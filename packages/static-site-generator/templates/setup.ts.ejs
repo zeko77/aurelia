@@ -1,0 +1,26 @@
+/**
+ * This is an automatically generated file.
+ * Do not change this manually.
+ */
+import { JitHtmlBrowserConfiguration } from '@aurelia/jit-html-browser';
+import { Aurelia, CustomElement } from '@aurelia/runtime';
+import { RouterConfiguration } from '@aurelia/router';
+import { App } from '@aurelia/static-site-generator/dist/app/App';
+import { Components } from '../components/index';
+
+(async function () {
+  const host = document.querySelector('app')!;
+
+  const au = new Aurelia()
+    .register(
+      JitHtmlBrowserConfiguration,
+      RouterConfiguration.customize({ useHref: true, useUrlFragmentHash: false, }),
+      <% for(const ce of customElements) {%>
+      CustomElement.define({ name: '<%- ce.customElementName %>', template: `<%- ce.template %>` }, class { }),
+      <% } %>
+      Components,
+    );
+  au.app({ host, component: App });
+
+  await au.start().wait();
+})().catch(console.error);

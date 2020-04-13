@@ -1,0 +1,53 @@
+{
+  "name": "@aurelia/static-site-generator",
+  "version": "0.6.0",
+  "description": "",
+  "main": "dist/index.js",
+  "bin": {
+    "au2-md-app": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "postbuild": "npm pack"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aurelia/dialog": "0.6.0",
+    "@aurelia/fetch-client": "0.6.0",
+    "@aurelia/jit": "0.6.0",
+    "@aurelia/jit-html": "0.6.0",
+    "@aurelia/jit-html-browser": "0.6.0",
+    "@aurelia/jit-html-jsdom": "0.6.0",
+    "@aurelia/kernel": "0.6.0",
+    "@aurelia/router": "0.6.0",
+    "@aurelia/runtime": "0.6.0",
+    "@aurelia/runtime-html": "0.6.0",
+    "@aurelia/runtime-html-browser": "0.6.0",
+    "@aurelia/runtime-html-jsdom": "0.6.0",
+    "ejs": "^3.0.2",
+    "gray-matter": "^4.0.2",
+    "html-loader": "^0.5.5",
+    "html-webpack-plugin": "^3.2.0",
+    "jsdom": "^15.2.1",
+    "markdown-it": "^10.0.0",
+    "markdown-it-front-matter": "^0.2.1",
+    "schema-utils": "^1.0.0",
+    "ts-loader": "^6.2.1",
+    "webpack": "^4.41.4",
+    "webpack-cli": "^3.3.10",
+    "webpack-dev-server": "^3.10.1",
+    "yargs": "^15.0.2"
+  },
+  "devDependencies": {
+    "@types/ejs": "^3.0.2",
+    "@types/html-webpack-plugin": "^3.2.2",
+    "@types/jsdom": "^12.2.4",
+    "@types/markdown-it": "^0.0.9",
+    "@types/node": "^12.12.21",
+    "@types/schema-utils": "^1.0.0",
+    "@types/webpack-dev-server": "^3.10.1",
+    "@types/yargs": "^15.0.4"
+  }
+}

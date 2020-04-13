@@ -1,0 +1,16 @@
+{
+  "name": "md-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "au2-md-app build --source src --out dist",
+    "start": "au2-md-app dev --source src --out dist"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aurelia/static-site-generator": "file:../../packages/static-site-generator/aurelia-static-site-generator-0.6.0.tgz"
+  }
+}

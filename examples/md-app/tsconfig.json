@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+        "pretty": true,
+        "lib": [
+            "esnext",
+            "dom"
+        ],
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "node",
+        "importHelpers": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "esModuleInterop": true,
+        "noEmitOnError": true,
+        "skipLibCheck": true,
+        "preserveConstEnums": true,
+        "stripInternal": true,
+        "strict": true,
+        "rootDir": "src",
+        "declaration": false
+    },
+    "include": [
+        "src"
+    ]
+}
