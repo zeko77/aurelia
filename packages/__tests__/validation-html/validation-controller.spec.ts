@@ -1,23 +1,23 @@
 /* eslint-disable mocha/no-hooks, mocha/no-sibling-hooks */
-import { IContainer, Registration, newInstanceForScope } from '@aurelia/kernel';
+import { newInstanceForScope } from '@aurelia/kernel';
 import { Aurelia, CustomElement, IScheduler, customElement } from '@aurelia/runtime';
 import { assert, TestContext } from '@aurelia/testing';
 import {
-  ControllerValidateResult,
-  IValidationController,
   IValidationRules,
   PropertyRule,
-  ValidateEventKind,
   ValidateInstruction,
-  ValidationConfiguration,
-  ValidationController,
-  ValidationControllerFactory,
-  ValidationResultsSubscriber,
-  ValidationEvent
 } from '@aurelia/validation';
-import { Spy } from '../Spy';
+import {
+  ControllerValidateResult,
+  IValidationController,
+  ValidateEventKind,
+  ValidationController,
+  ValidationResultsSubscriber,
+  ValidationEvent,
+  ValidationHtmlConfiguration,
+} from '@aurelia/validation-html';
 import { createSpecFunction, TestExecutionContext, TestFunction, ToNumberValueConverter } from '../util';
-import { Person } from './_test-resources';
+import { Person } from '../validation/_test-resources';
 
 describe('validation controller factory', function () {
   @customElement({
@@ -81,7 +81,7 @@ describe('validation controller factory', function () {
     const au = new Aurelia(container);
     await au
       .register(
-        ValidationConfiguration,
+        ValidationHtmlConfiguration,
         VcRoot,
         NewVcRoot,
         CustomStuff1,
@@ -134,20 +134,12 @@ describe('validation-controller', function () {
   class App {
     public person1: Person = new Person((void 0)!, (void 0)!);
     public person2: Person = new Person((void 0)!, (void 0)!);
-    public controller: ValidationController;
-    public controllerSpy: Spy;
     public person2rules: PropertyRule[];
-    public readonly validationRules: IValidationRules;
 
-    public constructor(container: IContainer) {
-      const factory = new ValidationControllerFactory();
-      this.controllerSpy = new Spy();
-
-      // mocks ValidationControllerFactory#createForCurrentScope
-      const controller = this.controller = this.controllerSpy.getMock(factory.construct(container)) as unknown as ValidationController;
-      Registration.instance(IValidationController, controller).register(container);
-
-      const validationRules = this.validationRules = container.get(IValidationRules);
+    public constructor(
+      @newInstanceForScope(IValidationController) public controller: ValidationController,
+      @IValidationRules public readonly validationRules: IValidationRules,
+    ) {
       validationRules
         .on(this.person1)
 
@@ -209,23 +201,20 @@ describe('validation-controller', function () {
     const container = ctx.container;
     const host = ctx.dom.createElement('app');
     ctx.doc.body.appendChild(host);
-    let app: App;
     const au = new Aurelia(container);
     await au
       .register(
-        ValidationConfiguration,
+        ValidationHtmlConfiguration,
         ToNumberValueConverter
       )
       .app({
         host,
-        component: app = (() => {
-          const ca = CustomElement.define({ name: 'app', isStrictBinding: true, template }, App);
-          return new ca(container);
-        })()
+        component: CustomElement.define({ name: 'app', isStrictBinding: true, template }, App)
       })
       .start()
       .wait();
 
+    const app = au.root.viewModel as App;
     await testFunction({ app, container, host, scheduler: container.get(IScheduler), ctx });
 
     await au.stop().wait();
@@ -414,11 +403,10 @@ describe('validation-controller', function () {
         const subscriber = new FooSubscriber();
         const msg = 'foobar';
         sut.addSubscriber(subscriber);
-        sut.addError(msg, person1, property);
+        const result = sut.addError(msg, person1, property);
         await scheduler.yieldAll();
         assert.html.textContent('span.error', msg, 'incorrect msg', host);
 
-        const result = sut.results.find((r) => r.object === person1 && r.propertyName === property && r.isManual);
         const events = subscriber.notifications;
         events.splice(0);
 
@@ -498,6 +486,56 @@ describe('validation-controller', function () {
 
       // cleanup
       sut.removeObject(person2);
+    }
+  );
+
+  $it(`revalidateErrors does not remove the manually added errors - w/o pre-existing errors`,
+    async function ({ app: { controller: sut, person1 }, scheduler, host }) {
+      const msg = 'foobar';
+      const result = sut.addError(msg, person1);
+      await scheduler.yieldAll();
+      assert.html.textContent('span.error', msg, 'incorrect msg', host);
+
+      await sut.revalidateErrors();
+      assert.includes(sut.results, result);
+    },
+    {
+      template: `
+  <input id="target" type="text" value.two-way="person1.name & validate">
+  <span class="error" repeat.for="result of controller.results">
+    \${result.message}
+  </span>
+  ` }
+  );
+
+  $it(`revalidateErrors does not remove the manually added errors - with pre-exiting errors`,
+    async function ({ app: { controller: sut, person1 } }) {
+      await sut.validate();
+      const msg = 'foobar';
+      sut.addError(msg, person1);
+      assert.deepStrictEqual(sut.results.filter((r) => !r.valid).map((r) => r.toString()), ['Name is required.', msg]);
+
+      person1.name = "test";
+      await sut.revalidateErrors();
+      assert.deepStrictEqual(sut.results.filter((r) => !r.valid).map((r) => r.toString()), [msg]);
+    },
+    {
+      template: `<input id="target" type="text" value.two-way="person1.name & validate">`
+    }
+  );
+
+  $it(`validate removes the manually added errors`,
+    async function ({ app: { controller: sut, person1 } }) {
+      await sut.validate();
+      const msg = 'foobar';
+      sut.addError(msg, person1);
+      assert.deepStrictEqual(sut.results.filter((r) => !r.valid).map((r) => r.toString()), ['Name is required.', msg]);
+
+      await sut.validate();
+      assert.deepStrictEqual(sut.results.filter((r) => !r.valid).map((r) => r.toString()), ['Name is required.']);
+    },
+    {
+      template: `<input id="target" type="text" value.two-way="person1.name & validate">`
     }
   );
 
