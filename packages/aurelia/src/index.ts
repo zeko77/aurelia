@@ -243,7 +243,6 @@ export {
 
   // relativeToFile,
   // join,
-  // buildQueryString,
   // parseQueryString,
   // IQueryParams,
 
@@ -272,7 +271,7 @@ export {
   EventAggregatorCallback,
   IEventAggregator,
 
-  isNumeric,
+  isArrayIndex,
   camelCase,
   kebabCase,
   pascalCase,
@@ -354,7 +353,6 @@ export {
   // Segment,
   // RouteRecognizer,
 
-  IRouteTransformer,
   IRouterOptions,
   IRouter,
   Router,
@@ -945,12 +943,15 @@ export {
   // ShadowDOMProjector,
 
   StyleConfiguration,
-  styles,
+  // styles,
   IShadowDOMConfiguration,
 
   // CSSModulesProcessorRegistry,
+  cssModules,
 
   // ShadowDOMRegistry,
+  // IShadowDOMStyleFactory,
+  shadowCSS,
 
   // AdoptedStyleSheetsStyles,
   // StyleElementStyles,

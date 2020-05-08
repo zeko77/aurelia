@@ -1,3 +1,4 @@
+import { HookManager } from './hook-manager';
 export {
   BrowserNavigator,
 } from './browser-navigator';
@@ -10,35 +11,29 @@ export {
 } from './link-handler';
 
 export {
-  Guard,
-} from './guard';
-
-export {
-  GuardTypes,
-  GuardIdentity,
-  IGuardOptions,
-  Guardian,
-} from './guardian';
-
-export {
   InstructionResolver,
 } from './instruction-resolver';
 
 export {
-  GuardFunction,
-  GuardTarget,
   INavigatorInstruction,
   IRouteableComponent,
   RouteableComponentType,
   IViewportInstruction,
   NavigationInstruction,
   ReentryBehavior,
+  IRoute,
 } from './interfaces';
 
 export {
   lifecycleLogger,
   LifecycleClass,
 } from './lifecycle-logger';
+
+export {
+  HookManager,
+  HookTypes,
+  IHookDefinition,
+} from './hook-manager';
 
 export {
   INavRoute,
@@ -68,25 +63,14 @@ export {
 } from './queue';
 
 export {
-  RouteHandler,
-  ConfigurableRoute,
-  HandlerEntry,
-  RouteGenerator,
-  TypesRecord,
-  RecognizeResult,
-  RecognizeResults,
-  CharSpec,
-  State,
-  StaticSegment,
-  DynamicSegment,
-  StarSegment,
-  EpsilonSegment,
-  Segment,
   RouteRecognizer,
+  IConfigurableRoute,
+  ConfigurableRoute,
+  RecognizedRoute,
+  Endpoint,
 } from './route-recognizer';
 
 export {
-  IRouteTransformer,
   IRouterOptions,
   IRouter,
   Router,
@@ -117,4 +101,6 @@ export {
   NavCustomElementRegistration,
   GotoCustomAttribute,
   GotoCustomAttributeRegistration,
+  HrefCustomAttribute,
+  HrefCustomAttributeRegistration,
 } from './configuration';

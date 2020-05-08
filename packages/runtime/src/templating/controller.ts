@@ -234,7 +234,7 @@ export class Controller<
       /* host           */host,
     );
 
-    controllerLookup.set(viewModel, controller);
+    controllerLookup.set(viewModel, controller as Controller<INode, IViewModel>);
 
     controller.hydrateCustomElement(definition, parentContainer, parts);
 
@@ -247,6 +247,7 @@ export class Controller<
   >(
     viewModel: C,
     lifecycle: ILifecycle,
+    host: T,
     flags: LifecycleFlags = LifecycleFlags.none,
   ): ICustomAttributeController<T, C> {
     if (controllerLookup.has(viewModel)) {
@@ -264,14 +265,14 @@ export class Controller<
       /* viewFactory    */void 0,
       /* viewModel      */viewModel,
       /* bindingContext */getBindingContext<T, C>(flags, viewModel),
-      /* host           */void 0,
+      /* host           */host
     );
 
-    controllerLookup.set(viewModel, controller);
+    controllerLookup.set(viewModel, controller as Controller<INode, IViewModel>);
 
     controller.hydrateCustomAttribute(definition);
 
-    return controller as ICustomAttributeController<T, C>;
+    return controller as unknown as ICustomAttributeController<T, C>;
   }
 
   public static forSyntheticView<
@@ -610,16 +611,16 @@ export class Controller<
     this.state |= State.isBinding;
 
     this.lifecycle.afterBind.begin();
-    this.bindBindings(flags, $scope);
 
     if (this.hooks.hasBeforeBind) {
       const ret = (this.bindingContext as BindingContext<T, C>).beforeBind(flags);
       if (hasAsyncWork(ret)) {
-        return new ContinuationTask(ret, this.bindControllers, this, flags, $scope);
+        // this.scope could be reassigned during beforeBind so reference that instead of $scope.
+        return new ContinuationTask(ret, this.bindBindings, this, flags, this.scope!);
       }
     }
 
-    return this.bindControllers(flags, $scope);
+    return this.bindBindings(flags, this.scope!);
   }
 
   private bindCustomAttribute(flags: LifecycleFlags, scope?: IScope): ILifecycleTask {
@@ -683,12 +684,10 @@ export class Controller<
     this.state |= State.isBinding;
 
     this.lifecycle.afterBind.begin();
-    this.bindBindings(flags, scope);
-
-    return this.bindControllers(flags, scope);
+    return this.bindBindings(flags, this.scope!);
   }
 
-  private bindBindings(flags: LifecycleFlags, scope: IScope): void {
+  private bindBindings(flags: LifecycleFlags, scope: IScope): ILifecycleTask {
     const { bindings } = this;
     if (bindings !== void 0) {
       const { length } = bindings;
@@ -699,6 +698,8 @@ export class Controller<
         bindings[i].$bind(flags, scope, this.part);
       }
     }
+
+    return this.bindControllers(flags, this.scope!);
   }
 
   private bindControllers(flags: LifecycleFlags, scope: IScope): ILifecycleTask {

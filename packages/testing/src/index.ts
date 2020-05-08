@@ -32,7 +32,7 @@ export {
   hJsx,
 } from './h';
 export {
-  setup
+  createFixture
 } from './startup';
 export {
   HTMLTestContext,
@@ -65,7 +65,7 @@ export {
   TestConfiguration,
 } from './resources';
 export {
-  verifyASTEqual,
+  // verifyASTEqual,
   verifyBindingInstructionsEqual,
   verifyEqual,
   getVisibleText,

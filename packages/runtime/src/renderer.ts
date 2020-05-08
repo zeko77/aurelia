@@ -141,9 +141,7 @@ export function instructionRenderer<TType extends string>(instructionType: TType
 export class Renderer implements IRenderer {
   public instructionRenderers: Record<InstructionTypeName, IInstructionRenderer['render']>;
 
-  public constructor(
-    @all(IInstructionRenderer) instructionRenderers: IInstructionRenderer[],
-  ) {
+  public constructor(@all(IInstructionRenderer) instructionRenderers: IInstructionRenderer[]) {
     const record: Record<InstructionTypeName, IInstructionRenderer['render']> = this.instructionRenderers = {};
     instructionRenderers.forEach(item => {
       // Binding the functions to the renderer instances and calling the functions directly,
@@ -350,6 +348,7 @@ export class CustomAttributeRenderer implements IInstructionRenderer {
     const childController = Controller.forCustomAttribute(
       /* viewModel */component,
       /* lifecycle */lifecycle,
+      /* host      */target,
       /* flags     */flags,
     );
 
@@ -400,6 +399,7 @@ export class TemplateControllerRenderer implements IInstructionRenderer {
     const childController = Controller.forCustomAttribute(
       /* viewModel */component,
       /* lifecycle */lifecycle,
+      /* host      */target,
       /* flags     */flags,
     );
 
