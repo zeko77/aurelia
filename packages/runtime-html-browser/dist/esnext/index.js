@@ -1,8 +1,19 @@
-import { __decorate, __metadata, __param } from "tslib";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 import { DI, IContainer, Registration } from '@aurelia/kernel';
-import { IDOM, IDOMInitializer, IScheduler, DOM } from '@aurelia/runtime';
+import { IDOM, IDOMInitializer, IScheduler } from '@aurelia/runtime';
 import { RuntimeHtmlConfiguration, HTMLDOM } from '@aurelia/runtime-html';
-import { BrowserScheduler } from './browser-scheduler';
+import { createDOMScheduler } from '@aurelia/scheduler-dom';
 let BrowserDOMInitializer = class BrowserDOMInitializer {
     constructor(container) {
         this.container = container;
@@ -30,12 +41,7 @@ let BrowserDOMInitializer = class BrowserDOMInitializer {
             dom = new HTMLDOM(window, document, Node, Element, HTMLElement, CustomEvent, CSSStyleSheet, ShadowRoot);
         }
         Registration.instance(IDOM, dom).register(this.container);
-        if (DOM.scheduler === void 0) {
-            this.container.register(BrowserScheduler);
-        }
-        else {
-            Registration.instance(IScheduler, DOM.scheduler).register(this.container);
-        }
+        Registration.instance(IScheduler, createDOMScheduler(this.container, window)).register(this.container);
         return dom;
     }
 };
@@ -44,14 +50,12 @@ BrowserDOMInitializer = __decorate([
     __metadata("design:paramtypes", [Object])
 ], BrowserDOMInitializer);
 export const IDOMInitializerRegistration = BrowserDOMInitializer;
-export const IBrowserSchedulerRegistration = BrowserScheduler;
 /**
  * Default HTML-specific, browser-specific implementations for the following interfaces:
  * - `IDOMInitializer`
  */
 export const DefaultComponents = [
     IDOMInitializerRegistration,
-    IBrowserSchedulerRegistration,
 ];
 /**
  * A DI configuration object containing html-specific, browser-specific registrations:
@@ -74,5 +78,5 @@ export const RuntimeHtmlBrowserConfiguration = {
         return this.register(DI.createContainer());
     }
 };
-export { BrowserDOMInitializer, BrowserScheduler, };
+export { BrowserDOMInitializer, };
 //# sourceMappingURL=index.js.map

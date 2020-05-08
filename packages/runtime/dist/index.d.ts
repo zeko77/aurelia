@@ -2,12 +2,12 @@ export { CallFunctionExpression, connects, observes, callsFunction, hasAncestor,
 export { AnyBindingExpression, IsPrimary, IsLiteral, IsLeftHandSide, IsUnary, IsBinary, IsConditional, IsAssign, IsValueConverter, IsBindingBehavior, IsAssignable, IsExpression, IsExpressionOrStatement, Connects, Observes, CallsFunction, IsResource, HasBind, HasUnbind, HasAncestor, IVisitor, IExpression, IAccessKeyedExpression, IAccessMemberExpression, IAccessScopeExpression, IAccessThisExpression, IArrayBindingPattern, IArrayLiteralExpression, IAssignExpression, IBinaryExpression, IBindingBehaviorExpression, IBindingIdentifier, ICallFunctionExpression, ICallMemberExpression, ICallScopeExpression, IConditionalExpression, IForOfStatement, IHtmlLiteralExpression, IInterpolationExpression, IObjectBindingPattern, IObjectLiteralExpression, IPrimitiveLiteralExpression, ITaggedTemplateExpression, ITemplateExpression, IUnaryExpression, IValueConverterExpression, BinaryOperator, BindingIdentifierOrPattern, UnaryOperator } from './ast';
 export { PropertyBinding } from './binding/property-binding';
 export { CallBinding } from './binding/call-binding';
-export { IPartialConnectableBinding, IConnectableBinding, connectable } from './binding/connectable';
+export { IPartialConnectableBinding, IConnectableBinding, connectable, BindingMediator, MediatedBinding } from './binding/connectable';
 export { IExpressionParser, BindingType } from './binding/expression-parser';
 export { MultiInterpolationBinding, InterpolationBinding } from './binding/interpolation-binding';
 export { LetBinding } from './binding/let-binding';
 export { RefBinding } from './binding/ref-binding';
-export { ArrayObserver, enableArrayObservation, disableArrayObservation, applyMutationsToIndices, synchronizeIndices, } from './observation/array-observer';
+export { ArrayObserver, ArrayIndexObserver, enableArrayObservation, disableArrayObservation, applyMutationsToIndices, synchronizeIndices, } from './observation/array-observer';
 export { MapObserver, enableMapObservation, disableMapObservation } from './observation/map-observer';
 export { SetObserver, enableSetObservation, disableSetObservation } from './observation/set-observer';
 export { BindingContext, Scope, OverrideContext } from './observation/binding-context';
@@ -23,7 +23,7 @@ export { BindableObserver } from './observation/bindable-observer';
 export { SetterObserver } from './observation/setter-observer';
 export { ISignaler } from './observation/signaler';
 export { subscriberCollection, collectionSubscriberCollection, proxySubscriberCollection, } from './observation/subscriber-collection';
-export { bindingBehavior, BindingBehavior, BindingBehaviorDefinition, PartialBindingBehaviorDefinition, BindingBehaviorKind, BindingBehaviorDecorator, BindingBehaviorInstance, BindingBehaviorType, } from './resources/binding-behavior';
+export { bindingBehavior, BindingBehavior, BindingBehaviorDefinition, PartialBindingBehaviorDefinition, BindingBehaviorKind, BindingBehaviorDecorator, BindingBehaviorInstance, BindingBehaviorType, BindingInterceptor, IInterceptableBinding } from './resources/binding-behavior';
 export { BindingModeBehavior, OneTimeBindingBehavior, ToViewBindingBehavior, FromViewBindingBehavior, TwoWayBindingBehavior } from './resources/binding-behaviors/binding-mode';
 export { DebounceBindingBehavior } from './resources/binding-behaviors/debounce';
 export { SignalableBinding, SignalBindingBehavior } from './resources/binding-behaviors/signals';
@@ -38,7 +38,7 @@ export { containerless, customElement, CustomElementHost, CustomElement, CustomE
 export { ValueConverter, ValueConverterDefinition, PartialValueConverterDefinition, ValueConverterKind, ValueConverterDecorator, ValueConverterInstance, ValueConverterType, valueConverter, } from './resources/value-converter';
 export { ISanitizer, SanitizeValueConverter } from './resources/value-converters/sanitize';
 export { ViewValueConverter } from './resources/value-converters/view';
-export { Clock, IClock, IClockSettings, IScheduler, ITask, ITaskQueue, QueueTaskOptions, Task, TaskAbortError, TaskCallback, TaskQueue, TaskQueuePriority, TaskStatus, QueueTaskTargetOptions, } from './scheduler';
+export { Now, IScheduler, ITask, ITaskQueue, QueueTaskOptions, Task, TaskAbortError, TaskCallback, TaskQueue, TaskQueuePriority, TaskStatus, QueueTaskTargetOptions, } from '@aurelia/scheduler';
 export { bindable, PartialBindableDefinition, BindableDefinition, Bindable, } from './templating/bindable';
 export { PartialChildrenDefinition, ChildrenDefinition, Children, children, ChildrenObserver, } from './templating/children';
 export { Controller, } from './templating/controller';
@@ -52,6 +52,6 @@ export { CallBindingInstruction, FromViewBindingInstruction, HydrateAttributeIns
 export { ViewModelKind, IBinding, ILifecycle, IViewModel, IController, IComponentController, IContextualCustomElementController, IRenderableController, IDryCustomElementController, ICustomAttributeController, IHydratedController, IHydratedComponentController, IHydratedRenderableController, ICompiledCustomElementController, ICustomElementController, IViewCache, IViewFactory, MountStrategy, ICustomElementViewModel, ICustomAttributeViewModel, IHydratedCustomElementViewModel, IHydratedCustomAttributeViewModel, ISyntheticView, } from './lifecycle';
 export { getRenderContext, isRenderContext, IRenderContext, ICompiledRenderContext, IComponentFactory, } from './templating/render-context';
 export { PromiseOrTask, MaybePromiseOrTask, AggregateContinuationTask, TerminalTask, AggregateTerminalTask, ContinuationTask, ILifecycleTask, LifecycleTask, PromiseTask, TaskSlot, StartTask, IStartTask, IStartTaskManager, ProviderTask, } from './lifecycle-task';
-export { AccessorOrObserver, Collection, CollectionKind, DelegationStrategy, IAccessor, IBindingContext, IBindingTargetAccessor, IBindingTargetObserver, ICollectionChangeTracker, ICollectionObserver, ICollectionSubscriber, IndexMap, IObservable, IObservedArray, IObservedMap, IObservedSet, IOverrideContext, IPropertyChangeTracker, IPropertyObserver, IScope, ISubscribable, ISubscriberCollection, ObservedCollection, ObserversLookup, PropertyObserver, CollectionObserver, ICollectionSubscriberCollection, IProxyObserver, IProxy, IProxySubscribable, IProxySubscriber, IProxySubscriberCollection, ICollectionSubscribable, ISubscriber, isIndexMap, copyIndexMap, cloneIndexMap, createIndexMap, } from './observation';
+export { AccessorOrObserver, Collection, CollectionKind, DelegationStrategy, IAccessor, IBindingContext, IBindingTargetAccessor, IBindingTargetObserver, ICollectionChangeTracker, ICollectionObserver, ICollectionIndexObserver, ICollectionSubscriber, IndexMap, IObservable, IObservedArray, IObservedMap, IObservedSet, IOverrideContext, IPropertyChangeTracker, IPropertyObserver, IScope, ISubscribable, ISubscriberCollection, ObservedCollection, ObserversLookup, PropertyObserver, CollectionObserver, ICollectionSubscriberCollection, IProxyObserver, IProxy, IProxySubscribable, IProxySubscriber, IProxySubscriberCollection, ICollectionSubscribable, ISubscriber, isIndexMap, copyIndexMap, cloneIndexMap, createIndexMap, } from './observation';
 export { applyBindingBehavior, IInstructionRenderer, IInstructionTypeClassifier, IRenderer, ITemplateCompiler, instructionRenderer, ensureExpression, } from './renderer';
 //# sourceMappingURL=index.d.ts.map

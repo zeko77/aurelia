@@ -1,12 +1,12 @@
 export { CallFunctionExpression, connects, observes, callsFunction, hasAncestor, isAssignable, isLeftHandSide, isPrimary, isResource, hasBind, hasUnbind, isLiteral, arePureLiterals, isPureLiteral, CustomExpression, BindingBehaviorExpression, ValueConverterExpression, AssignExpression, ConditionalExpression, AccessThisExpression, AccessScopeExpression, AccessMemberExpression, AccessKeyedExpression, CallScopeExpression, CallMemberExpression, BinaryExpression, UnaryExpression, PrimitiveLiteralExpression, HtmlLiteralExpression, ArrayLiteralExpression, ObjectLiteralExpression, TemplateExpression, TaggedTemplateExpression, ArrayBindingPattern, ObjectBindingPattern, BindingIdentifier, ForOfStatement, Interpolation } from './binding/ast';
 export { PropertyBinding } from './binding/property-binding';
 export { CallBinding } from './binding/call-binding';
-export { connectable } from './binding/connectable';
+export { connectable, BindingMediator } from './binding/connectable';
 export { IExpressionParser, BindingType } from './binding/expression-parser';
 export { MultiInterpolationBinding, InterpolationBinding } from './binding/interpolation-binding';
 export { LetBinding } from './binding/let-binding';
 export { RefBinding } from './binding/ref-binding';
-export { ArrayObserver, enableArrayObservation, disableArrayObservation, applyMutationsToIndices, synchronizeIndices, } from './observation/array-observer';
+export { ArrayObserver, ArrayIndexObserver, enableArrayObservation, disableArrayObservation, applyMutationsToIndices, synchronizeIndices, } from './observation/array-observer';
 export { MapObserver, enableMapObservation, disableMapObservation } from './observation/map-observer';
 export { SetObserver, enableSetObservation, disableSetObservation } from './observation/set-observer';
 export { BindingContext, Scope, OverrideContext } from './observation/binding-context';
@@ -22,7 +22,7 @@ export { BindableObserver } from './observation/bindable-observer';
 export { SetterObserver } from './observation/setter-observer';
 export { ISignaler } from './observation/signaler';
 export { subscriberCollection, collectionSubscriberCollection, proxySubscriberCollection, } from './observation/subscriber-collection';
-export { bindingBehavior, BindingBehavior, BindingBehaviorDefinition, } from './resources/binding-behavior';
+export { bindingBehavior, BindingBehavior, BindingBehaviorDefinition, BindingInterceptor } from './resources/binding-behavior';
 export { BindingModeBehavior, OneTimeBindingBehavior, ToViewBindingBehavior, FromViewBindingBehavior, TwoWayBindingBehavior } from './resources/binding-behaviors/binding-mode';
 export { DebounceBindingBehavior } from './resources/binding-behaviors/debounce';
 export { SignalBindingBehavior } from './resources/binding-behaviors/signals';
@@ -37,7 +37,7 @@ export { containerless, customElement, CustomElement, CustomElementDefinition, I
 export { ValueConverter, ValueConverterDefinition, valueConverter, } from './resources/value-converter';
 export { ISanitizer, SanitizeValueConverter } from './resources/value-converters/sanitize';
 export { ViewValueConverter } from './resources/value-converters/view';
-export { Clock, IClock, IScheduler, Task, TaskAbortError, TaskQueue, TaskQueuePriority, } from './scheduler';
+export { Now, IScheduler, Task, TaskAbortError, TaskQueue, TaskQueuePriority, } from '@aurelia/scheduler';
 export { bindable, BindableDefinition, Bindable, } from './templating/bindable';
 export { ChildrenDefinition, Children, children, ChildrenObserver, } from './templating/children';
 // These exports are temporary until we have a proper way to unit test them

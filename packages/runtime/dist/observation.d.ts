@@ -32,28 +32,28 @@ export interface ICollectionSubscribable {
     unsubscribeFromCollection(subscriber: ICollectionSubscriber): void;
 }
 export interface ISubscriberCollection extends ISubscribable {
+    [key: number]: LifecycleFlags;
     callSubscribers(newValue: unknown, oldValue: unknown, flags: LifecycleFlags): void;
     hasSubscribers(): boolean;
     hasSubscriber(subscriber: ISubscriber): boolean;
     removeSubscriber(subscriber: ISubscriber): boolean;
     addSubscriber(subscriber: ISubscriber): boolean;
-    [key: number]: LifecycleFlags;
 }
 export interface IProxySubscriberCollection extends IProxySubscribable {
+    [key: number]: LifecycleFlags;
     callProxySubscribers(key: PropertyKey, newValue: unknown, previousValue: unknown, flags: LifecycleFlags): void;
     hasProxySubscribers(): boolean;
     hasProxySubscriber(subscriber: IProxySubscriber): boolean;
     removeProxySubscriber(subscriber: IProxySubscriber): boolean;
     addProxySubscriber(subscriber: IProxySubscriber): boolean;
-    [key: number]: LifecycleFlags;
 }
 export interface ICollectionSubscriberCollection extends ICollectionSubscribable {
+    [key: number]: LifecycleFlags;
     callCollectionSubscribers(indexMap: IndexMap, flags: LifecycleFlags): void;
     hasCollectionSubscribers(): boolean;
     hasCollectionSubscriber(subscriber: ICollectionSubscriber): boolean;
     removeCollectionSubscriber(subscriber: ICollectionSubscriber): boolean;
     addCollectionSubscriber(subscriber: ICollectionSubscriber): boolean;
-    [key: number]: LifecycleFlags;
 }
 /**
  * Describes a complete property observer with an accessor, change tracking fields, normal and batched subscribers
@@ -159,6 +159,9 @@ export interface ICollectionLengthObserver extends IAccessor<number>, IPropertyC
 export interface ICollectionSizeObserver extends IAccessor<number>, IPropertyChangeTracker<Set<unknown> | Map<unknown, unknown>, 'size', number>, ISubscriberCollection {
     currentValue: number;
 }
+export interface ICollectionIndexObserver extends ICollectionSubscriber, IPropertyObserver<IIndexable, string> {
+    owner: ICollectionObserver<CollectionKind.array>;
+}
 /**
  * Describes a type that specifically tracks changes in a collection (map, set or array)
  */
@@ -176,6 +179,7 @@ export interface ICollectionObserver<T extends CollectionKind> extends ICollecti
     collection: ObservedCollectionKindToType<T>;
     lengthObserver: T extends CollectionKind.array ? ICollectionLengthObserver : ICollectionSizeObserver;
     getLengthObserver(): T extends CollectionKind.array ? ICollectionLengthObserver : ICollectionSizeObserver;
+    getIndexObserver(index: number): ICollectionIndexObserver;
     notify(): void;
 }
 export declare type CollectionObserver = ICollectionObserver<CollectionKind>;

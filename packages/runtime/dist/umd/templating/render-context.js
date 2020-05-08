@@ -4,17 +4,17 @@
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define(["require", "exports", "../resources/custom-element", "../definitions", "@aurelia/kernel", "../lifecycle", "../dom", "../renderer", "./view"], factory);
+        define(["require", "exports", "@aurelia/kernel", "../definitions", "../dom", "../lifecycle", "../renderer", "../resources/custom-element", "./view"], factory);
     }
 })(function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    const custom_element_1 = require("../resources/custom-element");
-    const definitions_1 = require("../definitions");
     const kernel_1 = require("@aurelia/kernel");
-    const lifecycle_1 = require("../lifecycle");
+    const definitions_1 = require("../definitions");
     const dom_1 = require("../dom");
+    const lifecycle_1 = require("../lifecycle");
     const renderer_1 = require("../renderer");
+    const custom_element_1 = require("../resources/custom-element");
     const view_1 = require("./view");
     const definitionContainerLookup = new WeakMap();
     const definitionContainerPartsLookup = new WeakMap();
@@ -27,6 +27,10 @@
         const definition = custom_element_1.CustomElementDefinition.getOrCreate(partialDefinition);
         if (isRenderContext(parentContainer)) {
             parts = definitions_1.mergeParts(parentContainer.parts, parts);
+        }
+        // injectable completely prevents caching, ensuring that each instance gets a new render context
+        if (definition.injectable !== null) {
+            return new RenderContext(definition, parentContainer, parts);
         }
         if (parts === void 0) {
             let containerLookup = definitionContainerLookup.get(definition);
@@ -66,10 +70,10 @@
             this.compiledDefinition = (void 0);
             const container = this.container = parentContainer.createChild();
             this.renderer = container.get(renderer_1.IRenderer);
-            container.registerResolver(lifecycle_1.IViewFactory, this.factoryProvider = new ViewFactoryProvider());
-            container.registerResolver(lifecycle_1.IController, this.parentControllerProvider = new kernel_1.InstanceProvider());
-            container.registerResolver(definitions_1.ITargetedInstruction, this.instructionProvider = new kernel_1.InstanceProvider());
-            container.registerResolver(dom_1.IRenderLocation, this.renderLocationProvider = new kernel_1.InstanceProvider());
+            container.registerResolver(lifecycle_1.IViewFactory, this.factoryProvider = new ViewFactoryProvider(), true);
+            container.registerResolver(lifecycle_1.IController, this.parentControllerProvider = new kernel_1.InstanceProvider(), true);
+            container.registerResolver(definitions_1.ITargetedInstruction, this.instructionProvider = new kernel_1.InstanceProvider(), true);
+            container.registerResolver(dom_1.IRenderLocation, this.renderLocationProvider = new kernel_1.InstanceProvider(), true);
             (this.dom = container.get(dom_1.IDOM)).registerElementResolver(container, this.elementProvider = new kernel_1.InstanceProvider());
             container.register(...definition.dependencies);
         }
@@ -102,6 +106,9 @@
         }
         createChild() {
             return this.container.createChild();
+        }
+        disposeResolvers() {
+            this.container.disposeResolvers();
         }
         // #endregion
         // #region IRenderContext api
@@ -194,11 +201,8 @@
             this.renderer.renderInstructions(flags, this, instructions, controller, target, parts);
         }
         dispose() {
-            this.factoryProvider.dispose();
-            this.parentControllerProvider.dispose();
-            this.instructionProvider.dispose();
             this.elementProvider.dispose();
-            this.renderLocationProvider.dispose();
+            this.container.disposeResolvers();
         }
     }
     exports.RenderContext = RenderContext;
@@ -210,6 +214,7 @@
         prepare(factory) {
             this.factory = factory;
         }
+        get $isResolver() { return true; }
         resolve(handler, requestor) {
             const factory = this.factory;
             if (factory === null) { // unmet precondition: call prepare

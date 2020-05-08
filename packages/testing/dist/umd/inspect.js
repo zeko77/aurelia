@@ -214,11 +214,11 @@
             this.operator = operator;
             if (typeof Error.captureStackTrace === 'function') {
                 Error.captureStackTrace(this, stackStartFn);
-                // eslint-disable-next-line no-unused-expressions
+                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
                 this.stack;
             }
             else {
-                // eslint-disable-next-line no-unused-expressions
+                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
                 Error().stack;
             }
             this.name = 'AssertionError';
@@ -762,7 +762,7 @@
                 break;
             }
             if (`${index}` !== key) {
-                if (!kernel_1.isNumeric(key)) {
+                if (!kernel_1.isArrayIndex(key)) {
                     break;
                 }
                 const emptyItems = tmp - index;

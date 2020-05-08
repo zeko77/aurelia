@@ -1,5 +1,13 @@
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 var TranslationBinding_1;
-import { __decorate, __metadata } from "tslib";
 import { IEventAggregator, IServiceLocator, toArray } from '@aurelia/kernel';
 import { connectable, CustomElement, CustomExpression, DOM, ensureExpression, Interpolation, IObserverLocator, INode, } from '@aurelia/runtime';
 import { I18N } from '../i18n';
@@ -44,6 +52,7 @@ let TranslationBinding = TranslationBinding_1 = class TranslationBinding {
         this.scope = scope;
         this.isInterpolatedSourceExpr = this.expr instanceof Interpolation;
         this.keyExpression = this.expr.evaluate(flags, scope, this.locator, part);
+        this.ensureKeyExpression();
         if (this.parametersExpr) {
             const parametersFlags = flags | 1073741824 /* secondaryExpression */;
             this.translationParameters = this.parametersExpr.evaluate(parametersFlags, scope, this.locator, part);
@@ -80,6 +89,7 @@ let TranslationBinding = TranslationBinding_1 = class TranslationBinding {
             this.keyExpression = this.isInterpolatedSourceExpr
                 ? this.expr.evaluate(flags, this.scope, this.locator, '')
                 : newValue;
+            this.ensureKeyExpression();
         }
         this.updateTranslations(flags);
     }
@@ -149,10 +159,11 @@ let TranslationBinding = TranslationBinding_1 = class TranslationBinding {
         }
     }
     prepareTemplate(content, marker, fallBackContents) {
+        var _a;
         const template = DOM.createTemplate();
         this.addContentToTemplate(template, content.prepend, marker);
         // build content: prioritize [html], then textContent, and falls back to original content
-        if (!this.addContentToTemplate(template, content.innerHTML || content.textContent, marker)) {
+        if (!this.addContentToTemplate(template, (_a = content.innerHTML) !== null && _a !== void 0 ? _a : content.textContent, marker)) {
             for (const fallbackContent of fallBackContents) {
                 template.content.append(fallbackContent);
             }
@@ -161,7 +172,7 @@ let TranslationBinding = TranslationBinding_1 = class TranslationBinding {
         return template;
     }
     addContentToTemplate(template, content, marker) {
-        if (content) {
+        if (content !== void 0 && content !== null) {
             const addendum = DOM.createDocumentFragment(content);
             for (const child of toArray(addendum.childNodes)) {
                 Reflect.set(child, marker, true);
@@ -178,6 +189,14 @@ let TranslationBinding = TranslationBinding_1 = class TranslationBinding {
             }
         }
         this.targetObservers.clear();
+    }
+    ensureKeyExpression() {
+        var _a;
+        const expr = this.keyExpression = (_a = this.keyExpression) !== null && _a !== void 0 ? _a : '';
+        const exprType = typeof expr;
+        if (exprType !== 'string') {
+            throw new Error(`Expected the i18n key to be a string, but got ${expr} of type ${exprType}`); // TODO use reporter/logger
+        }
     }
 };
 TranslationBinding = TranslationBinding_1 = __decorate([

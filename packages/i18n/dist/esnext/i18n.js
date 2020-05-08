@@ -1,4 +1,15 @@
-import { __decorate, __metadata, __param } from "tslib";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 import { DI, IEventAggregator, PLATFORM } from '@aurelia/kernel';
 import { ISignaler, PromiseTask } from '@aurelia/runtime';
 import { I18nInitOptions } from './i18n-configuration-options';
@@ -103,7 +114,7 @@ let I18nService = class I18nService {
         return new this.intl.RelativeTimeFormat(locales || this.getLocale(), options);
     }
     rt(input, options, locales) {
-        let difference = input.getTime() - new Date().getTime();
+        let difference = input.getTime() - this.now();
         const epsilon = this.options.rtEpsilon * (difference > 0 ? 1 : 0);
         const formatter = this.createRelativeTimeFormat(options, locales);
         let value = difference / 31536000000 /* Year */;
@@ -134,6 +145,9 @@ let I18nService = class I18nService {
         value = difference / 1000 /* Second */;
         return formatter.format(Math.round(value), 'second');
     }
+    now() {
+        return new Date().getTime();
+    }
     async initializeI18next(options) {
         const defaultOptions = {
             lng: 'en',
@@ -151,10 +165,7 @@ let I18nService = class I18nService {
     }
 };
 I18nService = __decorate([
-    __param(0, I18nWrapper),
-    __param(1, I18nInitOptions),
-    __param(2, IEventAggregator),
-    __param(3, ISignaler),
+    __param(0, I18nWrapper), __param(1, I18nInitOptions), __param(2, IEventAggregator), __param(3, ISignaler),
     __metadata("design:paramtypes", [I18nextWrapper, Object, Object, Object])
 ], I18nService);
 export { I18nService };

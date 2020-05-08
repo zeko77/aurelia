@@ -1,6 +1,17 @@
-import { __decorate, __metadata, __param } from "tslib";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+import { all, DI, ignore, optional, Registration } from './di';
 import { toLookup } from './functions';
-import { DI, all, Registration } from './di';
 /**
  * Flags to enable/disable color usage in the logging output.
  */
@@ -19,8 +30,9 @@ export const ILogConfig = DI.createInterface('ILogConfig').withDefault(x => x.in
 export const ISink = DI.createInterface('ISink').noDefault();
 export const ILogEventFactory = DI.createInterface('ILogEventFactory').withDefault(x => x.singleton(DefaultLogEventFactory));
 export const ILogger = DI.createInterface('ILogger').withDefault(x => x.singleton(DefaultLogger));
+export const ILogScopes = DI.createInterface('ILogScope').noDefault();
 // http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
-const format = toLookup({
+export const format = toLookup({
     red(str) {
         return `\u001b[31m${str}\u001b[39m`;
     },
@@ -179,6 +191,7 @@ let DefaultLogger = class DefaultLogger {
         this.factory = factory;
         this.sinks = sinks;
         this.scope = scope;
+        this.scopedLoggers = Object.create(null);
         if (parent === null) {
             this.root = this;
             this.parent = this;
@@ -228,13 +241,20 @@ let DefaultLogger = class DefaultLogger {
         };
     }
     scopeTo(name) {
-        return new DefaultLogger(this.config, this.factory, this.sinks, this.scope.concat(name), this);
+        const scopedLoggers = this.scopedLoggers;
+        let scopedLogger = scopedLoggers[name];
+        if (scopedLogger === void 0) {
+            scopedLogger = scopedLoggers[name] = new DefaultLogger(this.config, this.factory, this.sinks, this.scope.concat(name), this);
+        }
+        return scopedLogger;
     }
 };
 DefaultLogger = __decorate([
     __param(0, ILogConfig),
     __param(1, ILogEventFactory),
     __param(2, all(ISink)),
+    __param(3, optional(ILogScopes)),
+    __param(4, ignore),
     __metadata("design:paramtypes", [Object, Object, Array, Array, Object])
 ], DefaultLogger);
 export { DefaultLogger };

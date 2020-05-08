@@ -1,15 +1,23 @@
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 (function (factory) {
     if (typeof module === "object" && typeof module.exports === "object") {
         var v = factory(require, exports);
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define(["require", "exports", "tslib", "../lifecycle", "../observation", "./collection-length-observer", "./subscriber-collection"], factory);
+        define(["require", "exports", "../lifecycle", "../observation", "./collection-length-observer", "./subscriber-collection"], factory);
     }
 })(function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    const tslib_1 = require("tslib");
     const lifecycle_1 = require("../lifecycle");
     const observation_1 = require("../observation");
     const collection_length_observer_1 = require("./collection-length-observer");
@@ -406,6 +414,7 @@
                 enableArrayObservation();
             }
             this.inBatch = false;
+            this.indexObservers = {};
             this.collection = array;
             this.persistentFlags = flags & 2080374799 /* persistentBindingFlags */;
             this.indexMap = observation_1.createIndexMap(array.length);
@@ -430,6 +439,9 @@
             }
             return this.lengthObserver;
         }
+        getIndexObserver(index) {
+            return this.getOrCreateIndexObserver(index);
+        }
         flushBatch(flags) {
             this.inBatch = false;
             const indexMap = this.indexMap;
@@ -440,12 +452,93 @@
                 this.lengthObserver.setValue(length, 16 /* updateTargetInstance */);
             }
         }
+        /**
+         * @internal used by friend class ArrayIndexObserver only
+         */
+        addIndexObserver(indexObserver) {
+            this.addCollectionSubscriber(indexObserver);
+        }
+        /**
+         * @internal used by friend class ArrayIndexObserver only
+         */
+        removeIndexObserver(indexObserver) {
+            this.removeCollectionSubscriber(indexObserver);
+        }
+        /**
+         * @internal
+         */
+        getOrCreateIndexObserver(index) {
+            const indexObservers = this.indexObservers;
+            let observer = indexObservers[index];
+            if (observer === void 0) {
+                observer = indexObservers[index] = new ArrayIndexObserver(this, index);
+            }
+            return observer;
+        }
     };
-    ArrayObserver = tslib_1.__decorate([
+    ArrayObserver = __decorate([
         subscriber_collection_1.collectionSubscriberCollection(),
-        tslib_1.__metadata("design:paramtypes", [Number, Object, Object])
+        __metadata("design:paramtypes", [Number, Object, Object])
     ], ArrayObserver);
     exports.ArrayObserver = ArrayObserver;
+    let ArrayIndexObserver = class ArrayIndexObserver {
+        constructor(owner, index) {
+            this.owner = owner;
+            this.index = index;
+            this.subscriberCount = 0;
+            this.currentValue = this.getValue();
+        }
+        getValue() {
+            return this.owner.collection[this.index];
+        }
+        setValue(newValue, flags) {
+            if (newValue === this.getValue()) {
+                return;
+            }
+            const arrayObserver = this.owner;
+            const index = this.index;
+            const indexMap = arrayObserver.indexMap;
+            if (indexMap[index] > -1) {
+                indexMap.deletedItems.push(indexMap[index]);
+            }
+            indexMap[index] = -2;
+            // do not need to update current value here
+            // as it will be updated inside handle collection change
+            arrayObserver.collection[index] = newValue;
+            arrayObserver.notify();
+        }
+        /**
+         * From interface `ICollectionSubscriber`
+         */
+        handleCollectionChange(indexMap, flags) {
+            const index = this.index;
+            const noChange = indexMap[index] === index;
+            if (noChange) {
+                return;
+            }
+            const prevValue = this.currentValue;
+            const currValue = this.currentValue = this.getValue();
+            // hmm
+            if (prevValue !== currValue) {
+                this.callSubscribers(currValue, prevValue, flags);
+            }
+        }
+        subscribe(subscriber) {
+            if (this.addSubscriber(subscriber) && ++this.subscriberCount === 1) {
+                this.owner.addIndexObserver(this);
+            }
+        }
+        unsubscribe(subscriber) {
+            if (this.removeSubscriber(subscriber) && --this.subscriberCount === 0) {
+                this.owner.removeIndexObserver(this);
+            }
+        }
+    };
+    ArrayIndexObserver = __decorate([
+        subscriber_collection_1.subscriberCollection(),
+        __metadata("design:paramtypes", [ArrayObserver, Number])
+    ], ArrayIndexObserver);
+    exports.ArrayIndexObserver = ArrayIndexObserver;
     function getArrayObserver(flags, lifecycle, array) {
         const observer = observerLookup.get(array);
         if (observer === void 0) {

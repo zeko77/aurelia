@@ -1,5 +1,16 @@
-import { __decorate, __metadata, __param } from "tslib";
-import { DI, Registration, Reporter, } from '@aurelia/kernel';
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+import { DI, Registration, Reporter, isArrayIndex, } from '@aurelia/kernel';
 import { ILifecycle } from '../lifecycle';
 import { getArrayObserver } from './array-observer';
 import { createComputedObserver } from './computed-observer';
@@ -10,7 +21,7 @@ import { PropertyAccessor } from './property-accessor';
 import { ProxyObserver } from './proxy-observer';
 import { getSetObserver } from './set-observer';
 import { SetterObserver } from './setter-observer';
-import { IScheduler } from '../scheduler';
+import { IScheduler } from '@aurelia/scheduler';
 const toStringTag = Object.prototype.toString;
 export const IObserverLocator = DI.createInterface('IObserverLocator').noDefault();
 export const ITargetObserverLocator = DI.createInterface('ITargetObserverLocator').noDefault();
@@ -124,26 +135,30 @@ let ObserverLocator = class ObserverLocator {
                 if (propertyName === 'length') {
                     return this.getArrayObserver(flags, obj).getLengthObserver();
                 }
-                return this.dirtyChecker.createProperty(obj, propertyName);
+                // is numer only returns true for integer
+                if (isArrayIndex(propertyName)) {
+                    return this.getArrayObserver(flags, obj).getIndexObserver(Number(propertyName));
+                }
+                break;
             case '[object Map]':
                 if (propertyName === 'size') {
                     return this.getMapObserver(flags, obj).getLengthObserver();
                 }
-                return this.dirtyChecker.createProperty(obj, propertyName);
+                break;
             case '[object Set]':
                 if (propertyName === 'size') {
                     return this.getSetObserver(flags, obj).getLengthObserver();
                 }
-                return this.dirtyChecker.createProperty(obj, propertyName);
+                break;
         }
         const descriptor = getPropertyDescriptor(obj, propertyName);
-        if (descriptor && (descriptor.get || descriptor.set)) {
-            if (descriptor.get && descriptor.get.getObserver) {
+        if (descriptor != null && (descriptor.get != null || descriptor.set != null)) {
+            if (descriptor.get != null && descriptor.get.getObserver != null) {
                 return descriptor.get.getObserver(obj);
             }
             // attempt to use an adapter before resorting to dirty checking.
             const adapterObserver = this.getAdapterObserver(flags, obj, propertyName, descriptor);
-            if (adapterObserver) {
+            if (adapterObserver != null) {
                 return adapterObserver;
             }
             if (isNode) {

@@ -1,10 +1,10 @@
-import { CustomElementDefinition, PartialCustomElementDefinition } from '../resources/custom-element';
-import { PartialCustomElementDefinitionParts, ITargetedInstruction, IHydrateInstruction } from '../definitions';
-import { IContainer, Key, Resolved, IResolver, Constructable, IFactory, Transformer, IDisposable } from '@aurelia/kernel';
-import { IController, IViewFactory, ICustomElementViewModel, IRenderableController, ICustomAttributeViewModel } from '../lifecycle';
-import { IDOM, INode, IRenderLocation, INodeSequence } from '../dom';
-import { IRenderer } from '../renderer';
+import { Constructable, IContainer, IDisposable, IFactory, IResolver, Key, Resolved, Transformer } from '@aurelia/kernel';
+import { IHydrateInstruction, ITargetedInstruction, PartialCustomElementDefinitionParts } from '../definitions';
+import { IDOM, INode, INodeSequence, IRenderLocation } from '../dom';
 import { LifecycleFlags } from '../flags';
+import { IController, ICustomAttributeViewModel, ICustomElementViewModel, IRenderableController, IViewFactory } from '../lifecycle';
+import { IRenderer } from '../renderer';
+import { CustomElementDefinition, PartialCustomElementDefinition } from '../resources/custom-element';
 export declare function isRenderContext<T extends INode = INode>(value: unknown): value is IRenderContext<T>;
 /**
  * A render context that wraps an `IContainer` and must be compiled before it can be used for rendering.
@@ -141,6 +141,7 @@ export declare class RenderContext<T extends INode = INode> implements IComponen
     getResolver<K extends Key, T = K>(key: K | Key, autoRegister?: boolean): IResolver<T> | null;
     getFactory<T extends Constructable>(key: T): IFactory<T> | null;
     createChild(): IContainer;
+    disposeResolvers(): void;
     compile(): ICompiledRenderContext<T>;
     getViewFactory(name?: string): IViewFactory<T>;
     beginChildComponentOperation(instance: ICustomElementViewModel): IRenderContext<T>;

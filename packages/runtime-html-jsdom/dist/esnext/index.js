@@ -1,9 +1,20 @@
-import { __decorate, __metadata, __param } from "tslib";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 import { DI, IContainer, Registration } from '@aurelia/kernel';
-import { IDOM, IDOMInitializer, IScheduler, DOM } from '@aurelia/runtime';
+import { IDOM, IDOMInitializer, IScheduler } from '@aurelia/runtime';
 import { RuntimeHtmlConfiguration, HTMLDOM } from '@aurelia/runtime-html';
+import { createDOMScheduler } from '@aurelia/scheduler-dom';
 import { JSDOM } from 'jsdom';
-import { JSDOMScheduler } from './jsdom-scheduler';
 let JSDOMInitializer = class JSDOMInitializer {
     constructor(container) {
         this.container = container;
@@ -35,12 +46,7 @@ let JSDOMInitializer = class JSDOMInitializer {
             dom = new HTMLDOM(this.jsdom.window, this.jsdom.window.document, this.jsdom.window.Node, this.jsdom.window.Element, this.jsdom.window.HTMLElement, this.jsdom.window.CustomEvent, this.jsdom.window.CSSStyleSheet, this.jsdom.window.ShadowRoot);
         }
         Registration.instance(IDOM, dom).register(this.container);
-        if (DOM.scheduler === void 0) {
-            this.container.register(JSDOMScheduler);
-        }
-        else {
-            Registration.instance(IScheduler, DOM.scheduler).register(this.container);
-        }
+        Registration.instance(IScheduler, createDOMScheduler(this.container, this.jsdom.window)).register(this.container);
         return dom;
     }
 };
@@ -49,14 +55,12 @@ JSDOMInitializer = __decorate([
     __metadata("design:paramtypes", [Object])
 ], JSDOMInitializer);
 export const IDOMInitializerRegistration = JSDOMInitializer;
-export const IJSDOMSchedulerRegistration = JSDOMScheduler;
 /**
  * Default HTML-specific, jsdom-specific implementations for the following interfaces:
  * - `IDOMInitializer`
  */
 export const DefaultComponents = [
     IDOMInitializerRegistration,
-    IJSDOMSchedulerRegistration,
 ];
 /**
  * A DI configuration object containing html-specific, jsdom-specific registrations:
@@ -79,5 +83,5 @@ export const RuntimeHtmlJsdomConfiguration = {
         return this.register(DI.createContainer());
     }
 };
-export { JSDOMInitializer, JSDOMScheduler, };
+export { JSDOMInitializer, };
 //# sourceMappingURL=index.js.map

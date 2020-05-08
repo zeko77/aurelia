@@ -1,17 +1,28 @@
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 (function (factory) {
     if (typeof module === "object" && typeof module.exports === "object") {
         var v = factory(require, exports);
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define(["require", "exports", "tslib", "./functions", "./di"], factory);
+        define(["require", "exports", "./di", "./functions"], factory);
     }
 })(function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    const tslib_1 = require("tslib");
-    const functions_1 = require("./functions");
     const di_1 = require("./di");
+    const functions_1 = require("./functions");
     /**
      * Flags to enable/disable color usage in the logging output.
      */
@@ -30,8 +41,9 @@
     exports.ISink = di_1.DI.createInterface('ISink').noDefault();
     exports.ILogEventFactory = di_1.DI.createInterface('ILogEventFactory').withDefault(x => x.singleton(DefaultLogEventFactory));
     exports.ILogger = di_1.DI.createInterface('ILogger').withDefault(x => x.singleton(DefaultLogger));
+    exports.ILogScopes = di_1.DI.createInterface('ILogScope').noDefault();
     // http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
-    const format = functions_1.toLookup({
+    exports.format = functions_1.toLookup({
         red(str) {
             return `\u001b[31m${str}\u001b[39m`;
         },
@@ -76,13 +88,13 @@
                 QQQ: '???',
             }),
             functions_1.toLookup({
-                TRC: format.grey('TRC'),
-                DBG: format.grey('DBG'),
-                INF: format.white('INF'),
-                WRN: format.yellow('WRN'),
-                ERR: format.red('ERR'),
-                FTL: format.red('FTL'),
-                QQQ: format.grey('???'),
+                TRC: exports.format.grey('TRC'),
+                DBG: exports.format.grey('DBG'),
+                INF: exports.format.white('INF'),
+                WRN: exports.format.yellow('WRN'),
+                ERR: exports.format.red('ERR'),
+                FTL: exports.format.red('FTL'),
+                QQQ: exports.format.grey('???'),
             }),
         ];
         return function (level, colorOptions) {
@@ -112,13 +124,13 @@
             return scope.join('.');
         }
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        return scope.map(format.cyan).join('.');
+        return scope.map(exports.format.cyan).join('.');
     }
     function getIsoString(timestamp, colorOptions) {
         if (colorOptions === 0 /* noColors */) {
             return new Date(timestamp).toISOString();
         }
-        return format.grey(new Date(timestamp).toISOString());
+        return exports.format.grey(new Date(timestamp).toISOString());
     }
     class DefaultLogEvent {
         constructor(severity, message, optionalParams, scope, colorOptions, timestamp) {
@@ -146,9 +158,9 @@
             return new DefaultLogEvent(level, message, optionalParams, logger.scope, this.config.colorOptions, Date.now());
         }
     };
-    DefaultLogEventFactory = tslib_1.__decorate([
-        tslib_1.__param(0, exports.ILogConfig),
-        tslib_1.__metadata("design:paramtypes", [Object])
+    DefaultLogEventFactory = __decorate([
+        __param(0, exports.ILogConfig),
+        __metadata("design:paramtypes", [Object])
     ], DefaultLogEventFactory);
     exports.DefaultLogEventFactory = DefaultLogEventFactory;
     class ConsoleSink {
@@ -193,6 +205,7 @@
             this.factory = factory;
             this.sinks = sinks;
             this.scope = scope;
+            this.scopedLoggers = Object.create(null);
             if (parent === null) {
                 this.root = this;
                 this.parent = this;
@@ -242,14 +255,21 @@
             };
         }
         scopeTo(name) {
-            return new DefaultLogger(this.config, this.factory, this.sinks, this.scope.concat(name), this);
+            const scopedLoggers = this.scopedLoggers;
+            let scopedLogger = scopedLoggers[name];
+            if (scopedLogger === void 0) {
+                scopedLogger = scopedLoggers[name] = new DefaultLogger(this.config, this.factory, this.sinks, this.scope.concat(name), this);
+            }
+            return scopedLogger;
         }
     };
-    DefaultLogger = tslib_1.__decorate([
-        tslib_1.__param(0, exports.ILogConfig),
-        tslib_1.__param(1, exports.ILogEventFactory),
-        tslib_1.__param(2, di_1.all(exports.ISink)),
-        tslib_1.__metadata("design:paramtypes", [Object, Object, Array, Array, Object])
+    DefaultLogger = __decorate([
+        __param(0, exports.ILogConfig),
+        __param(1, exports.ILogEventFactory),
+        __param(2, di_1.all(exports.ISink)),
+        __param(3, di_1.optional(exports.ILogScopes)),
+        __param(4, di_1.ignore),
+        __metadata("design:paramtypes", [Object, Object, Array, Array, Object])
     ], DefaultLogger);
     exports.DefaultLogger = DefaultLogger;
     /**

@@ -1,4 +1,15 @@
-import { __decorate, __metadata, __param } from "tslib";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 import { Registration } from '@aurelia/kernel';
 import { IDOM, ITargetAccessorLocator, ITargetObserverLocator, SetterObserver } from '@aurelia/runtime';
 import { AttributeNSAccessor } from './attribute-ns-accessor';
@@ -66,7 +77,7 @@ let TargetObserverLocator = class TargetObserverLocator {
     getObserver(flags, scheduler, lifecycle, observerLocator, obj, propertyName) {
         switch (propertyName) {
             case 'checked':
-                return new CheckedObserver(scheduler, flags, observerLocator, new EventSubscriber(this.dom, inputEvents), obj);
+                return new CheckedObserver(scheduler, flags, lifecycle, new EventSubscriber(this.dom, inputEvents), obj);
             case 'value':
                 if (obj.tagName === 'SELECT') {
                     return new SelectValueObserver(scheduler, flags, observerLocator, this.dom, new EventSubscriber(this.dom, selectEvents), obj);
@@ -103,6 +114,10 @@ let TargetObserverLocator = class TargetObserverLocator {
     overridesAccessor(flags, obj, propertyName) {
         return overrideProps[propertyName] === true;
     }
+    // consider a scenario where user would want to provide a Date object observation via patching a few mutation method on it
+    // then this extension point of this default implementaion cannot be used,
+    // and a new implementation of ITargetObserverLocator should be used instead
+    // This default implementation only accounts for the most common target scenarios
     handles(flags, obj) {
         return this.dom.isNodeInstance(obj);
     }

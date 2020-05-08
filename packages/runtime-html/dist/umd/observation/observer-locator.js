@@ -1,15 +1,26 @@
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 (function (factory) {
     if (typeof module === "object" && typeof module.exports === "object") {
         var v = factory(require, exports);
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define(["require", "exports", "tslib", "@aurelia/kernel", "@aurelia/runtime", "./attribute-ns-accessor", "./checked-observer", "./class-attribute-accessor", "./data-attribute-accessor", "./element-property-accessor", "./event-manager", "./select-value-observer", "./style-attribute-accessor", "./svg-analyzer", "./value-attribute-observer"], factory);
+        define(["require", "exports", "@aurelia/kernel", "@aurelia/runtime", "./attribute-ns-accessor", "./checked-observer", "./class-attribute-accessor", "./data-attribute-accessor", "./element-property-accessor", "./event-manager", "./select-value-observer", "./style-attribute-accessor", "./svg-analyzer", "./value-attribute-observer"], factory);
     }
 })(function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    const tslib_1 = require("tslib");
     const kernel_1 = require("@aurelia/kernel");
     const runtime_1 = require("@aurelia/runtime");
     const attribute_ns_accessor_1 = require("./attribute-ns-accessor");
@@ -77,7 +88,7 @@
         getObserver(flags, scheduler, lifecycle, observerLocator, obj, propertyName) {
             switch (propertyName) {
                 case 'checked':
-                    return new checked_observer_1.CheckedObserver(scheduler, flags, observerLocator, new event_manager_1.EventSubscriber(this.dom, inputEvents), obj);
+                    return new checked_observer_1.CheckedObserver(scheduler, flags, lifecycle, new event_manager_1.EventSubscriber(this.dom, inputEvents), obj);
                 case 'value':
                     if (obj.tagName === 'SELECT') {
                         return new select_value_observer_1.SelectValueObserver(scheduler, flags, observerLocator, this.dom, new event_manager_1.EventSubscriber(this.dom, selectEvents), obj);
@@ -114,14 +125,18 @@
         overridesAccessor(flags, obj, propertyName) {
             return overrideProps[propertyName] === true;
         }
+        // consider a scenario where user would want to provide a Date object observation via patching a few mutation method on it
+        // then this extension point of this default implementaion cannot be used,
+        // and a new implementation of ITargetObserverLocator should be used instead
+        // This default implementation only accounts for the most common target scenarios
         handles(flags, obj) {
             return this.dom.isNodeInstance(obj);
         }
     };
-    TargetObserverLocator = tslib_1.__decorate([
-        tslib_1.__param(0, runtime_1.IDOM),
-        tslib_1.__param(1, svg_analyzer_1.ISVGAnalyzer),
-        tslib_1.__metadata("design:paramtypes", [Object, Object])
+    TargetObserverLocator = __decorate([
+        __param(0, runtime_1.IDOM),
+        __param(1, svg_analyzer_1.ISVGAnalyzer),
+        __metadata("design:paramtypes", [Object, Object])
     ], TargetObserverLocator);
     exports.TargetObserverLocator = TargetObserverLocator;
     let TargetAccessorLocator = class TargetAccessorLocator {
@@ -164,10 +179,10 @@
             return this.dom.isNodeInstance(obj);
         }
     };
-    TargetAccessorLocator = tslib_1.__decorate([
-        tslib_1.__param(0, runtime_1.IDOM),
-        tslib_1.__param(1, svg_analyzer_1.ISVGAnalyzer),
-        tslib_1.__metadata("design:paramtypes", [Object, Object])
+    TargetAccessorLocator = __decorate([
+        __param(0, runtime_1.IDOM),
+        __param(1, svg_analyzer_1.ISVGAnalyzer),
+        __metadata("design:paramtypes", [Object, Object])
     ], TargetAccessorLocator);
     exports.TargetAccessorLocator = TargetAccessorLocator;
     const IsDataAttribute = {};

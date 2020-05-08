@@ -121,7 +121,6 @@
     exports.LoggerConfiguration = kernel_1.LoggerConfiguration;
     // relativeToFile,
     // join,
-    // buildQueryString,
     // parseQueryString,
     // IQueryParams,
     exports.PLATFORM = kernel_1.PLATFORM;
@@ -143,7 +142,7 @@
     // fromDefinitionOrDefault,
     exports.EventAggregator = kernel_1.EventAggregator;
     exports.IEventAggregator = kernel_1.IEventAggregator;
-    exports.isNumeric = kernel_1.isNumeric;
+    exports.isArrayIndex = kernel_1.isArrayIndex;
     exports.camelCase = kernel_1.camelCase;
     exports.kebabCase = kernel_1.kebabCase;
     exports.pascalCase = kernel_1.pascalCase;
@@ -158,34 +157,6 @@
     var router_1 = require("@aurelia/router");
     // Nav,
     exports.NavRoute = router_1.NavRoute;
-    // IStoredNavigatorEntry,
-    // INavigatorEntry,
-    // INavigatorOptions,
-    // INavigatorFlags,
-    // INavigatorState,
-    // INavigatorStore,
-    // INavigatorViewer,
-    // INavigatorViewerEvent,
-    // Navigator,
-    // QueueItem,
-    // IQueueOptions,
-    // Queue,
-    // RouteHandler,
-    // ConfigurableRoute,
-    // HandlerEntry,
-    // RouteGenerator,
-    // TypesRecord,
-    // RecognizeResult,
-    // RecognizeResults,
-    // CharSpec,
-    // // State as RouterState, // duplicated in @aurelia/runtime
-    // StaticSegment,
-    // DynamicSegment,
-    // StarSegment,
-    // EpsilonSegment,
-    // Segment,
-    // RouteRecognizer,
-    exports.IRouteTransformer = router_1.IRouteTransformer;
     exports.IRouter = router_1.IRouter;
     exports.Router = router_1.Router;
     // IViewportOptions,
@@ -636,6 +607,10 @@
     // HTMLProjectorLocator,
     // ShadowDOMProjector,
     exports.StyleConfiguration = runtime_html_1.StyleConfiguration;
-    exports.styles = runtime_html_1.styles;
+    // CSSModulesProcessorRegistry,
+    exports.cssModules = runtime_html_1.cssModules;
+    // ShadowDOMRegistry,
+    // IShadowDOMStyleFactory,
+    exports.shadowCSS = runtime_html_1.shadowCSS;
 });
 //# sourceMappingURL=index.js.map

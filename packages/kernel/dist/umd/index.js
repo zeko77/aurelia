@@ -4,7 +4,7 @@
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define(["require", "exports", "./di", "./metadata", "./logger", "./path", "./platform", "./reporter", "./profiler", "./resource", "./eventaggregator", "./functions"], factory);
+        define(["require", "exports", "./di", "@aurelia/metadata", "./logger", "./path", "./platform", "./reporter", "./profiler", "./resource", "./eventaggregator", "./functions"], factory);
     }
 })(function (require, exports) {
     "use strict";
@@ -17,13 +17,21 @@
     exports.IServiceLocator = di_1.IServiceLocator;
     exports.lazy = di_1.lazy;
     exports.optional = di_1.optional;
+    exports.ignore = di_1.ignore;
     exports.Registration = di_1.Registration;
     exports.singleton = di_1.singleton;
     exports.transient = di_1.transient;
     exports.InstanceProvider = di_1.InstanceProvider;
-    var metadata_1 = require("./metadata");
+    exports.newInstanceForScope = di_1.newInstanceForScope;
+    exports.newInstanceOf = di_1.newInstanceOf;
+    exports.DefaultContainerConfiguration = di_1.DefaultContainerConfiguration;
+    exports.DefaultResolver = di_1.DefaultResolver;
+    var metadata_1 = require("@aurelia/metadata");
     exports.metadata = metadata_1.metadata;
     exports.Metadata = metadata_1.Metadata;
+    exports.isNullOrUndefined = metadata_1.isNullOrUndefined;
+    exports.isObject = metadata_1.isObject;
+    exports.applyMetadataPolyfill = metadata_1.applyMetadataPolyfill;
     var logger_1 = require("./logger");
     exports.ColorOptions = logger_1.ColorOptions;
     exports.ILogConfig = logger_1.ILogConfig;
@@ -36,11 +44,10 @@
     exports.DefaultLogger = logger_1.DefaultLogger;
     exports.ConsoleSink = logger_1.ConsoleSink;
     exports.LoggerConfiguration = logger_1.LoggerConfiguration;
+    exports.format = logger_1.format;
     var path_1 = require("./path");
     exports.relativeToFile = path_1.relativeToFile;
     exports.join = path_1.join;
-    exports.buildQueryString = path_1.buildQueryString;
-    exports.parseQueryString = path_1.parseQueryString;
     var platform_1 = require("./platform");
     exports.PLATFORM = platform_1.PLATFORM;
     var reporter_1 = require("./reporter");
@@ -58,7 +65,7 @@
     exports.EventAggregator = eventaggregator_1.EventAggregator;
     exports.IEventAggregator = eventaggregator_1.IEventAggregator;
     var functions_1 = require("./functions");
-    exports.isNumeric = functions_1.isNumeric;
+    exports.isArrayIndex = functions_1.isArrayIndex;
     exports.camelCase = functions_1.camelCase;
     exports.kebabCase = functions_1.kebabCase;
     exports.pascalCase = functions_1.pascalCase;
@@ -74,8 +81,6 @@
     exports.mergeObjects = functions_1.mergeObjects;
     exports.firstDefined = functions_1.firstDefined;
     exports.getPrototypeChain = functions_1.getPrototypeChain;
-    exports.isObject = functions_1.isObject;
-    exports.isNullOrUndefined = functions_1.isNullOrUndefined;
     exports.isNativeFunction = functions_1.isNativeFunction;
 });
 //# sourceMappingURL=index.js.map

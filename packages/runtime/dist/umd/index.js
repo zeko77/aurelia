@@ -4,7 +4,7 @@
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define(["require", "exports", "./binding/ast", "./binding/property-binding", "./binding/call-binding", "./binding/connectable", "./binding/expression-parser", "./binding/interpolation-binding", "./binding/let-binding", "./binding/ref-binding", "./observation/array-observer", "./observation/map-observer", "./observation/set-observer", "./observation/binding-context", "./observation/collection-length-observer", "./observation/collection-size-observer", "./observation/computed-observer", "./observation/dirty-checker", "./observation/observer-locator", "./observation/primitive-observer", "./observation/property-accessor", "./observation/proxy-observer", "./observation/bindable-observer", "./observation/setter-observer", "./observation/signaler", "./observation/subscriber-collection", "./resources/binding-behavior", "./resources/binding-behaviors/binding-mode", "./resources/binding-behaviors/debounce", "./resources/binding-behaviors/signals", "./resources/binding-behaviors/throttle", "./resources/custom-attribute", "./resources/custom-attributes/flags", "./resources/custom-attributes/if", "./resources/custom-attributes/repeat", "./resources/custom-attributes/replaceable", "./resources/custom-attributes/with", "./resources/custom-element", "./resources/value-converter", "./resources/value-converters/sanitize", "./resources/value-converters/view", "./scheduler", "./templating/bindable", "./templating/children", "./templating/controller", "./templating/view", "./aurelia", "./configuration", "./definitions", "./dom", "./flags", "./instructions", "./lifecycle", "./templating/render-context", "./lifecycle-task", "./observation", "./renderer"], factory);
+        define(["require", "exports", "./binding/ast", "./binding/property-binding", "./binding/call-binding", "./binding/connectable", "./binding/expression-parser", "./binding/interpolation-binding", "./binding/let-binding", "./binding/ref-binding", "./observation/array-observer", "./observation/map-observer", "./observation/set-observer", "./observation/binding-context", "./observation/collection-length-observer", "./observation/collection-size-observer", "./observation/computed-observer", "./observation/dirty-checker", "./observation/observer-locator", "./observation/primitive-observer", "./observation/property-accessor", "./observation/proxy-observer", "./observation/bindable-observer", "./observation/setter-observer", "./observation/signaler", "./observation/subscriber-collection", "./resources/binding-behavior", "./resources/binding-behaviors/binding-mode", "./resources/binding-behaviors/debounce", "./resources/binding-behaviors/signals", "./resources/binding-behaviors/throttle", "./resources/custom-attribute", "./resources/custom-attributes/flags", "./resources/custom-attributes/if", "./resources/custom-attributes/repeat", "./resources/custom-attributes/replaceable", "./resources/custom-attributes/with", "./resources/custom-element", "./resources/value-converter", "./resources/value-converters/sanitize", "./resources/value-converters/view", "@aurelia/scheduler", "./templating/bindable", "./templating/children", "./templating/controller", "./templating/view", "./aurelia", "./configuration", "./definitions", "./dom", "./flags", "./instructions", "./lifecycle", "./templating/render-context", "./lifecycle-task", "./observation", "./renderer"], factory);
     }
 })(function (require, exports) {
     "use strict";
@@ -54,6 +54,7 @@
     exports.CallBinding = call_binding_1.CallBinding;
     var connectable_1 = require("./binding/connectable");
     exports.connectable = connectable_1.connectable;
+    exports.BindingMediator = connectable_1.BindingMediator;
     var expression_parser_1 = require("./binding/expression-parser");
     exports.IExpressionParser = expression_parser_1.IExpressionParser;
     exports.BindingType = expression_parser_1.BindingType;
@@ -66,6 +67,7 @@
     exports.RefBinding = ref_binding_1.RefBinding;
     var array_observer_1 = require("./observation/array-observer");
     exports.ArrayObserver = array_observer_1.ArrayObserver;
+    exports.ArrayIndexObserver = array_observer_1.ArrayIndexObserver;
     exports.enableArrayObservation = array_observer_1.enableArrayObservation;
     exports.disableArrayObservation = array_observer_1.disableArrayObservation;
     exports.applyMutationsToIndices = array_observer_1.applyMutationsToIndices;
@@ -121,6 +123,7 @@
     exports.bindingBehavior = binding_behavior_1.bindingBehavior;
     exports.BindingBehavior = binding_behavior_1.BindingBehavior;
     exports.BindingBehaviorDefinition = binding_behavior_1.BindingBehaviorDefinition;
+    exports.BindingInterceptor = binding_behavior_1.BindingInterceptor;
     var binding_mode_1 = require("./resources/binding-behaviors/binding-mode");
     exports.BindingModeBehavior = binding_mode_1.BindingModeBehavior;
     exports.OneTimeBindingBehavior = binding_mode_1.OneTimeBindingBehavior;
@@ -167,9 +170,8 @@
     exports.SanitizeValueConverter = sanitize_1.SanitizeValueConverter;
     var view_1 = require("./resources/value-converters/view");
     exports.ViewValueConverter = view_1.ViewValueConverter;
-    var scheduler_1 = require("./scheduler");
-    exports.Clock = scheduler_1.Clock;
-    exports.IClock = scheduler_1.IClock;
+    var scheduler_1 = require("@aurelia/scheduler");
+    exports.Now = scheduler_1.Now;
     exports.IScheduler = scheduler_1.IScheduler;
     exports.Task = scheduler_1.Task;
     exports.TaskAbortError = scheduler_1.TaskAbortError;

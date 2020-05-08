@@ -4,16 +4,47 @@
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define(["require", "exports", "./platform", "./reporter", "./resource", "./metadata", "./functions"], factory);
+        define(["require", "exports", "@aurelia/metadata", "./functions", "./platform", "./reporter", "./resource"], factory);
     }
 })(function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    const metadata_1 = require("@aurelia/metadata");
+    metadata_1.applyMetadataPolyfill(Reflect);
+    const functions_1 = require("./functions");
     const platform_1 = require("./platform");
     const reporter_1 = require("./reporter");
     const resource_1 = require("./resource");
-    const metadata_1 = require("./metadata");
-    const functions_1 = require("./functions");
+    class ResolverBuilder {
+        constructor(container, key) {
+            this.container = container;
+            this.key = key;
+        }
+        instance(value) {
+            return this.registerResolver(0 /* instance */, value);
+        }
+        singleton(value) {
+            return this.registerResolver(1 /* singleton */, value);
+        }
+        transient(value) {
+            return this.registerResolver(2 /* transient */, value);
+        }
+        callback(value) {
+            return this.registerResolver(3 /* callback */, value);
+        }
+        cachedCallback(value) {
+            return this.registerResolver(3 /* callback */, cacheCallbackResult(value));
+        }
+        aliasTo(destinationKey) {
+            return this.registerResolver(5 /* alias */, destinationKey);
+        }
+        registerResolver(strategy, state) {
+            const { container, key } = this;
+            this.container = this.key = (void 0);
+            return container.registerResolver(key, new Resolver(key, strategy, state));
+        }
+    }
+    exports.ResolverBuilder = ResolverBuilder;
     function cloneArrayWithPossibleProps(source) {
         const clone = source.slice();
         const keys = Object.keys(source);
@@ -21,30 +52,33 @@
         let key;
         for (let i = 0; i < len; ++i) {
             key = keys[i];
-            if (!functions_1.isNumeric(key)) {
+            if (!functions_1.isArrayIndex(key)) {
                 clone[key] = source[key];
             }
         }
         return clone;
     }
-    class DI {
-        constructor() { return; }
-        static createContainer(...params) {
-            if (params.length === 0) {
-                return new Container(null);
-            }
-            else {
-                return new Container(null).register(...params);
-            }
-        }
-        static getDesignParamtypes(Type) {
+    exports.DefaultResolver = {
+        none(key) { throw Error(`${key.toString()} not registered, did you forget to add @singleton()?`); },
+        singleton(key) { return new Resolver(key, 1 /* singleton */, key); },
+        transient(key) { return new Resolver(key, 2 /* transient */, key); },
+    };
+    exports.DefaultContainerConfiguration = {
+        jitRegisterInRoot: true,
+        defaultResolver: exports.DefaultResolver.singleton,
+    };
+    exports.DI = {
+        createContainer(config = exports.DefaultContainerConfiguration) {
+            return new Container(null, config);
+        },
+        getDesignParamtypes(Type) {
             return metadata_1.Metadata.getOwn('design:paramtypes', Type);
-        }
-        static getAnnotationParamtypes(Type) {
+        },
+        getAnnotationParamtypes(Type) {
             const key = resource_1.Protocol.annotation.keyFor('di:paramtypes');
             return metadata_1.Metadata.getOwn(key, Type);
-        }
-        static getOrCreateAnnotationParamTypes(Type) {
+        },
+        getOrCreateAnnotationParamTypes(Type) {
             const key = resource_1.Protocol.annotation.keyFor('di:paramtypes');
             let annotationParamtypes = metadata_1.Metadata.getOwn(key, Type);
             if (annotationParamtypes === void 0) {
@@ -52,8 +86,8 @@
                 resource_1.Protocol.annotation.appendTo(Type, key);
             }
             return annotationParamtypes;
-        }
-        static getDependencies(Type) {
+        },
+        getDependencies(Type) {
             // Note: Every detail of this getDependencies method is pretty deliberate at the moment, and probably not yet 100% tested from every possible angle,
             // so be careful with making changes here as it can have a huge impact on complex end user apps.
             // Preferably, only make changes to the dependency resolution process via a RFC.
@@ -67,16 +101,16 @@
                 const inject = Type.inject;
                 if (inject === void 0) {
                     // design:paramtypes is set by tsc when emitDecoratorMetadata is enabled.
-                    const designParamtypes = DI.getDesignParamtypes(Type);
+                    const designParamtypes = exports.DI.getDesignParamtypes(Type);
                     // au:annotation:di:paramtypes is set by the parameter decorator from DI.createInterface or by @inject
-                    const annotationParamtypes = DI.getAnnotationParamtypes(Type);
+                    const annotationParamtypes = exports.DI.getAnnotationParamtypes(Type);
                     if (designParamtypes === void 0) {
                         if (annotationParamtypes === void 0) {
                             // Only go up the prototype if neither static inject nor any of the paramtypes is defined, as
                             // there is no sound way to merge a type's deps with its prototype's deps
                             const Proto = Object.getPrototypeOf(Type);
                             if (typeof Proto === 'function' && Proto !== Function.prototype) {
-                                dependencies = cloneArrayWithPossibleProps(DI.getDependencies(Proto));
+                                dependencies = cloneArrayWithPossibleProps(exports.DI.getDependencies(Proto));
                             }
                             else {
                                 dependencies = [];
@@ -107,7 +141,7 @@
                         let key;
                         for (let i = 0; i < len; ++i) {
                             key = keys[i];
-                            if (!functions_1.isNumeric(key)) {
+                            if (!functions_1.isArrayIndex(key)) {
                                 dependencies[key] = annotationParamtypes[key];
                             }
                         }
@@ -121,16 +155,60 @@
                 resource_1.Protocol.annotation.appendTo(Type, key);
             }
             return dependencies;
-        }
-        static createInterface(friendlyName) {
+        },
+        /**
+         * creates a decorator that also matches an interface and can be used as a {@linkcode Key}.
+         * ```ts
+         * const ILogger = DI.createInterface<Logger>('Logger').noDefault();
+         * container.register(Registration.singleton(ILogger, getSomeLogger()));
+         * const log = container.get(ILogger);
+         * log.info('hello world');
+         * class Foo {
+         *   constructor( @ILogger log: ILogger ) {
+         *     log.info('hello world');
+         *   }
+         * }
+         * ```
+         * you can also build default registrations into your interface.
+         * ```ts
+         * export const ILogger = DI.createInterface<Logger>('Logger')
+         *        .withDefault( builder => builder.cachedCallback(LoggerDefault));
+         * const log = container.get(ILogger);
+         * log.info('hello world');
+         * class Foo {
+         *   constructor( @ILogger log: ILogger ) {
+         *     log.info('hello world');
+         *   }
+         * }
+         * ```
+         * but these default registrations won't work the same with other decorators that take keys, for example
+         * ```ts
+         * export const MyStr = DI.createInterface<string>('MyStr')
+         *        .withDefault( builder => builder.instance('somestring'));
+         * class Foo {
+         *   constructor( @optional(MyStr) public readonly str: string ) {
+         *   }
+         * }
+         * container.get(Foo).str; // returns undefined
+         * ```
+         * to fix this add this line somewhere before you do a `get`
+         * ```ts
+         * container.register(MyStr);
+         * container.get(Foo).str; // returns 'somestring'
+         * ```
+         *
+         * - @param friendlyName used to improve error messaging
+         */
+        createInterface(friendlyName) {
             const Interface = function (target, property, index) {
-                if (target == null) {
-                    throw reporter_1.Reporter.error(16, Interface.friendlyName, Interface); // TODO: add error (trying to resolve an InterfaceSymbol that has no registrations)
+                if (target == null || new.target !== undefined) {
+                    throw new Error(`No registration for interface: '${Interface.friendlyName}'`); // TODO: add error (trying to resolve an InterfaceSymbol that has no registrations)
                 }
-                const annotationParamtypes = DI.getOrCreateAnnotationParamTypes(target);
+                const annotationParamtypes = exports.DI.getOrCreateAnnotationParamTypes(target);
                 annotationParamtypes[index] = Interface;
                 return target;
             };
+            Interface.$isInterface = true;
             Interface.friendlyName = friendlyName == null ? 'Interface' : friendlyName;
             Interface.noDefault = function () {
                 return Interface;
@@ -140,40 +218,23 @@
                     throw reporter_1.Reporter.error(17, Interface);
                 };
                 Interface.register = function (container, key) {
-                    const trueKey = key == null ? Interface : key;
-                    return configure({
-                        instance(value) {
-                            return container.registerResolver(trueKey, new Resolver(trueKey, 0 /* instance */, value));
-                        },
-                        singleton(value) {
-                            return container.registerResolver(trueKey, new Resolver(trueKey, 1 /* singleton */, value));
-                        },
-                        transient(value) {
-                            return container.registerResolver(trueKey, new Resolver(trueKey, 2 /* transient */, value));
-                        },
-                        callback(value) {
-                            return container.registerResolver(trueKey, new Resolver(trueKey, 3 /* callback */, value));
-                        },
-                        aliasTo(destinationKey) {
-                            return container.registerResolver(trueKey, new Resolver(trueKey, 5 /* alias */, destinationKey));
-                        },
-                    });
+                    return configure(new ResolverBuilder(container, key !== null && key !== void 0 ? key : Interface));
                 };
                 return Interface;
             };
             return Interface;
-        }
-        static inject(...dependencies) {
+        },
+        inject(...dependencies) {
             return function (target, key, descriptor) {
                 if (typeof descriptor === 'number') { // It's a parameter decorator.
-                    const annotationParamtypes = DI.getOrCreateAnnotationParamTypes(target);
+                    const annotationParamtypes = exports.DI.getOrCreateAnnotationParamTypes(target);
                     const dep = dependencies[0];
                     if (dep !== void 0) {
                         annotationParamtypes[descriptor] = dep;
                     }
                 }
                 else if (key) { // It's a property decorator. Not supported by the container without plugins.
-                    const annotationParamtypes = DI.getOrCreateAnnotationParamTypes(target.constructor);
+                    const annotationParamtypes = exports.DI.getOrCreateAnnotationParamTypes(target.constructor);
                     const dep = dependencies[0];
                     if (dep !== void 0) {
                         annotationParamtypes[key] = dep;
@@ -181,7 +242,7 @@
                 }
                 else if (descriptor) { // It's a function decorator (not a Class constructor)
                     const fn = descriptor.value;
-                    const annotationParamtypes = DI.getOrCreateAnnotationParamTypes(fn);
+                    const annotationParamtypes = exports.DI.getOrCreateAnnotationParamTypes(fn);
                     let dep;
                     for (let i = 0; i < dependencies.length; ++i) {
                         dep = dependencies[i];
@@ -191,7 +252,7 @@
                     }
                 }
                 else { // It's a class decorator.
-                    const annotationParamtypes = DI.getOrCreateAnnotationParamTypes(target);
+                    const annotationParamtypes = exports.DI.getOrCreateAnnotationParamTypes(target);
                     let dep;
                     for (let i = 0; i < dependencies.length; ++i) {
                         dep = dependencies[i];
@@ -201,7 +262,7 @@
                     }
                 }
             };
-        }
+        },
         /**
          * Registers the `target` class as a transient dependency; each time the dependency is resolved
          * a new instance will be created.
@@ -220,13 +281,13 @@
          * Foo.register(container);
          * ```
          */
-        static transient(target) {
+        transient(target) {
             target.register = function register(container) {
                 const registration = exports.Registration.transient(target, target);
                 return registration.register(container, target);
             };
             return target;
-        }
+        },
         /**
          * Registers the `target` class as a singleton dependency; the class will only be created once. Each
          * consecutive time the dependency is resolved, the same instance will be returned.
@@ -244,61 +305,128 @@
          * Foo.register(container);
          * ```
          */
-        static singleton(target) {
+        singleton(target) {
             target.register = function register(container) {
                 const registration = exports.Registration.singleton(target, target);
                 return registration.register(container, target);
             };
             return target;
-        }
-    }
-    exports.DI = DI;
-    exports.IContainer = DI.createInterface('IContainer').noDefault();
+        },
+    };
+    exports.IContainer = exports.DI.createInterface('IContainer').noDefault();
     exports.IServiceLocator = exports.IContainer;
     function createResolver(getter) {
         return function (key) {
             const resolver = function (target, property, descriptor) {
-                DI.inject(resolver)(target, property, descriptor);
+                exports.DI.inject(resolver)(target, property, descriptor);
             };
+            resolver.$isResolver = true;
             resolver.resolve = function (handler, requestor) {
                 return getter(key, handler, requestor);
             };
             return resolver;
         };
     }
-    exports.inject = DI.inject;
+    exports.inject = exports.DI.inject;
     function transientDecorator(target) {
-        return DI.transient(target);
+        return exports.DI.transient(target);
     }
     function transient(target) {
         return target == null ? transientDecorator : transientDecorator(target);
     }
     exports.transient = transient;
     function singletonDecorator(target) {
-        return DI.singleton(target);
+        return exports.DI.singleton(target);
     }
     function singleton(target) {
         return target == null ? singletonDecorator : singletonDecorator(target);
     }
     exports.singleton = singleton;
     exports.all = createResolver((key, handler, requestor) => requestor.getAll(key));
+    /**
+     * Lazily inject a dependency depending on whether the [[`Key`]] is present at the time of function call.
+     *
+     * You need to make your argument a function that returns the type, for example
+     * ```ts
+     * class Foo {
+     *   constructor( @lazy('random') public random: () => number )
+     * }
+     * const foo = container.get(Foo); // instanceof Foo
+     * foo.random(); // throws
+     * ```
+     * would throw an exception because you haven't registered `'random'` before calling the method. This, would give you a
+     * new [['Math.random()']] number each time.
+     * ```ts
+     * class Foo {
+     *   constructor( @lazy('random') public random: () => random )
+     * }
+     * container.register(Registration.callback('random', Math.random ));
+     * container.get(Foo).random(); // some random number
+     * container.get(Foo).random(); // another random number
+     * ```
+     * `@lazy` does not manage the lifecycle of the underlying key. If you want a singleton, you have to register as a
+     * `singleton`, `transient` would also behave as you would expect, providing you a new instance each time.
+     *
+     * - @param key [[`Key`]]
+     * see { @link DI.createInterface } on interactions with interfaces
+     */
     exports.lazy = createResolver((key, handler, requestor) => {
-        let instance = null; // cache locally so that lazy always returns the same instance once resolved
-        return () => {
-            if (instance == null) {
-                instance = requestor.get(key);
-            }
-            return instance;
-        };
+        return () => requestor.get(key);
     });
+    /**
+     * Allows you to optionally inject a dependency depending on whether the [[`Key`]] is present, for example
+     * ```ts
+     * class Foo {
+     *   constructor( @inject('mystring') public str: string = 'somestring' )
+     * }
+     * container.get(Foo); // throws
+     * ```
+     * would fail
+     * ```ts
+     * class Foo {
+     *   constructor( @optional('mystring') public str: string = 'somestring' )
+     * }
+     * container.get(Foo).str // somestring
+     * ```
+     * if you use it without a default it will inject `undefined`, so rember to mark your input type as
+     * possibly `undefined`!
+     *
+     * - @param key: [[`Key`]]
+     *
+     * see { @link DI.createInterface } on interactions with interfaces
+     */
     exports.optional = createResolver((key, handler, requestor) => {
         if (requestor.has(key, true)) {
             return requestor.get(key);
         }
         else {
-            return null;
+            return undefined;
         }
     });
+    /**
+     * ignore tells the container not to try to inject a dependency
+     */
+    function ignore(target, property, descriptor) {
+        exports.DI.inject(ignore)(target, property, descriptor);
+    }
+    exports.ignore = ignore;
+    ignore.$isResolver = true;
+    ignore.resolve = () => undefined;
+    exports.newInstanceForScope = createResolver((key, handler, requestor) => {
+        const instance = createNewInstance(key, handler);
+        const instanceProvider = new InstanceProvider();
+        instanceProvider.prepare(instance);
+        requestor.registerResolver(key, instanceProvider, true);
+        return instance;
+    });
+    exports.newInstanceOf = createResolver((key, handler, _requestor) => createNewInstance(key, handler));
+    function createNewInstance(key, handler) {
+        const factory = handler.getFactory(key);
+        if (factory === null) {
+            throw new Error(`No factory registered for ${key}`);
+        }
+        return factory.construct(handler);
+    }
     /** @internal */
     var ResolverStrategy;
     (function (ResolverStrategy) {
@@ -315,7 +443,9 @@
             this.key = key;
             this.strategy = strategy;
             this.state = state;
+            this.resolving = false;
         }
+        get $isResolver() { return true; }
         register(container, key) {
             return container.registerResolver(key || this.key, this);
         }
@@ -324,12 +454,18 @@
                 case 0 /* instance */:
                     return this.state;
                 case 1 /* singleton */: {
-                    this.strategy = 0 /* instance */;
+                    if (this.resolving) {
+                        throw new Error(`Cyclic dependency found: ${this.state.name}`);
+                    }
+                    this.resolving = true;
                     const factory = handler.getFactory(this.state);
                     if (factory === null) {
                         throw new Error(`Resolver for ${String(this.key)} returned a null factory`);
                     }
-                    return this.state = factory.construct(requestor);
+                    this.state = factory.construct(requestor);
+                    this.strategy = 0 /* instance */;
+                    this.resolving = false;
+                    return this.state;
                 }
                 case 2 /* transient */: {
                     // Always create transients from the requesting container
@@ -462,12 +598,13 @@
             if (functions_1.isNativeFunction(Type)) {
                 reporter_1.Reporter.write(5, Type.name);
             }
-            const dependencies = DI.getDependencies(Type);
+            const dependencies = exports.DI.getDependencies(Type);
             const invoker = classInvokers.length > dependencies.length ? classInvokers[dependencies.length] : fallbackInvoker;
             return new Factory(Type, invoker, dependencies);
         };
     })();
     const containerResolver = {
+        $isResolver: true,
         resolve(handler, requestor) {
             return requestor;
         }
@@ -481,11 +618,47 @@
     function isResourceKey(key) {
         return typeof key === 'string' && key.indexOf(':') > 0;
     }
+    const InstrinsicTypeNames = new Set([
+        'Array',
+        'ArrayBuffer',
+        'Boolean',
+        'DataView',
+        'Date',
+        'Error',
+        'EvalError',
+        'Float32Array',
+        'Float64Array',
+        'Function',
+        'Int8Array',
+        'Int16Array',
+        'Int32Array',
+        'Map',
+        'Number',
+        'Object',
+        'Promise',
+        'RangeError',
+        'ReferenceError',
+        'RegExp',
+        'Set',
+        'SharedArrayBuffer',
+        'String',
+        'SyntaxError',
+        'TypeError',
+        'Uint8Array',
+        'Uint8ClampedArray',
+        'Uint16Array',
+        'Uint32Array',
+        'URIError',
+        'WeakMap',
+        'WeakSet',
+    ]);
     /** @internal */
     class Container {
-        constructor(parent) {
+        constructor(parent, config = exports.DefaultContainerConfiguration) {
             this.parent = parent;
+            this.config = config;
             this.registerDepth = 0;
+            this.disposableResolvers = new Set();
             if (parent === null) {
                 this.root = this;
                 this.resolvers = new Map();
@@ -512,7 +685,7 @@
             let jj;
             for (let i = 0, ii = params.length; i < ii; ++i) {
                 current = params[i];
-                if (!functions_1.isObject(current)) {
+                if (!metadata_1.isObject(current)) {
                     continue;
                 }
                 if (isRegistry(current)) {
@@ -540,7 +713,7 @@
                     jj = keys.length;
                     for (; j < jj; ++j) {
                         value = current[keys[j]];
-                        if (!functions_1.isObject(value)) {
+                        if (!metadata_1.isObject(value)) {
                             continue;
                         }
                         // note: we could remove this if-branch and call this.register directly
@@ -557,7 +730,7 @@
             --this.registerDepth;
             return this;
         }
-        registerResolver(key, resolver) {
+        registerResolver(key, resolver, isDisposable = false) {
             validateKey(key);
             const resolvers = this.resolvers;
             const result = resolvers.get(key);
@@ -572,6 +745,9 @@
             }
             else {
                 resolvers.set(key, new Resolver(key, 4 /* array */, [result, resolver]));
+            }
+            if (isDisposable) {
+                this.disposableResolvers.add(resolver);
             }
             return resolver;
         }
@@ -604,7 +780,8 @@
                 resolver = current.resolvers.get(key);
                 if (resolver == null) {
                     if (current.parent == null) {
-                        return autoRegister ? this.jitRegister(key, current) : null;
+                        const handler = this.config.jitRegisterInRoot ? current : this;
+                        return autoRegister ? this.jitRegister(key, handler) : null;
                     }
                     current = current.parent;
                 }
@@ -623,7 +800,7 @@
         }
         get(key) {
             validateKey(key);
-            if (key.resolve !== void 0) {
+            if (key.$isResolver) {
                 return key.resolve(this, this);
             }
             let current = this;
@@ -632,7 +809,8 @@
                 resolver = current.resolvers.get(key);
                 if (resolver == null) {
                     if (current.parent == null) {
-                        resolver = this.jitRegister(key, current);
+                        const handler = this.config.jitRegisterInRoot ? current : this;
+                        resolver = this.jitRegister(key, handler);
                         return resolver.resolve(current, this);
                     }
                     current = current.parent;
@@ -670,12 +848,22 @@
             }
             return factory;
         }
-        createChild() {
-            return new Container(this);
+        createChild(config) {
+            return new Container(this, config !== null && config !== void 0 ? config : this.config);
+        }
+        disposeResolvers() {
+            var _a;
+            const disposables = Array.from(this.disposableResolvers);
+            while (disposables.length > 0) {
+                (_a = disposables.pop()) === null || _a === void 0 ? void 0 : _a.dispose();
+            }
         }
         jitRegister(keyAsValue, handler) {
             if (typeof keyAsValue !== 'function') {
                 throw new Error(`Attempted to jitRegister something that is not a constructor: '${keyAsValue}'. Did you forget to register this resource?`);
+            }
+            if (InstrinsicTypeNames.has(keyAsValue.name)) {
+                throw new Error(`Attempted to jitRegister an intrinsic type: ${keyAsValue.name}. Did you forget to add @inject(Key)`);
             }
             if (isRegistry(keyAsValue)) {
                 const registrationResolver = keyAsValue.register(handler, keyAsValue);
@@ -706,8 +894,11 @@
                 }
                 throw reporter_1.Reporter.error(40); // did not return a valid resolver from the static register method
             }
+            else if (keyAsValue.$isInterface) {
+                throw new Error(`Attempted to jitRegister an interface: ${keyAsValue.friendlyName}`);
+            }
             else {
-                const resolver = new Resolver(keyAsValue, 1 /* singleton */, keyAsValue);
+                const resolver = this.config.defaultResolver(keyAsValue, handler);
                 handler.resolvers.set(keyAsValue, resolver);
                 return resolver;
             }
@@ -735,22 +926,119 @@
         }
     }
     exports.ParameterizedRegistry = ParameterizedRegistry;
+    const cache = new WeakMap();
+    function cacheCallbackResult(fun) {
+        return function (handler, requestor, resolver) {
+            if (cache.has(resolver)) {
+                return cache.get(resolver);
+            }
+            const t = fun(handler, requestor, resolver);
+            cache.set(resolver, t);
+            return t;
+        };
+    }
+    /**
+     * you can use the resulting {@linkcode IRegistration} of any of the factory methods
+     * to register with the container, e.g.
+     * ```
+     * class Foo {}
+     * const container = DI.createContainer();
+     * container.register(Registration.instance(Foo, new Foo()));
+     * container.get(Foo);
+     * ```
+     */
     exports.Registration = {
+        /**
+         * allows you to pass an instance.
+         * Every time you request this {@linkcode Key} you will get this instance back.
+         * ```
+         * Registration.instance(Foo, new Foo()));
+         * ```
+         *
+         * @param key
+         * @param value
+         */
         instance(key, value) {
             return new Resolver(key, 0 /* instance */, value);
         },
+        /**
+         * Creates an instance from the class.
+         * Every time you request this {@linkcode Key} you will get the same one back.
+         * ```
+         * Registration.singleton(Foo, Foo);
+         * ```
+         *
+         * @param key
+         * @param value
+         */
         singleton(key, value) {
             return new Resolver(key, 1 /* singleton */, value);
         },
+        /**
+         * Creates an instance from a class.
+         * Every time you request this {@linkcode Key} you will get a new instance.
+         * ```
+         * Registration.instance(Foo, Foo);
+         * ```
+         *
+         * @param key
+         * @param value
+         */
         transient(key, value) {
             return new Resolver(key, 2 /* transient */, value);
         },
+        /**
+         * Creates an instance from the method passed.
+         * Every time you request this {@linkcode Key} you will get a new instance.
+         * ```
+         * Registration.callback(Foo, () => new Foo());
+         * Registration.callback(Bar, (c: IContainer) => new Bar(c.get(Foo)));
+         * ```
+         *
+         * @param key
+         * @param callback
+         */
         callback(key, callback) {
             return new Resolver(key, 3 /* callback */, callback);
         },
-        alias(originalKey, aliasKey) {
+        /**
+         * Creates an instance from the method passed.
+         * On the first request for the {@linkcode Key} your callback is called and returns an instance.
+         * subsequent requests for the {@linkcode Key}, the initial instance returned will be returned.
+         * If you pass the same {@linkcode Registration} to another container the same cached value will be used.
+         * Should all references to the resolver returned be removed, the cache will expire.
+         * ```
+         * Registration.cachedCallback(Foo, () => new Foo());
+         * Registration.cachedCallback(Bar, (c: IContainer) => new Bar(c.get(Foo)));
+         * ```
+         *
+         * @param key
+         * @param callback
+         */
+        cachedCallback(key, callback) {
+            return new Resolver(key, 3 /* callback */, cacheCallbackResult(callback));
+        },
+        /**
+         * creates an alternate {@linkcode Key} to retrieve an instance by.
+         * Returns the same scope as the original {@linkcode Key}.
+         * ```
+         * Register.singleton(Foo, Foo)
+         * Register.aliasTo(Foo, MyFoos);
+         *
+         * container.getAll(MyFoos) // contains an instance of Foo
+         * ```
+         *
+         * @param originalKey
+         * @param aliasKey
+         */
+        aliasTo(originalKey, aliasKey) {
             return new Resolver(aliasKey, 5 /* alias */, originalKey);
         },
+        /**
+         * @internal
+         * @param key
+         * @param params
+         */
         defer(key, ...params) {
             return new ParameterizedRegistry(key, params);
         }
@@ -762,7 +1050,8 @@
         prepare(instance) {
             this.instance = instance;
         }
-        resolve(handler, requestor) {
+        get $isResolver() { return true; }
+        resolve() {
             if (this.instance === undefined) { // unmet precondition: call prepare
                 throw reporter_1.Reporter.error(50); // TODO: organize error codes
             }

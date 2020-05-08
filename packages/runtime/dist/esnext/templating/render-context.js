@@ -1,9 +1,9 @@
-import { CustomElementDefinition } from '../resources/custom-element';
-import { ITargetedInstruction, mergeParts } from '../definitions';
-import { InstanceProvider, Reporter } from '@aurelia/kernel';
-import { IController, IViewFactory, ILifecycle } from '../lifecycle';
+import { InstanceProvider, Reporter, } from '@aurelia/kernel';
+import { ITargetedInstruction, mergeParts, } from '../definitions';
 import { IDOM, IRenderLocation } from '../dom';
+import { IController, ILifecycle, IViewFactory, } from '../lifecycle';
 import { IRenderer, ITemplateCompiler } from '../renderer';
+import { CustomElementDefinition } from '../resources/custom-element';
 import { ViewFactory } from './view';
 const definitionContainerLookup = new WeakMap();
 const definitionContainerPartsLookup = new WeakMap();
@@ -15,6 +15,10 @@ export function getRenderContext(partialDefinition, parentContainer, parts) {
     const definition = CustomElementDefinition.getOrCreate(partialDefinition);
     if (isRenderContext(parentContainer)) {
         parts = mergeParts(parentContainer.parts, parts);
+    }
+    // injectable completely prevents caching, ensuring that each instance gets a new render context
+    if (definition.injectable !== null) {
+        return new RenderContext(definition, parentContainer, parts);
     }
     if (parts === void 0) {
         let containerLookup = definitionContainerLookup.get(definition);
@@ -53,10 +57,10 @@ export class RenderContext {
         this.compiledDefinition = (void 0);
         const container = this.container = parentContainer.createChild();
         this.renderer = container.get(IRenderer);
-        container.registerResolver(IViewFactory, this.factoryProvider = new ViewFactoryProvider());
-        container.registerResolver(IController, this.parentControllerProvider = new InstanceProvider());
-        container.registerResolver(ITargetedInstruction, this.instructionProvider = new InstanceProvider());
-        container.registerResolver(IRenderLocation, this.renderLocationProvider = new InstanceProvider());
+        container.registerResolver(IViewFactory, this.factoryProvider = new ViewFactoryProvider(), true);
+        container.registerResolver(IController, this.parentControllerProvider = new InstanceProvider(), true);
+        container.registerResolver(ITargetedInstruction, this.instructionProvider = new InstanceProvider(), true);
+        container.registerResolver(IRenderLocation, this.renderLocationProvider = new InstanceProvider(), true);
         (this.dom = container.get(IDOM)).registerElementResolver(container, this.elementProvider = new InstanceProvider());
         container.register(...definition.dependencies);
     }
@@ -89,6 +93,9 @@ export class RenderContext {
     }
     createChild() {
         return this.container.createChild();
+    }
+    disposeResolvers() {
+        this.container.disposeResolvers();
     }
     // #endregion
     // #region IRenderContext api
@@ -181,11 +188,8 @@ export class RenderContext {
         this.renderer.renderInstructions(flags, this, instructions, controller, target, parts);
     }
     dispose() {
-        this.factoryProvider.dispose();
-        this.parentControllerProvider.dispose();
-        this.instructionProvider.dispose();
         this.elementProvider.dispose();
-        this.renderLocationProvider.dispose();
+        this.container.disposeResolvers();
     }
 }
 /** @internal */
@@ -196,6 +200,7 @@ export class ViewFactoryProvider {
     prepare(factory) {
         this.factory = factory;
     }
+    get $isResolver() { return true; }
     resolve(handler, requestor) {
         const factory = this.factory;
         if (factory === null) { // unmet precondition: call prepare

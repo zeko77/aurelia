@@ -1,12 +1,12 @@
-import { DebugConfiguration, } from '@aurelia/debug';
-import { DI, Registration, } from '@aurelia/kernel';
-import { IDOM, ILifecycle, IObserverLocator, IProjectorLocator, IRenderer, ITemplateCompiler, IScheduler, } from '@aurelia/runtime';
-import { HTMLDOM, } from '@aurelia/runtime-html';
+import { DebugConfiguration } from '@aurelia/debug';
+import { DI, Registration } from '@aurelia/kernel';
+import { IDOM, ILifecycle, IObserverLocator, IProjectorLocator, IRenderer, IScheduler, ITemplateCompiler, } from '@aurelia/runtime';
+import { HTMLDOM } from '@aurelia/runtime-html';
+import { createDOMScheduler } from '@aurelia/scheduler-dom';
 export class HTMLTestContext {
-    constructor(config, wnd, Scheduler, UIEventType, EventType, CustomEventType, NodeType, ElementType, HTMLElementType, HTMLDivElementType, TextType, CommentType, DOMParserType, CSSStyleSheetType, ShadowRootType) {
+    constructor(config, wnd, UIEventType, EventType, CustomEventType, NodeType, ElementType, HTMLElementType, HTMLDivElementType, TextType, CommentType, DOMParserType, CSSStyleSheetType, ShadowRootType) {
         this.config = config;
         this.wnd = wnd;
-        this.Scheduler = Scheduler;
         this.UIEvent = UIEventType;
         this.Event = EventType;
         this.CustomEvent = CustomEventType;
@@ -30,17 +30,17 @@ export class HTMLTestContext {
     }
     get container() {
         if (this._container === void 0) {
-            this._container = DI.createContainer(this.config);
+            this._container = DI.createContainer().register(this.config);
             Registration.instance(IDOM, this.dom).register(this._container);
             Registration.instance(HTMLTestContext, this).register(this._container);
-            this._container.register(this.Scheduler);
+            Registration.instance(IScheduler, createDOMScheduler(this._container, this.wnd)).register(this._container);
             this._container.register(DebugConfiguration);
         }
         return this._container;
     }
     get scheduler() {
         if (this._scheduler === void 0) {
-            this._scheduler = this.container.register(this.Scheduler).get(IScheduler);
+            this._scheduler = this.container.register(Registration.instance(IScheduler, createDOMScheduler(this.container, this.wnd))).get(IScheduler);
         }
         return this._scheduler;
     }
@@ -80,8 +80,8 @@ export class HTMLTestContext {
         }
         return this._domParser;
     }
-    static create(config, wnd, Scheduler, UIEventType, EventType, CustomEventType, NodeType, ElementType, HTMLElementType, HTMLDivElementType, TextType, CommentType, DOMParserType, CSSStyleSheetType, ShadowRootType) {
-        return new HTMLTestContext(config, wnd, Scheduler, UIEventType, EventType, CustomEventType, NodeType, ElementType, HTMLElementType, HTMLDivElementType, TextType, CommentType, DOMParserType, CSSStyleSheetType, ShadowRootType);
+    static create(config, wnd, UIEventType, EventType, CustomEventType, NodeType, ElementType, HTMLElementType, HTMLDivElementType, TextType, CommentType, DOMParserType, CSSStyleSheetType, ShadowRootType) {
+        return new HTMLTestContext(config, wnd, UIEventType, EventType, CustomEventType, NodeType, ElementType, HTMLElementType, HTMLDivElementType, TextType, CommentType, DOMParserType, CSSStyleSheetType, ShadowRootType);
     }
     createElementFromMarkup(markup) {
         this.domParser.innerHTML = markup;
