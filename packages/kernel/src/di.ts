@@ -159,6 +159,9 @@ export const DefaultContainerConfiguration: IContainerConfiguration = {
   defaultResolver: DefaultResolver.singleton,
 };
 
+type SingletonOptions = { scoped: boolean };
+const defaultSingletonOptions = { scoped: false };
+
 export const DI = {
   createContainer(config: IContainerConfiguration = DefaultContainerConfiguration): IContainer {
       return new Container(null, config);
@@ -400,7 +403,7 @@ export const DI = {
    * Foo.register(container);
    * ```
    */
-  singleton<T extends Constructable>(target: T & Partial<RegisterSelf<T>>): T & RegisterSelf<T> {
+  singleton<T extends Constructable>(target: T & Partial<RegisterSelf<T>>, options: SingletonOptions = defaultSingletonOptions): T & RegisterSelf<T> {
     target.register = function register(container: IContainer): IResolver<InstanceType<T>> {
       const registration = Registration.singleton(target, target);
       return registration.register(container, target);
@@ -461,6 +464,7 @@ export function transient<T extends Constructable>(target?: T & Partial<Register
 function singletonDecorator<T extends Constructable>(target: T & Partial<RegisterSelf<T>>): T & RegisterSelf<T> {
   return DI.singleton(target);
 }
+
 /**
  * Registers the decorated class as a singleton dependency; the class will only be created once. Each
  * consecutive time the dependency is resolved, the same instance will be returned.
@@ -470,7 +474,7 @@ function singletonDecorator<T extends Constructable>(target: T & Partial<Registe
  * class Foo { }
  * ```
  */
-export function singleton<T extends Constructable>(): typeof singletonDecorator;
+export function singleton<T extends Constructable>(options?: SingletonOptions): typeof singletonDecorator;
 /**
  * Registers the `target` class as a singleton dependency; the class will only be created once. Each
  * consecutive time the dependency is resolved, the same instance will be returned.
@@ -483,8 +487,13 @@ export function singleton<T extends Constructable>(): typeof singletonDecorator;
  * ```
  */
 export function singleton<T extends Constructable>(target: T & Partial<RegisterSelf<T>>): T & RegisterSelf<T>;
-export function singleton<T extends Constructable>(target?: T & Partial<RegisterSelf<T>>): T & RegisterSelf<T> | typeof singletonDecorator {
-  return target == null ? singletonDecorator : singletonDecorator(target);
+export function singleton<T extends Constructable>(targetOrOptions?: (T & Partial<RegisterSelf<T>>) | SingletonOptions): T & RegisterSelf<T> | typeof singletonDecorator {
+  if (typeof targetOrOptions === 'function') {
+    return DI.singleton(targetOrOptions);
+  }
+  return function <T extends Constructable>($target: T) {
+    return DI.singleton($target, targetOrOptions as SingletonOptions | undefined);
+  };
 }
 
 export const all = createResolver((key: Key, handler: IContainer, requestor: IContainer) => requestor.getAll(key));
@@ -594,6 +603,7 @@ export class Resolver implements IResolver, IRegistration {
     public key: Key,
     public strategy: ResolverStrategy,
     public state: any,
+    public readonly scoped: boolean = false,
   ) {}
 
   public get $isResolver(): true { return true; }
@@ -853,6 +863,10 @@ const InstrinsicTypeNames = new Set<string>([
   'WeakSet',
 ]);
 
+function isScoped(value: unknown): value is Resolver {
+  return (value as Resolver).$isResolver === true && (value as Resolver).scoped === true;
+}
+
 const factoryKey = 'di:factory';
 const factoryAnnotationKey = Protocol.annotation.keyFor(factoryKey);
 /** @internal */
@@ -1006,8 +1020,7 @@ export class Container implements IContainer {
 
       if (resolver == null) {
         if (current.parent == null) {
-          const handler = this.config.jitRegisterInRoot ? current : this;
-          return autoRegister ? this.jitRegister(key, handler) : null;
+          return autoRegister ? this.jitRegister(key) : null;
         }
 
         current = current.parent;
@@ -1042,8 +1055,7 @@ export class Container implements IContainer {
 
       if (resolver == null) {
         if (current.parent == null) {
-          const handler = this.config.jitRegisterInRoot ? current : this;
-          resolver = this.jitRegister(key, handler);
+          resolver = this.jitRegister(key);
           return resolver.resolve(current, this);
         }
 
@@ -1104,7 +1116,7 @@ export class Container implements IContainer {
     }
   }
 
-  private jitRegister(keyAsValue: any, handler: Container): IResolver {
+  private jitRegister(keyAsValue: any): IResolver {
     if (typeof keyAsValue !== 'function') {
       throw new Error(`Attempted to jitRegister something that is not a constructor: '${keyAsValue}'. Did you forget to register this resource?`);
     }
@@ -1112,7 +1124,11 @@ export class Container implements IContainer {
       throw new Error(`Attempted to jitRegister an intrinsic type: ${keyAsValue.name}. Did you forget to add @inject(Key)`);
     }
 
+    let handler = this.config.jitRegisterInRoot ? this.root : this;
     if (isRegistry(keyAsValue)) {
+      if (isScoped(keyAsValue)) {
+        handler = this;
+      }
       const registrationResolver = keyAsValue.register(handler, keyAsValue);
       if (!(registrationResolver instanceof Object) || (registrationResolver as IResolver).resolve == null) {
         const newResolver = handler.resolvers.get(keyAsValue);
@@ -1216,8 +1232,8 @@ export const Registration = {
    * @param key
    * @param value
    */
-  singleton<T extends Constructable>(key: Key, value: T): IRegistration<InstanceType<T>> {
-    return new Resolver(key, ResolverStrategy.singleton, value);
+  singleton<T extends Constructable>(key: Key, value: T, options: SingletonOptions = defaultSingletonOptions): IRegistration<InstanceType<T>> {
+    return new Resolver(key, ResolverStrategy.singleton, value, options.scoped);
   },
   /**
    * Creates an instance from a class.
