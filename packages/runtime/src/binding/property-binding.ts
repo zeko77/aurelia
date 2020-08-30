@@ -28,6 +28,9 @@ import {
   IConnectableBinding,
   IPartialConnectableBinding,
 } from './connectable';
+import { DepCollectorSwitcher } from '../observation/dep-collector-switcher';
+
+const { enter, exit } = DepCollectorSwitcher;
 
 // BindingMode is not a const enum (and therefore not inlined), so assigning them to a variable to save a member accessor is a minor perf tweak
 const { oneTime, toView, fromView } = BindingMode;
@@ -84,16 +87,23 @@ export class PropertyBinding implements IPartialConnectableBinding {
       const previousValue = this.targetObserver!.getValue();
       // if the only observable is an AccessScope then we can assume the passed-in newValue is the correct and latest value
       if (this.sourceExpression.$kind !== ExpressionKind.AccessScope || this.observerSlots > 1) {
+        const shouldObserve = (this.mode & toView) > 0;
+        if (shouldObserve) {
+          enter(this);
+        }
         newValue = this.sourceExpression.evaluate(flags, this.$scope!, this.locator, this.part);
+        if (shouldObserve) {
+          exit(this);
+        }
       }
       if (newValue !== previousValue) {
         this.interceptor.updateTarget(newValue, flags);
       }
-      if ((this.mode & oneTime) === 0) {
-        this.version++;
-        this.sourceExpression.connect(flags, this.$scope!, this.interceptor, this.part);
-        this.interceptor.unobserve(false);
-      }
+      // if ((this.mode & oneTime) === 0) {
+      //   this.version++;
+      //   this.sourceExpression.connect(flags, this.$scope!, this.interceptor, this.part);
+      //   this.interceptor.unobserve(false);
+      // }
       return;
     }
 
@@ -145,12 +155,20 @@ export class PropertyBinding implements IPartialConnectableBinding {
 
     // during bind, binding behavior might have changed sourceExpression
     sourceExpression = this.sourceExpression;
+
     if (this.mode & toViewOrOneTime) {
+      const shouldConnect = (this.mode & toView) > 0;
+      if (shouldConnect) {
+        enter(this);
+      }
       this.interceptor.updateTarget(sourceExpression.evaluate(flags, scope, this.locator, part), flags);
+      if (shouldConnect) {
+        exit(this);
+      }
     }
-    if (this.mode & toView) {
-      sourceExpression.connect(flags, scope, this.interceptor, part);
-    }
+    // if (this.mode & toView) {
+    //   sourceExpression.connect(flags, scope, this.interceptor, part);
+    // }
     if (this.mode & fromView) {
       targetObserver.subscribe(this.interceptor);
       if ((this.mode & toView) === 0) {
@@ -179,10 +197,10 @@ export class PropertyBinding implements IPartialConnectableBinding {
     }
     this.$scope = void 0;
 
-    if ((this.targetObserver as IBindingTargetObserver).unbind) {
+    if (typeof (this.targetObserver as IBindingTargetObserver).unbind === 'function') {
       (this.targetObserver as IBindingTargetObserver).unbind!(flags);
     }
-    if ((this.targetObserver as IBindingTargetObserver).unsubscribe) {
+    if (typeof (this.targetObserver as IBindingTargetObserver).unsubscribe === 'function') {
       (this.targetObserver as IBindingTargetObserver).unsubscribe(this.interceptor);
       (this.targetObserver as this['targetObserver'] & { [key: number]: number })[this.id] &= ~LifecycleFlags.updateSourceExpression;
     }

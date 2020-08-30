@@ -19,7 +19,9 @@ import {
   IConnectableBinding,
   IPartialConnectableBinding,
 } from './connectable';
+import { DepCollectorSwitcher } from '../observation/dep-collector-switcher';
 
+const { enter, exit } = DepCollectorSwitcher;
 const { toView, oneTime } = BindingMode;
 
 export class MultiInterpolationBinding implements IBinding {
@@ -118,16 +120,25 @@ export class InterpolationBinding implements IPartialConnectableBinding {
     }
 
     const previousValue = this.targetObserver.getValue();
+    const shouldObserver = (this.mode & toView) > 0;
+    if (shouldObserver) {
+      // todo: is unobserve all necessary step anymore?
+      this.unobserve(true);
+      enter(this);
+    }
     const newValue = this.interpolation.evaluate(flags, this.$scope!, this.locator, this.part);
+    if (shouldObserver) {
+      exit(this);
+    }
     if (newValue !== previousValue) {
       this.interceptor.updateTarget(newValue, flags);
     }
 
-    if ((this.mode & oneTime) === 0) {
-      this.version++;
-      this.sourceExpression.connect(flags, this.$scope!, this.interceptor, this.part);
-      this.interceptor.unobserve(false);
-    }
+    // if ((this.mode & oneTime) === 0) {
+    //   this.version++;
+    //   this.sourceExpression.connect(flags, this.$scope!, this.interceptor, this.part);
+    //   this.interceptor.unobserve(false);
+    // }
   }
 
   public $bind(flags: LifecycleFlags, scope: IScope, part?: string): void {
@@ -153,11 +164,18 @@ export class InterpolationBinding implements IPartialConnectableBinding {
     // since the interpolation already gets the whole value, we only need to let the first
     // text binding do the update if there are multiple
     if (this.isFirst) {
+      const shouldConnect = (this.mode & toView) > 0;
+      if (shouldConnect) {
+        enter(this);
+      }
       this.interceptor.updateTarget(this.interpolation.evaluate(flags, scope, this.locator, part), flags);
+      if (shouldConnect) {
+        exit(this);
+      }
     }
-    if (this.mode & toView) {
-      sourceExpression.connect(flags, scope, this.interceptor, part);
-    }
+    // if (this.mode & toView) {
+    //   sourceExpression.connect(flags, scope, this.interceptor, part);
+    // }
   }
 
   public $unbind(flags: LifecycleFlags): void {
