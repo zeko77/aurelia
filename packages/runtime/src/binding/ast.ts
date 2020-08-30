@@ -77,6 +77,9 @@ import {
   ValueConverter, ValueConverterInstance,
 } from '../resources/value-converter';
 import { IConnectableBinding } from './connectable';
+import { DepCollectorSwitcher } from '../observation/dep-collector-switcher';
+
+const getCurrentCollector = DepCollectorSwitcher.peek;
 
 export function connects(expr: IsExpressionOrStatement): expr is Connects {
   return (expr.$kind & ExpressionKind.Connects) === ExpressionKind.Connects;
@@ -441,7 +444,11 @@ export class AccessScopeExpression implements IAccessScopeExpression {
 
   public evaluate(flags: LifecycleFlags, scope: IScope, locator: IServiceLocator, part?: string): IBindingContext | IBinding | IOverrideContext {
     const obj = BindingContext.get(scope, this.name, this.ancestor, flags, part) as IBindingContext;
-    const evaluatedValue = obj[this.name] as ReturnType<AccessScopeExpression['evaluate']>;
+    const currentCollector = getCurrentCollector();
+    const evaluatedValue: ReturnType<AccessScopeExpression['evaluate']> = currentCollector == null
+      ? obj[this.name]
+      : currentCollector.observerLocator.getObserver(flags, obj, this.name).getValue();
+
     if (flags & LifecycleFlags.isStrictBindingStrategy) {
       return evaluatedValue;
     }
@@ -484,7 +491,13 @@ export class AccessMemberExpression implements IAccessMemberExpression {
     if (flags & LifecycleFlags.isStrictBindingStrategy) {
       return instance == null ? instance : instance[this.name];
     }
-    return instance ? instance[this.name] : '';
+    if (!instance) {
+      return '';
+    }
+    const currentCollector = getCurrentCollector();
+    return currentCollector == null
+      ? instance[this.name]
+      : currentCollector.observerLocator.getObserver(flags, instance, this.name).getValue();
   }
 
   public assign(flags: LifecycleFlags, scope: IScope, locator: IServiceLocator, value: unknown, part?: string): unknown {
@@ -528,7 +541,10 @@ export class AccessKeyedExpression implements IAccessKeyedExpression {
     const instance = this.object.evaluate(flags, scope, locator, part) as IIndexable;
     if (instance instanceof Object) {
       const key = this.key.evaluate(flags, scope, locator, part) as string;
-      return instance[key];
+      const currentCollector = getCurrentCollector();
+      return currentCollector == null
+        ? instance[key]
+        : currentCollector.observerLocator.getObserver(flags, instance, key).getValue();
     }
     return void 0;
   }
