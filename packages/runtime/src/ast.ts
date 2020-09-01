@@ -11,6 +11,7 @@ import {
   IScope,
   ObservedCollection
 } from './observation';
+import { IDepCollector } from './observation/dep-collector-switcher';
 
 export type IsPrimary = IAccessThisExpression | IAccessScopeExpression | IArrayLiteralExpression | IObjectLiteralExpression | IPrimitiveLiteralExpression | ITemplateExpression;
 export type IsLiteral = IArrayLiteralExpression | IObjectLiteralExpression | IPrimitiveLiteralExpression | ITemplateExpression;
@@ -67,7 +68,7 @@ export interface IExpression {
   readonly $kind: ExpressionKind;
   accept<T>(visitor: IVisitor<T>): T;
   connect(flags: LifecycleFlags, scope: IScope, binding: IConnectable, part?: string): void;
-  evaluate(flags: LifecycleFlags, scope: IScope, locator: IServiceLocator | null, part?: string): unknown;
+  evaluate(flags: LifecycleFlags, scope: IScope, locator: IServiceLocator | null, part?: string, depCollector?: IDepCollector): unknown;
   assign?(flags: LifecycleFlags, scope: IScope, locator: IServiceLocator | null, value: unknown, part?: string): unknown;
   bind?(flags: LifecycleFlags, scope: IScope, binding: IConnectable): void;
   unbind?(flags: LifecycleFlags, scope: IScope, binding: IConnectable): void;
