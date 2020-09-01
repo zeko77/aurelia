@@ -2,7 +2,7 @@ import { IObserverLocator } from './observer-locator';
 import { ISubscriber } from '../observation';
 
 export interface IDepCollector extends ISubscriber {
-  observerLocator: IObserverLocator;
+  observerLocator?: IObserverLocator;
 }
 
 const toStringTag = Object.prototype.toString;
