@@ -21,9 +21,6 @@ import {
   IConnectableBinding,
   IPartialConnectableBinding,
 } from './connectable';
-import { DepCollectorSwitcher } from '../observation/dep-collector-switcher';
-
-const { enter, exit } = DepCollectorSwitcher;
 
 export interface LetBinding extends IConnectableBinding {}
 
@@ -58,9 +55,9 @@ export class LetBinding implements IPartialConnectableBinding {
     if (flags & LifecycleFlags.updateTargetInstance) {
       const { target, targetProperty } = this as {target: IIndexable; targetProperty: string};
       const previousValue: unknown = target[targetProperty];
-      enter(this);
-      const newValue: unknown = this.sourceExpression.evaluate(flags, this.$scope!, this.locator, this.part);
-      exit(this);
+      // enter(this);
+      const newValue: unknown = this.sourceExpression.evaluate(flags, this.$scope!, this.locator, this.part, this);
+      // exit(this);
       if (newValue !== previousValue) {
         target[targetProperty] = newValue;
       }
@@ -89,9 +86,11 @@ export class LetBinding implements IPartialConnectableBinding {
       sourceExpression.bind(flags, scope, this.interceptor);
     }
     // sourceExpression might have been changed during bind
-    enter(this);
-    this.target[this.targetProperty] = this.sourceExpression.evaluate(flags | LifecycleFlags.fromBind, scope, this.locator, part);
-    exit(this);
+    // enter(this);
+    this.interceptor.version++;
+    this.target[this.targetProperty] = this.sourceExpression.evaluate(flags | LifecycleFlags.fromBind, scope, this.locator, part, this.interceptor);
+    this.interceptor.unobserve(false);
+    // exit(this);
     // this.sourceExpression.connect(flags, scope, this.interceptor, part);
 
     // add isBound flag and remove isBinding flag

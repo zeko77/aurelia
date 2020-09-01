@@ -28,9 +28,6 @@ import {
   IConnectableBinding,
   IPartialConnectableBinding,
 } from './connectable';
-import { DepCollectorSwitcher } from '../observation/dep-collector-switcher';
-
-const { enter, exit } = DepCollectorSwitcher;
 
 // BindingMode is not a const enum (and therefore not inlined), so assigning them to a variable to save a member accessor is a minor perf tweak
 const { oneTime, toView, fromView } = BindingMode;
@@ -89,11 +86,14 @@ export class PropertyBinding implements IPartialConnectableBinding {
       if (this.sourceExpression.$kind !== ExpressionKind.AccessScope || this.observerSlots > 1) {
         const shouldObserve = (this.mode & toView) > 0;
         if (shouldObserve) {
-          enter(this);
+          this.interceptor.version++;
         }
-        newValue = this.sourceExpression.evaluate(flags, this.$scope!, this.locator, this.part);
+        newValue = this.sourceExpression.evaluate(flags, this.$scope!, this.locator, this.part, shouldObserve ? this.interceptor : void 0);
+        // if (shouldObserve) {
+        //   exit(this);
+        // }
         if (shouldObserve) {
-          exit(this);
+          this.interceptor.unobserve(false);
         }
       }
       if (newValue !== previousValue) {
@@ -157,14 +157,17 @@ export class PropertyBinding implements IPartialConnectableBinding {
     sourceExpression = this.sourceExpression;
 
     if (this.mode & toViewOrOneTime) {
-      const shouldConnect = (this.mode & toView) > 0;
-      if (shouldConnect) {
-        enter(this);
-      }
-      this.interceptor.updateTarget(sourceExpression.evaluate(flags, scope, this.locator, part), flags);
-      if (shouldConnect) {
-        exit(this);
-      }
+      const shouldObserve = (this.mode & toView) > 0;
+      // if (shouldConnect) {
+      //   enter(this);
+      // }
+      this.interceptor.updateTarget(
+        sourceExpression.evaluate(flags, scope, this.locator, part, shouldObserve ? this : void 0),
+        flags,
+      );
+      // if (shouldConnect) {
+      //   exit(this);
+      // }
     }
     // if (this.mode & toView) {
     //   sourceExpression.connect(flags, scope, this.interceptor, part);

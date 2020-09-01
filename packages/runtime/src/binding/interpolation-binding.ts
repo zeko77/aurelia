@@ -19,9 +19,7 @@ import {
   IConnectableBinding,
   IPartialConnectableBinding,
 } from './connectable';
-import { DepCollectorSwitcher } from '../observation/dep-collector-switcher';
 
-const { enter, exit } = DepCollectorSwitcher;
 const { toView, oneTime } = BindingMode;
 
 export class MultiInterpolationBinding implements IBinding {
@@ -120,16 +118,16 @@ export class InterpolationBinding implements IPartialConnectableBinding {
     }
 
     const previousValue = this.targetObserver.getValue();
-    const shouldObserver = (this.mode & toView) > 0;
-    if (shouldObserver) {
-      // todo: is unobserve all necessary step anymore?
-      this.unobserve(true);
-      enter(this);
-    }
-    const newValue = this.interpolation.evaluate(flags, this.$scope!, this.locator, this.part);
-    if (shouldObserver) {
-      exit(this);
-    }
+    const shouldConnect = (this.mode & toView) > 0;
+    // if (shouldConnect) {
+    //   // todo: is unobserve all necessary step anymore?
+    //   this.unobserve(true);
+    //   enter(this);
+    // }
+    const newValue = this.interpolation.evaluate(flags, this.$scope!, this.locator, this.part, shouldConnect ? this.interceptor : void 0);
+    // if (shouldConnect) {
+    //   exit(this);
+    // }
     if (newValue !== previousValue) {
       this.interceptor.updateTarget(newValue, flags);
     }
@@ -165,12 +163,21 @@ export class InterpolationBinding implements IPartialConnectableBinding {
     // text binding do the update if there are multiple
     if (this.isFirst) {
       const shouldConnect = (this.mode & toView) > 0;
+      // if (shouldConnect) {
+      //   enter(this);
+      // }
       if (shouldConnect) {
-        enter(this);
+        this.interceptor.version++;
       }
-      this.interceptor.updateTarget(this.interpolation.evaluate(flags, scope, this.locator, part), flags);
+      this.interceptor.updateTarget(
+        this.interpolation.evaluate(flags, scope, this.locator, part, shouldConnect ? this.interceptor : void 0),
+        flags,
+      );
+      // if (shouldConnect) {
+      //   exit(this);
+      // }
       if (shouldConnect) {
-        exit(this);
+        this.interceptor.unobserve(false);
       }
     }
     // if (this.mode & toView) {
