@@ -61,6 +61,50 @@ const objectHandler: ProxyHandler<object> = {
   }
 };
 
+const arrayHandler: ProxyHandler<unknown[]> = {
+  get(target: unknown[], key: PropertyKey, receiver?): unknown {
+    const $key = key as $PropertyKey;
+    const currentCollector = peek();
+    if (currentCollector == null) {
+      return target[$key as number];
+    }
+
+    if ($key === 'length') {
+      const lengthObserver = getArrayObserver(target as unknown as unknown[]).getLengthObserver();
+      lengthObserver.subscribe(currentCollector);
+      return lengthObserver.currentValue;
+    }
+
+    if (isArrayIndex($key)) {
+      const indexObserver = getArrayObserver(target).getIndexObserver(Number($key));
+      indexObserver.subscribe(currentCollector);
+
+      const idxValue = indexObserver.currentValue;
+      if (!(idxValue instanceof Object)) {
+        return idxValue;
+      }
+
+      return getOrCreateProxy(idxValue);
+    }
+
+    // todo: some array method needs not observing on all element
+    // just need length observation
+    // example: [].forEach only requires length observation or any mutation, not every index observation
+    // how?
+    const value = target[$key];
+    return value;
+  },
+
+  set(target: unknown[], key: PropertyKey, value: unknown, receiver?): boolean {
+    const $key = key as $PropertyKey;
+
+    if ($key === 'length' || isArrayIndex($key)) {
+      target[$key as number] = value;
+      getArrayObserver(target as unknown as unknown[]).notify();
+    }
+  }
+};
+
 const collectionHandler: ProxyHandler<Collection> = {
   get(target: IIndexable<Collection>, key: PropertyKey, receiver?): unknown {
     const $key = key as $PropertyKey;
@@ -158,9 +202,10 @@ function ensureProxy<T extends object = object>(obj: T): T {
     if (proxy === void 0) {
       switch (toStringTag.call(obj)) {
         case arrTag:
+          return defineOnObject(obj, new Proxy(obj, arrayHandler as ProxyHandler<T>));
         case setTag:
         case mapTag:
-          return defineOnObject(obj, new Proxy(obj, collectionHandler as ProxyHandler<T>)) as T;
+          return defineOnObject(obj, new Proxy(obj, collectionHandler as ProxyHandler<T>));
       }
       return defineOnObject(obj, new Proxy(obj, objectHandler)) as T;
     }
