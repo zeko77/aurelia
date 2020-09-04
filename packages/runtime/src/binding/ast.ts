@@ -78,10 +78,9 @@ import {
   ValueConverter, ValueConverterInstance,
 } from '../resources/value-converter';
 import { IConnectableBinding } from './connectable';
-import { DepCollectorSwitcher, IDepCollector } from '../observation/dep-collector-switcher';
+import { pauseSubscription, resumeSubscription, IDepCollector } from '../observation/dep-collector-switcher';
 import { IObserverLocator } from '../observation/observer-locator';
-
-const getCurrentCollector = DepCollectorSwitcher.peek;
+import { getObserver } from '../observation/observable';
 
 export function connects(expr: IsExpressionOrStatement): expr is Connects {
   return (expr.$kind & ExpressionKind.Connects) === ExpressionKind.Connects;
@@ -448,11 +447,12 @@ export class AccessScopeExpression implements IAccessScopeExpression {
     const obj = BindingContext.get(scope, this.name, this.ancestor, flags, part) as IBindingContext;
 
     if (depCollector != null) {
-      const observerLocator = depCollector.observerLocator;
-      if (observerLocator != null) {
-        const observer = observerLocator.getObserver(flags, obj, this.name) as IPropertyObserver<object, never>;
-        observer.subscribe(depCollector);
-      }
+      const observer = getObserver(obj, this.name);
+      pauseSubscription();
+      observer.subscribe(depCollector);
+      const value = observer.getValue();
+      resumeSubscription();
+      return value as ReturnType<AccessScopeExpression['evaluate']>;
     }
 
     const evaluatedValue: ReturnType<AccessScopeExpression['evaluate']> = obj[this.name];
@@ -499,14 +499,16 @@ export class AccessMemberExpression implements IAccessMemberExpression {
     if (!instance) {
       return '';
     }
-    
+
     if (depCollector != null) {
-      const observerLocator = depCollector.observerLocator;
-      if (observerLocator != null) {
-        const observer = observerLocator.getObserver(flags, instance, this.name) as IPropertyObserver<object, never>;
-        observer.subscribe(depCollector);
-      }
+      const observer = getObserver(instance, this.name);
+      pauseSubscription();
+      observer.subscribe(depCollector);
+      const value = observer.getValue();
+      resumeSubscription();
+      return value;
     }
+
     if (flags & LifecycleFlags.isStrictBindingStrategy) {
       return instance == null ? instance : instance[this.name];
     }
@@ -555,11 +557,12 @@ export class AccessKeyedExpression implements IAccessKeyedExpression {
     if (instance instanceof Object) {
       const key = this.key.evaluate(flags, scope, locator, part) as string;
       if (depCollector != null) {
-        const observerLocator = depCollector.observerLocator;
-        if (observerLocator != null) {
-          const observer = observerLocator.getObserver(flags, instance, key) as IPropertyObserver<object, never>;
-          observer.subscribe(depCollector);
-        }
+        const observer = getObserver(instance, key);
+        pauseSubscription();
+        observer.subscribe(depCollector);
+        const value = observer.getValue();
+        resumeSubscription();
+        return value;
       }
       return instance[key];
     }
