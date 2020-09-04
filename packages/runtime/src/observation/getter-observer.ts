@@ -44,7 +44,11 @@ export class GetterObserver implements GetterObserver {
     this.isDirty = true;
     this.proxy = getOrCreateProxy(obj) as Required<typeof obj>;
     this.obj = this.proxy.$raw;
-    Reflect.defineProperty(obj, propertyKey, { configurable: true, get: this.$get.bind(this), set: descriptor.set });
+    Reflect.defineProperty(
+      obj,
+      propertyKey,
+      { configurable: true, get: this.$get.bind(this), set: descriptor.set }
+    );
   }
 
   // public addPropertyDep(subscribable: ISubscribable): void {
@@ -69,6 +73,9 @@ export class GetterObserver implements GetterObserver {
   public handleChange(): void {
     const oldValue = this.currentValue;
     this.isDirty = true;
+    if (!this.hasSubscribers()) {
+      return;
+    }
     const newValue = this.$get();
     if (oldValue !== newValue) {
       this.callSubscribers(newValue, oldValue, LifecycleFlags.updateTargetInstance);
@@ -78,6 +85,9 @@ export class GetterObserver implements GetterObserver {
   public handleCollectionChange(): void {
     const oldValue = this.currentValue;
     this.isDirty = true;
+    if (!this.hasSubscribers()) {
+      return;
+    }
     const newValue = this.$get();
     if (oldValue !== newValue) {
       this.callSubscribers(newValue, oldValue, LifecycleFlags.updateTargetInstance);
