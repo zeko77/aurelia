@@ -9,6 +9,7 @@ import {
   ISubscriberCollection,
   SubscriberFlags as SF
 } from '../observation';
+import { PLATFORM } from '@aurelia/kernel';
 
 // TODO: see if we can de-duplicate these 3 decorators and their functions without killing performance or readability
 
@@ -27,6 +28,7 @@ export function subscriberCollection(): ClassDecorator {
 
     if (proto.subscribe === void 0) proto.subscribe = addSubscriber;
     if (proto.unsubscribe === void 0) proto.unsubscribe = removeSubscriber;
+    if (proto.notify === void 0) proto.notify = PLATFORM.noop;
   };
 }
 
