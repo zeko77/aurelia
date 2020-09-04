@@ -1,15 +1,13 @@
 import { IIndexable, isArrayIndex } from '@aurelia/kernel';
 import { Collection, IBindingTargetObserver } from '../observation';
 import { getArrayObserver } from './array-observer';
-import { DepCollectorSwitcher } from './dep-collector-switcher';
+import { collecting, getCurrentSubscriber } from './dep-collector-switcher';
 import { IProxiedObject } from './proxy-observer';
 import { hasObserver, getObserver } from './observable';
 import { getSetObserver } from './set-observer';
 import { getMapObserver } from './map-observer';
 
 type $PropertyKey = Exclude<PropertyKey, symbol>;
-
-const { peek } = DepCollectorSwitcher;
 
 const toStringTag = Object.prototype.toString;
 const arrTag = '[object Array]';
@@ -22,16 +20,32 @@ const strTag = '[object String]';
 const nulTag = '[object Null]';
 const undTag = '[object Undefined]';
 
+function doNotCollect(target: unknown, key: PropertyKey) {
+  return key === '$observers'
+    || key === '$synthetic'
+    || key === 'constructor'
+    || key === '$proxy'
+    || key === '$raw';
+}
+
 const objectHandler: ProxyHandler<object> = {
-  get(target: IIndexable, propertyKey: PropertyKey, receiver?: unknown): unknown {
-    const $key = propertyKey as $PropertyKey;
-    const currentCollector = peek();
-    if (currentCollector == null) {
-      return target[$key as $PropertyKey];
+  get(target: IIndexable, key: PropertyKey, receiver?: unknown): unknown {
+    const $key = key as $PropertyKey;
+    if (!collecting) {
+      return target[$key];
+    }
+
+    if (doNotCollect(target, $key)) {
+      return target[$key];
+    }
+
+    const currentSubscriber = getCurrentSubscriber();
+    if (currentSubscriber == null) {
+      return target[$key];
     }
 
     const observer = getObserver(target, $key);
-    observer.subscribe(currentCollector);
+    observer.subscribe(currentSubscriber);
 
     const value = observer.getValue();
     if (!(value instanceof Object)) {
@@ -43,9 +57,9 @@ const objectHandler: ProxyHandler<object> = {
 
   set(target: IIndexable, key: PropertyKey, value: unknown, receiver?: unknown): boolean {
     const $key = key as $PropertyKey;
-    const currentCollector = peek();
+    const currentSubscriber = getCurrentSubscriber();
 
-    if (currentCollector == null) {
+    if (currentSubscriber == null) {
       target[$key] = value;
       return true;
     }
@@ -64,20 +78,28 @@ const objectHandler: ProxyHandler<object> = {
 const arrayHandler: ProxyHandler<unknown[]> = {
   get(target: unknown[], key: PropertyKey, receiver?): unknown {
     const $key = key as $PropertyKey;
-    const currentCollector = peek();
-    if (currentCollector == null) {
+    if (!collecting) {
+      return target[$key as number];
+    }
+
+    if (doNotCollect(target, $key)) {
+      return target[$key as number];
+    }
+
+    const currentSubscriber = getCurrentSubscriber();
+    if (currentSubscriber == null) {
       return target[$key as number];
     }
 
     if ($key === 'length') {
-      const lengthObserver = getArrayObserver(target as unknown as unknown[]).getLengthObserver();
-      lengthObserver.subscribe(currentCollector);
+      const lengthObserver = getArrayObserver(target).getLengthObserver();
+      lengthObserver.subscribe(currentSubscriber);
       return lengthObserver.currentValue;
     }
 
     if (isArrayIndex($key)) {
       const indexObserver = getArrayObserver(target).getIndexObserver(Number($key));
-      indexObserver.subscribe(currentCollector);
+      indexObserver.subscribe(currentSubscriber);
 
       const idxValue = indexObserver.currentValue;
       if (!(idxValue instanceof Object)) {
@@ -100,46 +122,45 @@ const arrayHandler: ProxyHandler<unknown[]> = {
 
     if ($key === 'length' || isArrayIndex($key)) {
       target[$key as number] = value;
-      getArrayObserver(target as unknown as unknown[]).notify();
+      getArrayObserver(target).notify();
     }
-  }
+    return true;
+  },
 };
 
-const collectionHandler: ProxyHandler<Collection> = {
-  get(target: IIndexable<Collection>, key: PropertyKey, receiver?): unknown {
+type $MapOrSet = Map<unknown, unknown> | Set<unknown>;
+const collectionHandler: ProxyHandler<$MapOrSet> = {
+  get(target: IIndexable<$MapOrSet>, key: PropertyKey, receiver?): unknown {
     const $key = key as $PropertyKey;
-    const currentCollector = peek();
-    if (currentCollector == null) {
+    if (!collecting) {
       return target[$key];
     }
-    
-    switch (toStringTag.call(target)) {
-      case arrTag:
-        if (isArrayIndex($key)) {
-          getArrayObserver(target as unknown as unknown[]).getIndexObserver(Number($key)).subscribe(currentCollector);
-        } else if ($key === 'length') {
-          const lengthObserver = getArrayObserver(target as unknown as unknown[]).getLengthObserver();
-          lengthObserver.subscribe(currentCollector);
-          return lengthObserver.currentValue;
-        }
-        break;
-      case setTag:
-        if ($key === 'size') {
-          const lengthObserver = getSetObserver(target as unknown as Set<unknown>).getLengthObserver();
-          lengthObserver.subscribe(currentCollector);
-          return lengthObserver.currentValue;
-        }
-        // todo: checking built-in method accesses
-        break;
-      case mapTag:
-        if ($key === 'size') {
-          const lengthObserver = getMapObserver(target as unknown as Map<unknown, unknown>).getLengthObserver();
-          lengthObserver.subscribe(currentCollector);
-          return lengthObserver.currentValue;
-        }
-        // todo: checking built-in method accesses
-        break;
+
+    if (doNotCollect(target, key)) {
+      return target[$key];
     }
+
+    const currentSubscriber = getCurrentSubscriber();
+    if (currentSubscriber == null) {
+      return target[$key];
+    }
+
+    if (target instanceof Set) {
+      if ($key === 'size') {
+        const lengthObserver = getSetObserver(target).getLengthObserver();
+        lengthObserver.subscribe(currentSubscriber);
+        return lengthObserver.currentValue;
+      }
+      // todo: checking built-in method accesses
+    } else {
+      if ($key === 'size') {
+        const lengthObserver = getMapObserver(target).getLengthObserver();
+        lengthObserver.subscribe(currentSubscriber);
+        return lengthObserver.currentValue;
+      }
+      // todo: checking built-in method accesses
+    }
+
     const value = target[$key];
     if (!(value instanceof Object)) {
       return value;
@@ -161,29 +182,22 @@ const collectionHandler: ProxyHandler<Collection> = {
     return getOrCreateProxy(value);
   },
 
-  set(target: IIndexable<Collection>, key: PropertyKey, value: unknown, receiver?): boolean {
+  set(target: $MapOrSet, key: PropertyKey, value: unknown, receiver?): boolean {
     const $key = key as $PropertyKey;
+    if ($key === 'size') {
+      return false;
+    }
+    if (target instanceof Set) {
 
-    switch (toStringTag.call(target)) {
-      case arrTag:
-        if (isArrayIndex($key)) {
-          target[$key] = value;
-          getArrayObserver(target as unknown as unknown[]).notify();
-        }
-        break;
-      case mapTag:
-      case setTag:
-        if ($key === 'size') {
-          return false;
-        }
-        break;
-      // todo: what else to be rejected?
+    } else {
+
     }
     return true;
   }
 };
 
-function defineOnObject<T extends object = object>(obj: T, proxiedObj: T): T {
+function createAndDefineProxy<T extends object = object>(obj: T, proxyHandlers: ProxyHandler<T>): T {
+  const proxiedObj = new Proxy(obj, proxyHandlers);
   Reflect.defineProperty(obj, '$proxy', {
     configurable: true,
     enumerable: false,
@@ -192,22 +206,18 @@ function defineOnObject<T extends object = object>(obj: T, proxiedObj: T): T {
   return proxiedObj;
 }
 
-function getOrCreateProxy<T extends object>(obj: T): T {
-  return ensureProxy(obj);
-}
-
-function ensureProxy<T extends object = object>(obj: T): T {
+export function getOrCreateProxy<T extends object>(obj: T): T {
   if (obj instanceof Object) {
     const proxy = (obj as IProxiedObject).$proxy;
     if (proxy === void 0) {
       switch (toStringTag.call(obj)) {
         case arrTag:
-          return defineOnObject(obj, new Proxy(obj, arrayHandler as ProxyHandler<T>));
+          return createAndDefineProxy(obj, arrayHandler as ProxyHandler<T>);
         case setTag:
         case mapTag:
-          return defineOnObject(obj, new Proxy(obj, collectionHandler as ProxyHandler<T>));
+          return createAndDefineProxy(obj, collectionHandler as ProxyHandler<T>);
       }
-      return defineOnObject(obj, new Proxy(obj, objectHandler)) as T;
+      return createAndDefineProxy(obj, objectHandler) as T;
     }
   }
   throw new Error('Invalid proxy target');

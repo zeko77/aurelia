@@ -33,6 +33,7 @@ export function enterSubscriber(subscriber: ISubscriber): void {
     throw new Error('Already in this subscriber {subscriber.id}');
   }
   collectors.push($currentCollector = subscriber);
+  collecting = true;
 }
 
 export function exitSubscriber(subscriber: ISubscriber): void {
@@ -42,6 +43,7 @@ export function exitSubscriber(subscriber: ISubscriber): void {
 
   collectors.pop();
   $currentCollector = collectors.length > 0 ? collectors[collectors.length - 1] : null;
+  collecting = $currentCollector != null;
 }
 
 export const DepCollectorSwitcher = new class {
