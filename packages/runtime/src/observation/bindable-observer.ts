@@ -5,6 +5,7 @@ import { IPropertyObserver, ISubscriber } from '../observation';
 import { ProxyObserver } from './proxy-observer';
 import { subscriberCollection } from './subscriber-collection';
 import { InterceptorFunc } from '../templating/bindable';
+import { collecting, getCurrentSubscriber } from './dep-collector-switcher';
 
 export interface BindableObserver extends IPropertyObserver<IIndexable, string> {}
 
@@ -34,7 +35,7 @@ export class BindableObserver {
     public readonly obj: IIndexable,
     public readonly propertyKey: string,
     cbName: string,
-    private readonly $set: InterceptorFunc,
+    private readonly $$set: InterceptorFunc,
   ) {
     let isProxy = false;
     if (ProxyObserver.isProxy(obj)) {
@@ -48,7 +49,7 @@ export class BindableObserver {
     const propertyChangedCallback = this.propertyChangedCallback = (this.obj as IMayHavePropertyChangedCallback).propertyChanged;
     const hasPropertyChangedCallback = this.hasPropertyChangedCallback = typeof propertyChangedCallback === 'function';
 
-    const shouldInterceptSet = this.shouldInterceptSet = $set !== PLATFORM.noop;
+    const shouldInterceptSet = this.shouldInterceptSet = $$set !== PLATFORM.noop;
     // when user declare @bindable({ set })
     // it's expected to work from the start,
     // regardless where the assignment comes from: either direct view model assignment or from binding during render
@@ -60,7 +61,7 @@ export class BindableObserver {
 
       const currentValue = obj[propertyKey];
       this.currentValue = shouldInterceptSet && currentValue !== void 0
-        ? $set(currentValue)
+        ? $$set(currentValue)
         : currentValue;
       if (!isProxy) {
         this.createGetterSetter();
@@ -74,12 +75,18 @@ export class BindableObserver {
   }
 
   public getValue(): unknown {
+    if (collecting) {
+      const currentSubscriber = getCurrentSubscriber();
+      if (currentSubscriber != null) {
+        this.subscribe(currentSubscriber);
+      }
+    }
     return this.currentValue;
   }
 
   public setValue(newValue: unknown, flags: LifecycleFlags): void {
     if (this.shouldInterceptSet) {
-      newValue = this.$set(newValue);
+      newValue = this.$$set(newValue);
     }
 
     if (this.observing) {
@@ -119,12 +126,16 @@ export class BindableObserver {
       this.observing = true;
       const currentValue = this.obj[this.propertyKey];
       this.currentValue = this.shouldInterceptSet
-        ? this.$set(currentValue)
+        ? this.$$set(currentValue)
         : currentValue;
       this.createGetterSetter();
     }
 
     this.addSubscriber(subscriber);
+  }
+
+  public notify(): void {
+    this.callSubscribers(this.currentValue, this.oldValue, LifecycleFlags.none);
   }
 
   private createGetterSetter(): void {
@@ -135,14 +146,26 @@ export class BindableObserver {
         {
           enumerable: true,
           configurable: true,
-          get: () => this.currentValue,
-          set: (value: unknown) => {
-            this.setValue(value, LifecycleFlags.none);
-          }
+          get: this.$get.bind(this),
+          set: this.$set.bind(this),
         }
       )
     ) {
       Reporter.write(1, this.propertyKey, this.obj);
     }
+  }
+
+  private $get() {
+    if (collecting) {
+      const currentSubscriber = getCurrentSubscriber();
+      if (currentSubscriber != null) {
+        this.subscribe(currentSubscriber);
+      }
+    }
+    return this.getValue();
+  }
+
+  private $set(value: unknown): void {
+    this.setValue(value, LifecycleFlags.none);
   }
 }

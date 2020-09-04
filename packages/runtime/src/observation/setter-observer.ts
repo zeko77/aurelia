@@ -3,9 +3,11 @@ import { LifecycleFlags } from '../flags';
 import { ILifecycle } from '../lifecycle';
 import { IPropertyObserver, ISubscriber } from '../observation';
 import { subscriberCollection } from './subscriber-collection';
+import { collecting, getCurrentSubscriber } from './dep-collector-switcher';
 
-export interface SetterObserver extends IPropertyObserver<IIndexable, string> {}
+export interface SetterObserver extends IPropertyObserver<IIndexable, PropertyKey> {}
 
+type $PropertyKey = Exclude<PropertyKey, symbol>;
 /**
  * Observer for the mutation of object property value employing getter-setter strategy.
  * This is used for observing object properties that has no decorator.
@@ -20,10 +22,9 @@ export class SetterObserver {
   public observing: boolean = false;
 
   public constructor(
-    public readonly lifecycle: ILifecycle,
-    flags: LifecycleFlags,
     public readonly obj: IIndexable,
-    public readonly propertyKey: string,
+    public readonly propertyKey: PropertyKey,
+    flags: LifecycleFlags = 0,
   ) {
     this.persistentFlags = flags & LifecycleFlags.persistentBindingFlags;
   }
@@ -36,13 +37,7 @@ export class SetterObserver {
     if (this.observing) {
       const currentValue = this.currentValue;
       this.currentValue = newValue;
-      if (this.lifecycle.batch.depth === 0) {
-        this.callSubscribers(newValue, currentValue, this.persistentFlags | flags);
-      } else if (!this.inBatch) {
-        this.inBatch = true;
-        this.oldValue = currentValue;
-        this.lifecycle.batch.add(this);
-      }
+      this.callSubscribers(newValue, currentValue, this.persistentFlags | flags);
     } else {
       // If subscribe() has been called, the target property descriptor is replaced by these getter/setter methods,
       // so calling obj[propertyKey] will actually return this.currentValue.
@@ -50,7 +45,7 @@ export class SetterObserver {
       // is unmodified and we need to explicitly set the property value.
       // This will happen in one-time, to-view and two-way bindings during $bind, meaning that the $bind will not actually update the target value.
       // This wasn't visible in vCurrent due to connect-queue always doing a delayed update, so in many cases it didn't matter whether $bind updated the target or not.
-      this.obj[this.propertyKey] = newValue;
+      this.obj[this.propertyKey as $PropertyKey] = newValue;
     }
   }
 
@@ -65,7 +60,7 @@ export class SetterObserver {
   public subscribe(subscriber: ISubscriber): void {
     if (this.observing === false) {
       this.observing = true;
-      this.currentValue = this.obj[this.propertyKey];
+      this.currentValue = this.obj[this.propertyKey as $PropertyKey];
       if (
         !Reflect.defineProperty(
           this.obj,
@@ -73,12 +68,8 @@ export class SetterObserver {
           {
             enumerable: true,
             configurable: true,
-            get: () => {
-              return this.getValue();
-            },
-            set: value => {
-              this.setValue(value, LifecycleFlags.none);
-            },
+            get: this.$get.bind(this),
+            set: this.$set.bind(this),
           }
         )
       ) {
@@ -87,5 +78,23 @@ export class SetterObserver {
     }
 
     this.addSubscriber(subscriber);
+  }
+
+  public notify(): void {
+    this.callSubscribers(this.currentValue, this.oldValue, LifecycleFlags.none);
+  }
+
+  private $get() {
+    if (collecting) {
+      const currentSubscriber = getCurrentSubscriber();
+      if (currentSubscriber != null) {
+        this.subscribe(currentSubscriber);
+      }
+    }
+    return this.getValue();
+  }
+
+  private $set(value: unknown): void {
+    this.setValue(value, LifecycleFlags.none);
   }
 }
