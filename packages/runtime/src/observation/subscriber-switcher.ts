@@ -1,12 +1,7 @@
-import { IObserverLocator } from './observer-locator';
-import { ISubscriber, ICollectionSubscriber } from '../observation';
+import { ISubscriber } from '../observation';
 
-export interface IDepCollector extends ISubscriber {
-  observerLocator?: IObserverLocator;
-}
-
-let $currentCollector: IDepCollector | null = null;
-const collectors: IDepCollector[] = [];
+let $currentCollector: ISubscriber | null = null;
+const collectors: ISubscriber[] = [];
 const collectingStatus: boolean[] = [];
 
 export let collecting = false;
@@ -20,7 +15,7 @@ export function resumeSubscription() {
   collecting = true;
 }
 
-export function getCurrentSubscriber(): IDepCollector | null {
+export function getCurrentSubscriber(): ISubscriber | null {
   return $currentCollector;
 }
 
@@ -46,6 +41,10 @@ export function exitSubscriber(subscriber: ISubscriber): void {
   collecting = $currentCollector != null;
 }
 
-export const DepCollectorSwitcher = new class {
-
-}();
+export const DepCollectorSwitcher = Object.freeze({
+  getCurrentSubscriber,
+  enterSubscriber,
+  exitSubscriber,
+  pauseSubscription,
+  resumeSubscription,
+});
