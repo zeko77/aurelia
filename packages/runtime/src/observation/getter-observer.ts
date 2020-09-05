@@ -28,10 +28,7 @@ export class GetterObserver implements GetterObserver {
   public readonly obj: IObservable & { $proxy?: IProxy<IObservable> };
 
   private readonly proxy: IObservable & { $raw: IObservable; $proxy: IProxy<IObservable> };
-  // private readonly propertyDeps: ISubscribable[] = [];
-  // private readonly collectionDeps: ICollectionSubscribable[] = [];
   private isDirty: boolean;
-  // private subscriberCount: number = 0;
   private isCollecting: boolean = false;
 
   public constructor(
@@ -50,18 +47,6 @@ export class GetterObserver implements GetterObserver {
       { configurable: true, get: this.$get.bind(this), set: descriptor.set }
     );
   }
-
-  // public addPropertyDep(subscribable: ISubscribable): void {
-  //   if (!this.propertyDeps.includes(subscribable)) {
-  //     this.propertyDeps.push(subscribable);
-  //   }
-  // }
-
-  // public addCollectionDep(subscribable: ICollectionSubscribable): void {
-  //   if (!this.collectionDeps.includes(subscribable)) {
-  //     this.collectionDeps.push(subscribable);
-  //   }
-  // }
 
   public getValue(): unknown {
     const $get = this.descriptor.get;
@@ -93,41 +78,6 @@ export class GetterObserver implements GetterObserver {
       this.callSubscribers(newValue, oldValue, LifecycleFlags.updateTargetInstance);
     }
   }
-
-  // public getValueAndCollectDependencies(requireCollect: boolean): unknown {
-  //   const dynamicDependencies = !this.overrides.static || requireCollect;
-
-  //   if (dynamicDependencies) {
-  //     this.unsubscribeAllDependencies();
-  //     this.isCollecting = true;
-  //   }
-
-  //   this.currentValue = this.getValue();
-
-  //   if (dynamicDependencies) {
-  //     this.propertyDeps.forEach(x => { x.subscribe(this); });
-  //     this.collectionDeps.forEach(x => { x.subscribeToCollection(this); });
-  //     this.isCollecting = false;
-  //   }
-
-  //   return this.currentValue;
-  // }
-
-  // public doNotCollect(target: IObservable | IBindingContext, key: PropertyKey, receiver?: unknown): boolean {
-  //   return !this.isCollecting
-  //     || key === '$observers'
-  //     || key === '$synthetic'
-  //     || key === 'constructor'
-  //     || key === '$proxy'
-  //     || key === '$raw';
-  // }
-
-  // private unsubscribeAllDependencies(): void {
-  //   this.propertyDeps.forEach(x => { x.unsubscribe(this); });
-  //   this.propertyDeps.length = 0;
-  //   this.collectionDeps.forEach(x => { x.unsubscribeFromCollection(this); });
-  //   this.collectionDeps.length = 0;
-  // }
 
   /**
    * @internal
