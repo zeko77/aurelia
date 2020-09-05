@@ -6,7 +6,7 @@ import {
 } from '../observation';
 import { subscriberCollection } from './subscriber-collection';
 import { getOrCreateProxy } from './proxy-handlers';
-import { enterSubscriber, exitSubscriber } from './dep-collector-switcher';
+import { enterSubscriber, exitSubscriber } from './subscriber-switcher';
 
 export interface ComputedOverrides {
   // Indicates that a getter doesn't need to re-calculate its dependencies after the first observation.
@@ -25,6 +25,7 @@ export interface GetterObserver extends IBindingTargetObserver { }
 export class GetterObserver implements GetterObserver {
   public currentValue: unknown = void 0;
   public oldValue: unknown = void 0;
+  public observing: boolean = false;
   public readonly obj: IObservable & { $proxy?: IProxy<IObservable> };
 
   private readonly proxy: IObservable & { $raw: IObservable; $proxy: IProxy<IObservable> };
@@ -41,11 +42,7 @@ export class GetterObserver implements GetterObserver {
     this.isDirty = true;
     this.proxy = getOrCreateProxy(obj) as Required<typeof obj>;
     this.obj = this.proxy.$raw;
-    Reflect.defineProperty(
-      obj,
-      propertyKey,
-      { configurable: true, get: this.$get.bind(this), set: descriptor.set }
-    );
+    this.start();
   }
 
   public getValue(): unknown {
@@ -77,6 +74,18 @@ export class GetterObserver implements GetterObserver {
     if (oldValue !== newValue) {
       this.callSubscribers(newValue, oldValue, LifecycleFlags.updateTargetInstance);
     }
+  }
+
+  public start(): void {
+    if (this.observing) {
+      return;
+    }
+    this.observing = true;
+    Reflect.defineProperty(
+      this.obj,
+      this.propertyKey,
+      { configurable: true, get: this.$get.bind(this), set: this.descriptor.set }
+    );
   }
 
   /**

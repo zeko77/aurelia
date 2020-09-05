@@ -1,9 +1,8 @@
 import { IIndexable, Reporter } from '@aurelia/kernel';
 import { LifecycleFlags } from '../flags';
-import { ILifecycle } from '../lifecycle';
 import { IPropertyObserver, ISubscriber } from '../observation';
 import { subscriberCollection } from './subscriber-collection';
-import { collecting, getCurrentSubscriber } from './dep-collector-switcher';
+import { collecting, getCurrentSubscriber } from './subscriber-switcher';
 
 export interface SetterObserver extends IPropertyObserver<IIndexable, PropertyKey> {}
 
@@ -30,7 +29,9 @@ export class SetterObserver {
   ) {
     this.obj = obj as IIndexable;
     this.propertyKey = propertyKey;
+    this.currentValue = (obj as IIndexable)[propertyKey as string];
     this.persistentFlags = flags & LifecycleFlags.persistentBindingFlags;
+    // todo: should it always convert at the start
   }
 
   public getValue(): unknown {
@@ -63,25 +64,31 @@ export class SetterObserver {
 
   public subscribe(subscriber: ISubscriber): void {
     if (this.observing === false) {
-      this.observing = true;
-      this.currentValue = this.obj[this.propertyKey as $PropertyKey];
-      if (
-        !Reflect.defineProperty(
-          this.obj,
-          this.propertyKey,
-          {
-            enumerable: true,
-            configurable: true,
-            get: this.$get.bind(this),
-            set: this.$set.bind(this),
-          }
-        )
-      ) {
-        Reporter.write(1, this.propertyKey, this.obj);
-      }
+      this.start();
     }
 
     this.addSubscriber(subscriber);
+  }
+
+  public start(): void {
+    if (this.observing) {
+      return;
+    }
+    this.observing = true;
+    if (
+      !Reflect.defineProperty(
+        this.obj,
+        this.propertyKey,
+        {
+          enumerable: true,
+          configurable: true,
+          get: this.$get.bind(this),
+          set: this.$set.bind(this),
+        }
+      )
+    ) {
+      Reporter.write(1, this.propertyKey, this.obj);
+    }
   }
 
   public notify(): void {

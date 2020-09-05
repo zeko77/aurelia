@@ -1,7 +1,7 @@
 import { IIndexable, isArrayIndex } from '@aurelia/kernel';
 import { IBindingTargetObserver } from '../observation';
 import { getArrayObserver } from './array-observer';
-import { collecting, getCurrentSubscriber } from './dep-collector-switcher';
+import { collecting, getCurrentSubscriber } from './subscriber-switcher';
 import { hasObserver, getObserver } from './observable';
 import { getSetObserver } from './set-observer';
 import { getMapObserver } from './map-observer';
