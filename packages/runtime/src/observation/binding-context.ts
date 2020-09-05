@@ -30,7 +30,7 @@ export class InternalObserversLookup {
     key: string,
   ): PropertyObserver {
     if (this[key] === void 0) {
-      this[key] = new SetterObserver(lifecycle, flags, obj, key);
+      this[key] = new SetterObserver(obj, key) as PropertyObserver;
     }
     return this[key];
   }
