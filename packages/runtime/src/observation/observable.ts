@@ -29,6 +29,7 @@ export const Observable = Object.freeze({
   lockAdapter: lockAdapter,
   unlockAdapter: unlockAdapter,
   addObservationAdapter: addObservationAdapter,
+  removeObservationAdapter: removeObservationAdapter,
   /**
    * @internal
    */
@@ -67,34 +68,33 @@ function getAdapterObserver(obj: object, key: PropertyKey): IBindingTargetObserv
 }
 
 function createPropertyObserver(obj: IObservable|IBindingContext, key: PropertyKey): IBindingTargetObserver {
-  const $propertyName = key as $PropertyKey;
   // fixed observation:
   // - primitive (none)
   // - array
   // - map
   // - set
   if (!(obj instanceof Object)) {
-    return new PrimitiveObserver(obj as unknown as Primitive, $propertyName) as unknown as IBindingTargetObserver;
+    return new PrimitiveObserver(obj as unknown as Primitive, key) as unknown as IBindingTargetObserver;
   }
 
   const tag = toStringTag.call(obj);
   switch (tag) {
     case '[object Array]':
-      if ($propertyName === 'length') {
+      if (key === 'length') {
         return getArrayObserver(obj as IObservedArray).getLengthObserver();
       }
       // is numer only returns true for integer
-      if (isArrayIndex($propertyName)) {
-        return getArrayObserver(obj as IObservedArray).getIndexObserver(Number($propertyName));
+      if (isArrayIndex(key)) {
+        return getArrayObserver(obj as IObservedArray).getIndexObserver(Number(key));
       }
       break;
     case '[object Map]':
-      if ($propertyName === 'size') {
+      if (key === 'size') {
         return getMapObserver(obj as IObservedMap).getLengthObserver();
       }
       break;
     case '[object Set]':
-      if ($propertyName === 'size') {
+      if (key === 'size') {
         return getSetObserver(obj as IObservedSet).getLengthObserver();
       }
       break;
@@ -105,12 +105,12 @@ function createPropertyObserver(obj: IObservable|IBindingContext, key: PropertyK
   // first via checking adapter
   // attempt to use an adapter before resorting to dirty checking.
   // example: an application & its plugins give different ways of how to observe a Node/an Element
-  const adapterObserver = getAdapterObserver(obj, $propertyName);
+  const adapterObserver = getAdapterObserver(obj, key);
   if (adapterObserver != null) {
     return adapterObserver;
   }
 
-  const descriptor = getPropertyDescriptor(obj, $propertyName) as PropertyDescriptor & {
+  const descriptor = getPropertyDescriptor(obj, key) as PropertyDescriptor & {
     get: PropertyDescriptor['get'] & { getObserver(obj: IObservable|IBindingContext): IBindingTargetObserver };
   };
 
@@ -127,8 +127,8 @@ function createPropertyObserver(obj: IObservable|IBindingContext, key: PropertyK
 
       const computedConfiguration = (obj as IObservable & { constructor: { prototype: ComputedLookup } }).constructor.prototype.computed;
       // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions, @typescript-eslint/no-unnecessary-type-assertion
-      const overrides: ComputedOverrides = computedConfiguration != null && computedConfiguration[$propertyName] || computedOverrideDefaults;
-      return new GetterObserver(obj as IObservable, $propertyName, descriptor, overrides);
+      const overrides: ComputedOverrides = computedConfiguration != null && computedConfiguration[key] || computedOverrideDefaults;
+      return new GetterObserver(obj as IObservable, key, descriptor, overrides);
     }
 
     if (descriptor.set != null) {
@@ -137,15 +137,15 @@ function createPropertyObserver(obj: IObservable|IBindingContext, key: PropertyK
   }
 
   // finally just use a traditional getter/setter
-  return new SetterObserver(obj, $propertyName);
+  return new SetterObserver(obj, key);
 }
 
-export function hasObserver(obj: object, propertyName: PropertyKey): boolean {
+export function hasObserver(obj: object, key: PropertyKey): boolean {
   const observerLookup = (obj as IObservable).$observers;
   if (observerLookup == null) {
     return false;
   }
-  return propertyName in observerLookup;
+  return key in observerLookup;
 }
 
 export function getObserver(obj: IObservable|IBindingContext, key: PropertyKey): IBindingTargetObserver {
@@ -174,24 +174,29 @@ export function getObserver(obj: IObservable|IBindingContext, key: PropertyKey):
   }
 
   return observer;
-};
+}
 
-let canAddAdapter = true;
+let adapterLocked = true;
 let lastLockToken = 0;
 function lockAdapter() {
-  canAddAdapter = false;
+  adapterLocked = false;
   return lastLockToken = Math.random();
 }
 function unlockAdapter(unlockToken: number) {
   if (unlockToken === lastLockToken) {
-    canAddAdapter = true;
+    adapterLocked = true;
     lastLockToken = 0;
   }
 }
 
 function addObservationAdapter(observationAdapter: IObservationAdapter): void {
-  if (canAddAdapter && !adapters.includes(observationAdapter)) {
+  if (adapterLocked && !adapters.includes(observationAdapter)) {
     adapters.push(observationAdapter);
+  }
+}
+function removeObservationAdapter(observationAdapter: IObservationAdapter): void {
+  if (!adapterLocked && adapters.includes(observationAdapter)) {
+    adapters.splice(adapters.indexOf(observationAdapter), -1);
   }
 }
 
