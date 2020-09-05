@@ -2,10 +2,9 @@ import { IIndexable, Reporter, PLATFORM } from '@aurelia/kernel';
 import { LifecycleFlags } from '../flags';
 import { ILifecycle } from '../lifecycle';
 import { IPropertyObserver, ISubscriber } from '../observation';
-import { ProxyObserver } from './proxy-observer';
 import { subscriberCollection } from './subscriber-collection';
 import { InterceptorFunc } from '../templating/bindable';
-import { collecting, getCurrentSubscriber } from './dep-collector-switcher';
+import { collecting, getCurrentSubscriber } from './subscriber-switcher';
 
 export interface BindableObserver extends IPropertyObserver<IIndexable, string> {}
 
@@ -22,7 +21,7 @@ export class BindableObserver {
 
   public readonly persistentFlags: LifecycleFlags;
   public inBatch: boolean = false;
-  public observing: boolean;
+  public observing!: boolean;
 
   private readonly callback?: (newValue: unknown, oldValue: unknown, flags: LifecycleFlags) => void;
   private readonly propertyChangedCallback?: HasPropertyChangedCallback['propertyChanged'];
@@ -37,13 +36,6 @@ export class BindableObserver {
     cbName: string,
     private readonly $$set: InterceptorFunc,
   ) {
-    let isProxy = false;
-    if (ProxyObserver.isProxy(obj)) {
-      isProxy = true;
-      obj.$observer.subscribe(this, propertyKey);
-      this.obj = obj.$raw;
-    }
-
     this.callback = this.obj[cbName] as typeof BindableObserver.prototype.callback;
 
     const propertyChangedCallback = this.propertyChangedCallback = (this.obj as IMayHavePropertyChangedCallback).propertyChanged;
@@ -57,15 +49,7 @@ export class BindableObserver {
     if (this.callback === void 0 && !hasPropertyChangedCallback && !shouldInterceptSet) {
       this.observing = false;
     } else {
-      this.observing = true;
-
-      const currentValue = obj[propertyKey];
-      this.currentValue = shouldInterceptSet && currentValue !== void 0
-        ? $$set(currentValue)
-        : currentValue;
-      if (!isProxy) {
-        this.createGetterSetter();
-      }
+      this.start();
     }
     this.persistentFlags = flags & LifecycleFlags.persistentBindingFlags;
   }
@@ -123,12 +107,7 @@ export class BindableObserver {
 
   public subscribe(subscriber: ISubscriber): void {
     if (this.observing === false) {
-      this.observing = true;
-      const currentValue = this.obj[this.propertyKey];
-      this.currentValue = this.shouldInterceptSet
-        ? this.$$set(currentValue)
-        : currentValue;
-      this.createGetterSetter();
+      this.start();
     }
 
     this.addSubscriber(subscriber);
@@ -136,6 +115,18 @@ export class BindableObserver {
 
   public notify(): void {
     this.callSubscribers(this.currentValue, this.oldValue, LifecycleFlags.none);
+  }
+
+  public start(): void {
+    if (this.observing) {
+      return;
+    }
+    this.observing = true;
+    const currentValue = this.obj[this.propertyKey];
+    this.currentValue = this.shouldInterceptSet && currentValue !== void 0
+      ? this.$$set(currentValue)
+      : currentValue;
+    this.createGetterSetter();
   }
 
   private createGetterSetter(): void {
