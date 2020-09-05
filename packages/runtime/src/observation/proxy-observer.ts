@@ -89,7 +89,7 @@ export class ProxyObserver<TObj extends object = object> implements ProxyObserve
       if (proxy === void 0) {
         proxyObserver = new ProxyObserver(obj);
       } else {
-        proxyObserver = (proxy as T & { $observer: ProxyObserver<T> }).$observer;
+        proxyObserver = (proxy as unknown as T & { $observer: ProxyObserver<T> }).$observer;
       }
     } else {
       proxyObserver = (obj as T & { $observer: ProxyObserver<T> }).$observer;
