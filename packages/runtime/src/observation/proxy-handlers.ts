@@ -1,11 +1,15 @@
 import { IIndexable, isArrayIndex } from '@aurelia/kernel';
-import { Collection, IBindingTargetObserver } from '../observation';
+import { IBindingTargetObserver } from '../observation';
 import { getArrayObserver } from './array-observer';
 import { collecting, getCurrentSubscriber } from './dep-collector-switcher';
-import { IProxiedObject } from './proxy-observer';
 import { hasObserver, getObserver } from './observable';
 import { getSetObserver } from './set-observer';
 import { getMapObserver } from './map-observer';
+
+export type IProxiedObject = IIndexable<{
+  $raw: IProxiedObject;
+  $proxy: IProxiedObject;
+}>
 
 type $PropertyKey = Exclude<PropertyKey, symbol>;
 
