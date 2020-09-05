@@ -150,13 +150,6 @@ export function hasObserver(obj: object, key: PropertyKey): boolean {
 
 export function getObserver(obj: IObservable|IBindingContext, key: PropertyKey): IBindingTargetObserver {
   const $key = key as $PropertyKey;
-  // if (flags & LifecycleFlags.proxyStrategy && typeof obj === 'object') {
-  //   return ProxyObserver.getOrCreate(obj, propertyName) as unknown as AccessorOrObserver; // TODO: fix typings (and ensure proper contracts ofc)
-  // }
-  // todo: re-enable this
-  // if (isBindingContext(obj)) {
-  //   return obj.getObservers!(flags).getOrCreate(this.lifecycle, flags, obj, propertyName);
-  // }
   let observersLookup = obj.$observers as $ObserverRecord;
 
   if (observersLookup != null && $key in observersLookup) {
@@ -167,10 +160,10 @@ export function getObserver(obj: IObservable|IBindingContext, key: PropertyKey):
 
   if (!observer.doNotCache) {
     if (observersLookup === void 0) {
-      observersLookup = createObserverRecord(obj);
+      observersLookup = createObserverLookup(obj);
     }
 
-    attachObserver(observersLookup, $key, observer, obj.hasOwnProperty($key));
+    observersLookup[$key] = observer;
   }
 
   return observer;
@@ -217,23 +210,11 @@ const observersRecordPropertyDescriptor: PropertyDescriptor = {
   value: null,
 };
 
-function createObserverRecord<T extends IObservable | IBindingContext = IObservable | IBindingContext>(obj: T): $ObserverRecord {
-  observersRecordPropertyDescriptor.value = {};
+function createObserverLookup<T extends IObservable | IBindingContext = IObservable | IBindingContext>(obj: T): $ObserverRecord {
+  observersRecordPropertyDescriptor.value = new InternalObserverLookup();
   Reflect.defineProperty(obj, '$observers', observersRecordPropertyDescriptor);
   observersRecordPropertyDescriptor.value = null;
   return obj.$observers as $ObserverRecord;
 }
 
-function attachObserver(record: $ObserverRecord, key: PropertyKey, observer: IBindingTargetObserver, enumerable?: boolean): void {
-  Reflect.defineProperty(record.obj, key, {
-    configurable: true,
-    enumerable,
-    get: observer.getValue.bind(observer),
-    set: observer.setValue.bind(observer) as any,
-  });
-  record[key as $PropertyKey] = observer;
-}
-
-function detachObserver(key: PropertyKey): void {
-  throw new Error('method not implemented');
-}
+class InternalObserverLookup {}
