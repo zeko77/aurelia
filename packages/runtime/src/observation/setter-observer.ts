@@ -17,15 +17,19 @@ export class SetterObserver {
   public currentValue: unknown = void 0;
   public oldValue: unknown = void 0;
 
+  public readonly obj: IIndexable;
+  public readonly propertyKey: PropertyKey;
   public readonly persistentFlags: LifecycleFlags;
   public inBatch: boolean = false;
   public observing: boolean = false;
 
   public constructor(
-    public readonly obj: IIndexable,
-    public readonly propertyKey: PropertyKey,
+    obj: object,
+    propertyKey: PropertyKey,
     flags: LifecycleFlags = 0,
   ) {
+    this.obj = obj as IIndexable;
+    this.propertyKey = propertyKey;
     this.persistentFlags = flags & LifecycleFlags.persistentBindingFlags;
   }
 
