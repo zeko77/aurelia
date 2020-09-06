@@ -1,6 +1,7 @@
 import {
   IServiceLocator,
   Reporter,
+  IIndexable,
 } from '@aurelia/kernel';
 import {
   IForOfStatement,
@@ -80,41 +81,44 @@ export class PropertyBinding implements IPartialConnectableBinding {
 
     flags |= this.persistentFlags;
 
+    const interceptor = this.interceptor;
+    const sourceExpression = this.sourceExpression;
+
     if ((flags & LifecycleFlags.updateTargetInstance) > 0) {
       const previousValue = this.targetObserver!.getValue();
+      const shouldObserve = (this.mode & toView) > 0;
+
       // if the only observable is an AccessScope then we can assume the passed-in newValue is the correct and latest value
-      if (this.sourceExpression.$kind !== ExpressionKind.AccessScope || this.observerSlots > 1) {
-        const shouldObserve = (this.mode & toView) > 0;
+      if (sourceExpression.$kind !== ExpressionKind.AccessScope || this.observerSlots > 1) {
         if (shouldObserve) {
-          this.interceptor.version++;
+          interceptor.version++;
         }
-        newValue = this.sourceExpression.evaluate(flags, this.$scope!, this.locator, this.part, shouldObserve ? this.interceptor : void 0);
-        // if (shouldObserve) {
-        //   exit(this);
-        // }
+        newValue = sourceExpression.evaluate(flags, this.$scope!, this.locator, this.part, shouldObserve ? interceptor : void 0);
         if (shouldObserve) {
-          this.interceptor.unobserve(false);
+          interceptor.unobserve(false);
         }
+      } else if (shouldObserve) {
+        interceptor.version++;
+        sourceExpression.connect(flags, this.$scope!, interceptor, this.part);
+        interceptor.unobserve();
       }
+
       if (newValue !== previousValue) {
-        this.interceptor.updateTarget(newValue, flags);
+        // todo: if target is DOM connector, queue, otherwise update
+        // always update for now as there's no flag ready
+        interceptor.updateTarget(newValue, flags);
       }
-      // if ((this.mode & oneTime) === 0) {
-      //   this.version++;
-      //   this.sourceExpression.connect(flags, this.$scope!, this.interceptor, this.part);
-      //   this.interceptor.unobserve(false);
-      // }
       return;
     }
 
     if ((flags & LifecycleFlags.updateSourceExpression) > 0) {
-      if (newValue !== this.sourceExpression.evaluate(flags, this.$scope!, this.locator, this.part)) {
-        this.interceptor.updateSource(newValue, flags);
+      if (newValue !== sourceExpression.evaluate(flags, this.$scope!, this.locator, this.part)) {
+        interceptor.updateSource(newValue, flags);
       }
       return;
     }
 
-    throw Reporter.error(15, flags);
+    throw new Error('Unexpected handleChange context');
   }
 
   public $bind(flags: LifecycleFlags, scope: IScope, part?: string): void {
@@ -141,43 +145,49 @@ export class PropertyBinding implements IPartialConnectableBinding {
       sourceExpression.bind(flags, scope, this.interceptor);
     }
 
-    let targetObserver = this.targetObserver as IBindingTargetObserver | undefined;
+    let targetObserver = this.targetObserver as IIndexable<IBindingTargetObserver>;
     if (!targetObserver) {
       if (this.mode & fromView) {
-        targetObserver = this.targetObserver = this.observerLocator.getObserver(flags, this.target, this.targetProperty) as IBindingTargetObserver;
+        targetObserver
+          = this.targetObserver
+          = this.observerLocator.getObserver(flags, this.target, this.targetProperty) as IIndexable<IBindingTargetObserver>;
       } else {
-        targetObserver = this.targetObserver = this.observerLocator.getAccessor(flags, this.target, this.targetProperty) as IBindingTargetObserver;
+        targetObserver
+          = this.targetObserver
+          = this.observerLocator.getAccessor(flags, this.target, this.targetProperty) as IIndexable<IBindingTargetObserver>;
       }
     }
-    if (this.mode !== BindingMode.oneTime && targetObserver.bind) {
+
+    let mode = this.mode;
+    if (mode !== BindingMode.oneTime && targetObserver.bind) {
       targetObserver.bind(flags);
     }
 
-    // during bind, binding behavior might have changed sourceExpression
+    // during bind, binding behavior might have changed sourceExpression/mode
     sourceExpression = this.sourceExpression;
+    mode = this.mode;
+    const interceptor = this.interceptor;
 
-    if (this.mode & toViewOrOneTime) {
-      const shouldObserve = (this.mode & toView) > 0;
-      // if (shouldConnect) {
-      //   enter(this);
-      // }
-      this.interceptor.updateTarget(
-        sourceExpression.evaluate(flags, scope, this.locator, part, shouldObserve ? this : void 0),
+    if (mode & toViewOrOneTime) {
+      const shouldObserve = (mode & toView) > 0;
+      if (shouldObserve) {
+        interceptor.version++;
+      }
+      interceptor.updateTarget(
+        sourceExpression.evaluate(flags, scope, this.locator, part, shouldObserve ? interceptor : void 0),
         flags,
       );
-      // if (shouldConnect) {
-      //   exit(this);
-      // }
-    }
-    // if (this.mode & toView) {
-    //   sourceExpression.connect(flags, scope, this.interceptor, part);
-    // }
-    if (this.mode & fromView) {
-      targetObserver.subscribe(this.interceptor);
-      if ((this.mode & toView) === 0) {
-        this.interceptor.updateSource(targetObserver.getValue(), flags);
+      if (shouldObserve) {
+        interceptor.unobserve();
       }
-      (targetObserver as typeof targetObserver & { [key: string]: number })[this.id] |= LifecycleFlags.updateSourceExpression;
+    }
+
+    if (mode & fromView) {
+      targetObserver.subscribe(interceptor);
+      if ((mode & toView) === 0) {
+        interceptor.updateSource(targetObserver.getValue(), flags);
+      }
+      targetObserver[this.id] |= LifecycleFlags.updateSourceExpression;
     }
 
     // add isBound flag and remove isBinding flag
