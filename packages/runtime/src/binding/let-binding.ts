@@ -53,18 +53,21 @@ export class LetBinding implements IPartialConnectableBinding {
     }
 
     if (flags & LifecycleFlags.updateTargetInstance) {
-      const { target, targetProperty } = this as {target: IIndexable; targetProperty: string};
+      const target = this.target as IIndexable;
+      const targetProperty = this.targetProperty;
       const previousValue: unknown = target[targetProperty];
-      // enter(this);
-      const newValue: unknown = this.sourceExpression.evaluate(flags, this.$scope!, this.locator, this.part, this);
-      // exit(this);
+      this.interceptor.version++;
+      const newValue: unknown = this.sourceExpression.evaluate(flags, this.$scope!, this.locator, this.part, this.interceptor);
+      this.interceptor.unobserve();
       if (newValue !== previousValue) {
+        // todo: if target is DOM connector, queue, otherwise update
+        // always update for now as it's assuming <let/> target is always a binding context
         target[targetProperty] = newValue;
       }
       return;
     }
 
-    throw Reporter.error(15, flags);
+    throw new Error('Unexpected <let/> handleChange context');
   }
 
   public $bind(flags: LifecycleFlags, scope: IScope, part?: string): void {
@@ -85,13 +88,11 @@ export class LetBinding implements IPartialConnectableBinding {
     if (sourceExpression.bind) {
       sourceExpression.bind(flags, scope, this.interceptor);
     }
-    // sourceExpression might have been changed during bind
-    // enter(this);
+
     this.interceptor.version++;
+    // sourceExpression might have been changed during bind
     this.target[this.targetProperty] = this.sourceExpression.evaluate(flags | LifecycleFlags.fromBind, scope, this.locator, part, this.interceptor);
-    this.interceptor.unobserve(false);
-    // exit(this);
-    // this.sourceExpression.connect(flags, scope, this.interceptor, part);
+    this.interceptor.unobserve();
 
     // add isBound flag and remove isBinding flag
     this.$state |= State.isBound;
