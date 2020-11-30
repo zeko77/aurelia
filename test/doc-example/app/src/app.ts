@@ -1,6 +1,6 @@
 import { inject } from '@aurelia/kernel';
 import { IRouter } from '@aurelia/router';
-import { customElement, INode } from '@aurelia/runtime';
+import { customElement, INode } from '@aurelia/runtime-html';
 import { AuthorsRepository } from './repositories/authors';
 import { State } from './state';
 import { arrayRemove } from '@aurelia/router/src/utils';
@@ -111,7 +111,7 @@ export class App {
     return { matches, match: matches === parts.length };
   }
 
-  public afterBind() {
+  public bound() {
     setTimeout(() => { this.link = 'newLink'; }, 5000);
     const paths = [
       'authors',

@@ -1,5 +1,8 @@
-import { arrayRemove } from './utils';
+import { arrayRemove } from './utils.js';
 
+/**
+ * @internal - Helper class
+ */
 export class Collection<T> extends Array<T> {
   private currentIndex: number = -1;
 

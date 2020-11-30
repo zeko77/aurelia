@@ -67,15 +67,15 @@ describe('Queue', function () {
   it('can tick the queue', async function () {
     this.timeout(5000);
 
-    const ctx = TestContext.createHTMLTestContext();
-    const { scheduler } = ctx;
+    const ctx = TestContext.create();
+    const { platform } = ctx;
 
     const callback = async (qAnimal: QueueItem<Animal>) => {
       await wait(100);
       qAnimal.resolve();
     };
     const q = new Queue<Animal>(callback as (item: QueueItem<Animal>) => void);
-    q.activate({ allowedExecutionCostWithinTick: 0, scheduler });
+    q.start({ allowedExecutionCostWithinTick: 0, platform });
     let promise = q.enqueue(new Animal('dog', 'Pluto'));
     assert.strictEqual(q.pending.length, 1, `q.pending.length`);
     await wait(50);
@@ -85,7 +85,7 @@ describe('Queue', function () {
     assert.strictEqual(q.pending.length, 1, `q.pending.length`);
     await wait(120);
     assert.strictEqual(q.pending.length, 0, `q.pending.length`);
-    q.deactivate();
+    q.stop();
   });
 });
 

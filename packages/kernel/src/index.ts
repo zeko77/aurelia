@@ -1,3 +1,20 @@
+import { Platform } from '@aurelia/platform';
+import { DI } from './di.js';
+
+export interface IPlatform extends Platform {}
+export const IPlatform = DI.createInterface<IPlatform>('IPlatform').noDefault();
+
+export {
+  Platform,
+  TaskQueue,
+  Task,
+  TaskAbortError,
+  TaskQueuePriority,
+  TaskStatus,
+  QueueTaskOptions,
+  ITask,
+} from '@aurelia/platform';
+
 export {
   all,
   DI,
@@ -25,47 +42,21 @@ export {
   Transformer,
   newInstanceForScope,
   newInstanceOf,
-  DefaultContainerConfiguration,
+  ContainerConfiguration,
   DefaultResolver,
-  IContainerConfiguration
-} from './di';
+  IContainerConfiguration,
+} from './di.js';
+
 export {
   Class,
   Constructable,
   ConstructableClass,
-  Diff,
-  ICallable,
   IDisposable,
-  IFrameRequestCallback,
   IIndexable,
-  IPerformance,
-  ITimerHandler,
-  IWindowOrWorkerGlobalScope,
-  KnownKeys,
-  NoInfer,
-  Omit,
-  OptionalKnownKeys,
-  OptionalValuesOf,
   Overwrite,
-  Param0,
-  Param1,
-  Param2,
-  Param3,
-  Pick2,
-  Pick3,
   Primitive,
-  Public,
-  Purify,
-  RequiredKnownKeys,
-  RequiredValuesOf,
-  StrictPrimitive,
-  Unwrap,
-  ValuesOf,
   Writable,
-  IfEquals,
-  ReadonlyKeys,
-  WritableKeys,
-} from './interfaces';
+} from './interfaces.js';
 export {
   metadata,
   Metadata,
@@ -74,6 +65,7 @@ export {
   applyMetadataPolyfill,
 } from '@aurelia/metadata';
 export {
+  LogLevel,
   IConsoleLike,
   ColorOptions,
   ILogConfig,
@@ -88,23 +80,19 @@ export {
   ConsoleSink,
   LoggerConfiguration,
   format,
-} from './logger';
+  sink,
+} from './logger.js';
 export {
-  relativeToFile,
-  join,
-} from './path';
-export { PLATFORM } from './platform';
+  IModule,
+  IModuleLoader,
+  AnalyzedModule,
+  ModuleItem,
+} from './module-loader';
 export {
-  ITraceInfo,
-  ITraceWriter,
-  ILiveLoggingOptions,
-  Reporter,
-  Tracer,
-  LogLevel,
-} from './reporter';
-export {
-  Profiler
-} from './profiler';
+  noop,
+  emptyArray,
+  emptyObject,
+} from './platform.js';
 export {
   IResourceKind,
   PartialResourceDefinition,
@@ -114,12 +102,11 @@ export {
   fromAnnotationOrDefinitionOrTypeOrDefault,
   fromAnnotationOrTypeOrDefault,
   fromDefinitionOrDefault,
-} from './resource';
+} from './resource.js';
 export {
   EventAggregator,
-  EventAggregatorCallback,
   IEventAggregator,
-} from './eventaggregator';
+} from './eventaggregator.js';
 export {
   isArrayIndex,
   camelCase,
@@ -138,4 +125,6 @@ export {
   firstDefined,
   getPrototypeChain,
   isNativeFunction,
-} from './functions';
+  onResolve,
+  resolveAll,
+} from './functions.js';

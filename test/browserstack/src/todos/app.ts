@@ -1,4 +1,4 @@
-import { ArrayObserver, customElement } from '@aurelia/runtime';
+import { ArrayObserver, customElement } from '@aurelia/runtime-html';
 
 let id = 0;
 class Todo {
@@ -64,27 +64,27 @@ export class App {
     }
   }
 
-  public afterBind(): void {
+  public binding(): void {
+    console.log('app binding');
+  }
+
+  public bound(): void {
     console.log('app bound');
   }
 
-  public beforeAttach(): void {
-    console.log('app beforeAttach');
+  public attaching(): void {
+    console.log('app attaching');
   }
 
-  public afterAttach(): void {
-    console.log('app afterAttach');
+  public attached(): void {
+    console.log('app attached');
   }
 
-  public beforeDetach(): void {
-    console.log('app beforeDetach');
+  public detaching(): void {
+    console.log('app detaching');
   }
 
-  public afterDetach(): void {
-    console.log('app afterDetach');
-  }
-
-  public afterUnbind(): void {
-    console.log('app unbound');
+  public unbinding(): void {
+    console.log('app unbinding');
   }
 }

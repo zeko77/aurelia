@@ -1,6 +1,6 @@
 import { inject } from '@aurelia/kernel';
 import { INavRoute, IRouter } from '@aurelia/router';
-import { customElement, IObserverLocator, IViewModel, LifecycleFlags } from '@aurelia/runtime';
+import { customElement, IObserverLocator, IViewModel, LifecycleFlags } from '@aurelia/runtime-html';
 
 import { Article } from './components/article/article';
 import { Auth } from './components/auth/auth';
@@ -42,7 +42,7 @@ export class App implements IViewModel {
     this.message = 'Hello World!'; // just for unit testing ;)
   }
 
-  public async beforeBind() {
+  public async binding() {
     // this.router.guardian.addGuard(
     this.router.addHook(
       () => {

@@ -1,5 +1,5 @@
-import { IRouter, ViewportContent, ViewportInstruction } from '@aurelia/router';
-import { CustomElement } from '@aurelia/runtime';
+import { IRouter, ViewportContent } from '@aurelia/router';
+import { CustomElement } from '@aurelia/runtime-html';
 import { assert, TestContext } from '@aurelia/testing';
 
 const define = (CustomElement as any).define;
@@ -13,7 +13,7 @@ describe('ViewportContent', function () {
     this.timeout(5000);
 
     function $setup(dependencies: any[] = []) {
-      const ctx = TestContext.createHTMLTestContext();
+      const ctx = TestContext.create();
       const container = ctx.container;
       const router = container.get(IRouter);
       return { container, router };
@@ -25,7 +25,7 @@ describe('ViewportContent', function () {
       const { container, router } = $setup([Local]);
 
       container.register(Global);
-      const viewport = new ViewportContent(router.createViewportInstruction('global'), null, router.container);
+      const viewport = new ViewportContent(router.createViewportInstruction('global'), null, container);
       assert.strictEqual(viewport.toComponentName(), 'global', `viewport.toComponentName()`);
     });
     it('resolves component name from type', function () {
@@ -34,7 +34,7 @@ describe('ViewportContent', function () {
       const { container, router } = $setup([Local]);
 
       container.register(Global);
-      const viewport = new ViewportContent(router.createViewportInstruction('global'), null, router.container);
+      const viewport = new ViewportContent(router.createViewportInstruction('global'), null, container);
       assert.strictEqual(viewport.toComponentName(), 'global', `viewport.toComponentName()`);
     });
 
@@ -44,8 +44,8 @@ describe('ViewportContent', function () {
       const { container, router } = $setup([Local]);
 
       container.register(Global);
-      const viewport = new ViewportContent(router.createViewportInstruction('global'), null, router.container);
-      assert.strictEqual(viewport.toComponentType(router.container), Global, `viewport.toComponentType(router.container)`);
+      const viewport = new ViewportContent(router.createViewportInstruction('global'), null, container);
+      assert.strictEqual(viewport.toComponentType(container), Global, `viewport.toComponentType(container)`);
     });
     it('resolves component type from type', function () {
       const Local = define({ name: 'local', template: 'local' }, null);
@@ -53,8 +53,8 @@ describe('ViewportContent', function () {
       const { container, router } = $setup([Local]);
 
       container.register(Global);
-      const viewport = new ViewportContent(router.createViewportInstruction(Global), null, router.container);
-      assert.strictEqual(viewport.toComponentType(router.container), Global, `viewport.toComponentType(router.container)`);
+      const viewport = new ViewportContent(router.createViewportInstruction(Global), null, container);
+      assert.strictEqual(viewport.toComponentType(container), Global, `viewport.toComponentType(container)`);
     });
 
     it('resolves component instance from string', function () {
@@ -63,8 +63,8 @@ describe('ViewportContent', function () {
       const { container, router } = $setup([Local]);
 
       container.register(Global);
-      const viewport = new ViewportContent(router.createViewportInstruction('global'), null, router.container);
-      const component = viewport.toComponentInstance(router.container);
+      const viewport = new ViewportContent(router.createViewportInstruction('global'), null, container);
+      const component = viewport.toComponentInstance(container);
       assert.strictEqual(component.constructor, Global, `component.constructor`);
     });
     it('resolves component instance from type', function () {
@@ -75,8 +75,8 @@ describe('ViewportContent', function () {
       container.register(Global);
       // Registration.aliasTo(CustomElement.keyFrom('global'), Global).register(container);
 
-      const viewport = new ViewportContent(router.createViewportInstruction(Global), null, router.container);
-      const component = viewport.toComponentInstance(router.container);
+      const viewport = new ViewportContent(router.createViewportInstruction(Global), null, container);
+      const component = viewport.toComponentInstance(container);
       assert.strictEqual(component.constructor, Global, `component.constructor`);
     });
   });

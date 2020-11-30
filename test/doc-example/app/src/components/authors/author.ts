@@ -1,5 +1,5 @@
 import { IRouter } from '@aurelia/router';
-import { customElement, INode } from '@aurelia/runtime';
+import { customElement, INode } from '@aurelia/runtime-html';
 import { AuthorsRepository } from '../../repositories/authors';
 import { State } from '../../state';
 import { Information } from './information';
@@ -42,6 +42,18 @@ export class Author {
     private readonly state: State,
   ) {}
 
+  public define() {
+    console.log('### define', this);
+  }
+
+  public hydrating() {
+    console.log('### hydrating', this);
+  }
+
+  public hydrated() {
+    console.log('### hydrated', this);
+  }
+
   public created() {
     console.log('### created', this);
   }
@@ -75,7 +87,7 @@ export class Author {
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
   }
-  public beforeBind() {
+  public binding() {
     console.log('### binding', this);
     const newRoutes = this.router.addRoutes([
       { path: 'awards', instructions: [{ component: 'awards', viewport: 'down' }] },
@@ -93,14 +105,14 @@ export class Author {
     // console.log('route', route);
     // this.match(route);
   }
-  public afterBind() {
+  public bound() {
     console.log('### bound', this);
   }
-  public beforeAttach() {
-    console.log('### beforeAttach', this);
+  public attaching() {
+    console.log('### attaching', this);
   }
-  public afterAttach() {
-    console.log('### afterAttach', this);
+  public attached() {
+    console.log('### attached', this);
   }
 
   public canLeave(parameters) {
@@ -111,16 +123,10 @@ export class Author {
     console.log('### leave', this, parameters);
     return true;
   }
-  public beforeDetach() {
-    console.log('### beforeDetach', this);
+  public detaching() {
+    console.log('### detaching', this);
   }
-  public afterDetach() {
-    console.log('### afterDetach', this);
-  }
-  public beforeUnbind() {
-    console.log('### beforeUnbind', this);
-  }
-  public afterUnbind() {
-    console.log('### unbound', this);
+  public unbinding() {
+    console.log('### unbinding', this);
   }
 }

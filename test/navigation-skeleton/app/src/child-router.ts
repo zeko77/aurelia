@@ -1,5 +1,5 @@
 import { IRouter } from '@aurelia/router';
-import { customElement } from '@aurelia/runtime';
+import { customElement } from '@aurelia/runtime-html';
 
 import * as template from './child-router.html';
 
@@ -13,7 +13,7 @@ export class ChildRouter {
     @IRouter public readonly router: IRouter,
   ) { }
 
-  public beforeBind() {
+  public binding() {
     this.router.setNav('child-menu', [
       { title: 'Welcome', route: 'welcome' },
       { title: 'Users', route: 'users' },

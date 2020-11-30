@@ -1,6 +1,5 @@
-import { DebugConfiguration } from '@aurelia/debug';
 import { IRouter, RouterConfiguration } from '@aurelia/router';
-import { Aurelia, CustomElement } from '@aurelia/runtime';
+import { CustomElement, Aurelia } from '@aurelia/runtime-html';
 import { assert, MockBrowserHistoryLocation, TestContext } from '@aurelia/testing';
 
 describe('Configuration', function () {
@@ -14,7 +13,7 @@ describe('Configuration', function () {
   }
 
   async function createFixture(config?) {
-    const ctx = TestContext.createHTMLTestContext();
+    const ctx = TestContext.create();
     const { container, lifecycle } = ctx;
 
     const App = CustomElement.define({ name: 'app', template: '<template><au-viewport name="left"></au-viewport><au-viewport name="right"></au-viewport></template>' });
@@ -23,25 +22,25 @@ describe('Configuration', function () {
 
     const au = new Aurelia(container)
       .register(
-        DebugConfiguration,
         !config ? RouterConfiguration : RouterConfiguration.customize(config),
         App)
       .app({ host: host, component: App });
 
     const router = getModifiedRouter(container);
 
-    await au.start().wait();
+    await au.start();
 
     async function tearDown() {
-      router.deactivate();
-      await au.stop().wait();
+      await au.stop();
       ctx.doc.body.removeChild(host);
+
+      au.dispose();
     }
 
     return { au, container, lifecycle, host, router, ctx, tearDown };
   }
 
-  it('can be activated with defaults', async function () {
+  it('can be started with defaults', async function () {
     this.timeout(5000);
 
     const { router, tearDown } = await createFixture();
@@ -51,7 +50,7 @@ describe('Configuration', function () {
     await tearDown();
   });
 
-  it('can be activated with config object', async function () {
+  it('can be started with config object', async function () {
     this.timeout(5000);
 
     const { router, tearDown } = await createFixture({ separators: { viewport: '#' } });
@@ -62,11 +61,11 @@ describe('Configuration', function () {
     await tearDown();
   });
 
-  it('can be activated with config function', async function () {
+  it('can be started with config function', async function () {
     this.timeout(5000);
 
     const { router, tearDown } = await createFixture((router) => {
-      router.activate({ separators: { viewport: '%' } });
+      router.start({ separators: { viewport: '%' } });
     });
     assert.strictEqual(router['isActive'], true, `router.isActive`);
     assert.strictEqual(router.instructionResolver.separators.viewport, '%', `router.instructionResolver.separators.viewport`);
@@ -78,13 +77,13 @@ describe('Configuration', function () {
   it('is awaitable at start up', async function () {
     this.timeout(5000);
 
-    const ctx = TestContext.createHTMLTestContext();
+    const ctx = TestContext.create();
     const { container } = ctx;
 
     const App = CustomElement.define({ name: 'app', template: '<au-viewport default="foo"></au-viewport>' });
     const Foo = CustomElement.define({ name: 'foo', template: `<div>foo: \${message}</div>` }, class {
       public message: string = '';
-      public async enter() {
+      public async load() {
         await new Promise(resolve => setTimeout(resolve, 250));
         this.message = 'Hello, World!';
       }
@@ -95,7 +94,6 @@ describe('Configuration', function () {
 
     const au = new Aurelia(container)
       .register(
-        DebugConfiguration,
         RouterConfiguration,
         App,
         Foo)
@@ -103,12 +101,13 @@ describe('Configuration', function () {
 
     const router = getModifiedRouter(container);
 
-    await au.start().wait();
+    await au.start();
 
     assert.includes(host.textContent, 'Hello, World!', `host.textContent`);
 
-    await au.stop().wait();
+    await au.stop();
     ctx.doc.body.removeChild(host);
-    router.deactivate();
+
+    au.dispose();
   });
 });

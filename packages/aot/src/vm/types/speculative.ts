@@ -2,21 +2,21 @@ import {
   nextValueId,
   getPath,
   $AnyNonError,
-} from './_shared';
+} from './_shared.js';
 import {
   Realm,
   ExecutionContext,
-} from '../realm';
+} from '../realm.js';
 import {
   $Empty,
-} from './empty';
+} from './empty.js';
 import {
   $TypeError,
   $Error,
-} from './error';
+} from './error.js';
 import {
   $$AssignmentExpressionOrHigher,
-} from '../ast/_shared';
+} from '../ast/_shared.js';
 
 export class $SpeculativeValue {
   public readonly '<$SpeculativeValue>': unknown;
@@ -52,7 +52,7 @@ export class $SpeculativeValue {
     this.path = `((${antecedents.map(getPath).join('+')})/${this.id})`;
   }
 
-  public is(other: $AnyNonError): other is $Empty {
+  public is(other: $AnyNonError | $SpeculativeValue): other is $Empty {
     return other instanceof $SpeculativeValue && this.id === other.id;
   }
 

@@ -36,11 +36,11 @@ Aurelia
 To start an Aurelia application, create a `new Aurelia()` object with a target `host` and a root `component` and call `start()`.
 
 ```typescript
-import Aurelia, { DebugConfiguration, JitHtmlBrowserConfiguration } from 'aurelia';
+import Aurelia, { StandardConfiguration } from 'aurelia';
 import { ShellComponent } from './shell';
 
 new Aurelia()
-  .register(JitHtmlBrowserConfiguration, DebugConfiguration)
+  .register(StandardConfiguration)
   .app({ host: document.querySelector('body'), component: ShellComponent })
   .start();
 ```
@@ -74,12 +74,15 @@ new Aurelia()
 If you have a package that exports all your custom elements, you can pass the entire package to the `.register()` method on your Aurelia app.
 
 src/components/index.ts:
-```TypeScript 
+
+```typescript
 export { CardCustomElement } from './card';
 export { CollapseCustomElement } from './collapse';
 ```
+
 src/main.ts:
-```TypeScript
+
+```typescript
 import * as globalComponents from './components';
 
 // When using quick startup

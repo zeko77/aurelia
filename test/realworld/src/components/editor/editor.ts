@@ -1,6 +1,6 @@
 import { inject } from '@aurelia/kernel';
 import { IRouter, lifecycleLogger } from '@aurelia/router';
-import { bindable, BindingMode } from '@aurelia/runtime';
+import { bindable, BindingMode } from '@aurelia/runtime-html';
 
 import { Article } from 'shared/models/article';
 import { ArticleService } from 'shared/services/article-service';
@@ -17,15 +17,18 @@ export class Editor {
     private readonly router: IRouter,
   ) {}
 
+  public define() { return; }
+  public hydrating() { return; }
+  public hydrated() { return; }
   public created() { return; }
-  public beforeBind() { return; }
-  public afterBind() { return; }
-  public beforeAttach() { return; }
-  public afterAttach() { return; }
-  public beforeDetach() { return; }
-  public afterDetach() { return; }
-  public beforeUnbind() { return; }
-  public afterUnbind() { return; }
+
+  public binding() { return; }
+  public bound() { return; }
+  public attaching() { return; }
+  public attached() { return; }
+
+  public detaching() { return; }
+  public unbinding() { return; }
 
   public enter(params: { slug: any }) {
     this.slug = params.slug;

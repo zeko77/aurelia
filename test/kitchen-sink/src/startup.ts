@@ -1,14 +1,9 @@
 import * as faker from 'faker';
-import { TraceConfiguration, DebugConfiguration } from '@aurelia/debug';
 import {
   Aurelia,
-  IObserverLocatorRegistration,
-  ILifecycleRegistration,
-  IRendererRegistration,
   IfRegistration,
   ElseRegistration,
   RepeatRegistration,
-  ReplaceableRegistration,
   OneTimeBindingBehaviorRegistration,
   TwoWayBindingBehaviorRegistration,
   CustomElementRendererRegistration,
@@ -18,71 +13,38 @@ import {
   SetPropertyRendererRegistration,
   TemplateControllerRendererRegistration,
   ValueConverter,
-} from '@aurelia/runtime';
-import {
-  IProjectorLocatorRegistration,
-  ITargetAccessorLocatorRegistration,
-  ITemplateFactoryRegistration,
-  ComposeRegistration,
-  ListenerBindingRendererRegistration,
-  SetAttributeRendererRegistration,
-  TextBindingRendererRegistration,
-  ITargetObserverLocatorRegistration
-} from '@aurelia/runtime-html';
-import {
-  IDOMInitializerRegistration
-} from '@aurelia/runtime-html-browser';
-import {
   AtPrefixedTriggerAttributePatternRegistration,
   ColonPrefixedBindAttributePatternRegistration,
   DotSeparatedAttributePatternRegistration,
   DefaultBindingCommandRegistration,
   ForBindingCommandRegistration,
-  IExpressionParserRegistration,
   OneTimeBindingCommandRegistration,
-  TwoWayBindingCommandRegistration
-} from '@aurelia/jit';
-import {
+  TwoWayBindingCommandRegistration,
+  ITargetAccessorLocatorRegistration,
+  ComposeRegistration,
+  ListenerBindingRendererRegistration,
+  SetAttributeRendererRegistration,
+  TextBindingRendererRegistration,
+  ITargetObserverLocatorRegistration,
   ITemplateCompilerRegistration,
-  ITemplateElementFactoryRegistration,
-  TriggerBindingCommandRegistration
-} from '@aurelia/jit-html';
+  TriggerBindingCommandRegistration,
+} from '@aurelia/runtime-html';
 import {
   ViewportCustomElement,
   Router
 } from '@aurelia/router';
 import { App } from './app';
-import { DI, Tracer, camelCase } from '@aurelia/kernel';
+import { DI, camelCase } from '@aurelia/kernel';
 
 window['faker'] = faker;
-
-DebugConfiguration.register();
-TraceConfiguration.register();
-Tracer.enabled = true;
-Tracer.enableLiveLogging({
-  di: false,
-  jit: false,
-  rendering: false,
-  lifecycle: true,
-  binding: true,
-  beforeAttach: true,
-  mounting: true,
-  observation: true
-});
 
 // manually compose the app from individual registrations, leaving out some stuff that we're not going
 // to use (yet)
 const container = DI.createContainer().register(
-  // runtime components
-  IObserverLocatorRegistration,
-  ILifecycleRegistration,
-  IRendererRegistration,
-
   // runtime resources
   IfRegistration,
   ElseRegistration,
   RepeatRegistration,
-  ReplaceableRegistration,
 
   OneTimeBindingBehaviorRegistration,
   TwoWayBindingBehaviorRegistration,
@@ -96,10 +58,8 @@ const container = DI.createContainer().register(
   TemplateControllerRendererRegistration,
 
   // runtime-html components
-  IProjectorLocatorRegistration,
   ITargetObserverLocatorRegistration,
   ITargetAccessorLocatorRegistration,
-  ITemplateFactoryRegistration,
 
   // runtime-html resources
   ComposeRegistration,
@@ -108,12 +68,6 @@ const container = DI.createContainer().register(
   ListenerBindingRendererRegistration,
   SetAttributeRendererRegistration,
   TextBindingRendererRegistration,
-
-  // runtime-html-browser components
-  IDOMInitializerRegistration,
-
-  // jit components
-  IExpressionParserRegistration,
 
   // jit attribute patterns
   DotSeparatedAttributePatternRegistration,
@@ -128,7 +82,6 @@ const container = DI.createContainer().register(
 
   // jit-html components
   ITemplateCompilerRegistration,
-  ITemplateElementFactoryRegistration,
 
   // jit-html binding commands
   TriggerBindingCommandRegistration,

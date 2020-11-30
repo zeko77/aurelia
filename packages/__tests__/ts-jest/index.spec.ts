@@ -22,7 +22,6 @@ function tsProcess(
 
 const config: Config.ProjectConfig = {
   automock: false,
-  browser: false,
   cache: false,
   cacheDirectory: '/test_cache_dir/',
   clearMocks: false,
@@ -33,14 +32,13 @@ const config: Config.ProjectConfig = {
   displayName: undefined,
   errorOnDeprecated: false,
   extraGlobals: [],
-  filter: null,
+  filter: undefined,
   forceCoverageMatch: [],
-  globalSetup: null,
-  globalTeardown: null,
+  globalSetup: undefined,
+  globalTeardown: undefined,
   globals: {},
-  haste: {
-    providesModuleNodeModules: [],
-  },
+  haste: {},
+  injectGlobals: false,
   moduleDirectories: [],
   moduleFileExtensions: ['js'],
   moduleLoader: '/test_module_loader_path',
@@ -51,7 +49,7 @@ const config: Config.ProjectConfig = {
   prettierPath: 'prettier',
   resetMocks: false,
   resetModules: false,
-  resolver: null,
+  resolver: undefined,
   restoreMocks: false,
   rootDir: '/test_root_dir/',
   roots: [],
@@ -60,7 +58,8 @@ const config: Config.ProjectConfig = {
   setupFilesAfterEnv: [],
   skipFilter: false,
   skipNodeResolution: false,
-  snapshotResolver: null,
+  slowTestThreshold: 75,
+  snapshotResolver: undefined,
   snapshotSerializers: [],
   testEnvironment: 'node',
   testEnvironmentOptions: {},
@@ -73,7 +72,7 @@ const config: Config.ProjectConfig = {
   timers: 'real',
   transform: [],
   transformIgnorePatterns: [],
-  unmockedModulePathPatterns: null,
+  unmockedModulePathPatterns: undefined,
   watchPathIgnorePatterns: [],
 };
 
@@ -81,7 +80,7 @@ describe('ts-jest', function () {
   it('transforms html file', function () {
     const html = '<template></template>';
     const expected = `// @ts-nocheck
-import { CustomElement } from '@aurelia/runtime';
+import { CustomElement } from '@aurelia/runtime-html';
 export const name = "foo-bar";
 export const template = "<template></template>";
 export default template;
@@ -102,7 +101,7 @@ export function register(container) {
   it('transforms html file with shadowOptions', function () {
     const html = '<template></template>';
     const expected = `// @ts-nocheck
-import { CustomElement } from '@aurelia/runtime';
+import { CustomElement } from '@aurelia/runtime-html';
 import { shadowCSS } from '@aurelia/runtime-html';
 import d0 from "./foo-bar.less";
 export const name = "foo-bar";
@@ -130,7 +129,7 @@ export function register(container) {
   it('transforms html file with cssModules', function () {
     const html = '<template></template>';
     const expected = `// @ts-nocheck
-import { CustomElement } from '@aurelia/runtime';
+import { CustomElement } from '@aurelia/runtime-html';
 import { cssModules } from '@aurelia/runtime-html';
 import d0 from "./foo-bar.scss";
 export const name = "foo-bar";
@@ -157,7 +156,7 @@ export function register(container) {
   it('transforms js file with html pair', function () {
     const js = 'export class FooBar {}\n';
     const expected = `import * as __au2ViewDef from './foo-bar.html';
-import { customElement } from '@aurelia/runtime';
+import { customElement } from '@aurelia/runtime-html';
 @customElement(__au2ViewDef)
 export class FooBar {}
 `;

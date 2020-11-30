@@ -1,8 +1,8 @@
 import * as path from 'path';
 import { kebabCase } from '@aurelia/kernel';
 import modifyCode, { ModifyCodeResult } from 'modify-code';
-import { IFileUnit, IPreprocessOptions } from './options';
-import { stripMetaData } from './strip-meta-data';
+import { IFileUnit, IPreprocessOptions } from './options.js';
+import { stripMetaData } from './strip-meta-data.js';
 
 // stringModuleWrap is to deal with pure css text module import in shadowDOM mode.
 // For webpack:
@@ -76,7 +76,7 @@ export function preprocessHtmlTemplate(unit: IFileUnit, options: IPreprocessOpti
   });
 
   const m = modifyCode('', unit.path);
-  m.append(`import { CustomElement } from '@aurelia/runtime';\n`);
+  m.append(`import { CustomElement } from '@aurelia/runtime-html';\n`);
   if (cssDeps.length > 0) {
     if (shadowMode !== null) {
       m.append(`import { shadowCSS } from '@aurelia/runtime-html';\n`);

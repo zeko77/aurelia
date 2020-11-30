@@ -1,29 +1,28 @@
-import { DebugConfiguration } from '@aurelia/debug';
-import { IRouter, RouterConfiguration, ViewportInstruction } from '@aurelia/router';
-import { Aurelia, CustomElement } from '@aurelia/runtime';
+import { IRouter, RouterConfiguration } from '@aurelia/router';
+import { CustomElement, Aurelia } from '@aurelia/runtime-html';
 import { assert, MockBrowserHistoryLocation, TestContext } from '@aurelia/testing';
 
 describe('Nav', function () {
   async function createFixture(component) {
-    const ctx = TestContext.createHTMLTestContext();
+    const ctx = TestContext.create();
     const container = ctx.container;
 
     const App = CustomElement.define({ name: 'app', template: `<template><au-viewport name="app" used-by="${component}" default="${component}"></au-viewport></template>` });
     const Foo = CustomElement.define({ name: 'foo', template: '<template>Nav: foo <au-nav name="main-nav"></au-nav></template>' }, class {
       public static inject = [IRouter];
       public constructor(private readonly r: IRouter) { }
-      public enter() { this.r.setNav('main-nav', [{ title: 'Bar', route: 'bar' }]); }
+      public load() { this.r.setNav('main-nav', [{ title: 'Bar', route: 'bar' }]); }
     });
     const Bar = CustomElement.define({ name: 'bar', template: '<template>Nav: bar <au-nav name="main-nav"></au-nav><au-viewport name="main-viewport" default="baz"></au-viewport></template>' }, class {
       public static inject = [IRouter];
       public constructor(private readonly r: IRouter) { }
-      public enter() { this.r.setNav('main-nav', [{ title: 'Baz', route: 'baz' }]); }
+      public load() { this.r.setNav('main-nav', [{ title: 'Baz', route: 'baz' }]); }
     });
     const Baz = CustomElement.define({ name: 'baz', template: '<template>Baz</template>' }, class { });
     const Qux = CustomElement.define({ name: 'qux', template: '<template>Nav: qux <au-nav name="main-nav"></au-nav><au-viewport name="main-viewport" default="baz"></au-viewport></template>' }, class {
       public static inject = [IRouter];
       public constructor(private readonly r: IRouter) { }
-      public enter() {
+      public load() {
         this.r.addNav('main-nav', [{ title: 'Baz', route: Baz, children: [{ title: 'Bar', route: ['bar', Baz] }] }, { title: 'Foo', route: { component: Foo, viewport: 'main-viewport' } }]);
       }
     });
@@ -32,7 +31,7 @@ describe('Nav', function () {
     ctx.doc.body.appendChild(host);
 
     const au = ctx.wnd['au'] = new Aurelia(container)
-      .register(DebugConfiguration, RouterConfiguration)
+      .register(RouterConfiguration)
       .app({ host: host, component: App });
 
     const router = container.get(IRouter);
@@ -43,24 +42,25 @@ describe('Nav', function () {
 
     container.register(Foo, Bar, Baz, Qux);
 
-    await au.start().wait();
+    await au.start();
 
     async function tearDown() {
-      router.deactivate();
-      await au.stop().wait();
+      await au.stop();
       ctx.doc.body.removeChild(host);
+
+      au.dispose();
     }
 
-    const scheduler = ctx.scheduler;
+    const platform = ctx.platform;
 
-    return { au, container, host, router, ctx, tearDown, scheduler };
+    return { au, container, host, router, ctx, tearDown, platform };
   }
 
   it('generates nav with a link', async function () {
     this.timeout(5000);
-    const { host, router, tearDown, scheduler } = await createFixture('foo');
+    const { host, router, tearDown, platform } = await createFixture('foo');
 
-    await scheduler.yieldAll();
+    await platform.domWriteQueue.yield();
 
     assert.includes(host.innerHTML, 'foo', `host.innerHTML`);
     assert.includes(host.innerHTML, 'Bar', `host.innerHTML`);
@@ -71,10 +71,10 @@ describe('Nav', function () {
 
   it('generates nav with an active link', async function () {
     this.timeout(5000);
-    const { host, router, tearDown, scheduler } = await createFixture('bar');
+    const { host, router, tearDown, platform } = await createFixture('bar');
     router.activeComponents = [router.createViewportInstruction('baz', 'main-viewport')];
 
-    await scheduler.yieldAll();
+    await platform.domWriteQueue.yield();
 
     assert.includes(host.innerHTML, 'href="baz"', `host.innerHTML`);
     // assert.includes(host.innerHTML, 'nav-active', `host.innerHTML`); // TODO: fix this
@@ -83,10 +83,10 @@ describe('Nav', function () {
 
   it('generates nav with child links', async function () {
     this.timeout(5000);
-    const { host, router, tearDown, scheduler } = await createFixture('qux');
+    const { host, router, tearDown, platform } = await createFixture('qux');
     router.activeComponents =[router.createViewportInstruction('baz', 'main-viewport')];
 
-    await scheduler.yieldAll();
+    await platform.domWriteQueue.yield();
 
     assert.includes(host.innerHTML, 'href="baz"', `host.innerHTML`);
     assert.includes(host.innerHTML, 'nav-has-children', `host.innerHTML`);

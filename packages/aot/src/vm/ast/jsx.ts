@@ -18,17 +18,17 @@ import {
   JsxAttributeLike,
 } from 'typescript';
 import {
-  PLATFORM,
+  emptyArray,
   ILogger,
 } from '@aurelia/kernel';
 import {
   Realm,
   ExecutionContext,
-} from '../realm';
+} from '../realm.js';
 import {
   $Any,
   $AnyNonEmpty,
-} from '../types/_shared';
+} from '../types/_shared.js';
 import {
   I$Node,
   Context,
@@ -38,22 +38,18 @@ import {
   $AssignmentExpressionNode,
   $$JsxOpeningLikeElement,
   $i,
-} from './_shared';
+} from './_shared.js';
 import {
   $$ESModuleOrScript,
-} from './modules';
+} from './modules.js';
 import {
   $Identifier,
   $PropertyAccessExpression,
   $ThisExpression,
-} from './expressions';
+} from './expressions.js';
 import {
   $StringLiteral,
-} from './literals';
-
-const {
-  emptyArray,
-} = PLATFORM;
+} from './literals.js';
 
 export type $$JsxParent = (
   $JsxElement |

@@ -1,26 +1,26 @@
 import {
   ILogger,
-  PLATFORM,
+  emptyArray,
   IContainer,
 } from '@aurelia/kernel';
 import {
   Char,
-} from '@aurelia/jit';
+} from '@aurelia/runtime';
 import {
   IFileSystem,
   IFile,
-} from './interfaces';
+} from './interfaces.js';
 import {
   normalizePath,
   joinPath,
-} from './path-utils';
+} from './path-utils.js';
 import {
   basename,
   dirname,
 } from 'path';
 import {
   Package,
-} from './package-types';
+} from './package-types.js';
 
 function countSlashes(path: string): number {
   let count = 0;
@@ -173,7 +173,7 @@ export class NPMPackageLoader {
   public async loadEntryPackage(
     projectDir: string,
   ): Promise<NPMPackage> {
-    const start = PLATFORM.now();
+    const start = Date.now();
 
     this.logger.info(`load()`);
 
@@ -184,7 +184,7 @@ export class NPMPackageLoader {
 
     this.pkgPromiseCache.clear();
 
-    const end = PLATFORM.now();
+    const end = Date.now();
 
     const packages = Array.from(this.pkgCache.values());
     const pkgCount = packages.length;
@@ -360,7 +360,7 @@ export class NPMPackage {
     if (pkgJson.dependencies instanceof Object) {
       this.deps = Object.keys(pkgJson.dependencies).map(name => new NPMPackageDependency(this, name));
     } else {
-      this.deps = PLATFORM.emptyArray;
+      this.deps = emptyArray;
     }
   }
 

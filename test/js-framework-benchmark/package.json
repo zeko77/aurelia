@@ -1,6 +1,6 @@
 {
   "name": "test-js-framework-benchmark",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "description": "Simple Benchmark for Javascript client side rendering",
   "scripts": {
@@ -50,7 +50,7 @@
   "homepage": "https://github.com/krausest/js-framework-benchmark",
   "dependencies": {
     "command-exists": "^1.2.8",
-    "cross-env": "^6.0.3",
+    "cross-env": "^7.0.2",
     "fs-extra": "^8.1.0",
     "lodash": "4.17.15",
     "rimraf": "^3.0.0",

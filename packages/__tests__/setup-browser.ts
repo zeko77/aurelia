@@ -1,43 +1,10 @@
-import {
-  HTMLTestContext,
-  TestContext,
-} from '@aurelia/testing';
-import {
-  JitHtmlBrowserConfiguration
-} from '@aurelia/jit-html-browser';
-import {
-  Reporter,
-  LogLevel,
-} from '@aurelia/kernel';
+import { BrowserPlatform } from '@aurelia/platform-browser';
+import { $setup } from './setup-shared.js';
 
-Reporter.level = LogLevel.error;
+const platform = new BrowserPlatform(window);
+$setup(platform);
 
-function createBrowserTestContext(): HTMLTestContext {
-  return HTMLTestContext.create(
-    JitHtmlBrowserConfiguration,
-    window,
-    UIEvent,
-    Event,
-    CustomEvent,
-    Node,
-    Element,
-    HTMLElement,
-    HTMLDivElement,
-    Text,
-    Comment,
-    DOMParser,
-    CSSStyleSheet,
-    ShadowRoot
-  );
-}
-
-function initializeBrowserTestContext(): void {
-  TestContext.createHTMLTestContext = createBrowserTestContext;
-  // Just trigger the HTMLDOM to be resolved once so it sets the DOM globals
-  TestContext.createHTMLTestContext().dom.createElement('div');
-}
-
-initializeBrowserTestContext();
+console.log(`Browser test context initialized`);
 
 function importAll(r) {
   r.keys().forEach(r);
@@ -47,12 +14,9 @@ function importAll(r) {
 importAll(require.context('./1-kernel/', true, /\.spec\.js$/));
 importAll(require.context('./2-runtime/', true, /\.spec\.js$/));
 importAll(require.context('./3-runtime-html/', true, /\.spec\.js$/));
-importAll(require.context('./4-jit/', true, /\.spec\.js$/));
-importAll(require.context('./5-jit-html/', true, /\.spec\.js$/));
 
-importAll(require.context('./web-components/', true, /\.spec\.js$/));
 importAll(require.context('./fetch-client/', true, /\.spec\.js$/));
-importAll(require.context('./i18n/', true, /\.spec\.js$/));
+importAll(require.context('./i18n/t/', true, /\.spec\.js$/));
 importAll(require.context('./integration/', true, /\.spec\.js$/));
 importAll(require.context('./router/', true, /\.spec\.js$/));
 importAll(require.context('./validation/', true, /\.spec\.js$/));

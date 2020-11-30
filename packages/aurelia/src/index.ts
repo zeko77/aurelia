@@ -1,18 +1,60 @@
-export {
-  Aurelia,
-  Aurelia as default
-} from './quick-start';
+import { DI, IContainer, Registration } from '@aurelia/kernel';
+import { StandardConfiguration, Aurelia as $Aurelia, IPlatform, IAppRoot, CustomElementType, ISinglePageApp, CustomElement } from '@aurelia/runtime-html';
+import { BrowserPlatform } from '@aurelia/platform-browser';
 
-export {
-  DebugConfiguration,
-  TraceConfiguration,
+export const PLATFORM = BrowserPlatform.getOrCreate(globalThis);
+export { IPlatform };
 
-  // DebugTracer,
-  // stringifyLifecycleFlags,
+function createContainer(): IContainer {
+  return DI.createContainer()
+    .register(
+      Registration.instance(IPlatform, PLATFORM),
+      StandardConfiguration,
+    );
+}
 
-  // Unparser,
-  // Serializer
-} from '@aurelia/debug';
+export class Aurelia extends $Aurelia {
+  public constructor(container: IContainer = createContainer()) {
+    super(container);
+  }
+
+  public static start(root: IAppRoot | undefined): void | Promise<void> {
+    return new Aurelia().start(root);
+  }
+
+  public static app(config: ISinglePageApp | unknown): Omit<Aurelia, 'register' | 'app' | 'enhance'> {
+    return new Aurelia().app(config);
+  }
+
+  public static enhance(config: ISinglePageApp): Omit<Aurelia, 'register' | 'app' | 'enhance'> {
+    return new Aurelia().enhance(config) as Omit<Aurelia, 'register' | 'app' | 'enhance'>;
+  }
+
+  public static register(...params: readonly unknown[]): Aurelia {
+    return new Aurelia().register(...params);
+  }
+
+  public app(config: ISinglePageApp | unknown): Omit<this, 'register' | 'app' | 'enhance'> {
+    if (CustomElement.isType(config as CustomElementType)) {
+      // Default to custom element element name
+      const definition = CustomElement.getDefinition(config as CustomElementType);
+      let host = document.querySelector(definition.name);
+      if (host === null) {
+        // When no target is found, default to body.
+        // For example, when user forgot to write <my-app></my-app> in html.
+        host = document.body;
+      }
+      return super.app({
+        host: host as HTMLElement,
+        component: config as CustomElementType
+      });
+    }
+
+    return super.app(config as ISinglePageApp);
+  }
+}
+
+export default Aurelia;
 
 export {
   Interceptor,
@@ -29,139 +71,6 @@ export {
 
   HttpClient
 } from '@aurelia/fetch-client';
-
-export {
-  // AttrSyntax,
-
-  // IAttributeParser,
-
-  attributePattern,
-  // AttributePatternDefinition,
-  IAttributePattern,
-  // IAttributePatternHandler,
-  // Interpretation,
-  // ISyntaxInterpreter,
-
-  // AtPrefixedTriggerAttributePattern,
-  // ColonPrefixedBindAttributePattern,
-  // DotSeparatedAttributePattern,
-  // RefAttributePattern,
-
-  bindingCommand,
-  // BindingCommand,
-  BindingCommandInstance,
-  // BindingCommandDefinition,
-  // BindingCommandKind,
-  // BindingCommandType,
-  getTarget,
-
-  // CallBindingCommand,
-  // DefaultBindingCommand,
-  // ForBindingCommand,
-  // FromViewBindingCommand,
-  // OneTimeBindingCommand,
-  // ToViewBindingCommand,
-  // TwoWayBindingCommand,
-
-  // IExpressionParserRegistration,
-
-  // DefaultComponents as JitDefaultComponents,
-
-  // RefAttributePatternRegistration,
-  // DotSeparatedAttributePatternRegistration,
-
-  // DefaultBindingSyntax,
-
-  // AtPrefixedTriggerAttributePatternRegistration,
-  // ColonPrefixedBindAttributePatternRegistration,
-
-  ShortHandBindingSyntax,
-
-  // CallBindingCommandRegistration,
-  // DefaultBindingCommandRegistration,
-  // ForBindingCommandRegistration,
-  // FromViewBindingCommandRegistration,
-  // OneTimeBindingCommandRegistration,
-  // ToViewBindingCommandRegistration,
-  // TwoWayBindingCommandRegistration,
-
-  // DefaultBindingLanguage as JitDefaultBindingLanguage,
-
-  // JitConfiguration,
-
-  // Access,
-  // Precedence,
-  // Char,
-  // These exports are temporary until we have a proper way to unit test them
-
-  // parseExpression,
-  // parse,
-  // ParserState,
-
-  // ResourceModel,
-  // BindableInfo,
-  // ElementInfo,
-  // AttrInfo,
-
-  // AnySymbol,
-  // BindingSymbol,
-  // CustomAttributeSymbol,
-  // CustomElementSymbol,
-  // ElementSymbol,
-  // LetElementSymbol,
-  // NodeSymbol,
-  // ParentNodeSymbol,
-  // PlainAttributeSymbol,
-  // PlainElementSymbol,
-  // ReplacePartSymbol,
-  // ResourceAttributeSymbol,
-  // SymbolFlags,
-  // SymbolWithBindings,
-  // SymbolWithMarker,
-  // SymbolWithTemplate,
-  // TemplateControllerSymbol,
-  // TextSymbol
-} from '@aurelia/jit';
-
-export {
-  // IAttrSyntaxTransformer,
-
-  // TriggerBindingCommand,
-  // DelegateBindingCommand,
-  // CaptureBindingCommand,
-  // AttrBindingCommand,
-  // ClassBindingCommand,
-  // StyleBindingCommand,
-
-  // ITemplateCompilerRegistration,
-  // ITemplateElementFactoryRegistration,
-  // IAttrSyntaxTransformerRegistation,
-
-  // DefaultComponents as JitHtmlDefaultComponents,
-
-  // TriggerBindingCommandRegistration,
-  // DelegateBindingCommandRegistration,
-  // CaptureBindingCommandRegistration,
-  // AttrBindingCommandRegistration,
-  // ClassBindingCommandRegistration,
-  // StyleBindingCommandRegistration,
-
-  // DefaultBindingLanguage as JitHtmlDefaultBindingLanguage,
-
-  // JitHtmlConfiguration,
-
-  // stringifyDOM,
-  // stringifyInstructions,
-  // stringifyTemplateDefinition,
-
-  // TemplateBinder,
-
-  // ITemplateElementFactory
-} from '@aurelia/jit-html';
-
-export {
-  JitHtmlBrowserConfiguration
-} from '@aurelia/jit-html-browser';
 
 export {
   all,
@@ -192,7 +101,6 @@ export {
   Constructable,
   ConstructableClass,
   // Diff,
-  ICallable,
   IDisposable,
   // IFrameRequestCallback,
   IIndexable,
@@ -246,16 +154,14 @@ export {
   // parseQueryString,
   // IQueryParams,
 
-  PLATFORM,
+  emptyArray,
+  emptyObject,
+  noop,
 
   // ITraceInfo,
   // ITraceWriter,
   // ILiveLoggingOptions,
-  Reporter,
-  Tracer,
   LogLevel,
-
-  Profiler,
 
   // IResourceDefinition,
   // IResourceDescriptions,
@@ -268,7 +174,6 @@ export {
   // fromDefinitionOrDefault,
 
   EventAggregator,
-  EventAggregatorCallback,
   IEventAggregator,
 
   isArrayIndex,
@@ -353,7 +258,8 @@ export {
   // Segment,
   // RouteRecognizer,
 
-  IRouterOptions,
+  RouterOptions,
+  IRouterActivateOptions,
   IRouter,
   Router,
 
@@ -453,9 +359,9 @@ export {
   // ICallMemberExpression,
   // ICallScopeExpression,
   // IConditionalExpression,
-  // IForOfStatement,
+  // ForOfStatement,
   // IHtmlLiteralExpression,
-  // IInterpolationExpression,
+  // Interpolation,
   // IObjectBindingPattern,
   // IObjectLiteralExpression,
   // IPrimitiveLiteralExpression,
@@ -500,23 +406,19 @@ export {
   // disableSetObservation,
 
   // BindingContext,
-  // Scope,
   // OverrideContext,
 
   // CollectionLengthObserver,
 
   // CollectionSizeObserver,
 
-  // ComputedOverrides,
-  // ComputedLookup,
-  computed,
-  // createComputedObserver,
-  // CustomSetterObserver,
-  // GetterObserver,
-
   // IDirtyChecker,
   // DirtyCheckProperty,
   // DirtyCheckSettings,
+
+  ComputedObserver,
+  ComputedWatcher,
+  ExpressionWatcher,
 
   // IObjectObservationAdapter,
   IObserverLocator,
@@ -529,8 +431,6 @@ export {
 
   // PropertyAccessor,
 
-  // ProxyObserver,
-
   // BindableObserver,
 
   // SetterObserver,
@@ -539,7 +439,6 @@ export {
 
   subscriberCollection,
   collectionSubscriberCollection,
-  proxySubscriberCollection,
 
   bindingBehavior,
   BindingBehavior,
@@ -587,7 +486,6 @@ export {
 
   containerless,
   customElement,
-  CustomElementHost,
   CustomElement,
   // CustomElementDecorator,
   // CustomElementKind,
@@ -615,14 +513,14 @@ export {
   // Clock,
   // IClock,
   // IClockSettings,
-  IScheduler,
   // ITask,
-  // ITaskQueue,
+  // TaskQueue,
   // QueueTaskOptions,
   // Task,
   // TaskAbortError,
   // TaskCallback,
   // TaskQueue,
+  AppTask,
   TaskQueuePriority,
   // TaskStatus,
   // QueueTaskTargetOptions,
@@ -649,7 +547,7 @@ export {
   // Aurelia, // Replaced by quick-start wrapper
   // IDOMInitializer,
   // ISinglePageApp,
-  CompositionRoot,
+  IAppRoot,
 
   // IfRegistration,
   // ElseRegistration,
@@ -685,7 +583,6 @@ export {
   // RuntimeConfiguration,
 
   // AttributeInstruction,
-  // HooksDefinition,
   // ICallBindingInstruction,
   // IHydrateAttributeInstruction,
   // IHydrateElementInstruction,
@@ -694,49 +591,44 @@ export {
   // IInterpolationInstruction,
   // IIteratorBindingInstruction,
   // ILetBindingInstruction,
-  // InstructionRow,
+  // IInstructionRow,
   // InstructionTypeName,
   // IPropertyBindingInstruction,
   // IRefBindingInstruction,
   // ISetPropertyInstruction,
-  // isTargetedInstruction,
-  // ITargetedInstruction,
+  // isInstruction,
+  // IInstruction,
   // NodeInstruction,
-  // TargetedInstruction,
-  // TargetedInstructionType,
+  // IInstruction,
+  // InstructionType,
   // PartialCustomElementDefinitionParts,
   alias,
   registerAliases,
 
   // DOM, should expose the one exported in runtime-html
   INode,
+  IEventTarget,
   IRenderLocation,
-  IDOM,
   // NodeSequence,
   // INodeSequence,
   // INodeSequenceFactory,
 
   BindingMode,
-  BindingStrategy,
   // ExpressionKind,
   // Hooks,
   LifecycleFlags,
   // State,
 
   // CallBindingInstruction,
-  // FromViewBindingInstruction,
   // HydrateAttributeInstruction,
   // HydrateElementInstruction,
   // HydrateTemplateController,
   // InterpolationInstruction,
   // IteratorBindingInstruction,
   // LetBindingInstruction,
-  // LetElementInstruction,
-  // OneTimeBindingInstruction,
+  // HydrateLetElementInstruction,
   // RefBindingInstruction,
   // SetPropertyInstruction,
-  // ToViewBindingInstruction,
-  // TwoWayBindingInstruction,
 
   // ViewModelKind,
   // IBinding,
@@ -747,21 +639,6 @@ export {
   // IViewCache,
   // IViewFactory,
   // MountStrategy,
-
-  // PromiseOrTask,
-  // MaybePromiseOrTask,
-  AggregateContinuationTask,
-  TerminalTask,
-  AggregateTerminalTask,
-  ContinuationTask,
-  ILifecycleTask,
-  LifecycleTask,
-  PromiseTask,
-  TaskSlot,
-  StartTask,
-  IStartTask,
-  IStartTaskManager,
-  ProviderTask,
 
   // AccessorOrObserver,
   // Collection,
@@ -782,19 +659,13 @@ export {
   // IOverrideContext,
   // IPropertyChangeTracker,
   // IPropertyObserver,
-  // IScope,
+  // Scope,
   // ISubscribable,
   // ISubscriberCollection,
   // ObservedCollection,
-  // ObserversLookup,
   // PropertyObserver,
   // CollectionObserver,
   // ICollectionSubscriberCollection,
-  // IProxyObserver,
-  // IProxy,
-  // IProxySubscribable,
-  // IProxySubscriber,
-  // IProxySubscriberCollection,
   // ICollectionSubscribable,
   // ISubscriber,
   // isIndexMap,
@@ -802,23 +673,45 @@ export {
   // cloneIndexMap,
   // createIndexMap,
 
-  instructionRenderer,
-  ensureExpression,
+  renderer,
 
-  // CompiledTemplate,
-  // ChildrenObserver,
-  // IInstructionRenderer,
-  // IInstructionTypeClassifier,
-  // IRenderer,
-  // IRenderingEngine,
-  // ITemplate,
-  // ITemplateCompiler,
-  // ITemplateFactory,
+  // DefaultBindingLanguage as JitDefaultBindingLanguage,
 
-  // RenderContext
-} from '@aurelia/runtime';
+  // JitConfiguration,
 
-export {
+  // Access,
+  // Precedence,
+  // Char,
+  // These exports are temporary until we have a proper way to unit test them
+
+  // parseExpression,
+  // parse,
+  // ParserState,
+
+  // BindableInfo,
+  // ElementInfo,
+  // AttrInfo,
+
+  // AnySymbol,
+  // BindingSymbol,
+  // CustomAttributeSymbol,
+  // CustomElementSymbol,
+  // ElementSymbol,
+  // LetElementSymbol,
+  // NodeSymbol,
+  // ParentNodeSymbol,
+  // PlainAttributeSymbol,
+  // PlainElementSymbol,
+  // ReplacePartSymbol,
+  // ResourceAttributeSymbol,
+  // SymbolFlags,
+  // SymbolWithBindings,
+  // SymbolWithMarker,
+  // SymbolWithTemplate,
+  // TemplateControllerSymbol,
+  // TextSymbol
+
+  IAurelia,
   // Listener,
 
   // AttributeBinding,
@@ -839,12 +732,14 @@ export {
   // DelegateOrCaptureSubscription,
   // TriggerSubscription,
   // IElementConfiguration,
-  // IEventManager,
+  // IEventDelegator,
   // IEventSubscriber,
   // IEventTargetWithLookups,
   // EventSubscriber,
   // EventSubscription,
-  // EventManager,
+  // EventDelegator,
+
+  NodeObserverLocator,
 
   // TargetAccessorLocator,
   // TargetObserverLocator,
@@ -887,6 +782,72 @@ export {
 
   // DefaultComponents as RuntimeHtmlDefaultComponents,
 
+  // CompiledTemplate,
+  // ChildrenObserver,
+  // IRenderer,
+  // IInstructionTypeClassifier,
+  // IRenderingEngine,
+  // ITemplate,
+  // ITemplateCompiler,
+  // ITemplateFactory,
+
+  // RenderContext
+
+  // AttrSyntax,
+
+  // IAttributeParser,
+
+  attributePattern,
+  // AttributePatternDefinition,
+  IAttributePattern,
+  // IAttributePatternHandler,
+  // Interpretation,
+  // ISyntaxInterpreter,
+  IAttrSyntaxTransformer,
+
+  // AtPrefixedTriggerAttributePattern,
+  // ColonPrefixedBindAttributePattern,
+  // DotSeparatedAttributePattern,
+  // RefAttributePattern,
+
+  bindingCommand,
+  // BindingCommand,
+  BindingCommandInstance,
+  // BindingCommandDefinition,
+  // BindingCommandKind,
+  // BindingCommandType,
+  getTarget,
+
+  // CallBindingCommand,
+  // DefaultBindingCommand,
+  // ForBindingCommand,
+  // FromViewBindingCommand,
+  // OneTimeBindingCommand,
+  // ToViewBindingCommand,
+  // TwoWayBindingCommand,
+
+  // IExpressionParserRegistration,
+
+  // DefaultComponents as JitDefaultComponents,
+
+  // RefAttributePatternRegistration,
+  // DotSeparatedAttributePatternRegistration,
+
+  // DefaultBindingSyntax,
+
+  // AtPrefixedTriggerAttributePatternRegistration,
+  // ColonPrefixedBindAttributePatternRegistration,
+
+  ShortHandBindingSyntax,
+
+  // CallBindingCommandRegistration,
+  // DefaultBindingCommandRegistration,
+  // ForBindingCommandRegistration,
+  // FromViewBindingCommandRegistration,
+  // OneTimeBindingCommandRegistration,
+  // ToViewBindingCommandRegistration,
+  // TwoWayBindingCommandRegistration,
+
   // AttrBindingBehaviorRegistration,
   // SelfBindingBehaviorRegistration,
   // UpdateTriggerBindingBehaviorRegistration,
@@ -904,38 +865,32 @@ export {
 
   // DefaultRenderers,
 
-  // RuntimeHtmlConfiguration,
+  // StandardConfiguration,
 
   createElement,
   // RenderPlan,
 
-  // HTMLAttributeInstruction,
-  // HTMLInstructionRow,
-  // HTMLNodeInstruction,
-  // HTMLTargetedInstruction,
-  // HTMLTargetedInstructionType,
+  // AttributeInstruction,
+  // IInstructionRow,
+  // NodeInstruction,
+  // IInstruction,
+  // InstructionType,
   // IAttributeBindingInstruction,
   // IListenerBindingInstruction,
   // ISetAttributeInstruction,
-  // isHTMLTargetedInstruction,
+  // isInstruction,
   // IStylePropertyBindingInstruction,
   // ITextBindingInstruction,
 
-  // NodeType,
-  HTMLDOM,
-  DOM, // on top of DOM in @aurelia/runtime
   // NodeSequenceFactory,
   // FragmentNodeSequence,
 
   // AttributeBindingInstruction,
-  // CaptureBindingInstruction,
-  // DelegateBindingInstruction,
   // SetAttributeInstruction,
   // SetClassAttributeInstruction,
   // SetStyleAttributeInstruction,
   // StylePropertyBindingInstruction,
   // TextBindingInstruction,
-  // TriggerBindingInstruction,
 
   // ContainerlessProjector,
   // HostProjector,
@@ -957,12 +912,39 @@ export {
   // StyleElementStyles,
   // IShadowDOMStyles,
   // IShadowDOMGlobalStyles
+
+  // IAttrSyntaxTransformer,
+
+  // TriggerBindingCommand,
+  // DelegateBindingCommand,
+  // CaptureBindingCommand,
+  // AttrBindingCommand,
+  // ClassBindingCommand,
+  // StyleBindingCommand,
+
+  // ITemplateCompilerRegistration,
+  // ITemplateElementFactoryRegistration,
+  // IAttrSyntaxTransformerRegistation,
+
+  // DefaultComponents as JitHtmlDefaultComponents,
+
+  // TriggerBindingCommandRegistration,
+  // DelegateBindingCommandRegistration,
+  // CaptureBindingCommandRegistration,
+  // AttrBindingCommandRegistration,
+  // ClassBindingCommandRegistration,
+  // StyleBindingCommandRegistration,
+
+  // DefaultBindingLanguage as JitHtmlDefaultBindingLanguage,
+
+  // StandardConfiguration,
+
+  // stringifyDOM,
+  // stringifyInstructions,
+  // stringifyTemplateDefinition,
+
+  // TemplateBinder,
+
+  // ITemplateElementFactory
 } from '@aurelia/runtime-html';
 
-export {
-  // IDOMInitializerRegistration,
-  // DefaultComponents as RuntimeHtmlBrowserDefaultComponents,
-  // RuntimeHtmlBrowserConfiguration
-  // BrowserDOMInitializer,
-  // BrowserScheduler
-} from '@aurelia/runtime-html-browser';

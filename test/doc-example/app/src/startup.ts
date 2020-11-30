@@ -1,7 +1,5 @@
-import { DebugConfiguration } from '@aurelia/debug';
-import { JitHtmlBrowserConfiguration } from '@aurelia/jit-html-browser';
+import { Aurelia, StandardConfiguration } from '@aurelia/runtime-html';
 import { RouterConfiguration } from '@aurelia/router';
-import { Aurelia } from '@aurelia/runtime';
 
 import { App } from './app';
 
@@ -46,14 +44,13 @@ import { State } from './state';
       LoginSpecial,
       Main,
 
-      JitHtmlBrowserConfiguration,
+      StandardConfiguration,
       RouterConfiguration.customize({ useHref: true }),
-      DebugConfiguration,
     )
     .app({
       host: document.querySelector('app'),
       component: App,
     });
 
-  await au.start().wait();
+  await au.start();
 })().catch(console.error);

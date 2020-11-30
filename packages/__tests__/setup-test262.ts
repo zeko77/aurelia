@@ -5,7 +5,6 @@ import {
   Registration,
   IContainer,
   ILogger,
-  PLATFORM,
   format,
   IDisposable,
   Writable,
@@ -115,11 +114,9 @@ class TestCase implements IDisposable {
 
   public async GetSourceFiles(ctx: ExecutionContext): Promise<readonly $$ESModuleOrScript[]> {
     const host = this.host;
-    // eslint-disable-next-line @typescript-eslint/promise-function-async
     return Promise.all(this.files.map(x => host.loadSpecificFile(ctx, x, 'script'))); // TODO: decide this based on meta
   }
 
-  // eslint-disable-next-line @typescript-eslint/promise-function-async
   public run(): Promise<$Any> {
     return this.host.executeProvider(this);
   }
@@ -259,7 +256,7 @@ function toString(x: { toString(): string }): string {
   return x.toString();
 }
 
-const utf8Encoding = { encoding: 'utf8' };
+const utf8Encoding = { encoding: 'utf8' } as const;
 
 export class BufferedFileSink {
   private readonly buffer: ILogEvent[] = [];
@@ -328,7 +325,7 @@ class TestRunner {
     const assertFile = harnessFiles.find(x => x.name === 'assert.js');
     const prerequisites = [staFile, assertFile];
 
-    const now = PLATFORM.now();
+    const now = Date.now();
 
     const files: IFile[] = [
       // ...(await fs.getFiles(join(languageDir, 'eval-code', 'indirect'), true)).filter(x => x.shortName.endsWith('realm'))
@@ -344,7 +341,7 @@ class TestRunner {
       files.push(...(await fs.getFiles(dir, true)).filter(x => !x.shortName.endsWith('FIXTURE')));
     }
 
-    logger.info(`Discovered ${files.length} test files in ${Math.round(PLATFORM.now() - now)}ms`);
+    logger.info(`Discovered ${files.length} test files in ${Math.round(Date.now() - now)}ms`);
 
     const reporter = new TestReporter(logger);
 

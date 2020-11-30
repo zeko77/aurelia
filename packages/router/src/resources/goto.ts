@@ -1,46 +1,38 @@
-import { NavigationInstructionResolver } from '../type-resolvers';
-import { customAttribute, INode, bindable, BindingMode, IDOM, DelegationStrategy, IObserverLocator, LifecycleFlags, CustomAttribute, ICustomAttributeController, ICustomAttributeViewModel } from '@aurelia/runtime';
-import { IRouter } from '../router';
-import { IEventManager } from '@aurelia/runtime-html';
-import { IDisposable } from '@aurelia/kernel';
+import { customAttribute, INode, bindable, BindingMode, IObserverLocator, CustomAttribute, ICustomAttributeController, ICustomAttributeViewModel } from '@aurelia/runtime-html';
+import { IRouter } from '../router.js';
+import { NavigationInstructionResolver } from '../type-resolvers.js';
+import { deprecationWarning } from '../utils.js';
 
 @customAttribute('goto')
-export class GotoCustomAttribute implements ICustomAttributeViewModel<HTMLElement> {
+export class GotoCustomAttribute implements ICustomAttributeViewModel {
   @bindable({ mode: BindingMode.toView })
   public value: unknown;
 
-  private listener: IDisposable | null = null;
   private hasHref: boolean | null = null;
 
-  private readonly element: HTMLElement;
   private observer: any;
 
-  public readonly $controller!: ICustomAttributeController<HTMLElement, this>;
+  public readonly $controller!: ICustomAttributeController<this>;
 
   private readonly activeClass: string = 'goto-active';
   public constructor(
-    @IDOM private readonly dom: IDOM,
-    @INode element: INode,
+    @INode private readonly element: INode<Element>,
     @IRouter private readonly router: IRouter,
-    @IEventManager private readonly eventManager: IEventManager,
   ) {
-    this.element = element as HTMLElement;
+    deprecationWarning('"goto" custom attribute', '"load" custom attribute');
   }
 
-  public beforeBind(): void {
-    this.listener = this.eventManager.addEventListener(
-      this.dom, this.element, 'click', this.router.linkHandler.handler, DelegationStrategy.none);
+  public binding(): void {
+    this.element.addEventListener('click', this.router.linkHandler.handler);
     this.updateValue();
 
     const observerLocator = this.router.container.get(IObserverLocator);
-    this.observer = observerLocator.getObserver(LifecycleFlags.none, this.router, 'activeComponents') as any;
+    this.observer = observerLocator.getObserver(this.router, 'activeComponents') as any;
     this.observer.subscribe(this);
   }
 
-  public beforeUnbind(): void {
-    if (this.listener !== null) {
-      this.listener.dispose();
-    }
+  public unbinding(): void {
+    this.element.removeEventListener('click', this.router.linkHandler.handler);
     this.observer.unsubscribe(this);
   }
 
@@ -60,7 +52,7 @@ export class GotoCustomAttribute implements ICustomAttributeViewModel<HTMLElemen
   }
 
   public handleChange(): void {
-    const controller = CustomAttribute.for(this.element, 'goto')!.parent;
+    const controller = CustomAttribute.for(this.element, 'goto')!.parent!;
     const created = NavigationInstructionResolver.createViewportInstructions(this.router, this.value as any, { context: controller });
     const instructions = NavigationInstructionResolver.toViewportInstructions(this.router, created.instructions);
     for (const instruction of instructions) {

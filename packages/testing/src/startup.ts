@@ -1,14 +1,14 @@
 import { Constructable } from '@aurelia/kernel';
-import { CustomElement, Aurelia } from '@aurelia/runtime';
-import { HTMLTestContext, TestContext } from './html-test-context';
+import { CustomElement, Aurelia } from '@aurelia/runtime-html';
+import { TestContext } from './test-context.js';
 
 export function createFixture<T>(template: string | Node,
   $class?: Constructable<T>,
   registrations: any[] = [],
   autoStart: boolean = true,
-  ctx: HTMLTestContext = TestContext.createHTMLTestContext(),
+  ctx: TestContext = TestContext.create(),
 ) {
-  const { container, lifecycle, scheduler, observerLocator } = ctx;
+  const { container, lifecycle, platform, observerLocator } = ctx;
   container.register(...registrations);
   const root = ctx.doc.body.appendChild(ctx.doc.createElement('div'));
   const host = root.appendChild(ctx.createElement('app'));
@@ -16,10 +16,10 @@ export function createFixture<T>(template: string | Node,
   const App = CustomElement.define({ name: 'app', template }, $class || class { } as Constructable<T>);
   const component = new App();
 
-  let startPromise: Promise<unknown> = Promise.resolve();
+  let startPromise: Promise<void> | void = void 0;
   if (autoStart) {
     au.app({ host: host, component });
-    startPromise = au.start().wait();
+    startPromise = au.start();
   }
 
   return {
@@ -28,18 +28,19 @@ export function createFixture<T>(template: string | Node,
     host: ctx.doc.firstElementChild,
     container,
     lifecycle,
-    scheduler,
+    platform,
     testHost: root,
     appHost: host,
     au,
     component,
     observerLocator,
     start: async () => {
-      await au.app({ host: host, component }).start().wait();
+      await au.app({ host: host, component }).start();
     },
     tearDown: async () => {
-      await au.stop().wait();
+      await au.stop();
       root.remove();
+      au.dispose();
     }
   };
 }

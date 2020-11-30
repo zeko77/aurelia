@@ -21,9 +21,9 @@ import {
   SyntaxKind,
 } from 'typescript';
 import {
-  PLATFORM,
   ILogger,
   Writable,
+  emptyArray,
 } from '@aurelia/kernel';
 import {
   IFile,
@@ -38,35 +38,35 @@ import {
   ResolvedBindingRecord,
   Realm,
   ExecutionContext,
-} from '../realm';
+} from '../realm.js';
 import {
   $ModuleEnvRec,
   $EnvRec,
   $FunctionEnvRec,
   $GlobalEnvRec,
-} from '../types/environment-record';
+} from '../types/environment-record.js';
 import {
   $NamespaceExoticObject,
-} from '../exotics/namespace';
+} from '../exotics/namespace.js';
 import {
   $String,
-} from '../types/string';
+} from '../types/string.js';
 import {
   $Undefined,
-} from '../types/undefined';
+} from '../types/undefined.js';
 import {
   $Any,
   CompletionType,
-} from '../types/_shared';
+} from '../types/_shared.js';
 import {
   $Number,
-} from '../types/number';
+} from '../types/number.js';
 import {
   $Null,
-} from '../types/null';
+} from '../types/null.js';
 import {
   $Empty,
-} from '../types/empty';
+} from '../types/empty.js';
 import {
   IModuleResolver,
 } from '../../service-host';
@@ -74,10 +74,10 @@ import {
   $Error,
   $SyntaxError,
   $TypeError,
-} from '../types/error';
+} from '../types/error.js';
 import {
   $List,
-} from '../types/list';
+} from '../types/list.js';
 import {
   I$Node,
   Context,
@@ -102,13 +102,13 @@ import {
   $i,
   $ESStatementListItemNode,
   $$ESVarDeclaration,
-} from './_shared';
+} from './_shared.js';
 import {
   $Identifier,
-} from './expressions';
+} from './expressions.js';
 import {
   $ClassDeclaration,
-} from './classes';
+} from './classes.js';
 import {
   DirectivePrologue,
   $VariableStatement,
@@ -130,25 +130,21 @@ import {
   $ThrowStatement,
   $TryStatement,
   $DebuggerStatement,
-} from './statements';
+} from './statements.js';
 import {
   $FunctionDeclaration,
-} from './functions';
+} from './functions.js';
 import {
   $InterfaceDeclaration,
   $TypeAliasDeclaration,
   $EnumDeclaration,
-} from './types';
+} from './types.js';
 import {
   $StringLiteral,
-} from './literals';
+} from './literals.js';
 import {
   $StringSet,
-} from '../globals/string';
-
-const {
-  emptyArray,
-} = PLATFORM;
+} from '../globals/string.js';
 
 export type $$ESModuleItem = (
   $$ESStatementListItem |
@@ -1128,7 +1124,7 @@ export class $ESModule implements I$Node, IModule {
     const realm = ctx.Realm;
     const intrinsics = realm['[[Intrinsics]]'];
 
-    const start = PLATFORM.now();
+    const start = Date.now();
     this.logger.debug(`${this.path}.[Instantiate] starting`);
 
     // TODO: this is temporary. Should be done by RunJobs
@@ -1171,7 +1167,7 @@ export class $ESModule implements I$Node, IModule {
     // 7. Assert: stack is empty.
     // 8. Return undefined.
 
-    const end = PLATFORM.now();
+    const end = Date.now();
     this.logger.debug(`${this.path}.[Instantiate] done in ${Math.round(end - start)}ms`);
 
     return new $Undefined(realm);

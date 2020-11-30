@@ -1,15 +1,16 @@
-import { IDOM, CustomAttribute } from '@aurelia/runtime';
-import { HTMLDOM } from '@aurelia/runtime-html';
-import { Key } from '@aurelia/kernel';
-import { GotoCustomAttribute } from './resources/goto';
+import { IPlatform, CustomAttribute } from '@aurelia/runtime-html';
+import { GotoCustomAttribute } from './resources/goto.js';
+import { LoadCustomAttribute } from './resources/load.js';
 
 /**
  * Provides information about how to handle an anchor event.
+ *
+ * @internal - Shouldn't be used directly.
  */
 export interface ILinkHandlerOptions {
   /**
    * Attribute href should be used for instruction if present and
-   * attribute goto is not present
+   * attribute load is not present
    */
   useHref?: boolean;
   /**
@@ -20,6 +21,8 @@ export interface ILinkHandlerOptions {
 
 /**
  * Provides information about how to handle an anchor event.
+ *
+ * @internal - Shouldn't be used directly.
  */
 export interface AnchorEventInfo {
   /**
@@ -38,10 +41,11 @@ export interface AnchorEventInfo {
 
 /**
  * Class responsible for handling interactions that should trigger navigation.
+ *
+ * @ internal - Shouldn't be used directly.
+ * TODO: remove the space between @ and i again at some point (this stripInternal currently screws up the types in the __tests__ package for some reason)
  */
 export class LinkHandler {
-  public static readonly inject: readonly Key[] = [IDOM];
-
   public window: Window;
   public document: Document;
 
@@ -51,11 +55,9 @@ export class LinkHandler {
   };
   private isActive: boolean = false;
 
-  public constructor(
-    dom: HTMLDOM
-  ) {
-    this.window = dom.window;
-    this.document = dom.document;
+  public constructor(@IPlatform p: IPlatform) {
+    this.window = p.window;
+    this.document = p.document;
   }
   /**
    * Gets the href and a "should handle" recommendation, given an Event.
@@ -85,14 +87,16 @@ export class LinkHandler {
     }
 
     const gotoAttr = CustomAttribute.for(target, 'goto');
-    const goto: string | null = gotoAttr !== void 0 ? (gotoAttr.viewModel as GotoCustomAttribute).value as string : null;
-    const href: string | null = options.useHref && target.hasAttribute('href') ? target.getAttribute('href') : null;
-    if ((goto === null || goto.length === 0) && (href === null || href.length === 0)) {
+    const goto = gotoAttr !== void 0 ? (gotoAttr.viewModel as GotoCustomAttribute).value as string : null;
+    const loadAttr = CustomAttribute.for(target, 'load');
+    const load = loadAttr !== void 0 ? (loadAttr.viewModel as LoadCustomAttribute).value as string : null;
+    const href = options.useHref && target.hasAttribute('href') ? target.getAttribute('href') : null;
+    if ((goto === null || goto.length === 0) && (load === null || load.length === 0) && (href === null || href.length === 0)) {
       return info;
     }
 
     info.anchor = target;
-    info.instruction = goto || href;
+    info.instruction = load ?? goto ?? href;
 
     const leftButtonClicked: boolean = event.button === 0;
 
@@ -131,12 +135,12 @@ export class LinkHandler {
   }
 
   /**
-   * Activate the instance.
+   * Start the instance.
    *
    */
-  public activate(options: ILinkHandlerOptions): void {
+  public start(options: ILinkHandlerOptions): void {
     if (this.isActive) {
-      throw new Error('Link handler has already been activated');
+      throw new Error('Link handler has already been started');
     }
 
     this.isActive = true;
@@ -144,11 +148,11 @@ export class LinkHandler {
   }
 
   /**
-   * Deactivate the instance. Event handlers and other resources should be cleaned up here.
+   * Stop the instance. Event handlers and other resources should be cleaned up here.
    */
-  public deactivate(): void {
+  public stop(): void {
     if (!this.isActive) {
-      throw new Error('Link handler has not been activated');
+      throw new Error('Link handler has not been started');
     }
     this.isActive = false;
   }

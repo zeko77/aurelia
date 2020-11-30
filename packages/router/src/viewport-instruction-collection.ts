@@ -1,7 +1,10 @@
-import { ViewportInstruction } from './viewport-instruction';
-import { IScopeOwner } from './scope';
-import { arrayRemove } from './utils';
+import { ViewportInstruction } from './viewport-instruction.js';
+import { IScopeOwner } from './scope.js';
+import { arrayRemove } from './utils.js';
 
+/**
+ * @internal - Shouldn't be used directly
+ */
 export class ViewportInstructionCollection extends Array<ViewportInstruction> {
   public get empty(): boolean {
     return this.length === 0;

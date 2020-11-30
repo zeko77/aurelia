@@ -2,8 +2,8 @@ import * as path from 'path';
 import { kebabCase } from '@aurelia/kernel';
 import modifyCode, { ModifyCodeResult } from 'modify-code';
 import * as ts from 'typescript';
-import { nameConvention } from './name-convention';
-import { IFileUnit, IPreprocessOptions, ResourceType } from './options';
+import { nameConvention } from './name-convention.js';
+import { IFileUnit, IPreprocessOptions, ResourceType } from './options.js';
 
 interface ICapturedImport {
   names: string[];
@@ -21,7 +21,6 @@ interface IFoundResource {
   needDecorator?: [number, string];
   implicitStatement?: IPos;
   runtimeImportName?: string;
-  jitImportName?: string;
   customName?: IPos;
 }
 
@@ -33,7 +32,6 @@ interface IFoundDecorator {
 interface IModifyResourceOptions {
   expectedResourceName: string;
   runtimeImport: ICapturedImport;
-  jitImport: ICapturedImport;
   implicitElement?: IPos;
   localDeps: string[];
   conventionalDecorators: [number, string][];
@@ -47,13 +45,12 @@ export function preprocessResource(unit: IFileUnit, options: IPreprocessOptions)
 
   let auImport: ICapturedImport = { names: [], start: 0, end: 0 };
   let runtimeImport: ICapturedImport = { names: [], start: 0, end: 0 };
-  let jitImport: ICapturedImport = { names: [], start: 0, end: 0 };
 
   let implicitElement: IPos | undefined;
   let customElementName: IPos | undefined; // for @customName('custom-name')
 
   // When there are multiple exported classes (e.g. local value converters),
-  // they might be deps for rendering the main implicit custom element.
+  // they might be deps for composing the main implicit custom element.
   const localDeps: string[] = [];
   const conventionalDecorators: [number, string][] = [];
 
@@ -61,24 +58,16 @@ export function preprocessResource(unit: IFileUnit, options: IPreprocessOptions)
     // Find existing import Aurelia, {customElement, templateController} from 'aurelia';
     const au = captureImport(s, 'aurelia', unit.contents);
     if (au) {
-      // Assumes only one import statement for @aurelia/runtime
+      // Assumes only one import statement for @aurelia/runtime-html
       auImport = au;
       return;
     }
 
-    // Find existing import {customElement} from '@aurelia/runtime';
-    const runtime = captureImport(s, '@aurelia/runtime', unit.contents);
+    // Find existing import {customElement} from '@aurelia/runtime-html';
+    const runtime = captureImport(s, '@aurelia/runtime-html', unit.contents);
     if (runtime) {
-      // Assumes only one import statement for @aurelia/runtime
+      // Assumes only one import statement for @aurelia/runtime-html
       runtimeImport = runtime;
-      return;
-    }
-
-    // Find existing import {bindingCommand} from '@aurelia/jit';
-    const jit = captureImport(s, '@aurelia/jit', unit.contents);
-    if (jit) {
-      // Assumes only one import statement for @aurelia/jit
-      jitImport = jit;
       return;
     }
 
@@ -93,7 +82,6 @@ export function preprocessResource(unit: IFileUnit, options: IPreprocessOptions)
       needDecorator,
       implicitStatement,
       runtimeImportName,
-      jitImportName,
       customName
     } = resource;
 
@@ -103,16 +91,12 @@ export function preprocessResource(unit: IFileUnit, options: IPreprocessOptions)
     if (runtimeImportName && !auImport.names.includes(runtimeImportName)) {
       ensureTypeIsExported(runtimeImport.names, runtimeImportName);
     }
-    if (jitImportName && !auImport.names.includes(jitImportName)) {
-      ensureTypeIsExported(jitImport.names, jitImportName);
-    }
     if (customName) customElementName = customName;
   });
 
   return modifyResource(unit, {
     expectedResourceName,
     runtimeImport,
-    jitImport,
     implicitElement,
     localDeps,
     conventionalDecorators,
@@ -124,7 +108,6 @@ function modifyResource(unit: IFileUnit, options: IModifyResourceOptions) {
   const {
     expectedResourceName,
     runtimeImport,
-    jitImport,
     implicitElement,
     localDeps,
     conventionalDecorators,
@@ -166,15 +149,9 @@ function modifyResource(unit: IFileUnit, options: IModifyResourceOptions) {
 
   if (conventionalDecorators.length) {
     if (runtimeImport.names.length) {
-      let runtimeImportStatement = `import { ${runtimeImport.names.join(', ')} } from '@aurelia/runtime';`;
+      let runtimeImportStatement = `import { ${runtimeImport.names.join(', ')} } from '@aurelia/runtime-html';`;
       if (runtimeImport.end === runtimeImport.start) runtimeImportStatement += '\n';
       m.replace(runtimeImport.start, runtimeImport.end, runtimeImportStatement);
-    }
-
-    if (jitImport.names.length) {
-      let jitImportStatement = `import { ${jitImport.names.join(', ')} } from '@aurelia/jit';`;
-      if (jitImport.end === jitImport.start) jitImportStatement += '\n';
-      m.replace(jitImport.start, jitImport.end, jitImportStatement);
     }
 
     conventionalDecorators.forEach(([pos, str]) => m.insert(pos, str));
@@ -292,11 +269,7 @@ function findResource(node: ts.Node, expectedResourceName: string, filePair: str
         localDep: className,
       };
 
-      if (type === 'bindingCommand') {
-        result.jitImportName = type;
-      } else {
-        result.runtimeImportName = type;
-      }
+      result.runtimeImportName = type;
 
       return result;
     }

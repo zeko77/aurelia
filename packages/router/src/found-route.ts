@@ -1,12 +1,17 @@
-import { IRoute } from './interfaces';
-import { ViewportInstruction } from './viewport-instruction';
+import { IRoute } from './interfaces.js';
+import { ViewportInstruction } from './viewport-instruction.js';
 
+/**
+ * @internal - Used when founding route/instructions
+ */
 export class FoundRoute {
   public constructor(
     public match: IRoute | null = null,
     public matching: string = '',
     public instructions: ViewportInstruction[] = [],
     public remaining: string = '',
+    // public remaining: string | null = null,
+    public params: Record<string, unknown> = {},
   ) { }
 
   public get foundConfiguration(): boolean {

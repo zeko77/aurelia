@@ -33,30 +33,30 @@ import {
   CaseOrDefaultClause,
 } from 'typescript';
 import {
-  PLATFORM,
+  emptyArray,
   ILogger,
 } from '@aurelia/kernel';
 import {
   Realm,
   ExecutionContext,
-} from '../realm';
+} from '../realm.js';
 import {
   $DeclarativeEnvRec,
-} from '../types/environment-record';
+} from '../types/environment-record.js';
 import {
   $String,
-} from '../types/string';
+} from '../types/string.js';
 import {
   $Undefined,
-} from '../types/undefined';
+} from '../types/undefined.js';
 import {
   $Any,
   CompletionType,
   $AnyNonEmpty,
-} from '../types/_shared';
+} from '../types/_shared.js';
 import {
   $Empty,
-} from '../types/empty';
+} from '../types/empty.js';
 import {
   I$Node,
   Context,
@@ -87,27 +87,23 @@ import {
   getLexicallyScopedDeclarations,
   $i,
   $$ESVarDeclaration,
-} from './_shared';
+} from './_shared.js';
 import {
   ExportEntryRecord,
   $$ESModuleOrScript,
-} from './modules';
+} from './modules.js';
 import {
   $Identifier,
-} from './expressions';
+} from './expressions.js';
 import {
   $ObjectBindingPattern,
-} from './bindings';
+} from './bindings.js';
 import {
   $StringSet,
-} from '../globals/string';
+} from '../globals/string.js';
 import {
   $LoopContinues,
-} from '../operations';
-
-const {
-  emptyArray,
-} = PLATFORM;
+} from '../operations.js';
 
 export class $VariableStatement implements I$Node {
   public get $kind(): SyntaxKind.VariableStatement { return SyntaxKind.VariableStatement; }
@@ -1882,7 +1878,7 @@ export class $LabeledStatement implements I$Node {
   public readonly LexicallyScopedDeclarations: readonly $$ESDeclaration[];
   // http://www.ecma-international.org/ecma-262/#sec-labelled-statements-static-semantics-toplevellexicallydeclarednames
   // 13.13.8 Static Semantics: TopLevelLexicallyDeclaredNames
-  public readonly TopLevelLexicallyDeclaredNames: readonly $String[] = emptyArray;;
+  public readonly TopLevelLexicallyDeclaredNames: readonly $String[] = emptyArray;
   // http://www.ecma-international.org/ecma-262/#sec-labelled-statements-static-semantics-toplevellexicallyscopeddeclarations
   // 13.13.9 Static Semantics: TopLevelLexicallyScopedDeclarations
   public readonly TopLevelLexicallyScopedDeclarations: readonly $$ESDeclaration[] = emptyArray;

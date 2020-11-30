@@ -1,13 +1,7 @@
 /* eslint-disable import/no-nodejs-modules */
 import {
-  DebugConfiguration,
-} from '@aurelia/debug';
-import {
   resolve,
 } from 'path';
-import {
-  Realm,
-} from './vm/realm';
 import {
   DI,
   LoggerConfiguration,
@@ -17,23 +11,21 @@ import {
 } from '@aurelia/kernel';
 import {
   IFileSystem,
-} from './system/interfaces';
+} from './system/interfaces.js';
 import {
   NodeFileSystem,
-} from './system/file-system';
+} from './system/file-system.js';
 import {
   ServiceHost,
-} from './service-host';
+} from './service-host.js';
 
 (async function () {
-  DebugConfiguration.register();
-
   // Just for testing
   const root = resolve(__dirname, '..', '..', '..', '..', 'test', 'realworld');
 
   const container = DI.createContainer();
   container.register(
-    LoggerConfiguration.create(console, LogLevel.debug, ColorOptions.colors),
+    LoggerConfiguration.create({ $console: console, level: LogLevel.debug, colorOptions: ColorOptions.colors }),
     Registration.singleton(IFileSystem, NodeFileSystem),
   );
 

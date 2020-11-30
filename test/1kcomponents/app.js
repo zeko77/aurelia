@@ -1,6 +1,5 @@
-import { JitHtmlBrowserConfiguration } from '@aurelia/jit-html-browser';
-import { Aurelia, CustomElementResource, ValueConverterResource, ILifecycle, Priority, LifecycleFlags } from '@aurelia/runtime';
-import { register } from '@aurelia/plugin-svg';
+// @ts-check
+import { Aurelia, CustomElement, IPlatform, ValueConverter, SVGAnalyzerRegistration, StandardConfiguration } from '@aurelia/runtime-html';
 import { startFPSMonitor, startMemMonitor } from 'perf-monitor';
 import { interpolateViridis } from 'd3-scale-chromatic';
 
@@ -139,12 +138,9 @@ class Point {
   }
 
   flushRAF() {
-    if (this.transform === void 0) {
-      this.transform = this.$controller.getTargetAccessor('transform');
-    }
     this.x = this[Point.pxProp] + (this[Point.nxProp] - this[Point.pxProp]) * Point.pct;
     this.y = this[Point.pyProp] + (this[Point.nyProp] - this[Point.pyProp]) * Point.pct;
-    this.transform.setValue(`translate(${~~this.x}, ${~~this.y})`, LifecycleFlags.fromBind);
+    this.transform = `translate(${~~this.x}, ${~~this.y})`;
   }
 }
 
@@ -158,7 +154,7 @@ Point.nxProp = '';
 Point.pyProp = '';
 Point.nyProp = '';
 
-const App = CustomElementResource.define(
+const App = CustomElement.define(
   {
     name: 'app',
     template: `
@@ -170,7 +166,6 @@ const App = CustomElementResource.define(
               class="point"
               transform.bind="point.transform"
               fill.bind="point.color"
-              view.one-time="point.$controller = $view"
             />
           </g>
         </svg>
@@ -195,26 +190,33 @@ const App = CustomElementResource.define(
     `,
     bindables: ['count', 'fps'],
     dependencies: [
-      ValueConverterResource.define('num', class { fromView(str) { return parseInt(str, 10); } })
+      ValueConverter.define('num', class { fromView(str) { return parseInt(str, 10); } })
     ]
   },
   class {
-    static get inject() { return [ILifecycle]; }
+    static get inject() { return [IPlatform]; }
 
-    constructor(lifecycle) {
-      this.lifecycle = lifecycle;
+    /**
+     * @param {IPlatform} platform
+     */
+    constructor(platform) {
+      this.platform = platform;
       this.points = [];
       this.count = 0;
       this.fps = 30;
     }
 
-    attached() {
+    attaching() {
       this.count = 1000;
-      this.lifecycle.enqueueRAF(Point.update, Point, Priority.preempt);
-    }
-
-    fpsChanged(fps) {
-      this.$controller.lifecycle.minFPS = fps;
+      // this.scheduler.enqueueRAF(Point.update, Point, Priority.preempt);
+      this.platform.domWriteQueue.queueTask(
+        () => {
+          Point.update();
+          this.points.forEach(point => point.flushRAF());
+        },
+        {
+        persistent: true,
+      });
     }
 
     countChanged(count) {
@@ -238,28 +240,19 @@ const App = CustomElementResource.define(
         for (let i = 0; i < count; ++i) {
           points[i].update(i, count);
         }
-        let point;
-        for (let i = count; i < length; ++i) {
-          point = points[i];
-          this.lifecycle.dequeueRAF(point.flushRAF, point);
-        }
         points.splice(count, length - count);
       }
     }
 
     createPoint(count, i) {
-      const point = new Point(i, count);
-      this.lifecycle.enqueueRAF(point.flushRAF, point, Priority.low);
-      return point;
+      return new Point(i, count);
     }
   }
 );
 
-new Aurelia().register(JitHtmlBrowserConfiguration, { register }).app(
+new Aurelia().register(StandardConfiguration, SVGAnalyzerRegistration).app(
   {
     host: document.getElementById('app'),
     component: App,
-    enableTimeSlicing: true,
-    adaptiveTimeSlicing: true
-  }
-).start();
+  })
+  .start();

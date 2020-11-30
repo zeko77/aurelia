@@ -1,8 +1,6 @@
-import { DebugConfiguration } from '@aurelia/debug';
 import { HttpClient } from '@aurelia/fetch-client';
-import { JitHtmlBrowserConfiguration } from '@aurelia/jit-html-browser';
 import { RouterConfiguration } from '@aurelia/router';
-import { Aurelia } from '@aurelia/runtime';
+import { Aurelia, StandardConfiguration } from '@aurelia/runtime-html';
 
 import 'promise-polyfill/lib/polyfill'; // eslint-disable-line import/no-unassigned-import
 
@@ -28,8 +26,7 @@ const globalResources = [
 
 new Aurelia()
   .register(
-    JitHtmlBrowserConfiguration,
-    DebugConfiguration,
+    StandardConfiguration,
     RouterConfiguration.customize({ useUrlFragmentHash: false, statefulHistoryLength: 3 }),
     ...globalResources,
   )

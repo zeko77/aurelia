@@ -1,5 +1,5 @@
 import { inject } from '@aurelia/kernel';
-import { customElement } from '@aurelia/runtime';
+import { customElement } from '@aurelia/runtime-html';
 import { Router } from '@aurelia/router';
 import template from './app.html';
 
@@ -8,7 +8,7 @@ import template from './app.html';
 export class App {
   public constructor(private readonly router: Router) { }
 
-  public afterAttach() {
+  public attached() {
     this.router.activate();
   }
 }

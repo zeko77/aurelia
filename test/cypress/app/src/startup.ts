@@ -1,13 +1,11 @@
 import { NavCustomElement, ViewportCustomElement } from '@aurelia/router';
-import { DebugConfiguration } from '@aurelia/debug';
-import { JitHtmlBrowserConfiguration } from '@aurelia/jit-html-browser';
-import { Aurelia } from '@aurelia/runtime';
+import { Aurelia, StandardConfiguration } from '@aurelia/runtime-html';
 import { registerComponent } from './utils';
 import { App } from './app';
 import { RouterHome } from './components/router/home';
 import { RouterWithNav } from './components/router/with-nav';
 
-const container = JitHtmlBrowserConfiguration.createContainer();
+const container = StandardConfiguration.createContainer();
 
 container.register(
   ViewportCustomElement as any,
@@ -21,6 +19,5 @@ registerComponent(
 );
 
 window['au'] = new Aurelia(container)
-  .register(DebugConfiguration)
   .app({ host: document.querySelector('app'), component: App })
   .start();

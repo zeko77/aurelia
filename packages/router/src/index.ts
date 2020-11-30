@@ -1,66 +1,75 @@
-import { HookManager } from './hook-manager';
-export {
-  BrowserNavigator,
-} from './browser-navigator';
+import { HookManager } from './hook-manager.js';
 
 export {
   ILinkHandlerOptions,
   AnchorEventInfo,
 
   LinkHandler,
-} from './link-handler';
+} from './link-handler.js';
 
 export {
   InstructionResolver,
-} from './instruction-resolver';
+} from './instruction-resolver.js';
 
 export {
-  INavigatorInstruction,
+  // Navigation,
   IRouteableComponent,
   RouteableComponentType,
   IViewportInstruction,
   NavigationInstruction,
   ReentryBehavior,
   IRoute,
-} from './interfaces';
+} from './interfaces.js';
 
 export {
   lifecycleLogger,
   LifecycleClass,
-} from './lifecycle-logger';
+} from './lifecycle-logger.js';
 
 export {
   HookManager,
   HookTypes,
   IHookDefinition,
-} from './hook-manager';
+} from './hook-manager.js';
 
 export {
   INavRoute,
   Nav,
-} from './nav';
+} from './nav.js';
 
 export {
   NavRoute,
-} from './nav-route';
+} from './nav-route.js';
+
+export {
+  Navigation,
+} from './navigation.js';
+
+export {
+  NavigationState,
+} from './navigation-coordinator.js';
 
 export {
   IStoredNavigatorEntry,
   INavigatorEntry,
   INavigatorOptions,
-  INavigatorFlags,
+  INavigationFlags,
   INavigatorState,
   INavigatorStore,
   INavigatorViewer,
   INavigatorViewerEvent,
   Navigator,
-} from './navigator';
+} from './navigator.js';
+
+export {
+  Runner,
+} from './runner.js';
 
 export {
   QueueItem,
   IQueueOptions,
   Queue,
-} from './queue';
+} from './queue.js';
 
 export {
   RouteRecognizer,
@@ -68,27 +77,36 @@ export {
   ConfigurableRoute,
   RecognizedRoute,
   Endpoint,
-} from './route-recognizer';
+} from './route-recognizer.js';
 
 export {
-  IRouterOptions,
+  // IRouterActivateOptions,
+  // IRouterOptions,
+  // IRouterTitle,
   IRouter,
   Router,
-} from './router';
+} from './router.js';
+
+export {
+  IRouterActivateOptions,
+  IRouterTitle,
+  RouterOptions,
+} from './router-options.js';
 
 export {
   IViewportOptions,
   Viewport,
-} from './viewport';
+} from './viewport.js';
 
 export {
   ContentStatus,
   ViewportContent,
-} from './viewport-content';
+} from './viewport-content.js';
 
 export {
+  Params,
   ViewportInstruction,
-} from './viewport-instruction';
+} from './viewport-instruction.js';
 
 export {
   RouterConfiguration,
@@ -101,6 +119,8 @@ export {
   NavCustomElementRegistration,
   GotoCustomAttribute,
   GotoCustomAttributeRegistration,
+  LoadCustomAttribute,
+  LoadCustomAttributeRegistration,
   HrefCustomAttribute,
   HrefCustomAttributeRegistration,
-} from './configuration';
+} from './configuration.js';

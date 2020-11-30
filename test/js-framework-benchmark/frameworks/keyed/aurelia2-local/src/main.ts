@@ -1,9 +1,50 @@
-import { JitHtmlBrowserConfiguration } from '@aurelia/jit-html-browser';
-import { Aurelia } from '@aurelia/runtime';
+import {
+  ITemplateCompilerRegistration,
+  INodeObserverLocatorRegistration,
+
+  RepeatRegistration,
+  OneTimeBindingBehaviorRegistration,
+  DotSeparatedAttributePatternRegistration,
+
+  DefaultBindingCommandRegistration,
+  ForBindingCommandRegistration,
+
+  PropertyBindingRendererRegistration,
+  IteratorBindingRendererRegistration,
+
+  CustomElementRendererRegistration,
+  TemplateControllerRendererRegistration,
+  DelegateBindingCommandRegistration,
+
+  TextBindingRendererRegistration,
+  ListenerBindingRendererRegistration,
+
+  Aurelia,
+} from '@aurelia/runtime-html';
+
 import { App } from './app';
 
 global['Aurelia'] = new Aurelia()
-  .register(JitHtmlBrowserConfiguration)
+  .register(
+    ITemplateCompilerRegistration,
+    INodeObserverLocatorRegistration,
+
+    DotSeparatedAttributePatternRegistration,
+
+    RepeatRegistration,
+    OneTimeBindingBehaviorRegistration,
+
+    DefaultBindingCommandRegistration,
+    DelegateBindingCommandRegistration,
+    ForBindingCommandRegistration,
+
+    TextBindingRendererRegistration,
+    ListenerBindingRendererRegistration,
+    PropertyBindingRendererRegistration,
+    IteratorBindingRendererRegistration,
+    CustomElementRendererRegistration,
+    TemplateControllerRendererRegistration,
+  )
   .app({
     host: document.querySelector('app'),
     component: App

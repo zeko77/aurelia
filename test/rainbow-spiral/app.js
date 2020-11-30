@@ -1,6 +1,4 @@
-import { JitHtmlBrowserConfiguration } from '@aurelia/jit-html-browser';
-import { register } from '@aurelia/plugin-svg';
-import { Aurelia, CustomElementResource } from '@aurelia/runtime';
+import { Aurelia, CustomElementResource, SVGAnalyzerRegistration, StandardConfiguration } from '@aurelia/runtime-html';
 import { startFPSMonitor, startMemMonitor } from 'perf-monitor';
 import { Cursor } from './cursor';
 
@@ -13,8 +11,8 @@ const LOOPS = 6;
 try {
   new Aurelia()
     .register(
-      JitHtmlBrowserConfiguration,
-      { register }
+      StandardConfiguration,
+      SVGAnalyzerRegistration,
     )
     .app({
       host: document.getElementById('app'),

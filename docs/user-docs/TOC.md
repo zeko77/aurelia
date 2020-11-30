@@ -11,7 +11,12 @@
   * [Your First Component - Part 2: The View](getting-started/quick-start-guide/your-first-component-part-2-the-view.md)
   * [Beyond the Basics](getting-started/quick-start-guide/bonus.md)
   * [Next Steps](getting-started/quick-start-guide/next-steps.md)
-* [Building Components](getting-started/components.md)
+* [Building Components](getting-started/components/README.md)
+  * [Creating a Custom Element](getting-started/components/creating-a-custom-element.md)
+  * [Creating a Custom Attribute](getting-started/components/creating-a-custom-attribute.md)
+  * [Components Lifecycles](getting-started/components/component-lifecycles.md)
+  * [Watching Data](getting-started/components/watching-data.md)
+  * [Templating - Local Template](getting-started/components/local-templates.md)
 * [Displaying Basic Data](getting-started/displaying-basic-data.md)
 * [Rendering Collections](getting-started/rendering-collections.md)
 * [Conditional Rendering](getting-started/conditional-rendering.md)
@@ -24,6 +29,7 @@
 * [Dependency Injection](app-basics/dependency-injection.md)
 * [Components Revisited](app-basics/components-revisited.md)
 * [Styling Components](app-basics/styling-components.md)
+* [Extending Templating Syntax](app-basics/extending-templating-syntax.md)
 * [Routing](app-basics/routing.md)
 * [Tooling](app-basics/tooling.md)
 * [Building a Dashboard App](app-basics/building-a-dashboard-app.md)
@@ -43,6 +49,19 @@
 * [Adding Animation](app-basics/adding-animation.md)
 * [Overlays, Modals, and Toast](app-basics/overlays-modals-toast.md)
 * [Testing Apps and Components](app-basics/testing-apps-and-components.md)
+
+## Routing
+
+* [Configuration & Setup](routing/configuration-and-setup.md)
+* [Direct Routing](routing/direct-routing.md)
+* [Component Configured Routing](routing/component-configured-routing.md)
+* [Configured Routing](routing/configured-routing.md)
+* [Configuring The Viewport](routing/configuring-the-viewport.md)
+* [Navigation Menus](routing/navigation-menus.md)
+* [Navigating With Load](routing/navigating-with-load.md)
+* [Lifecycle Hooks](routing/lifecycle-hooks.md)
+* [Router Hooks](routing/router-hooks.md)
+* [Differences From V1](routing/differences-from-v1.md)
 
 ## Advanced Scenarios
 
@@ -72,6 +91,9 @@
   * [Binding to Element Size](examples/custom-attributes/binding-to-element-size.md)
 * [Routing](examples/routing/README.md)
   * [Configuring Auth-Protected Routes](examples/routing/configuring-auth-protected-routes.md)
+* [Integration](examples/integration/README.md)
+  * [Microsoft FAST](examples/integration/ms-fast.md)
+  * [Ionic](examples/integration/ionic.md)
 
 ## Community Contribution
 
