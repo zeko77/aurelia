@@ -1,5 +1,12 @@
 import { IContainer, IRegistry } from '@aurelia/kernel';
 import { AuSlot } from './resources/custom-elements/au-slot.js';
+export declare const DebounceBindingBehaviorRegistration: IRegistry;
+export declare const OneTimeBindingBehaviorRegistration: IRegistry;
+export declare const ToViewBindingBehaviorRegistration: IRegistry;
+export declare const FromViewBindingBehaviorRegistration: IRegistry;
+export declare const SignalBindingBehaviorRegistration: IRegistry;
+export declare const ThrottleBindingBehaviorRegistration: IRegistry;
+export declare const TwoWayBindingBehaviorRegistration: IRegistry;
 export declare const ITemplateCompilerRegistration: IRegistry;
 export declare const INodeObserverLocatorRegistration: IRegistry;
 /**
@@ -66,6 +73,7 @@ export declare const ComposeRegistration: IRegistry;
 export declare const PortalRegistration: IRegistry;
 export declare const FocusRegistration: IRegistry;
 export declare const BlurRegistration: IRegistry;
+export declare const ShowRegistration: IRegistry;
 /**
  * Default HTML-specific (but environment-agnostic) resources:
  * - Binding Behaviors: `oneTime`, `toView`, `fromView`, `twoWay`, `signal`, `debounce`, `throttle`, `attr`, `self`, `updateTrigger`

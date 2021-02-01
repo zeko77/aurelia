@@ -4,7 +4,7 @@ import { INode, INodeSequence, IRenderLocation } from '../dom.js';
 import { IInstruction, Instruction } from '../renderer.js';
 import { CustomElementDefinition, PartialCustomElementDefinition } from '../resources/custom-element.js';
 import { IViewFactory } from './view.js';
-import { AuSlotContentType, IProjectionProvider, RegisteredProjections } from '../resources/custom-elements/au-slot.js';
+import { AuSlotContentType, IAuSlotsInfo, IProjectionProvider, RegisteredProjections } from '../resources/custom-elements/au-slot.js';
 import { IPlatform } from '../platform.js';
 import { IController } from './controller.js';
 import type { ICustomAttributeViewModel, ICustomElementViewModel, IHydratableController } from './controller.js';
@@ -77,7 +77,7 @@ export interface ICompiledRenderContext extends IRenderContext, IProjectionProvi
      * @param viewFactory - The `IViewFactory` that was created from the template that the template controller was placed on. Only applicable for template controllers. Used by all built-in template controllers.
      * @param location - The DOM node that the nodes created by the `IViewFactory` should be mounted to. Only applicable for template controllers. Used by all built-in template controllers.
      */
-    getComponentFactory(parentController?: IController, host?: INode, instruction?: IInstruction, viewFactory?: IViewFactory, location?: IRenderLocation): IComponentFactory;
+    getComponentFactory(parentController?: IController, host?: INode, instruction?: IInstruction, viewFactory?: IViewFactory, location?: IRenderLocation, auSlotsInfo?: IAuSlotsInfo): IComponentFactory;
     render(flags: LifecycleFlags, controller: IController, targets: ArrayLike<INode>, templateDefinition: CustomElementDefinition, host: INode | null | undefined): void;
     renderChildren(flags: LifecycleFlags, instructions: readonly IInstruction[], controller: IController, target: unknown): void;
 }
@@ -117,12 +117,14 @@ export declare function getRenderContext(partialDefinition: PartialCustomElement
 export declare class RenderContext implements IComponentFactory {
     readonly definition: CustomElementDefinition;
     readonly parentContainer: IContainer;
+    readonly root: IContainer;
     private readonly container;
     private readonly parentControllerProvider;
     private readonly elementProvider;
     private readonly instructionProvider;
     private readonly factoryProvider;
     private readonly renderLocationProvider;
+    private readonly auSlotsInfoProvider;
     private viewModelProvider;
     private fragment;
     private factory;
@@ -139,7 +141,7 @@ export declare class RenderContext implements IComponentFactory {
     registerResolver<K extends Key, T = K>(key: K, resolver: IResolver<T>): IResolver<T>;
     registerTransformer<K extends Key, T = K>(key: K, transformer: Transformer<T>): boolean;
     getResolver<K extends Key, T = K>(key: K | Key, autoRegister?: boolean): IResolver<T> | null;
-    getFactory<T extends Constructable>(key: T): IFactory<T> | null;
+    getFactory<T extends Constructable>(key: T): IFactory<T>;
     registerFactory<K extends Constructable>(key: K, factory: IFactory<K>): void;
     createChild(): IContainer;
     find<TType extends ResourceType, TDef extends ResourceDefinition>(kind: IResourceKind<TType, TDef>, name: string): TDef | null;
@@ -149,7 +151,7 @@ export declare class RenderContext implements IComponentFactory {
     getViewFactory(name?: string, contentType?: AuSlotContentType, projectionScope?: Scope | null): IViewFactory;
     beginChildComponentOperation(instance: ICustomElementViewModel): IRenderContext;
     createNodes(): INodeSequence;
-    getComponentFactory(parentController?: IController, host?: HTMLElement, instruction?: Instruction, viewFactory?: IViewFactory, location?: IRenderLocation): IComponentFactory;
+    getComponentFactory(parentController?: IController, host?: HTMLElement, instruction?: Instruction, viewFactory?: IViewFactory, location?: IRenderLocation, auSlotsInfo?: IAuSlotsInfo): IComponentFactory;
     createComponent<TViewModel = ICustomElementViewModel>(resourceKey: string): TViewModel;
     render(flags: LifecycleFlags, controller: IHydratableController, targets: ArrayLike<INode>, definition: CustomElementDefinition, host: INode | null | undefined): void;
     renderChildren(flags: LifecycleFlags, instructions: readonly IInstruction[], controller: IHydratableController, target: unknown): void;

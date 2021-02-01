@@ -1,5 +1,5 @@
 import { ILogger, IContainer } from '@aurelia/kernel';
-import { IHttpServer, IHttpServerOptions, IRequestHandler, StartOutput, IHttp2FileServer } from './interfaces';
+import { IHttpServer, IHttpServerOptions, IRequestHandler, StartOutput, IHttp2FileServer } from './interfaces.js';
 export declare class HttpServer implements IHttpServer {
     private readonly logger;
     private readonly opts;

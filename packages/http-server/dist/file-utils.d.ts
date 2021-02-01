@@ -15,6 +15,6 @@ export declare function mkdir(path: string): Promise<void>;
 export declare function rimraf(path: string): Promise<void>;
 export declare function getStats(path: string): Promise<Stats>;
 export declare function readdir(path: string): Promise<string[]>;
-export declare function rmdir(path: string): Promise<unknown>;
-export declare function unlink(path: string): Promise<unknown>;
+export declare function rmdir(path: string): Promise<void>;
+export declare function unlink(path: string): Promise<void>;
 //# sourceMappingURL=file-utils.d.ts.map

@@ -1,4 +1,4 @@
-import { IHttpContext } from './http-context';
+import { IHttpContext } from './http-context.js';
 export declare const enum Encoding {
     utf8 = "utf8"
 }

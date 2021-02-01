@@ -1,27 +1,25 @@
-import { LifecycleFlags, AccessorType } from '../observation.js';
+import { LifecycleFlags, AccessorType, ISubscriberCollection, ICollectionSubscriberCollection } from '../observation.js';
 import { CollectionLengthObserver } from './collection-length-observer.js';
-import type { CollectionKind, ICollectionObserver, ICollectionIndexObserver, ILifecycle, IndexMap, ISubscriber } from '../observation.js';
+import type { CollectionKind, ICollectionObserver, IArrayIndexObserver, IndexMap, ISubscriber } from '../observation.js';
 export declare function enableArrayObservation(): void;
 export declare function disableArrayObservation(): void;
-export interface ArrayObserver extends ICollectionObserver<CollectionKind.array> {
+export interface ArrayObserver extends ICollectionObserver<CollectionKind.array>, ICollectionSubscriberCollection {
 }
 export declare class ArrayObserver {
-    inBatch: boolean;
     type: AccessorType;
     private readonly indexObservers;
+    private lenObs?;
     constructor(array: unknown[]);
     notify(): void;
     getLengthObserver(): CollectionLengthObserver;
-    getIndexObserver(index: number): ICollectionIndexObserver;
-    flushBatch(flags: LifecycleFlags): void;
+    getIndexObserver(index: number): IArrayIndexObserver;
 }
-export interface ArrayIndexObserver extends ICollectionIndexObserver {
+export interface ArrayIndexObserver extends IArrayIndexObserver, ISubscriberCollection {
 }
-export declare class ArrayIndexObserver implements ICollectionIndexObserver {
+export declare class ArrayIndexObserver implements IArrayIndexObserver {
     readonly owner: ArrayObserver;
     readonly index: number;
-    private subscriberCount;
-    currentValue: unknown;
+    value: unknown;
     constructor(owner: ArrayObserver, index: number);
     getValue(): unknown;
     setValue(newValue: unknown, flags: LifecycleFlags): void;
@@ -32,7 +30,7 @@ export declare class ArrayIndexObserver implements ICollectionIndexObserver {
     subscribe(subscriber: ISubscriber): void;
     unsubscribe(subscriber: ISubscriber): void;
 }
-export declare function getArrayObserver(array: unknown[], lifecycle: ILifecycle | null): ArrayObserver;
+export declare function getArrayObserver(array: unknown[]): ArrayObserver;
 /**
  * Applies offsets to the non-negative indices in the IndexMap
  * based on added and deleted items relative to those indices.

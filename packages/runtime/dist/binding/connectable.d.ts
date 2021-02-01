@@ -1,35 +1,42 @@
 import { Class, IServiceLocator, ResourceDefinition } from '@aurelia/kernel';
-import { IConnectable, ISubscribable, ISubscriber, IBinding, LifecycleFlags } from '../observation.js';
-import { IObserverLocator } from '../observation/observer-locator.js';
+import { IConnectable, ISubscribable, ISubscriber, IBinding, LifecycleFlags, ICollectionSubscriber, IndexMap, ICollectionSubscribable } from '../observation.js';
+import type { IObserverLocator } from '../observation/observer-locator.js';
 import type { Scope } from '../observation/binding-context.js';
-export interface IPartialConnectableBinding extends IBinding, ISubscriber {
+export interface IPartialConnectableBinding extends IBinding, ISubscriber, ICollectionSubscriber {
     observerLocator: IObserverLocator;
 }
 export interface IConnectableBinding extends IPartialConnectableBinding, IConnectable {
     id: number;
-    record: BindingObserverRecord;
-    addObserver(observer: ISubscribable): void;
-    unobserve(all?: boolean): void;
+    /**
+     * A record storing observers that are currently subscribed to by this binding
+     */
+    obs: BindingObserverRecord;
 }
-export declare function getRecord(this: IConnectableBinding): BindingObserverRecord;
 declare type ObservationRecordImplType = {
     id: number;
     version: number;
     count: number;
     binding: IConnectableBinding;
-} & ISubscriber & Record<string, unknown>;
-export interface BindingObserverRecord extends ISubscriber, ObservationRecordImplType {
+} & Record<string, unknown>;
+export interface BindingObserverRecord extends ObservationRecordImplType {
 }
-export declare class BindingObserverRecord implements ISubscriber {
+export declare class BindingObserverRecord implements ISubscriber, ICollectionSubscriber {
     binding: IConnectableBinding;
     id: number;
     version: number;
     count: number;
     constructor(binding: IConnectableBinding);
     handleChange(value: unknown, oldValue: unknown, flags: LifecycleFlags): unknown;
-    add(observer: ISubscribable & {
+    handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void;
+    /**
+     * Add, and subscribe to a given observer
+     */
+    add(observer: (ISubscribable | ICollectionSubscribable) & {
         [id: number]: number;
     }): void;
+    /**
+     * Unsubscribe the observers that are not up to date with the record version
+     */
     clear(all?: boolean): void;
 }
 declare type DecoratableConnectable<TProto, TClass> = Class<TProto & Partial<IConnectableBinding> & IPartialConnectableBinding, TClass>;

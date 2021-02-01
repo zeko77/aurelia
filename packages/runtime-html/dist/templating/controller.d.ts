@@ -1,14 +1,16 @@
 import { IContainer, Writable, IDisposable } from '@aurelia/kernel';
-import { IBinding, Scope, LifecycleFlags, ILifecycle, IBindingTargetAccessor } from '@aurelia/runtime';
+import { Scope, LifecycleFlags } from '@aurelia/runtime';
 import { INode, INodeSequence, IRenderLocation } from '../dom.js';
 import { CustomElementDefinition, PartialCustomElementDefinition } from '../resources/custom-element.js';
 import { CustomAttributeDefinition } from '../resources/custom-attribute.js';
 import { IRenderContext, RenderContext, ICompiledRenderContext } from './render-context.js';
 import { IAppRoot } from '../app-root.js';
 import { IPlatform } from '../platform.js';
-import type { RegisteredProjections } from '../resources/custom-elements/au-slot.js';
+import type { IBinding, AccessorOrObserver } from '@aurelia/runtime';
+import { RegisteredProjections } from '../resources/custom-elements/au-slot.js';
 import type { IViewFactory } from './view.js';
 import type { Instruction } from '../renderer.js';
+import { LifecycleHooksLookup } from './lifecycle-hooks.js';
 declare type BindingContext<C extends IViewModel> = Required<ICompileHooks> & Required<IActivationHooks<IHydratedController | null>> & C;
 export declare const enum MountTarget {
     none = 0,
@@ -55,6 +57,7 @@ export declare class Controller<C extends IViewModel = IViewModel> implements IC
     nodes: INodeSequence | null;
     context: RenderContext | null;
     location: IRenderLocation | null;
+    lifecycleHooks: LifecycleHooksLookup | null;
     state: State;
     get isActive(): boolean;
     private get name();
@@ -62,7 +65,6 @@ export declare class Controller<C extends IViewModel = IViewModel> implements IC
     private debug;
     private fullyNamed;
     readonly platform: IPlatform;
-    readonly lifecycle: ILifecycle;
     readonly hooks: HooksDefinition;
     constructor(root: IAppRoot | null, container: IContainer, vmKind: ViewModelKind, flags: LifecycleFlags, definition: CustomElementDefinition | CustomAttributeDefinition | null, 
     /**
@@ -122,7 +124,7 @@ export declare class Controller<C extends IViewModel = IViewModel> implements IC
     release(): void;
     dispose(): void;
     accept(visitor: ControllerVisitor): void | true;
-    getTargetAccessor(propertyName: string): IBindingTargetAccessor | undefined;
+    getTargetAccessor(propertyName: string): AccessorOrObserver | undefined;
 }
 export declare function isCustomElementController<C extends ICustomElementViewModel = ICustomElementViewModel>(value: unknown): value is ICustomElementController<C>;
 export declare function isCustomElementViewModel(value: unknown): value is ICustomElementViewModel;
@@ -187,7 +189,6 @@ export interface IController<C extends IViewModel = IViewModel> extends IDisposa
     readonly platform: IPlatform;
     readonly root: IAppRoot | null;
     readonly flags: LifecycleFlags;
-    readonly lifecycle: ILifecycle;
     readonly vmKind: ViewModelKind;
     readonly definition: CustomElementDefinition | CustomAttributeDefinition | null;
     readonly host: HTMLElement | null;
@@ -225,7 +226,7 @@ export interface IHydratableController<C extends IViewModel = IViewModel> extend
     readonly definition: CustomElementDefinition | null;
     readonly bindings: readonly IBinding[] | null;
     readonly children: readonly IHydratedController[] | null;
-    getTargetAccessor(propertyName: string): IBindingTargetAccessor | null;
+    getTargetAccessor(propertyName: string): AccessorOrObserver | null;
     addBinding(binding: IBinding): void;
     addController(controller: IController): void;
 }
@@ -316,6 +317,7 @@ export interface ICustomAttributeController<C extends ICustomAttributeViewModel 
      * @inheritdoc
      */
     readonly viewModel: C;
+    readonly lifecycleHooks: LifecycleHooksLookup;
     /**
      * The scope that belongs to this custom attribute. This property will always be defined when the `state` property of this view indicates that the view is currently bound.
      *
@@ -399,6 +401,7 @@ export interface ICustomElementController<C extends ICustomElementViewModel = IC
      * @inheritdoc
      */
     readonly viewModel: C;
+    readonly lifecycleHooks: LifecycleHooksLookup;
     activate(initiator: IHydratedController, parent: IHydratedController | null, flags: LifecycleFlags, scope?: Scope, hostScope?: Scope | null): void | Promise<void>;
     deactivate(initiator: IHydratedController, parent: IHydratedController | null, flags: LifecycleFlags): void | Promise<void>;
 }
@@ -423,7 +426,7 @@ export interface ICompileHooks {
     define?(controller: IDryCustomElementController<this>, parentContainer: IContainer, definition: CustomElementDefinition): PartialCustomElementDefinition | void;
     hydrating?(controller: IContextualCustomElementController<this>): void;
     hydrated?(controller: ICompiledCustomElementController<this>): void;
-    created?(controller: ICustomElementController<this>): void;
+    created?(controller: ICustomElementController<this> | ICustomAttributeController<this>): void;
 }
 /**
  * Defines optional lifecycle hooks that will be called only when they are implemented.
@@ -434,10 +437,12 @@ export interface IViewModel {
 }
 export interface ICustomElementViewModel extends IViewModel, IActivationHooks<IHydratedController | null>, ICompileHooks {
     readonly $controller?: ICustomElementController<this>;
+    created?(controller: ICustomElementController<this>): void;
 }
 export interface ICustomAttributeViewModel extends IViewModel, IActivationHooks<IHydratedController> {
     readonly $controller?: ICustomAttributeController<this>;
     link?(flags: LifecycleFlags, parentContext: ICompiledRenderContext, controller: IHydratableController, childController: ICustomAttributeController, target: INode, instruction: Instruction): void;
+    created?(controller: ICustomAttributeController<this>): void;
 }
 export interface IHydratedCustomElementViewModel extends ICustomElementViewModel {
     readonly $controller: ICustomElementController<this>;

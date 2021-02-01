@@ -1,7 +1,7 @@
-import { IContainer, IDisposable, IIndexable, IServiceLocator } from '@aurelia/kernel';
-import { ExpressionKind, IBinding, IConnectableBinding, IndexMap, IObserverLocator, ISignaler, ISubscribable, LifecycleFlags } from '@aurelia/runtime-html';
+import { ExpressionKind, LifecycleFlags } from '@aurelia/runtime-html';
+import type { IContainer, IDisposable, IIndexable, IServiceLocator } from '@aurelia/kernel';
 import type { Scope } from '@aurelia/runtime-html';
-import { BindingObserverRecord } from '@aurelia/runtime';
+import type { IBinding, IConnectableBinding, IndexMap, IObserverLocator, ISignaler, BindingObserverRecord, Collection } from '@aurelia/runtime';
 export declare class MockBinding implements IConnectableBinding {
     interceptor: this;
     id: number;
@@ -13,14 +13,14 @@ export declare class MockBinding implements IConnectableBinding {
     $hostScope: Scope | null;
     isBound: boolean;
     value: unknown;
-    record: BindingObserverRecord;
+    obs: BindingObserverRecord;
     calls: [keyof MockBinding, ...any[]][];
     updateTarget(value: unknown, flags: LifecycleFlags): void;
     updateSource(value: unknown, flags: LifecycleFlags): void;
     handleChange(newValue: unknown, _previousValue: unknown, flags: LifecycleFlags): void;
+    handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void;
     observeProperty(obj: IIndexable, propertyName: string): void;
-    unobserve(all?: boolean): void;
-    addObserver(observer: ISubscribable): void;
+    observeCollection(col: Collection): void;
     $bind(flags: LifecycleFlags, scope: Scope): void;
     $unbind(flags: LifecycleFlags): void;
     trace(fnName: keyof MockBinding, ...args: any[]): void;

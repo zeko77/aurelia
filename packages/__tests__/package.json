@@ -76,7 +76,5 @@
     "ts-node": "^9.0.0",
     "tsconfig-paths": "^3.9.0"
   },
-  "version": "0.8.0",
-  "main": "dist/umd/index.js",
-  "module": "dist/esnext/index.js"
+  "version": "0.8.0"
 }
