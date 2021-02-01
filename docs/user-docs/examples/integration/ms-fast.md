@@ -1,11 +1,12 @@
-# Integrating with Microsoft FAST Web Components
+# Microsoft FAST
 
 If the example doesn't seem obvious, the following prerequisite reads are recommended:
-- [extending templating syntax](../../app-basics/extening-templating-syntax.md)
+
+* [extending templating syntax](https://github.com/aurelia/aurelia/tree/1bdb122cd1af090b298c934325d917b9bd494949/docs/user-docs/app-basics/extening-templating-syntax.md)
 
 The following is a code example of how to teach Aurelia to work seamlessly with [Microsoft FAST](https://www.fast.design/):
 
-```ts
+```typescript
 import { AppTask, IContainer, IAttrSyntaxTransformer, NodeObserverLocator } from 'aurelia';
 
 Aurelia.register(AppTask.with(IContainer).beforeCreate().call(container => {
@@ -32,7 +33,7 @@ Aurelia.register(AppTask.with(IContainer).beforeCreate().call(container => {
   // Teach Aurelia what events to use to observe properties of elements.
   // Because FAST components all use a single change event to notify,
   // we can use a single common object
-  const valuePropertyConfig = { events: ['change'] };
+  const valuePropertyConfig = { events: ['input', 'change'] };
   nodeObserverLocator.useConfig({
     'FAST-CHECKBOX': {
       value: valuePropertyConfig
@@ -50,7 +51,7 @@ Aurelia.register(AppTask.with(IContainer).beforeCreate().call(container => {
       value: valuePropertyConfig
     },
     'FAST-TABS': {
-      value: valuePropertyConfig
+      activeid: valuePropertyConfig
     },
     'FAST-TEXT-FIELD': {
       value: valuePropertyConfig
@@ -61,3 +62,4 @@ Aurelia.register(AppTask.with(IContainer).beforeCreate().call(container => {
   });
 }))
 ```
+

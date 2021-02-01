@@ -24,6 +24,33 @@ export {
 } from './observation/bindable-observer.js';
 
 export {
+  DebounceBindingBehaviorRegistration,
+  OneTimeBindingBehaviorRegistration,
+  ToViewBindingBehaviorRegistration,
+  FromViewBindingBehaviorRegistration,
+  SignalBindingBehaviorRegistration,
+  ThrottleBindingBehaviorRegistration,
+  TwoWayBindingBehaviorRegistration,
+} from './configuration.js';
+
+export {
+  BindingModeBehavior,
+  OneTimeBindingBehavior,
+  ToViewBindingBehavior,
+  FromViewBindingBehavior,
+  TwoWayBindingBehavior,
+} from './binding-behaviors/binding-mode.js';
+export {
+  DebounceBindingBehavior,
+} from './binding-behaviors/debounce.js';
+export {
+  SignalBindingBehavior,
+} from './binding-behaviors/signals.js';
+export {
+  ThrottleBindingBehavior,
+} from './binding-behaviors/throttle.js';
+
+export {
   alias,
   registerAliases,
 
@@ -71,10 +98,6 @@ export {
   UnaryOperator,
   IExpressionHydrator,
 
-  PropertyBinding,
-
-  CallBinding,
-
   IPartialConnectableBinding,
   IConnectableBinding,
   connectable,
@@ -89,13 +112,6 @@ export {
   Precedence,
   parse,
   ParserState,
-
-  ContentBinding,
-  InterpolationBinding,
-
-  LetBinding,
-
-  RefBinding,
 
   ArrayObserver,
   ArrayIndexObserver,
@@ -125,8 +141,6 @@ export {
   DirtyCheckSettings,
 
   ComputedObserver,
-  ComputedWatcher,
-  ExpressionWatcher,
 
   IObservableDefinition,
   observable,
@@ -146,7 +160,6 @@ export {
   ISignaler,
 
   subscriberCollection,
-  collectionSubscriberCollection,
 
   bindingBehavior,
   BindingBehavior,
@@ -161,18 +174,6 @@ export {
   BindingBehaviorStrategy,
   IInterceptableBinding,
 
-  BindingModeBehavior,
-  OneTimeBindingBehavior,
-  ToViewBindingBehavior,
-  FromViewBindingBehavior,
-  TwoWayBindingBehavior,
-
-  DebounceBindingBehavior,
-
-  SignalBindingBehavior,
-
-  ThrottleBindingBehavior,
-
   ValueConverter,
   ValueConverterDefinition,
   PartialValueConverterDefinition,
@@ -182,20 +183,11 @@ export {
   ValueConverterType,
   valueConverter,
 
-  DebounceBindingBehaviorRegistration,
-  OneTimeBindingBehaviorRegistration,
-  ToViewBindingBehaviorRegistration,
-  FromViewBindingBehaviorRegistration,
-  SignalBindingBehaviorRegistration,
-  ThrottleBindingBehaviorRegistration,
-  TwoWayBindingBehaviorRegistration,
-
   BindingMode,
   ExpressionKind,
   LifecycleFlags,
 
   IBinding,
-  ILifecycle,
 
   AccessorOrObserver,
   AccessorType,
@@ -204,21 +196,15 @@ export {
   DelegationStrategy,
   IAccessor,
   IBindingContext,
-  IBindingTargetAccessor,
-  IBindingTargetObserver,
   ICollectionChangeTracker,
   ICollectionObserver,
-  ICollectionIndexObserver,
   ICollectionSubscriber,
   IndexMap,
   IBatchable,
   IObservable,
   IOverrideContext,
-  IPropertyChangeTracker,
-  IPropertyObserver,
   ISubscribable,
   ISubscriberCollection,
-  PropertyObserver,
   CollectionObserver,
   ICollectionSubscriberCollection,
   ICollectionSubscribable,
@@ -237,6 +223,7 @@ export {
   ISinglePageApp,
   AppRoot,
   IAppRoot,
+  IWorkTracker,
 } from './app-root.js';
 export {
   TaskSlot,
@@ -280,14 +267,29 @@ export {
   StyleBindingCommand,
 } from './resources/binding-command.js';
 export {
-  IAttrSyntaxTransformer
+  IAttrSyntaxTransformer,
 } from './attribute-syntax-transformer.js';
 export {
-  Listener
+  Listener,
 } from './binding/listener.js';
 export {
-  AttributeBinding
+  AttributeBinding,
 } from './binding/attribute.js';
+export {
+  CallBinding,
+} from './binding/call-binding.js';
+export {
+  InterpolationBinding,
+} from './binding/interpolation-binding.js';
+export {
+  LetBinding,
+} from './binding/let-binding.js';
+export {
+  PropertyBinding,
+} from './binding/property-binding.js';
+export {
+  RefBinding,
+} from './binding/ref-binding.js';
 
 export {
   IRenderer,
@@ -429,6 +431,8 @@ export {
   RegisteredProjections,
   IProjectionProvider,
   ProjectionContext,
+  AuSlotsInfo,
+  IAuSlotsInfo,
 } from './resources/custom-elements/au-slot.js';
 
 export {
@@ -441,6 +445,7 @@ export {
   CustomElementDefinition,
   PartialCustomElementDefinition,
   useShadowDOM,
+  processContent,
 } from './resources/custom-element.js';
 
 export {
@@ -567,6 +572,15 @@ export {
   ISyntheticView,
 } from './templating/controller.js';
 export {
+  ILifecycleHooks,
+  LifecycleHooksEntry,
+  LifecycleHooksDefinition,
+  LifecycleHooksLookup,
+  LifecycleHook,
+  LifecycleHooks,
+  lifecycleHooks,
+} from './templating/lifecycle-hooks.js';
+export {
   getRenderContext,
   isRenderContext,
   IRenderContext,
@@ -599,6 +613,8 @@ export {
   setEffectiveParentNode,
   convertToRenderLocation,
   isRenderLocation,
+  getRef,
+  setRef,
 } from './dom.js';
 export {
   IPlatform,
@@ -641,3 +657,16 @@ export {
   IShadowDOMStyles,
   IShadowDOMGlobalStyles,
 } from './templating/styles.js';
+
+export {
+  Watch,
+  watch,
+  IWatchDefinition,
+  IWatcherCallback,
+  IDepCollectionFn,
+} from './watch.js';
+
+export {
+  ComputedWatcher,
+  ExpressionWatcher,
+} from './templating/watchers.js';

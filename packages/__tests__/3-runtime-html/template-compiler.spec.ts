@@ -511,6 +511,7 @@ function createTemplateController(ctx: TestContext, attr: string, target: string
         needsCompile: false,
         enhance: false,
         projectionsMap: new Map<IInstruction, IProjections>(),
+        processContent: null,
       },
       instructions: createTplCtrlAttributeInstruction(attr, value),
     };
@@ -525,6 +526,7 @@ function createTemplateController(ctx: TestContext, attr: string, target: string
       needsCompile: false,
       enhance: false,
       projectionsMap: new Map<IInstruction, IProjections>(),
+      processContent: null,
     } as unknown as PartialCustomElementDefinition;
     return [input, output];
   } else {
@@ -549,6 +551,7 @@ function createTemplateController(ctx: TestContext, attr: string, target: string
         needsCompile: false,
         enhance: false,
         projectionsMap: new Map<IInstruction, IProjections>(),
+        processContent: null,
       },
       instructions: createTplCtrlAttributeInstruction(attr, value),
     };
@@ -564,6 +567,7 @@ function createTemplateController(ctx: TestContext, attr: string, target: string
       needsCompile: false,
       enhance: false,
       projectionsMap: new Map<IInstruction, IProjections>(),
+      processContent: null,
     } as unknown as PartialCustomElementDefinition;
     return [input, output];
   }
@@ -605,6 +609,7 @@ function createCustomElement(
     enhance: false,
     projectionsMap: new Map<IInstruction, IProjections>(),
     watches: [],
+    processContent: null,
   };
   return [input, output];
 }
@@ -644,6 +649,7 @@ function createCustomAttribute(
     enhance: false,
     projectionsMap: new Map<IInstruction, IProjections>(),
     watches: [],
+    processContent: null,
   };
   return [input, output];
 }
@@ -761,6 +767,7 @@ describe(`TemplateCompiler - combinations`, function () {
           needsCompile: false,
           enhance: false,
           projectionsMap: new Map<IInstruction, IProjections>(),
+          processContent: null,
         };
 
         const { sut, container } = createFixture(ctx);
@@ -832,6 +839,7 @@ describe(`TemplateCompiler - combinations`, function () {
           enhance: false,
           projectionsMap: new Map<IInstruction, IProjections>(),
           watches: [],
+          processContent: null,
         };
 
         const $def = CustomAttribute.define(def, ctor);
@@ -1100,6 +1108,7 @@ describe(`TemplateCompiler - combinations`, function () {
           enhance: false,
           projectionsMap: new Map<IInstruction, IProjections>(),
           watches: [],
+          processContent: null,
         };
         // enableTracing();
         // Tracer.enableLiveLogging(SymbolTraceWriter);
@@ -1279,7 +1288,7 @@ describe('TemplateCompiler - local templates', function () {
       assert.equal((definition.template as HTMLTemplateElement).querySelector('template[as-custom-element]'), null);
 
       for (const [name, info] of this.expectedResources) {
-        assert.deepStrictEqual(ElementInfo.from(container.find(CustomElement, name)), info, 'element info');
+        assert.deepStrictEqual(ElementInfo.from(container.find(CustomElement, name), void 0), info, 'element info');
       }
       const ceInstructions: HydrateElementInstruction[] = definition.instructions.flatMap((i) => i).filter((i) => i instanceof HydrateElementInstruction) as HydrateElementInstruction[];
       for (const [template, freq] of this.templateFreq) {
@@ -1292,14 +1301,14 @@ describe('TemplateCompiler - local templates', function () {
     yield new LocalTemplateTestData(
       `<template as-custom-element="foo-bar">static</template>
       <foo-bar></foo-bar>`,
-      new Map([['foo-bar', new ElementInfo('foo-bar', false)]]),
+      new Map([['foo-bar', new ElementInfo('foo-bar', void 0, false)]]),
       new Map([['foo-bar', 1]]),
       'static'
     );
     yield new LocalTemplateTestData(
       `<foo-bar></foo-bar>
       <template as-custom-element="foo-bar">static</template>`,
-      new Map([['foo-bar', new ElementInfo('foo-bar', false)]]),
+      new Map([['foo-bar', new ElementInfo('foo-bar', void 0, false)]]),
       new Map([['foo-bar', 1]]),
       'static'
     );
@@ -1307,7 +1316,7 @@ describe('TemplateCompiler - local templates', function () {
       `<foo-bar></foo-bar>
       <template as-custom-element="foo-bar">static</template>
       <foo-bar></foo-bar>`,
-      new Map([['foo-bar', new ElementInfo('foo-bar', false)]]),
+      new Map([['foo-bar', new ElementInfo('foo-bar', void 0, false)]]),
       new Map([['foo-bar', 2]]),
       'static static'
     );
@@ -1316,7 +1325,7 @@ describe('TemplateCompiler - local templates', function () {
       <template as-custom-element="fiz-baz">static fiz-baz</template>
       <fiz-baz></fiz-baz>
       <foo-bar></foo-bar>`,
-      new Map([['foo-bar', new ElementInfo('foo-bar', false)], ['fiz-baz', new ElementInfo('fiz-baz', false)]]),
+      new Map([['foo-bar', new ElementInfo('foo-bar', void 0, false)], ['fiz-baz', new ElementInfo('fiz-baz', void 0, false)]]),
       new Map([['foo-bar', 1], ['fiz-baz', 1]]),
       'static fiz-baz static foo-bar'
     );
@@ -1332,7 +1341,7 @@ describe('TemplateCompiler - local templates', function () {
       [['prop'], ['prop', 'camelProp']],
       ['fiz-baz', undefined],
     ])) {
-      const ei = new ElementInfo('foo-bar', false);
+      const ei = new ElementInfo('foo-bar', void 0, false);
       const mode = bindingModeMap.get(bindingMode) ?? BindingMode.toView;
       let bindables = '';
       let templateBody = '';
