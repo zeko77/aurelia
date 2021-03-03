@@ -13,7 +13,8 @@ function ensureEnoughSlotNames(currentSlot) {
     if (currentSlot === lastSlot) {
         lastSlot += 5;
         const ii = slotNames.length = versionSlotNames.length = lastSlot + 1;
-        for (let i = currentSlot + 1; i < ii; ++i) {
+        let i = currentSlot + 1;
+        for (; i < ii; ++i) {
             slotNames[i] = `_o${i}`;
             versionSlotNames[i] = `_v${i}`;
         }
@@ -52,6 +53,9 @@ function observeCollection(collection) {
     }
     this.obs.add(obs);
 }
+function subscribeTo(subscribable) {
+    this.obs.add(subscribable);
+}
 function noopHandleChange() {
     throw new Error('method "handleChange" not implemented');
 }
@@ -63,7 +67,6 @@ class BindingObserverRecord {
         this.binding = binding;
         this.version = 0;
         this.count = 0;
-        connectable.assignIdTo(this);
     }
     handleChange(value, oldValue, flags) {
         return this.binding.interceptor.handleChange(value, oldValue, flags);
@@ -88,7 +91,6 @@ class BindingObserverRecord {
             }
             this[slotNames[i]] = observer;
             observer.subscribe(this);
-            observer[this.id] |= 8 /* updateTarget */;
             // increment the slot count.
             if (i === observerSlots) {
                 this.count = i + 1;
@@ -112,7 +114,6 @@ class BindingObserverRecord {
                 if (observer != null) {
                     this[slotName] = void 0;
                     observer.unsubscribe(this);
-                    observer[this.id] &= ~8 /* updateTarget */;
                 }
             }
             this.count = 0;
@@ -125,7 +126,6 @@ class BindingObserverRecord {
                     if (observer != null) {
                         this[slotName] = void 0;
                         observer.unsubscribe(this);
-                        observer[this.id] &= ~8 /* updateTarget */;
                         this.count--;
                     }
                 }
@@ -138,6 +138,7 @@ function connectableDecorator(target) {
     const proto = target.prototype;
     utilities_objects_js_1.ensureProto(proto, 'observeProperty', observeProperty, true);
     utilities_objects_js_1.ensureProto(proto, 'observeCollection', observeCollection, true);
+    utilities_objects_js_1.ensureProto(proto, 'subscribeTo', subscribeTo, true);
     utilities_objects_js_1.def(proto, 'obs', { get: getObserverRecord });
     // optionally add these two methods to normalize a connectable impl
     utilities_objects_js_1.ensureProto(proto, 'handleChange', noopHandleChange);
@@ -148,10 +149,6 @@ function connectable(target) {
     return target == null ? connectableDecorator : connectableDecorator(target);
 }
 exports.connectable = connectable;
-let idValue = 0;
-connectable.assignIdTo = (instance) => {
-    instance.id = ++idValue;
-};
 // @connectable
 class BindingMediator {
     constructor(key, binding, observerLocator, locator) {
@@ -160,7 +157,6 @@ class BindingMediator {
         this.observerLocator = observerLocator;
         this.locator = locator;
         this.interceptor = this;
-        connectable.assignIdTo(this);
     }
     $bind(flags, scope, hostScope, projection) {
         throw new Error('Method not implemented.');

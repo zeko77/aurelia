@@ -15,32 +15,27 @@ class LetBinding {
         this.$hostScope = null;
         this.task = null;
         this.target = null;
-        runtime_1.connectable.assignIdTo(this);
     }
-    handleChange(_newValue, _previousValue, flags) {
+    handleChange(newValue, _previousValue, flags) {
         if (!this.isBound) {
             return;
         }
-        if (flags & 8 /* updateTarget */) {
-            const target = this.target;
-            const targetProperty = this.targetProperty;
-            const previousValue = target[targetProperty];
-            this.obs.version++;
-            const newValue = this.sourceExpression.evaluate(flags, this.$scope, this.$hostScope, this.locator, this.interceptor);
-            this.obs.clear(false);
-            if (newValue !== previousValue) {
-                target[targetProperty] = newValue;
-            }
-            return;
+        const target = this.target;
+        const targetProperty = this.targetProperty;
+        const previousValue = target[targetProperty];
+        this.obs.version++;
+        newValue = this.sourceExpression.evaluate(flags, this.$scope, this.$hostScope, this.locator, this.interceptor);
+        this.obs.clear(false);
+        if (newValue !== previousValue) {
+            target[targetProperty] = newValue;
         }
-        throw new Error('Unexpected handleChange context in LetBinding');
     }
     $bind(flags, scope, hostScope) {
         if (this.isBound) {
             if (this.$scope === scope) {
                 return;
             }
-            this.interceptor.$unbind(flags | 32 /* fromBind */);
+            this.interceptor.$unbind(flags | 2 /* fromBind */);
         }
         this.$scope = scope;
         this.$hostScope = hostScope;
@@ -51,7 +46,7 @@ class LetBinding {
         }
         // sourceExpression might have been changed during bind
         this.target[this.targetProperty]
-            = this.sourceExpression.evaluate(flags | 32 /* fromBind */, scope, hostScope, this.locator, this.interceptor);
+            = this.sourceExpression.evaluate(flags | 2 /* fromBind */, scope, hostScope, this.locator, this.interceptor);
         // add isBound flag and remove isBinding flag
         this.isBound = true;
     }

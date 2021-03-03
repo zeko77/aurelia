@@ -61,6 +61,7 @@ export class Controller {
         this.isStrictBinding = false;
         this.scope = null;
         this.hostScope = null;
+        this.isBound = false;
         // If a host from another custom element was passed in, then this will be the controller for that custom element (could be `au-viewport` for example).
         // In that case, this controller will create a new host node (with the definition's name) and use that as the target host for the nodes instead.
         // That host node is separately mounted to the host controller's original host node.
@@ -355,7 +356,7 @@ export class Controller {
             this.logger.trace(`activate()`);
         }
         this.hostScope = hostScope !== null && hostScope !== void 0 ? hostScope : null;
-        flags |= 32 /* fromBind */;
+        flags |= 2 /* fromBind */;
         switch (this.vmKind) {
             case 0 /* customElement */:
                 // Custom element scope is created and assigned during hydration
@@ -374,7 +375,7 @@ export class Controller {
                 break;
         }
         if (this.isStrictBinding) {
-            flags |= 4 /* isStrictBindingStrategy */;
+            flags |= 1 /* isStrictBindingStrategy */;
         }
         this.$initiator = initiator;
         this.$flags = flags;
@@ -415,6 +416,7 @@ export class Controller {
             if (ret instanceof Promise) {
                 this.ensurePromise();
                 ret.then(() => {
+                    this.isBound = true;
                     this.attach();
                 }).catch(err => {
                     this.reject(err);
@@ -422,6 +424,7 @@ export class Controller {
                 return;
             }
         }
+        this.isBound = true;
         this.attach();
     }
     append(...nodes) {
@@ -587,7 +590,7 @@ export class Controller {
         if (this.debug) {
             this.logger.trace(`unbind()`);
         }
-        const flags = this.$flags | 64 /* fromUnbind */;
+        const flags = this.$flags | 4 /* fromUnbind */;
         if (this.bindings !== null) {
             for (let i = 0; i < this.bindings.length; ++i) {
                 this.bindings[i].$unbind(flags);
@@ -612,7 +615,7 @@ export class Controller {
                 this.scope.parentScope = null;
                 break;
         }
-        if ((flags & 512 /* dispose */) === 512 /* dispose */ && this.$initiator === this) {
+        if ((flags & 32 /* dispose */) === 32 /* dispose */ && this.$initiator === this) {
             this.dispose();
         }
         this.state = (this.state & 32 /* disposed */) | 8 /* deactivated */;
@@ -734,6 +737,7 @@ export class Controller {
             let next = null;
             while (cur !== null) {
                 if (cur !== this) {
+                    cur.isBound = false;
                     cur.unbind();
                 }
                 next = cur.next;
@@ -741,6 +745,7 @@ export class Controller {
                 cur = next;
             }
             this.head = this.tail = null;
+            this.isBound = false;
             this.unbind();
         }
     }

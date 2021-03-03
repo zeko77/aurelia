@@ -20,30 +20,24 @@ export declare enum BindingMode {
 }
 export declare const enum LifecycleFlags {
     none = 0,
-    persistentBindingFlags = 15367,
-    allowParentScopeTraversal = 1024,
-    observeLeafPropertiesOnly = 2048,
-    targetObserverFlags = 12295,
-    noFlush = 4096,
-    persistentTargetObserverQueue = 8192,
-    bindingStrategy = 7,
-    getterSetterStrategy = 1,
-    proxyStrategy = 2,
-    isStrictBindingStrategy = 4,
-    update = 24,
-    updateTarget = 8,
-    updateSource = 16,
-    from = 96,
-    fromBind = 32,
-    fromUnbind = 64,
-    mustEvaluate = 128,
-    isTraversingParentScope = 256,
-    dispose = 512
+    persistentBindingFlags = 961,
+    allowParentScopeTraversal = 64,
+    observeLeafPropertiesOnly = 128,
+    targetObserverFlags = 769,
+    noFlush = 256,
+    persistentTargetObserverQueue = 512,
+    bindingStrategy = 1,
+    isStrictBindingStrategy = 1,
+    fromBind = 2,
+    fromUnbind = 4,
+    mustEvaluate = 8,
+    isTraversingParentScope = 16,
+    dispose = 32
 }
 export interface IConnectable {
-    id: number;
     observeProperty(obj: object, key: PropertyKey): void;
     observeCollection(obj: Collection): void;
+    subscribeTo(subscribable: ISubscribable | ICollectionSubscribable): void;
 }
 export declare enum DelegationStrategy {
     none = 0,
@@ -136,7 +130,6 @@ export declare const enum AccessorType {
  * Basic interface to normalize getting/setting a value of any property on any object
  */
 export interface IAccessor<TValue = unknown> {
-    [id: number]: number;
     type: AccessorType;
     getValue(obj?: object, key?: PropertyKey): TValue;
     setValue(newValue: TValue, flags: LifecycleFlags, obj?: object, key?: PropertyKey): void;
@@ -178,7 +171,6 @@ export interface ICollectionChangeTracker<T extends Collection> {
  * An observer that tracks collection mutations and notifies subscribers (either directly or in batches)
  */
 export interface ICollectionObserver<T extends CollectionKind> extends ICollectionChangeTracker<CollectionKindToType<T>>, ICollectionSubscribable {
-    [id: number]: number;
     type: AccessorType;
     collection: ObservedCollectionKindToType<T>;
     getLengthObserver(): T extends CollectionKind.array ? CollectionLengthObserver : CollectionSizeObserver;

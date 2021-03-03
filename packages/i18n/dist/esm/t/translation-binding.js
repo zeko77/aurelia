@@ -6,29 +6,33 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 var TranslationBinding_1;
 import { toArray } from '@aurelia/kernel';
-import { connectable, CustomElement, CustomExpression, Interpolation, IPlatform, } from '@aurelia/runtime-html';
+import { connectable, CustomElement, CustomExpression, Interpolation, } from '@aurelia/runtime-html';
 import { I18N } from '../i18n.js';
 const contentAttributes = ['textContent', 'innerHTML', 'prepend', 'append'];
 const attributeAliases = new Map([['text', 'textContent'], ['html', 'innerHTML']]);
 const forOpts = { optional: true };
+const taskQueueOpts = {
+    reusable: false,
+    preempt: true,
+};
 let TranslationBinding = TranslationBinding_1 = class TranslationBinding {
-    constructor(target, observerLocator, locator) {
+    constructor(target, observerLocator, locator, platform) {
         this.observerLocator = observerLocator;
         this.locator = locator;
         this.interceptor = this;
         this.isBound = false;
         this.contentAttributes = contentAttributes;
         this.hostScope = null;
+        this.task = null;
         this.parameter = null;
         this.target = target;
         this.i18n = this.locator.get(I18N);
-        this.platform = this.locator.get(IPlatform);
-        this.targetObservers = new Set();
+        this.platform = platform;
+        this.targetAccessors = new Set();
         this.i18n.subscribeLocaleChange(this);
-        connectable.assignIdTo(this);
     }
-    static create({ parser, observerLocator, context, controller, target, instruction, isParameterContext, }) {
-        const binding = this.getBinding({ observerLocator, context, controller, target });
+    static create({ parser, observerLocator, context, controller, target, instruction, platform, isParameterContext, }) {
+        const binding = this.getBinding({ observerLocator, context, controller, target, platform });
         const expr = typeof instruction.from === 'string'
             ? parser.parse(instruction.from, 53 /* BindCommand */)
             : instruction.from;
@@ -40,10 +44,10 @@ let TranslationBinding = TranslationBinding_1 = class TranslationBinding {
             binding.expr = interpolation || expr;
         }
     }
-    static getBinding({ observerLocator, context, controller, target, }) {
+    static getBinding({ observerLocator, context, controller, target, platform, }) {
         let binding = controller.bindings && controller.bindings.find((b) => b instanceof TranslationBinding_1 && b.target === target);
         if (!binding) {
-            binding = new TranslationBinding_1(target, observerLocator, context);
+            binding = new TranslationBinding_1(target, observerLocator, context, platform);
             controller.addBinding(binding);
         }
         return binding;
@@ -71,7 +75,11 @@ let TranslationBinding = TranslationBinding_1 = class TranslationBinding {
             this.expr.unbind(flags, this.scope, this.hostScope, this);
         }
         (_a = this.parameter) === null || _a === void 0 ? void 0 : _a.$unbind(flags);
-        this.targetObservers.clear();
+        this.targetAccessors.clear();
+        if (this.task !== null) {
+            this.task.cancel();
+            this.task = null;
+        }
         this.scope = (void 0);
         this.obs.clear(true);
     }
@@ -85,6 +93,9 @@ let TranslationBinding = TranslationBinding_1 = class TranslationBinding {
         this.updateTranslations(flags);
     }
     handleLocaleChange() {
+        // todo:
+        // no flag passed, so if a locale is updated during binding of a component
+        // and the author wants to signal that locale change fromBind, then it's a bug
         this.updateTranslations(0 /* none */);
     }
     useParameter(expr) {
@@ -97,7 +108,9 @@ let TranslationBinding = TranslationBinding_1 = class TranslationBinding {
         var _a;
         const results = this.i18n.evaluate(this.keyExpression, (_a = this.parameter) === null || _a === void 0 ? void 0 : _a.value);
         const content = Object.create(null);
-        this.targetObservers.clear();
+        const accessorUpdateTasks = [];
+        const task = this.task;
+        this.targetAccessors.clear();
         for (const item of results) {
             const value = item.value;
             const attributes = this.preprocessAttributes(item.attributes);
@@ -106,21 +119,40 @@ let TranslationBinding = TranslationBinding_1 = class TranslationBinding {
                     content[attribute] = value;
                 }
                 else {
-                    this.updateAttribute(attribute, value, flags);
+                    const controller = CustomElement.for(this.target, forOpts);
+                    const accessor = controller && controller.viewModel
+                        ? this.observerLocator.getAccessor(controller.viewModel, attribute)
+                        : this.observerLocator.getAccessor(this.target, attribute);
+                    const shouldQueueUpdate = (flags & 2 /* fromBind */) === 0 && (accessor.type & 4 /* Layout */) > 0;
+                    if (shouldQueueUpdate) {
+                        accessorUpdateTasks.push(new AccessorUpdateTask(accessor, value, flags, this.target, attribute));
+                    }
+                    else {
+                        accessor.setValue(value, flags, this.target, attribute);
+                    }
+                    this.targetAccessors.add(accessor);
                 }
             }
         }
-        if (Object.keys(content).length) {
-            this.updateContent(content, flags);
+        let shouldQueueContent = false;
+        if (Object.keys(content).length > 0) {
+            shouldQueueContent = (flags & 2 /* fromBind */) === 0;
+            if (!shouldQueueContent) {
+                this.updateContent(content, flags);
+            }
         }
-    }
-    updateAttribute(attribute, value, flags) {
-        const controller = CustomElement.for(this.target, forOpts);
-        const observer = controller && controller.viewModel
-            ? this.observerLocator.getAccessor(controller.viewModel, attribute)
-            : this.observerLocator.getAccessor(this.target, attribute);
-        observer.setValue(value, flags, this.target, attribute);
-        this.targetObservers.add(observer);
+        if (accessorUpdateTasks.length > 0 || shouldQueueContent) {
+            this.task = this.platform.domWriteQueue.queueTask(() => {
+                this.task = null;
+                for (const updateTask of accessorUpdateTasks) {
+                    updateTask.run();
+                }
+                if (shouldQueueContent) {
+                    this.updateContent(content, flags);
+                }
+            }, taskQueueOpts);
+        }
+        task === null || task === void 0 ? void 0 : task.cancel();
     }
     preprocessAttributes(attributes) {
         if (attributes.length === 0) {
@@ -194,6 +226,18 @@ TranslationBinding = TranslationBinding_1 = __decorate([
     connectable()
 ], TranslationBinding);
 export { TranslationBinding };
+class AccessorUpdateTask {
+    constructor(accessor, v, f, el, attr) {
+        this.accessor = accessor;
+        this.v = v;
+        this.f = f;
+        this.el = el;
+        this.attr = attr;
+    }
+    run() {
+        this.accessor.setValue(this.v, this.f, this.el, this.attr);
+    }
+}
 let ParameterBinding = class ParameterBinding {
     constructor(owner, expr, updater) {
         this.owner = owner;
@@ -204,12 +248,8 @@ let ParameterBinding = class ParameterBinding {
         this.hostScope = null;
         this.observerLocator = owner.observerLocator;
         this.locator = owner.locator;
-        connectable.assignIdTo(this);
     }
     handleChange(newValue, _previousValue, flags) {
-        if ((flags & 8 /* updateTarget */) === 0) {
-            throw new Error('Unexpected context in a ParameterBinding.');
-        }
         this.obs.version++;
         this.value = this.expr.evaluate(flags, this.scope, this.hostScope, this.locator, this);
         this.obs.clear(false);
