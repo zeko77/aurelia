@@ -1,24 +1,21 @@
-import {
-  Class,
-  IServiceLocator,
-  ResourceDefinition
-} from '@aurelia/kernel';
-import {
+import { def, defineHiddenProp, ensureProto } from '../utilities-objects.js';
+import { getArrayObserver } from '../observation/array-observer.js';
+import { getSetObserver } from '../observation/set-observer.js';
+import { getMapObserver } from '../observation/map-observer.js';
+
+import type { Class, IServiceLocator, ResourceDefinition } from '@aurelia/kernel';
+import type {
   IConnectable,
   ISubscribable,
   ISubscriber,
   IBinding,
-  LifecycleFlags,
   Collection,
   CollectionObserver,
   ICollectionSubscriber,
   IndexMap,
   ICollectionSubscribable,
+  LifecycleFlags,
 } from '../observation.js';
-import { def, defineHiddenProp, ensureProto } from '../utilities-objects.js';
-import { getArrayObserver } from '../observation/array-observer.js';
-import { getSetObserver } from '../observation/set-observer.js';
-import { getMapObserver } from '../observation/map-observer.js';
 import type { IObserverLocator } from '../observation/observer-locator.js';
 import type { Scope } from '../observation/binding-context.js';
 
@@ -31,7 +28,8 @@ function ensureEnoughSlotNames(currentSlot: number): void {
   if (currentSlot === lastSlot) {
     lastSlot += 5;
     const ii = slotNames.length = versionSlotNames.length = lastSlot + 1;
-    for (let i = currentSlot + 1; i < ii; ++i) {
+    let i = currentSlot + 1;
+    for (; i < ii; ++i) {
       slotNames[i] = `_o${i}`;
       versionSlotNames[i] = `_v${i}`;
     }
@@ -44,7 +42,6 @@ export interface IPartialConnectableBinding extends IBinding, ISubscriber, IColl
 }
 
 export interface IConnectableBinding extends IPartialConnectableBinding, IConnectable {
-  id: number;
   /**
    * A record storing observers that are currently subscribed to by this binding
    */
@@ -82,6 +79,10 @@ function observeCollection(this: IConnectableBinding, collection: Collection): v
   this.obs.add(obs);
 }
 
+function subscribeTo(this: IConnectableBinding, subscribable: ISubscribable | ICollectionSubscribable): void {
+  this.obs.add(subscribable);
+}
+
 function noopHandleChange() {
   throw new Error('method "handleChange" not implemented');
 }
@@ -91,7 +92,6 @@ function noopHandleCollectionChange() {
 }
 
 type ObservationRecordImplType = {
-  id: number;
   version: number;
   count: number;
   binding: IConnectableBinding;
@@ -99,14 +99,12 @@ type ObservationRecordImplType = {
 
 export interface BindingObserverRecord extends ObservationRecordImplType { }
 export class BindingObserverRecord implements ISubscriber, ICollectionSubscriber {
-  public id!: number;
   public version: number = 0;
   public count: number = 0;
 
   public constructor(
     public binding: IConnectableBinding
   ) {
-    connectable.assignIdTo(this);
   }
 
   public handleChange(value: unknown, oldValue: unknown, flags: LifecycleFlags): unknown {
@@ -120,7 +118,7 @@ export class BindingObserverRecord implements ISubscriber, ICollectionSubscriber
   /**
    * Add, and subscribe to a given observer
    */
-  public add(observer: (ISubscribable | ICollectionSubscribable) & { [id: number]: number }): void {
+  public add(observer: ISubscribable | ICollectionSubscribable): void {
     // find the observer.
     const observerSlots = this.count == null ? 0 : this.count;
     let i = observerSlots;
@@ -135,7 +133,6 @@ export class BindingObserverRecord implements ISubscriber, ICollectionSubscriber
       }
       this[slotNames[i]] = observer;
       observer.subscribe(this);
-      observer[this.id] |= LifecycleFlags.updateTarget;
       // increment the slot count.
       if (i === observerSlots) {
         this.count = i + 1;
@@ -160,7 +157,6 @@ export class BindingObserverRecord implements ISubscriber, ICollectionSubscriber
         if (observer != null) {
           this[slotName] = void 0;
           observer.unsubscribe(this);
-          observer[this.id] &= ~LifecycleFlags.updateTarget;
         }
       }
       this.count = 0;
@@ -172,7 +168,6 @@ export class BindingObserverRecord implements ISubscriber, ICollectionSubscriber
           if (observer != null) {
             this[slotName] = void 0;
             observer.unsubscribe(this);
-            observer[this.id] &= ~LifecycleFlags.updateTarget;
             this.count--;
           }
         }
@@ -181,13 +176,15 @@ export class BindingObserverRecord implements ISubscriber, ICollectionSubscriber
   }
 }
 
-type DecoratableConnectable<TProto, TClass> = Class<TProto & Partial<IConnectableBinding> & IPartialConnectableBinding, TClass>;
-type DecoratedConnectable<TProto, TClass> = Class<TProto & IConnectableBinding, TClass>;
+type Connectable = IConnectable & Partial<ISubscriber & ICollectionSubscriber>;
+type DecoratableConnectable<TProto, TClass> = Class<TProto & Connectable, TClass>;
+type DecoratedConnectable<TProto, TClass> = Class<TProto & Connectable, TClass>;
 
 function connectableDecorator<TProto, TClass>(target: DecoratableConnectable<TProto, TClass>): DecoratedConnectable<TProto, TClass> {
   const proto = target.prototype;
   ensureProto(proto, 'observeProperty', observeProperty, true);
   ensureProto(proto, 'observeCollection', observeCollection, true);
+  ensureProto(proto, 'subscribeTo', subscribeTo, true);
   def(proto, 'obs', { get: getObserverRecord });
   // optionally add these two methods to normalize a connectable impl
   ensureProto(proto, 'handleChange', noopHandleChange);
@@ -201,12 +198,6 @@ export function connectable<TProto, TClass>(target: DecoratableConnectable<TProt
 export function connectable<TProto, TClass>(target?: DecoratableConnectable<TProto, TClass>): DecoratedConnectable<TProto, TClass> | typeof connectableDecorator {
   return target == null ? connectableDecorator : connectableDecorator(target);
 }
-
-let idValue = 0;
-
-connectable.assignIdTo = (instance: IConnectableBinding | BindingObserverRecord): void => {
-  instance.id = ++idValue;
-};
 
 export type MediatedBinding<K extends string> = {
   [key in K]: (newValue: unknown, previousValue: unknown, flags: LifecycleFlags) => void;
@@ -223,7 +214,6 @@ export class BindingMediator<K extends string> implements IConnectableBinding {
     public observerLocator: IObserverLocator,
     public locator: IServiceLocator,
   ) {
-    connectable.assignIdTo(this);
   }
 
   public $bind(flags: LifecycleFlags, scope: Scope, hostScope?: Scope | null, projection?: ResourceDefinition): void {

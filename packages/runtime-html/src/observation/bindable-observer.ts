@@ -31,7 +31,10 @@ export class BindableObserver {
     public readonly propertyKey: string,
     cbName: string,
     private readonly set: InterceptorFunc,
-    public readonly $controller: IController,
+    // todo: a future feature where the observer is not instantiated via a controller
+    // this observer can become more static, as in immediately available when used
+    // in the form of a decorator
+    public readonly $controller: IController | null,
   ) {
     const cb = obj[cbName] as typeof BindableObserver.prototype.cb;
     const cbAll = (obj as IMayHavePropertyChangedCallback).propertyChanged!;
@@ -40,7 +43,7 @@ export class BindableObserver {
     const hasSetter = this.hasSetter = set !== noop;
 
     this.cb = hasCb ? cb : noop;
-    this.cbAll = this.hasCbAll ? cbAll : noop;
+    this.cbAll = hasCbAll ? cbAll : noop;
     // when user declare @bindable({ set })
     // it's expected to work from the start,
     // regardless where the assignment comes from: either direct view model assignment or from binding during render
@@ -72,7 +75,9 @@ export class BindableObserver {
       }
       this.currentValue = newValue;
       // todo: controller (if any) state should determine the invocation instead
-      if ((flags & LifecycleFlags.fromBind) === 0 || (flags & LifecycleFlags.updateSource) > 0) {
+      if (/* either not instantiated via a controller */this.$controller == null
+        /* or the controller instantiating this is bound */|| this.$controller.isBound
+      ) {
         if (this.hasCb) {
           this.cb.call(this.obj, newValue, currentValue, flags);
         }

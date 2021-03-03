@@ -21,11 +21,12 @@ import type {
   ISignaler,
   BindingObserverRecord,
   Collection,
+  ISubscribable,
+  ICollectionSubscribable,
 } from '@aurelia/runtime';
 
 export class MockBinding implements IConnectableBinding {
   public interceptor: this = this;
-  public id!: number;
   public observerSlots!: number;
   public version!: number;
   public observerLocator!: IObserverLocator;
@@ -60,6 +61,10 @@ export class MockBinding implements IConnectableBinding {
 
   public observeCollection(col: Collection): void {
     this.trace('observeCollection', col);
+  }
+
+  public subscribeTo(subscribable: ISubscribable | ICollectionSubscribable): void {
+    this.trace('subscribeTo', subscribable);
   }
 
   public $bind(flags: LifecycleFlags, scope: Scope): void {

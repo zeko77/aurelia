@@ -145,7 +145,7 @@ describe('PropertyBinding', function () {
 
     const flagsVariations: (() => [LF, string])[] = [
       () => [LF.fromBind,                                            `fromBind               `],
-      () => [LF.updateTarget,                                `updateTarget           `],
+      () => [LF.none,                                                `none                   `],
     ];
 
     const scopeVariations: (() => [Scope, string])[] = [
@@ -217,7 +217,7 @@ describe('PropertyBinding', function () {
 
     const flagsVariations: (() => [LF, string])[] = [
       () => [LF.fromBind,                                            `fromBind               `],
-      () => [LF.updateTarget,                                `updateTarget           `],
+      () => [LF.none,                                                `none                   `],
     ];
 
     const scopeVariations: (() => [Scope, string])[] = [
@@ -446,7 +446,7 @@ describe('PropertyBinding', function () {
 
     const flagsVariations: (() => [LF, string])[] = [
       () => [LF.fromBind,                                            `fromBind               `],
-      () => [LF.updateTarget,                                `updateTarget           `],
+      () => [LF.none,                                                `none                   `],
     ];
 
     const scopeVariations: (() => [Scope, string])[] = [
@@ -494,7 +494,7 @@ describe('PropertyBinding', function () {
         // massSpy(sut, 'handleChange');
         // massSpy(expr, 'evaluate', 'assign');
 
-        flags = LF.updateSource;
+        flags = LF.none;
 
         // - Act - Part 2
         targetObserver.setValue(newValue, flags);
@@ -562,7 +562,7 @@ describe('PropertyBinding', function () {
 
     const flagsVariations: (() => [LF, string])[] = [
       () => [LF.fromBind,             `fromBind     `],
-      () => [LF.updateTarget, `updateTarget `]
+      () => [LF.none,                 `none `]
     ];
 
     const scopeVariations: (() => [Scope, string])[] = [
@@ -611,7 +611,7 @@ describe('PropertyBinding', function () {
           assert.strictEqual(observer00, undefined, `observer00 #06`);
         }
 
-        assert.strictEqual(subscriber00, sut, `subscriber00 #07`);
+        assert.strictEqual(subscriber00, sut['targetSubscriber'], `subscriber00 #07`);
         assert.strictEqual(subscriber01, undefined, `subscriber01 #08`);
 
         assert.strictEqual(sut.targetObserver, targetObserver, `sut.targetObserver #09`);
@@ -713,7 +713,7 @@ describe('PropertyBinding', function () {
           assert.strictEqual(observer10, undefined, `observer10 #47`);
         }
 
-        assert.strictEqual(subscriber10, sut, `subscriber10 #48`);
+        assert.strictEqual(subscriber10, sut['targetSubscriber'], `subscriber10 #48`);
         assert.strictEqual(subscriber11, undefined, `subscriber11 #49`);
 
         if (observer00) {
@@ -813,7 +813,7 @@ describe('PropertyBinding', function () {
         // massSpy(sut, 'handleChange');
         // massSpy(expr, 'evaluate', 'assign');
 
-        flags = LF.updateSource;
+        flags = LF.none;
 
         // - Act - Part 3
         targetObserver.setValue(newValue2, flags);

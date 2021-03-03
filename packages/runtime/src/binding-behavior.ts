@@ -21,7 +21,7 @@ import type {
   Key,
 } from '@aurelia/kernel';
 import type { BindingObserverRecord, IConnectableBinding } from './binding/connectable.js';
-import type { BindingBehaviorExpression, IBindingBehaviorExpression } from './binding/ast.js';
+import type { BindingBehaviorExpression, ForOfStatement, IBindingBehaviorExpression, IsBindingBehavior } from './binding/ast.js';
 import type { IObserverLocator } from './observation/observer-locator.js';
 import type { IBinding } from './observation.js';
 import type { Scope } from './observation/binding-context.js';
@@ -156,9 +156,6 @@ export interface BindingInterceptor extends IConnectableBinding {}
 
 export class BindingInterceptor implements IInterceptableBinding {
   public interceptor: this = this;
-  public get id(): number {
-    return this.binding.id!;
-  }
   public get observerLocator(): IObserverLocator {
     return this.binding.observerLocator;
   }
@@ -176,6 +173,9 @@ export class BindingInterceptor implements IInterceptableBinding {
   }
   public get obs(): BindingObserverRecord {
     return this.binding.obs;
+  }
+  public get sourceExpression(): IsBindingBehavior | ForOfStatement {
+    return (this.binding as unknown as { sourceExpression: IsBindingBehavior | ForOfStatement }).sourceExpression;
   }
 
   public constructor(
