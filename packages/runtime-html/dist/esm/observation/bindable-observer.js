@@ -1,5 +1,5 @@
 import { noop } from '@aurelia/kernel';
-import { subscriberCollection } from '@aurelia/runtime';
+import { subscriberCollection, withFlushQueue } from '@aurelia/runtime';
 export class BindableObserver {
     constructor(obj, propertyKey, cbName, set, 
     // todo: a future feature where the observer is not instantiated via a controller
@@ -10,8 +10,10 @@ export class BindableObserver {
         this.propertyKey = propertyKey;
         this.set = set;
         this.$controller = $controller;
-        this.currentValue = void 0;
+        // todo: name too long. just value/oldValue, or v/oV
+        this.value = void 0;
         this.oldValue = void 0;
+        this.f = 0 /* none */;
         const cb = obj[cbName];
         const cbAll = obj.propertyChanged;
         const hasCb = this.hasCb = typeof cb === 'function';
@@ -29,24 +31,26 @@ export class BindableObserver {
         else {
             this.observing = true;
             const val = obj[propertyKey];
-            this.currentValue = hasSetter && val !== void 0 ? set(val) : val;
+            this.value = hasSetter && val !== void 0 ? set(val) : val;
             this.createGetterSetter();
         }
     }
     get type() { return 1 /* Observer */; }
     getValue() {
-        return this.currentValue;
+        return this.value;
     }
     setValue(newValue, flags) {
         if (this.hasSetter) {
             newValue = this.set(newValue);
         }
         if (this.observing) {
-            const currentValue = this.currentValue;
+            const currentValue = this.value;
             if (Object.is(newValue, currentValue)) {
                 return;
             }
-            this.currentValue = newValue;
+            this.value = newValue;
+            this.oldValue = currentValue;
+            this.f = flags;
             // todo: controller (if any) state should determine the invocation instead
             if ( /* either not instantiated via a controller */this.$controller == null
                 /* or the controller instantiating this is bound */ || this.$controller.isBound) {
@@ -57,7 +61,8 @@ export class BindableObserver {
                     this.cbAll.call(this.obj, this.propertyKey, newValue, currentValue, flags);
                 }
             }
-            this.subs.notify(newValue, currentValue, flags);
+            this.queue.add(this);
+            // this.subs.notify(newValue, currentValue, flags);
         }
         else {
             // See SetterObserver.setValue for explanation
@@ -68,18 +73,23 @@ export class BindableObserver {
         if (!this.observing === false) {
             this.observing = true;
             const currentValue = this.obj[this.propertyKey];
-            this.currentValue = this.hasSetter
+            this.value = this.hasSetter
                 ? this.set(currentValue)
                 : currentValue;
             this.createGetterSetter();
         }
         this.subs.add(subscriber);
     }
+    flush() {
+        oV = this.oldValue;
+        this.oldValue = this.value;
+        this.subs.notify(this.value, oV, this.f);
+    }
     createGetterSetter() {
         Reflect.defineProperty(this.obj, this.propertyKey, {
             enumerable: true,
             configurable: true,
-            get: ( /* Bindable Observer */) => this.currentValue,
+            get: ( /* Bindable Observer */) => this.value,
             set: (/* Bindable Observer */ value) => {
                 this.setValue(value, 0 /* none */);
             }
@@ -87,4 +97,8 @@ export class BindableObserver {
     }
 }
 subscriberCollection(BindableObserver);
+withFlushQueue(BindableObserver);
+// a reusable variable for `.flush()` methods of observers
+// so that there doesn't need to create an env record for every call
+let oV = void 0;
 //# sourceMappingURL=bindable-observer.js.map

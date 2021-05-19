@@ -41,6 +41,7 @@ export { If, Else, } from './resources/template-controllers/if.js';
 export { Repeat } from './resources/template-controllers/repeat.js';
 export { With } from './resources/template-controllers/with.js';
 export { Switch, Case, DefaultCase, } from './resources/template-controllers/switch.js';
+export { PromiseTemplateController, FulfilledTemplateController, PendingTemplateController, RejectedTemplateController, } from './resources/template-controllers/promise.js';
 export { Blur, BlurManager, } from './resources/custom-attributes/blur.js';
 export { Focus, } from './resources/custom-attributes/focus.js';
 export { Portal, } from './resources/template-controllers/portal.js';
@@ -65,4 +66,11 @@ export { BindableInfo, ElementInfo, AttrInfo, BindingSymbol, CustomAttributeSymb
 export { CSSModulesProcessorRegistry, cssModules, ShadowDOMRegistry, IShadowDOMStyleFactory, shadowCSS, StyleConfiguration, AdoptedStyleSheetsStyles, StyleElementStyles, IShadowDOMStyles, IShadowDOMGlobalStyles, } from './templating/styles.js';
 export { Watch, watch, } from './watch.js';
 export { ComputedWatcher, ExpressionWatcher, } from './templating/watchers.js';
+export { 
+// configurations
+DialogConfiguration, DialogDefaultConfiguration, DialogDeactivationStatuses, IDialogGlobalSettings, 
+// main interfaces
+IDialogService, IDialogController, IDialogDomRenderer, IDialogDom, DialogOpenResult, DialogCloseResult, 
+// default impls
+DialogService, DialogController, DefaultDialogDom, DefaultDialogDomRenderer, DefaultDialogGlobalSettings, } from './dialog.js';
 //# sourceMappingURL=index.js.map

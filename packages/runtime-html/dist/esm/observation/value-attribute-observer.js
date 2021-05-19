@@ -1,4 +1,4 @@
-import { subscriberCollection } from '@aurelia/runtime';
+import { subscriberCollection, withFlushQueue } from '@aurelia/runtime';
 /**
  * Observer for non-radio, non-checkbox input.
  */
@@ -6,7 +6,7 @@ export class ValueAttributeObserver {
     constructor(obj, propertyKey, handler) {
         this.propertyKey = propertyKey;
         this.handler = handler;
-        this.currentValue = '';
+        this.value = '';
         this.oldValue = '';
         this.hasChanges = false;
         // ObserverType.Layout is not always true, it depends on the element & property combo
@@ -17,39 +17,41 @@ export class ValueAttributeObserver {
     getValue() {
         // is it safe to assume the observer has the latest value?
         // todo: ability to turn on/off cache based on type
-        return this.currentValue;
+        return this.value;
     }
     setValue(newValue, flags) {
-        this.currentValue = newValue;
-        this.hasChanges = newValue !== this.oldValue;
+        if (Object.is(newValue, this.value)) {
+            return;
+        }
+        this.oldValue = this.value;
+        this.value = newValue;
+        this.hasChanges = true;
         if (!this.handler.config.readonly && (flags & 256 /* noFlush */) === 0) {
             this.flushChanges(flags);
         }
     }
     flushChanges(flags) {
+        var _a;
         if (this.hasChanges) {
             this.hasChanges = false;
-            const currentValue = this.currentValue;
-            const oldValue = this.oldValue;
-            this.oldValue = currentValue;
-            this.obj[this.propertyKey] = currentValue !== null && currentValue !== void 0 ? currentValue : this.handler.config.default;
+            this.obj[this.propertyKey] = (_a = this.value) !== null && _a !== void 0 ? _a : this.handler.config.default;
             if ((flags & 2 /* fromBind */) === 0) {
-                this.subs.notify(currentValue, oldValue, flags);
+                this.queue.add(this);
             }
         }
     }
     handleEvent() {
-        const oldValue = this.oldValue = this.currentValue;
-        const currentValue = this.currentValue = this.obj[this.propertyKey];
-        if (oldValue !== currentValue) {
-            this.oldValue = currentValue;
-            this.subs.notify(currentValue, oldValue, 0 /* none */);
+        this.oldValue = this.value;
+        this.value = this.obj[this.propertyKey];
+        if (this.oldValue !== this.value) {
+            this.hasChanges = false;
+            this.queue.add(this);
         }
     }
     subscribe(subscriber) {
         if (this.subs.add(subscriber) && this.subs.count === 1) {
             this.handler.subscribe(this.obj, this);
-            this.currentValue = this.oldValue = this.obj[this.propertyKey];
+            this.value = this.oldValue = this.obj[this.propertyKey];
         }
     }
     unsubscribe(subscriber) {
@@ -57,6 +59,15 @@ export class ValueAttributeObserver {
             this.handler.dispose();
         }
     }
+    flush() {
+        oV = this.oldValue;
+        this.oldValue = this.value;
+        this.subs.notify(this.value, oV, 0 /* none */);
+    }
 }
 subscriberCollection(ValueAttributeObserver);
+withFlushQueue(ValueAttributeObserver);
+// a reusable variable for `.flush()` methods of observers
+// so that there doesn't need to create an env record for every call
+let oV = void 0;
 //# sourceMappingURL=value-attribute-observer.js.map

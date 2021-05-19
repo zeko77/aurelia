@@ -1,4 +1,4 @@
-import { subscriberCollection, } from '../../../../runtime/dist/native-modules/index.js';
+import { subscriberCollection, withFlushQueue, } from '../../../../runtime/dist/native-modules/index.js';
 const hasOwn = Object.prototype.hasOwnProperty;
 const childObserverOptions = {
     childList: true,
@@ -14,7 +14,7 @@ export class SelectValueObserver {
     _key, handler, observerLocator) {
         this.handler = handler;
         this.observerLocator = observerLocator;
-        this.currentValue = void 0;
+        this.value = void 0;
         this.oldValue = void 0;
         this.hasChanges = false;
         // ObserverType.Layout is not always true
@@ -29,13 +29,14 @@ export class SelectValueObserver {
         // is it safe to assume the observer has the latest value?
         // todo: ability to turn on/off cache based on type
         return this.observing
-            ? this.currentValue
+            ? this.value
             : this.obj.multiple
                 ? Array.from(this.obj.options).map(o => o.value)
                 : this.obj.value;
     }
     setValue(newValue, flags) {
-        this.currentValue = newValue;
+        this.oldValue = this.value;
+        this.value = newValue;
         this.hasChanges = newValue !== this.oldValue;
         this.observeArray(newValue instanceof Array ? newValue : null);
         if ((flags & 256 /* noFlush */) === 0) {
@@ -45,48 +46,33 @@ export class SelectValueObserver {
     flushChanges(flags) {
         if (this.hasChanges) {
             this.hasChanges = false;
-            this.synchronizeOptions();
+            this.syncOptions();
         }
     }
     handleCollectionChange() {
         // always sync "selected" property of <options/>
         // immediately whenever the array notifies its mutation
-        this.synchronizeOptions();
+        this.syncOptions();
     }
-    notify(flags) {
-        if ((flags & 2 /* fromBind */) > 0) {
-            return;
-        }
-        const oldValue = this.oldValue;
-        const newValue = this.currentValue;
-        if (newValue === oldValue) {
-            return;
-        }
-        this.subs.notify(newValue, oldValue, flags);
-    }
-    handleEvent() {
-        const shouldNotify = this.synchronizeValue();
-        if (shouldNotify) {
-            this.subs.notify(this.currentValue, this.oldValue, 0 /* none */);
-        }
-    }
-    synchronizeOptions(indexMap) {
-        const { currentValue, obj } = this;
-        const isArray = Array.isArray(currentValue);
-        const matcher = obj.matcher !== void 0 ? obj.matcher : defaultMatcher;
+    syncOptions() {
+        var _a;
+        const value = this.value;
+        const obj = this.obj;
+        const isArray = Array.isArray(value);
+        const matcher = (_a = obj.matcher) !== null && _a !== void 0 ? _a : defaultMatcher;
         const options = obj.options;
         let i = options.length;
         while (i-- > 0) {
             const option = options[i];
             const optionValue = hasOwn.call(option, 'model') ? option.model : option.value;
             if (isArray) {
-                option.selected = currentValue.findIndex(item => !!matcher(optionValue, item)) !== -1;
+                option.selected = value.findIndex(item => !!matcher(optionValue, item)) !== -1;
                 continue;
             }
-            option.selected = !!matcher(optionValue, currentValue);
+            option.selected = !!matcher(optionValue, value);
         }
     }
-    synchronizeValue() {
+    syncValue() {
         // Spec for synchronizing value from `<select/>`  to `SelectObserver`
         // When synchronizing value to observed <select/> element, do the following steps:
         // A. If `<select/>` is multiple
@@ -105,7 +91,7 @@ export class SelectValueObserver {
         const obj = this.obj;
         const options = obj.options;
         const len = options.length;
-        const currentValue = this.currentValue;
+        const currentValue = this.value;
         let i = 0;
         if (obj.multiple) {
             // A.
@@ -167,16 +153,16 @@ export class SelectValueObserver {
             ++i;
         }
         // B.2
-        this.oldValue = this.currentValue;
+        this.oldValue = this.value;
         // B.3
-        this.currentValue = value;
+        this.value = value;
         // B.4
         return true;
     }
     start() {
         (this.nodeObserver = new this.obj.ownerDocument.defaultView.MutationObserver(this.handleNodeChange.bind(this)))
             .observe(this.obj, childObserverOptions);
-        this.observeArray(this.currentValue instanceof Array ? this.currentValue : null);
+        this.observeArray(this.value instanceof Array ? this.value : null);
         this.observing = true;
     }
     stop() {
@@ -200,11 +186,18 @@ export class SelectValueObserver {
             (this.arrayObserver = this.observerLocator.getArrayObserver(array)).subscribe(this);
         }
     }
-    handleNodeChange() {
-        this.synchronizeOptions();
-        const shouldNotify = this.synchronizeValue();
+    handleEvent() {
+        const shouldNotify = this.syncValue();
         if (shouldNotify) {
-            this.notify(0 /* none */);
+            this.queue.add(this);
+            // this.subs.notify(this.currentValue, this.oldValue, LF.none);
+        }
+    }
+    handleNodeChange() {
+        this.syncOptions();
+        const shouldNotify = this.syncValue();
+        if (shouldNotify) {
+            this.queue.add(this);
         }
     }
     subscribe(subscriber) {
@@ -219,6 +212,15 @@ export class SelectValueObserver {
             this.stop();
         }
     }
+    flush() {
+        oV = this.oldValue;
+        this.oldValue = this.value;
+        this.subs.notify(this.value, oV, 0 /* none */);
+    }
 }
 subscriberCollection(SelectValueObserver);
+withFlushQueue(SelectValueObserver);
+// a shared variable for `.flush()` methods of observers
+// so that there doesn't need to create an env record for every call
+let oV = void 0;
 //# sourceMappingURL=select-value-observer.js.map
