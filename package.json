@@ -1,7 +1,7 @@
 {
   "name": "@aurelia/monorepo",
   "private": true,
-  "version": "2.0.0-alpha.3",
+  "version": "v2.0.0-alpha.4",
   "workspaces": [
     "packages/__tests__",
     "packages/au",
@@ -17,7 +17,7 @@
     "packages/runtime",
     "packages/runtime-html",
     "packages/http-server",
-    "packages/store",
+    "packages/store-v1",
     "packages/testing",
     "packages/validation",
     "packages/validation-html",
