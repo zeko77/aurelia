@@ -49,7 +49,7 @@
     "typescript" "^4.0.3"
     "vinyl" "^2.2.0"
 
-"@aurelia/aot@file:/home/circleci/repo/packages-cjs/aot", "@aurelia/aot@v2.0.0-alpha.4":
+"@aurelia/aot@2.0.0-alpha.4", "@aurelia/aot@file:/home/circleci/repo/packages-cjs/aot":
   "resolved" "file:packages-cjs/aot"
   "version" "2.0.0-alpha.4"
   dependencies:
@@ -60,7 +60,7 @@
     "jsdom" "^15.2.1"
     "typescript" "^4.0.3"
 
-"@aurelia/babel-jest@file:/home/circleci/repo/packages-cjs/babel-jest", "@aurelia/babel-jest@v2.0.0-alpha.4":
+"@aurelia/babel-jest@2.0.0-alpha.4", "@aurelia/babel-jest@file:/home/circleci/repo/packages-cjs/babel-jest":
   "resolved" "file:packages-cjs/babel-jest"
   "version" "2.0.0-alpha.4"
   dependencies:
@@ -71,14 +71,14 @@
     "@aurelia/runtime" "2.0.0-alpha.4"
     "babel-jest" "^26.3.0"
 
-"@aurelia/fetch-client@file:/home/circleci/repo/packages/fetch-client", "@aurelia/fetch-client@v2.0.0-alpha.4":
+"@aurelia/fetch-client@2.0.0-alpha.4", "@aurelia/fetch-client@file:/home/circleci/repo/packages/fetch-client":
   "resolved" "file:packages/fetch-client"
   "version" "2.0.0-alpha.4"
   dependencies:
     "@aurelia/kernel" "2.0.0-alpha.4"
     "@aurelia/metadata" "2.0.0-alpha.4"
 
-"@aurelia/http-server@file:/home/circleci/repo/packages/http-server", "@aurelia/http-server@v2.0.0-alpha.4":
+"@aurelia/http-server@2.0.0-alpha.4", "@aurelia/http-server@file:/home/circleci/repo/packages/http-server":
   "resolved" "file:packages/http-server"
   "version" "2.0.0-alpha.4"
   dependencies:
@@ -87,7 +87,7 @@
     "@aurelia/platform" "2.0.0-alpha.4"
     "@aurelia/runtime" "2.0.0-alpha.4"
 
-"@aurelia/i18n@file:/home/circleci/repo/packages/i18n", "@aurelia/i18n@v2.0.0-alpha.4":
+"@aurelia/i18n@2.0.0-alpha.4", "@aurelia/i18n@file:/home/circleci/repo/packages/i18n":
   "resolved" "file:packages/i18n"
   "version" "2.0.0-alpha.4"
   dependencies:
@@ -98,28 +98,28 @@
     "@aurelia/runtime-html" "2.0.0-alpha.4"
     "i18next" "^17.0.0"
 
-"@aurelia/kernel@file:/home/circleci/repo/packages/kernel", "@aurelia/kernel@v2.0.0-alpha.4":
+"@aurelia/kernel@2.0.0-alpha.4", "@aurelia/kernel@file:/home/circleci/repo/packages/kernel":
   "resolved" "file:packages/kernel"
   "version" "2.0.0-alpha.4"
   dependencies:
     "@aurelia/metadata" "2.0.0-alpha.4"
     "@aurelia/platform" "2.0.0-alpha.4"
 
-"@aurelia/metadata@file:/home/circleci/repo/packages/metadata", "@aurelia/metadata@v2.0.0-alpha.4":
+"@aurelia/metadata@2.0.0-alpha.4", "@aurelia/metadata@file:/home/circleci/repo/packages/metadata":
   "resolved" "file:packages/metadata"
   "version" "2.0.0-alpha.4"
 
-"@aurelia/platform-browser@file:/home/circleci/repo/packages/platform-browser", "@aurelia/platform-browser@v2.0.0-alpha.4":
+"@aurelia/platform-browser@2.0.0-alpha.4", "@aurelia/platform-browser@file:/home/circleci/repo/packages/platform-browser":
   "resolved" "file:packages/platform-browser"
   "version" "2.0.0-alpha.4"
   dependencies:
     "@aurelia/platform" "2.0.0-alpha.4"
 
-"@aurelia/platform@file:/home/circleci/repo/packages/platform", "@aurelia/platform@v2.0.0-alpha.4":
+"@aurelia/platform@2.0.0-alpha.4", "@aurelia/platform@file:/home/circleci/repo/packages/platform":
   "resolved" "file:packages/platform"
   "version" "2.0.0-alpha.4"
 
-"@aurelia/plugin-conventions@file:/home/circleci/repo/packages-cjs/plugin-conventions", "@aurelia/plugin-conventions@v2.0.0-alpha.4":
+"@aurelia/plugin-conventions@2.0.0-alpha.4", "@aurelia/plugin-conventions@file:/home/circleci/repo/packages-cjs/plugin-conventions":
   "resolved" "file:packages-cjs/plugin-conventions"
   "version" "2.0.0-alpha.4"
   dependencies:
@@ -132,7 +132,7 @@
     "parse5" "^5.1.1"
     "typescript" "^4.0.3"
 
-"@aurelia/plugin-gulp@file:/home/circleci/repo/packages-cjs/plugin-gulp", "@aurelia/plugin-gulp@v2.0.0-alpha.4":
+"@aurelia/plugin-gulp@2.0.0-alpha.4", "@aurelia/plugin-gulp@file:/home/circleci/repo/packages-cjs/plugin-gulp":
   "resolved" "file:packages-cjs/plugin-gulp"
   "version" "2.0.0-alpha.4"
   dependencies:
@@ -152,11 +152,11 @@
     "@aurelia/platform" "2.0.0-alpha.4"
     "@aurelia/runtime" "2.0.0-alpha.4"
 
-"@aurelia/route-recognizer@file:/home/circleci/repo/packages/route-recognizer", "@aurelia/route-recognizer@v2.0.0-alpha.4":
+"@aurelia/route-recognizer@2.0.0-alpha.4", "@aurelia/route-recognizer@file:/home/circleci/repo/packages/route-recognizer":
   "resolved" "file:packages/route-recognizer"
   "version" "2.0.0-alpha.4"
 
-"@aurelia/router@file:/home/circleci/repo/packages/router", "@aurelia/router@v2.0.0-alpha.4":
+"@aurelia/router@2.0.0-alpha.4", "@aurelia/router@file:/home/circleci/repo/packages/router":
   "resolved" "file:packages/router"
   "version" "2.0.0-alpha.4"
   dependencies:
@@ -168,7 +168,7 @@
     "@aurelia/runtime" "2.0.0-alpha.4"
     "@aurelia/runtime-html" "2.0.0-alpha.4"
 
-"@aurelia/runtime-html@file:/home/circleci/repo/packages/runtime-html", "@aurelia/runtime-html@v2.0.0-alpha.4":
+"@aurelia/runtime-html@2.0.0-alpha.4", "@aurelia/runtime-html@file:/home/circleci/repo/packages/runtime-html":
   "resolved" "file:packages/runtime-html"
   "version" "2.0.0-alpha.4"
   dependencies:
@@ -178,7 +178,7 @@
     "@aurelia/platform-browser" "2.0.0-alpha.4"
     "@aurelia/runtime" "2.0.0-alpha.4"
 
-"@aurelia/runtime@file:/home/circleci/repo/packages/runtime", "@aurelia/runtime@v2.0.0-alpha.4":
+"@aurelia/runtime@2.0.0-alpha.4", "@aurelia/runtime@file:/home/circleci/repo/packages/runtime":
   "resolved" "file:packages/runtime"
   "version" "2.0.0-alpha.4"
   dependencies:
@@ -186,7 +186,7 @@
     "@aurelia/metadata" "2.0.0-alpha.4"
     "@aurelia/platform" "2.0.0-alpha.4"
 
-"@aurelia/store-v1@file:/home/circleci/repo/packages/store-v1", "@aurelia/store-v1@v2.0.0-alpha.4":
+"@aurelia/store-v1@2.0.0-alpha.4", "@aurelia/store-v1@file:/home/circleci/repo/packages/store-v1":
   "resolved" "file:packages/store-v1"
   "version" "2.0.0-alpha.4"
   dependencies:
@@ -195,7 +195,7 @@
     "@aurelia/platform" "2.0.0-alpha.4"
     "rxjs" "^6.5.3"
 
-"@aurelia/testing@file:/home/circleci/repo/packages/testing", "@aurelia/testing@v2.0.0-alpha.4":
+"@aurelia/testing@2.0.0-alpha.4", "@aurelia/testing@file:/home/circleci/repo/packages/testing":
   "resolved" "file:packages/testing"
   "version" "2.0.0-alpha.4"
   dependencies:
@@ -206,7 +206,7 @@
     "@aurelia/runtime" "2.0.0-alpha.4"
     "@aurelia/runtime-html" "2.0.0-alpha.4"
 
-"@aurelia/ts-jest@file:/home/circleci/repo/packages-cjs/ts-jest", "@aurelia/ts-jest@v2.0.0-alpha.4":
+"@aurelia/ts-jest@2.0.0-alpha.4", "@aurelia/ts-jest@file:/home/circleci/repo/packages-cjs/ts-jest":
   "resolved" "file:packages-cjs/ts-jest"
   "version" "2.0.0-alpha.4"
   dependencies:
@@ -217,7 +217,7 @@
     "@aurelia/runtime" "2.0.0-alpha.4"
     "ts-jest" "^26.2.0"
 
-"@aurelia/validation-html@file:/home/circleci/repo/packages/validation-html", "@aurelia/validation-html@v2.0.0-alpha.4":
+"@aurelia/validation-html@2.0.0-alpha.4", "@aurelia/validation-html@file:/home/circleci/repo/packages/validation-html":
   "resolved" "file:packages/validation-html"
   "version" "2.0.0-alpha.4"
   dependencies:
@@ -229,7 +229,7 @@
     "@aurelia/runtime-html" "2.0.0-alpha.4"
     "@aurelia/validation" "2.0.0-alpha.4"
 
-"@aurelia/validation-i18n@file:/home/circleci/repo/packages/validation-i18n", "@aurelia/validation-i18n@v2.0.0-alpha.4":
+"@aurelia/validation-i18n@2.0.0-alpha.4", "@aurelia/validation-i18n@file:/home/circleci/repo/packages/validation-i18n":
   "resolved" "file:packages/validation-i18n"
   "version" "2.0.0-alpha.4"
   dependencies:
@@ -244,7 +244,7 @@
     "@aurelia/validation-html" "2.0.0-alpha.4"
     "i18next" "^17.0.0"
 
-"@aurelia/validation@file:/home/circleci/repo/packages/validation", "@aurelia/validation@v2.0.0-alpha.4":
+"@aurelia/validation@2.0.0-alpha.4", "@aurelia/validation@file:/home/circleci/repo/packages/validation":
   "resolved" "file:packages/validation"
   "version" "2.0.0-alpha.4"
   dependencies:
@@ -253,7 +253,7 @@
     "@aurelia/platform" "2.0.0-alpha.4"
     "@aurelia/runtime" "2.0.0-alpha.4"
 
-"@aurelia/webpack-loader@file:/home/circleci/repo/packages-cjs/webpack-loader", "@aurelia/webpack-loader@v2.0.0-alpha.4":
+"@aurelia/webpack-loader@2.0.0-alpha.4", "@aurelia/webpack-loader@file:/home/circleci/repo/packages-cjs/webpack-loader":
   "resolved" "file:packages-cjs/webpack-loader"
   "version" "2.0.0-alpha.4"
   dependencies:
@@ -1929,7 +1929,7 @@
     "@aurelia/metadata" "2.0.0-alpha.4"
     "@aurelia/platform" "2.0.0-alpha.4"
 
-"aurelia@file:/home/circleci/repo/packages/aurelia", "aurelia@v2.0.0-alpha.4":
+"aurelia@2.0.0-alpha.4", "aurelia@file:/home/circleci/repo/packages/aurelia":
   "resolved" "file:packages/aurelia"
   "version" "2.0.0-alpha.4"
   dependencies:
