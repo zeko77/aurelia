@@ -1,7 +1,7 @@
 export { Platform, Task, TaskAbortError, TaskQueue, TaskQueuePriority, TaskStatus } from '@aurelia/platform';
 import { BrowserPlatform } from '@aurelia/platform-browser';
 export { BrowserPlatform } from '@aurelia/platform-browser';
-import { Protocol, getPrototypeChain, Metadata, firstDefined, kebabCase, noop, emptyArray, DI, all, Registration, IPlatform as IPlatform$1, fromDefinitionOrDefault, pascalCase, mergeArrays, fromAnnotationOrTypeOrDefault, fromAnnotationOrDefinitionOrTypeOrDefault, InstanceProvider, IContainer, nextId, ILogger, isObject, onResolve, resolveAll, camelCase, toArray, emptyObject, IServiceLocator, compareNumber } from '@aurelia/kernel';
+import { Protocol, getPrototypeChain, Metadata, firstDefined, kebabCase, noop, emptyArray, DI, all, Registration, IPlatform as IPlatform$1, fromDefinitionOrDefault, pascalCase, mergeArrays, fromAnnotationOrTypeOrDefault, fromAnnotationOrDefinitionOrTypeOrDefault, InstanceProvider, IContainer, nextId, ILogger, isObject, onResolve, resolveAll, camelCase, toArray, emptyObject, IServiceLocator, compareNumber, transient } from '@aurelia/kernel';
 import { BindingMode, subscriberCollection, withFlushQueue, connectable, registerAliases, Scope, ConnectableSwitcher, ProxyObservable, IObserverLocator, IExpressionParser, AccessScopeExpression, DelegationStrategy, BindingBehaviorExpression, BindingBehaviorFactory, bindingBehavior, BindingInterceptor, ISignaler, PropertyAccessor, INodeObserverLocator, SetterObserver, IDirtyChecker, alias, applyMutationsToIndices, getCollectionObserver as getCollectionObserver$1, BindingContext, synchronizeIndices, valueConverter } from '@aurelia/runtime';
 export { Access, AccessKeyedExpression, AccessMemberExpression, AccessScopeExpression, AccessThisExpression, AccessorType, ArrayBindingPattern, ArrayIndexObserver, ArrayLiteralExpression, ArrayObserver, AssignExpression, BinaryExpression, BindingBehavior, BindingBehaviorDefinition, BindingBehaviorExpression, BindingBehaviorFactory, BindingBehaviorStrategy, BindingContext, BindingIdentifier, BindingInterceptor, BindingMediator, BindingMode, BindingType, CallFunctionExpression, CallMemberExpression, CallScopeExpression, Char, CollectionKind, CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, ConditionalExpression, CustomExpression, DelegationStrategy, DirtyCheckProperty, DirtyCheckSettings, ExpressionKind, ForOfStatement, HtmlLiteralExpression, IDirtyChecker, IExpressionParser, INodeObserverLocator, IObserverLocator, ISignaler, Interpolation, LifecycleFlags, MapObserver, ObjectBindingPattern, ObjectLiteralExpression, ObserverLocator, OverrideContext, ParserState, Precedence, PrimitiveLiteralExpression, PrimitiveObserver, PropertyAccessor, Scope, SetObserver, SetterObserver, TaggedTemplateExpression, TemplateExpression, UnaryExpression, ValueConverter, ValueConverterDefinition, ValueConverterExpression, alias, applyMutationsToIndices, bindingBehavior, cloneIndexMap, connectable, copyIndexMap, createIndexMap, disableArrayObservation, disableMapObservation, disableSetObservation, enableArrayObservation, enableMapObservation, enableSetObservation, getCollectionObserver, isIndexMap, observable, parse, parseExpression, registerAliases, subscriberCollection, synchronizeIndices, valueConverter } from '@aurelia/runtime';
 
@@ -830,9 +830,10 @@ class AttributeObserver {
     flushChanges(flags) {
         if (this.hasChanges) {
             this.hasChanges = false;
-            const currentValue = this.value;
-            this.oldValue = currentValue;
-            switch (this.targetAttribute) {
+            const value = this.value;
+            const attr = this.targetAttribute;
+            this.oldValue = value;
+            switch (attr) {
                 case 'class': {
                     // Why does class attribute observer setValue look different with class attribute accessor?
                     // ==============
@@ -845,17 +846,26 @@ class AttributeObserver {
                     // this also comes from syntax, where it would typically be my-class.class="someProperty"
                     //
                     // so there is no need for separating class by space and add all of them like class accessor
-                    this.obj.classList.toggle(this.propertyKey, !!currentValue);
+                    this.obj.classList.toggle(this.propertyKey, !!value);
                     break;
                 }
                 case 'style': {
                     let priority = '';
-                    let newValue = currentValue;
+                    let newValue = value;
                     if (typeof newValue === 'string' && newValue.includes('!important')) {
                         priority = 'important';
                         newValue = newValue.replace('!important', '');
                     }
                     this.obj.style.setProperty(this.propertyKey, newValue, priority);
+                    break;
+                }
+                default: {
+                    if (value == null) {
+                        this.obj.removeAttribute(attr);
+                    }
+                    else {
+                        this.obj.setAttribute(attr, String(value));
+                    }
                 }
             }
         }
@@ -879,7 +889,7 @@ class AttributeObserver {
                     newValue = this.obj.style.getPropertyValue(this.propertyKey);
                     break;
                 default:
-                    throw new Error(`Unsupported targetAttribute: ${this.targetAttribute}`);
+                    throw new Error(`Unsupported observation of attribute: ${this.targetAttribute}`);
             }
             if (newValue !== this.value) {
                 this.oldValue = this.value;
@@ -1806,7 +1816,14 @@ class ChildrenDefinition {
         return new ChildrenDefinition(firstDefined(def.callback, `${prop}Changed`), firstDefined(def.property, prop), (_a = def.options) !== null && _a !== void 0 ? _a : childObserverOptions$1, def.query, def.filter, def.map);
     }
 }
-/** @internal */
+/**
+ * @internal
+ *
+ * A special observer for observing the children of a custom element. Unlike other observer that starts/stops
+ * based on the changes in the subscriber addition/removal, this is a controlled observers.
+ *
+ * The controller of a custom element should totally control when this observer starts/stops.
+ */
 let ChildrenObserver = class ChildrenObserver {
     constructor(controller, obj, propertyKey, cbName, query = defaultChildQuery, filter = defaultChildFilter, map = defaultChildMap, options) {
         this.controller = controller;
@@ -1818,6 +1835,7 @@ let ChildrenObserver = class ChildrenObserver {
         this.options = options;
         this.observing = false;
         this.children = (void 0);
+        this.observer = void 0;
         this.callback = obj[cbName];
         Reflect.defineProperty(this.obj, this.propertyKey, {
             enumerable: true,
@@ -1827,28 +1845,36 @@ let ChildrenObserver = class ChildrenObserver {
         });
     }
     getValue() {
-        this.tryStartObserving();
-        return this.children;
+        return this.observing ? this.children : this.get();
     }
-    setValue(newValue) { }
-    subscribe(subscriber) {
-        this.tryStartObserving();
-        this.subs.add(subscriber);
-    }
-    tryStartObserving() {
+    setValue(value) { }
+    start() {
+        var _a;
         if (!this.observing) {
             this.observing = true;
-            this.children = filterChildren(this.controller, this.query, this.filter, this.map);
-            const obs = new this.controller.host.ownerDocument.defaultView.MutationObserver(() => { this.onChildrenChanged(); });
-            obs.observe(this.controller.host, this.options);
+            this.children = this.get();
+            ((_a = this.observer) !== null && _a !== void 0 ? _a : (this.observer = new this.controller.host.ownerDocument.defaultView.MutationObserver(() => { this.onChildrenChanged(); })))
+                .observe(this.controller.host, this.options);
+        }
+    }
+    stop() {
+        if (this.observing) {
+            this.observing = false;
+            this.observer.disconnect();
+            this.children = emptyArray;
         }
     }
     onChildrenChanged() {
-        this.children = filterChildren(this.controller, this.query, this.filter, this.map);
+        this.children = this.get();
         if (this.callback !== void 0) {
             this.callback.call(this.obj);
         }
         this.subs.notify(this.children, undefined, 0 /* none */);
+    }
+    // freshly retrieve the children everytime
+    // in case this observer is not observing
+    get() {
+        return filterChildren(this.controller, this.query, this.filter, this.map);
     }
 };
 ChildrenObserver = __decorate([
@@ -1868,11 +1894,16 @@ const forOpts = { optional: true };
 function filterChildren(controller, query, filter, map) {
     var _a;
     const nodes = query(controller);
+    const ii = nodes.length;
     const children = [];
-    for (let i = 0, ii = nodes.length; i < ii; ++i) {
-        const node = nodes[i];
-        const $controller = CustomElement.for(node, forOpts);
-        const viewModel = (_a = $controller === null || $controller === void 0 ? void 0 : $controller.viewModel) !== null && _a !== void 0 ? _a : null;
+    let node;
+    let $controller;
+    let viewModel;
+    let i = 0;
+    for (; i < ii; ++i) {
+        node = nodes[i];
+        $controller = CustomElement.for(node, forOpts);
+        viewModel = (_a = $controller === null || $controller === void 0 ? void 0 : $controller.viewModel) !== null && _a !== void 0 ? _a : null;
         if (filter(node, $controller, viewModel)) {
             children.push(map(node, $controller, viewModel));
         }
@@ -3428,6 +3459,7 @@ class Controller {
         this.logger = null;
         this.debug = false;
         this.fullyNamed = false;
+        this.childrenObs = emptyArray;
         this.$initiator = null;
         this.$flags = 0 /* none */;
         this.$resolve = void 0;
@@ -3555,7 +3587,7 @@ class Controller {
             createWatchers(this, this.container, definition, instance);
         }
         createObservers(this, definition, flags, instance);
-        createChildrenObservers(this, definition, flags, instance);
+        this.childrenObs = createChildrenObservers(this, definition, flags, instance);
         if (this.hooks.hasDefine) {
             if (this.debug) {
                 this.logger.trace(`invoking define() hook`);
@@ -3754,6 +3786,16 @@ class Controller {
         if (this.debug) {
             this.logger.trace(`bind()`);
         }
+        // timing: after binding, before bound
+        // reason: needs to start observing before all the bindings finish their $bind phase,
+        //         so that changes in one binding can be reflected into the other, regardless the index of the binding
+        //
+        // todo: is this timing appropriate?
+        if (this.childrenObs.length) {
+            for (let i = 0; i < this.childrenObs.length; ++i) {
+                this.childrenObs[i].start();
+            }
+        }
         if (this.bindings !== null) {
             for (let i = 0; i < this.bindings.length; ++i) {
                 this.bindings[i].$bind(this.$flags, this.scope, this.hostScope);
@@ -3872,6 +3914,14 @@ class Controller {
         this.$flags = flags;
         if (initiator === this) {
             this.enterDetaching();
+        }
+        // timing: before deactiving
+        // reason: avoid queueing a callback from the mutation observer, caused by the changes of nodes by repeat/if etc...
+        // todo: is this appropriate timing?
+        if (this.childrenObs.length) {
+            for (let i = 0; i < this.childrenObs.length; ++i) {
+                this.childrenObs[i].stop();
+            }
         }
         if (this.children !== null) {
             for (let i = 0; i < this.children.length; ++i) {
@@ -4259,6 +4309,7 @@ _flags, instance) {
     const length = childObserverNames.length;
     if (length > 0) {
         const observers = getLookup(instance);
+        const obs = [];
         let name;
         let i = 0;
         let childrenDescription;
@@ -4266,10 +4317,12 @@ _flags, instance) {
             name = childObserverNames[i];
             if (observers[name] == void 0) {
                 childrenDescription = childrenObservers[name];
-                observers[name] = new ChildrenObserver(controller, instance, name, childrenDescription.callback, childrenDescription.query, childrenDescription.filter, childrenDescription.map, childrenDescription.options);
+                obs[obs.length] = observers[name] = new ChildrenObserver(controller, instance, name, childrenDescription.callback, childrenDescription.query, childrenDescription.filter, childrenDescription.map, childrenDescription.options);
             }
         }
+        return obs;
     }
+    return emptyArray;
 }
 const AccessScopeAst = {
     map: new Map(),
@@ -6257,7 +6310,7 @@ CaptureBindingCommand = __decorate([
  */
 let AttrBindingCommand = class AttrBindingCommand {
     constructor() {
-        this.bindingType = 32 /* IsProperty */;
+        this.bindingType = 32 /* IsProperty */ | 4096 /* IgnoreAttr */;
     }
     compile(binding) {
         const target = getTarget(binding, false);
@@ -10998,7 +11051,7 @@ function toLookup(acc, item) {
     }
     return acc;
 }
-let Compose = class Compose {
+let AuRender = class AuRender {
     constructor(p, instruction) {
         this.p = p;
         this.id = nextId('au$component');
@@ -11100,17 +11153,286 @@ let Compose = class Compose {
 };
 __decorate([
     bindable
-], Compose.prototype, "subject", void 0);
+], AuRender.prototype, "subject", void 0);
 __decorate([
     bindable({ mode: BindingMode.fromView })
-], Compose.prototype, "composing", void 0);
-Compose = __decorate([
-    customElement({ name: 'au-compose', template: null, containerless: true }),
+], AuRender.prototype, "composing", void 0);
+AuRender = __decorate([
+    customElement({ name: 'au-render', template: null, containerless: true }),
     __param(0, IPlatform),
     __param(1, IInstruction)
-], Compose);
+], AuRender);
 function isController(subject) {
     return 'lockScope' in subject;
+}
+
+// Desired usage:
+// <au-component view.bind="Promise<string>" view-model.bind="" model.bind="" />
+// <au-component view.bind="<string>" model.bind="" />
+//
+let AuCompose = class AuCompose {
+    constructor(container, parent, host, p, 
+    // todo: use this to retrieve au-slot instruction
+    //        for later enhancement related to <au-slot/> + compose
+    instruction, contextFactory) {
+        this.container = container;
+        this.parent = parent;
+        this.host = host;
+        this.p = p;
+        this.instruction = instruction;
+        this.contextFactory = contextFactory;
+        this.scopeBehavior = 'auto';
+        /** @internal */
+        this.task = null;
+        /** @internal */
+        this.c = void 0;
+    }
+    /** @internal */
+    static get inject() {
+        return [IContainer, IController, INode, IPlatform, IInstruction, transient(CompositionContextFactory)];
+    }
+    get composition() {
+        return this.c;
+    }
+    attaching(initiator, parent, flags) {
+        return this.queue(new ChangeInfo(this.view, this.viewModel, this.model, initiator, void 0));
+    }
+    detaching(initiator) {
+        var _a;
+        (_a = this.task) === null || _a === void 0 ? void 0 : _a.cancel();
+        this.task = null;
+        const cmpstn = this.c;
+        if (cmpstn != null) {
+            this.c = void 0;
+            return cmpstn.deactivate(initiator);
+        }
+    }
+    /** @internal */
+    propertyChanged(name) {
+        const task = this.task;
+        this.task = this.p.domWriteQueue.queueTask(() => {
+            return onResolve(this.queue(new ChangeInfo(this.view, this.viewModel, this.model, void 0, name)), () => {
+                this.task = null;
+            });
+        });
+        task === null || task === void 0 ? void 0 : task.cancel();
+    }
+    /** @internal */
+    queue(change) {
+        const factory = this.contextFactory;
+        const currentComposition = this.c;
+        if (change.src === 'model' && currentComposition != null) {
+            return currentComposition.update(change.model);
+        }
+        // todo: handle consequitive changes that create multiple queues
+        return onResolve(factory.create(change), context => {
+            // Don't compose [stale] view/view model
+            // by always ensuring that the composition context is the latest one
+            if (factory.isCurrent(context)) {
+                return onResolve(this.compose(context), (result) => {
+                    // Don't activate [stale] controller
+                    // by always ensuring that the composition context is the latest one
+                    if (factory.isCurrent(context)) {
+                        return onResolve(result.activate(), () => {
+                            // Don't conclude the [stale] composition
+                            // by always ensuring that the composition context is the latest one
+                            if (factory.isCurrent(context)) {
+                                // after activation, if the composition context is still the most recent one
+                                // then the job is done
+                                this.c = result;
+                                return currentComposition === null || currentComposition === void 0 ? void 0 : currentComposition.deactivate(change.initiator);
+                            }
+                            else {
+                                // the stale controller should be deactivated
+                                return onResolve(result.controller.deactivate(result.controller, this.$controller, 4 /* fromUnbind */), 
+                                // todo: do we need to deactivate?
+                                () => result.controller.dispose());
+                            }
+                        });
+                    }
+                    else {
+                        result.controller.dispose();
+                    }
+                });
+            }
+        });
+    }
+    /** @internal */
+    compose(context) {
+        // todo: when both view model and view are empty
+        //       should it throw or try it best to proceed?
+        //       current: proceed
+        const { view, viewModel, model, initiator } = context.change;
+        const { container, host, $controller, contextFactory } = this;
+        const comp = this.getOrCreateVm(container, viewModel, host);
+        const compose = () => {
+            const srcDef = this.getDefinition(comp);
+            // custom element based composition
+            if (srcDef !== null) {
+                const targetDef = CustomElementDefinition.create(srcDef !== null && srcDef !== void 0 ? srcDef : { name: CustomElement.generateName(), template: view });
+                const controller = Controller.forCustomElement(null, container, comp, host, null, 0 /* none */, true, targetDef);
+                return new CompositionController(controller, () => controller.activate(initiator !== null && initiator !== void 0 ? initiator : controller, $controller, 2 /* fromBind */), 
+                // todo: call deactivate on the component view model
+                (deactachInitiator) => controller.deactivate(deactachInitiator !== null && deactachInitiator !== void 0 ? deactachInitiator : controller, $controller, 4 /* fromUnbind */), 
+                // casting is technically incorrect
+                // but it's ignored in the caller anyway
+                (model) => { var _a; return (_a = comp.activate) === null || _a === void 0 ? void 0 : _a.call(comp, model); }, context);
+            }
+            else {
+                const targetDef = CustomElementDefinition.create({
+                    name: CustomElement.generateName(),
+                    template: view
+                });
+                const renderContext = getRenderContext(targetDef, container);
+                const viewFactory = renderContext.getViewFactory();
+                const controller = Controller.forSyntheticView(contextFactory.isFirst(context) ? $controller.root : null, renderContext, viewFactory, 2 /* fromBind */, $controller);
+                const scope = this.scopeBehavior === 'auto'
+                    ? Scope.fromParent(this.parent.scope, comp)
+                    : Scope.create(comp);
+                controller.setHost(host);
+                return new CompositionController(controller, () => controller.activate(initiator !== null && initiator !== void 0 ? initiator : controller, $controller, 2 /* fromBind */, scope, null), 
+                // todo: call deactivate on the component view model
+                (detachInitiator) => controller.deactivate(detachInitiator !== null && detachInitiator !== void 0 ? detachInitiator : controller, $controller, 4 /* fromUnbind */), 
+                // casting is technically incorrect
+                // but it's ignored in the caller anyway
+                (model) => { var _a; return (_a = comp.activate) === null || _a === void 0 ? void 0 : _a.call(comp, model); }, context);
+            }
+        };
+        if ('activate' in comp) {
+            // todo: try catch
+            // req:  ensure synchronosity of compositions that dont employ promise
+            return onResolve(comp.activate(model), () => compose());
+        }
+        else {
+            return compose();
+        }
+    }
+    /** @internal */
+    getOrCreateVm(container, comp, host) {
+        if (comp == null) {
+            return new EmptyComponent$1();
+        }
+        if (typeof comp === 'object') {
+            return comp;
+        }
+        const p = this.p;
+        const ep = new InstanceProvider('ElementResolver');
+        ep.prepare(host);
+        container.registerResolver(INode, ep);
+        container.registerResolver(p.Node, ep);
+        container.registerResolver(p.Element, ep);
+        container.registerResolver(p.HTMLElement, ep);
+        return container.invoke(comp);
+    }
+    /** @internal */
+    getDefinition(component) {
+        const Ctor = (typeof component === 'function'
+            ? component
+            : component === null || component === void 0 ? void 0 : component.constructor);
+        return CustomElement.isType(Ctor)
+            ? CustomElement.getDefinition(Ctor)
+            : null;
+    }
+};
+__decorate([
+    bindable
+], AuCompose.prototype, "view", void 0);
+__decorate([
+    bindable
+], AuCompose.prototype, "viewModel", void 0);
+__decorate([
+    bindable
+], AuCompose.prototype, "model", void 0);
+__decorate([
+    bindable({ set: v => {
+            if (v === 'scoped' || v === 'auto') {
+                return v;
+            }
+            throw new Error('Invalid scope behavior config. Only "scoped" or "auto" allowed.');
+        } })
+], AuCompose.prototype, "scopeBehavior", void 0);
+AuCompose = __decorate([
+    customElement('au-compose')
+], AuCompose);
+class EmptyComponent$1 {
+}
+class CompositionContextFactory {
+    constructor() {
+        this.id = 0;
+    }
+    isFirst(context) {
+        return context.id === 0;
+    }
+    isCurrent(context) {
+        return context.id === this.id - 1;
+    }
+    create(changes) {
+        return onResolve(changes.load(), (loaded) => new CompositionContext(this.id++, loaded));
+    }
+}
+class ChangeInfo {
+    constructor(view, viewModel, model, initiator, src) {
+        this.view = view;
+        this.viewModel = viewModel;
+        this.model = model;
+        this.initiator = initiator;
+        this.src = src;
+    }
+    load() {
+        if (this.view instanceof Promise || this.viewModel instanceof Promise) {
+            return Promise
+                .all([this.view, this.viewModel])
+                .then(([view, viewModel]) => {
+                return new LoadedChangeInfo(view, viewModel, this.model, this.initiator, this.src);
+            });
+        }
+        else {
+            return new LoadedChangeInfo(this.view, this.viewModel, this.model, this.initiator, this.src);
+        }
+    }
+}
+class LoadedChangeInfo {
+    constructor(view, viewModel, model, initiator, src) {
+        this.view = view;
+        this.viewModel = viewModel;
+        this.model = model;
+        this.initiator = initiator;
+        this.src = src;
+    }
+}
+class CompositionContext {
+    constructor(id, change) {
+        this.id = id;
+        this.change = change;
+    }
+}
+class CompositionController {
+    constructor(controller, start, stop, update, context) {
+        this.controller = controller;
+        this.start = start;
+        this.stop = stop;
+        this.update = update;
+        this.context = context;
+        this.state = 0;
+    }
+    activate() {
+        if (this.state !== 0) {
+            throw new Error(`Composition has already been activated/deactivated. Id: ${this.controller.id}`);
+        }
+        this.state = 1;
+        return this.start();
+    }
+    deactivate(detachInitator) {
+        switch (this.state) {
+            case 1:
+                this.state = -1;
+                return this.stop(detachInitator);
+            case -1:
+                throw new Error('Composition has already been deactivated.');
+            default:
+                this.state = -1;
+        }
+    }
 }
 
 const SCRIPT_REGEX = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
@@ -11257,7 +11579,8 @@ const RejectedTemplateControllerRegistration = RejectedTemplateController;
 const AttrBindingBehaviorRegistration = AttrBindingBehavior;
 const SelfBindingBehaviorRegistration = SelfBindingBehavior;
 const UpdateTriggerBindingBehaviorRegistration = UpdateTriggerBindingBehavior;
-const ComposeRegistration = Compose;
+const AuRenderRegistration = AuRender;
+const AuComposeRegistration = AuCompose;
 const PortalRegistration = Portal;
 const FocusRegistration = Focus;
 const BlurRegistration = Blur;
@@ -11300,7 +11623,8 @@ const DefaultResources = [
     AttrBindingBehaviorRegistration,
     SelfBindingBehaviorRegistration,
     UpdateTriggerBindingBehaviorRegistration,
-    ComposeRegistration,
+    AuRenderRegistration,
+    AuComposeRegistration,
     PortalRegistration,
     FocusRegistration,
     BlurRegistration,
@@ -11989,5 +12313,5 @@ const DialogDefaultConfiguration = createDialogConfiguration(noop, [
     DefaultDialogDomRenderer,
 ]);
 
-export { AdoptedStyleSheetsStyles, AppRoot, AppTask, AtPrefixedTriggerAttributePattern, AtPrefixedTriggerAttributePatternRegistration, AttrBindingBehavior, AttrBindingBehaviorRegistration, AttrBindingCommand, AttrBindingCommandRegistration, AttrInfo, AttrSyntax, AttributeBinding, AttributeBindingInstruction, AttributeBindingRendererRegistration, AttributeNSAccessor, AttributePattern, AuSlot, AuSlotContentType, AuSlotsInfo, Aurelia, Bindable, BindableDefinition, BindableInfo, BindableObserver, BindingCommand, BindingCommandDefinition, BindingModeBehavior, BindingSymbol, Blur, BlurManager, CSSModulesProcessorRegistry, CallBinding, CallBindingCommand, CallBindingCommandRegistration, CallBindingInstruction, CallBindingRendererRegistration, CaptureBindingCommand, CaptureBindingCommandRegistration, Case, CheckedObserver, Children, ChildrenDefinition, ChildrenObserver, ClassAttributeAccessor, ClassBindingCommand, ClassBindingCommandRegistration, ColonPrefixedBindAttributePattern, ColonPrefixedBindAttributePatternRegistration, Compose, ComposeRegistration, ComputedWatcher, Controller, CustomAttribute, CustomAttributeDefinition, CustomAttributeRendererRegistration, CustomAttributeSymbol, CustomElement, CustomElementDefinition, CustomElementRendererRegistration, CustomElementSymbol, DataAttributeAccessor, DebounceBindingBehavior, DebounceBindingBehaviorRegistration, DefaultBindingCommand, DefaultBindingCommandRegistration, DefaultBindingLanguage, DefaultBindingSyntax, DefaultCase, DefaultComponents, DefaultDialogDom, DefaultDialogDomRenderer, DefaultDialogGlobalSettings, DefaultRenderers, DefaultResources, DelegateBindingCommand, DelegateBindingCommandRegistration, DialogCloseResult, DialogConfiguration, DialogController, DialogDeactivationStatuses, DialogDefaultConfiguration, DialogOpenResult, DialogService, DotSeparatedAttributePattern, DotSeparatedAttributePatternRegistration, ElementInfo, Else, ElseRegistration, EventDelegator, EventSubscriber, ExpressionWatcher, Focus, ForBindingCommand, ForBindingCommandRegistration, FragmentNodeSequence, FrequentMutations, FromViewBindingBehavior, FromViewBindingBehaviorRegistration, FromViewBindingCommand, FromViewBindingCommandRegistration, FulfilledTemplateController, HydrateAttributeInstruction, HydrateElementInstruction, HydrateLetElementInstruction, HydrateTemplateController, IAppRoot, IAppTask, IAttrSyntaxTransformer, IAttributeParser, IAttributePattern, IAuSlotsInfo, IAurelia, IController, IDialogController, IDialogDom, IDialogDomRenderer, IDialogGlobalSettings, IDialogService, IEventDelegator, IEventTarget, IHistory, IInstruction, ILifecycleHooks, ILocation, INode, INodeObserverLocatorRegistration, IPlatform, IProjectionProvider, IProjections, IRenderLocation, IRenderer, ISVGAnalyzer, ISanitizer, IShadowDOMGlobalStyles, IShadowDOMStyleFactory, IShadowDOMStyles, ISyntaxInterpreter, ITemplateCompiler, ITemplateCompilerRegistration, ITemplateElementFactory, IViewFactory, IViewLocator, IWindow, IWorkTracker, If, IfRegistration, InstructionType, InterpolationBinding, InterpolationBindingRendererRegistration, InterpolationInstruction, Interpretation, IteratorBindingInstruction, IteratorBindingRendererRegistration, LetBinding, LetBindingInstruction, LetElementRendererRegistration, LetElementSymbol, LifecycleHooks, LifecycleHooksDefinition, LifecycleHooksEntry, Listener, ListenerBindingInstruction, ListenerBindingRendererRegistration, NodeObserverConfig, NodeObserverLocator, NodeType, NoopSVGAnalyzer, ObserveShallow, OneTimeBindingBehavior, OneTimeBindingBehaviorRegistration, OneTimeBindingCommand, OneTimeBindingCommandRegistration, PendingTemplateController, PlainAttributeSymbol, PlainElementSymbol, Portal, ProjectionSymbol, PromiseTemplateController, PropertyBinding, PropertyBindingInstruction, PropertyBindingRendererRegistration, RefAttributePattern, RefAttributePatternRegistration, RefBinding, RefBindingCommandRegistration, RefBindingInstruction, RefBindingRendererRegistration, RegisteredProjections, RejectedTemplateController, RenderPlan, Repeat, RepeatRegistration, SVGAnalyzer, SVGAnalyzerRegistration, SanitizeValueConverter, SanitizeValueConverterRegistration, SelectValueObserver, SelfBindingBehavior, SelfBindingBehaviorRegistration, SetAttributeInstruction, SetAttributeRendererRegistration, SetClassAttributeInstruction, SetClassAttributeRendererRegistration, SetPropertyInstruction, SetPropertyRendererRegistration, SetStyleAttributeInstruction, SetStyleAttributeRendererRegistration, ShadowDOMRegistry, ShortHandBindingSyntax, SignalBindingBehavior, SignalBindingBehaviorRegistration, SlotInfo, StandardConfiguration, StyleAttributeAccessor, StyleBindingCommand, StyleBindingCommandRegistration, StyleConfiguration, StyleElementStyles, StylePropertyBindingInstruction, StylePropertyBindingRendererRegistration, Switch, SymbolFlags, TemplateBinder, TemplateControllerRendererRegistration, TemplateControllerSymbol, TextBindingInstruction, TextBindingRendererRegistration, TextSymbol, ThrottleBindingBehavior, ThrottleBindingBehaviorRegistration, ToViewBindingBehavior, ToViewBindingBehaviorRegistration, ToViewBindingCommand, ToViewBindingCommandRegistration, TriggerBindingCommand, TriggerBindingCommandRegistration, TwoWayBindingBehavior, TwoWayBindingBehaviorRegistration, TwoWayBindingCommand, TwoWayBindingCommandRegistration, UpdateTriggerBindingBehavior, UpdateTriggerBindingBehaviorRegistration, ValueAttributeObserver, ViewFactory, ViewLocator, ViewModelKind, ViewValueConverter, ViewValueConverterRegistration, Views, Watch, With, WithRegistration, attributePattern, bindable, bindingCommand, children, containerless, convertToRenderLocation, createElement, cssModules, customAttribute, customElement, getEffectiveParentNode, getRef, getRenderContext, getTarget, isCustomElementController, isCustomElementViewModel, isInstruction, isRenderContext, isRenderLocation, lifecycleHooks, processContent, renderer, setEffectiveParentNode, setRef, shadowCSS, templateController, useShadowDOM, view, watch };
+export { AdoptedStyleSheetsStyles, AppRoot, AppTask, AtPrefixedTriggerAttributePattern, AtPrefixedTriggerAttributePatternRegistration, AttrBindingBehavior, AttrBindingBehaviorRegistration, AttrBindingCommand, AttrBindingCommandRegistration, AttrInfo, AttrSyntax, AttributeBinding, AttributeBindingInstruction, AttributeBindingRendererRegistration, AttributeNSAccessor, AttributePattern, AuCompose, AuRender, AuSlot, AuSlotContentType, AuSlotsInfo, Aurelia, Bindable, BindableDefinition, BindableInfo, BindableObserver, BindingCommand, BindingCommandDefinition, BindingModeBehavior, BindingSymbol, Blur, BlurManager, CSSModulesProcessorRegistry, CallBinding, CallBindingCommand, CallBindingCommandRegistration, CallBindingInstruction, CallBindingRendererRegistration, CaptureBindingCommand, CaptureBindingCommandRegistration, Case, CheckedObserver, Children, ChildrenDefinition, ChildrenObserver, ClassAttributeAccessor, ClassBindingCommand, ClassBindingCommandRegistration, ColonPrefixedBindAttributePattern, ColonPrefixedBindAttributePatternRegistration, AuRenderRegistration as ComposeRegistration, ComputedWatcher, Controller, CustomAttribute, CustomAttributeDefinition, CustomAttributeRendererRegistration, CustomAttributeSymbol, CustomElement, CustomElementDefinition, CustomElementRendererRegistration, CustomElementSymbol, DataAttributeAccessor, DebounceBindingBehavior, DebounceBindingBehaviorRegistration, DefaultBindingCommand, DefaultBindingCommandRegistration, DefaultBindingLanguage, DefaultBindingSyntax, DefaultCase, DefaultComponents, DefaultDialogDom, DefaultDialogDomRenderer, DefaultDialogGlobalSettings, DefaultRenderers, DefaultResources, DelegateBindingCommand, DelegateBindingCommandRegistration, DialogCloseResult, DialogConfiguration, DialogController, DialogDeactivationStatuses, DialogDefaultConfiguration, DialogOpenResult, DialogService, DotSeparatedAttributePattern, DotSeparatedAttributePatternRegistration, ElementInfo, Else, ElseRegistration, EventDelegator, EventSubscriber, ExpressionWatcher, Focus, ForBindingCommand, ForBindingCommandRegistration, FragmentNodeSequence, FrequentMutations, FromViewBindingBehavior, FromViewBindingBehaviorRegistration, FromViewBindingCommand, FromViewBindingCommandRegistration, FulfilledTemplateController, HydrateAttributeInstruction, HydrateElementInstruction, HydrateLetElementInstruction, HydrateTemplateController, IAppRoot, IAppTask, IAttrSyntaxTransformer, IAttributeParser, IAttributePattern, IAuSlotsInfo, IAurelia, IController, IDialogController, IDialogDom, IDialogDomRenderer, IDialogGlobalSettings, IDialogService, IEventDelegator, IEventTarget, IHistory, IInstruction, ILifecycleHooks, ILocation, INode, INodeObserverLocatorRegistration, IPlatform, IProjectionProvider, IProjections, IRenderLocation, IRenderer, ISVGAnalyzer, ISanitizer, IShadowDOMGlobalStyles, IShadowDOMStyleFactory, IShadowDOMStyles, ISyntaxInterpreter, ITemplateCompiler, ITemplateCompilerRegistration, ITemplateElementFactory, IViewFactory, IViewLocator, IWindow, IWorkTracker, If, IfRegistration, InstructionType, InterpolationBinding, InterpolationBindingRendererRegistration, InterpolationInstruction, Interpretation, IteratorBindingInstruction, IteratorBindingRendererRegistration, LetBinding, LetBindingInstruction, LetElementRendererRegistration, LetElementSymbol, LifecycleHooks, LifecycleHooksDefinition, LifecycleHooksEntry, Listener, ListenerBindingInstruction, ListenerBindingRendererRegistration, NodeObserverConfig, NodeObserverLocator, NodeType, NoopSVGAnalyzer, ObserveShallow, OneTimeBindingBehavior, OneTimeBindingBehaviorRegistration, OneTimeBindingCommand, OneTimeBindingCommandRegistration, PendingTemplateController, PlainAttributeSymbol, PlainElementSymbol, Portal, ProjectionSymbol, PromiseTemplateController, PropertyBinding, PropertyBindingInstruction, PropertyBindingRendererRegistration, RefAttributePattern, RefAttributePatternRegistration, RefBinding, RefBindingCommandRegistration, RefBindingInstruction, RefBindingRendererRegistration, RegisteredProjections, RejectedTemplateController, RenderPlan, Repeat, RepeatRegistration, SVGAnalyzer, SVGAnalyzerRegistration, SanitizeValueConverter, SanitizeValueConverterRegistration, SelectValueObserver, SelfBindingBehavior, SelfBindingBehaviorRegistration, SetAttributeInstruction, SetAttributeRendererRegistration, SetClassAttributeInstruction, SetClassAttributeRendererRegistration, SetPropertyInstruction, SetPropertyRendererRegistration, SetStyleAttributeInstruction, SetStyleAttributeRendererRegistration, ShadowDOMRegistry, ShortHandBindingSyntax, SignalBindingBehavior, SignalBindingBehaviorRegistration, SlotInfo, StandardConfiguration, StyleAttributeAccessor, StyleBindingCommand, StyleBindingCommandRegistration, StyleConfiguration, StyleElementStyles, StylePropertyBindingInstruction, StylePropertyBindingRendererRegistration, Switch, SymbolFlags, TemplateBinder, TemplateControllerRendererRegistration, TemplateControllerSymbol, TextBindingInstruction, TextBindingRendererRegistration, TextSymbol, ThrottleBindingBehavior, ThrottleBindingBehaviorRegistration, ToViewBindingBehavior, ToViewBindingBehaviorRegistration, ToViewBindingCommand, ToViewBindingCommandRegistration, TriggerBindingCommand, TriggerBindingCommandRegistration, TwoWayBindingBehavior, TwoWayBindingBehaviorRegistration, TwoWayBindingCommand, TwoWayBindingCommandRegistration, UpdateTriggerBindingBehavior, UpdateTriggerBindingBehaviorRegistration, ValueAttributeObserver, ViewFactory, ViewLocator, ViewModelKind, ViewValueConverter, ViewValueConverterRegistration, Views, Watch, With, WithRegistration, attributePattern, bindable, bindingCommand, children, containerless, convertToRenderLocation, createElement, cssModules, customAttribute, customElement, getEffectiveParentNode, getRef, getRenderContext, getTarget, isCustomElementController, isCustomElementViewModel, isInstruction, isRenderContext, isRenderLocation, lifecycleHooks, processContent, renderer, setEffectiveParentNode, setRef, shadowCSS, templateController, useShadowDOM, view, watch };
 //# sourceMappingURL=index.js.map
