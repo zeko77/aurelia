@@ -269,8 +269,8 @@ export {
   StyleBindingCommand,
 } from './resources/binding-command.js';
 export {
-  IAttrSyntaxTransformer,
-} from './attribute-syntax-transformer.js';
+  IAttrMapper,
+} from './attribute-mapper.js';
 export {
   Listener,
 } from './binding/listener.js';
@@ -566,6 +566,7 @@ export {
   IContextualCustomElementController,
   IControllerElementHydrationInstruction,
   IHydratableController,
+  IHydrationContext,
   IDryCustomElementController,
   ICustomAttributeController,
   IHydratedController,
@@ -593,7 +594,6 @@ export {
   isRenderContext,
   IRenderContext,
   ICompiledRenderContext,
-  IComponentFactory,
 } from './templating/render-context.js';
 export {
   ViewFactory,

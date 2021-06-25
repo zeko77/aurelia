@@ -1,7 +1,7 @@
 {
   "name": "@aurelia/runtime",
-  "version": "2.0.0-alpha.8",
-  "main": "dist/cjs/index.js",
+  "version": "2.0.0-alpha.9",
+  "main": "dist/esm/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/index.d.ts",
   "typings": "dist/index.d.ts",
@@ -25,6 +25,7 @@
     "CHANGELOG.md",
     "LICENSE"
   ],
+  "sideEffects": false,
   "scripts": {
     "lint": "eslint --cache --ext .js,.ts src/",
     "lint:ci": "eslint --cache --ext .js,.ts --quiet --report-unused-disable-directives src/",
@@ -38,9 +39,9 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurelia/kernel": "2.0.0-alpha.8",
-    "@aurelia/metadata": "2.0.0-alpha.8",
-    "@aurelia/platform": "2.0.0-alpha.8"
+    "@aurelia/kernel": "2.0.0-alpha.9",
+    "@aurelia/metadata": "2.0.0-alpha.9",
+    "@aurelia/platform": "2.0.0-alpha.9"
   },
   "devDependencies": {
     "typescript": "^4.0.3"
