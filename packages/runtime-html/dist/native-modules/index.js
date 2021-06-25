@@ -13,7 +13,7 @@ export { AppRoot, IAppRoot, IWorkTracker, } from './app-root.js';
 export { AppTask, IAppTask, } from './app-task.js';
 export { AttrSyntax, IAttributeParser, attributePattern, IAttributePattern, AttributePattern, Interpretation, ISyntaxInterpreter, AtPrefixedTriggerAttributePattern, ColonPrefixedBindAttributePattern, DotSeparatedAttributePattern, RefAttributePattern, } from './resources/attribute-pattern.js';
 export { bindingCommand, BindingCommand, BindingCommandDefinition, CallBindingCommand, DefaultBindingCommand, ForBindingCommand, FromViewBindingCommand, OneTimeBindingCommand, ToViewBindingCommand, TwoWayBindingCommand, TriggerBindingCommand, DelegateBindingCommand, CaptureBindingCommand, AttrBindingCommand, ClassBindingCommand, StyleBindingCommand, } from './resources/binding-command.js';
-export { IAttrSyntaxTransformer, } from './attribute-syntax-transformer.js';
+export { IAttrMapper, } from './attribute-mapper.js';
 export { Listener, } from './binding/listener.js';
 export { AttributeBinding, } from './binding/attribute.js';
 export { CallBinding, } from './binding/call-binding.js';
@@ -55,7 +55,7 @@ export { ITemplateCompilerRegistration, INodeObserverLocatorRegistration, Defaul
 export { ITemplateElementFactory } from './template-element-factory.js';
 export { ChildrenDefinition, Children, children, ChildrenObserver, } from './templating/children.js';
 // These exports are temporary until we have a proper way to unit test them
-export { Controller, isCustomElementController, isCustomElementViewModel, ViewModelKind, IController, } from './templating/controller.js';
+export { Controller, isCustomElementController, isCustomElementViewModel, ViewModelKind, IController, IHydrationContext, } from './templating/controller.js';
 export { ILifecycleHooks, LifecycleHooksEntry, LifecycleHooksDefinition, LifecycleHooks, lifecycleHooks, } from './templating/lifecycle-hooks.js';
 export { getRenderContext, isRenderContext, } from './templating/render-context.js';
 export { ViewFactory, IViewFactory, IViewLocator, ViewLocator, view, Views, } from './templating/view.js';

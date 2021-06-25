@@ -1,17 +1,17 @@
-import { IContainer } from '@aurelia/kernel';
 import { Scope, LifecycleFlags } from '@aurelia/runtime';
-import { INode, INodeSequence, IRenderLocation } from '../dom.js';
-import { CustomElementDefinition, PartialCustomElementDefinition } from '../resources/custom-element.js';
+import { CustomElementDefinition } from '../resources/custom-element.js';
 import { CustomAttributeDefinition } from '../resources/custom-attribute.js';
 import { IRenderContext, RenderContext, ICompiledRenderContext } from './render-context.js';
 import { IAppRoot } from '../app-root.js';
 import { IPlatform } from '../platform.js';
-import type { Writable, IDisposable } from '@aurelia/kernel';
+import type { IContainer, Writable, IDisposable } from '@aurelia/kernel';
 import type { IBinding, AccessorOrObserver } from '@aurelia/runtime';
-import { IProjections } from '../resources/custom-elements/au-slot.js';
-import { LifecycleHooksLookup } from './lifecycle-hooks.js';
+import type { IProjections } from '../resources/custom-elements/au-slot.js';
+import type { LifecycleHooksLookup } from './lifecycle-hooks.js';
+import type { INode, INodeSequence, IRenderLocation } from '../dom.js';
 import type { IViewFactory } from './view.js';
 import type { Instruction } from '../renderer.js';
+import type { PartialCustomElementDefinition } from '../resources/custom-element.js';
 declare type BindingContext<C extends IViewModel> = Required<ICompileHooks> & Required<IActivationHooks<IHydratedController | null>> & C;
 export declare const enum MountTarget {
     none = 0,
@@ -21,6 +21,7 @@ export declare const enum MountTarget {
 }
 export declare class Controller<C extends IViewModel = IViewModel> implements IController<C> {
     root: IAppRoot | null;
+    ctxCt: IContainer;
     container: IContainer;
     readonly vmKind: ViewModelKind;
     flags: LifecycleFlags;
@@ -69,7 +70,7 @@ export declare class Controller<C extends IViewModel = IViewModel> implements IC
     private childrenObs;
     readonly platform: IPlatform;
     readonly hooks: HooksDefinition;
-    constructor(root: IAppRoot | null, container: IContainer, vmKind: ViewModelKind, flags: LifecycleFlags, definition: CustomElementDefinition | CustomAttributeDefinition | null, 
+    constructor(root: IAppRoot | null, ctxCt: IContainer, container: IContainer, vmKind: ViewModelKind, flags: LifecycleFlags, definition: CustomElementDefinition | CustomAttributeDefinition | null, 
     /**
      * The viewFactory. Only present for synthetic views.
      */
@@ -88,8 +89,8 @@ export declare class Controller<C extends IViewModel = IViewModel> implements IC
     host: HTMLElement | null);
     static getCached<C extends ICustomElementViewModel = ICustomElementViewModel>(viewModel: C): ICustomElementController<C> | undefined;
     static getCachedOrThrow<C extends ICustomElementViewModel = ICustomElementViewModel>(viewModel: C): ICustomElementController<C>;
-    static forCustomElement<C extends ICustomElementViewModel = ICustomElementViewModel>(root: IAppRoot | null, container: IContainer, viewModel: C, host: HTMLElement, hydrationInst: IControllerElementHydrationInstruction | null, flags?: LifecycleFlags, hydrate?: boolean, definition?: CustomElementDefinition | undefined): ICustomElementController<C>;
-    static forCustomAttribute<C extends ICustomAttributeViewModel = ICustomAttributeViewModel>(root: IAppRoot | null, container: IContainer, viewModel: C, host: HTMLElement, flags?: LifecycleFlags): ICustomAttributeController<C>;
+    static forCustomElement<C extends ICustomElementViewModel = ICustomElementViewModel>(root: IAppRoot | null, contextCt: IContainer, ownCt: IContainer, viewModel: C, host: HTMLElement, hydrationInst: IControllerElementHydrationInstruction | null, flags?: LifecycleFlags, hydrate?: boolean, definition?: CustomElementDefinition | undefined): ICustomElementController<C>;
+    static forCustomAttribute<C extends ICustomAttributeViewModel = ICustomAttributeViewModel>(root: IAppRoot | null, context: IContainer, viewModel: C, host: HTMLElement, flags?: LifecycleFlags): ICustomAttributeController<C>;
     static forSyntheticView(root: IAppRoot | null, context: IRenderContext, viewFactory: IViewFactory, flags?: LifecycleFlags, parentController?: ISyntheticView | ICustomElementController | ICustomAttributeController | undefined): ISyntheticView;
     private hydrateCustomAttribute;
     private hydrateSynthetic;
@@ -410,6 +411,14 @@ export interface ICustomElementController<C extends ICustomElementViewModel = IC
     deactivate(initiator: IHydratedController, parent: IHydratedController | null, flags: LifecycleFlags): void | Promise<void>;
 }
 export declare const IController: import("@aurelia/kernel").InterfaceSymbol<IController<IViewModel>>;
+export declare const IHydrationContext: import("@aurelia/kernel").InterfaceSymbol<IHydrationContext<unknown>>;
+export interface IHydrationContext<T = unknown> extends HydrationContext<T> {
+}
+declare class HydrationContext<T extends ICustomElementViewModel> {
+    readonly instruction: IControllerElementHydrationInstruction | null;
+    readonly controller: ICustomElementController<T>;
+    constructor(controller: Controller, instruction: IControllerElementHydrationInstruction | null);
+}
 export interface IActivationHooks<TParent> {
     binding?(initiator: IHydratedController, parent: TParent, flags: LifecycleFlags): void | Promise<void>;
     bound?(initiator: IHydratedController, parent: TParent, flags: LifecycleFlags): void | Promise<void>;

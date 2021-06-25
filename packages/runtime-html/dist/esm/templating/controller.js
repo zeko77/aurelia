@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
-import { nextId, isObject, ILogger, DI, emptyArray, } from '@aurelia/kernel';
+import { nextId, isObject, ILogger, DI, emptyArray, InstanceProvider, } from '@aurelia/kernel';
 import { AccessScopeExpression, Scope, IObserverLocator, IExpressionParser, } from '@aurelia/runtime';
 import { BindableObserver } from '../observation/bindable-observer.js';
 import { convertToRenderLocation, setRef } from '../dom.js';
@@ -12,9 +12,6 @@ import { IPlatform } from '../platform.js';
 import { IShadowDOMGlobalStyles, IShadowDOMStyles } from './styles.js';
 import { ComputedWatcher, ExpressionWatcher } from './watchers.js';
 import { LifecycleHooks } from './lifecycle-hooks.js';
-function callDispose(disposable) {
-    disposable.dispose();
-}
 export var MountTarget;
 (function (MountTarget) {
     MountTarget[MountTarget["none"] = 0] = "none";
@@ -25,7 +22,7 @@ export var MountTarget;
 const optional = { optional: true };
 const controllerLookup = new WeakMap();
 export class Controller {
-    constructor(root, container, vmKind, flags, definition, 
+    constructor(root, ctxCt, container, vmKind, flags, definition, 
     /**
      * The viewFactory. Only present for synthetic views.
      */
@@ -43,6 +40,7 @@ export class Controller {
      */
     host) {
         this.root = root;
+        this.ctxCt = ctxCt;
         this.container = container;
         this.vmKind = vmKind;
         this.flags = flags;
@@ -135,37 +133,43 @@ export class Controller {
         }
         return controller;
     }
-    static forCustomElement(root, container, viewModel, host, hydrationInst, flags = 0 /* none */, hydrate = true, 
-    // Use this when `instance.constructor` is not a custom element type to pass on the CustomElement definition
+    static forCustomElement(root, contextCt, ownCt, viewModel, host, hydrationInst, flags = 0 /* none */, hydrate = true, 
+    // Use this when `instance.constructor` is not a custom element type
+    // to pass on the CustomElement definition
     definition = void 0) {
         if (controllerLookup.has(viewModel)) {
             return controllerLookup.get(viewModel);
         }
-        // todo: the caching behavior from CustomElement.getDefinition here will stip us time to time
-        //       when combined with au-slot. Consider a way to not allow this
         definition = definition !== null && definition !== void 0 ? definition : CustomElement.getDefinition(viewModel.constructor);
         const controller = new Controller(
         /* root           */ root, 
-        /* container      */ container, 0 /* customElement */, 
+        /* context ct     */ contextCt, 
+        /* own ct         */ ownCt, 0 /* customElement */, 
         /* flags          */ flags, 
         /* definition     */ definition, 
         /* viewFactory    */ null, 
         /* viewModel      */ viewModel, 
         /* host           */ host);
+        const hydrationContextProvider = new InstanceProvider();
+        hydrationContextProvider.prepare(new HydrationContext(controller, hydrationInst));
+        ownCt.register(...definition.dependencies);
+        ownCt.registerResolver(IHydrationContext, hydrationContextProvider);
         controllerLookup.set(viewModel, controller);
         if (hydrate) {
-            controller.hydrateCustomElement(container, hydrationInst);
+            controller.hydrateCustomElement(contextCt, hydrationInst);
         }
         return controller;
     }
-    static forCustomAttribute(root, container, viewModel, host, flags = 0 /* none */) {
+    static forCustomAttribute(root, context, viewModel, host, flags = 0 /* none */) {
         if (controllerLookup.has(viewModel)) {
             return controllerLookup.get(viewModel);
         }
         const definition = CustomAttribute.getDefinition(viewModel.constructor);
         const controller = new Controller(
         /* root           */ root, 
-        /* container      */ container, 1 /* customAttribute */, 
+        /* context ct     */ context, 
+        // CA does not have its own container
+        /* own ct         */ context, 1 /* customAttribute */, 
         /* flags          */ flags, 
         /* definition     */ definition, 
         /* viewFactory    */ null, 
@@ -178,6 +182,8 @@ export class Controller {
     static forSyntheticView(root, context, viewFactory, flags = 0 /* none */, parentController = void 0) {
         const controller = new Controller(
         /* root           */ root, 
+        // todo: context container
+        /* container      */ context, 
         /* container      */ context, 2 /* synthetic */, 
         /* flags          */ flags, 
         /* definition     */ null, 
@@ -189,19 +195,21 @@ export class Controller {
         return controller;
     }
     /** @internal */
-    hydrateCustomElement(parentContainer, hydrationInst) {
+    hydrateCustomElement(contextCt, hydrationInst) {
         var _a;
-        this.logger = parentContainer.get(ILogger).root;
+        this.logger = contextCt.get(ILogger).root;
         this.debug = this.logger.config.level <= 1 /* debug */;
         if (this.debug) {
             this.logger = this.logger.scopeTo(this.name);
         }
-        let definition = this.definition;
+        const container = this.container;
         const flags = this.flags;
         const instance = this.viewModel;
+        let definition = this.definition;
+        let vmProvider;
         this.scope = Scope.create(instance, null, true);
         if (definition.watches.length > 0) {
-            createWatchers(this, this.container, definition, instance);
+            createWatchers(this, container, definition, instance);
         }
         createObservers(this, definition, flags, instance);
         this.childrenObs = createChildrenObservers(this, definition, flags, instance);
@@ -211,14 +219,14 @@ export class Controller {
             }
             const result = instance.define(
             /* controller      */ this, 
-            /* parentContainer */ parentContainer, 
+            /* parentContainer */ contextCt, 
             /* definition      */ definition);
             if (result !== void 0 && result !== definition) {
                 definition = CustomElementDefinition.getOrCreate(result);
             }
         }
         // todo: make projections not influential on the render context construction
-        const context = this.context = getRenderContext(definition, parentContainer, hydrationInst === null || hydrationInst === void 0 ? void 0 : hydrationInst.projections);
+        const context = this.context = getRenderContext(definition, container, hydrationInst === null || hydrationInst === void 0 ? void 0 : hydrationInst.projections);
         // todo: should register a resolver resolving to a IContextElement/IContextComponent
         //       so that component directly under this template can easily distinguish its owner/parent
         // context.register(Registration.instance(IContextElement))
@@ -226,8 +234,8 @@ export class Controller {
         // Support Recursive Components by adding self to own context
         definition.register(context);
         if (definition.injectable !== null) {
-            // If the element is registered as injectable, support injecting the instance into children
-            context.beginChildComponentOperation(instance);
+            container.registerResolver(definition.injectable, vmProvider = new InstanceProvider('definition.injectable'));
+            vmProvider.prepare(instance);
         }
         // If this is the root controller, then the AppRoot will invoke things in the following order:
         // - Controller.hydrateCustomElement
@@ -1051,4 +1059,14 @@ export function stringifyState(state) {
     return names.length === 0 ? 'none' : names.join('|');
 }
 export const IController = DI.createInterface('IController');
+export const IHydrationContext = DI.createInterface('IHydrationContext');
+class HydrationContext {
+    constructor(controller, instruction) {
+        this.instruction = instruction;
+        this.controller = controller;
+    }
+}
+function callDispose(disposable) {
+    disposable.dispose();
+}
 //# sourceMappingURL=controller.js.map

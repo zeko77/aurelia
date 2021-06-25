@@ -5,10 +5,10 @@ import { IViewFactory } from './view.js';
 import { IAuSlotsInfo, IProjections } from '../resources/custom-elements/au-slot.js';
 import { IPlatform } from '../platform.js';
 import { IController } from './controller.js';
-import type { Constructable, IContainer, IDisposable, IFactory, IResolver, IResourceKind, Key, Resolved, ResourceDefinition, ResourceType, Transformer } from '@aurelia/kernel';
+import type { Constructable, IContainer, IFactory, IResolver, IResourceKind, Key, Resolved, ResourceDefinition, ResourceType, Transformer } from '@aurelia/kernel';
 import type { LifecycleFlags } from '@aurelia/runtime';
-import type { ICustomAttributeViewModel, ICustomElementViewModel, IHydratableController } from './controller.js';
-import type { Instruction } from '../renderer.js';
+import type { ICustomAttributeViewModel, IHydratableController } from './controller.js';
+import type { HydrateAttributeInstruction, HydrateTemplateController, HydrateElementInstruction } from '../renderer.js';
 import type { PartialCustomElementDefinition } from '../resources/custom-element.js';
 export declare function isRenderContext(value: unknown): value is IRenderContext;
 /**
@@ -26,12 +26,7 @@ export interface IRenderContext extends IContainer {
      * The `IContainer` (which may be, but is not guaranteed to be, an `IRenderContext`) that this `IRenderContext` was created with.
      */
     readonly parentContainer: IContainer;
-    /**
-     * Prepare this factory for creating child controllers. Only applicable for custom elements.
-     *
-     * @param instance - The component instance to make available to child components if this context's definition has `injectable` set to `true`.
-     */
-    beginChildComponentOperation(instance: ICustomElementViewModel): IRenderContext;
+    readonly container: IContainer;
     /**
      * Compiles the backing `CustomElementDefinition` (if needed) and returns the compiled `IRenderContext` that exposes the compiled `CustomElementDefinition` as well as composing operations.
      *
@@ -67,68 +62,32 @@ export interface ICompiledRenderContext extends IRenderContext {
      */
     createNodes(): INodeSequence;
     /**
-     * Prepare this context context for creating a new component instance.
-     *
-     * All parameters are optional injectable dependencies, that is: only those that are actually needed by the to-be-created component, need to be provided in order for that component to work.
-     *
-     * To avoid possible memory leaks, don't forget to call `dispose()` on the returned `IComponentFactory` after creating a component.
-     *
-     * @param parentController - The `IController` of the immediate parent of the to-be-created component. Not used by any built-in components.
-     * @param host - The DOM node that declared the component, or the node that the component will be mounted to (in case of containerless). Used by some built-in custom attributes.
-     * @param instruction - The hydrate instruction that resulted in the creation of this context context. Only used by `au-compose`.
-     * @param viewFactory - The `IViewFactory` that was created from the template that the template controller was placed on. Only applicable for template controllers. Used by all built-in template controllers.
-     * @param location - The DOM node that the nodes created by the `IViewFactory` should be mounted to. Only applicable for template controllers. Used by all built-in template controllers.
+     * Prepare a new container to associate with a custom element instance
      */
-    getComponentFactory(parentController?: IController, host?: INode, instruction?: IInstruction, viewFactory?: IViewFactory, location?: IRenderLocation, auSlotsInfo?: IAuSlotsInfo): IComponentFactory;
+    createElementContainer(parentController: IController, host: HTMLElement, instruction: HydrateElementInstruction, viewFactory?: IViewFactory, location?: IRenderLocation, auSlotsInfo?: IAuSlotsInfo): IContainer;
+    /**
+     * Instantiate a custom attribute
+     */
+    invokeAttribute(parentController: IController, host: HTMLElement, instruction: HydrateAttributeInstruction | HydrateTemplateController, viewFactory?: IViewFactory, location?: IRenderLocation, auSlotsInfo?: IAuSlotsInfo): ICustomAttributeViewModel;
     render(flags: LifecycleFlags, controller: IController, targets: ArrayLike<INode>, templateDefinition: CustomElementDefinition, host: INode | null | undefined): void;
     renderChildren(flags: LifecycleFlags, instructions: readonly IInstruction[], controller: IController, target: unknown): void;
 }
-/**
- * A compiled `IRenderContext` that is ready to be used for creating component instances, and composing them.
- */
-export interface IComponentFactory extends ICompiledRenderContext, IDisposable {
-    /**
-     * Creates a new component instance based on the provided `resourceKey`.
-     *
-     * It is only safe to override the generic type argument if you know / own the component type associated with the name.
-     *
-     * @param resourceKey - The (full) resource key as returned from the `keyFrom` helper.
-     *
-     * @returns A new instance of the requested component. Will throw an error if the registration does not exist.
-     *
-     * @example
-     *
-     * ```ts
-     * // Create a new instance of the 'au-compose' custom element
-     * const elementInstance = factory.createComponent<Compose>(CustomElement.keyFrom('au-compose'));
-     *
-     * // Create a new instance of the 'if' template controller
-     * const attributeInstance = factory.createComponent<If>(CustomAttribute.keyFrom('if'));
-     *
-     * // Dynamically create a new instance of a custom element
-     * const attributeInstance = factory.createComponent(CustomElement.keyFrom(name));
-     * ```
-     */
-    createComponent<TViewModel = ICustomAttributeViewModel | ICustomElementViewModel>(resourceKey: string): TViewModel;
-    /**
-     * Release any resources that were stored by `getComponentFactory()`.
-     */
-    dispose(): void;
+export declare function getRenderContext(partialDefinition: PartialCustomElementDefinition, container: IContainer, projections?: IProjections | null): IRenderContext;
+export declare namespace getRenderContext {
+    var count: number;
 }
-export declare function getRenderContext(partialDefinition: PartialCustomElementDefinition, parentContainer: IContainer, projections?: IProjections | null): IRenderContext;
-export declare class RenderContext implements IComponentFactory {
+export declare class RenderContext implements ICompiledRenderContext {
     readonly definition: CustomElementDefinition;
     readonly parentContainer: IContainer;
     get id(): number;
     readonly root: IContainer;
-    private readonly container;
+    readonly container: IContainer;
     private readonly parentControllerProvider;
     private readonly elementProvider;
     private readonly instructionProvider;
     private readonly factoryProvider;
     private readonly renderLocationProvider;
     private readonly auSlotsInfoProvider;
-    private viewModelProvider;
     private fragment;
     private factory;
     private isCompiled;
@@ -152,10 +111,10 @@ export declare class RenderContext implements IComponentFactory {
     disposeResolvers(): void;
     compile(compilationInstruction: ICompliationInstruction | null): ICompiledRenderContext;
     getViewFactory(name?: string): IViewFactory;
-    beginChildComponentOperation(instance: ICustomElementViewModel): IRenderContext;
     createNodes(): INodeSequence;
-    getComponentFactory(parentController?: IController, host?: HTMLElement, instruction?: Instruction, viewFactory?: IViewFactory, location?: IRenderLocation, auSlotsInfo?: IAuSlotsInfo): IComponentFactory;
-    createComponent<TViewModel = ICustomElementViewModel>(resourceKey: string): TViewModel;
+    createElementContainer(parentController: IController, host: HTMLElement, instruction: HydrateElementInstruction, viewFactory?: IViewFactory, location?: IRenderLocation, auSlotsInfo?: IAuSlotsInfo): IContainer;
+    resourceInvoker: IContainer | null;
+    invokeAttribute(parentController: IController, host: HTMLElement, instruction: HydrateAttributeInstruction | HydrateTemplateController, viewFactory?: IViewFactory, location?: IRenderLocation, auSlotsInfo?: IAuSlotsInfo): ICustomAttributeViewModel;
     render(flags: LifecycleFlags, controller: IHydratableController, targets: ArrayLike<INode>, definition: CustomElementDefinition, host: INode | null | undefined): void;
     renderChildren(flags: LifecycleFlags, instructions: readonly IInstruction[], controller: IHydratableController, target: unknown): void;
     dispose(): void;

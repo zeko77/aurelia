@@ -1,7 +1,7 @@
 export { Platform, Task, TaskAbortError, TaskQueue, TaskQueuePriority, TaskStatus } from '@aurelia/platform';
 import { BrowserPlatform } from '@aurelia/platform-browser';
 export { BrowserPlatform } from '@aurelia/platform-browser';
-import { Protocol, getPrototypeChain, Metadata, firstDefined, kebabCase, noop, emptyArray, DI, all, Registration, IPlatform as IPlatform$1, fromDefinitionOrDefault, pascalCase, mergeArrays, fromAnnotationOrTypeOrDefault, fromAnnotationOrDefinitionOrTypeOrDefault, InstanceProvider, IContainer, nextId, ILogger, isObject, onResolve, resolveAll, emptyObject, camelCase, toArray, IServiceLocator, compareNumber, transient } from '@aurelia/kernel';
+import { Protocol, getPrototypeChain, Metadata, firstDefined, kebabCase, noop, emptyArray, DI, all, Registration, IPlatform as IPlatform$1, fromDefinitionOrDefault, pascalCase, mergeArrays, fromAnnotationOrTypeOrDefault, fromAnnotationOrDefinitionOrTypeOrDefault, InstanceProvider, IContainer, nextId, ILogger, isObject, onResolve, resolveAll, camelCase, toArray, emptyObject, IServiceLocator, compareNumber, transient } from '@aurelia/kernel';
 import { BindingMode, subscriberCollection, withFlushQueue, connectable, registerAliases, Scope, ConnectableSwitcher, ProxyObservable, IObserverLocator, IExpressionParser, AccessScopeExpression, DelegationStrategy, BindingBehaviorExpression, BindingBehaviorFactory, PrimitiveLiteralExpression, bindingBehavior, BindingInterceptor, ISignaler, PropertyAccessor, INodeObserverLocator, SetterObserver, IDirtyChecker, alias, applyMutationsToIndices, getCollectionObserver as getCollectionObserver$1, BindingContext, synchronizeIndices, valueConverter } from '@aurelia/runtime';
 export { Access, AccessKeyedExpression, AccessMemberExpression, AccessScopeExpression, AccessThisExpression, AccessorType, ArrayBindingPattern, ArrayIndexObserver, ArrayLiteralExpression, ArrayObserver, AssignExpression, BinaryExpression, BindingBehavior, BindingBehaviorDefinition, BindingBehaviorExpression, BindingBehaviorFactory, BindingBehaviorStrategy, BindingContext, BindingIdentifier, BindingInterceptor, BindingMediator, BindingMode, BindingType, CallFunctionExpression, CallMemberExpression, CallScopeExpression, Char, CollectionKind, CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, ConditionalExpression, CustomExpression, DelegationStrategy, DirtyCheckProperty, DirtyCheckSettings, ExpressionKind, ForOfStatement, HtmlLiteralExpression, IDirtyChecker, IExpressionParser, INodeObserverLocator, IObserverLocator, ISignaler, Interpolation, LifecycleFlags, MapObserver, ObjectBindingPattern, ObjectLiteralExpression, ObserverLocator, OverrideContext, ParserState, Precedence, PrimitiveLiteralExpression, PrimitiveObserver, PropertyAccessor, Scope, SetObserver, SetterObserver, TaggedTemplateExpression, TemplateExpression, UnaryExpression, ValueConverter, ValueConverterDefinition, ValueConverterExpression, alias, applyMutationsToIndices, bindingBehavior, cloneIndexMap, connectable, copyIndexMap, createIndexMap, disableArrayObservation, disableMapObservation, disableSetObservation, enableArrayObservation, enableMapObservation, enableSetObservation, getCollectionObserver, isIndexMap, observable, parse, parseExpression, registerAliases, subscriberCollection, synchronizeIndices, valueConverter } from '@aurelia/runtime';
 
@@ -764,22 +764,23 @@ class NoopSVGAnalyzer {
     }
 }
 function o(keys) {
-    const lookup = Object.create(null);
-    for (const key of keys) {
+    const lookup = createLookup();
+    let key;
+    for (key of keys) {
         lookup[key] = true;
     }
     return lookup;
 }
 class SVGAnalyzer {
     constructor(platform) {
-        this.svgElements = Object.assign(Object.create(null), {
+        this.svgElements = Object.assign(createLookup(), {
             'a': o(['class', 'externalResourcesRequired', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'target', 'transform', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space']),
             'altGlyph': o(['class', 'dx', 'dy', 'externalResourcesRequired', 'format', 'glyphRef', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'rotate', 'style', 'systemLanguage', 'x', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'altglyph': Object.create(null),
+            'altglyph': createLookup(),
             'altGlyphDef': o(['id', 'xml:base', 'xml:lang', 'xml:space']),
-            'altglyphdef': Object.create(null),
+            'altglyphdef': createLookup(),
             'altGlyphItem': o(['id', 'xml:base', 'xml:lang', 'xml:space']),
-            'altglyphitem': Object.create(null),
+            'altglyphitem': createLookup(),
             'animate': o(['accumulate', 'additive', 'attributeName', 'attributeType', 'begin', 'by', 'calcMode', 'dur', 'end', 'externalResourcesRequired', 'fill', 'from', 'id', 'keySplines', 'keyTimes', 'max', 'min', 'onbegin', 'onend', 'onload', 'onrepeat', 'repeatCount', 'repeatDur', 'requiredExtensions', 'requiredFeatures', 'restart', 'systemLanguage', 'to', 'values', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space']),
             'animateColor': o(['accumulate', 'additive', 'attributeName', 'attributeType', 'begin', 'by', 'calcMode', 'dur', 'end', 'externalResourcesRequired', 'fill', 'from', 'id', 'keySplines', 'keyTimes', 'max', 'min', 'onbegin', 'onend', 'onload', 'onrepeat', 'repeatCount', 'repeatDur', 'requiredExtensions', 'requiredFeatures', 'restart', 'systemLanguage', 'to', 'values', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space']),
             'animateMotion': o(['accumulate', 'additive', 'begin', 'by', 'calcMode', 'dur', 'end', 'externalResourcesRequired', 'fill', 'from', 'id', 'keyPoints', 'keySplines', 'keyTimes', 'max', 'min', 'onbegin', 'onend', 'onload', 'onrepeat', 'origin', 'path', 'repeatCount', 'repeatDur', 'requiredExtensions', 'requiredFeatures', 'restart', 'rotate', 'systemLanguage', 'to', 'values', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space']),
@@ -826,7 +827,7 @@ class SVGAnalyzer {
             'g': o(['class', 'externalResourcesRequired', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'transform', 'xml:base', 'xml:lang', 'xml:space']),
             'glyph': o(['arabic-form', 'class', 'd', 'glyph-name', 'horiz-adv-x', 'id', 'lang', 'orientation', 'style', 'unicode', 'vert-adv-y', 'vert-origin-x', 'vert-origin-y', 'xml:base', 'xml:lang', 'xml:space']),
             'glyphRef': o(['class', 'dx', 'dy', 'format', 'glyphRef', 'id', 'style', 'x', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'glyphref': Object.create(null),
+            'glyphref': createLookup(),
             'hkern': o(['g1', 'g2', 'id', 'k', 'u1', 'u2', 'xml:base', 'xml:lang', 'xml:space']),
             'image': o(['class', 'externalResourcesRequired', 'height', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'preserveAspectRatio', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'transform', 'width', 'x', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space', 'y']),
             'line': o(['class', 'externalResourcesRequired', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'transform', 'x1', 'x2', 'xml:base', 'xml:lang', 'xml:space', 'y1', 'y2']),
@@ -1009,9 +1010,9 @@ class SVGAnalyzer {
  */
 SVGAnalyzer.inject = [IPlatform];
 
-const IAttrSyntaxTransformer = DI
-    .createInterface('IAttrSyntaxTransformer', x => x.singleton(AttrSyntaxTransformer));
-class AttrSyntaxTransformer {
+const IAttrMapper = DI
+    .createInterface('IAttrMapper', x => x.singleton(AttrMapper));
+class AttrMapper {
     constructor(svg) {
         this.svg = svg;
         /**
@@ -1092,22 +1093,21 @@ class AttrSyntaxTransformer {
     }
     /**
      * Add a given function to a list of fns that will be used
-     * to check if `'bind'` command can be transformed to `'two-way'` command.
-     *
-     * If one of those functions in this lists returns true, the `'bind'` command
-     * will be transformed into `'two-way'` command.
-     *
-     * The function will be called with 2 parameters:
-     * - element: the element that the template compiler is currently working with
-     * - property: the target property name
+     * to check if `'bind'` command can be understood as `'two-way'` command.
      */
     useTwoWay(fn) {
         this.fns.push(fn);
     }
+    /**
+     * Returns true if an attribute should be two way bound based on an element
+     */
     isTwoWay(node, attrName) {
         return shouldDefaultToTwoWay(node, attrName)
             || this.fns.length > 0 && this.fns.some(fn => fn(node, attrName));
     }
+    /**
+     * Retrieves the mapping information this mapper have for an attribute on an element
+     */
     map(node, attr) {
         var _a, _b, _c;
         return (_c = (_b = (_a = this.tagAttrMap[node.nodeName]) === null || _a === void 0 ? void 0 : _a[attr]) !== null && _b !== void 0 ? _b : this.globalAttrMap[attr]) !== null && _c !== void 0 ? _c : (isDataAttribute(node, attr, this.svg)
@@ -2958,29 +2958,20 @@ class SlotInfo {
     }
 }
 class AuSlot {
-    constructor(instruction, factory, location) {
+    constructor(factory, location, instruction, hdrContext) {
         this.instruction = instruction;
+        this.hdrContext = hdrContext;
         this.hostScope = null;
         this.outerScope = null;
         this.view = factory.create().setLocation(location);
     }
     /** @internal */
-    static get inject() { return [IInstruction, IViewFactory, IRenderLocation]; }
+    static get inject() { return [IViewFactory, IRenderLocation, IInstruction, IHydrationContext]; }
     binding(_initiator, _parent, _flags) {
-        var _a, _b;
+        var _a;
         this.hostScope = this.$controller.scope.parentScope;
-        if (this.instruction.slotInfo.type === AuSlotContentType.Projection) {
-            // todo: replace the following block with an IContextController injection
-            let contextController = this.$controller.parent;
-            while (contextController != null) {
-                if (contextController.vmKind === 0 /* customElement */
-                    && !(contextController.viewModel instanceof AuSlot)) {
-                    break;
-                }
-                contextController = contextController.parent;
-            }
-            this.outerScope = (_b = (_a = contextController === null || contextController === void 0 ? void 0 : contextController.parent) === null || _a === void 0 ? void 0 : _a.scope) !== null && _b !== void 0 ? _b : null;
-        }
+        this.outerScope = this.instruction.slotInfo.type === AuSlotContentType.Projection
+            ? (_a = this.hdrContext.controller.scope.parentScope) !== null && _a !== void 0 ? _a : null : this.hostScope;
     }
     attaching(initiator, parent, flags) {
         var _a;
@@ -3018,20 +3009,21 @@ const fragmentCache = new WeakMap();
 function isRenderContext(value) {
     return value instanceof RenderContext;
 }
-function getRenderContext(partialDefinition, parentContainer, projections) {
+let renderContextCount = 0;
+function getRenderContext(partialDefinition, container, projections) {
     const definition = CustomElementDefinition.getOrCreate(partialDefinition);
     // injectable completely prevents caching, ensuring that each instance gets a new context context
     if (definition.injectable !== null) {
-        return new RenderContext(definition, parentContainer);
+        return new RenderContext(definition, container);
     }
     if (projections == null) {
         let containerLookup = definitionContainerLookup.get(definition);
         if (containerLookup === void 0) {
             definitionContainerLookup.set(definition, containerLookup = new WeakMap());
         }
-        let context = containerLookup.get(parentContainer);
+        let context = containerLookup.get(container);
         if (context === void 0) {
-            containerLookup.set(parentContainer, context = new RenderContext(definition, parentContainer));
+            containerLookup.set(container, context = new RenderContext(definition, container));
         }
         return context;
     }
@@ -3039,29 +3031,34 @@ function getRenderContext(partialDefinition, parentContainer, projections) {
     if (containerProjectionsLookup === void 0) {
         definitionContainerProjectionsLookup.set(definition, containerProjectionsLookup = new WeakMap());
     }
-    let projectionsLookup = containerProjectionsLookup.get(parentContainer);
+    let projectionsLookup = containerProjectionsLookup.get(container);
     if (projectionsLookup === void 0) {
-        containerProjectionsLookup.set(parentContainer, projectionsLookup = new WeakMap());
+        containerProjectionsLookup.set(container, projectionsLookup = new WeakMap());
     }
     let context = projectionsLookup.get(projections);
     if (context === void 0) {
-        projectionsLookup.set(projections, context = new RenderContext(definition, parentContainer));
+        projectionsLookup.set(projections, context = new RenderContext(definition, container));
     }
     return context;
 }
+getRenderContext.count = 0;
+// A simple counter for debugging purposes only
+Reflect.defineProperty(getRenderContext, 'count', {
+    get: () => renderContextCount
+});
 const emptyNodeCache = new WeakMap();
 class RenderContext {
     constructor(definition, parentContainer) {
         this.definition = definition;
         this.parentContainer = parentContainer;
-        this.viewModelProvider = void 0;
         this.fragment = null;
         this.factory = void 0;
         this.isCompiled = false;
         this.renderers = Object.create(null);
         this.compiledDefinition = (void 0);
-        this.root = parentContainer.root;
-        const container = this.container = parentContainer.createChild();
+        this.resourceInvoker = null;
+        ++renderContextCount;
+        const container = this.container = parentContainer;
         // TODO(fkleuver): get contextual + root renderers
         const renderers = container.getAll(IRenderer);
         let i = 0;
@@ -3070,18 +3067,14 @@ class RenderContext {
             renderer = renderers[i];
             this.renderers[renderer.instructionType] = renderer;
         }
-        container.registerResolver(IViewFactory, this.factoryProvider = new ViewFactoryProvider(), true);
-        container.registerResolver(IController, this.parentControllerProvider = new InstanceProvider('IController'), true);
-        container.registerResolver(IInstruction, this.instructionProvider = new InstanceProvider('IInstruction'), true);
-        container.registerResolver(IRenderLocation, this.renderLocationProvider = new InstanceProvider('IRenderLocation'), true);
-        container.registerResolver(IAuSlotsInfo, this.auSlotsInfoProvider = new InstanceProvider('IAuSlotsInfo'), true);
-        const p = this.platform = container.get(IPlatform);
-        const ep = this.elementProvider = new InstanceProvider('ElementResolver');
-        container.registerResolver(INode, ep);
-        container.registerResolver(p.Node, ep);
-        container.registerResolver(p.Element, ep);
-        container.registerResolver(p.HTMLElement, ep);
-        container.register(...definition.dependencies);
+        this.root = parentContainer.root;
+        this.platform = container.get(IPlatform);
+        this.elementProvider = new InstanceProvider('ElementResolver');
+        this.factoryProvider = new ViewFactoryProvider();
+        this.parentControllerProvider = new InstanceProvider('IController');
+        this.instructionProvider = new InstanceProvider('IInstruction');
+        this.renderLocationProvider = new InstanceProvider('IRenderLocation');
+        this.auSlotsInfoProvider = new InstanceProvider('IAuSlotsInfo');
     }
     get id() {
         return this.container.id;
@@ -3192,16 +3185,6 @@ class RenderContext {
         }
         return factory;
     }
-    beginChildComponentOperation(instance) {
-        const definition = this.definition;
-        if (definition.injectable !== null) {
-            if (this.viewModelProvider === void 0) {
-                this.container.registerResolver(definition.injectable, this.viewModelProvider = new InstanceProvider('definition.injectable'));
-            }
-            this.viewModelProvider.prepare(instance);
-        }
-        return this;
-    }
     // #endregion
     // #region ICompiledRenderContext api
     createNodes() {
@@ -3217,34 +3200,90 @@ class RenderContext {
         }
         return new FragmentNodeSequence(this.platform, this.fragment.cloneNode(true));
     }
-    // TODO: split up into 2 methods? getComponentFactory + getSyntheticFactory or something
-    getComponentFactory(parentController, host, instruction, viewFactory, location, auSlotsInfo) {
-        if (parentController !== void 0) {
-            this.parentControllerProvider.prepare(parentController);
-        }
-        if (host !== void 0) {
-            // TODO: fix provider input type, Key is probably not a good constraint
-            this.elementProvider.prepare(host);
-        }
-        if (instruction !== void 0) {
-            this.instructionProvider.prepare(instruction);
-        }
-        if (location !== void 0) {
-            this.renderLocationProvider.prepare(location);
-        }
-        if (viewFactory !== void 0) {
-            this.factoryProvider.prepare(viewFactory);
-        }
-        if (auSlotsInfo !== void 0) {
-            this.auSlotsInfoProvider.prepare(auSlotsInfo);
-        }
-        return this;
-    }
     // #endregion
-    // #region IComponentFactory api
-    createComponent(resourceKey) {
-        return this.container.get(resourceKey);
+    createElementContainer(parentController, host, instruction, viewFactory, location, auSlotsInfo) {
+        const ctxContainer = this.container;
+        const p = this.platform;
+        const container = ctxContainer.createChild();
+        const nodeProvider = new InstanceProvider('ElementProvider');
+        const controllerProvider = new InstanceProvider('IController');
+        const instructionProvider = new InstanceProvider('IInstruction');
+        let viewFactoryProvider;
+        let locationProvider;
+        let slotInfoProvider;
+        controllerProvider.prepare(parentController);
+        nodeProvider.prepare(host);
+        instructionProvider.prepare(instruction);
+        if (viewFactory == null) {
+            viewFactoryProvider = noViewFactoryProvider;
+        }
+        else {
+            viewFactoryProvider = new ViewFactoryProvider();
+            viewFactoryProvider.prepare(viewFactory);
+        }
+        if (location == null) {
+            locationProvider = noLocationProvider;
+        }
+        else {
+            locationProvider = new InstanceProvider('IRenderLocation');
+            locationProvider.prepare(location);
+        }
+        if (auSlotsInfo == null) {
+            slotInfoProvider = noAuSlotProvider;
+        }
+        else {
+            slotInfoProvider = new InstanceProvider('AuSlotInfo');
+            slotInfoProvider.prepare(auSlotsInfo);
+        }
+        container.registerResolver(INode, nodeProvider);
+        container.registerResolver(p.Node, nodeProvider);
+        container.registerResolver(p.Element, nodeProvider);
+        container.registerResolver(p.HTMLElement, nodeProvider);
+        container.registerResolver(IController, controllerProvider);
+        container.registerResolver(IInstruction, instructionProvider);
+        container.registerResolver(IRenderLocation, locationProvider);
+        container.registerResolver(IViewFactory, viewFactoryProvider);
+        container.registerResolver(IAuSlotsInfo, slotInfoProvider);
+        return container;
     }
+    invokeAttribute(parentController, host, instruction, viewFactory, location, auSlotsInfo) {
+        const p = this.platform;
+        const eProvider = this.elementProvider;
+        const pcProvider = this.parentControllerProvider;
+        const iProvider = this.instructionProvider;
+        const fProvider = this.factoryProvider;
+        const rlProvider = this.renderLocationProvider;
+        const siProvider = this.auSlotsInfoProvider;
+        const container = this.container;
+        const definition = container.find(CustomAttribute, instruction.res);
+        const Ctor = definition.Type;
+        let invoker = this.resourceInvoker;
+        if (invoker == null) {
+            invoker = container.createChild();
+            invoker.registerResolver(INode, eProvider, true);
+            invoker.registerResolver(p.Node, eProvider);
+            invoker.registerResolver(p.Element, eProvider);
+            invoker.registerResolver(p.HTMLElement, eProvider);
+            invoker.registerResolver(IController, pcProvider, true);
+            invoker.registerResolver(IInstruction, iProvider, true);
+            invoker.registerResolver(IRenderLocation, rlProvider, true);
+            invoker.registerResolver(IViewFactory, fProvider, true);
+            invoker.registerResolver(IAuSlotsInfo, siProvider, true);
+        }
+        eProvider.prepare(host);
+        pcProvider.prepare(parentController);
+        iProvider.prepare(instruction);
+        // null or undefined wouldn't matter
+        // as it can just throw if trying to inject something non-existant
+        fProvider.prepare(viewFactory);
+        rlProvider.prepare(location);
+        siProvider.prepare(auSlotsInfo);
+        const instance = invoker.invoke(Ctor);
+        invoker.dispose();
+        return instance;
+    }
+    // public create
+    // #region IComponentFactory api
     render(flags, controller, targets, definition, host) {
         if (targets.length !== definition.instructions.length) {
             throw new Error(`The compiled template is not aligned with the render instructions. There are ${targets.length} targets and ${definition.instructions.length} instructions.`);
@@ -3271,10 +3310,9 @@ class RenderContext {
         }
     }
     dispose() {
-        this.elementProvider.dispose();
+        throw new Error('Cannot dispose a render context');
     }
 }
-/** @internal */
 class ViewFactoryProvider {
     constructor() {
         this.factory = null;
@@ -3283,7 +3321,7 @@ class ViewFactoryProvider {
         this.factory = factory;
     }
     get $isResolver() { return true; }
-    resolve(_handler, _requestor) {
+    resolve() {
         const factory = this.factory;
         if (factory === null) {
             throw new Error('Cannot resolve ViewFactory before the provider was prepared.');
@@ -3297,6 +3335,9 @@ class ViewFactoryProvider {
         this.factory = null;
     }
 }
+const noLocationProvider = new InstanceProvider('IRenderLocation');
+const noViewFactoryProvider = new ViewFactoryProvider();
+const noAuSlotProvider = new InstanceProvider('AuSlotsInfo');
 
 class ClassAttributeAccessor {
     constructor(obj) {
@@ -3756,9 +3797,6 @@ function lifecycleHooks() {
 }
 
 /* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
-function callDispose(disposable) {
-    disposable.dispose();
-}
 var MountTarget;
 (function (MountTarget) {
     MountTarget[MountTarget["none"] = 0] = "none";
@@ -3769,7 +3807,7 @@ var MountTarget;
 const optional = { optional: true };
 const controllerLookup = new WeakMap();
 class Controller {
-    constructor(root, container, vmKind, flags, definition, 
+    constructor(root, ctxCt, container, vmKind, flags, definition, 
     /**
      * The viewFactory. Only present for synthetic views.
      */
@@ -3787,6 +3825,7 @@ class Controller {
      */
     host) {
         this.root = root;
+        this.ctxCt = ctxCt;
         this.container = container;
         this.vmKind = vmKind;
         this.flags = flags;
@@ -3879,37 +3918,43 @@ class Controller {
         }
         return controller;
     }
-    static forCustomElement(root, container, viewModel, host, hydrationInst, flags = 0 /* none */, hydrate = true, 
-    // Use this when `instance.constructor` is not a custom element type to pass on the CustomElement definition
+    static forCustomElement(root, contextCt, ownCt, viewModel, host, hydrationInst, flags = 0 /* none */, hydrate = true, 
+    // Use this when `instance.constructor` is not a custom element type
+    // to pass on the CustomElement definition
     definition = void 0) {
         if (controllerLookup.has(viewModel)) {
             return controllerLookup.get(viewModel);
         }
-        // todo: the caching behavior from CustomElement.getDefinition here will stip us time to time
-        //       when combined with au-slot. Consider a way to not allow this
         definition = definition !== null && definition !== void 0 ? definition : CustomElement.getDefinition(viewModel.constructor);
         const controller = new Controller(
         /* root           */ root, 
-        /* container      */ container, 0 /* customElement */, 
+        /* context ct     */ contextCt, 
+        /* own ct         */ ownCt, 0 /* customElement */, 
         /* flags          */ flags, 
         /* definition     */ definition, 
         /* viewFactory    */ null, 
         /* viewModel      */ viewModel, 
         /* host           */ host);
+        const hydrationContextProvider = new InstanceProvider();
+        hydrationContextProvider.prepare(new HydrationContext(controller, hydrationInst));
+        ownCt.register(...definition.dependencies);
+        ownCt.registerResolver(IHydrationContext, hydrationContextProvider);
         controllerLookup.set(viewModel, controller);
         if (hydrate) {
-            controller.hydrateCustomElement(container, hydrationInst);
+            controller.hydrateCustomElement(contextCt, hydrationInst);
         }
         return controller;
     }
-    static forCustomAttribute(root, container, viewModel, host, flags = 0 /* none */) {
+    static forCustomAttribute(root, context, viewModel, host, flags = 0 /* none */) {
         if (controllerLookup.has(viewModel)) {
             return controllerLookup.get(viewModel);
         }
         const definition = CustomAttribute.getDefinition(viewModel.constructor);
         const controller = new Controller(
         /* root           */ root, 
-        /* container      */ container, 1 /* customAttribute */, 
+        /* context ct     */ context, 
+        // CA does not have its own container
+        /* own ct         */ context, 1 /* customAttribute */, 
         /* flags          */ flags, 
         /* definition     */ definition, 
         /* viewFactory    */ null, 
@@ -3922,6 +3967,8 @@ class Controller {
     static forSyntheticView(root, context, viewFactory, flags = 0 /* none */, parentController = void 0) {
         const controller = new Controller(
         /* root           */ root, 
+        // todo: context container
+        /* container      */ context, 
         /* container      */ context, 2 /* synthetic */, 
         /* flags          */ flags, 
         /* definition     */ null, 
@@ -3933,19 +3980,21 @@ class Controller {
         return controller;
     }
     /** @internal */
-    hydrateCustomElement(parentContainer, hydrationInst) {
+    hydrateCustomElement(contextCt, hydrationInst) {
         var _a;
-        this.logger = parentContainer.get(ILogger).root;
+        this.logger = contextCt.get(ILogger).root;
         this.debug = this.logger.config.level <= 1 /* debug */;
         if (this.debug) {
             this.logger = this.logger.scopeTo(this.name);
         }
-        let definition = this.definition;
+        const container = this.container;
         const flags = this.flags;
         const instance = this.viewModel;
+        let definition = this.definition;
+        let vmProvider;
         this.scope = Scope.create(instance, null, true);
         if (definition.watches.length > 0) {
-            createWatchers(this, this.container, definition, instance);
+            createWatchers(this, container, definition, instance);
         }
         createObservers(this, definition, flags, instance);
         this.childrenObs = createChildrenObservers(this, definition, flags, instance);
@@ -3955,14 +4004,14 @@ class Controller {
             }
             const result = instance.define(
             /* controller      */ this, 
-            /* parentContainer */ parentContainer, 
+            /* parentContainer */ contextCt, 
             /* definition      */ definition);
             if (result !== void 0 && result !== definition) {
                 definition = CustomElementDefinition.getOrCreate(result);
             }
         }
         // todo: make projections not influential on the render context construction
-        const context = this.context = getRenderContext(definition, parentContainer, hydrationInst === null || hydrationInst === void 0 ? void 0 : hydrationInst.projections);
+        const context = this.context = getRenderContext(definition, container, hydrationInst === null || hydrationInst === void 0 ? void 0 : hydrationInst.projections);
         // todo: should register a resolver resolving to a IContextElement/IContextComponent
         //       so that component directly under this template can easily distinguish its owner/parent
         // context.register(Registration.instance(IContextElement))
@@ -3970,8 +4019,8 @@ class Controller {
         // Support Recursive Components by adding self to own context
         definition.register(context);
         if (definition.injectable !== null) {
-            // If the element is registered as injectable, support injecting the instance into children
-            context.beginChildComponentOperation(instance);
+            container.registerResolver(definition.injectable, vmProvider = new InstanceProvider('definition.injectable'));
+            vmProvider.prepare(instance);
         }
         // If this is the root controller, then the AppRoot will invoke things in the following order:
         // - Controller.hydrateCustomElement
@@ -4795,6 +4844,16 @@ function stringifyState(state) {
     return names.length === 0 ? 'none' : names.join('|');
 }
 const IController = DI.createInterface('IController');
+const IHydrationContext = DI.createInterface('IHydrationContext');
+class HydrationContext {
+    constructor(controller, instruction) {
+        this.instruction = instruction;
+        this.controller = controller;
+    }
+}
+function callDispose(disposable) {
+    disposable.dispose();
+}
 
 const IAppRoot = DI.createInterface('IAppRoot');
 const IWorkTracker = DI.createInterface('IWorkTracker', x => x.singleton(WorkTracker));
@@ -4846,9 +4905,9 @@ class AppRoot {
         this.host = config.host;
         this.work = container.get(IWorkTracker);
         rootProvider.prepare(this);
-        if (container.has(INode, false) && container.get(INode) !== config.host) {
-            this.container = container.createChild();
-        }
+        // if (container.has(INode, false) && container.get(INode) !== config.host) {
+        //   this.container = container.createChild();
+        // }
         this.container.register(Registration.instance(INode, config.host));
         if (enhance) {
             const component = config.component;
@@ -4857,10 +4916,16 @@ class AppRoot {
                 : CustomElement.define({ name: (void 0), template: this.host, enhance: true }));
         }
         this.hydratePromise = onResolve(this.runAppTasks('beforeCreate'), () => {
-            const instance = CustomElement.isType(config.component)
-                ? this.container.get(config.component)
-                : config.component;
-            const controller = (this.controller = Controller.forCustomElement(this, container, instance, this.host, null, 0 /* none */, false, this.enhanceDefinition));
+            const component = config.component;
+            const ownContainer = container.createChild();
+            let instance;
+            if (CustomElement.isType(component)) {
+                instance = this.container.get(component);
+            }
+            else {
+                instance = config.component;
+            }
+            const controller = (this.controller = Controller.forCustomElement(this, container, ownContainer, instance, this.host, null, 0 /* none */, false, this.enhanceDefinition));
             controller.hydrateCustomElement(container, null);
             return onResolve(this.runAppTasks('hydrating'), () => {
                 controller.hydrate(null);
@@ -5460,9 +5525,21 @@ class SetPropertyInstruction {
     get type() { return "re" /* setProperty */; }
 }
 class HydrateElementInstruction {
-    constructor(res, alias, instructions, 
+    constructor(
+    /**
+     * The name of the custom element this instruction is associated with
+     */
+    res, alias, 
+    /**
+     * Bindable instructions for the custom element instance
+     */
+    instructions, 
+    /**
+     * Indicates what projections are associated with the element usage
+     */
+    projections, 
     // only not null if this is an au-slot instruction
-    projections, slotInfo) {
+    slotInfo) {
         this.res = res;
         this.alias = alias;
         this.instructions = instructions;
@@ -5472,7 +5549,11 @@ class HydrateElementInstruction {
     get type() { return "ra" /* hydrateElement */; }
 }
 class HydrateAttributeInstruction {
-    constructor(res, alias, instructions) {
+    constructor(res, alias, 
+    /**
+     * Bindable instructions for the custom attribute instance
+     */
+    instructions) {
         this.res = res;
         this.alias = alias;
         this.instructions = instructions;
@@ -5480,7 +5561,11 @@ class HydrateAttributeInstruction {
     get type() { return "rb" /* hydrateAttribute */; }
 }
 class HydrateTemplateController {
-    constructor(def, res, alias, instructions) {
+    constructor(def, res, alias, 
+    /**
+     * Bindable instructions for the template controller instance
+     */
+    instructions) {
         this.def = def;
         this.res = res;
         this.alias = alias;
@@ -5660,18 +5745,24 @@ class CustomElementRenderer {
             viewFactory = getRenderContext(slotInfo.content, context).getViewFactory(void 0);
         }
         const projections = instruction.projections;
-        const factory = context.getComponentFactory(
+        const container = context.createElementContainer(
         /* parentController */ controller, 
         /* host             */ target, 
         /* instruction      */ instruction, 
         /* viewFactory      */ viewFactory, 
         /* location         */ target, 
-        /* auSlotsInfo      */ new AuSlotsInfo(Object.keys(projections !== null && projections !== void 0 ? projections : emptyObject)));
+        /* auSlotsInfo      */ new AuSlotsInfo(projections == null ? emptyArray : Object.keys(projections)));
+        const definition = context.find(CustomElement, instruction.res);
+        const Ctor = definition.Type;
+        const component = container.invoke(Ctor);
+        const provider = new InstanceProvider();
         const key = CustomElement.keyFrom(instruction.res);
-        const component = factory.createComponent(key);
+        provider.prepare(component);
+        container.registerResolver(Ctor, provider);
         const childController = Controller.forCustomElement(
         /* root                */ controller.root, 
-        /* container           */ context, 
+        /* context ct          */ context, 
+        /* own container       */ container, 
         /* viewModel           */ component, 
         /* host                */ target, 
         /* instructions        */ instruction, 
@@ -5684,7 +5775,6 @@ class CustomElementRenderer {
         /* controller   */ controller, 
         /* target       */ childController);
         controller.addController(childController);
-        factory.dispose();
     }
 };
 CustomElementRenderer = __decorate([
@@ -5695,20 +5785,19 @@ let CustomAttributeRenderer =
 /** @internal */
 class CustomAttributeRenderer {
     render(flags, context, controller, target, instruction) {
-        const factory = context.getComponentFactory(
+        const component = context.invokeAttribute(
         /* parentController */ controller, 
         /* host             */ target, 
         /* instruction      */ instruction, 
         /* viewFactory      */ void 0, 
         /* location         */ void 0);
-        const key = CustomAttribute.keyFrom(instruction.res);
-        const component = factory.createComponent(key);
         const childController = Controller.forCustomAttribute(
-        /* root      */ controller.root, 
-        /* container */ context, 
-        /* viewModel */ component, 
-        /* host      */ target, 
-        /* flags     */ flags);
+        /* root       */ controller.root, 
+        /* context ct */ context, 
+        /* viewModel  */ component, 
+        /* host       */ target, 
+        /* flags      */ flags);
+        const key = CustomAttribute.keyFrom(instruction.res);
         setRef(target, key, childController);
         context.renderChildren(
         /* flags        */ flags, 
@@ -5716,7 +5805,6 @@ class CustomAttributeRenderer {
         /* controller   */ controller, 
         /* target       */ childController);
         controller.addController(childController);
-        factory.dispose();
     }
 };
 CustomAttributeRenderer = __decorate([
@@ -5728,22 +5816,21 @@ let TemplateControllerRenderer =
 class TemplateControllerRenderer {
     render(flags, context, controller, target, instruction) {
         var _a;
-        const viewFactory = getRenderContext(instruction.def, context).getViewFactory();
+        const viewFactory = getRenderContext(instruction.def, context.container).getViewFactory();
         const renderLocation = convertToRenderLocation(target);
-        const componentFactory = context.getComponentFactory(
+        const component = context.invokeAttribute(
         /* parentController */ controller, 
         /* host             */ target, 
         /* instruction      */ instruction, 
         /* viewFactory      */ viewFactory, 
         /* location         */ renderLocation);
-        const key = CustomAttribute.keyFrom(instruction.res);
-        const component = componentFactory.createComponent(key);
         const childController = Controller.forCustomAttribute(
-        /* root      */ controller.root, 
-        /* container */ context, 
-        /* viewModel */ component, 
-        /* host      */ target, 
-        /* flags     */ flags);
+        /* root         */ controller.root, 
+        /* container ct */ context, 
+        /* viewModel    */ component, 
+        /* host         */ target, 
+        /* flags        */ flags);
+        const key = CustomAttribute.keyFrom(instruction.res);
         setRef(renderLocation, key, childController);
         (_a = component.link) === null || _a === void 0 ? void 0 : _a.call(component, flags, context, controller, childController, target, instruction);
         context.renderChildren(
@@ -5752,7 +5839,6 @@ class TemplateControllerRenderer {
         /* controller   */ controller, 
         /* target       */ childController);
         controller.addController(childController);
-        componentFactory.dispose();
     }
 };
 TemplateControllerRenderer = __decorate([
@@ -6135,16 +6221,16 @@ const BindingCommand = {
     },
 };
 let OneTimeBindingCommand = class OneTimeBindingCommand {
-    constructor(t) {
-        this.t = t;
+    constructor(m) {
+        this.m = m;
         this.bindingType = 49 /* OneTimeCommand */;
     }
-    static get inject() { return [IAttrSyntaxTransformer]; }
+    static get inject() { return [IAttrMapper]; }
     build(info) {
         var _a;
         let target;
         if (info.bindable == null) {
-            target = (_a = this.t.map(info.node, info.attr.target)) !== null && _a !== void 0 ? _a : camelCase(info.attr.target);
+            target = (_a = this.m.map(info.node, info.attr.target)) !== null && _a !== void 0 ? _a : camelCase(info.attr.target);
         }
         else {
             target = info.bindable.property;
@@ -6156,16 +6242,16 @@ OneTimeBindingCommand = __decorate([
     bindingCommand('one-time')
 ], OneTimeBindingCommand);
 let ToViewBindingCommand = class ToViewBindingCommand {
-    constructor(t) {
-        this.t = t;
+    constructor(m) {
+        this.m = m;
         this.bindingType = 50 /* ToViewCommand */;
     }
-    static get inject() { return [IAttrSyntaxTransformer]; }
+    static get inject() { return [IAttrMapper]; }
     build(info) {
         var _a;
         let target;
         if (info.bindable == null) {
-            target = (_a = this.t.map(info.node, info.attr.target)) !== null && _a !== void 0 ? _a : camelCase(info.attr.target);
+            target = (_a = this.m.map(info.node, info.attr.target)) !== null && _a !== void 0 ? _a : camelCase(info.attr.target);
         }
         else {
             target = info.bindable.property;
@@ -6177,16 +6263,16 @@ ToViewBindingCommand = __decorate([
     bindingCommand('to-view')
 ], ToViewBindingCommand);
 let FromViewBindingCommand = class FromViewBindingCommand {
-    constructor(t) {
-        this.t = t;
+    constructor(m) {
+        this.m = m;
         this.bindingType = 51 /* FromViewCommand */;
     }
-    static get inject() { return [IAttrSyntaxTransformer]; }
+    static get inject() { return [IAttrMapper]; }
     build(info) {
         var _a;
         let target;
         if (info.bindable == null) {
-            target = (_a = this.t.map(info.node, info.attr.target)) !== null && _a !== void 0 ? _a : camelCase(info.attr.target);
+            target = (_a = this.m.map(info.node, info.attr.target)) !== null && _a !== void 0 ? _a : camelCase(info.attr.target);
         }
         else {
             target = info.bindable.property;
@@ -6198,16 +6284,16 @@ FromViewBindingCommand = __decorate([
     bindingCommand('from-view')
 ], FromViewBindingCommand);
 let TwoWayBindingCommand = class TwoWayBindingCommand {
-    constructor(t) {
-        this.t = t;
+    constructor(m) {
+        this.m = m;
         this.bindingType = 52 /* TwoWayCommand */;
     }
-    static get inject() { return [IAttrSyntaxTransformer]; }
+    static get inject() { return [IAttrMapper]; }
     build(info) {
         var _a;
         let target;
         if (info.bindable == null) {
-            target = (_a = this.t.map(info.node, info.attr.target)) !== null && _a !== void 0 ? _a : camelCase(info.attr.target);
+            target = (_a = this.m.map(info.node, info.attr.target)) !== null && _a !== void 0 ? _a : camelCase(info.attr.target);
         }
         else {
             target = info.bindable.property;
@@ -6219,11 +6305,11 @@ TwoWayBindingCommand = __decorate([
     bindingCommand('two-way')
 ], TwoWayBindingCommand);
 let DefaultBindingCommand = class DefaultBindingCommand {
-    constructor(t) {
-        this.t = t;
+    constructor(m) {
+        this.m = m;
         this.bindingType = 53 /* BindCommand */;
     }
-    static get inject() { return [IAttrSyntaxTransformer]; }
+    static get inject() { return [IAttrMapper]; }
     build(info) {
         var _a;
         const attrName = info.attr.target;
@@ -6232,8 +6318,8 @@ let DefaultBindingCommand = class DefaultBindingCommand {
         let mode;
         let target;
         if (bindable == null) {
-            mode = this.t.isTwoWay(info.node, attrName) ? BindingMode.twoWay : BindingMode.toView;
-            target = (_a = this.t.map(info.node, attrName)) !== null && _a !== void 0 ? _a : camelCase(attrName);
+            mode = this.m.isTwoWay(info.node, attrName) ? BindingMode.twoWay : BindingMode.toView;
+            target = (_a = this.m.map(info.node, attrName)) !== null && _a !== void 0 ? _a : camelCase(attrName);
         }
         else {
             defaultMode = info.def.defaultBindingMode;
@@ -6415,7 +6501,7 @@ TemplateElementFactory = __decorate([
     __param(0, IPlatform)
 ], TemplateElementFactory);
 
-class ViewCompiler {
+class TemplateCompiler {
     static register(container) {
         return Registration.singleton(ITemplateCompiler, this).register(container);
     }
@@ -6459,7 +6545,7 @@ class ViewCompiler {
         const attrs = el.attributes;
         const attrParser = context.attrParser;
         const exprParser = context.exprParser;
-        const attrTransformer = context.attrTransformer;
+        const attrMapper = context.attrMapper;
         let ii = attrs.length;
         let i = 0;
         let attr;
@@ -6568,7 +6654,7 @@ class ViewCompiler {
                     // e.g: colspan -> colSpan
                     //      innerhtml -> innerHTML
                     //      minlength -> minLengt etc...
-                    attrTransformer.map(el, realAttrTarget)) !== null && _a !== void 0 ? _a : camelCase(realAttrTarget)));
+                    attrMapper.map(el, realAttrTarget)) !== null && _a !== void 0 ? _a : camelCase(realAttrTarget)));
                 }
                 else {
                     switch (attrName) {
@@ -6595,6 +6681,7 @@ class ViewCompiler {
                 instructions.push(bindingCommand.build(commandBuildInfo));
             }
         }
+        resetCommandBuildInfo();
         if (attrInstructions != null) {
             return attrInstructions.concat(instructions);
         }
@@ -6676,14 +6763,14 @@ class ViewCompiler {
                     letInstructions.push(new LetBindingInstruction(exprParser.parse(realAttrValue, bindingCommand.bindingType), camelCase(realAttrTarget)));
                     continue;
                 }
-                throw new Error('Invalid binding command for <let>. Only to-view/bind supported.');
+                throw new Error(`Invalid command ${attrSyntax.command} for <let>. Only to-view/bind supported.`);
             }
             expr = exprParser.parse(realAttrValue, 2048 /* Interpolation */);
             if (expr === null) {
                 context.logger.warn(`Property ${realAttrTarget} is declared with literal string ${realAttrValue}. ` +
                     `Did you mean ${realAttrTarget}.bind="${realAttrValue}"?`);
             }
-            letInstructions.push(new LetBindingInstruction(expr === null ? new PrimitiveLiteralExpression(realAttrValue) : expr, realAttrTarget));
+            letInstructions.push(new LetBindingInstruction(expr === null ? new PrimitiveLiteralExpression(realAttrValue) : expr, camelCase(realAttrTarget)));
         }
         context.rows.push([new HydrateLetElementInstruction(letInstructions, toBindingContext)]);
         // probably no need to replace
@@ -6706,7 +6793,7 @@ class ViewCompiler {
         const isAuSlot = elName === 'au-slot';
         const attrParser = context.attrParser;
         const exprParser = context.exprParser;
-        const attrSyntaxTransformer = context.attrTransformer;
+        const attrMapper = context.attrMapper;
         const isAttrsOrderSensitive = this.shouldReorderAttrs(el);
         let attrs = el.attributes;
         let instructions;
@@ -6869,7 +6956,7 @@ class ViewCompiler {
                     // e.g: colspan -> colSpan
                     //      innerhtml -> innerHTML
                     //      minlength -> minLengt etc...
-                    attrSyntaxTransformer.map(el, realAttrTarget)) !== null && _c !== void 0 ? _c : camelCase(realAttrTarget)));
+                    attrMapper.map(el, realAttrTarget)) !== null && _c !== void 0 ? _c : camelCase(realAttrTarget)));
                 }
                 // if not a custom attribute + no binding command + not a bindable + not an interpolation
                 // then it's just a plain attribute, do nothing
@@ -6918,11 +7005,7 @@ class ViewCompiler {
             commandBuildInfo.def = null;
             (plainAttrInstructions !== null && plainAttrInstructions !== void 0 ? plainAttrInstructions : (plainAttrInstructions = [])).push(bindingCommand.build(commandBuildInfo));
         }
-        commandBuildInfo.node
-            = commandBuildInfo.attr
-                = commandBuildInfo.expr
-                    = commandBuildInfo.bindable
-                        = commandBuildInfo.def = null;
+        resetCommandBuildInfo();
         if (isAttrsOrderSensitive && plainAttrInstructions != null && plainAttrInstructions.length > 1) {
             this.reorder(el, plainAttrInstructions);
         }
@@ -7372,6 +7455,7 @@ class ViewCompiler {
                 attrValue = void 0;
             }
         }
+        resetCommandBuildInfo();
         return instructions;
     }
     /** @internal */
@@ -7515,7 +7599,7 @@ class CompilationContext {
         // todo: attr parser should be retrieved based in resource semantic (current leaf + root + ignore parent)
         this.attrParser = hasParent ? parent.attrParser : container.get(IAttributeParser);
         this.exprParser = hasParent ? parent.exprParser : container.get(IExpressionParser);
-        this.attrTransformer = hasParent ? parent.attrTransformer : container.get(IAttrSyntaxTransformer);
+        this.attrMapper = hasParent ? parent.attrMapper : container.get(IAttrMapper);
         this.logger = hasParent ? parent.logger : container.get(ILogger);
         this.p = hasParent ? parent.p : container.get(IPlatform);
         this.localEls = hasParent ? parent.localEls : new Set();
@@ -7532,17 +7616,26 @@ class CompilationContext {
         }
         return el;
     }
+    /**
+     * Find the custom element definition of a given name
+     */
     el(name) {
         return this.c.find(CustomElement, name);
     }
+    /**
+     * Find the custom attribute definition of a given name
+     */
     attr(name) {
         return this.c.find(CustomAttribute, name);
     }
+    /**
+     * Create a new child compilation context
+     */
     child(instructions) {
         return new CompilationContext(this.def, this.c, this.ci, this, this.root, instructions);
     }
     /**
-     *Retrieve a binding command resource.
+     * Retrieve a binding command resource instance.
      *
      * @param name - The parsed `AttrSyntax`
      *
@@ -7584,6 +7677,13 @@ function hasInlineBindings(rawValue) {
         }
     }
     return false;
+}
+function resetCommandBuildInfo() {
+    commandBuildInfo.node
+        = commandBuildInfo.attr
+            = commandBuildInfo.expr
+                = commandBuildInfo.bindable
+                    = commandBuildInfo.def = null;
 }
 const emptyCompilationInstructions = { projections: null };
 // eslint-disable-next-line
@@ -7961,7 +8061,7 @@ SelfBindingBehavior = __decorate([
     bindingBehavior('self')
 ], SelfBindingBehavior);
 
-const nsMap = Object.create(null);
+const nsMap = createLookup();
 /**
  * Attribute accessor in a XML document/element that can be accessed via a namespace.
  * Wraps [`getAttributeNS`](https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNS).
@@ -10119,22 +10219,24 @@ let With = class With {
         this.view = this.factory.create().setLocation(location);
     }
     valueChanged(newValue, oldValue, flags) {
-        if (this.$controller.isActive) {
-            // TODO(fkleuver): add logic to the controller that ensures correct handling of race conditions and add integration tests
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            this.activateView(this.view, 2 /* fromBind */);
+        const $controller = this.$controller;
+        const bindings = this.view.bindings;
+        let scope;
+        let i = 0, ii = 0;
+        if ($controller.isActive && bindings != null) {
+            scope = Scope.fromParent($controller.scope, newValue === void 0 ? {} : newValue);
+            for (ii = bindings.length; ii > i; ++i) {
+                bindings[i].$bind(2 /* fromBind */, scope, $controller.hostScope);
+            }
         }
     }
     attaching(initiator, parent, flags) {
-        return this.activateView(initiator, flags);
-    }
-    detaching(initiator, parent, flags) {
-        return this.view.deactivate(initiator, this.$controller, flags);
-    }
-    activateView(initiator, flags) {
         const { $controller, value } = this;
         const scope = Scope.fromParent($controller.scope, value === void 0 ? {} : value);
         return this.view.activate(initiator, $controller, flags, scope, $controller.hostScope);
+    }
+    detaching(initiator, parent, flags) {
+        return this.view.deactivate(initiator, this.$controller, flags);
     }
     dispose() {
         this.view.dispose();
@@ -10740,6 +10842,7 @@ class RenderPlan {
         this.instructions = instructions;
         this.dependencies = dependencies;
         this.lazyDefinition = void 0;
+        this.childFor = new WeakMap();
     }
     get definition() {
         if (this.lazyDefinition === void 0) {
@@ -10753,8 +10856,13 @@ class RenderPlan {
         }
         return this.lazyDefinition;
     }
-    getContext(parentContainer) {
-        return getRenderContext(this.definition, parentContainer);
+    getContext(container) {
+        const childFor = this.childFor;
+        let childContainer = childFor.get(container);
+        if (childContainer == null) {
+            childFor.set(container, (childContainer = container.createChild()).register(...this.dependencies));
+        }
+        return getRenderContext(this.definition, childContainer);
     }
     createView(parentContainer) {
         return this.getViewFactory(parentContainer).create();
@@ -10939,17 +11047,17 @@ let AuRender = class AuRender {
             return subject;
         }
         if ('createView' in subject) { // RenderPlan
-            return subject.createView(this.$controller.context);
+            return subject.createView(this.$controller.context.container);
         }
         if ('create' in subject) { // IViewFactory
             return subject.create(flags);
         }
         if ('template' in subject) { // Raw Template Definition
             const definition = CustomElementDefinition.getOrCreate(subject);
-            return getRenderContext(definition, this.$controller.context).getViewFactory().create(flags);
+            return getRenderContext(definition, this.$controller.context.container).getViewFactory().create(flags);
         }
         // Constructable (Custom Element Constructor)
-        return createElement(this.p, subject, this.properties, this.$controller.host.childNodes).createView(this.$controller.context);
+        return createElement(this.p, subject, this.properties, this.$controller.host.childNodes).createView(this.$controller.context.container);
     }
     dispose() {
         var _a;
@@ -11082,7 +11190,7 @@ let AuCompose = class AuCompose {
             // custom element based composition
             if (srcDef !== null) {
                 const targetDef = CustomElementDefinition.create(srcDef !== null && srcDef !== void 0 ? srcDef : { name: CustomElement.generateName(), template: view });
-                const controller = Controller.forCustomElement(null, container, comp, host, null, 0 /* none */, true, targetDef);
+                const controller = Controller.forCustomElement(null, container, container.createChild(), comp, host, null, 0 /* none */, true, targetDef);
                 return new CompositionController(controller, () => controller.activate(initiator !== null && initiator !== void 0 ? initiator : controller, $controller, 2 /* fromBind */), 
                 // todo: call deactivate on the component view model
                 (deactachInitiator) => controller.deactivate(deactachInitiator !== null && deactachInitiator !== void 0 ? deactachInitiator : controller, $controller, 4 /* fromUnbind */), 
@@ -11095,7 +11203,7 @@ let AuCompose = class AuCompose {
                     name: CustomElement.generateName(),
                     template: view
                 });
-                const renderContext = getRenderContext(targetDef, container);
+                const renderContext = getRenderContext(targetDef, container.createChild());
                 const viewFactory = renderContext.getViewFactory();
                 const controller = Controller.forSyntheticView(contextFactory.isFirst(context) ? $controller.root : null, renderContext, viewFactory, 2 /* fromBind */, $controller);
                 const scope = this.scopeBehavior === 'auto'
@@ -11297,7 +11405,7 @@ const FromViewBindingBehaviorRegistration = FromViewBindingBehavior;
 const SignalBindingBehaviorRegistration = SignalBindingBehavior;
 const ThrottleBindingBehaviorRegistration = ThrottleBindingBehavior;
 const TwoWayBindingBehaviorRegistration = TwoWayBindingBehavior;
-const ITemplateCompilerRegistration = ViewCompiler;
+const ITemplateCompilerRegistration = TemplateCompiler;
 const INodeObserverLocatorRegistration = NodeObserverLocator;
 /**
  * Default HTML-specific (but environment-agnostic) implementations for the following interfaces:
@@ -11694,7 +11802,7 @@ class DialogController {
     /** @internal */
     activate(settings) {
         var _a;
-        const { ctn: container } = this;
+        const container = this.ctn.createChild();
         const { model, template, rejectOnCancel } = settings;
         const hostRenderer = container.get(IDialogDomRenderer);
         const dialogTargetHost = (_a = settings.host) !== null && _a !== void 0 ? _a : this.p.document.body;
@@ -11731,7 +11839,7 @@ class DialogController {
             const cmp = this.cmp;
             return onResolve((_a = cmp.activate) === null || _a === void 0 ? void 0 : _a.call(cmp, model), () => {
                 var _a;
-                const ctrlr = this.controller = Controller.forCustomElement(null, container, cmp, contentHost, null, 0 /* none */, true, CustomElementDefinition.create((_a = this.getDefinition(cmp)) !== null && _a !== void 0 ? _a : { name: CustomElement.generateName(), template }));
+                const ctrlr = this.controller = Controller.forCustomElement(null, container, container, cmp, contentHost, null, 0 /* none */, true, CustomElementDefinition.create((_a = this.getDefinition(cmp)) !== null && _a !== void 0 ? _a : { name: CustomElement.generateName(), template }));
                 return onResolve(ctrlr.activate(ctrlr, null, 2 /* fromBind */), () => {
                     var _a;
                     dom.overlay.addEventListener((_a = settings.mouseEvent) !== null && _a !== void 0 ? _a : 'click', this);
@@ -12125,5 +12233,5 @@ const DialogDefaultConfiguration = createDialogConfiguration(noop, [
     DefaultDialogDomRenderer,
 ]);
 
-export { AdoptedStyleSheetsStyles, AppRoot, AppTask, AtPrefixedTriggerAttributePattern, AtPrefixedTriggerAttributePatternRegistration, AttrBindingBehavior, AttrBindingBehaviorRegistration, AttrBindingCommand, AttrBindingCommandRegistration, AttrSyntax, AttributeBinding, AttributeBindingInstruction, AttributeBindingRendererRegistration, AttributeNSAccessor, AttributePattern, AuCompose, AuRender, AuRenderRegistration, AuSlot, AuSlotContentType, AuSlotsInfo, Aurelia, Bindable, BindableDefinition, BindableObserver, BindingCommand, BindingCommandDefinition, BindingModeBehavior, Blur, BlurManager, CSSModulesProcessorRegistry, CallBinding, CallBindingCommand, CallBindingCommandRegistration, CallBindingInstruction, CallBindingRendererRegistration, CaptureBindingCommand, CaptureBindingCommandRegistration, Case, CheckedObserver, Children, ChildrenDefinition, ChildrenObserver, ClassAttributeAccessor, ClassBindingCommand, ClassBindingCommandRegistration, ColonPrefixedBindAttributePattern, ColonPrefixedBindAttributePatternRegistration, ComputedWatcher, Controller, CustomAttribute, CustomAttributeDefinition, CustomAttributeRendererRegistration, CustomElement, CustomElementDefinition, CustomElementRendererRegistration, DataAttributeAccessor, DebounceBindingBehavior, DebounceBindingBehaviorRegistration, DefaultBindingCommand, DefaultBindingCommandRegistration, DefaultBindingLanguage, DefaultBindingSyntax, DefaultCase, DefaultComponents, DefaultDialogDom, DefaultDialogDomRenderer, DefaultDialogGlobalSettings, DefaultRenderers, DefaultResources, DelegateBindingCommand, DelegateBindingCommandRegistration, DialogCloseResult, DialogConfiguration, DialogController, DialogDeactivationStatuses, DialogDefaultConfiguration, DialogOpenResult, DialogService, DotSeparatedAttributePattern, DotSeparatedAttributePatternRegistration, Else, ElseRegistration, EventDelegator, EventSubscriber, ExpressionWatcher, Focus, ForBindingCommand, ForBindingCommandRegistration, FragmentNodeSequence, FrequentMutations, FromViewBindingBehavior, FromViewBindingBehaviorRegistration, FromViewBindingCommand, FromViewBindingCommandRegistration, FulfilledTemplateController, HydrateAttributeInstruction, HydrateElementInstruction, HydrateLetElementInstruction, HydrateTemplateController, IAppRoot, IAppTask, IAttrSyntaxTransformer, IAttributeParser, IAttributePattern, IAuSlotsInfo, IAurelia, IController, IDialogController, IDialogDom, IDialogDomRenderer, IDialogGlobalSettings, IDialogService, IEventDelegator, IEventTarget, IHistory, IInstruction, ILifecycleHooks, ILocation, INode, INodeObserverLocatorRegistration, IPlatform, IProjections, IRenderLocation, IRenderer, ISVGAnalyzer, ISanitizer, IShadowDOMGlobalStyles, IShadowDOMStyleFactory, IShadowDOMStyles, ISyntaxInterpreter, ITemplateCompiler, ITemplateCompilerRegistration, ITemplateElementFactory, IViewFactory, IViewLocator, IWindow, IWorkTracker, If, IfRegistration, InstructionType, InterpolationBinding, InterpolationBindingRendererRegistration, InterpolationInstruction, Interpretation, IteratorBindingInstruction, IteratorBindingRendererRegistration, LetBinding, LetBindingInstruction, LetElementRendererRegistration, LifecycleHooks, LifecycleHooksDefinition, LifecycleHooksEntry, Listener, ListenerBindingInstruction, ListenerBindingRendererRegistration, NodeObserverConfig, NodeObserverLocator, NodeType, NoopSVGAnalyzer, ObserveShallow, OneTimeBindingBehavior, OneTimeBindingBehaviorRegistration, OneTimeBindingCommand, OneTimeBindingCommandRegistration, PendingTemplateController, Portal, PromiseTemplateController, PropertyBinding, PropertyBindingInstruction, PropertyBindingRendererRegistration, RefAttributePattern, RefAttributePatternRegistration, RefBinding, RefBindingCommandRegistration, RefBindingInstruction, RefBindingRendererRegistration, RejectedTemplateController, RenderPlan, Repeat, RepeatRegistration, SVGAnalyzer, SVGAnalyzerRegistration, SanitizeValueConverter, SanitizeValueConverterRegistration, SelectValueObserver, SelfBindingBehavior, SelfBindingBehaviorRegistration, SetAttributeInstruction, SetAttributeRendererRegistration, SetClassAttributeInstruction, SetClassAttributeRendererRegistration, SetPropertyInstruction, SetPropertyRendererRegistration, SetStyleAttributeInstruction, SetStyleAttributeRendererRegistration, ShadowDOMRegistry, ShortHandBindingSyntax, SignalBindingBehavior, SignalBindingBehaviorRegistration, SlotInfo, StandardConfiguration, StyleAttributeAccessor, StyleBindingCommand, StyleBindingCommandRegistration, StyleConfiguration, StyleElementStyles, StylePropertyBindingInstruction, StylePropertyBindingRendererRegistration, Switch, TemplateControllerRendererRegistration, TextBindingInstruction, TextBindingRendererRegistration, ThrottleBindingBehavior, ThrottleBindingBehaviorRegistration, ToViewBindingBehavior, ToViewBindingBehaviorRegistration, ToViewBindingCommand, ToViewBindingCommandRegistration, TriggerBindingCommand, TriggerBindingCommandRegistration, TwoWayBindingBehavior, TwoWayBindingBehaviorRegistration, TwoWayBindingCommand, TwoWayBindingCommandRegistration, UpdateTriggerBindingBehavior, UpdateTriggerBindingBehaviorRegistration, ValueAttributeObserver, ViewFactory, ViewLocator, ViewModelKind, ViewValueConverter, ViewValueConverterRegistration, Views, Watch, With, WithRegistration, attributePattern, bindable, bindingCommand, children, containerless, convertToRenderLocation, createElement, cssModules, customAttribute, customElement, getEffectiveParentNode, getRef, getRenderContext, isCustomElementController, isCustomElementViewModel, isInstruction, isRenderContext, isRenderLocation, lifecycleHooks, processContent, renderer, setEffectiveParentNode, setRef, shadowCSS, templateController, useShadowDOM, view, watch };
+export { AdoptedStyleSheetsStyles, AppRoot, AppTask, AtPrefixedTriggerAttributePattern, AtPrefixedTriggerAttributePatternRegistration, AttrBindingBehavior, AttrBindingBehaviorRegistration, AttrBindingCommand, AttrBindingCommandRegistration, AttrSyntax, AttributeBinding, AttributeBindingInstruction, AttributeBindingRendererRegistration, AttributeNSAccessor, AttributePattern, AuCompose, AuRender, AuRenderRegistration, AuSlot, AuSlotContentType, AuSlotsInfo, Aurelia, Bindable, BindableDefinition, BindableObserver, BindingCommand, BindingCommandDefinition, BindingModeBehavior, Blur, BlurManager, CSSModulesProcessorRegistry, CallBinding, CallBindingCommand, CallBindingCommandRegistration, CallBindingInstruction, CallBindingRendererRegistration, CaptureBindingCommand, CaptureBindingCommandRegistration, Case, CheckedObserver, Children, ChildrenDefinition, ChildrenObserver, ClassAttributeAccessor, ClassBindingCommand, ClassBindingCommandRegistration, ColonPrefixedBindAttributePattern, ColonPrefixedBindAttributePatternRegistration, ComputedWatcher, Controller, CustomAttribute, CustomAttributeDefinition, CustomAttributeRendererRegistration, CustomElement, CustomElementDefinition, CustomElementRendererRegistration, DataAttributeAccessor, DebounceBindingBehavior, DebounceBindingBehaviorRegistration, DefaultBindingCommand, DefaultBindingCommandRegistration, DefaultBindingLanguage, DefaultBindingSyntax, DefaultCase, DefaultComponents, DefaultDialogDom, DefaultDialogDomRenderer, DefaultDialogGlobalSettings, DefaultRenderers, DefaultResources, DelegateBindingCommand, DelegateBindingCommandRegistration, DialogCloseResult, DialogConfiguration, DialogController, DialogDeactivationStatuses, DialogDefaultConfiguration, DialogOpenResult, DialogService, DotSeparatedAttributePattern, DotSeparatedAttributePatternRegistration, Else, ElseRegistration, EventDelegator, EventSubscriber, ExpressionWatcher, Focus, ForBindingCommand, ForBindingCommandRegistration, FragmentNodeSequence, FrequentMutations, FromViewBindingBehavior, FromViewBindingBehaviorRegistration, FromViewBindingCommand, FromViewBindingCommandRegistration, FulfilledTemplateController, HydrateAttributeInstruction, HydrateElementInstruction, HydrateLetElementInstruction, HydrateTemplateController, IAppRoot, IAppTask, IAttrMapper, IAttributeParser, IAttributePattern, IAuSlotsInfo, IAurelia, IController, IDialogController, IDialogDom, IDialogDomRenderer, IDialogGlobalSettings, IDialogService, IEventDelegator, IEventTarget, IHistory, IHydrationContext, IInstruction, ILifecycleHooks, ILocation, INode, INodeObserverLocatorRegistration, IPlatform, IProjections, IRenderLocation, IRenderer, ISVGAnalyzer, ISanitizer, IShadowDOMGlobalStyles, IShadowDOMStyleFactory, IShadowDOMStyles, ISyntaxInterpreter, ITemplateCompiler, ITemplateCompilerRegistration, ITemplateElementFactory, IViewFactory, IViewLocator, IWindow, IWorkTracker, If, IfRegistration, InstructionType, InterpolationBinding, InterpolationBindingRendererRegistration, InterpolationInstruction, Interpretation, IteratorBindingInstruction, IteratorBindingRendererRegistration, LetBinding, LetBindingInstruction, LetElementRendererRegistration, LifecycleHooks, LifecycleHooksDefinition, LifecycleHooksEntry, Listener, ListenerBindingInstruction, ListenerBindingRendererRegistration, NodeObserverConfig, NodeObserverLocator, NodeType, NoopSVGAnalyzer, ObserveShallow, OneTimeBindingBehavior, OneTimeBindingBehaviorRegistration, OneTimeBindingCommand, OneTimeBindingCommandRegistration, PendingTemplateController, Portal, PromiseTemplateController, PropertyBinding, PropertyBindingInstruction, PropertyBindingRendererRegistration, RefAttributePattern, RefAttributePatternRegistration, RefBinding, RefBindingCommandRegistration, RefBindingInstruction, RefBindingRendererRegistration, RejectedTemplateController, RenderPlan, Repeat, RepeatRegistration, SVGAnalyzer, SVGAnalyzerRegistration, SanitizeValueConverter, SanitizeValueConverterRegistration, SelectValueObserver, SelfBindingBehavior, SelfBindingBehaviorRegistration, SetAttributeInstruction, SetAttributeRendererRegistration, SetClassAttributeInstruction, SetClassAttributeRendererRegistration, SetPropertyInstruction, SetPropertyRendererRegistration, SetStyleAttributeInstruction, SetStyleAttributeRendererRegistration, ShadowDOMRegistry, ShortHandBindingSyntax, SignalBindingBehavior, SignalBindingBehaviorRegistration, SlotInfo, StandardConfiguration, StyleAttributeAccessor, StyleBindingCommand, StyleBindingCommandRegistration, StyleConfiguration, StyleElementStyles, StylePropertyBindingInstruction, StylePropertyBindingRendererRegistration, Switch, TemplateControllerRendererRegistration, TextBindingInstruction, TextBindingRendererRegistration, ThrottleBindingBehavior, ThrottleBindingBehaviorRegistration, ToViewBindingBehavior, ToViewBindingBehaviorRegistration, ToViewBindingCommand, ToViewBindingCommandRegistration, TriggerBindingCommand, TriggerBindingCommandRegistration, TwoWayBindingBehavior, TwoWayBindingBehaviorRegistration, TwoWayBindingCommand, TwoWayBindingCommandRegistration, UpdateTriggerBindingBehavior, UpdateTriggerBindingBehaviorRegistration, ValueAttributeObserver, ViewFactory, ViewLocator, ViewModelKind, ViewValueConverter, ViewValueConverterRegistration, Views, Watch, With, WithRegistration, attributePattern, bindable, bindingCommand, children, containerless, convertToRenderLocation, createElement, cssModules, customAttribute, customElement, getEffectiveParentNode, getRef, getRenderContext, isCustomElementController, isCustomElementViewModel, isInstruction, isRenderContext, isRenderLocation, lifecycleHooks, processContent, renderer, setEffectiveParentNode, setRef, shadowCSS, templateController, useShadowDOM, view, watch };
 //# sourceMappingURL=index.js.map
