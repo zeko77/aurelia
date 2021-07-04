@@ -76,15 +76,7 @@ export const DI = {
         const key = Protocol.annotation.keyFor('di:paramtypes');
         return Metadata.getOwn(key, Type);
     },
-    getOrCreateAnnotationParamTypes(Type) {
-        const key = Protocol.annotation.keyFor('di:paramtypes');
-        let annotationParamtypes = Metadata.getOwn(key, Type);
-        if (annotationParamtypes === void 0) {
-            Metadata.define(key, annotationParamtypes = [], Type);
-            Protocol.annotation.appendTo(Type, key);
-        }
-        return annotationParamtypes;
-    },
+    getOrCreateAnnotationParamTypes: getOrCreateAnnotationParamTypes,
     getDependencies: getDependencies,
     /**
      * creates a decorator that also matches an interface and can be used as a {@linkcode Key}.
@@ -134,7 +126,7 @@ export const DI = {
             if (target == null || new.target !== undefined) {
                 throw new Error(`No registration for interface: '${Interface.friendlyName}'`); // TODO: add error (trying to resolve an InterfaceSymbol that has no registrations)
             }
-            const annotationParamtypes = DI.getOrCreateAnnotationParamTypes(target);
+            const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
             annotationParamtypes[index] = Interface;
         };
         Interface.$isInterface = true;
@@ -152,14 +144,14 @@ export const DI = {
     inject(...dependencies) {
         return function (target, key, descriptor) {
             if (typeof descriptor === 'number') { // It's a parameter decorator.
-                const annotationParamtypes = DI.getOrCreateAnnotationParamTypes(target);
+                const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
                 const dep = dependencies[0];
                 if (dep !== void 0) {
                     annotationParamtypes[descriptor] = dep;
                 }
             }
             else if (key) { // It's a property decorator. Not supported by the container without plugins.
-                const annotationParamtypes = DI.getOrCreateAnnotationParamTypes(target.constructor);
+                const annotationParamtypes = getOrCreateAnnotationParamTypes(target.constructor);
                 const dep = dependencies[0];
                 if (dep !== void 0) {
                     annotationParamtypes[key] = dep;
@@ -167,7 +159,7 @@ export const DI = {
             }
             else if (descriptor) { // It's a function decorator (not a Class constructor)
                 const fn = descriptor.value;
-                const annotationParamtypes = DI.getOrCreateAnnotationParamTypes(fn);
+                const annotationParamtypes = getOrCreateAnnotationParamTypes(fn);
                 let dep;
                 for (let i = 0; i < dependencies.length; ++i) {
                     dep = dependencies[i];
@@ -177,7 +169,7 @@ export const DI = {
                 }
             }
             else { // It's a class decorator.
-                const annotationParamtypes = DI.getOrCreateAnnotationParamTypes(target);
+                const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
                 let dep;
                 for (let i = 0; i < dependencies.length; ++i) {
                     dep = dependencies[i];
@@ -311,6 +303,15 @@ function getDependencies(Type) {
     }
     return dependencies;
 }
+function getOrCreateAnnotationParamTypes(Type) {
+    const key = Protocol.annotation.keyFor('di:paramtypes');
+    let annotationParamtypes = Metadata.getOwn(key, Type);
+    if (annotationParamtypes === void 0) {
+        Metadata.define(key, annotationParamtypes = [], Type);
+        Protocol.annotation.appendTo(Type, key);
+    }
+    return annotationParamtypes;
+}
 export const IContainer = DI.createInterface('IContainer');
 export const IServiceLocator = IContainer;
 function createResolver(getter) {
@@ -426,37 +427,47 @@ export function ignore(target, property, descriptor) {
 }
 ignore.$isResolver = true;
 ignore.resolve = () => undefined;
+/**
+ * Inject a function that will return a resolved instance of the [[key]] given.
+ * Also supports passing extra parameters to the invocation of the resolved constructor of [[key]]
+ *
+ * For typings, it's a function that take 0 or more arguments and return an instance. Example:
+ * ```ts
+ * class Foo {
+ *   constructor( @factory(MyService) public createService: (...args: unknown[]) => MyService)
+ * }
+ * const foo = container.get(Foo); // instanceof Foo
+ * const myService_1 = foo.createService('user service')
+ * const myService_2 = foo.createService('content service')
+ * ```
+ *
+ * ```ts
+ * class Foo {
+ *   constructor( @factory('random') public createRandomizer: () => Randomizer)
+ * }
+ * container.get(Foo).createRandomizer(); // create a randomizer
+ * ```
+ * would throw an exception because you haven't registered `'random'` before calling the method. This, would give you a
+ * new instance of Randomizer each time.
+ *
+ * `@factory` does not manage the lifecycle of the underlying key. If you want a singleton, you have to register as a
+ * `singleton`, `transient` would also behave as you would expect, providing you a new instance each time.
+ *
+ * - @param key [[`Key`]]
+ * see { @link DI.createInterface } on interactions with interfaces
+ */
+export const factory = createResolver((key, handler, requestor) => {
+    return (...args) => handler.getFactory(key).construct(requestor, args);
+});
 export const newInstanceForScope = createResolver((key, handler, requestor) => {
     const instance = createNewInstance(key, handler, requestor);
-    const instanceProvider = new InstanceProvider(String(key));
-    instanceProvider.prepare(instance);
+    const instanceProvider = new InstanceProvider(String(key), instance);
     requestor.registerResolver(key, instanceProvider);
     return instance;
 });
 export const newInstanceOf = createResolver((key, handler, requestor) => createNewInstance(key, handler, requestor));
 function createNewInstance(key, handler, requestor) {
-    const resolver = handler.getResolver(key, false);
-    let factory;
-    if (typeof (resolver === null || resolver === void 0 ? void 0 : resolver.getFactory) === 'function') {
-        factory = resolver.getFactory(handler);
-        // 2 scenarios:
-        //
-        // 1. if construct is invoked with handler
-        // then anew instance of something registered from parent
-        // will not have information of some dependencies registered in child, even child is the requestor
-        //
-        // 2. if construct is invoked with requestor
-        // then a new instance of something registered from parent
-        // will have the information of something registered in child shadowing the samething registered in parent
-        //
-        // choice: No. (2), as it makes more sense in terms of WYSIWYG
-        //         and if anyone wants to avoid shadowing behavior, they can use parent() resolver
-        //         todo: implement parent resolver
-        if (factory != null) {
-            return factory.construct(requestor);
-        }
-    }
-    return handler.getFactory(key).construct(handler);
+    return handler.getFactory(key).construct(requestor);
 }
 /** @internal */
 export var ResolverStrategy;
@@ -656,7 +667,10 @@ export class Container {
         let value;
         let j;
         let jj;
-        for (let i = 0, ii = params.length; i < ii; ++i) {
+        let i = 0;
+        // eslint-disable-next-line
+        let ii = params.length;
+        for (; i < ii; ++i) {
             current = params[i];
             if (!isObject(current)) {
                 continue;
@@ -671,9 +685,11 @@ export class Container {
                     defs[0].register(this);
                 }
                 else {
-                    const len = defs.length;
-                    for (let d = 0; d < len; ++d) {
-                        defs[d].register(this);
+                    j = 0;
+                    jj = defs.length;
+                    while (jj > j) {
+                        defs[j].register(this);
+                        ++j;
                     }
                 }
             }
@@ -1133,9 +1149,17 @@ export const Registration = {
     }
 };
 export class InstanceProvider {
-    constructor(friendlyName) {
+    constructor(friendlyName, 
+    /**
+     * if not undefined, then this is the value this provider will resolve to
+     * until overridden by explicit prepare call
+     */
+    instance) {
         this.friendlyName = friendlyName;
         this.instance = null;
+        if (instance !== void 0) {
+            this.instance = instance;
+        }
     }
     prepare(instance) {
         this.instance = instance;

@@ -42,10 +42,9 @@ export { Repeat } from './resources/template-controllers/repeat.js';
 export { With } from './resources/template-controllers/with.js';
 export { Switch, Case, DefaultCase, } from './resources/template-controllers/switch.js';
 export { PromiseTemplateController, FulfilledTemplateController, PendingTemplateController, RejectedTemplateController, } from './resources/template-controllers/promise.js';
-export { Blur, BlurManager, } from './resources/custom-attributes/blur.js';
 export { Focus, } from './resources/custom-attributes/focus.js';
 export { Portal, } from './resources/template-controllers/portal.js';
-export { AuSlot, IProjections, SlotInfo, AuSlotContentType, AuSlotsInfo, IAuSlotsInfo, } from './resources/custom-elements/au-slot.js';
+export { AuSlot, IProjections, AuSlotsInfo, IAuSlotsInfo, } from './resources/custom-elements/au-slot.js';
 export { containerless, customElement, CustomElement, CustomElementDefinition, useShadowDOM, processContent, } from './resources/custom-element.js';
 export { AuRender, } from './resources/custom-elements/au-render.js';
 export { AuCompose, } from './resources/custom-elements/au-compose.js';
@@ -53,6 +52,8 @@ export { ISanitizer, SanitizeValueConverter, } from './resources/value-converter
 export { ViewValueConverter, } from './resources/value-converters/view.js';
 export { ITemplateCompilerRegistration, INodeObserverLocatorRegistration, DefaultComponents, RefAttributePatternRegistration, DotSeparatedAttributePatternRegistration, DefaultBindingSyntax, AtPrefixedTriggerAttributePatternRegistration, ColonPrefixedBindAttributePatternRegistration, ShortHandBindingSyntax, SVGAnalyzerRegistration, CallBindingCommandRegistration, DefaultBindingCommandRegistration, ForBindingCommandRegistration, RefBindingCommandRegistration, FromViewBindingCommandRegistration, OneTimeBindingCommandRegistration, ToViewBindingCommandRegistration, TwoWayBindingCommandRegistration, TriggerBindingCommandRegistration, DelegateBindingCommandRegistration, CaptureBindingCommandRegistration, AttrBindingCommandRegistration, ClassBindingCommandRegistration, StyleBindingCommandRegistration, DefaultBindingLanguage, ViewValueConverterRegistration, SanitizeValueConverterRegistration, IfRegistration, ElseRegistration, RepeatRegistration, WithRegistration, AttrBindingBehaviorRegistration, SelfBindingBehaviorRegistration, UpdateTriggerBindingBehaviorRegistration, AuRenderRegistration, DefaultResources, AttributeBindingRendererRegistration, ListenerBindingRendererRegistration, SetAttributeRendererRegistration, SetClassAttributeRendererRegistration, SetStyleAttributeRendererRegistration, StylePropertyBindingRendererRegistration, TextBindingRendererRegistration, RefBindingRendererRegistration, CallBindingRendererRegistration, CustomAttributeRendererRegistration, CustomElementRendererRegistration, InterpolationBindingRendererRegistration, IteratorBindingRendererRegistration, LetElementRendererRegistration, PropertyBindingRendererRegistration, SetPropertyRendererRegistration, TemplateControllerRendererRegistration, DefaultRenderers, StandardConfiguration } from './configuration.js';
 export { ITemplateElementFactory } from './template-element-factory.js';
+export { BindablesInfo, TemplateCompiler, ITemplateCompilerHooks, TemplateCompilerHooks, templateCompilerHooks, } from './template-compiler.js';
+export { allResources, } from './utilities-di.js';
 export { ChildrenDefinition, Children, children, ChildrenObserver, } from './templating/children.js';
 // These exports are temporary until we have a proper way to unit test them
 export { Controller, isCustomElementController, isCustomElementViewModel, ViewModelKind, IController, IHydrationContext, } from './templating/controller.js';

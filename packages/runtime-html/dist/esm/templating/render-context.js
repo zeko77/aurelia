@@ -8,40 +8,24 @@ import { IAuSlotsInfo } from '../resources/custom-elements/au-slot.js';
 import { IPlatform } from '../platform.js';
 import { IController } from './controller.js';
 const definitionContainerLookup = new WeakMap();
-const definitionContainerProjectionsLookup = new WeakMap();
 const fragmentCache = new WeakMap();
 export function isRenderContext(value) {
     return value instanceof RenderContext;
 }
 let renderContextCount = 0;
-export function getRenderContext(partialDefinition, container, projections) {
+export function getRenderContext(partialDefinition, container) {
     const definition = CustomElementDefinition.getOrCreate(partialDefinition);
     // injectable completely prevents caching, ensuring that each instance gets a new context context
     if (definition.injectable !== null) {
         return new RenderContext(definition, container);
     }
-    if (projections == null) {
-        let containerLookup = definitionContainerLookup.get(definition);
-        if (containerLookup === void 0) {
-            definitionContainerLookup.set(definition, containerLookup = new WeakMap());
-        }
-        let context = containerLookup.get(container);
-        if (context === void 0) {
-            containerLookup.set(container, context = new RenderContext(definition, container));
-        }
-        return context;
+    let containerLookup = definitionContainerLookup.get(definition);
+    if (containerLookup === void 0) {
+        definitionContainerLookup.set(definition, containerLookup = new WeakMap());
     }
-    let containerProjectionsLookup = definitionContainerProjectionsLookup.get(definition);
-    if (containerProjectionsLookup === void 0) {
-        definitionContainerProjectionsLookup.set(definition, containerProjectionsLookup = new WeakMap());
-    }
-    let projectionsLookup = containerProjectionsLookup.get(container);
-    if (projectionsLookup === void 0) {
-        containerProjectionsLookup.set(container, projectionsLookup = new WeakMap());
-    }
-    let context = projectionsLookup.get(projections);
+    let context = containerLookup.get(container);
     if (context === void 0) {
-        projectionsLookup.set(projections, context = new RenderContext(definition, container));
+        containerLookup.set(container, context = new RenderContext(definition, container));
     }
     return context;
 }
@@ -206,48 +190,29 @@ export class RenderContext {
     }
     // #endregion
     createElementContainer(parentController, host, instruction, viewFactory, location, auSlotsInfo) {
-        const ctxContainer = this.container;
         const p = this.platform;
-        const container = ctxContainer.createChild();
-        const nodeProvider = new InstanceProvider('ElementProvider');
-        const controllerProvider = new InstanceProvider('IController');
-        const instructionProvider = new InstanceProvider('IInstruction');
-        let viewFactoryProvider;
-        let locationProvider;
-        let slotInfoProvider;
-        controllerProvider.prepare(parentController);
-        nodeProvider.prepare(host);
-        instructionProvider.prepare(instruction);
-        if (viewFactory == null) {
-            viewFactoryProvider = noViewFactoryProvider;
-        }
-        else {
-            viewFactoryProvider = new ViewFactoryProvider();
-            viewFactoryProvider.prepare(viewFactory);
-        }
-        if (location == null) {
-            locationProvider = noLocationProvider;
-        }
-        else {
-            locationProvider = new InstanceProvider('IRenderLocation');
-            locationProvider.prepare(location);
-        }
-        if (auSlotsInfo == null) {
-            slotInfoProvider = noAuSlotProvider;
-        }
-        else {
-            slotInfoProvider = new InstanceProvider('AuSlotInfo');
-            slotInfoProvider.prepare(auSlotsInfo);
-        }
+        const container = this.container.createChild();
+        const nodeProvider = new InstanceProvider('ElementProvider', host);
+        // todo:
+        // both node provider and location provider may not be allowed to throw
+        // if there's no value associated, unlike InstanceProvider
+        // reason being some custom element can have `containerless` attribute on them
+        // causing the host to disappear, and replace by a location instead
         container.registerResolver(INode, nodeProvider);
         container.registerResolver(p.Node, nodeProvider);
         container.registerResolver(p.Element, nodeProvider);
         container.registerResolver(p.HTMLElement, nodeProvider);
-        container.registerResolver(IController, controllerProvider);
-        container.registerResolver(IInstruction, instructionProvider);
-        container.registerResolver(IRenderLocation, locationProvider);
-        container.registerResolver(IViewFactory, viewFactoryProvider);
-        container.registerResolver(IAuSlotsInfo, slotInfoProvider);
+        container.registerResolver(IController, new InstanceProvider('IController', parentController));
+        container.registerResolver(IInstruction, new InstanceProvider('IInstruction', instruction));
+        container.registerResolver(IRenderLocation, location == null
+            ? noLocationProvider
+            : new InstanceProvider('IRenderLocation', location));
+        container.registerResolver(IViewFactory, viewFactory == null
+            ? noViewFactoryProvider
+            : new ViewFactoryProvider(viewFactory));
+        container.registerResolver(IAuSlotsInfo, auSlotsInfo == null
+            ? noAuSlotProvider
+            : new InstanceProvider('AuSlotInfo', auSlotsInfo));
         return container;
     }
     invokeAttribute(parentController, host, instruction, viewFactory, location, auSlotsInfo) {
@@ -318,8 +283,16 @@ export class RenderContext {
     }
 }
 class ViewFactoryProvider {
-    constructor() {
+    constructor(
+    /**
+     * The factory instance that this provider will resolves to,
+     * until explicitly overridden by prepare call
+     */
+    factory) {
         this.factory = null;
+        if (factory !== void 0) {
+            this.factory = factory;
+        }
     }
     prepare(factory) {
         this.factory = factory;

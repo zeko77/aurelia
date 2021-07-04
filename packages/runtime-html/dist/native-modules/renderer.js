@@ -106,14 +106,16 @@ export class HydrateElementInstruction {
     /**
      * Indicates what projections are associated with the element usage
      */
-    projections, 
-    // only not null if this is an au-slot instruction
-    slotInfo) {
+    projections, containerless) {
         this.res = res;
         this.alias = alias;
         this.instructions = instructions;
         this.projections = projections;
-        this.slotInfo = slotInfo;
+        this.containerless = containerless;
+        /**
+         * A special property that can be used to store <au-slot/> usage information
+         */
+        this.auSlot = null;
     }
     get type() { return "ra" /* hydrateElement */; }
 }
@@ -309,26 +311,19 @@ let CustomElementRenderer =
 /** @internal */
 class CustomElementRenderer {
     render(flags, context, controller, target, instruction) {
-        let viewFactory;
-        const slotInfo = instruction.slotInfo;
-        if (instruction.res === 'au-slot' && slotInfo !== null) {
-            viewFactory = getRenderContext(slotInfo.content, context).getViewFactory(void 0);
-        }
         const projections = instruction.projections;
         const container = context.createElementContainer(
         /* parentController */ controller, 
         /* host             */ target, 
         /* instruction      */ instruction, 
-        /* viewFactory      */ viewFactory, 
+        /* viewFactory      */ void 0, 
         /* location         */ target, 
         /* auSlotsInfo      */ new AuSlotsInfo(projections == null ? emptyArray : Object.keys(projections)));
         const definition = context.find(CustomElement, instruction.res);
         const Ctor = definition.Type;
         const component = container.invoke(Ctor);
-        const provider = new InstanceProvider();
         const key = CustomElement.keyFrom(instruction.res);
-        provider.prepare(component);
-        container.registerResolver(Ctor, provider);
+        container.registerResolver(Ctor, new InstanceProvider(key, component));
         const childController = Controller.forCustomElement(
         /* root                */ controller.root, 
         /* context ct          */ context, 

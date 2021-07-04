@@ -1,7 +1,7 @@
 import { BindingMode, IExpressionParser, IObserverLocator, LifecycleFlags } from '@aurelia/runtime';
 import { IEventDelegator } from './observation/event-delegator.js';
 import { CustomElementDefinition } from './resources/custom-element.js';
-import { IProjections, SlotInfo } from './resources/custom-elements/au-slot.js';
+import { IProjections } from './resources/custom-elements/au-slot.js';
 import { IPlatform } from './platform.js';
 import type { IServiceLocator, IContainer, Class, IRegistry } from '@aurelia/kernel';
 import type { Interpolation, IsBindingBehavior, IInterceptableBinding, ForOfStatement, DelegationStrategy } from '@aurelia/runtime';
@@ -90,8 +90,15 @@ export declare class HydrateElementInstruction {
      * Indicates what projections are associated with the element usage
      */
     projections: Record<string, CustomElementDefinition> | null;
-    slotInfo: SlotInfo | null;
+    containerless: boolean;
     get type(): InstructionType.hydrateElement;
+    /**
+     * A special property that can be used to store <au-slot/> usage information
+     */
+    auSlot: {
+        name: string;
+        fallback: CustomElementDefinition;
+    } | null;
     constructor(
     /**
      * The name of the custom element this instruction is associated with
@@ -104,7 +111,7 @@ export declare class HydrateElementInstruction {
     /**
      * Indicates what projections are associated with the element usage
      */
-    projections: Record<string, CustomElementDefinition> | null, slotInfo: SlotInfo | null);
+    projections: Record<string, CustomElementDefinition> | null, containerless: boolean);
 }
 export declare class HydrateAttributeInstruction {
     res: string;
@@ -216,7 +223,14 @@ export declare class AttributeBindingInstruction {
      */
     attr: string, from: string | IsBindingBehavior, to: string);
 }
+export declare const ITemplateCompiler: import("@aurelia/kernel").InterfaceSymbol<ITemplateCompiler>;
 export interface ITemplateCompiler {
+    /**
+     * Indicates whether this compiler should compile template in debug mode
+     *
+     * For the default compiler, this means all expressions are kept as is on the template
+     */
+    debug: boolean;
     compile(partialDefinition: PartialCustomElementDefinition, context: IContainer, compilationInstruction: ICompliationInstruction | null): CustomElementDefinition;
 }
 export interface ICompliationInstruction {
@@ -226,9 +240,7 @@ export interface ICompliationInstruction {
      * and each value is the definition to render and project
      */
     projections: IProjections | null;
-    surrogates?: boolean;
 }
-export declare const ITemplateCompiler: import("@aurelia/kernel").InterfaceSymbol<ITemplateCompiler>;
 export interface IInstructionTypeClassifier<TType extends string = string> {
     instructionType: TType;
 }
