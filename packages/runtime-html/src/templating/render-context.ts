@@ -4,7 +4,7 @@ import { IRenderer, ITemplateCompiler, IInstruction, ICompliationInstruction } f
 import { CustomElementDefinition } from '../resources/custom-element.js';
 import { CustomAttribute } from '../resources/custom-attribute.js';
 import { IViewFactory, ViewFactory } from './view.js';
-import { AuSlotsInfo, IAuSlotsInfo, IProjections } from '../resources/custom-elements/au-slot.js';
+import { AuSlotsInfo, IAuSlotsInfo } from '../resources/custom-elements/au-slot.js';
 import { IPlatform } from '../platform.js';
 import { IController } from './controller.js';
 
@@ -32,8 +32,6 @@ import type {
 import type { PartialCustomElementDefinition } from '../resources/custom-element.js';
 
 const definitionContainerLookup = new WeakMap<CustomElementDefinition, WeakMap<IContainer, RenderContext>>();
-const definitionContainerProjectionsLookup = new WeakMap<CustomElementDefinition, WeakMap<IContainer, WeakMap<Record<string, CustomElementDefinition>, RenderContext>>>();
-
 const fragmentCache = new WeakMap<CustomElementDefinition, Node | null>();
 
 export function isRenderContext(value: unknown): value is IRenderContext {
@@ -142,7 +140,6 @@ let renderContextCount = 0;
 export function getRenderContext(
   partialDefinition: PartialCustomElementDefinition,
   container: IContainer,
-  projections?: IProjections | null,
 ): IRenderContext {
   const definition = CustomElementDefinition.getOrCreate(partialDefinition);
 
@@ -151,46 +148,18 @@ export function getRenderContext(
     return new RenderContext(definition, container);
   }
 
-  if (projections == null) {
-    let containerLookup = definitionContainerLookup.get(definition);
-    if (containerLookup === void 0) {
-      definitionContainerLookup.set(
-        definition,
-        containerLookup = new WeakMap(),
-      );
-    }
-
-    let context = containerLookup.get(container);
-    if (context === void 0) {
-      containerLookup.set(
-        container,
-        context = new RenderContext(definition, container),
-      );
-    }
-
-    return context;
-  }
-
-  let containerProjectionsLookup = definitionContainerProjectionsLookup.get(definition);
-  if (containerProjectionsLookup === void 0) {
-    definitionContainerProjectionsLookup.set(
+  let containerLookup = definitionContainerLookup.get(definition);
+  if (containerLookup === void 0) {
+    definitionContainerLookup.set(
       definition,
-      containerProjectionsLookup = new WeakMap(),
+      containerLookup = new WeakMap(),
     );
   }
 
-  let projectionsLookup = containerProjectionsLookup.get(container);
-  if (projectionsLookup === void 0) {
-    containerProjectionsLookup.set(
-      container,
-      projectionsLookup = new WeakMap(),
-    );
-  }
-
-  let context = projectionsLookup.get(projections);
+  let context = containerLookup.get(container);
   if (context === void 0) {
-    projectionsLookup.set(
-      projections,
+    containerLookup.set(
+      container,
       context = new RenderContext(definition, container),
     );
   }
@@ -403,49 +372,33 @@ export class RenderContext implements ICompiledRenderContext {
     location?: IRenderLocation,
     auSlotsInfo?: IAuSlotsInfo,
   ): IContainer {
-    const ctxContainer = this.container;
     const p = this.platform;
-    const container = ctxContainer.createChild();
+    const container = this.container.createChild();
+    const nodeProvider = new InstanceProvider('ElementProvider', host);
 
-    const nodeProvider: InstanceProvider<INode> = new InstanceProvider('ElementProvider');
-    const controllerProvider: InstanceProvider<IController> = new InstanceProvider('IController');
-    const instructionProvider: InstanceProvider<IInstruction> = new InstanceProvider('IInstruction');
-    let viewFactoryProvider: ViewFactoryProvider;
-    let locationProvider: InstanceProvider<IRenderLocation>;
-    let slotInfoProvider: InstanceProvider<AuSlotsInfo>;
-
-    controllerProvider.prepare(parentController);
-    nodeProvider.prepare(host);
-    instructionProvider.prepare(instruction);
-
-    if (viewFactory == null) {
-      viewFactoryProvider = noViewFactoryProvider;
-    } else {
-      viewFactoryProvider = new ViewFactoryProvider();
-      viewFactoryProvider.prepare(viewFactory!);
-    }
-    if (location == null) {
-      locationProvider = noLocationProvider;
-    } else {
-      locationProvider = new InstanceProvider('IRenderLocation');
-      locationProvider.prepare(location);
-    }
-    if (auSlotsInfo == null) {
-      slotInfoProvider = noAuSlotProvider;
-    } else {
-      slotInfoProvider = new InstanceProvider('AuSlotInfo');
-      slotInfoProvider.prepare(auSlotsInfo);
-    }
-
+    // todo:
+    // both node provider and location provider may not be allowed to throw
+    // if there's no value associated, unlike InstanceProvider
+    // reason being some custom element can have `containerless` attribute on them
+    // causing the host to disappear, and replace by a location instead
     container.registerResolver(INode, nodeProvider);
     container.registerResolver(p.Node, nodeProvider);
     container.registerResolver(p.Element, nodeProvider);
     container.registerResolver(p.HTMLElement, nodeProvider);
-    container.registerResolver(IController, controllerProvider);
-    container.registerResolver(IInstruction, instructionProvider);
-    container.registerResolver(IRenderLocation, locationProvider);
-    container.registerResolver(IViewFactory, viewFactoryProvider);
-    container.registerResolver(IAuSlotsInfo, slotInfoProvider);
+    container.registerResolver(IController, new InstanceProvider('IController', parentController));
+    container.registerResolver(IInstruction, new InstanceProvider('IInstruction', instruction));
+    container.registerResolver(IRenderLocation, location == null
+      ? noLocationProvider
+      : new InstanceProvider('IRenderLocation', location)
+    );
+    container.registerResolver(IViewFactory, viewFactory == null
+      ? noViewFactoryProvider
+      : new ViewFactoryProvider(viewFactory)
+    );
+    container.registerResolver(IAuSlotsInfo, auSlotsInfo == null
+      ? noAuSlotProvider
+      : new InstanceProvider('AuSlotInfo', auSlotsInfo)
+    );
 
     return container;
   }
@@ -552,6 +505,18 @@ export class RenderContext implements ICompiledRenderContext {
 
 class ViewFactoryProvider implements IResolver {
   private factory: IViewFactory | null = null;
+
+  public constructor(
+    /**
+     * The factory instance that this provider will resolves to,
+     * until explicitly overridden by prepare call
+     */
+    factory?: IViewFactory | null
+  ) {
+    if (factory !== void 0) {
+      this.factory = factory;
+    }
+  }
 
   public prepare(factory: IViewFactory): void {
     this.factory = factory;

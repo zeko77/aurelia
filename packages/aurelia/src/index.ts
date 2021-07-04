@@ -691,9 +691,6 @@ export {
   // UpdateTriggerableBinding,
   // UpdateTriggerableObserver,
 
-  // Blur,
-  // BlurManager,
-
   // Focus,
 
   // Portal,
@@ -720,6 +717,9 @@ export {
   // ITemplate,
   // ITemplateCompiler,
   // ITemplateFactory,
+  ITemplateCompilerHooks,
+  TemplateCompilerHooks,
+  templateCompilerHooks,
 
   // RenderContext
 

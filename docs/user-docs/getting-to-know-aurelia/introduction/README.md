@@ -20,9 +20,9 @@ Visit one or more of the following sections to get to know Aurelia better.
 
 {% page-ref page="property-binding.md" %}
 
-{% page-ref page="class-and-style-binding.md" %}
+{% page-ref page="class-and-style-binding/" %}
 
-{% page-ref page="built-in-template-features.md" %}
+{% page-ref page="built-in-template-features/" %}
 
 {% page-ref page="value-converters.md" %}
 
@@ -34,11 +34,11 @@ Visit one or more of the following sections to get to know Aurelia better.
 
 {% page-ref page="local-templates.md" %}
 
-{% page-ref page="dynamic-composition.md" %}
+{% page-ref page="../components/dynamic-composition.md" %}
 
-{% page-ref page="shadow-dom-and-slots/" %}
+{% page-ref page="../components/shadow-dom-and-slots/" %}
 
-{% page-ref page="bindable-setter.md" %}
+{% page-ref page="../components/bindable-properties/bindable-setter.md" %}
 
 
 

@@ -1,4 +1,4 @@
-import { emptyArray, Registration, toArray, ILogger, camelCase } from '@aurelia/kernel';
+import { DI, emptyArray, Registration, toArray, ILogger, camelCase, Protocol, ResourceDefinition, ResourceType, Metadata, noop } from '@aurelia/kernel';
 import { BindingMode, BindingType, Char, IExpressionParser, PrimitiveLiteralExpression } from '@aurelia/runtime';
 import { IAttrMapper } from './attribute-mapper.js';
 import { ITemplateElementFactory } from './template-element-factory.js';
@@ -17,7 +17,6 @@ import {
   ITemplateCompiler,
   PropertyBindingInstruction,
 } from './renderer.js';
-import { AuSlotContentType, SlotInfo } from './resources/custom-elements/au-slot.js';
 import { IPlatform } from './platform.js';
 import { Bindable, BindableDefinition } from './bindable.js';
 import { AttrSyntax, IAttributeParser } from './resources/attribute-pattern.js';
@@ -25,8 +24,13 @@ import { CustomAttribute } from './resources/custom-attribute.js';
 import { CustomElement, CustomElementDefinition } from './resources/custom-element.js';
 import { BindingCommand } from './resources/binding-command.js';
 import { createLookup } from './utilities-html.js';
+import { allResources } from './utilities-di.js';
 
-import type { IContainer, IResolver } from '@aurelia/kernel';
+import type {
+  IContainer,
+  IResolver,
+  Constructable,
+} from '@aurelia/kernel';
 import type { AnyBindingExpression } from '@aurelia/runtime';
 import type { CustomAttributeType, CustomAttributeDefinition } from './resources/custom-attribute.js';
 import type { CustomElementType, PartialCustomElementDefinition } from './resources/custom-element.js';
@@ -38,6 +42,8 @@ export class TemplateCompiler implements ITemplateCompiler {
   public static register(container: IContainer): IResolver<ITemplateCompiler> {
     return Registration.singleton(ITemplateCompiler, this).register(container);
   }
+
+  public debug: boolean = false;
 
   public compile(
     partialDefinition: PartialCustomElementDefinition,
@@ -56,9 +62,18 @@ export class TemplateCompiler implements ITemplateCompiler {
     const context = new CompilationContext(partialDefinition, container, compilationInstruction, null, null, void 0);
     const template = typeof definition.template === 'string' || !partialDefinition.enhance
       ? context.templateFactory.createTemplate(definition.template)
-      : definition.template as Element;
+      : definition.template as HTMLElement;
     const isTemplateElement = template.nodeName === 'TEMPLATE' && (template as HTMLTemplateElement).content != null;
     const content = isTemplateElement ? (template as HTMLTemplateElement).content : template;
+    const hooks = container.get(allResources(ITemplateCompilerHooks));
+    const ii = hooks.length;
+    let i = 0;
+    if (ii > 0) {
+      while (ii > i) {
+        hooks[i].beforeCompile?.(template);
+        ++i;
+      }
+    }
 
     if (template.hasAttribute(localTemplateIdentifier)) {
       throw new Error('The root cannot be a local template itself.');
@@ -66,15 +81,13 @@ export class TemplateCompiler implements ITemplateCompiler {
     this.local(content, context);
     this.node(content, context);
 
-    const surrogates = isTemplateElement
-      ? this.surrogate(template, context)
-      : emptyArray;
-
     return CustomElementDefinition.create({
       ...partialDefinition,
       name: partialDefinition.name || CustomElement.generateName(),
       instructions: context.rows,
-      surrogates,
+      surrogates: isTemplateElement
+        ? this.surrogate(template, context)
+        : emptyArray,
       template,
       hasSlots: context.hasSlot,
       needsCompile: false,
@@ -85,9 +98,7 @@ export class TemplateCompiler implements ITemplateCompiler {
   private surrogate(el: Element, context: CompilationContext): IInstruction[] {
     const instructions: IInstruction[] = [];
     const attrs = el.attributes;
-    const attrParser = context.attrParser;
     const exprParser = context.exprParser;
-    const attrMapper = context.attrMapper;
     let ii = attrs.length;
     let i = 0;
     let attr: Attr;
@@ -110,7 +121,7 @@ export class TemplateCompiler implements ITemplateCompiler {
       attr = attrs[i];
       attrName = attr.name;
       attrValue = attr.value;
-      attrSyntax = attrParser.parse(attrName, attrValue);
+      attrSyntax = context.attrParser.parse(attrName, attrValue);
 
       realAttrTarget = attrSyntax.target;
       realAttrValue = attrSyntax.rawValue;
@@ -209,8 +220,8 @@ export class TemplateCompiler implements ITemplateCompiler {
             // if not a bindable, then ensure plain attribute are mapped correctly:
             // e.g: colspan -> colSpan
             //      innerhtml -> innerHTML
-            //      minlength -> minLengt etc...
-            attrMapper.map(el, realAttrTarget) ?? camelCase(realAttrTarget)
+            //      minlength -> minLength etc...
+            context.attrMapper.map(el, realAttrTarget) ?? camelCase(realAttrTarget)
           ));
         } else {
           switch (attrName) {
@@ -364,11 +375,14 @@ export class TemplateCompiler implements ITemplateCompiler {
     const nextSibling = el.nextSibling;
     const elName = (el.getAttribute('as-element') ?? el.nodeName).toLowerCase();
     const elDef = context.el(elName);
-    const isAuSlot = elName === 'au-slot';
-    const attrParser = context.attrParser;
     const exprParser = context.exprParser;
-    const attrMapper = context.attrMapper;
-    const isAttrsOrderSensitive = this.shouldReorderAttrs(el);
+    const removeAttr = this.debug
+      ? noop
+      : () => {
+        el.removeAttribute(attrName);
+        --i;
+        --ii;
+      };
     let attrs = el.attributes;
     let instructions: IInstruction[] | undefined;
     let ii = attrs.length;
@@ -395,6 +409,7 @@ export class TemplateCompiler implements ITemplateCompiler {
     let realAttrTarget: string;
     let realAttrValue: string;
     let processContentResult: boolean | undefined | void = true;
+    let hasContainerless = false;
 
     if (elName === 'slot') {
       context.root.hasSlot = true;
@@ -412,10 +427,16 @@ export class TemplateCompiler implements ITemplateCompiler {
       attr = attrs[i];
       attrName = attr.name;
       attrValue = attr.value;
-      if (attrName === 'as-element') {
-        continue;
+      switch (attrName) {
+        case 'as-element':
+        case 'containerless':
+          removeAttr();
+          if (!hasContainerless) {
+            hasContainerless = attrName === 'containerless';
+          }
+          continue;
       }
-      attrSyntax = attrParser.parse(attrName, attrValue);
+      attrSyntax = context.attrParser.parse(attrName, attrValue);
 
       bindingCommand = context.command(attrSyntax);
       if (bindingCommand !== null && bindingCommand.bindingType & BindingType.IgnoreAttr) {
@@ -433,6 +454,7 @@ export class TemplateCompiler implements ITemplateCompiler {
         commandBuildInfo.def = null;
         (plainAttrInstructions ??= []).push(bindingCommand.build(commandBuildInfo));
 
+        removeAttr();
         // to next attribute
         continue;
       }
@@ -487,9 +509,7 @@ export class TemplateCompiler implements ITemplateCompiler {
           }
         }
 
-        el.removeAttribute(attrName);
-        --i;
-        --ii;
+        removeAttr();
 
         if (attrDef.isTemplateController) {
           (tcInstructions ??= []).push(new HydrateTemplateController(
@@ -498,16 +518,13 @@ export class TemplateCompiler implements ITemplateCompiler {
             void 0,
             attrBindableInstructions,
           ));
-
-          // to next attribute
-          continue;
+        } else {
+          (attrInstructions ??= []).push(new HydrateAttributeInstruction(
+            attrDef.name,
+            attrDef.aliases != null && attrDef.aliases.includes(realAttrTarget) ? realAttrTarget : void 0,
+            attrBindableInstructions
+          ));
         }
-
-        (attrInstructions ??= []).push(new HydrateAttributeInstruction(
-          attrDef.name,
-          attrDef.aliases != null && attrDef.aliases.includes(realAttrTarget) ? realAttrTarget : void 0,
-          attrBindableInstructions
-        ));
         continue;
       }
 
@@ -521,18 +538,13 @@ export class TemplateCompiler implements ITemplateCompiler {
           bindable = bindablesInfo.attrs[realAttrTarget];
           if (bindable !== void 0) {
             expr = exprParser.parse(realAttrValue, BindingType.Interpolation);
-            elBindableInstructions ??= [];
-            if (expr != null) {
-              // if it's an interpolation, remove the attribute
-              el.removeAttribute(attrName);
-              --i;
-              --ii;
+            (elBindableInstructions ??= []).push(
+              expr == null
+                ? new SetPropertyInstruction(realAttrValue, bindable.property)
+                : new InterpolationInstruction(expr, bindable.property)
+            );
 
-              elBindableInstructions.push(new InterpolationInstruction(expr, bindable.property));
-            } else {
-              elBindableInstructions.push(new SetPropertyInstruction(realAttrValue, bindable.property));
-            }
-
+            removeAttr();
             continue;
           }
         }
@@ -543,17 +555,15 @@ export class TemplateCompiler implements ITemplateCompiler {
         expr = exprParser.parse(realAttrValue, BindingType.Interpolation);
         if (expr != null) {
           // if it's an interpolation, remove the attribute
-          el.removeAttribute(attrName);
-          --i;
-          --ii;
+          removeAttr();
 
           (plainAttrInstructions ??= []).push(new InterpolationInstruction(
             expr,
             // if not a bindable, then ensure plain attribute are mapped correctly:
             // e.g: colspan -> colSpan
             //      innerhtml -> innerHTML
-            //      minlength -> minLengt etc...
-            attrMapper.map(el, realAttrTarget) ?? camelCase(realAttrTarget)
+            //      minlength -> minLength etc...
+            context.attrMapper.map(el, realAttrTarget) ?? camelCase(realAttrTarget)
           ));
         }
         // if not a custom attribute + no binding command + not a bindable + not an interpolation
@@ -565,6 +575,7 @@ export class TemplateCompiler implements ITemplateCompiler {
       // + has binding command
       // + not an overriding binding command
       // + not a custom attribute
+      removeAttr();
 
       if (elDef !== null) {
         // if the element is a custom element
@@ -597,7 +608,6 @@ export class TemplateCompiler implements ITemplateCompiler {
         }
       }
 
-      // old: mutate attr syntax before building instruction
       // reaching here means:
       // + a plain attribute
       // + has binding command
@@ -614,56 +624,52 @@ export class TemplateCompiler implements ITemplateCompiler {
 
     resetCommandBuildInfo();
 
-    if (isAttrsOrderSensitive && plainAttrInstructions != null && plainAttrInstructions.length > 1) {
+    if (this.shouldReorderAttrs(el) && plainAttrInstructions != null && plainAttrInstructions.length > 1) {
       this.reorder(el, plainAttrInstructions);
     }
 
     if (elDef !== null) {
-      let slotInfo: SlotInfo | null = null;
-      if (isAuSlot) {
-        const slotName = el.getAttribute('name') || /* name="" is the same with no name */'default';
-        const projection = context.ci.projections?.[slotName];
-        let fallbackContentContext: CompilationContext;
-        let template;
-        let node: Node | null;
-        if (projection == null) {
-          template = context.h('template');
-          node = el.firstChild;
-          while (node !== null) {
-            // a special case:
-            // <au-slot> doesn't have its own template
-            // so anything attempting to project into it is discarded
-            // doing so during compilation via removing the node,
-            // instead of considering it as part of the fallback view
-            if (node.nodeType === 1 && (node as Element).hasAttribute('au-slot')) {
-              el.removeChild(node);
-            } else {
-              template.content.appendChild(node);
-            }
-            node = el.firstChild;
-          }
-
-          fallbackContentContext = context.child();
-          this.node(template.content, fallbackContentContext);
-          slotInfo = new SlotInfo(slotName, AuSlotContentType.Fallback, CustomElementDefinition.create({
-            name: CustomElement.generateName(),
-            template,
-            instructions: fallbackContentContext.rows,
-            needsCompile: false,
-          }));
-        } else {
-          slotInfo = new SlotInfo(slotName, AuSlotContentType.Projection, projection);
-        }
-        el = this.marker(el, context);
-      }
-
       elementInstruction = new HydrateElementInstruction(
         elDef.name,
         void 0,
         (elBindableInstructions ?? emptyArray) as IInstruction[],
         null,
-        slotInfo,
+        hasContainerless,
       );
+
+      if (elName === 'au-slot') {
+        const slotName = el.getAttribute('name') || /* name="" is the same with no name */'default';
+        const template = context.h('template');
+        const fallbackContentContext = context.child();
+        let node: Node | null = el.firstChild;
+        while (node !== null) {
+          // a special case:
+          // <au-slot> doesn't have its own template
+          // so anything attempting to project into it is discarded
+          // doing so during compilation via removing the node,
+          // instead of considering it as part of the fallback view
+          if (node.nodeType === 1 && (node as Element).hasAttribute('au-slot')) {
+            el.removeChild(node);
+          } else {
+            template.content.appendChild(node);
+          }
+          node = el.firstChild;
+        }
+
+        this.node(template.content, fallbackContentContext);
+        elementInstruction.auSlot = {
+          name: slotName,
+          fallback: CustomElementDefinition.create({
+            name: CustomElement.generateName(),
+            template,
+            instructions: fallbackContentContext.rows,
+            needsCompile: false,
+          }),
+        };
+        // todo: shouldn't have to eagerly replace everything like this
+        // this is a leftover refactoring work from the old binder
+        el = this.marker(el, context);
+      }
     }
 
     if (plainAttrInstructions != null
@@ -697,11 +703,13 @@ export class TemplateCompiler implements ITemplateCompiler {
       const mostInnerTemplate = template;
       const childContext = context.child(instructions == null ? [] : [instructions]);
 
-      shouldCompileContent = elDef === null || !elDef.containerless && processContentResult !== false;
-
-      if (elDef?.containerless) {
+      shouldCompileContent = elDef === null || !elDef.containerless && !hasContainerless && processContentResult !== false;
+      // todo: shouldn't have to eagerly replace with a marker like this
+      //       this should be the job of the renderer
+      if (elDef !== null && elDef.containerless) {
         this.marker(el, context);
       }
+
       let child: Node | null;
       let childEl: Element;
       let targetSlot: string | null;
@@ -869,8 +877,10 @@ export class TemplateCompiler implements ITemplateCompiler {
         context.rows.push(instructions);
       }
 
-      shouldCompileContent = elDef === null || !elDef.containerless && processContentResult !== false;
-      if (elDef?.containerless) {
+      shouldCompileContent = elDef === null || !elDef.containerless && !hasContainerless && processContentResult !== false;
+      // todo: shouldn't have to eagerly replace with a marker like this
+      //       this should be the job of the renderer
+      if (elDef !== null && elDef.containerless) {
         this.marker(el, context);
       }
       if (shouldCompileContent && el.childNodes.length > 0) {
@@ -1298,7 +1308,7 @@ class CompilationContext {
    * Find the custom element definition of a given name
    */
   public el(name: string): CustomElementDefinition | null {
-    return this.c.find(CustomElement, name) as CustomElementDefinition | null;
+    return this.c.find(CustomElement, name);
   }
 
   /**
@@ -1395,7 +1405,7 @@ const orderSensitiveInputType: Record<string, number> = {
 };
 
 const bindableAttrsInfoCache = new WeakMap<CustomElementDefinition | CustomAttributeDefinition, BindablesInfo>();
-class BindablesInfo<T extends 0 | 1 = 0> {
+export class BindablesInfo<T extends 0 | 1 = 0> {
   public static from(def: CustomAttributeDefinition, isAttr: true): BindablesInfo<1>;
   // eslint-disable-next-line
   public static from(def: CustomElementDefinition, isAttr: false): BindablesInfo<0>;
@@ -1492,3 +1502,62 @@ function getBindingMode(bindable: Element): BindingMode {
       return BindingMode.default;
   }
 }
+
+/**
+ * An interface describing the hooks a compilation process should invoke.
+ *
+ * A feature available to the default template compiler.
+ */
+export const ITemplateCompilerHooks = DI.createInterface<ITemplateCompilerHooks>('ITemplateCompilerHooks');
+export interface ITemplateCompilerHooks {
+  /**
+   * Should be invoked immediately before a template gets compiled
+   */
+  beforeCompile?(template: HTMLElement): void;
+}
+
+const typeToHooksDefCache = new WeakMap<Constructable, TemplateCompilerHooksDefinition<unknown>>();
+const compilerHooksResourceName = Protocol.resource.keyFor('compiler-hooks');
+export const TemplateCompilerHooks = Object.freeze({
+  name: compilerHooksResourceName,
+  /**
+   * @param def - Placeholder for future extensions. Currently always an empty object.
+   */
+  define<K extends ITemplateCompilerHooks, T extends Constructable<K>>(Type: T): T {
+    let def = typeToHooksDefCache.get(Type);
+    if (def === void 0) {
+      typeToHooksDefCache.set(Type, def = new TemplateCompilerHooksDefinition(Type));
+      Metadata.define(compilerHooksResourceName, def, Type);
+      Protocol.resource.appendTo(Type, compilerHooksResourceName);
+    }
+    return Type;
+  }
+});
+
+class TemplateCompilerHooksDefinition<T> implements ResourceDefinition<Constructable<T>, ITemplateCompilerHooks> {
+  public get name(): string { return ''; }
+
+  public constructor(
+    public readonly Type: ResourceType<Constructable<T>, ITemplateCompilerHooks>,
+  ) {}
+
+  public register(c: IContainer) {
+    c.register(Registration.singleton(ITemplateCompilerHooks, this.Type));
+  }
+}
+
+/**
+ * Decorator: Indicates that the decorated class is a template compiler hooks.
+ *
+ * An instance of this class will be created and appropriate compilation hooks will be invoked
+ * at different phases of the default compiler.
+ */
+/* eslint-disable */
+// deepscan-disable-next-line
+export const templateCompilerHooks = (target?: Function) => {
+  return target === void 0 ? decorator : decorator(target);
+  function decorator(t: Function): any {
+    return TemplateCompilerHooks.define(t as Constructable) as unknown as void;
+  };
+}
+/* eslint-enable */

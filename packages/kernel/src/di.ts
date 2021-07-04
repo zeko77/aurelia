@@ -40,6 +40,10 @@ export interface IFactory<T extends Constructable = any> {
 
 export interface IServiceLocator {
   has<K extends Key>(key: K | Key, searchAncestors: boolean): boolean;
+  get<K extends Key>(key: INewInstanceResolver<K>): Resolved<K>;
+  get<K extends Key>(key: ILazyResolver<K>): IResolvedLazy<K>;
+  get<K extends Key>(key: IFactoryResolver<K>): IResolvedFactory<K>;
+  get<K extends Key>(key: IResolver<K>): Resolved<K>;
   get<K extends Key>(key: K): Resolved<K>;
   get<K extends Key>(key: Key): Resolved<K>;
   get<K extends Key>(key: K | Key): Resolved<K>;
@@ -191,15 +195,7 @@ export const DI = {
     const key = Protocol.annotation.keyFor('di:paramtypes');
     return Metadata.getOwn(key, Type);
   },
-  getOrCreateAnnotationParamTypes(Type: Constructable | Injectable): Key[] {
-    const key = Protocol.annotation.keyFor('di:paramtypes');
-    let annotationParamtypes = Metadata.getOwn(key, Type);
-    if (annotationParamtypes === void 0) {
-      Metadata.define(key, annotationParamtypes = [], Type);
-      Protocol.annotation.appendTo(Type, key);
-    }
-    return annotationParamtypes;
-  },
+  getOrCreateAnnotationParamTypes: getOrCreateAnnotationParamTypes,
   getDependencies: getDependencies,
   /**
    * creates a decorator that also matches an interface and can be used as a {@linkcode Key}.
@@ -250,7 +246,7 @@ export const DI = {
       if (target == null || new.target !== undefined) {
         throw new Error(`No registration for interface: '${Interface.friendlyName}'`); // TODO: add error (trying to resolve an InterfaceSymbol that has no registrations)
       }
-      const annotationParamtypes = DI.getOrCreateAnnotationParamTypes(target);
+      const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
       annotationParamtypes[index] = Interface;
     };
     Interface.$isInterface = true;
@@ -271,20 +267,20 @@ export const DI = {
   inject(...dependencies: Key[]): (target: Injectable, key?: string | number, descriptor?: PropertyDescriptor | number) => void {
     return function (target: Injectable, key?: string | number, descriptor?: PropertyDescriptor | number): void {
       if (typeof descriptor === 'number') { // It's a parameter decorator.
-        const annotationParamtypes = DI.getOrCreateAnnotationParamTypes(target);
+        const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
         const dep = dependencies[0];
         if (dep !== void 0) {
           annotationParamtypes[descriptor] = dep;
         }
       } else if (key) { // It's a property decorator. Not supported by the container without plugins.
-        const annotationParamtypes = DI.getOrCreateAnnotationParamTypes((target as unknown as { constructor: Injectable }).constructor);
+        const annotationParamtypes = getOrCreateAnnotationParamTypes((target as unknown as { constructor: Injectable }).constructor);
         const dep = dependencies[0];
         if (dep !== void 0) {
           annotationParamtypes[key as number] = dep;
         }
       } else if (descriptor) { // It's a function decorator (not a Class constructor)
         const fn = descriptor.value;
-        const annotationParamtypes = DI.getOrCreateAnnotationParamTypes(fn);
+        const annotationParamtypes = getOrCreateAnnotationParamTypes(fn);
         let dep: Key;
         for (let i = 0; i < dependencies.length; ++i) {
           dep = dependencies[i];
@@ -293,7 +289,7 @@ export const DI = {
           }
         }
       } else { // It's a class decorator.
-        const annotationParamtypes = DI.getOrCreateAnnotationParamTypes(target);
+        const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
         let dep: Key;
         for (let i = 0; i < dependencies.length; ++i) {
           dep = dependencies[i];
@@ -429,6 +425,16 @@ function getDependencies(Type: Constructable | Injectable): Key[] {
   }
 
   return dependencies;
+}
+
+function getOrCreateAnnotationParamTypes(Type: Constructable | Injectable): Key[] {
+  const key = Protocol.annotation.keyFor('di:paramtypes');
+  let annotationParamtypes = Metadata.getOwn(key, Type);
+  if (annotationParamtypes === void 0) {
+    Metadata.define(key, annotationParamtypes = [], Type);
+    Protocol.annotation.appendTo(Type, key);
+  }
+  return annotationParamtypes;
 }
 
 export const IContainer = DI.createInterface<IContainer>('IContainer');
@@ -582,6 +588,12 @@ export const all = createAllResolver(
 export const lazy = createResolver((key: Key, handler: IContainer, requestor: IContainer) =>  {
   return () => requestor.get(key);
 });
+export type ILazyResolver<K = any> = IResolver<K>
+  // type only hack
+  & { __isLazy: undefined }
+  // any is needed for decorator usages
+  & ((...args: unknown[]) => any);
+export type IResolvedLazy<K> = () => Resolved<K>;
 
 /**
  * Allows you to optionally inject a dependency depending on whether the [[`Key`]] is present, for example
@@ -620,40 +632,66 @@ export function ignore(target: Injectable, property?: string | number, descripto
 }
 ignore.$isResolver = true;
 ignore.resolve = () => undefined;
+
+/**
+ * Inject a function that will return a resolved instance of the [[key]] given.
+ * Also supports passing extra parameters to the invocation of the resolved constructor of [[key]]
+ *
+ * For typings, it's a function that take 0 or more arguments and return an instance. Example:
+ * ```ts
+ * class Foo {
+ *   constructor( @factory(MyService) public createService: (...args: unknown[]) => MyService)
+ * }
+ * const foo = container.get(Foo); // instanceof Foo
+ * const myService_1 = foo.createService('user service')
+ * const myService_2 = foo.createService('content service')
+ * ```
+ *
+ * ```ts
+ * class Foo {
+ *   constructor( @factory('random') public createRandomizer: () => Randomizer)
+ * }
+ * container.get(Foo).createRandomizer(); // create a randomizer
+ * ```
+ * would throw an exception because you haven't registered `'random'` before calling the method. This, would give you a
+ * new instance of Randomizer each time.
+ *
+ * `@factory` does not manage the lifecycle of the underlying key. If you want a singleton, you have to register as a
+ * `singleton`, `transient` would also behave as you would expect, providing you a new instance each time.
+ *
+ * - @param key [[`Key`]]
+ * see { @link DI.createInterface } on interactions with interfaces
+ */
+export const factory = createResolver((key: any, handler: IContainer, requestor: IContainer) => {
+  return (...args: unknown[]) => handler.getFactory(key).construct(requestor, args);
+}) as <K>(key: K) => IFactoryResolver<K>;
+export type IFactoryResolver<K = any> = IResolver<K>
+  // type only hack
+  & { __isFactory: undefined }
+  // any is needed for decorator usage
+  & ((...args: unknown[]) => any);
+export type IResolvedFactory<K> = (...args: unknown[]) => Resolved<K>;
+
 export const newInstanceForScope = createResolver((key: any, handler: IContainer, requestor: IContainer) => {
   const instance = createNewInstance(key, handler, requestor);
-  const instanceProvider: InstanceProvider<any> = new InstanceProvider<any>(String(key));
-  instanceProvider.prepare(instance);
+  const instanceProvider: InstanceProvider<any> = new InstanceProvider<any>(String(key), instance);
   requestor.registerResolver(key, instanceProvider);
 
   return instance;
-});
+}) as <K>(key: K) => INewInstanceResolver<K>;
 
-export const newInstanceOf = createResolver((key: any, handler: IContainer, requestor: IContainer) => createNewInstance(key, handler, requestor));
+export const newInstanceOf = createResolver(
+  (key: any, handler: IContainer, requestor: IContainer) => createNewInstance(key, handler, requestor)
+) as <K>(key: K) => INewInstanceResolver<K>;
+
+export type INewInstanceResolver<T> = {
+  __newInstance: undefined;
+  // any is needed for decorator usage
+  (...args: unknown[]): any;
+};
 
 function createNewInstance(key: any, handler: IContainer, requestor: IContainer) {
-  const resolver = handler.getResolver(key, false);
-  let factory: IFactory<typeof key> | null;
-  if (typeof resolver?.getFactory === 'function') {
-    factory = resolver.getFactory(handler);
-      // 2 scenarios:
-      //
-      // 1. if construct is invoked with handler
-      // then anew instance of something registered from parent
-      // will not have information of some dependencies registered in child, even child is the requestor
-      //
-      // 2. if construct is invoked with requestor
-      // then a new instance of something registered from parent
-      // will have the information of something registered in child shadowing the samething registered in parent
-      //
-      // choice: No. (2), as it makes more sense in terms of WYSIWYG
-      //         and if anyone wants to avoid shadowing behavior, they can use parent() resolver
-      //         todo: implement parent resolver
-    if (factory != null) {
-      return factory.construct(requestor);
-    }
-  }
-  return handler.getFactory(key).construct(handler);
+  return handler.getFactory(key).construct(requestor);
 }
 
 /** @internal */
@@ -901,7 +939,10 @@ export class Container implements IContainer {
     let value: IRegistry;
     let j: number;
     let jj: number;
-    for (let i = 0, ii = params.length; i < ii; ++i) {
+    let i = 0;
+    // eslint-disable-next-line
+    let ii = params.length;
+    for (; i < ii; ++i) {
       current = params[i];
       if (!isObject(current)) {
         continue;
@@ -914,9 +955,11 @@ export class Container implements IContainer {
           // Fast path for the very common case
           defs[0].register(this);
         } else {
-          const len = defs.length;
-          for (let d = 0; d < len; ++d) {
-            defs[d].register(this);
+          j = 0;
+          jj = defs.length;
+          while (jj > j) {
+            defs[j].register(this);
+            ++j;
           }
         }
       } else if (isClass(current)) {
@@ -1425,7 +1468,16 @@ export class InstanceProvider<K extends Key> implements IDisposableResolver<K | 
 
   public constructor(
     public readonly friendlyName?: string,
-  ) {}
+    /**
+     * if not undefined, then this is the value this provider will resolve to
+     * until overridden by explicit prepare call
+     */
+    instance?: Resolved<K> | null,
+  ) {
+    if (instance !== void 0) {
+      this.instance = instance;
+    }
+  }
 
   public prepare(instance: Resolved<K>): void {
     this.instance = instance;

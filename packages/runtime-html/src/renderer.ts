@@ -18,7 +18,7 @@ import { Listener } from './binding/listener.js';
 import { IEventDelegator } from './observation/event-delegator.js';
 import { CustomElement, CustomElementDefinition } from './resources/custom-element.js';
 import { getRenderContext } from './templating/render-context.js';
-import { AuSlotsInfo, IProjections, SlotInfo } from './resources/custom-elements/au-slot.js';
+import { AuSlotsInfo, IProjections } from './resources/custom-elements/au-slot.js';
 import { CustomAttribute } from './resources/custom-attribute.js';
 import { convertToRenderLocation, setRef } from './dom.js';
 import { Controller } from './templating/controller.js';
@@ -36,7 +36,6 @@ import type {
   DelegationStrategy,
 } from '@aurelia/runtime';
 import type { IHydratableController, IController } from './templating/controller.js';
-import type { IViewFactory } from './templating/view.js';
 import type { PartialCustomElementDefinition } from './resources/custom-element.js';
 import type { ICompiledRenderContext } from './templating/render-context.js';
 import type { INode } from './dom.js';
@@ -157,6 +156,11 @@ export class SetPropertyInstruction {
 export class HydrateElementInstruction {
   public get type(): InstructionType.hydrateElement { return InstructionType.hydrateElement; }
 
+  /**
+   * A special property that can be used to store <au-slot/> usage information
+   */
+  public auSlot: { name: string; fallback: CustomElementDefinition } | null = null;
+
   public constructor(
     /**
      * The name of the custom element this instruction is associated with
@@ -171,8 +175,7 @@ export class HydrateElementInstruction {
      * Indicates what projections are associated with the element usage
      */
     public projections: Record<string, CustomElementDefinition> | null,
-    // only not null if this is an au-slot instruction
-    public slotInfo: SlotInfo | null,
+    public containerless: boolean,
   ) {
   }
 }
@@ -297,7 +300,14 @@ export class AttributeBindingInstruction {
   ) {}
 }
 
+export const ITemplateCompiler = DI.createInterface<ITemplateCompiler>('ITemplateCompiler');
 export interface ITemplateCompiler {
+  /**
+   * Indicates whether this compiler should compile template in debug mode
+   *
+   * For the default compiler, this means all expressions are kept as is on the template
+   */
+  debug: boolean;
   compile(
     partialDefinition: PartialCustomElementDefinition,
     context: IContainer,
@@ -312,13 +322,7 @@ export interface ICompliationInstruction {
    * and each value is the definition to render and project
    */
   projections: IProjections | null;
-  /*
-   * Indicates whether this compilation should compile root element for surrogate instruction
-   */
-  surrogates?: boolean;
 }
-
-export const ITemplateCompiler = DI.createInterface<ITemplateCompiler>('ITemplateCompiler');
 
 export interface IInstructionTypeClassifier<TType extends string = string> {
   instructionType: TType;
@@ -440,29 +444,20 @@ export class CustomElementRenderer implements IRenderer {
     target: HTMLElement,
     instruction: HydrateElementInstruction,
   ): void {
-    let viewFactory: IViewFactory | undefined;
-
-    const slotInfo = instruction.slotInfo;
-    if (instruction.res === 'au-slot' && slotInfo !== null) {
-      viewFactory = getRenderContext(slotInfo.content, context).getViewFactory(void 0);
-    }
-
     const projections = instruction.projections;
     const container = context.createElementContainer(
       /* parentController */controller,
       /* host             */target,
       /* instruction      */instruction,
-      /* viewFactory      */viewFactory,
+      /* viewFactory      */void 0,
       /* location         */target,
       /* auSlotsInfo      */new AuSlotsInfo(projections == null ? emptyArray : Object.keys(projections)),
     );
     const definition = context.find(CustomElement, instruction.res) as CustomElementDefinition;
     const Ctor = definition.Type;
     const component = container.invoke(Ctor);
-    const provider = new InstanceProvider<typeof Ctor>();
     const key = CustomElement.keyFrom(instruction.res);
-    provider.prepare(component);
-    container.registerResolver(Ctor, provider);
+    container.registerResolver(Ctor, new InstanceProvider<typeof Ctor>(key, component));
 
     const childController = Controller.forCustomElement(
       /* root                */controller.root,

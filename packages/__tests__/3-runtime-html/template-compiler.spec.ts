@@ -8,6 +8,7 @@ import {
   DefaultLogger,
   LogLevel,
   camelCase,
+  Registration,
 } from '@aurelia/kernel';
 import {
   AccessScopeExpression,
@@ -27,23 +28,21 @@ import {
   PrimitiveLiteralExpression,
   PartialCustomAttributeDefinition,
   CustomElementDefinition,
-  IProjections,
   IInstruction,
   CustomElementType,
   AuSlot,
-  AuSlotContentType,
-  Scope,
   parseExpression,
   Aurelia,
   HydrateElementInstruction,
   HydrateTemplateController,
   InstructionType as HTT,
-  ITemplateElementFactory,
   InstructionType as TT,
   HydrateLetElementInstruction,
   InstructionType,
   IExpressionParser,
   CustomAttributeDefinition,
+  ITemplateCompilerHooks,
+  IAttributeParser,
 } from '@aurelia/runtime-html';
 import {
   assert,
@@ -51,7 +50,6 @@ import {
   TestContext,
   verifyBindingInstructionsEqual,
   generateCartesianProduct,
-  createScopeForTest,
 } from '@aurelia/testing';
 
 export function createAttribute(name: string, value: string): Attr {
@@ -788,15 +786,18 @@ function createCustomElement(
   nestedElInstructions: readonly any[],
   childOutput?,
   childInput?,
+  debugMode?: boolean
 ): [PartialCustomElementDefinition, PartialCustomElementDefinition] {
   const instruction: Partial<HydrateElementInstruction> = {
     type: TT.hydrateElement,
     res: tagName,
     instructions: childInstructions as IInstruction[],
-    slotInfo: null,
+    auSlot: null,
+    containerless: false,
     projections: null,
   };
   const exprParser = ctx.container.get(IExpressionParser);
+  const attrParser = ctx.container.get(IAttributeParser);
   const attributeMarkup = attributes.map(a => `${a[0]}="${a[1]}"`).join(' ');
   const rawMarkup = `<${tagName} ${attributeMarkup}>${(childInput && childInput.template) || ''}</${tagName}>`;
   const input = {
@@ -804,8 +805,28 @@ function createCustomElement(
     template: finalize ? `<div>${rawMarkup}</div>` : rawMarkup,
     instructions: []
   };
-  const outputAttributeMarkup = attributes.map(a => exprParser.parse(a[1], BindingType.Interpolation) !== null ? '' : `${a[0]}="${a[1]}"`).join(' ');
-  const outputMarkup = ctx.createElementFromMarkup(`<${tagName} ${outputAttributeMarkup.replace(/\$\{.*\}/, '')}>${(childOutput && childOutput.template.outerHTML) || ''}</${tagName}>`);
+  const def = ctx.container.find(CustomElement, tagName);
+  const outputAttributeMarkup = debugMode
+    ? attributes
+      .map(a => `${a[0]}="${a[1]}"`)
+      .join(' ')
+    : attributes
+      .filter((a) => {
+        const syntax = attrParser.parse(a[0], a[1]);
+        // if not with a binding command,
+        const canStay = syntax.command === null
+          // nor a custom attribute,
+          && !ctx.container.find(CustomAttribute, syntax.target)
+          // nor with interpolation
+          && exprParser.parse(a[1], BindingType.Interpolation) === null
+          // nor a bindable
+          && !(BindablesInfo.from(def, false).attrs[a[0]]);
+        // then can stay in the template
+        return canStay;
+      })
+      .map(a => `${a[0]}="${a[1]}"`)
+      .join(' ');
+  const outputMarkup = ctx.createElementFromMarkup(`<${tagName} ${outputAttributeMarkup}>${(childOutput && childOutput.template.outerHTML) || ''}</${tagName}>`);
   outputMarkup.classList.add('au');
   const output = {
     ...defaultCustomElementDefinitionProperties,
@@ -961,9 +982,65 @@ describe(`TemplateCompiler - combinations`, function () {
         (ctx, $1, [attr, to, value]) => [`${attr}.call`,      value, { type: TT.callBinding,      from: new AccessScopeExpression(value), to }]
       ] as ((ctx: TestContext, $1: [string], $2: [string, string, string]) => [string, string, any])[]
     ],                       (ctx, [el], $2, [n1, v1, i1]) => {
-      const markup = `<${el} ${n1}="${v1}"></${el}>`;
+      const markup = `<${el} plain data-attr="value" ${n1}="${v1}"></${el}>`;
 
-      it(markup, function () {
+      for (const debugMode of [true, false]) {
+        it(`[Debug: ${debugMode}] ${markup} + [class] attribute`, function () {
+          const markup = `<${el} plain data-attr="value" class="abc" ${n1}="${v1}"></${el}>`;
+          const input: PartialCustomElementDefinition = {
+            template: markup,
+            instructions: [],
+            surrogates: [],
+          } as unknown as PartialCustomElementDefinition;
+          const expected = {
+            ...defaultCustomElementDefinitionProperties,
+            template: ctx.createElementFromMarkup(`<template><${el} plain data-attr="value" class="abc au" ${debugMode ? `${n1}="${v1}" ` : ''}></${el}></template>`),
+            instructions: [[i1]],
+            surrogates: [],
+            needsCompile: false,
+            enhance: false,
+            processContent: null,
+          };
+
+          const { sut, container } = createFixture(ctx);
+          sut.debug = debugMode;
+
+          const actual = sut.compile(input, container, null);
+
+          verifyBindingInstructionsEqual(actual, expected);
+        });
+
+        it(`[Debug: ${debugMode}] ${markup}`, function () {
+          const markup = `<${el} plain data-attr="value" ${n1}="${v1}"></${el}>`;
+          const input: PartialCustomElementDefinition = {
+            template: markup,
+            instructions: [],
+            surrogates: [],
+          } as unknown as PartialCustomElementDefinition;
+          const expected = {
+            ...defaultCustomElementDefinitionProperties,
+            template: ctx.createElementFromMarkup(`<template><${el} plain data-attr="value" ${debugMode ? `${n1}="${v1}" ` : ''}class="au"></${el}></template>`),
+            instructions: [[i1]],
+            surrogates: [],
+            needsCompile: false,
+            enhance: false,
+            processContent: null,
+          };
+
+          const { sut, container } = createFixture(ctx);
+          sut.debug = debugMode;
+
+          const actual = sut.compile(input, container, null);
+
+          verifyBindingInstructionsEqual(actual, expected);
+        });
+      }
+    });
+
+    for (const debugMode of [true, false]) {
+      it(`[Debug: ${debugMode}] [class] attribute + \${interpolation}`, function () {
+        const ctx = TestContext.create();
+        const markup = `<span plain data-attr="value" class="abc-\${value}"></span>`;
         const input: PartialCustomElementDefinition = {
           template: markup,
           instructions: [],
@@ -971,8 +1048,22 @@ describe(`TemplateCompiler - combinations`, function () {
         } as unknown as PartialCustomElementDefinition;
         const expected = {
           ...defaultCustomElementDefinitionProperties,
-          template: ctx.createElementFromMarkup(`<template><${el} ${n1}="${v1}" class="au"></${el}></template>`),
-          instructions: [[i1]],
+          template: ctx.createElementFromMarkup(
+            `<template><span plain data-attr="value" class="${debugMode ? `abc-\${value} ` : ''}au"></span></template>`
+          ),
+          instructions: [[
+            {
+              "from": {
+                "parts": ["abc-",""],
+                "expressions": [
+                  {"name":"value","ancestor":0,"accessHostScope":false}
+                ],
+                "isMulti": false,
+                "firstExpression": {"name":"value","ancestor":0,"accessHostScope":false}
+              },
+              "to":"class"
+            }
+          ]],
           surrogates: [],
           needsCompile: false,
           enhance: false,
@@ -980,12 +1071,13 @@ describe(`TemplateCompiler - combinations`, function () {
         };
 
         const { sut, container } = createFixture(ctx);
+        sut.debug = debugMode;
 
         const actual = sut.compile(input, container, null);
 
         verifyBindingInstructionsEqual(actual, expected);
       });
-    });
+    }
   });
 
   describe('custom attributes', function () {
@@ -1386,45 +1478,59 @@ describe(`TemplateCompiler - combinations`, function () {
       ] as ((ctx: TestContext) => string)[]
     ],
     (ctx, pdName, pdProp, pdAttr, bindables, [cmd, attrValue], [bindableDescription, attrName]) => {
-      it(`customElement - pdName=${pdName}  pdProp=${pdProp}  pdAttr=${pdAttr}  cmd=${cmd}  attrName=${attrName}  attrValue="${attrValue}"`, function () {
+      for (const debugMode of [true, false]) {
+        it(`[Debug: ${debugMode}] customElement - pdName=${pdName}  pdProp=${pdProp}  pdAttr=${pdAttr}  cmd=${cmd}  attrName=${attrName}  attrValue="${attrValue}"`, function () {
 
-        const { sut, container } = createFixture(
-          ctx,
-          CustomElement.define({ name: 'foobar', bindables }, class FooBar {})
-        );
+          const { sut, container } = createFixture(
+            ctx,
+            CustomElement.define({ name: 'foobar', bindables }, class FooBar {})
+          );
+          sut.debug = debugMode;
 
-        const instruction = createAttributeInstruction(bindableDescription, attrName, attrValue, false);
-        const instructions = instruction == null ? [] : [instruction];
-        const childInstructions = !!bindableDescription ? instructions : [];
-        const siblingInstructions = !bindableDescription ? instructions : [];
+          const instruction = createAttributeInstruction(bindableDescription, attrName, attrValue, false);
+          const instructions = instruction == null ? [] : [instruction];
+          const childInstructions = !!bindableDescription ? instructions : [];
+          const siblingInstructions = !bindableDescription ? instructions : [];
 
-        const [input, output] = createCustomElement(ctx, 'foobar', true, [[attrName, attrValue]], childInstructions, siblingInstructions, []) as [PartialCustomElementDefinition, PartialCustomElementDefinition];
+          const [input, output] = createCustomElement(
+            ctx,
+            'foobar',
+            true,
+            [[attrName, attrValue]],
+            childInstructions,
+            siblingInstructions,
+            [],
+            void 0,
+            void 0,
+            debugMode
+          ) as [PartialCustomElementDefinition, PartialCustomElementDefinition];
 
-        if (attrName.endsWith('.qux')) {
-          let e;
-          try {
-            sut.compile(input, container, null);
-          } catch (err) {
-            // console.log('EXPECTED: ', JSON.stringify(output.instructions[0][0], null, 2));
-            // console.log('ACTUAL: ', JSON.stringify(actual.instructions[0][0], null, 2));
-            e = err;
+          if (attrName.endsWith('.qux')) {
+            let e;
+            try {
+              sut.compile(input, container, null);
+            } catch (err) {
+              // console.log('EXPECTED: ', JSON.stringify(output.instructions[0][0], null, 2));
+              // console.log('ACTUAL: ', JSON.stringify(actual.instructions[0][0], null, 2));
+              e = err;
+            }
+            assert.instanceOf(e, Error);
+          } else {
+            // enableTracing();
+            // Tracer.enableLiveLogging(SymbolTraceWriter);
+            const actual = sut.compile(input, container, null);
+            // console.log('\n'+stringifyTemplateDefinition(actual, 0));
+            // disableTracing();
+            try {
+              verifyBindingInstructionsEqual(actual, output);
+            } catch (err) {
+              // console.log('EXPECTED: ', JSON.stringify(output.instructions[0][0], null, 2));
+              // console.log('ACTUAL: ', JSON.stringify(actual.instructions[0][0], null, 2));
+              throw err;
+            }
           }
-          assert.instanceOf(e, Error);
-        } else {
-          // enableTracing();
-          // Tracer.enableLiveLogging(SymbolTraceWriter);
-          const actual = sut.compile(input, container, null);
-          // console.log('\n'+stringifyTemplateDefinition(actual, 0));
-          // disableTracing();
-          try {
-            verifyBindingInstructionsEqual(actual, output);
-          } catch (err) {
-            // console.log('EXPECTED: ', JSON.stringify(output.instructions[0][0], null, 2));
-            // console.log('ACTUAL: ', JSON.stringify(actual.instructions[0][0], null, 2));
-            throw err;
-          }
-        }
-      });
+        });
+      }
     });
   });
 
@@ -1858,103 +1964,99 @@ describe('TemplateCompiler - au-slot', function () {
     const sut = ctx.templateCompiler;
     return { ctx, container, sut };
   }
-  function $createCustomElement(template: string, name: string = 'my-element') {
+  function $createCustomElement(template: string, name: string) {
     return CustomElement.define({ name, isStrictBinding: true, template, bindables: { people: { mode: BindingMode.default } }, }, class MyElement { });
   }
 
-  class ExpectedSlotInfo {
+  class ExpectedSlotFallbackInfo {
     public constructor(
       public readonly slotName: string,
-      public readonly contentType: AuSlotContentType,
       public readonly content: string,
-      public readonly scope: Scope | null = null,
     ) { }
   }
   class TestData {
     public constructor(
       public readonly template: string,
       public readonly customElements: CustomElementType[],
-      public readonly partialTargetedProjections: [Scope, Record<string, string>] | null,
-      public readonly expectedSlotInfos: ExpectedSlotInfo[],
+      public readonly allExpectedProjections: [string, Record<string, string>][] | null,
+      public readonly expectedSlotInfos: ExpectedSlotFallbackInfo[],
     ) {
-      this.getTargetedProjections = this.getTargetedProjections.bind(this);
-    }
-
-    public getTargetedProjections(factory: ITemplateElementFactory): IProjections {
-      if (this.partialTargetedProjections === null) { return null; }
-      const [, projections] = this.partialTargetedProjections;
-      return Object.entries(projections)
-          .reduce((acc: Record<string, CustomElementDefinition>, [key, template]) => {
-            acc[key] = CustomElementDefinition.create({
-              name: CustomElement.generateName(),
-              template: template ? factory.createTemplate(template) : factory.createTemplate(''),
-              needsCompile: false
-            });
-            return acc;
-          }, Object.create(null));
     }
   }
 
   function *getTestData() {
+    // projections verification
     yield new TestData(
       `<my-element><div au-slot></div></my-element>`,
-      [$createCustomElement('')],
-      null,
+      [$createCustomElement('', 'my-element')],
+      [['my-element', { 'default': '<div></div>' }]],
       [],
     );
     yield new TestData(
       `<my-element><div au-slot="s1">p1</div><div au-slot="s2">p2</div></my-element>`,
-      [$createCustomElement('')],
-      null,
+      [$createCustomElement('', 'my-element')],
+      [['my-element', { s1: '<div>p1</div>', s2: '<div>p2</div>' }]],
       [],
     );
+    yield new TestData(
+      `<my-element><div au-slot="s1">p1</div><div au-slot="s1">p2</div></my-element>`,
+      [$createCustomElement('', 'my-element')],
+      [['my-element', { s1: '<div>p1</div><div>p2</div>' }]],
+      [],
+    );
+    yield new TestData(
+      `<my-element><au-slot au-slot><div au-slot="s1">p1</div><div au-slot="s1">p2</div></au-slot></my-element>`,
+      [$createCustomElement('', 'my-element')],
+      [['my-element', { 'default': '<au-m class="au"></au-m>' }]],
+      [],
+    );
+
+    // fallback verification
     yield new TestData(
       `<au-slot name="s1">s1fb</au-slot><au-slot name="s2"><div>s2fb</div></au-slot>`,
       [],
       null,
       [
-        new ExpectedSlotInfo('s1', AuSlotContentType.Fallback, 's1fb'),
-        new ExpectedSlotInfo('s2', AuSlotContentType.Fallback, '<div>s2fb</div>'),
-      ],
-    );
-    const scope1 = createScopeForTest();
-    yield new TestData(
-      `<au-slot name="s1">s1fb</au-slot><au-slot name="s2"><div>s2fb</div></au-slot>`,
-      [],
-      [scope1, { s1: '<span>s1p</span>' }],
-      [
-        new ExpectedSlotInfo('s1', AuSlotContentType.Projection, '<span>s1p</span>', scope1),
-        new ExpectedSlotInfo('s2', AuSlotContentType.Fallback, '<div>s2fb</div>'),
+        new ExpectedSlotFallbackInfo('s1', 's1fb'),
+        new ExpectedSlotFallbackInfo('s2', '<div>s2fb</div>'),
       ],
     );
     yield new TestData(
       `<au-slot name="s1">s1fb</au-slot><au-slot name="s2"><div>s2fb</div></au-slot>`,
       [],
-      [scope1, { s1: '<span>s1p</span>', s2: '<div><span>s2p</span></div>' }],
+      null,
       [
-        new ExpectedSlotInfo('s1', AuSlotContentType.Projection, '<span>s1p</span>', scope1),
-        new ExpectedSlotInfo('s2', AuSlotContentType.Projection, '<div><span>s2p</span></div>', scope1),
+        new ExpectedSlotFallbackInfo('s1', 's1fb'),
+        new ExpectedSlotFallbackInfo('s2', '<div>s2fb</div>'),
+      ],
+    );
+    yield new TestData(
+      `<au-slot name="s1">s1fb</au-slot><au-slot name="s2"><div>s2fb</div></au-slot>`,
+      [],
+      null,
+      [
+        new ExpectedSlotFallbackInfo('s1', 's1fb'),
+        new ExpectedSlotFallbackInfo('s2', '<div>s2fb</div>'),
       ],
     );
     yield new TestData(
       `<au-slot name="s1">s1fb</au-slot><my-element><div au-slot>p</div></my-element>`,
-      [$createCustomElement('')],
-      [scope1, { s1: '<span>s1p</span>' }],
+      [$createCustomElement('', 'my-element')],
+      null,
       [
-        new ExpectedSlotInfo('s1', AuSlotContentType.Projection, '<span>s1p</span>', scope1),
+        new ExpectedSlotFallbackInfo('s1', 's1fb'),
       ],
     );
   }
-  for (const { customElements, template, getTargetedProjections, expectedSlotInfos } of getTestData()) {
+  for (const { customElements, template, expectedSlotInfos, allExpectedProjections } of getTestData()) {
     it(`compiles - ${template}`, function () {
       const { sut, container } = createFixture();
       container.register(AuSlot, ...customElements);
-      const factory = container.get(ITemplateElementFactory);
 
       const compiledDefinition = sut.compile(
         CustomElementDefinition.create({ name: 'my-ce', template }, class MyCe { }),
         container,
-        { projections: getTargetedProjections(factory) }
+        { projections: null }
       );
 
       const allInstructions = compiledDefinition.instructions.flat();
@@ -1962,16 +2064,137 @@ describe('TemplateCompiler - au-slot', function () {
         const actualInstruction = allInstructions.find((i) =>
           i.type === InstructionType.hydrateElement
           && (i as HydrateElementInstruction).res.includes('au-slot')
-          && (i as HydrateElementInstruction).slotInfo.name === expectedSlotInfo.slotName
+          && (i as HydrateElementInstruction).auSlot.name === expectedSlotInfo.slotName
         ) as HydrateElementInstruction;
         assert.notEqual(actualInstruction, void 0, 'instruction');
-        const actualSlotInfo = actualInstruction.slotInfo;
-        assert.strictEqual(actualSlotInfo.type, expectedSlotInfo.contentType, 'content type');
-        assert.deepStrictEqual((actualSlotInfo.content.template as HTMLElement).outerHTML, `<template>${expectedSlotInfo.content}</template>`, 'content');
-        assert.deepStrictEqual(actualSlotInfo.content.needsCompile, false, 'needsCompile');
+        const actualSlotInfo = actualInstruction.auSlot!;
+        assert.deepStrictEqual((actualSlotInfo.fallback.template as HTMLElement).outerHTML, `<template>${expectedSlotInfo.content}</template>`, 'content');
+        assert.deepStrictEqual(actualSlotInfo.fallback.needsCompile, false, 'needsCompile');
+      }
+
+      // for each element instruction found
+      // verify projections for it compiles properly
+      if (allExpectedProjections == null) {
+        return;
+      }
+
+      for (const [elName, projections] of allExpectedProjections) {
+        const elementInstruction = allInstructions.find(i =>
+          i.type === InstructionType.hydrateElement
+          && (i as HydrateElementInstruction).res === elName
+        ) as HydrateElementInstruction;
+        assert.notEqual(elementInstruction, void 0, `Instruction for element "${elName}" missing`);
+        const actualProjections = elementInstruction.projections;
+        for (const slotName in projections) {
+          const def = actualProjections[slotName];
+          assert.instanceOf(def, CustomElementDefinition);
+          assert.deepStrictEqual((def.template as HTMLElement).outerHTML, `<template>${projections[slotName]}</template>`, 'content');
+          assert.deepStrictEqual(def.needsCompile, false, 'needsCompile');
+        }
       }
     });
   }
+});
+
+describe('TemplateCompiler - hooks', function () {
+  function createFixture() {
+    const ctx = TestContext.create();
+    const container = ctx.container;
+    const sut = ctx.templateCompiler;
+    return { ctx, container, sut };
+  }
+
+  it('invokes before compile hooks', function () {
+    const template = `<template></template>`;
+    const { container, sut } = createFixture();
+    let hookCallCount = 0;
+
+    container.register(Registration.instance(ITemplateCompilerHooks, {
+      beforeCompile(template: HTMLElement) {
+        hookCallCount++;
+        template.setAttribute('data-hello', 'world');
+      }
+    }));
+
+    const definition = sut.compile({ name: 'lorem-ipsum', template }, container, null);
+    assert.strictEqual(hookCallCount, 1);
+    assert.strictEqual((definition.template as Element).getAttribute('data-hello'), 'world');
+  });
+
+  it('invokes all hooks', function () {
+    const template = `<template></template>`;
+    const { container, sut } = createFixture();
+    let hookCallCount = 0;
+
+    container.register(Registration.instance(ITemplateCompilerHooks, {
+      beforeCompile(template: HTMLElement) {
+        hookCallCount++;
+        template.setAttribute('data-hello', 'world');
+      }
+    }));
+    container.register(Registration.instance(ITemplateCompilerHooks, {
+      beforeCompile(template: HTMLElement) {
+        hookCallCount++;
+        template.setAttribute('data-world', 'hello');
+      }
+    }));
+
+    const definition = sut.compile({ name: 'lorem-ipsum', template }, container, null);
+    assert.strictEqual(hookCallCount, 2);
+    assert.strictEqual((definition.template as Element).getAttribute('data-hello'), 'world');
+    assert.strictEqual((definition.template as Element).getAttribute('data-world'), 'hello');
+  });
+
+  it('does not throw if the compile hooks does not have any hooks', function () {
+    const template = `<template></template>`;
+    const { container, sut } = createFixture();
+
+    container.register(Registration.instance(ITemplateCompilerHooks, {}));
+    assert.doesNotThrow(() => sut.compile({ name: 'lorem-ipsum', template }, container, null));
+  });
+
+  it('invokes hooks with resources semantic - only leaf', function () {
+    const template = `<template></template>`;
+    const { container, sut } = createFixture();
+    let hookCallCount = 0;
+    const createResolver = () => Registration.instance(ITemplateCompilerHooks, {
+      beforeCompile(template: HTMLElement) {
+        hookCallCount++;
+        template.setAttribute('data-hello', 'world');
+      }
+    });
+    const middleContainer = container.createChild();
+    const leafContainer = middleContainer.createChild();
+    middleContainer.register(createResolver());
+    leafContainer.register(createResolver());
+
+    const definition = sut.compile({ name: 'lorem-ipsum', template }, leafContainer, null);
+    assert.strictEqual(hookCallCount, 1);
+    assert.strictEqual((definition.template as Element).getAttribute('data-hello'), 'world');
+  });
+
+  it('invokes hooks with resources semantic - leaf + root', function () {
+    const template = `<template></template>`;
+    const { container, sut } = createFixture();
+    let hookCallCount = 0;
+    const createResolver = (value: string) => Registration.instance(ITemplateCompilerHooks, {
+      beforeCompile(template: HTMLElement) {
+        hookCallCount++;
+        template.setAttribute(`data-${value}`, value);
+      }
+    });
+    const middleContainer = container.createChild();
+    const leafContainer = middleContainer.createChild();
+    container.register(createResolver('root'));
+    middleContainer.register(createResolver('middle'));
+    leafContainer.register(createResolver('leaf'));
+
+    const definition = sut.compile({ name: 'lorem-ipsum', template }, leafContainer, null);
+    assert.strictEqual(hookCallCount, 2);
+    assert.strictEqual((definition.template as Element).getAttribute('data-root'), 'root');
+    assert.strictEqual((definition.template as Element).getAttribute('data-middle'), null);
+    assert.strictEqual((definition.template as Element).getAttribute('data-leaf'), 'leaf');
+  });
 });
 
 class BindablesInfo<T extends 0 | 1 = 0> {

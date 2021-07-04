@@ -418,11 +418,6 @@ export {
 } from './resources/template-controllers/promise.js';
 
 export {
-  Blur,
-  BlurManager,
-} from './resources/custom-attributes/blur.js';
-
-export {
   Focus,
 } from './resources/custom-attributes/focus.js';
 
@@ -435,8 +430,6 @@ export {
 export {
   AuSlot,
   IProjections,
-  SlotInfo,
-  AuSlotContentType,
   AuSlotsInfo,
   IAuSlotsInfo,
 } from './resources/custom-elements/au-slot.js';
@@ -544,6 +537,17 @@ export {
 export {
   ITemplateElementFactory
 } from './template-element-factory.js';
+export {
+  BindablesInfo,
+  TemplateCompiler,
+  ITemplateCompilerHooks,
+  TemplateCompilerHooks,
+  templateCompilerHooks,
+} from './template-compiler.js';
+
+export {
+  allResources,
+} from './utilities-di.js';
 
 export {
   PartialChildrenDefinition,

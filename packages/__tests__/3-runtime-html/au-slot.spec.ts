@@ -805,9 +805,9 @@ describe('au-slot', function () {
             ListBox, Assignee, ItemRow
           ],
           {
-            'item-row': ['<div><assignee class="au"><list-box value.two-way="value" class="au"> <div> 0 </div></list-box></assignee></div>',null],
-            'item-row+item-row': ['<div><assignee class="au"><list-box value.two-way="value" class="au"> <div> 1 </div></list-box></assignee></div>',null],
-            'item-row+item-row+item-row': ['<div><assignee class="au"><list-box value.two-way="value" class="au"> <div> 2 </div></list-box></assignee></div>',null],
+            'item-row': ['<div><assignee class="au"><list-box class="au"> <div> 0 </div></list-box></assignee></div>',null],
+            'item-row+item-row': ['<div><assignee class="au"><list-box class="au"> <div> 1 </div></list-box></assignee></div>',null],
+            'item-row+item-row+item-row': ['<div><assignee class="au"><list-box class="au"> <div> 2 </div></list-box></assignee></div>',null],
           },
         );
       }
@@ -951,7 +951,7 @@ describe('au-slot', function () {
           CollVwr,
           MyElement,
         ],
-        { 'my-element': ['<h4>First Name</h4> <h4>Last Name</h4> <h4>Pets</h4> <div>John</div> <div>Doe</div> <coll-vwr collection.bind="person.pets" class="au"><div>Browny</div><div>Smokey</div></coll-vwr> <div>Max</div> <div>Mustermann</div> <coll-vwr collection.bind="person.pets" class="au"><div>Sea biscuit</div><div>Swift Thunder</div></coll-vwr>', new AuSlotsInfo([])] },
+        { 'my-element': ['<h4>First Name</h4> <h4>Last Name</h4> <h4>Pets</h4> <div>John</div> <div>Doe</div> <coll-vwr class="au"><div>Browny</div><div>Smokey</div></coll-vwr> <div>Max</div> <div>Mustermann</div> <coll-vwr class="au"><div>Sea biscuit</div><div>Swift Thunder</div></coll-vwr>', new AuSlotsInfo([])] },
       );
 
       yield new TestData(
@@ -969,7 +969,7 @@ describe('au-slot', function () {
           CollVwr,
           MyElement,
         ],
-        { 'my-element': ['<h4>First Name</h4> <h4>Last Name</h4> <h4>Pets</h4> <div>John</div> <div>Doe</div> <coll-vwr collection.bind="$host.person.pets" class="au"> <ul><li>Browny</li><li>Smokey</li></ul></coll-vwr> <div>Max</div> <div>Mustermann</div> <coll-vwr collection.bind="$host.person.pets" class="au"> <ul><li>Sea biscuit</li><li>Swift Thunder</li></ul></coll-vwr>', new AuSlotsInfo(['content'])] },
+        { 'my-element': ['<h4>First Name</h4> <h4>Last Name</h4> <h4>Pets</h4> <div>John</div> <div>Doe</div> <coll-vwr class="au"> <ul><li>Browny</li><li>Smokey</li></ul></coll-vwr> <div>Max</div> <div>Mustermann</div> <coll-vwr class="au"> <ul><li>Sea biscuit</li><li>Swift Thunder</li></ul></coll-vwr>', new AuSlotsInfo(['content'])] },
       );
 
       yield new TestData(
@@ -988,7 +988,7 @@ describe('au-slot', function () {
           CollVwr,
           MyElement,
         ],
-        { 'my-element': ['<h4>First Name</h4> <h4>Last Name</h4> <h4>Pets</h4> <div>John</div> <div>Doe</div> <coll-vwr collection.bind="person.pets" class="au"> <ul><li>Browny</li><li>Smokey</li></ul></coll-vwr> <div>Max</div> <div>Mustermann</div> <coll-vwr collection.bind="person.pets" class="au"> <ul><li>Sea biscuit</li><li>Swift Thunder</li></ul></coll-vwr>', new AuSlotsInfo(['content'])] },
+        { 'my-element': ['<h4>First Name</h4> <h4>Last Name</h4> <h4>Pets</h4> <div>John</div> <div>Doe</div> <coll-vwr class="au"> <ul><li>Browny</li><li>Smokey</li></ul></coll-vwr> <div>Max</div> <div>Mustermann</div> <coll-vwr class="au"> <ul><li>Sea biscuit</li><li>Swift Thunder</li></ul></coll-vwr>', new AuSlotsInfo(['content'])] },
       );
 
       yield new TestData(
@@ -1007,7 +1007,7 @@ describe('au-slot', function () {
           CollVwr,
           MyElement,
         ],
-        { 'my-element': ['<h4>First Name</h4> <h4>Last Name</h4> <h4>Pets</h4> <div>John</div> <div>Doe</div> <coll-vwr collection.bind="h.person.pets" class="au"> <ul><li>Browny</li><li>Smokey</li></ul></coll-vwr> <div>Max</div> <div>Mustermann</div> <coll-vwr collection.bind="h.person.pets" class="au"> <ul><li>Sea biscuit</li><li>Swift Thunder</li></ul></coll-vwr>', new AuSlotsInfo(['content'])] },
+        { 'my-element': ['<h4>First Name</h4> <h4>Last Name</h4> <h4>Pets</h4> <div>John</div> <div>Doe</div> <coll-vwr class="au"> <ul><li>Browny</li><li>Smokey</li></ul></coll-vwr> <div>Max</div> <div>Mustermann</div> <coll-vwr class="au"> <ul><li>Sea biscuit</li><li>Swift Thunder</li></ul></coll-vwr>', new AuSlotsInfo(['content'])] },
       );
 
       // tag: nonsense-example
@@ -1020,7 +1020,7 @@ describe('au-slot', function () {
           CollVwr,
           MyElement,
         ],
-        { 'my-element': ['<h4>First Name</h4> <h4>Last Name</h4> <h4>Pets</h4> <div>John</div> <div>Doe</div> <coll-vwr collection.bind="person.pets" class="au"><div>Browny</div><div>Smokey</div></coll-vwr> <div>Max</div> <div>Mustermann</div> <coll-vwr collection.bind="person.pets" class="au"><div>Sea biscuit</div><div>Swift Thunder</div></coll-vwr>', new AuSlotsInfo(['colleslawt'])] },
+        { 'my-element': ['<h4>First Name</h4> <h4>Last Name</h4> <h4>Pets</h4> <div>John</div> <div>Doe</div> <coll-vwr class="au"><div>Browny</div><div>Smokey</div></coll-vwr> <div>Max</div> <div>Mustermann</div> <coll-vwr class="au"><div>Sea biscuit</div><div>Swift Thunder</div></coll-vwr>', new AuSlotsInfo(['colleslawt'])] },
       );
 
       yield new TestData(
@@ -1067,7 +1067,7 @@ describe('au-slot', function () {
           CustomElement.define({ name: 'my-element', isStrictBinding: true, template: `<au-slot name="s1"><foo-bar foo.bind="message"></foo-bar></au-slot>` }, class MyElement { public readonly message = 'inner'; }),
           CustomElement.define({ name: 'foo-bar', isStrictBinding: true, template: `\${foo}`, bindables: ['foo'] }, class MyElement { }),
         ],
-        { 'my-element': ['<foo-bar foo.bind="message" class="au">inner</foo-bar>', null] },
+        { 'my-element': ['<foo-bar class="au">inner</foo-bar>', null] },
       );
 
       yield new TestData(
@@ -1079,7 +1079,7 @@ describe('au-slot', function () {
           createMyElement(`<au-slot name="s1">s1fb</au-slot>`),
           CustomElement.define({ name: 'foo-bar', isStrictBinding: true, template: `\${foo}`, bindables: ['foo'] }, class MyElement { }),
         ],
-        { 'my-element': ['<foo-bar foo.bind="message" class="au">root</foo-bar>', new AuSlotsInfo(['s1'])] },
+        { 'my-element': ['<foo-bar class="au">root</foo-bar>', new AuSlotsInfo(['s1'])] },
       );
 
       {
@@ -1102,7 +1102,7 @@ describe('au-slot', function () {
             ),
             CustomElement.define({ name: 'foo-bar', isStrictBinding: true, template: `\${foo}`, bindables: ['foo'] }, class MyElement { }),
           ],
-          { 'my-element': ['<foo-bar foo.bind="$host.message" class="au">inner</foo-bar>', new AuSlotsInfo(['s1'])] },
+          { 'my-element': ['<foo-bar class="au">inner</foo-bar>', new AuSlotsInfo(['s1'])] },
         );
       }
 
@@ -1385,8 +1385,8 @@ describe('au-slot', function () {
           `<elem text="1"></elem><elem text="2"></elem>`,
           [Elem, Notch, Child],
           {
-            'elem': ['Parent 1 <notch class="au"> Notch <child text.bind="text" view-model.ref="child" class="au">Id: 0. Child 1</child></notch> 0', null],
-            'elem+elem': ['Parent 2 <notch class="au"> Notch <child text.bind="text" view-model.ref="child" class="au">Id: 1. Child 2</child></notch> 1', null],
+            'elem': ['Parent 1 <notch class="au"> Notch <child class="au">Id: 0. Child 1</child></notch> 0', null],
+            'elem+elem': ['Parent 2 <notch class="au"> Notch <child class="au">Id: 1. Child 2</child></notch> 1', null],
           }
         );
       }
@@ -1458,7 +1458,7 @@ describe('au-slot', function () {
         <input au-slot type="text" value.two-way="$host.foo">
       </my-element>`,
         [CustomElement.define({ name: 'my-element', isStrictBinding: true, template: `<au-slot></au-slot>` }, MyElement)],
-        { 'my-element': ['<input type="text" value.two-way="$host.foo" class="au">', new AuSlotsInfo(['default'])] },
+        { 'my-element': ['<input type="text" class="au">', new AuSlotsInfo(['default'])] },
         async function ({ host, platform }) {
           const el = host.querySelector('my-element');
           const vm = CustomElement.for(el).viewModel as any;
@@ -1477,7 +1477,7 @@ describe('au-slot', function () {
         <input au-slot type="text" value.two-way="people[0].firstName">
       </my-element>`,
       [createMyElement(`<au-slot></au-slot>`)],
-      { 'my-element': ['<input type="text" value.two-way="people[0].firstName" class="au">', new AuSlotsInfo(['default'])] },
+      { 'my-element': ['<input type="text" class="au">', new AuSlotsInfo(['default'])] },
       async function ({ app, host, platform }) {
         const el = host.querySelector('my-element');
         const input = el.querySelector('input');
@@ -1665,7 +1665,149 @@ describe('au-slot', function () {
         },
       );
     }
+
+    {
+      yield new TestData(
+        'works with 2 layers of slot[default] pass through',
+        `<mdc-tab-bar
+          ><template au-slot
+            ><mdc-tab click.trigger="fn()">\${callCount}`,
+        [
+          CustomElement.define({ name: 'mdc-tab-scroller', template: '<au-slot>' }),
+          CustomElement.define({ name: 'mdc-tab-bar', template: '<mdc-tab-scroller><template au-slot><au-slot></au-slot></template></mdc-tab-scroller>' }),
+          CustomElement.define({ name: 'mdc-tab', template: '<button>Tab</button>' }),
+        ],
+        {
+          'mdc-tab': ['0<button>Tab</button>', undefined]
+        },
+        function ({ host, platform }) {
+          host.querySelector<HTMLElement>('mdc-tab').click();
+          platform.domWriteQueue.flush();
+          assert.html.innerEqual(host.querySelector('mdc-tab'), '1<button>Tab</button>');
+        }
+      );
+    }
+
+    {
+      yield new TestData(
+        'works with 3 layers of slot[default] pass through, no projections',
+        `<mdc></mdc><mdc></mdc>`,
+        [
+          CustomElement.define({ name: 'mdc', template:
+          `<mdc-tab-bar
+            ><template au-slot
+              ><mdc-tab id="mdc-\${id}" click.trigger="increase()">\${count}</mdc-tab>`
+          }, class Mdc {
+            public static id = 0;
+            public id = Mdc.id++;
+            public count = 0;
+            public increase() {
+              this.count++;
+            }
+          }),
+            CustomElement.define({ name: 'mdc-tab-scroller', template: '<au-slot>' }),
+            CustomElement.define({ name: 'mdc-tab-bar', template: '<mdc-tab-scroller><template au-slot><au-slot></au-slot></template></mdc-tab-scroller>' }),
+            CustomElement.define({ name: 'mdc-tab', template: '<button>Tab</button>' }),
+        ],
+        {
+          '#mdc-0': ['0<button>Tab</button>', undefined],
+          '#mdc-1': ['0<button>Tab</button>', undefined]
+        },
+        function ({ host, platform }) {
+          host.querySelector<HTMLElement>('#mdc-0').click();
+          platform.domWriteQueue.flush();
+          assert.html.innerEqual(host.querySelector('#mdc-0'), '1<button>Tab</button>');
+          assert.html.innerEqual(host.querySelector('#mdc-1'), '0<button>Tab</button>');
+
+          host.querySelector<HTMLElement>('#mdc-1').click();
+          platform.domWriteQueue.flush();
+          assert.html.innerEqual(host.querySelector('#mdc-0'), '1<button>Tab</button>');
+          assert.html.innerEqual(host.querySelector('#mdc-1'), '1<button>Tab</button>');
+        },
+      );
+    }
+
+    {
+      yield new TestData(
+        'works with 3 layers of slot[default] pass through + template controller',
+        `<mdc></mdc><mdc></mdc>`,
+        [
+          CustomElement.define({ name: 'mdc', template:
+          `<mdc-tab-bar
+            ><mdc-tab au-slot repeat.for="i of 3" id="mdc-\${id}-\${i}" click.trigger="increase()">\${count + i}</mdc-tab>`
+          }, class Mdc {
+            public static id = 0;
+            public id = Mdc.id++;
+            public count = 0;
+            public increase() {
+              this.count++;
+            }
+          }),
+            CustomElement.define({ name: 'mdc-tab-scroller', template: '<au-slot>' }),
+            CustomElement.define({ name: 'mdc-tab-bar', template: '<mdc-tab-scroller><au-slot au-slot></au-slot></mdc-tab-scroller>' }),
+            CustomElement.define({ name: 'mdc-tab', template: '<button>Tab</button>' }),
+        ],
+        {
+          '#mdc-0-0': ['0<button>Tab</button>', undefined],
+          '#mdc-0-1': ['1<button>Tab</button>', undefined],
+          '#mdc-0-2': ['2<button>Tab</button>', undefined],
+          '#mdc-1-0': ['0<button>Tab</button>', undefined],
+          '#mdc-1-1': ['1<button>Tab</button>', undefined],
+          '#mdc-1-2': ['2<button>Tab</button>', undefined],
+        },
+        function ({ host, platform }) {
+          const [tab00, tab01, tab02, tab10, tab11, tab12] = Array.from(host.querySelectorAll<HTMLElement>('mdc-tab'));
+
+          tab00.click();
+          platform.domWriteQueue.flush();
+          assert.html.innerEqual(tab00, '1<button>Tab</button>');
+          assert.html.innerEqual(tab01, '2<button>Tab</button>');
+          assert.html.innerEqual(tab02, '3<button>Tab</button>');
+          assert.html.innerEqual(tab10, '0<button>Tab</button>');
+          assert.html.innerEqual(tab11, '1<button>Tab</button>');
+          assert.html.innerEqual(tab12, '2<button>Tab</button>');
+
+          tab10.click();
+          platform.domWriteQueue.flush();
+          assert.html.innerEqual(tab00, '1<button>Tab</button>');
+          assert.html.innerEqual(tab01, '2<button>Tab</button>');
+          assert.html.innerEqual(tab02, '3<button>Tab</button>');
+          assert.html.innerEqual(tab10, '1<button>Tab</button>');
+          assert.html.innerEqual(tab11, '2<button>Tab</button>');
+          assert.html.innerEqual(tab12, '3<button>Tab</button>');
+        },
+      );
+    }
+
+    {
+      yield new TestData(
+        'picks the right scope of component [ref] bindings',
+        `<my-component>
+          <template au-slot>
+            <my-component>
+            </my-component>
+          </template>
+        </my-component>`,
+        [
+          CustomElement.define({
+            name: 'my-component',
+            template: `<div ref="container" id="div-\${id}"> ref.id=\${container.id} <au-slot></au-slot></div>`
+          }, class MyComponent {
+            public static count = 0;
+            public id: number = MyComponent.count++;
+          })
+        ],
+        {},
+        function ({ host }) {
+          assert.notStrictEqual(host.querySelector('#div-0'), null);
+          assert.notStrictEqual(host.querySelector('#div-1'), null);
+          assert.strictEqual(host.querySelector('#div-0').textContent.replace(/\s/g, ''), 'ref.id=div-0ref.id=div-1');
+          assert.strictEqual(host.querySelector('#div-1').textContent.replace(/\s/g, ''), 'ref.id=div-1');
+        },
+      );
+    }
   }
+
   for (const { spec, template, expected, registrations, additionalAssertion, only } of getTestData()) {
     (only ? $it.only : $it)(spec,
       async function (ctx) {
