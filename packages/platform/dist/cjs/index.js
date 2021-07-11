@@ -1,6 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.TaskQueuePriority = exports.Task = exports.TaskStatus = exports.TaskAbortError = exports.TaskQueue = exports.Platform = void 0;
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
 const lookup = new Map();
 function notImplemented(name) {
     return function notImplemented() {
@@ -60,7 +61,6 @@ class Platform {
         }
     }
 }
-exports.Platform = Platform;
 function isPersistent(task) {
     return task.persistent;
 }
@@ -373,22 +373,20 @@ class TaskQueue {
         }
     }
 }
-exports.TaskQueue = TaskQueue;
 class TaskAbortError extends Error {
     constructor(task) {
         super('Task was canceled.');
         this.task = task;
     }
 }
-exports.TaskAbortError = TaskAbortError;
 let id = 0;
-var TaskStatus;
+exports.TaskStatus = void 0;
 (function (TaskStatus) {
     TaskStatus[TaskStatus["pending"] = 0] = "pending";
     TaskStatus[TaskStatus["running"] = 1] = "running";
     TaskStatus[TaskStatus["completed"] = 2] = "completed";
     TaskStatus[TaskStatus["canceled"] = 3] = "canceled";
-})(TaskStatus = exports.TaskStatus || (exports.TaskStatus = {}));
+})(exports.TaskStatus || (exports.TaskStatus = {}));
 class Task {
     constructor(tracer, taskQueue, createdTime, queueTime, preempt, persistent, suspend, reusable, callback) {
         this.tracer = tracer;
@@ -605,7 +603,6 @@ class Task {
         this._result = void 0;
     }
 }
-exports.Task = Task;
 function taskStatus(status) {
     switch (status) {
         case 0 /* pending */: return 'pending';
@@ -653,12 +650,12 @@ class Tracer {
         }
     }
 }
-var TaskQueuePriority;
+exports.TaskQueuePriority = void 0;
 (function (TaskQueuePriority) {
     TaskQueuePriority[TaskQueuePriority["render"] = 0] = "render";
     TaskQueuePriority[TaskQueuePriority["macroTask"] = 1] = "macroTask";
     TaskQueuePriority[TaskQueuePriority["postRender"] = 2] = "postRender";
-})(TaskQueuePriority = exports.TaskQueuePriority || (exports.TaskQueuePriority = {}));
+})(exports.TaskQueuePriority || (exports.TaskQueuePriority = {}));
 const defaultQueueTaskOptions = {
     delay: 0,
     preempt: false,
@@ -681,4 +678,9 @@ function createExposedPromise() {
     p.reject = $reject;
     return p;
 }
+
+exports.Platform = Platform;
+exports.Task = Task;
+exports.TaskAbortError = TaskAbortError;
+exports.TaskQueue = TaskQueue;
 //# sourceMappingURL=index.js.map

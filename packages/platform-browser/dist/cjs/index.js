@@ -1,14 +1,16 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.BrowserPlatform = void 0;
-const platform_1 = require("@aurelia/platform");
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+var platform = require('@aurelia/platform');
+
 const lookup = new Map();
 function notImplemented(name) {
     return function notImplemented() {
         throw new Error(`The PLATFORM did not receive a valid reference to the global function '${name}'.`); // TODO: link to docs describing how to fix this issue
     };
 }
-class BrowserPlatform extends platform_1.Platform {
+class BrowserPlatform extends platform.Platform {
     constructor(g, overrides = {}) {
         var _a, _b, _c, _d, _e, _f;
         super(g, overrides);
@@ -34,8 +36,8 @@ class BrowserPlatform extends platform_1.Platform {
         this.customElements = 'customElements' in overrides ? overrides.customElements : g.customElements;
         this.flushDomRead = this.flushDomRead.bind(this);
         this.flushDomWrite = this.flushDomWrite.bind(this);
-        this.domReadQueue = new platform_1.TaskQueue(this, this.requestDomRead.bind(this), this.cancelDomRead.bind(this));
-        this.domWriteQueue = new platform_1.TaskQueue(this, this.requestDomWrite.bind(this), this.cancelDomWrite.bind(this));
+        this.domReadQueue = new platform.TaskQueue(this, this.requestDomRead.bind(this), this.cancelDomRead.bind(this));
+        this.domWriteQueue = new platform.TaskQueue(this, this.requestDomWrite.bind(this), this.cancelDomWrite.bind(this));
         /* eslint-enable @typescript-eslint/no-unnecessary-type-assertion */
     }
     static getOrCreate(g, overrides = {}) {
@@ -102,5 +104,6 @@ class BrowserPlatform extends platform_1.Platform {
         }
     }
 }
+
 exports.BrowserPlatform = BrowserPlatform;
 //# sourceMappingURL=index.js.map

@@ -1,22 +1,23 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.loader = void 0;
-const plugin_conventions_1 = require("@aurelia/plugin-conventions");
-const loader_utils_1 = require("loader-utils");
-function default_1(contents, sourceMap) {
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+var pluginConventions = require('@aurelia/plugin-conventions');
+var loaderUtils = require('loader-utils');
+
+function index (contents, sourceMap) {
     return loader.call(this, contents);
 }
-exports.default = default_1;
-function loader(contents, _preprocess = plugin_conventions_1.preprocess // for testing
+function loader(contents, _preprocess = pluginConventions.preprocess // for testing
 ) {
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions, @typescript-eslint/strict-boolean-expressions
     this.cacheable && this.cacheable();
     // @ts-ignore TODO: fix types
     const cb = this.async();
-    const options = loader_utils_1.getOptions(this);
+    const options = loaderUtils.getOptions(this);
     const filePath = this.resourcePath;
     try {
-        const result = _preprocess({ path: filePath, contents }, plugin_conventions_1.preprocessOptions(options || {}));
+        const result = _preprocess({ path: filePath, contents }, pluginConventions.preprocessOptions(options || {}));
         // webpack uses source-map 0.6.1 typings for RawSourceMap which
         // contains typing error version: string (should be number).
         // use result.map as any to bypass the typing issue.
@@ -31,5 +32,7 @@ function loader(contents, _preprocess = plugin_conventions_1.preprocess // for t
         cb(e);
     }
 }
+
+exports.default = index;
 exports.loader = loader;
 //# sourceMappingURL=index.js.map

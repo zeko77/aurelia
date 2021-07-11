@@ -1,2 +1,4 @@
-export const placeholder = null;
+const placeholder = null;
+
+export { placeholder };
 //# sourceMappingURL=index.js.map

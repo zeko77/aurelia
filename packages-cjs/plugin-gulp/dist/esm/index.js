@@ -1,13 +1,14 @@
 import { Transform } from 'stream';
 import { preprocess, preprocessOptions } from '@aurelia/plugin-conventions';
-export default function (options = {}) {
+
+function index (options = {}) {
     return plugin({
         ...options,
         useProcessedFilePairFilename: true,
         stringModuleWrap
     });
 }
-export function plugin(options, _preprocess = preprocess // for testing
+function plugin(options, _preprocess = preprocess // for testing
 ) {
     const allOptions = preprocessOptions(options);
     return new Transform({
@@ -42,4 +43,7 @@ export function plugin(options, _preprocess = preprocess // for testing
 function stringModuleWrap(id) {
     return `text!${id}`;
 }
+
+export default index;
+export { plugin };
 //# sourceMappingURL=index.js.map

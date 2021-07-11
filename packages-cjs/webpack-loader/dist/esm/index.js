@@ -1,9 +1,10 @@
 import { preprocess, preprocessOptions } from '@aurelia/plugin-conventions';
 import { getOptions } from 'loader-utils';
-export default function (contents, sourceMap) {
+
+function index (contents, sourceMap) {
     return loader.call(this, contents);
 }
-export function loader(contents, _preprocess = preprocess // for testing
+function loader(contents, _preprocess = preprocess // for testing
 ) {
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions, @typescript-eslint/strict-boolean-expressions
     this.cacheable && this.cacheable();
@@ -27,4 +28,7 @@ export function loader(contents, _preprocess = preprocess // for testing
         cb(e);
     }
 }
+
+export default index;
+export { loader };
 //# sourceMappingURL=index.js.map

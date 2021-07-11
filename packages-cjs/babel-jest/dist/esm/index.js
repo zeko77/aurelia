@@ -1,5 +1,6 @@
 import { preprocess, preprocessOptions } from '@aurelia/plugin-conventions';
 import babelTransformer from 'babel-jest';
+
 function _createTransformer(conventionsOptions = {}, 
 // for testing
 _preprocess = preprocess, _babelProcess = babelTransformer.process.bind(babelTransformer)) {
@@ -26,5 +27,7 @@ function createTransformer(conventionsOptions = {}) {
     return _createTransformer(conventionsOptions);
 }
 const { canInstrument, getCacheKey, process } = createTransformer();
-export default { canInstrument, getCacheKey, process, createTransformer, _createTransformer };
+var index = { canInstrument, getCacheKey, process, createTransformer, _createTransformer };
+
+export default index;
 //# sourceMappingURL=index.js.map

@@ -1,6 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.RouteRecognizer = exports.RecognizedRoute = exports.Endpoint = exports.ConfigurableRoute = void 0;
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
 class ConfigurableRoute {
     constructor(path, caseSensitive, handler) {
         this.path = path;
@@ -8,21 +9,18 @@ class ConfigurableRoute {
         this.handler = handler;
     }
 }
-exports.ConfigurableRoute = ConfigurableRoute;
 class Endpoint {
     constructor(route, paramNames) {
         this.route = route;
         this.paramNames = paramNames;
     }
 }
-exports.Endpoint = Endpoint;
 class RecognizedRoute {
     constructor(endpoint, params) {
         this.endpoint = endpoint;
         this.params = params;
     }
 }
-exports.RecognizedRoute = RecognizedRoute;
 class Candidate {
     constructor(chars, states, skippedStates, result) {
         var _a;
@@ -338,7 +336,6 @@ class RouteRecognizer {
         return new RecognizedRoute(endpoint, params);
     }
 }
-exports.RouteRecognizer = RouteRecognizer;
 class State {
     constructor(prevState, segment, value) {
         this.prevState = prevState;
@@ -491,4 +488,9 @@ class StarSegment {
             b.name === this.name);
     }
 }
+
+exports.ConfigurableRoute = ConfigurableRoute;
+exports.Endpoint = Endpoint;
+exports.RecognizedRoute = RecognizedRoute;
+exports.RouteRecognizer = RouteRecognizer;
 //# sourceMappingURL=index.js.map

@@ -1,6 +1,7 @@
 import { preprocess, preprocessOptions } from '@aurelia/plugin-conventions';
 import tsJest from 'ts-jest';
 import * as path from 'path';
+
 const tsTransformer = tsJest.createTransformer();
 function _createTransformer(conventionsOptions = {}, 
 // for testing
@@ -35,5 +36,7 @@ function createTransformer(conventionsOptions = {}) {
     return _createTransformer(conventionsOptions);
 }
 const { canInstrument, getCacheKey, process } = createTransformer();
-export default { canInstrument, getCacheKey, process, createTransformer, _createTransformer };
+var index = { canInstrument, getCacheKey, process, createTransformer, _createTransformer };
+
+export default index;
 //# sourceMappingURL=index.js.map

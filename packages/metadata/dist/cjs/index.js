@@ -1,6 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.applyMetadataPolyfill = exports.Metadata = exports.metadata = exports.isNullOrUndefined = exports.isObject = void 0;
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
 /**
  * Determine whether a value is an object.
  *
@@ -55,7 +56,6 @@ exports.applyMetadataPolyfill = exports.Metadata = exports.metadata = exports.is
 function isObject(value) {
     return typeof value === 'object' && value !== null || typeof value === 'function';
 }
-exports.isObject = isObject;
 /**
  * Determine whether a value is `null` or `undefined`.
  *
@@ -66,7 +66,6 @@ exports.isObject = isObject;
 function isNullOrUndefined(value) {
     return value === null || value === void 0;
 }
-exports.isNullOrUndefined = isNullOrUndefined;
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/ban-types */
 const metadataInternalSlot = new WeakMap();
@@ -348,7 +347,6 @@ function metadata(metadataKey, metadataValue) {
     }
     return decorator;
 }
-exports.metadata = metadata;
 function decorate(decorators, target, propertyKey, attributes) {
     if (propertyKey !== void 0) {
         if (!Array.isArray(decorators)) {
@@ -466,7 +464,7 @@ function $delete(metadataKey, target, propertyKey) {
     // 2. Return ? target.[[DeleteMetadata]](metadataKey, propertyKey).
     return OrdinaryDeleteMetadata(target, metadataKey, toPropertyKeyOrUndefined(propertyKey));
 }
-exports.Metadata = {
+const Metadata = {
     define: $define,
     has: $has,
     hasOwn: $hasOwn,
@@ -540,5 +538,10 @@ function applyMetadataPolyfill(reflect, throwIfConflict = true, forceOverwrite =
         $applyMetadataPolyfill(reflect, writable, configurable);
     }
 }
+
+exports.Metadata = Metadata;
 exports.applyMetadataPolyfill = applyMetadataPolyfill;
+exports.isNullOrUndefined = isNullOrUndefined;
+exports.isObject = isObject;
+exports.metadata = metadata;
 //# sourceMappingURL=index.js.map
