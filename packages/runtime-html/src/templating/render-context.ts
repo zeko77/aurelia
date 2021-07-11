@@ -1,34 +1,14 @@
-import { InstanceProvider } from '@aurelia/kernel';
-import { FragmentNodeSequence, INode, INodeSequence, IRenderLocation } from '../dom.js';
+import { FragmentNodeSequence, INode, INodeSequence } from '../dom.js';
 import { IRenderer, ITemplateCompiler, IInstruction, ICompliationInstruction } from '../renderer.js';
 import { CustomElementDefinition } from '../resources/custom-element.js';
-import { CustomAttribute } from '../resources/custom-attribute.js';
 import { IViewFactory, ViewFactory } from './view.js';
-import { AuSlotsInfo, IAuSlotsInfo } from '../resources/custom-elements/au-slot.js';
 import { IPlatform } from '../platform.js';
 import { IController } from './controller.js';
 
-import type {
-  Constructable,
-  IContainer,
-  IFactory,
-  IResolver,
-  IResourceKind,
-  Key,
-  Resolved,
-  ResourceDefinition,
-  ResourceType,
-  Transformer,
-} from '@aurelia/kernel';
+import type { IContainer } from '@aurelia/kernel';
 import type { LifecycleFlags } from '@aurelia/runtime';
-import type { ICustomAttributeViewModel, IHydratableController } from './controller.js';
-import type {
-  Instruction,
-  InstructionTypeName,
-  HydrateAttributeInstruction,
-  HydrateTemplateController,
-  HydrateElementInstruction,
-} from '../renderer.js';
+import type { IHydratableController } from './controller.js';
+import type { InstructionTypeName } from '../renderer.js';
 import type { PartialCustomElementDefinition } from '../resources/custom-element.js';
 
 const definitionContainerLookup = new WeakMap<CustomElementDefinition, WeakMap<IContainer, RenderContext>>();
@@ -41,7 +21,7 @@ export function isRenderContext(value: unknown): value is IRenderContext {
 /**
  * A render context that wraps an `IContainer` and must be compiled before it can be used for composing.
  */
-export interface IRenderContext extends IContainer {
+export interface IRenderContext {
   readonly platform: IPlatform;
 
   /**
@@ -54,7 +34,7 @@ export interface IRenderContext extends IContainer {
   /**
    * The `IContainer` (which may be, but is not guaranteed to be, an `IRenderContext`) that this `IRenderContext` was created with.
    */
-  readonly parentContainer: IContainer;
+  // readonly parentContainer: IContainer;
 
   readonly container: IContainer;
 
@@ -96,30 +76,6 @@ export interface ICompiledRenderContext extends IRenderContext {
    */
   createNodes(): INodeSequence;
 
-  /**
-   * Prepare a new container to associate with a custom element instance
-   */
-  createElementContainer(
-    parentController: IController,
-    host: HTMLElement,
-    instruction: HydrateElementInstruction,
-    viewFactory?: IViewFactory,
-    location?: IRenderLocation,
-    auSlotsInfo?: IAuSlotsInfo,
-  ): IContainer;
-
-  /**
-   * Instantiate a custom attribute
-   */
-  invokeAttribute(
-    parentController: IController,
-    host: HTMLElement,
-    instruction: HydrateAttributeInstruction | HydrateTemplateController,
-    viewFactory?: IViewFactory,
-    location?: IRenderLocation,
-    auSlotsInfo?: IAuSlotsInfo,
-  ): ICustomAttributeViewModel;
-
   render(
     flags: LifecycleFlags,
     controller: IController,
@@ -142,11 +98,6 @@ export function getRenderContext(
   container: IContainer,
 ): IRenderContext {
   const definition = CustomElementDefinition.getOrCreate(partialDefinition);
-
-  // injectable completely prevents caching, ensuring that each instance gets a new context context
-  if (definition.injectable !== null) {
-    return new RenderContext(definition, container);
-  }
 
   let containerLookup = definitionContainerLookup.get(definition);
   if (containerLookup === void 0) {
@@ -173,6 +124,8 @@ Reflect.defineProperty(getRenderContext, 'count', {
 });
 
 const emptyNodeCache = new WeakMap<IPlatform, FragmentNodeSequence>();
+const getRenderersSymb = Symbol();
+const compiledDefCache = new WeakMap<IContainer, WeakMap<PartialCustomElementDefinition, CustomElementDefinition>>();
 
 export class RenderContext implements ICompiledRenderContext {
   public get id(): number {
@@ -181,13 +134,6 @@ export class RenderContext implements ICompiledRenderContext {
 
   public readonly root: IContainer;
   public readonly container: IContainer;
-
-  private readonly parentControllerProvider: InstanceProvider<IController>;
-  private readonly elementProvider: InstanceProvider<HTMLElement>;
-  private readonly instructionProvider: InstanceProvider<Instruction>;
-  private readonly factoryProvider: ViewFactoryProvider;
-  private readonly renderLocationProvider: InstanceProvider<IRenderLocation>;
-  private readonly auSlotsInfoProvider: InstanceProvider<IAuSlotsInfo>;
 
   private fragment: Node | null = null;
   private factory: IViewFactory | undefined = void 0;
@@ -200,12 +146,14 @@ export class RenderContext implements ICompiledRenderContext {
 
   public constructor(
     public readonly definition: CustomElementDefinition,
-    public readonly parentContainer: IContainer,
+    container: IContainer,
   ) {
     ++renderContextCount;
-    const container = this.container = parentContainer;
-    // TODO(fkleuver): get contextual + root renderers
-    const renderers = container.getAll(IRenderer);
+    this.container = container;
+    // note: it's incorrect to get rendereres only from root,
+    //       as they could also be considered normal resources
+    //       though it's highly practical for limiting renderers to the global scope
+    const renderers = (container.root as any)[getRenderersSymb] ??= container.root.getAll(IRenderer);
     let i = 0;
     let renderer: IRenderer;
     for (; i < renderers.length; ++i) {
@@ -213,79 +161,9 @@ export class RenderContext implements ICompiledRenderContext {
       this.renderers[renderer.instructionType as string] = renderer;
     }
 
-    this.root = parentContainer.root;
+    this.root = container.root;
     this.platform = container.get(IPlatform);
-    this.elementProvider = new InstanceProvider('ElementResolver');
-    this.factoryProvider = new ViewFactoryProvider();
-    this.parentControllerProvider = new InstanceProvider('IController');
-    this.instructionProvider = new InstanceProvider<Instruction>('IInstruction');
-    this.renderLocationProvider = new InstanceProvider<IRenderLocation>('IRenderLocation');
-    this.auSlotsInfoProvider = new InstanceProvider<IAuSlotsInfo>('IAuSlotsInfo');
   }
-
-  // #region IServiceLocator api
-  public has<K extends Key>(key: K | Key, searchAncestors: boolean): boolean {
-    return this.container.has(key, searchAncestors);
-  }
-
-  public get<K extends Key>(key: K | Key): Resolved<K> {
-    return this.container.get(key);
-  }
-
-  public getAll<K extends Key>(key: K | Key): readonly Resolved<K>[] {
-    return this.container.getAll(key);
-  }
-  // #endregion
-
-  // #region IContainer api
-  public register(...params: unknown[]): IContainer {
-    return this.container.register(...params);
-  }
-
-  public registerResolver<K extends Key, T = K>(key: K, resolver: IResolver<T>): IResolver<T> {
-    return this.container.registerResolver(key, resolver);
-  }
-
-  // public deregisterResolverFor<K extends Key, T = K>(key: K): void {
-  //   this.container.deregisterResolverFor(key);
-  // }
-
-  public registerTransformer<K extends Key, T = K>(key: K, transformer: Transformer<T>): boolean {
-    return this.container.registerTransformer(key, transformer);
-  }
-
-  public getResolver<K extends Key, T = K>(key: K | Key, autoRegister?: boolean): IResolver<T> | null {
-    return this.container.getResolver(key, autoRegister);
-  }
-
-  public invoke<T, TDeps extends unknown[] = unknown[]>(key: Constructable<T>, dynamicDependencies?: TDeps): T {
-    return this.container.invoke(key, dynamicDependencies);
-  }
-
-  public getFactory<T extends Constructable>(key: T): IFactory<T> {
-    return this.container.getFactory(key);
-  }
-
-  public registerFactory<K extends Constructable>(key: K, factory: IFactory<K>): void {
-    this.container.registerFactory(key, factory);
-  }
-
-  public createChild(): IContainer {
-    return this.container.createChild();
-  }
-
-  public find<TType extends ResourceType, TDef extends ResourceDefinition>(kind: IResourceKind<TType, TDef>, name: string): TDef | null {
-    return this.container.find(kind, name);
-  }
-
-  public create<TType extends ResourceType, TDef extends ResourceDefinition>(kind: IResourceKind<TType, TDef>, name: string): InstanceType<TType> | null {
-    return this.container.create(kind, name);
-  }
-
-  public disposeResolvers() {
-    this.container.disposeResolvers();
-  }
-  // #endregion
 
   // #region IRenderContext api
   public compile(compilationInstruction: ICompliationInstruction | null): ICompiledRenderContext {
@@ -299,14 +177,23 @@ export class RenderContext implements ICompiledRenderContext {
     if (definition.needsCompile) {
       const container = this.container;
       const compiler = container.get(ITemplateCompiler);
-
-      compiledDefinition = this.compiledDefinition = compiler.compile(definition, container, compilationInstruction);
+      let compiledMap = compiledDefCache.get(container.root);
+      if (compiledMap == null) {
+        compiledDefCache.set(container.root, compiledMap = new WeakMap());
+      }
+      let compiled = compiledMap.get(definition);
+      if (compiled == null) {
+        compiledMap.set(definition, compiled = compiler.compile(definition, container, compilationInstruction));
+      } else {
+        container.register(...compiled.dependencies);
+      }
+      compiledDefinition = this.compiledDefinition = compiled;
     } else {
       compiledDefinition = this.compiledDefinition = definition;
     }
 
     // Support Recursive Components by adding self to own context
-    compiledDefinition.register(this);
+    compiledDefinition.register(this.container);
 
     if (fragmentCache.has(compiledDefinition)) {
       this.fragment = fragmentCache.get(compiledDefinition)!;
@@ -364,93 +251,6 @@ export class RenderContext implements ICompiledRenderContext {
   }
   // #endregion
 
-  public createElementContainer(
-    parentController: IController,
-    host: HTMLElement,
-    instruction: HydrateElementInstruction,
-    viewFactory?: IViewFactory,
-    location?: IRenderLocation,
-    auSlotsInfo?: IAuSlotsInfo,
-  ): IContainer {
-    const p = this.platform;
-    const container = this.container.createChild();
-    const nodeProvider = new InstanceProvider('ElementProvider', host);
-
-    // todo:
-    // both node provider and location provider may not be allowed to throw
-    // if there's no value associated, unlike InstanceProvider
-    // reason being some custom element can have `containerless` attribute on them
-    // causing the host to disappear, and replace by a location instead
-    container.registerResolver(INode, nodeProvider);
-    container.registerResolver(p.Node, nodeProvider);
-    container.registerResolver(p.Element, nodeProvider);
-    container.registerResolver(p.HTMLElement, nodeProvider);
-    container.registerResolver(IController, new InstanceProvider('IController', parentController));
-    container.registerResolver(IInstruction, new InstanceProvider('IInstruction', instruction));
-    container.registerResolver(IRenderLocation, location == null
-      ? noLocationProvider
-      : new InstanceProvider('IRenderLocation', location)
-    );
-    container.registerResolver(IViewFactory, viewFactory == null
-      ? noViewFactoryProvider
-      : new ViewFactoryProvider(viewFactory)
-    );
-    container.registerResolver(IAuSlotsInfo, auSlotsInfo == null
-      ? noAuSlotProvider
-      : new InstanceProvider('AuSlotInfo', auSlotsInfo)
-    );
-
-    return container;
-  }
-
-  public resourceInvoker: IContainer | null = null;
-  public invokeAttribute(
-    parentController: IController,
-    host: HTMLElement,
-    instruction: HydrateAttributeInstruction | HydrateTemplateController,
-    viewFactory?: IViewFactory,
-    location?: IRenderLocation,
-    auSlotsInfo?: IAuSlotsInfo
-  ): ICustomAttributeViewModel {
-    const p = this.platform;
-    const eProvider = this.elementProvider;
-    const pcProvider = this.parentControllerProvider;
-    const iProvider = this.instructionProvider;
-    const fProvider = this.factoryProvider;
-    const rlProvider = this.renderLocationProvider;
-    const siProvider = this.auSlotsInfoProvider;
-    const container = this.container;
-    const definition = container.find(CustomAttribute, instruction.res);
-    const Ctor = definition!.Type;
-    let invoker = this.resourceInvoker;
-    if (invoker == null) {
-      invoker = container.createChild();
-      invoker.registerResolver(INode, eProvider, true);
-      invoker.registerResolver(p.Node, eProvider);
-      invoker.registerResolver(p.Element, eProvider);
-      invoker.registerResolver(p.HTMLElement, eProvider);
-      invoker.registerResolver(IController, pcProvider, true);
-      invoker.registerResolver(IInstruction, iProvider, true);
-      invoker.registerResolver(IRenderLocation, rlProvider, true);
-      invoker.registerResolver(IViewFactory, fProvider, true);
-      invoker.registerResolver(IAuSlotsInfo, siProvider, true);
-    }
-
-    eProvider.prepare(host);
-    pcProvider.prepare(parentController);
-    iProvider.prepare(instruction);
-    // null or undefined wouldn't matter
-    // as it can just throw if trying to inject something non-existant
-    fProvider.prepare(viewFactory!);
-    rlProvider.prepare(location!);
-    siProvider.prepare(auSlotsInfo!);
-
-    const instance = invoker!.invoke(Ctor);
-    invoker.dispose();
-
-    return instance;
-  }
-
   // public create
 
   // #region IComponentFactory api
@@ -502,43 +302,3 @@ export class RenderContext implements ICompiledRenderContext {
   }
   // #endregion
 }
-
-class ViewFactoryProvider implements IResolver {
-  private factory: IViewFactory | null = null;
-
-  public constructor(
-    /**
-     * The factory instance that this provider will resolves to,
-     * until explicitly overridden by prepare call
-     */
-    factory?: IViewFactory | null
-  ) {
-    if (factory !== void 0) {
-      this.factory = factory;
-    }
-  }
-
-  public prepare(factory: IViewFactory): void {
-    this.factory = factory;
-  }
-  public get $isResolver(): true { return true; }
-
-  public resolve(): IViewFactory {
-    const factory = this.factory;
-    if (factory === null) {
-      throw new Error('Cannot resolve ViewFactory before the provider was prepared.');
-    }
-    if (typeof factory.name !== 'string' || factory.name.length === 0) {
-      throw new Error('Cannot resolve ViewFactory without a (valid) name.');
-    }
-    return factory;
-  }
-
-  public dispose(): void {
-    this.factory = null;
-  }
-}
-
-const noLocationProvider = new InstanceProvider<IRenderLocation>('IRenderLocation');
-const noViewFactoryProvider = new ViewFactoryProvider();
-const noAuSlotProvider = new InstanceProvider<AuSlotsInfo>('AuSlotsInfo');

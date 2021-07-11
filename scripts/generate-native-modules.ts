@@ -1,6 +1,14 @@
 /* eslint-disable */
+// convert all import paths into relative paths so it works natively in the browser
+// example:
+// import {} from '@aurelia/kernel'
+// ->
+// import {} from '../../kernel/dist/esm/index.js'
+// this works with CDN well, though it wouldn't have the proper sourcemap
+// todo: consider make this step part of the rollup build
+// ------------------------
 import * as ts from 'typescript';
-import { File, getFiles } from './files';
+import { getFiles } from './files';
 import { createLogger } from './logger';
 import project from './project';
 import * as path from 'path';

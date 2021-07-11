@@ -4,8 +4,8 @@ import {
   isInstruction,
   SetAttributeInstruction,
   IInstruction,
-  InstructionType,
   Instruction,
+  SetPropertyInstruction,
 } from './renderer.js';
 import { IPlatform } from './platform.js';
 import { CustomElement, CustomElementDefinition, CustomElementType } from './resources/custom-element.js';
@@ -119,20 +119,19 @@ function createElementForType(
   children?: ArrayLike<unknown>,
 ): RenderPlan {
   const definition = CustomElement.getDefinition(Type);
-  const tagName = definition.name;
   const instructions: IInstruction[] = [];
   const allInstructions = [instructions];
   const dependencies: Key[] = [];
   const childInstructions: Instruction[] = [];
   const bindables = definition.bindables;
-  const element = p.document.createElement(tagName);
+  const element = p.document.createElement(definition.name);
   element.className = 'au';
 
   if (!dependencies.includes(Type)) {
     dependencies.push(Type);
   }
 
-  instructions.push(new HydrateElementInstruction(tagName, void 0, childInstructions, null, false));
+  instructions.push(new HydrateElementInstruction(definition, void 0, childInstructions, null, false));
 
   if (props) {
     Object.keys(props)
@@ -142,16 +141,10 @@ function createElementForType(
         if (isInstruction(value)) {
           childInstructions.push(value);
         } else {
-          const bindable = bindables[to];
-
-          if (bindable !== void 0) {
-            childInstructions.push({
-              type: InstructionType.setProperty,
-              to,
-              value
-            });
-          } else {
+          if (bindables[to] === void 0) {
             childInstructions.push(new SetAttributeInstruction(value, to));
+          } else {
+            childInstructions.push(new SetPropertyInstruction(value, to));
           }
         }
       });
