@@ -9,7 +9,6 @@ export declare class MockBinding implements IConnectableBinding {
     observerLocator: IObserverLocator;
     locator: IServiceLocator;
     $scope?: Scope | undefined;
-    $hostScope: Scope | null;
     isBound: boolean;
     value: unknown;
     obs: BindingObserverRecord;
@@ -18,7 +17,7 @@ export declare class MockBinding implements IConnectableBinding {
     updateSource(value: unknown, flags: LifecycleFlags): void;
     handleChange(newValue: unknown, _previousValue: unknown, flags: LifecycleFlags): void;
     handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void;
-    observeProperty(obj: IIndexable, propertyName: string): void;
+    observe(obj: IIndexable, propertyName: string): void;
     observeCollection(col: Collection): void;
     subscribeTo(subscribable: ISubscribable | ICollectionSubscribable): void;
     $bind(flags: LifecycleFlags, scope: Scope): void;
