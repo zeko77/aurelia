@@ -20,8 +20,6 @@ import type { Scope } from '../observation/binding-context.js';
 import { IConnectableBinding } from './connectable.js';
 
 export const enum ExpressionKind {
-  Connects             = 0b000000000001_00000, // The expression's connect() function calls observeProperty and/or calls connect() on another expression that it wraps (all expressions except for AccessThis, PrimitiveLiteral, CallMember/Function and Assign)
-  Observes             = 0b000000000010_00000, // The expression's connect() function calls observeProperty (only AccessScope, AccessMember and AccessKeyed do this)
   CallsFunction        = 0b000000000100_00000, // Calls a function (CallFunction, CallScope, CallMember, TaggedTemplate) -> needs a valid function object returning from its lefthandside's evaluate()
   HasAncestor          = 0b000000001000_00000, // Has an "ancestor" property, meaning the expression could climb up the context (only AccessThis, AccessScope and CallScope)
   IsPrimary            = 0b000000010000_00000, // Is a primary expression according to ES parsing rules
@@ -29,34 +27,34 @@ export const enum ExpressionKind {
   HasBind              = 0b000001000000_00000, // Has a bind() method (currently only BindingBehavior)
   HasUnbind            = 0b000010000000_00000, // Has an unbind() method (currentl only BindingBehavior and ValueConverter)
   IsAssignable         = 0b000100000000_00000, // Is an assignable expression according to ES parsing rules (only AccessScope, AccessMember, AccessKeyed ans Assign)
-  IsLiteral            = 0b001000000000_00000, // Is an Aurelia resource (ValueConverter or BindingBehavior)
-  IsResource           = 0b010000000000_00000, // Is literal expression (Primitive, Array, Object or Template)
+  IsLiteral            = 0b001000000000_00000, // Is literal expression (Primitive, Array, Object or Template)
+  IsResource           = 0b010000000000_00000, // Is an Aurelia resource (ValueConverter or BindingBehavior)
   IsForDeclaration     = 0b100000000000_00000, // Is a For declaration (for..of, for..in -> currently only ForOfStatement)
   Type                 = 0b000000000000_11111, // Type mask to uniquely identify each AST class (concrete types start below)
   // ---------------------------------------------------------------------------------------------------------------------------
   AccessThis           = 0b000000111000_00001, //               HasAncestor
-  AccessScope          = 0b000100111011_00010, // IsAssignable  HasAncestor       Observes  Connects
-  ArrayLiteral         = 0b001000110001_00011, //                                           Connects
-  ObjectLiteral        = 0b001000110001_00100, //                                           Connects
+  AccessScope          = 0b000100111011_00010, // IsAssignable  HasAncestor
+  ArrayLiteral         = 0b001000110001_00011, //
+  ObjectLiteral        = 0b001000110001_00100, //
   PrimitiveLiteral     = 0b001000110000_00101, //
-  Template             = 0b001000110001_00110, //                                           Connects
-  Unary                = 0b000000000001_00111, //                                           Connects
-  CallScope            = 0b000000101101_01000, //               HasAncestor  CallsFunction  Connects
+  Template             = 0b001000110001_00110, //
+  Unary                = 0b000000000001_00111, //
+  CallScope            = 0b000000101101_01000, //               HasAncestor  CallsFunction
   CallMember           = 0b000000100100_01001, //                            CallsFunction
   CallFunction         = 0b000000100100_01010, //                            CallsFunction
-  AccessMember         = 0b000100100011_01011, // IsAssignable                    Observes  Connects
-  AccessKeyed          = 0b000100100011_01100, // IsAssignable                    Observes  Connects
-  TaggedTemplate       = 0b000000100101_01101, //                            CallsFunction  Connects
-  Binary               = 0b000000000001_01110, //                                           Connects
-  Conditional          = 0b000000000001_11111, //                                           Connects
+  AccessMember         = 0b000100100011_01011, // IsAssignable
+  AccessKeyed          = 0b000100100011_01100, // IsAssignable
+  TaggedTemplate       = 0b000000100101_01101, //                            CallsFunction
+  Binary               = 0b000000000001_01110, //
+  Conditional          = 0b000000000001_11111, //
   Assign               = 0b000100000000_10000, // IsAssignable
-  ValueConverter       = 0b010010000001_10001, //                                           Connects
-  BindingBehavior      = 0b010011000001_10010, //                                           Connects
-  HtmlLiteral          = 0b000000000001_10011, //                                           Connects
+  ValueConverter       = 0b010010000001_10001, //
+  BindingBehavior      = 0b010011000001_10010, //
+  HtmlLiteral          = 0b000000000001_10011, //
   ArrayBindingPattern  = 0b100000000000_10100, //
   ObjectBindingPattern = 0b100000000000_10101, //
   BindingIdentifier    = 0b100000000000_10110, //
-  ForOfStatement       = 0b000011000001_10111, //                                           Connects
+  ForOfStatement       = 0b000011000001_10111, //
   Interpolation        = 0b000000000000_11000  //
 }
 
@@ -359,13 +357,11 @@ export class Unparser implements IVisitor<void> {
   }
 }
 
-function chooseScope(accessHostScope: boolean, s: Scope, hs: Scope | null) {
-  if (accessHostScope) {
-    if (hs === null || hs === void 0) { throw new Error('Host scope is missing. Are you using `$host` outside the `au-slot`? Or missing the `au-slot` attribute?'); }
-    return hs;
-  }
-  return s;
-}
+// export interface IAstEvaluator {
+//   readonly scope: Scope;
+//   create<T>(kind: ExpressionKind.ValueConverter, name: string): ValueConverterInstance<T>;
+//   create<T>(kind: ExpressionKind.BindingBehavior, name: string): BindingBehaviorInstance<T>;
+// }
 
 type BindingWithBehavior = IConnectableBinding & { [key: string]: BindingBehaviorInstance | undefined };
 
@@ -374,7 +370,7 @@ export class CustomExpression {
     public readonly value: string,
   ) {}
 
-  public evaluate(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _c: IConnectable | null): string {
+  public evaluate(_f: LF, _s: Scope, _l: IServiceLocator, _c: IConnectable | null): string {
     return this.value;
   }
 }
@@ -395,17 +391,17 @@ export class BindingBehaviorExpression {
     this.behaviorKey = BindingBehavior.keyFrom(name);
   }
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): unknown {
-    return this.expression.evaluate(f, s, hs, l, c);
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown {
+    return this.expression.evaluate(f, s, l, c);
   }
 
-  public assign(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, val: unknown): unknown {
-    return this.expression.assign(f, s, hs, l, val);
+  public assign(f: LF, s: Scope, l: IServiceLocator, val: unknown): unknown {
+    return this.expression.assign(f, s, l, val);
   }
 
-  public bind(f: LF, s: Scope, hs: Scope | null, b: IConnectableBinding): void {
+  public bind(f: LF, s: Scope, b: IConnectableBinding): void {
     if (this.expression.hasBind) {
-      this.expression.bind(f, s, hs, b);
+      this.expression.bind(f, s, b);
     }
     const behavior = b.locator.get<BindingBehaviorInstance>(this.behaviorKey);
     if (behavior == null) {
@@ -414,24 +410,24 @@ export class BindingBehaviorExpression {
     if (!(behavior instanceof BindingBehaviorFactory)) {
       if ((b as BindingWithBehavior)[this.behaviorKey] === void 0) {
         (b as BindingWithBehavior)[this.behaviorKey] = behavior;
-        (behavior.bind.call as (...args: unknown[]) => void)(behavior, f, s, hs, b, ...this.args.map(a => a.evaluate(f, s, hs, b.locator, null)));
+        (behavior.bind.call as (...args: unknown[]) => void)(behavior, f, s, b, ...this.args.map(a => a.evaluate(f, s, b.locator, null)));
       } else {
         throw new Error(`BindingBehavior named '${this.name}' already applied.`);
       }
     }
   }
 
-  public unbind(f: LF, s: Scope, hs: Scope | null, b: IConnectableBinding): void {
+  public unbind(f: LF, s: Scope, b: IConnectableBinding): void {
     const key = this.behaviorKey;
     const $b = b as BindingWithBehavior;
     if ($b[key] !== void 0) {
       if (typeof $b[key]!.unbind === 'function') {
-        $b[key]!.unbind(f, s, hs, b);
+        $b[key]!.unbind(f, s, b);
       }
       $b[key] = void 0;
     }
     if (this.expression.hasUnbind) {
-      this.expression.unbind(f, s, hs, b);
+      this.expression.unbind(f, s, b);
     }
   }
 
@@ -458,7 +454,7 @@ export class ValueConverterExpression {
     this.converterKey = ValueConverter.keyFrom(name);
   }
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): unknown {
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown {
     const vc = l.get<ValueConverterExpression & ValueConverterInstance & { signals?: string[] }>(this.converterKey);
     if (vc == null) {
       throw new Error(`ValueConverter named '${this.name}' could not be found. Did you forget to register it as a dependency?`);
@@ -477,23 +473,23 @@ export class ValueConverterExpression {
       }
     }
     if ('toView' in vc) {
-      return vc.toView(this.expression.evaluate(f, s, hs, l, c), ...this.args.map(a => a.evaluate(f, s, hs, l, c)));
+      return vc.toView(this.expression.evaluate(f, s, l, c), ...this.args.map(a => a.evaluate(f, s, l, c)));
     }
-    return this.expression.evaluate(f, s, hs, l, c);
+    return this.expression.evaluate(f, s, l, c);
   }
 
-  public assign(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, val: unknown): unknown {
+  public assign(f: LF, s: Scope, l: IServiceLocator, val: unknown): unknown {
     const vc = l.get<ValueConverterExpression & ValueConverterInstance>(this.converterKey);
     if (vc == null) {
       throw new Error(`ValueConverter named '${this.name}' could not be found. Did you forget to register it as a dependency?`);
     }
     if ('fromView' in vc) {
-      val = vc.fromView!(val, ...this.args.map(a => a.evaluate(f, s, hs, l, null)));
+      val = vc.fromView!(val, ...this.args.map(a => a.evaluate(f, s, l, null)));
     }
-    return this.expression.assign(f, s, hs, l, val);
+    return this.expression.assign(f, s, l, val);
   }
 
-  public unbind(_f: LF, _s: Scope, _hs: Scope | null, b: IConnectableBinding): void {
+  public unbind(_f: LF, _s: Scope, b: IConnectableBinding): void {
     const vc = b.locator.get(this.converterKey) as { signals?: string[] };
     if (vc.signals === void 0) {
       return;
@@ -525,13 +521,13 @@ export class AssignExpression {
     public readonly value: IsAssign,
   ) {}
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): unknown {
-    return this.target.assign(f, s, hs, l, this.value.evaluate(f, s, hs, l, c));
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown {
+    return this.target.assign(f, s, l, this.value.evaluate(f, s, l, c));
   }
 
-  public assign(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, val: unknown): unknown {
-    this.value.assign(f, s, hs, l, val);
-    return this.target.assign(f, s, hs, l, val);
+  public assign(f: LF, s: Scope, l: IServiceLocator, val: unknown): unknown {
+    this.value.assign(f, s, l, val);
+    return this.target.assign(f, s, l, val);
   }
 
   public accept<T>(visitor: IVisitor<T>): T {
@@ -554,11 +550,11 @@ export class ConditionalExpression {
     public readonly no: IsAssign,
   ) {}
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): unknown {
-    return this.condition.evaluate(f, s, hs, l, c) ? this.yes.evaluate(f, s, hs, l, c) : this.no.evaluate(f, s, hs, l, c);
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown {
+    return this.condition.evaluate(f, s, l, c) ? this.yes.evaluate(f, s, l, c) : this.no.evaluate(f, s, l, c);
   }
 
-  public assign(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _obj: unknown): unknown {
+  public assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown {
     return void 0;
   }
 
@@ -573,8 +569,6 @@ export class ConditionalExpression {
 
 export class AccessThisExpression {
   public static readonly $this: AccessThisExpression = new AccessThisExpression(0);
-  // $host and $this are loosely the same thing. $host is used in the context of `au-slot` with the primary objective of determining the s.
-  public static readonly $host: AccessThisExpression = new AccessThisExpression(0);
   public static readonly $parent: AccessThisExpression = new AccessThisExpression(1);
   public get $kind(): ExpressionKind.AccessThis { return ExpressionKind.AccessThis; }
   public get hasBind(): false { return false; }
@@ -584,10 +578,7 @@ export class AccessThisExpression {
     public readonly ancestor: number = 0,
   ) {}
 
-  public evaluate(_f: LF, s: Scope, hs: Scope | null, _l: IServiceLocator, _c: IConnectable | null): IBindingContext | undefined {
-    if (this === AccessThisExpression.$host) {
-      s = chooseScope(true, s, hs);
-    }
+  public evaluate(_f: LF, s: Scope, _l: IServiceLocator, _c: IConnectable | null): IBindingContext | undefined {
     let oc: IOverrideContext | null = s.overrideContext;
     let currentScope: Scope | null = s;
     let i = this.ancestor;
@@ -598,7 +589,7 @@ export class AccessThisExpression {
     return i < 1 && oc ? oc.bindingContext : void 0;
   }
 
-  public assign(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _obj: unknown): unknown {
+  public assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown {
     return void 0;
   }
 
@@ -619,23 +610,28 @@ export class AccessScopeExpression {
   public constructor(
     public readonly name: string,
     public readonly ancestor: number = 0,
-    public readonly accessHostScope: boolean = false,
   ) {}
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, _l: IServiceLocator, c: IConnectable | null): IBindingContext | IOverrideContext {
-    const obj = BindingContext.get(chooseScope(this.accessHostScope, s, hs), this.name, this.ancestor, f, hs) as IBindingContext;
+  public evaluate(f: LF, s: Scope, _l: IServiceLocator, c: IConnectable | null): IBindingContext | IOverrideContext {
+    const obj = BindingContext.get(s, this.name, this.ancestor, f) as IBindingContext;
     if (c !== null) {
-      c.observeProperty(obj, this.name);
+      c.observe(obj, this.name);
     }
     const evaluatedValue = obj[this.name] as ReturnType<AccessScopeExpression['evaluate']>;
+    if (evaluatedValue == null && this.name === '$host') {
+      throw new Error('Unable to find $host context. Did you forget [au-slot] attribute?');
+    }
     if (f & LF.isStrictBindingStrategy) {
       return evaluatedValue;
     }
     return evaluatedValue == null ? '' as unknown as ReturnType<AccessScopeExpression['evaluate']> : evaluatedValue;
   }
 
-  public assign(f: LF, s: Scope, hs: Scope | null, _l: IServiceLocator, val: unknown): unknown {
-    const obj = BindingContext.get(chooseScope(this.accessHostScope, s, hs), this.name, this.ancestor, f, hs) as IObservable;
+  public assign(f: LF, s: Scope, _l: IServiceLocator, val: unknown): unknown {
+    if (this.name === '$host') {
+      throw new Error('Invalid assignment. $host is a reserved keyword.');
+    }
+    const obj = BindingContext.get(s, this.name, this.ancestor, f) as IObservable;
     if (obj instanceof Object) {
       if (obj.$observers?.[this.name] !== void 0) {
         obj.$observers[this.name].setValue(val, f);
@@ -666,25 +662,25 @@ export class AccessMemberExpression {
     public readonly name: string,
   ) {}
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): unknown {
-    const instance = this.object.evaluate(f, s, hs, l, (f & LF.observeLeafPropertiesOnly) > 0 ? null : c) as IIndexable;
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown {
+    const instance = this.object.evaluate(f, s, l, (f & LF.observeLeafPropertiesOnly) > 0 ? null : c) as IIndexable;
     if (f & LF.isStrictBindingStrategy) {
       if (instance == null) {
         return instance;
       }
       if (c !== null) {
-        c.observeProperty(instance, this.name);
+        c.observe(instance, this.name);
       }
       return instance[this.name];
     }
     if (c !== null && instance instanceof Object) {
-      c.observeProperty(instance, this.name);
+      c.observe(instance, this.name);
     }
     return instance ? instance[this.name] : '';
   }
 
-  public assign(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, val: unknown): unknown {
-    const obj = this.object.evaluate(f, s, hs, l, null) as IObservable;
+  public assign(f: LF, s: Scope, l: IServiceLocator, val: unknown): unknown {
+    const obj = this.object.evaluate(f, s, l, null) as IObservable;
     if (obj instanceof Object) {
       if (obj.$observers !== void 0 && obj.$observers[this.name] !== void 0) {
         obj.$observers[this.name].setValue(val, f);
@@ -692,7 +688,7 @@ export class AccessMemberExpression {
         obj[this.name] = val;
       }
     } else {
-      this.object.assign(f, s, hs, l, { [this.name]: val });
+      this.object.assign(f, s, l, { [this.name]: val });
     }
     return val;
   }
@@ -716,21 +712,21 @@ export class AccessKeyedExpression {
     public readonly key: IsAssign,
   ) {}
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): unknown {
-    const instance = this.object.evaluate(f, s, hs, l, (f & LF.observeLeafPropertiesOnly) > 0 ? null : c) as IIndexable;
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown {
+    const instance = this.object.evaluate(f, s, l, (f & LF.observeLeafPropertiesOnly) > 0 ? null : c) as IIndexable;
     if (instance instanceof Object) {
-      const key = this.key.evaluate(f, s, hs, l, (f & LF.observeLeafPropertiesOnly) > 0 ? null : c) as string;
+      const key = this.key.evaluate(f, s, l, (f & LF.observeLeafPropertiesOnly) > 0 ? null : c) as string;
       if (c !== null) {
-        c.observeProperty(instance, key);
+        c.observe(instance, key);
       }
       return instance[key];
     }
     return void 0;
   }
 
-  public assign(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, val: unknown): unknown {
-    const instance = this.object.evaluate(f, s, hs, l, null) as IIndexable;
-    const key = this.key.evaluate(f, s, hs, l, null) as string;
+  public assign(f: LF, s: Scope, l: IServiceLocator, val: unknown): unknown {
+    const instance = this.object.evaluate(f, s, l, null) as IIndexable;
+    const key = this.key.evaluate(f, s, l, null) as string;
     return instance[key] = val;
   }
 
@@ -752,14 +748,11 @@ export class CallScopeExpression {
     public readonly name: string,
     public readonly args: readonly IsAssign[],
     public readonly ancestor: number = 0,
-    public readonly accessHostScope: boolean = false,
   ) {}
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): unknown {
-    s = chooseScope(this.accessHostScope, s, hs);
-
-    const args = this.args.map(a => a.evaluate(f, s, hs, l, c));
-    const context = BindingContext.get(s, this.name, this.ancestor, f, hs)!;
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown {
+    const args = this.args.map(a => a.evaluate(f, s, l, c));
+    const context = BindingContext.get(s, this.name, this.ancestor, f)!;
     // ideally, should observe property represents by this.name as well
     // because it could be changed
     // todo: did it ever surprise anyone?
@@ -770,7 +763,7 @@ export class CallScopeExpression {
     return void 0;
   }
 
-  public assign(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _obj: unknown): unknown {
+  public assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown {
     return void 0;
   }
 
@@ -794,10 +787,10 @@ export class CallMemberExpression {
     public readonly args: readonly IsAssign[],
   ) {}
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): unknown {
-    const instance = this.object.evaluate(f, s, hs, l, (f & LF.observeLeafPropertiesOnly) > 0 ? null : c) as IIndexable;
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown {
+    const instance = this.object.evaluate(f, s, l, (f & LF.observeLeafPropertiesOnly) > 0 ? null : c) as IIndexable;
 
-    const args = this.args.map(a => a.evaluate(f, s, hs, l, c));
+    const args = this.args.map(a => a.evaluate(f, s, l, c));
     const func = getFunction(f, instance, this.name);
     if (func) {
       return func.apply(instance, args as unknown[]);
@@ -805,7 +798,7 @@ export class CallMemberExpression {
     return void 0;
   }
 
-  public assign(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _obj: unknown): unknown {
+  public assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown {
     return void 0;
   }
 
@@ -828,10 +821,10 @@ export class CallFunctionExpression {
     public readonly args: readonly IsAssign[],
   ) {}
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): unknown {
-    const func = this.func.evaluate(f, s, hs, l, c);
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown {
+    const func = this.func.evaluate(f, s, l, c);
     if (typeof func === 'function') {
-      return func(...this.args.map(a => a.evaluate(f, s, hs, l, c)));
+      return func(...this.args.map(a => a.evaluate(f, s, l, c)));
     }
     if (!(f & LF.mustEvaluate) && (func == null)) {
       return void 0;
@@ -839,7 +832,7 @@ export class CallFunctionExpression {
     throw new Error(`Expression is not a function.`);
   }
 
-  public assign(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _obj: unknown): unknown {
+  public assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown {
     return void 0;
   }
 
@@ -863,33 +856,33 @@ export class BinaryExpression {
     public readonly right: IsBinary,
   ) {}
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): unknown {
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown {
     switch (this.operation) {
       case '&&':
         // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-        return this.left.evaluate(f, s, hs, l, c) && this.right.evaluate(f, s, hs, l, c);
+        return this.left.evaluate(f, s, l, c) && this.right.evaluate(f, s, l, c);
       case '||':
         // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-        return this.left.evaluate(f, s, hs, l, c) || this.right.evaluate(f, s, hs, l, c);
+        return this.left.evaluate(f, s, l, c) || this.right.evaluate(f, s, l, c);
       case '==':
-        return this.left.evaluate(f, s, hs, l, c) == this.right.evaluate(f, s, hs, l, c);
+        return this.left.evaluate(f, s, l, c) == this.right.evaluate(f, s, l, c);
       case '===':
-        return this.left.evaluate(f, s, hs, l, c) === this.right.evaluate(f, s, hs, l, c);
+        return this.left.evaluate(f, s, l, c) === this.right.evaluate(f, s, l, c);
       case '!=':
-        return this.left.evaluate(f, s, hs, l, c) != this.right.evaluate(f, s, hs, l, c);
+        return this.left.evaluate(f, s, l, c) != this.right.evaluate(f, s, l, c);
       case '!==':
-        return this.left.evaluate(f, s, hs, l, c) !== this.right.evaluate(f, s, hs, l, c);
+        return this.left.evaluate(f, s, l, c) !== this.right.evaluate(f, s, l, c);
       case 'instanceof': {
-        const right = this.right.evaluate(f, s, hs, l, c);
+        const right = this.right.evaluate(f, s, l, c);
         if (typeof right === 'function') {
-          return this.left.evaluate(f, s, hs, l, c) instanceof right;
+          return this.left.evaluate(f, s, l, c) instanceof right;
         }
         return false;
       }
       case 'in': {
-        const right = this.right.evaluate(f, s, hs, l, c);
+        const right = this.right.evaluate(f, s, l, c);
         if (right instanceof Object) {
-          return this.left.evaluate(f, s, hs, l, c) as string in right;
+          return this.left.evaluate(f, s, l, c) as string in right;
         }
         return false;
       }
@@ -898,8 +891,8 @@ export class BinaryExpression {
       // this makes bugs in user code easier to track down for end users
       // also, skipping these checks and leaving it to the runtime is a nice little perf boost and simplifies our code
       case '+': {
-        const left: any = this.left.evaluate(f, s, hs, l, c);
-        const right: any = this.right.evaluate(f, s, hs, l, c);
+        const left: any = this.left.evaluate(f, s, l, c);
+        const right: any = this.right.evaluate(f, s, l, c);
 
         if ((f & LF.isStrictBindingStrategy) > 0) {
           return (left as number) + (right as number);
@@ -917,27 +910,27 @@ export class BinaryExpression {
         return (left as number) + (right as number);
       }
       case '-':
-        return (this.left.evaluate(f, s, hs, l, c) as number) - (this.right.evaluate(f, s, hs, l, c) as number);
+        return (this.left.evaluate(f, s, l, c) as number) - (this.right.evaluate(f, s, l, c) as number);
       case '*':
-        return (this.left.evaluate(f, s, hs, l, c) as number) * (this.right.evaluate(f, s, hs, l, c) as number);
+        return (this.left.evaluate(f, s, l, c) as number) * (this.right.evaluate(f, s, l, c) as number);
       case '/':
-        return (this.left.evaluate(f, s, hs, l, c) as number) / (this.right.evaluate(f, s, hs, l, c) as number);
+        return (this.left.evaluate(f, s, l, c) as number) / (this.right.evaluate(f, s, l, c) as number);
       case '%':
-        return (this.left.evaluate(f, s, hs, l, c) as number) % (this.right.evaluate(f, s, hs, l, c) as number);
+        return (this.left.evaluate(f, s, l, c) as number) % (this.right.evaluate(f, s, l, c) as number);
       case '<':
-        return (this.left.evaluate(f, s, hs, l, c) as number) < (this.right.evaluate(f, s, hs, l, c) as number);
+        return (this.left.evaluate(f, s, l, c) as number) < (this.right.evaluate(f, s, l, c) as number);
       case '>':
-        return (this.left.evaluate(f, s, hs, l, c) as number) > (this.right.evaluate(f, s, hs, l, c) as number);
+        return (this.left.evaluate(f, s, l, c) as number) > (this.right.evaluate(f, s, l, c) as number);
       case '<=':
-        return (this.left.evaluate(f, s, hs, l, c) as number) <= (this.right.evaluate(f, s, hs, l, c) as number);
+        return (this.left.evaluate(f, s, l, c) as number) <= (this.right.evaluate(f, s, l, c) as number);
       case '>=':
-        return (this.left.evaluate(f, s, hs, l, c) as number) >= (this.right.evaluate(f, s, hs, l, c) as number);
+        return (this.left.evaluate(f, s, l, c) as number) >= (this.right.evaluate(f, s, l, c) as number);
       default:
         throw new Error(`Unknown binary operator: '${this.operation}'`);
     }
   }
 
-  public assign(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _obj: unknown): unknown {
+  public assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown {
     return void 0;
   }
 
@@ -960,24 +953,24 @@ export class UnaryExpression {
     public readonly expression: IsLeftHandSide,
   ) {}
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): unknown {
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown {
     switch (this.operation) {
       case 'void':
-        return void this.expression.evaluate(f, s, hs, l, c);
+        return void this.expression.evaluate(f, s, l, c);
       case 'typeof':
-        return typeof this.expression.evaluate(f | LF.isStrictBindingStrategy, s, hs, l, c);
+        return typeof this.expression.evaluate(f | LF.isStrictBindingStrategy, s, l, c);
       case '!':
-        return !(this.expression.evaluate(f, s, hs, l, c) as boolean);
+        return !(this.expression.evaluate(f, s, l, c) as boolean);
       case '-':
-        return -(this.expression.evaluate(f, s, hs, l, c) as number);
+        return -(this.expression.evaluate(f, s, l, c) as number);
       case '+':
-        return +(this.expression.evaluate(f, s, hs, l, c) as number);
+        return +(this.expression.evaluate(f, s, l, c) as number);
       default:
         throw new Error(`Unknown unary operator: '${this.operation}'`);
     }
   }
 
-  public assign(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _obj: unknown): unknown {
+  public assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown {
     return void 0;
   }
 
@@ -1003,11 +996,11 @@ export class PrimitiveLiteralExpression<TValue extends null | undefined | number
     public readonly value: TValue,
   ) {}
 
-  public evaluate(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _c: IConnectable | null): TValue {
+  public evaluate(_f: LF, _s: Scope, _l: IServiceLocator, _c: IConnectable | null): TValue {
     return this.value;
   }
 
-  public assign(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _obj: unknown): unknown {
+  public assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown {
     return void 0;
   }
 
@@ -1029,10 +1022,10 @@ export class HtmlLiteralExpression {
     public readonly parts: readonly HtmlLiteralExpression[],
   ) {}
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): string {
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): string {
     let result = '';
     for (let i = 0; i < this.parts.length; ++i) {
-      const v = this.parts[i].evaluate(f, s, hs, l, c);
+      const v = this.parts[i].evaluate(f, s, l, c);
       if (v == null) {
         continue;
       }
@@ -1041,7 +1034,7 @@ export class HtmlLiteralExpression {
     return result;
   }
 
-  public assign(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _obj: unknown, _projection?: ResourceDefinition): unknown {
+  public assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown, _projection?: ResourceDefinition): unknown {
     return void 0;
   }
 
@@ -1064,11 +1057,11 @@ export class ArrayLiteralExpression {
     public readonly elements: readonly IsAssign[],
   ) {}
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): readonly unknown[] {
-    return this.elements.map(e => e.evaluate(f, s, hs, l, c));
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): readonly unknown[] {
+    return this.elements.map(e => e.evaluate(f, s, l, c));
   }
 
-  public assign(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _obj: unknown): unknown {
+  public assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown {
     return void 0;
   }
 
@@ -1092,15 +1085,15 @@ export class ObjectLiteralExpression {
     public readonly values: readonly IsAssign[],
   ) {}
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): Record<string, unknown> {
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): Record<string, unknown> {
     const instance: Record<string, unknown> = {};
     for (let i = 0; i < this.keys.length; ++i) {
-      instance[this.keys[i]] = this.values[i].evaluate(f, s, hs, l, c);
+      instance[this.keys[i]] = this.values[i].evaluate(f, s, l, c);
     }
     return instance;
   }
 
-  public assign(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _obj: unknown): unknown {
+  public assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown {
     return void 0;
   }
 
@@ -1124,16 +1117,16 @@ export class TemplateExpression {
     public readonly expressions: readonly IsAssign[] = emptyArray,
   ) {}
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): string {
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): string {
     let result = this.cooked[0];
     for (let i = 0; i < this.expressions.length; ++i) {
-      result += String(this.expressions[i].evaluate(f, s, hs, l, c));
+      result += String(this.expressions[i].evaluate(f, s, l, c));
       result += this.cooked[i + 1];
     }
     return result;
   }
 
-  public assign(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _obj: unknown): unknown {
+  public assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown {
     return void 0;
   }
 
@@ -1160,16 +1153,16 @@ export class TaggedTemplateExpression {
     cooked.raw = raw;
   }
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): string {
-    const results = this.expressions.map(e => e.evaluate(f, s, hs, l, c));
-    const func = this.func.evaluate(f, s, hs, l, c);
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): string {
+    const results = this.expressions.map(e => e.evaluate(f, s, l, c));
+    const func = this.func.evaluate(f, s, l, c);
     if (typeof func !== 'function') {
       throw new Error(`Left-hand side of tagged template expression is not a function.`);
     }
     return func(this.cooked, ...results);
   }
 
-  public assign(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _obj: unknown): unknown {
+  public assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown {
     return void 0;
   }
 
@@ -1192,7 +1185,7 @@ export class ArrayBindingPattern {
     public readonly elements: readonly IsAssign[],
   ) {}
 
-  public evaluate(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _c: IConnectable | null): unknown {
+  public evaluate(_f: LF, _s: Scope, _l: IServiceLocator, _c: IConnectable | null): unknown {
     // TODO: this should come after batch
     // as a destructuring expression like [x, y] = value
     //
@@ -1208,7 +1201,7 @@ export class ArrayBindingPattern {
     return void 0;
   }
 
-  public assign(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _obj: unknown): unknown {
+  public assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown {
     // TODO
     return void 0;
   }
@@ -1233,7 +1226,7 @@ export class ObjectBindingPattern {
     public readonly values: readonly IsAssign[],
   ) {}
 
-  public evaluate(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _c: IConnectable | null): unknown {
+  public evaluate(_f: LF, _s: Scope, _l: IServiceLocator, _c: IConnectable | null): unknown {
     // TODO
     // similar to array binding ast, this should only come after batch
     // for a single notification per destructing,
@@ -1241,7 +1234,7 @@ export class ObjectBindingPattern {
     return void 0;
   }
 
-  public assign(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _obj: unknown): unknown {
+  public assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown {
     // TODO
     return void 0;
   }
@@ -1264,7 +1257,7 @@ export class BindingIdentifier {
     public readonly name: string,
   ) {}
 
-  public evaluate(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator | null, _c: IConnectable | null): string {
+  public evaluate(_f: LF, _s: Scope, _l: IServiceLocator | null, _c: IConnectable | null): string {
     return this.name;
   }
 
@@ -1293,11 +1286,11 @@ export class ForOfStatement {
     public readonly iterable: IsBindingBehavior,
   ) {}
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): unknown {
-    return this.iterable.evaluate(f, s, hs, l, c);
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown {
+    return this.iterable.evaluate(f, s, l, c);
   }
 
-  public assign(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _obj: unknown): unknown {
+  public assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown {
     return void 0;
   }
 
@@ -1326,15 +1319,15 @@ export class ForOfStatement {
     }
   }
 
-  public bind(f: LF, s: Scope, hs: Scope | null, b: IConnectableBinding): void {
+  public bind(f: LF, s: Scope, b: IConnectableBinding): void {
     if (this.iterable.hasBind) {
-      this.iterable.bind(f, s, hs, b);
+      this.iterable.bind(f, s, b);
     }
   }
 
-  public unbind(f: LF, s: Scope, hs: Scope | null, b: IConnectableBinding): void {
+  public unbind(f: LF, s: Scope, b: IConnectableBinding): void {
     if (this.iterable.hasUnbind) {
-      this.iterable.unbind(f, s, hs, b);
+      this.iterable.unbind(f, s, b);
     }
   }
 
@@ -1367,20 +1360,20 @@ export class Interpolation {
     this.firstExpression = expressions[0];
   }
 
-  public evaluate(f: LF, s: Scope, hs: Scope | null, l: IServiceLocator, c: IConnectable | null): string {
+  public evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): string {
     if (this.isMulti) {
       let result = this.parts[0];
       for (let i = 0; i < this.expressions.length; ++i) {
-        result += String(this.expressions[i].evaluate(f, s, hs, l, c));
+        result += String(this.expressions[i].evaluate(f, s, l, c));
         result += this.parts[i + 1];
       }
       return result;
     } else {
-      return `${this.parts[0]}${this.firstExpression.evaluate(f, s, hs, l, c)}${this.parts[1]}`;
+      return `${this.parts[0]}${this.firstExpression.evaluate(f, s, l, c)}${this.parts[1]}`;
     }
   }
 
-  public assign(_f: LF, _s: Scope, _hs: Scope | null, _l: IServiceLocator, _obj: unknown): unknown {
+  public assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown {
     return void 0;
   }
 

@@ -1,7 +1,7 @@
 {
   "name": "@aurelia/monorepo",
   "private": true,
-  "version": "2.0.0-alpha.12",
+  "version": "2.0.0-alpha.13",
   "workspaces": [
     "packages/__tests__",
     "packages/au",
@@ -50,7 +50,7 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=16.0.0",
+    "node": ">=14.17.0",
     "npm": ">=7.0.0"
   },
   "scripts": {

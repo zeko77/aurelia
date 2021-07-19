@@ -62,9 +62,6 @@ for (const parentSpec of specs) {
             public created(controller: ICustomElementController<this>): void {
               const container = controller.container;
               this.childController = Controller.forCustomElement(
-                null,
-                container,
-                // todo: should this not be allowed to work?
                 container,
                 container.get(CustomElement.keyFrom('the-child')),
                 controller.host,

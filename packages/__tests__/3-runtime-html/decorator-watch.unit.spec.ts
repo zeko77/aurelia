@@ -78,7 +78,7 @@ describe('3-runtime-html/decorator-watch.unit.spec.ts', function () {
       assert.deepStrictEqual(callbackValues, [obj]);
 
       // start again
-      watcher.observeProperty(arr, 'length');
+      watcher.observe(arr, 'length');
       arr.push(3);
       assert.strictEqual(getCallCount, 2);
       // returning te same value, callback won't be call
@@ -96,7 +96,7 @@ describe('3-runtime-html/decorator-watch.unit.spec.ts', function () {
         observerLocator,
         (o: any, w) => {
           getCallCount++;
-          w.observeProperty(o, '_p');
+          w.observe(o, '_p');
           return o.prop;
         },
         (newValue) => {
@@ -145,7 +145,7 @@ describe('3-runtime-html/decorator-watch.unit.spec.ts', function () {
       expr.evaluate = (evaluate => {
         return function (...args: unknown[]) {
           evaluateCallCount++;
-          assert.strictEqual(args[4], watcher);
+          assert.strictEqual(args[3], watcher);
           return evaluate.apply(this, args);
         };
       })(expr.evaluate);

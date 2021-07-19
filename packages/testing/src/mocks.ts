@@ -32,7 +32,6 @@ export class MockBinding implements IConnectableBinding {
   public observerLocator!: IObserverLocator;
   public locator!: IServiceLocator;
   public $scope?: Scope | undefined;
-  public $hostScope!: Scope | null;
   public isBound!: boolean;
   public value: unknown;
   public obs!: BindingObserverRecord;
@@ -55,8 +54,8 @@ export class MockBinding implements IConnectableBinding {
     this.trace('handleCollectionChange', indexMap, flags);
   }
 
-  public observeProperty(obj: IIndexable, propertyName: string): void {
-    this.trace('observeProperty', obj, propertyName);
+  public observe(obj: IIndexable, propertyName: string): void {
+    this.trace('observe', obj, propertyName);
   }
 
   public observeCollection(col: Collection): void {

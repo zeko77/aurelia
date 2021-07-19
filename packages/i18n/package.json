@@ -1,7 +1,7 @@
 {
   "name": "@aurelia/i18n",
-  "version": "2.0.0-alpha.12",
-  "main": "dist/cjs/index.js",
+  "version": "2.0.0-alpha.13",
+  "main": "dist/esm/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/types/index.d.ts",
   "typings": "dist/types/index.d.ts",
@@ -35,8 +35,7 @@
     "build:prod": "rollup -c --environment BUILD:prod",
     "build:dev": "rollup -c --environment MAP,BUILD:dev",
     "postbuild": "tsc --emitDeclarationOnly",
-    "dev:tsc": "tsc -b -w --preserveWatchOutput",
-    "dev": "rollup -c -w --environment MAP,TYPES",
+    "dev": "tsc -b -w --preserveWatchOutput",
     "publish:dev": "npm publish --tag dev",
     "publish:latest": "npm publish --tag latest",
     "rollup": "rollup -c --environment MAP"
@@ -45,11 +44,11 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurelia/kernel": "2.0.0-alpha.12",
-    "@aurelia/metadata": "2.0.0-alpha.12",
-    "@aurelia/platform": "2.0.0-alpha.12",
-    "@aurelia/runtime-html": "2.0.0-alpha.12",
-    "@aurelia/runtime": "2.0.0-alpha.12",
+    "@aurelia/kernel": "2.0.0-alpha.13",
+    "@aurelia/metadata": "2.0.0-alpha.13",
+    "@aurelia/platform": "2.0.0-alpha.13",
+    "@aurelia/runtime-html": "2.0.0-alpha.13",
+    "@aurelia/runtime": "2.0.0-alpha.13",
     "i18next": "^17.0.0"
   },
   "devDependencies": {

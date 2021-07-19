@@ -218,6 +218,7 @@ export {
 export {
   Aurelia,
   IAurelia,
+  IEnhancementConfig,
 } from './aurelia.js';
 export {
   ISinglePageApp,
@@ -596,11 +597,9 @@ export {
   lifecycleHooks,
 } from './templating/lifecycle-hooks.js';
 export {
-  getRenderContext,
-  isRenderContext,
-  IRenderContext,
-  ICompiledRenderContext,
-} from './templating/render-context.js';
+  IRendering,
+  Rendering,
+} from './templating/rendering.js';
 export {
   ViewFactory,
   IViewFactory,

@@ -31,7 +31,6 @@ export class PropertyBinding implements IPartialConnectableBinding {
 
   public isBound: boolean = false;
   public $scope?: Scope = void 0;
-  public $hostScope: Scope | null = null;
 
   public targetObserver?: AccessorOrObserver = void 0;
 
@@ -58,7 +57,7 @@ export class PropertyBinding implements IPartialConnectableBinding {
 
   public updateSource(value: unknown, flags: LifecycleFlags): void {
     flags |= this.persistentFlags;
-    this.sourceExpression.assign!(flags, this.$scope!, this.$hostScope, this.locator, value);
+    this.sourceExpression.assign!(flags, this.$scope!, this.locator, value);
   }
 
   public handleChange(newValue: unknown, _previousValue: unknown, flags: LifecycleFlags): void {
@@ -80,15 +79,16 @@ export class PropertyBinding implements IPartialConnectableBinding {
     //  (2). if not, then fix tests to reflect the changes/platform to properly yield all with aurelia.start()
     const shouldQueueFlush = (flags & LifecycleFlags.fromBind) === 0 && (targetObserver.type & AccessorType.Layout) > 0;
     const obsRecord = this.obs;
+    let shouldConnect: boolean = false;
 
     // if the only observable is an AccessScope then we can assume the passed-in newValue is the correct and latest value
     if (sourceExpression.$kind !== ExpressionKind.AccessScope || obsRecord.count > 1) {
       // todo: in VC expressions, from view also requires connect
-      const shouldConnect = this.mode > oneTime;
+      shouldConnect = this.mode > oneTime;
       if (shouldConnect) {
         obsRecord.version++;
       }
-      newValue = sourceExpression.evaluate(flags, $scope!, this.$hostScope, locator, interceptor);
+      newValue = sourceExpression.evaluate(flags, $scope!, locator, interceptor);
       if (shouldConnect) {
         obsRecord.clear(false);
       }
@@ -96,18 +96,19 @@ export class PropertyBinding implements IPartialConnectableBinding {
 
     if (shouldQueueFlush) {
       // Queue the new one before canceling the old one, to prevent early yield
-      const task = this.task;
+      task = this.task;
       this.task = this.taskQueue.queueTask(() => {
         interceptor.updateTarget(newValue, flags);
         this.task = null;
       }, updateTaskOpts);
       task?.cancel();
+      task = null;
     } else {
       interceptor.updateTarget(newValue, flags);
     }
   }
 
-  public $bind(flags: LifecycleFlags, scope: Scope, hostScope: Scope | null): void {
+  public $bind(flags: LifecycleFlags, scope: Scope): void {
     if (this.isBound) {
       if (this.$scope === scope) {
         return;
@@ -122,17 +123,16 @@ export class PropertyBinding implements IPartialConnectableBinding {
     this.persistentFlags = flags & LifecycleFlags.persistentBindingFlags;
 
     this.$scope = scope;
-    this.$hostScope = hostScope;
 
     let sourceExpression = this.sourceExpression;
     if (sourceExpression.hasBind) {
-      sourceExpression.bind(flags, scope, hostScope, this.interceptor);
+      sourceExpression.bind(flags, scope, this.interceptor);
     }
 
+    const observerLocator = this.observerLocator;
     const $mode = this.mode;
     let targetObserver = this.targetObserver;
     if (!targetObserver) {
-      const observerLocator = this.observerLocator;
       if ($mode & fromView) {
         targetObserver = observerLocator.getObserver(this.target, this.targetProperty);
       } else {
@@ -145,11 +145,11 @@ export class PropertyBinding implements IPartialConnectableBinding {
     // deepscan-disable-next-line
     sourceExpression = this.sourceExpression;
     const interceptor = this.interceptor;
-
     const shouldConnect = ($mode & toView) > 0;
+
     if ($mode & toViewOrOneTime) {
       interceptor.updateTarget(
-        sourceExpression.evaluate(flags, scope, this.$hostScope, this.locator, shouldConnect ? interceptor : null),
+        sourceExpression.evaluate(flags, scope, this.locator, shouldConnect ? interceptor : null),
         flags,
       );
     }
@@ -171,20 +171,18 @@ export class PropertyBinding implements IPartialConnectableBinding {
     this.persistentFlags = LifecycleFlags.none;
 
     if (this.sourceExpression.hasUnbind) {
-      this.sourceExpression.unbind(flags, this.$scope!, this.$hostScope, this.interceptor);
+      this.sourceExpression.unbind(flags, this.$scope!, this.interceptor);
     }
 
     this.$scope = void 0;
-    this.$hostScope = null;
 
-    const task = this.task;
-
+    task = this.task;
     if (this.targetSubscriber) {
       (this.targetObserver as IObserver).unsubscribe(this.targetSubscriber);
     }
     if (task != null) {
       task.cancel();
-      this.task = null;
+      task = this.task = null;
     }
     this.obs.clear(true);
 
@@ -193,3 +191,5 @@ export class PropertyBinding implements IPartialConnectableBinding {
 }
 
 connectable(PropertyBinding);
+
+let task: ITask | null = null;

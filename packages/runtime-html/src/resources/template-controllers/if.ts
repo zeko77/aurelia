@@ -7,7 +7,6 @@ import { bindable } from '../../bindable.js';
 import { IWorkTracker } from '../../app-root.js';
 
 import type { ISyntheticView, ICustomAttributeController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, ControllerVisitor, IHydratableController } from '../../templating/controller.js';
-import type { ICompiledRenderContext } from '../../templating/render-context.js';
 import type { Instruction } from '../../renderer.js';
 import type { INode } from '../../dom.js';
 
@@ -79,14 +78,14 @@ export class If implements ICustomAttributeViewModel {
 
       // Promise return values from user VM hooks are awaited by the initiator
       this.pending = onResolve(
-        view.activate(initiator, this.ctrl, f, this.ctrl.scope, this.ctrl.hostScope),
+        view.activate(initiator, this.ctrl, f, this.ctrl.scope),
         () => {
           if (isCurrent()) {
             this.pending = void 0;
           }
         });
       // old
-      // void (this.view = this.updateView(this.value, f))?.activate(initiator, this.ctrl, f, this.ctrl.scope, this.ctrl.hostScope);
+      // void (this.view = this.updateView(this.value, f))?.activate(initiator, this.ctrl, f, this.ctrl.scope);
     });
   }
 
@@ -151,7 +150,7 @@ export class If implements ICustomAttributeViewModel {
           //       instead of always the if
           view.setLocation(this.location);
           return onResolve(
-            view.activate(view, this.ctrl, f, this.ctrl.scope, this.ctrl.hostScope),
+            view.activate(view, this.ctrl, f, this.ctrl.scope),
             () => {
               if (isCurrent()) {
                 this.pending = void 0;
@@ -189,7 +188,6 @@ export class Else {
 
   public link(
     flags: LifecycleFlags,
-    parentContext: ICompiledRenderContext,
     controller: IHydratableController,
     _childController: ICustomAttributeController,
     _target: INode,

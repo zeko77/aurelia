@@ -1,7 +1,7 @@
 {
   "name": "aurelia",
-  "version": "2.0.0-alpha.12",
-  "main": "dist/cjs/index.js",
+  "version": "2.0.0-alpha.13",
+  "main": "dist/esm/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/types/index.d.ts",
   "typings": "dist/types/index.d.ts",
@@ -34,8 +34,7 @@
     "build:prod": "rollup -c --environment BUILD:prod",
     "build:dev": "rollup -c --environment MAP,BUILD:dev",
     "postbuild": "tsc --emitDeclarationOnly",
-    "dev:tsc": "tsc -b -w --preserveWatchOutput",
-    "dev": "rollup -c -w --environment MAP,TYPES",
+    "dev": "tsc -b -w --preserveWatchOutput",
     "publish:dev": "npm publish --tag dev",
     "publish:latest": "npm publish --tag latest",
     "rollup": "rollup -c --environment MAP"
@@ -44,15 +43,15 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurelia/fetch-client": "2.0.0-alpha.12",
-    "@aurelia/kernel": "2.0.0-alpha.12",
-    "@aurelia/metadata": "2.0.0-alpha.12",
-    "@aurelia/platform": "2.0.0-alpha.12",
-    "@aurelia/platform-browser": "2.0.0-alpha.12",
-    "@aurelia/route-recognizer": "2.0.0-alpha.12",
-    "@aurelia/router": "2.0.0-alpha.12",
-    "@aurelia/runtime-html": "2.0.0-alpha.12",
-    "@aurelia/runtime": "2.0.0-alpha.12"
+    "@aurelia/fetch-client": "2.0.0-alpha.13",
+    "@aurelia/kernel": "2.0.0-alpha.13",
+    "@aurelia/metadata": "2.0.0-alpha.13",
+    "@aurelia/platform": "2.0.0-alpha.13",
+    "@aurelia/platform-browser": "2.0.0-alpha.13",
+    "@aurelia/route-recognizer": "2.0.0-alpha.13",
+    "@aurelia/router": "2.0.0-alpha.13",
+    "@aurelia/runtime-html": "2.0.0-alpha.13",
+    "@aurelia/runtime": "2.0.0-alpha.13"
   },
   "devDependencies": {
     "typescript": "^4.0.3"

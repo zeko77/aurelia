@@ -31,8 +31,8 @@ export type PartialBindingBehaviorDefinition = PartialResourceDefinition<{
 }>;
 
 export type BindingBehaviorInstance<T extends {} = {}> = {
-  bind(flags: LifecycleFlags, scope: Scope, hostScope: Scope | null, binding: IBinding, ...args: T[]): void;
-  unbind(flags: LifecycleFlags, scope: Scope, hostScope: Scope | null, binding: IBinding, ...args: T[]): void;
+  bind(flags: LifecycleFlags, scope: Scope, binding: IBinding, ...args: T[]): void;
+  unbind(flags: LifecycleFlags, scope: Scope, binding: IBinding, ...args: T[]): void;
 } & T;
 
 export const enum BindingBehaviorStrategy {
@@ -165,9 +165,6 @@ export class BindingInterceptor implements IInterceptableBinding {
   public get $scope(): Scope | undefined {
     return this.binding.$scope;
   }
-  public get $hostScope(): Scope | null {
-    return this.binding.$hostScope;
-  }
   public get isBound(): boolean {
     return this.binding.isBound;
   }
@@ -205,15 +202,15 @@ export class BindingInterceptor implements IInterceptableBinding {
   public handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void {
     this.binding.handleCollectionChange(indexMap, flags);
   }
-  public observeProperty(obj: object, key: string): void {
-    this.binding.observeProperty(obj, key);
+  public observe(obj: object, key: string): void {
+    this.binding.observe(obj, key);
   }
   public observeCollection(observer: Collection): void {
     this.binding.observeCollection(observer);
   }
 
-  public $bind(flags: LifecycleFlags, scope: Scope, hostScope: Scope | null): void {
-    this.binding.$bind(flags, scope, hostScope);
+  public $bind(flags: LifecycleFlags, scope: Scope): void {
+    this.binding.$bind(flags, scope);
   }
   public $unbind(flags: LifecycleFlags): void {
     this.binding.$unbind(flags);

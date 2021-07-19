@@ -85,7 +85,7 @@ describe('au-slot', function () {
       public readonly only: boolean = false,
     ) { }
   }
-  function* getTestData() {
+  function *getTestData() {
     const createMyElement = (template: string) => {
       class MyElement {
         public constructor(
@@ -373,7 +373,7 @@ describe('au-slot', function () {
           <h4>Last Name</h4>
         </au-slot>
         <template repeat.for="person of people">
-          <au-slot name="content">
+          <au-slot name="content" expose.bind="{ person, $index, $even, $odd }">
             <div>\${person.firstName}</div>
             <div>\${person.lastName}</div>
           </au-slot>
@@ -538,6 +538,49 @@ describe('au-slot', function () {
           'my-element+my-element': [`S<div>1<div>Second</div></div><div>2<div>Second</div></div>E`, new AuSlotsInfo(['bar'])],
         },
       );
+
+      {
+        @customElement({
+          name: 'my-element', isStrictBinding: true, template: `
+        <au-slot name="grid">
+          <au-slot name="header">
+            <h4>First Name</h4>
+            <h4>Last Name</h4>
+          </au-slot>
+          <template repeat.for="person of people">
+            <au-slot name="content" expose.bind="{ p: person, i: $index }">
+              <div>\${person.firstName}</div>
+              <div>\${person.lastName}</div>
+            </au-slot>
+          </template>
+        </au-slot>` })
+        class MyElement {
+          @bindable public people: Person[];
+          public constructor(
+            @IAuSlotsInfo public readonly slots: IAuSlotsInfo,
+          ) { }
+        }
+
+        yield new TestData(
+          'works when <au-slot/> re-defines properties',
+          `<my-element people.bind="people">
+            <template au-slot="header">
+              <h4>Meta</h4>
+              <h4>Surname</h4>
+              <h4>Given name</h4>
+            </template>
+            <template au-slot="content">
+              <div>index: \${$host.i} \${$host.$index}</div>
+              <div>\${$host.p.lastName}</div>
+              <div>\${$host.p.firstName}</div>
+            </template>
+          </my-element>`,
+          [
+            MyElement,
+          ],
+          { 'my-element': [`<h4>Meta</h4> <h4>Surname</h4> <h4>Given name</h4> <div>index: 0 undefined</div> <div>Doe</div> <div>John</div> <div>index: 1 undefined</div> <div>Mustermann</div> <div>Max</div>`, new AuSlotsInfo(['header', 'content'])] },
+        );
+      }
 
       {
         class MyElement {
@@ -1663,6 +1706,40 @@ describe('au-slot', function () {
         {
           'div': [`content`, undefined],
         },
+      );
+    }
+
+    {
+      yield new TestData(
+        'updates expose binding on <au-slot/> dynamically',
+        `<my-element><div au-slot>\${$host.value}</div>`,
+        [createMyElement('<input value.bind="message"/><au-slot expose.bind="{ value: message }">')],
+        {
+          'my-element': ['<input class="au"><div>undefined</div>', undefined]
+        },
+        function ({ host, platform }) {
+          const input = host.querySelector('input');
+          input.value = 'hello';
+          input.dispatchEvent(new platform.CustomEvent('change'));
+          platform.domWriteQueue.flush();
+          assert.strictEqual(host.querySelector('div').textContent, 'hello');
+        }
+      );
+
+      yield new TestData(
+        'exposure of host context does not affect inner binding contexts',
+        `<my-element>`,
+        [createMyElement(`<input value.bind="message"/><au-slot expose.bind="{ value: message }">\${message}</au-slot>`)],
+        {
+          'my-element': ['<input class="au">undefined', undefined]
+        },
+        function ({ host, platform }) {
+          const input = host.querySelector('input');
+          input.value = 'hello';
+          input.dispatchEvent(new platform.CustomEvent('change'));
+          platform.domWriteQueue.flush();
+          assert.strictEqual(host.querySelector('my-element').textContent, 'hello');
+        }
       );
     }
 

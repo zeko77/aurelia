@@ -1,21 +1,12 @@
-import { Constructable, IContainer, InstanceProvider, ITask, onResolve, transient } from '@aurelia/kernel';
+import { Constructable, IContainer, InstanceProvider, onResolve, transient } from '@aurelia/kernel';
 import { LifecycleFlags, Scope } from '@aurelia/runtime';
 import { bindable } from '../../bindable.js';
 import { convertToRenderLocation, INode, IRenderLocation, isRenderLocation } from '../../dom.js';
 import { IPlatform } from '../../platform.js';
 import { HydrateElementInstruction, IInstruction } from '../../renderer.js';
 import { Controller, IController, ICustomElementController, IHydratedController, ISyntheticView } from '../../templating/controller.js';
-import { getRenderContext } from '../../templating/render-context.js';
+import { IRendering } from '../../templating/rendering.js';
 import { CustomElement, customElement, CustomElementDefinition } from '../custom-element.js';
-
-// plan:
-// 0. <au-component/> is containerless
-//    this probably won't work, since it prohibits the use of shadow dom + slot naturally
-//    this probably will still allows au-slot
-// 1. create host element corresponding to the composed component view model
-//    if there's no view model def, then creates a div
-//    if there's no view model at all, then creates a div
-//    this probably has issue related to containerless, since it's sometimes desirable
 
 /**
  * An optional interface describing the dialog activate convention.
@@ -56,25 +47,31 @@ export class AuCompose {
   @bindable
   public model?: unknown;
 
-  @bindable({ set: v => {
-    if (v === 'scoped' || v === 'auto') {
-      return v;
+  @bindable({
+    set: v => {
+      if (v === 'scoped' || v === 'auto') {
+        return v;
+      }
+      throw new Error('Invalid scope behavior config. Only "scoped" or "auto" allowed.');
     }
-    throw new Error('Invalid scope behavior config. Only "scoped" or "auto" allowed.');
-  }})
+  })
   public scopeBehavior: 'auto' | 'scoped' = 'auto';
 
   /** @internal */
   public readonly $controller!: ICustomElementController<AuCompose>;
 
-  /** @internal */
-  private task: ITask | null = null;
+  private _p?: Promise<void> | void;
+  public get pending(): Promise<void> | void {
+    return this._p;
+  }
 
   /** @internal */
   private c: ICompositionController | undefined = void 0;
   public get composition(): ICompositionController | undefined {
     return this.c;
   }
+
+  private readonly r: IRendering;
 
   /** @internal */
   private readonly loc: IRenderLocation | undefined;
@@ -90,40 +87,51 @@ export class AuCompose {
     private readonly contextFactory: CompositionContextFactory,
   ) {
     this.loc = instruction.containerless ? convertToRenderLocation(this.host) : void 0;
+    this.r = container.get(IRendering);
   }
 
   public attaching(initiator: IHydratedController, parent: IHydratedController, flags: LifecycleFlags): void | Promise<void> {
-    return this.queue(new ChangeInfo(this.view, this.viewModel, this.model, initiator, void 0));
+    return this._p = onResolve(
+      this.queue(new ChangeInfo(this.view, this.viewModel, this.model, initiator, void 0)),
+      (context) => {
+        if (this.contextFactory.isCurrent(context)) {
+          this._p = void 0;
+        }
+      }
+    );
   }
 
   public detaching(initiator: IHydratedController): void | Promise<void> {
-    this.task?.cancel();
-    this.task = null;
     const cmpstn = this.c;
-    if (cmpstn != null) {
-      this.c = void 0;
-      return cmpstn.deactivate(initiator);
-    }
+    const pending = this._p;
+    this.contextFactory.invalidate();
+    this.c = this._p = void 0;
+    return onResolve(pending, () => cmpstn?.deactivate(initiator));
   }
 
   /** @internal */
   protected propertyChanged(name: ChangeSource): void {
-    const task = this.task;
-    this.task = this.p.domWriteQueue.queueTask(() => {
-      return onResolve(this.queue(new ChangeInfo(this.view!, this.viewModel, this.model, void 0, name)), () => {
-        this.task = null;
-      });
-    });
-    task?.cancel();
+    if (name === 'model' && this.c != null) {
+      // eslint-disable-next-line
+      this.c.update(this.model);
+      return;
+    }
+    this._p = onResolve(this._p, () =>
+      onResolve(
+        this.queue(new ChangeInfo(this.view!, this.viewModel, this.model, void 0, name)),
+        (context) => {
+          if (this.contextFactory.isCurrent(context)) {
+            this._p = void 0;
+          }
+        }
+      )
+    );
   }
 
   /** @internal */
-  private queue(change: ChangeInfo): void | Promise<void> {
+  private queue(change: ChangeInfo): CompositionContext | Promise<CompositionContext> {
     const factory = this.contextFactory;
-    const currentComposition = this.c;
-    if (change.src === 'model' && currentComposition != null) {
-      return currentComposition.update(change.model);
-    }
+    const compositionCtrl = this.c;
     // todo: handle consequitive changes that create multiple queues
     return onResolve(
       factory.create(change),
@@ -142,21 +150,27 @@ export class AuCompose {
                   // after activation, if the composition context is still the most recent one
                   // then the job is done
                   this.c = result;
-                  return currentComposition?.deactivate(change.initiator);
+                  return onResolve(compositionCtrl?.deactivate(change.initiator), () => context);
                 } else {
                   // the stale controller should be deactivated
                   return onResolve(
                     result.controller.deactivate(result.controller, this.$controller, LifecycleFlags.fromUnbind),
                     // todo: do we need to deactivate?
-                    () => result.controller.dispose()
+                    () => {
+                      result.controller.dispose();
+                      return context;
+                    }
                   );
                 }
               });
-            } else {
-              result.controller.dispose();
             }
+
+            result.controller.dispose();
+            return context;
           });
         }
+
+        return context;
       }
     );
   }
@@ -170,9 +184,9 @@ export class AuCompose {
     //       should it throw or try it best to proceed?
     //       current: proceed
     const { view, viewModel, model, initiator } = context.change;
-    const { container, host, $controller, contextFactory, loc } = this;
+    const { container, host, $controller, loc } = this;
     const srcDef = this.getDef(viewModel);
-    const childContainer: IContainer = container.createChild();
+    const childCtn: IContainer = container.createChild();
     const parentNode = loc == null ? host.parentNode : loc.parentNode;
 
     if (srcDef !== null) {
@@ -186,30 +200,28 @@ export class AuCompose {
           // but the host remains
         };
       } else {
+        // todo: should the host be appended later, during the activation phase instead?
         compositionHost = parentNode!.insertBefore(this.p.document.createElement(srcDef.name), loc);
         removeCompositionHost = () => {
           compositionHost.remove();
         };
       }
-      comp = this.getVm(childContainer, viewModel, compositionHost);
+      comp = this.getVm(childCtn, viewModel, compositionHost);
     } else {
       compositionHost = loc == null
         ? host
         : loc;
-      comp = this.getVm(childContainer, viewModel, compositionHost);
+      comp = this.getVm(childCtn, viewModel, compositionHost);
     }
     const compose: () => ICompositionController = () => {
-          // custom element based composition
+      // custom element based composition
       if (srcDef !== null) {
         const controller = Controller.forCustomElement(
-          null,
-          container,
-          childContainer,
+          childCtn,
           comp,
           compositionHost as HTMLElement,
           null,
           LifecycleFlags.none,
-          true,
           srcDef,
         );
 
@@ -231,11 +243,8 @@ export class AuCompose {
           name: CustomElement.generateName(),
           template: view,
         });
-        const renderContext = getRenderContext(targetDef, childContainer);
-        const viewFactory = renderContext.getViewFactory();
+        const viewFactory = this.r.getViewFactory(targetDef, childCtn);
         const controller = Controller.forSyntheticView(
-          contextFactory.isFirst(context) ? $controller.root : null,
-          renderContext,
           viewFactory,
           LifecycleFlags.fromBind,
           $controller
@@ -252,7 +261,7 @@ export class AuCompose {
 
         return new CompositionController(
           controller,
-          () => controller.activate(initiator ?? controller, $controller, LifecycleFlags.fromBind, scope, null),
+          () => controller.activate(initiator ?? controller, $controller, LifecycleFlags.fromBind, scope),
           // todo: call deactivate on the component view model
           // a difference with composing custom element is that we leave render location/host alone
           // as they all share the same host/render location
@@ -340,6 +349,11 @@ class CompositionContextFactory {
   public create(changes: ChangeInfo): MaybePromise<CompositionContext> {
     return onResolve(changes.load(), (loaded) => new CompositionContext(this.id++, loaded));
   }
+
+  // simplify increasing the id will invalidate all previously created context
+  public invalidate(): void {
+    this.id++;
+  }
 }
 
 class ChangeInfo {
@@ -396,7 +410,7 @@ class CompositionController implements ICompositionController {
 
   public activate() {
     if (this.state !== 0) {
-      throw new Error(`Composition has already been activated/deactivated. Id: ${this.controller.id}`);
+      throw new Error(`Composition has already been activated/deactivated. Id: ${this.controller.name}`);
     }
     this.state = 1;
     return this.start();

@@ -428,6 +428,17 @@ export class TemplateCompiler implements ITemplateCompiler {
       ii = attrs.length;
     }
 
+    if (context.root.def.enhance && el.classList.contains('au')) {
+      if (__DEV__)
+        throw new Error(
+          'Trying to enhance with a template that was probably compiled before. '
+          + 'This is likely going to cause issues. '
+          + 'Consider enhancing only untouched elements.'
+        );
+      else
+        throw new Error(`AUR0710`);
+    }
+
     for (; ii > i; ++i) {
       attr = attrs[i];
       attrName = attr.name;
@@ -1373,7 +1384,8 @@ class CompilationContext {
 function hasInlineBindings(rawValue: string): boolean {
   const len = rawValue.length;
   let ch = 0;
-  for (let i = 0; i < len; ++i) {
+  let i = 0;
+  while (len > i) {
     ch = rawValue.charCodeAt(i);
     if (ch === Char.Backslash) {
       ++i;
@@ -1383,6 +1395,7 @@ function hasInlineBindings(rawValue: string): boolean {
     } else if (ch === Char.Dollar && rawValue.charCodeAt(i + 1) === Char.OpenBrace) {
       return false;
     }
+    ++i;
   }
   return false;
 }
@@ -1533,9 +1546,6 @@ const typeToHooksDefCache = new WeakMap<Constructable, TemplateCompilerHooksDefi
 const compilerHooksResourceName = Protocol.resource.keyFor('compiler-hooks');
 export const TemplateCompilerHooks = Object.freeze({
   name: compilerHooksResourceName,
-  /**
-   * @param def - Placeholder for future extensions. Currently always an empty object.
-   */
   define<K extends ITemplateCompilerHooks, T extends Constructable<K>>(Type: T): T {
     let def = typeToHooksDefCache.get(Type);
     if (def === void 0) {

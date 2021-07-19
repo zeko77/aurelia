@@ -21,13 +21,12 @@ import { BindableObserver } from '../observation/bindable-observer.js';
 import { convertToRenderLocation, setRef } from '../dom.js';
 import { CustomElementDefinition, CustomElement } from '../resources/custom-element.js';
 import { CustomAttributeDefinition, CustomAttribute } from '../resources/custom-attribute.js';
-import { IRenderContext, getRenderContext, RenderContext, ICompiledRenderContext } from './render-context.js';
 import { ChildrenDefinition, ChildrenObserver } from './children.js';
-import { IAppRoot } from '../app-root.js';
 import { IPlatform } from '../platform.js';
 import { IShadowDOMGlobalStyles, IShadowDOMStyles } from './styles.js';
 import { ComputedWatcher, ExpressionWatcher } from './watchers.js';
 import { LifecycleHooks } from './lifecycle-hooks.js';
+import { IRendering } from './rendering.js';
 
 import type {
   IContainer,
@@ -79,7 +78,6 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
   public isStrictBinding: boolean = false;
 
   public scope: Scope | null = null;
-  public hostScope: Scope | null = null;
   public isBound: boolean = false;
 
   // If a host from another custom element was passed in, then this will be the controller for that custom element (could be `au-viewport` for example).
@@ -89,7 +87,6 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
   public mountTarget: MountTarget = MountTarget.none;
   public shadowRoot: ShadowRoot | null = null;
   public nodes: INodeSequence | null = null;
-  public context: RenderContext | null = null;
   public location: IRenderLocation | null = null;
   public lifecycleHooks: LifecycleHooksLookup | null = null;
 
@@ -98,7 +95,7 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     return (this.state & (State.activating | State.activated)) > 0 && (this.state & State.deactivating) === 0;
   }
 
-  private get name(): string {
+  public get name(): string {
     if (this.parent === null) {
       switch (this.vmKind) {
         case ViewModelKind.customAttribute:
@@ -121,17 +118,18 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     }
   }
 
+  private compiledDef: CustomElementDefinition | undefined;
   private logger: ILogger | null = null;
   private debug: boolean = false;
   private fullyNamed: boolean = false;
   private childrenObs: ChildrenObserver[] = emptyArray;
+  /** @internal */
+  private readonly r: IRendering;
 
   public readonly platform: IPlatform;
   public readonly hooks: HooksDefinition;
 
   public constructor(
-    public root: IAppRoot | null,
-    public ctxCt: IContainer,
     public container: IContainer,
     public readonly vmKind: ViewModelKind,
     public flags: LifecycleFlags,
@@ -153,9 +151,7 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
      */
     public host: HTMLElement | null,
   ) {
-    if (root === null && container.has(IAppRoot, true)) {
-      this.root = container.get<IAppRoot>(IAppRoot);
-    }
+    this.r = container.root.get(IRendering);
     this.platform = container.get(IPlatform);
     switch (vmKind) {
       case ViewModelKind.customAttribute:
@@ -182,17 +178,11 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
   }
 
   public static forCustomElement<C extends ICustomElementViewModel = ICustomElementViewModel>(
-    root: IAppRoot | null,
-    // todo: it's not a great API that both parent and child containers
-    //       are required to instantiate a controller
-    //       though refactoring this won't be simple. Should be done after other refactorings
-    contextCt: IContainer,
-    ownCt: IContainer,
+    ctn: IContainer,
     viewModel: C,
     host: HTMLElement,
     hydrationInst: IControllerElementHydrationInstruction | null,
     flags: LifecycleFlags = LifecycleFlags.none,
-    hydrate: boolean = true,
     // Use this when `instance.constructor` is not a custom element type
     // to pass on the CustomElement definition
     definition: CustomElementDefinition | undefined = void 0,
@@ -204,9 +194,7 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     definition = definition ?? CustomElement.getDefinition(viewModel.constructor as Constructable);
 
     const controller = new Controller<C>(
-      /* root           */root,
-      /* context ct     */contextCt,
-      /* own ct         */ownCt,
+      /* container      */ctn,
       /* vmKind         */ViewModelKind.customElement,
       /* flags          */flags,
       /* definition     */definition,
@@ -214,28 +202,32 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
       /* viewModel      */viewModel as BindingContext<C>,
       /* host           */host,
     );
+    // the hydration context this controller is provided with
+    const hydrationContext = ctn.get(optional(IHydrationContext));
 
-    ownCt.register(...definition.dependencies);
-    ownCt.registerResolver(IHydrationContext, new InstanceProvider(
+    if (definition.dependencies.length > 0) {
+      ctn.register(...definition.dependencies);
+    }
+    // each CE controller provides its own hydration context for its internal template
+    ctn.registerResolver(IHydrationContext, new InstanceProvider(
       'IHydrationContext',
       new HydrationContext(
         controller,
         hydrationInst,
-        /* parent context */contextCt.get(optional(IHydrationContext)),
+        hydrationContext,
       )
     ));
     controllerLookup.set(viewModel, controller as Controller);
 
-    if (hydrate) {
-      controller.hydrateCustomElement(hydrationInst);
+    if (hydrationInst == null || hydrationInst.hydrate !== false) {
+      controller.hydrateCustomElement(hydrationInst, hydrationContext);
     }
 
     return controller as ICustomElementController<C>;
   }
 
   public static forCustomAttribute<C extends ICustomAttributeViewModel = ICustomAttributeViewModel>(
-    root: IAppRoot | null,
-    context: IContainer,
+    ctn: IContainer,
     viewModel: C,
     host: HTMLElement,
     flags: LifecycleFlags = LifecycleFlags.none,
@@ -253,10 +245,7 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     definition = definition ?? CustomAttribute.getDefinition(viewModel.constructor as Constructable);
 
     const controller = new Controller<C>(
-      /* root           */root,
-      /* context ct     */context,
-      // CA does not have its own container
-      /* own ct         */context,
+      /* own ct         */ctn,
       /* vmKind         */ViewModelKind.customAttribute,
       /* flags          */flags,
       /* definition     */definition,
@@ -273,17 +262,12 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
   }
 
   public static forSyntheticView(
-    root: IAppRoot | null,
-    context: IRenderContext,
     viewFactory: IViewFactory,
     flags: LifecycleFlags = LifecycleFlags.none,
     parentController: ISyntheticView | ICustomElementController | ICustomAttributeController | undefined = void 0,
   ): ISyntheticView {
     const controller = new Controller(
-      /* root           */root,
-      // todo: view factory should carry its own container
-      /* container      */context.container,
-      /* container      */context.container,
+      /* container      */viewFactory.container,
       /* vmKind         */ViewModelKind.synthetic,
       /* flags          */flags,
       /* definition     */null,
@@ -293,14 +277,20 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     );
     controller.parent = parentController ?? null;
 
-    controller.hydrateSynthetic(context);
+    controller.hydrateSynthetic(/* context */);
 
     return controller as unknown as ISyntheticView;
   }
 
   /** @internal */
   public hydrateCustomElement(
-    hydrationInst: IControllerElementHydrationInstruction | null
+    hydrationInst: IControllerElementHydrationInstruction | null,
+    /**
+     * The context where this custom element is hydrated.
+     *
+     * This is the context controller creating this this controller
+     */
+    hydrationContext: IHydrationContext | null,
   ): void {
     this.logger = this.container.get(ILogger).root;
     this.debug = this.logger.config.level <= LogLevel.debug;
@@ -325,7 +315,7 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
       if (this.debug) { this.logger.trace(`invoking define() hook`); }
       const result = instance.define(
         /* controller      */this as ICustomElementController,
-        /* parentContainer */this.ctxCt,
+        /* parentContainer */hydrationContext,
         /* definition      */definition,
       );
       if (result !== void 0 && result !== definition) {
@@ -333,7 +323,6 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
       }
     }
 
-    this.context = getRenderContext(definition, container) as RenderContext;
     this.lifecycleHooks = LifecycleHooks.resolve(container);
     // Support Recursive Components by adding self to own context
     definition.register(container);
@@ -352,7 +341,7 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     // - runAppTasks('hydrated') // may return a promise
     // - Controller.compileChildren
     // This keeps hydration synchronous while still allowing the composition root compile hooks to do async work.
-    if ((this.root?.controller as this | undefined) !== this) {
+    if (hydrationInst == null || hydrationInst.hydrate !== false) {
       this.hydrate(hydrationInst);
       this.hydrateChildren();
     }
@@ -365,13 +354,13 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
       (this.viewModel as BindingContext<C>).hydrating(this as ICustomElementController);
     }
 
-    const compiledContext = this.context!.compile(hydrationInst);
-    const { shadowOptions, isStrictBinding, hasSlots, containerless } = compiledContext.compiledDefinition;
+    const compiledDef = this.compiledDef = this.r.compile(this.definition as CustomElementDefinition, this.container, hydrationInst);
+    const { shadowOptions, isStrictBinding, hasSlots, containerless } = compiledDef;
 
     this.isStrictBinding = isStrictBinding;
 
     if ((this.hostController = CustomElement.for(this.host!, optionalCeFind) as Controller | null) !== null) {
-      this.host = this.platform.document.createElement(this.context!.definition.name);
+      this.host = this.platform.document.createElement(this.definition!.name);
     }
 
     setRef(this.host!, CustomElement.name, this as IHydratedController);
@@ -390,7 +379,7 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     }
 
     (this.viewModel as Writable<C>).$controller = this;
-    this.nodes = compiledContext.createNodes();
+    this.nodes = this.r.createNodes(compiledDef);
 
     if (this.hooks.hasHydrated) {
       if (this.debug) { this.logger!.trace(`invoking hydrated() hook`); }
@@ -400,12 +389,11 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
 
   /** @internal */
   public hydrateChildren(): void {
-    const targets = this.nodes!.findTargets();
-    this.context!.render(
+    this.r.render(
       /* flags      */this.flags,
       /* controller */this as ICustomElementController,
-      /* targets    */targets,
-      /* definition */this.context!.compiledDefinition,
+      /* targets    */this.nodes!.findTargets(),
+      /* definition */this.compiledDef!,
       /* host       */this.host,
     );
 
@@ -416,7 +404,7 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
   }
 
   private hydrateCustomAttribute(): void {
-    const definition = this.definition as CustomElementDefinition;
+    const definition = this.definition as CustomAttributeDefinition;
     const instance = this.viewModel!;
 
     if (definition.watches.length > 0) {
@@ -433,20 +421,14 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     }
   }
 
-  private hydrateSynthetic(context: IRenderContext): void {
-    this.context = context as RenderContext;
-    const compiledContext = context.compile(null);
-    const compiledDefinition = compiledContext.compiledDefinition;
-
-    this.isStrictBinding = compiledDefinition.isStrictBinding;
-
-    const nodes = this.nodes = compiledContext.createNodes();
-    const targets = nodes.findTargets();
-    compiledContext.render(
+  private hydrateSynthetic(): void {
+    this.compiledDef = this.r.compile(this.viewFactory!.def!, this.container, null);
+    this.isStrictBinding = this.compiledDef.isStrictBinding;
+    this.r.render(
       /* flags      */this.flags,
-      /* controller */this,
-      /* targets    */targets,
-      /* definition */compiledDefinition,
+      /* controller */this as ISyntheticView,
+      /* targets    */(this.nodes = this.r.createNodes(this.compiledDef)).findTargets(),
+      /* definition */this.compiledDef,
       /* host       */void 0,
     );
   }
@@ -458,7 +440,6 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     parent: IHydratedController | null,
     flags: LifecycleFlags,
     scope?: Scope | null,
-    hostScope?: Scope | null,
   ): void | Promise<void> {
     switch (this.state) {
       case State.none:
@@ -488,9 +469,6 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
       this.fullyNamed = true;
       (this.logger ??= this.container.get(ILogger).root.scopeTo(this.name))
         .trace(`activate()`);
-    }
-    if (this.vmKind === ViewModelKind.synthetic) {
-      this.hostScope = hostScope ?? null;
     }
     flags |= LifecycleFlags.fromBind;
 
@@ -546,27 +524,34 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
   private bind(): void {
     if (this.debug) { this.logger!.trace(`bind()`); }
 
+    let i = 0;
+    let ii = this.childrenObs.length;
+    let ret: void | Promise<void>;
     // timing: after binding, before bound
     // reason: needs to start observing before all the bindings finish their $bind phase,
     //         so that changes in one binding can be reflected into the other, regardless the index of the binding
     //
     // todo: is this timing appropriate?
-    if (this.childrenObs.length) {
-      for (let i = 0; i < this.childrenObs.length; ++i) {
+    if (ii > 0) {
+      while (ii > i) {
         this.childrenObs[i].start();
+        ++i;
       }
     }
 
     if (this.bindings !== null) {
-      for (let i = 0; i < this.bindings.length; ++i) {
-        this.bindings[i].$bind(this.$flags, this.scope!, this.hostScope);
+      i = 0;
+      ii = this.bindings.length;
+      while (ii > i) {
+        this.bindings[i].$bind(this.$flags, this.scope!);
+        ++i;
       }
     }
 
     if (this.hooks.hasBound) {
       if (this.debug) { this.logger!.trace(`bound()`); }
 
-      const ret = this.viewModel!.bound(this.$initiator, this.parent, this.$flags);
+      ret = this.viewModel!.bound(this.$initiator, this.parent, this.$flags);
       if (ret instanceof Promise) {
         this.ensurePromise();
         ret.then(() => {
@@ -591,11 +576,13 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
       case MountTarget.shadowRoot:
         this.shadowRoot!.append(...nodes);
         break;
-      case MountTarget.location:
-        for (let i = 0; i < nodes.length; ++i) {
+      case MountTarget.location: {
+        let i = 0;
+        for (; i < nodes.length; ++i) {
           this.location!.parentNode!.insertBefore(nodes[i], this.location);
         }
         break;
+      }
     }
   }
 
@@ -649,9 +636,10 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
 
     // attaching() and child activation run in parallel, and attached() is called when both are finished
     if (this.children !== null) {
-      for (let i = 0; i < this.children.length; ++i) {
+      let i = 0;
+      for (; i < this.children.length; ++i) {
         // Any promises returned from child activation are cumulatively awaited before this.$promise resolves
-        void this.children[i].activate(this.$initiator, this as IHydratedController, this.$flags, this.scope, this.hostScope);
+        void this.children[i].activate(this.$initiator, this as IHydratedController, this.$flags, this.scope);
       }
     }
 
@@ -688,17 +676,18 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
       this.enterDetaching();
     }
 
+    let i = 0;
     // timing: before deactiving
     // reason: avoid queueing a callback from the mutation observer, caused by the changes of nodes by repeat/if etc...
     // todo: is this appropriate timing?
     if (this.childrenObs.length) {
-      for (let i = 0; i < this.childrenObs.length; ++i) {
+      for (; i < this.childrenObs.length; ++i) {
         this.childrenObs[i].stop();
       }
     }
 
     if (this.children !== null) {
-      for (let i = 0; i < this.children.length; ++i) {
+      for (i = 0; i < this.children.length; ++i) {
         // Child promise results are tracked by enter/leave combo's
         void this.children[i].deactivate(initiator, this as IHydratedController, flags);
       }
@@ -770,9 +759,10 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     if (this.debug) { this.logger!.trace(`unbind()`); }
 
     const flags = this.$flags | LifecycleFlags.fromUnbind;
+    let i = 0;
 
     if (this.bindings !== null) {
-      for (let i = 0; i < this.bindings.length; ++i) {
+      for (; i < this.bindings.length; ++i) {
         this.bindings[i].$unbind(flags);
       }
     }
@@ -969,12 +959,10 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
   public is(name: string): boolean {
     switch (this.vmKind) {
       case ViewModelKind.customAttribute: {
-        const def = CustomAttribute.getDefinition(this.viewModel!.constructor as Constructable);
-        return def.name === name;
+        return CustomAttribute.getDefinition(this.viewModel!.constructor).name === name;
       }
       case ViewModelKind.customElement: {
-        const def = CustomElement.getDefinition(this.viewModel!.constructor as Constructable);
-        return def.name === name;
+        return CustomElement.getDefinition(this.viewModel!.constructor).name === name;
       }
       case ViewModelKind.synthetic:
         return this.viewFactory!.name === name;
@@ -1041,7 +1029,6 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     this.scope = null;
 
     this.nodes = null;
-    this.context = null;
     this.location = null;
 
     this.viewFactory = null;
@@ -1052,7 +1039,6 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     this.viewModel = null;
     this.host = null;
     this.shadowRoot = null;
-    this.root = null;
   }
 
   public accept(visitor: ControllerVisitor): void | true {
@@ -1330,9 +1316,9 @@ export interface IController<C extends IViewModel = IViewModel> extends IDisposa
    * By default, CE should have their own container while custom attribute & synthetic view
    * will use the parent container one, since they do not need to manage one
    */
+  readonly name: string;
   readonly container: IContainer;
   readonly platform: IPlatform;
-  readonly root: IAppRoot | null;
   readonly flags: LifecycleFlags;
   readonly vmKind: ViewModelKind;
   readonly definition: CustomElementDefinition | CustomAttributeDefinition | null;
@@ -1421,11 +1407,6 @@ export interface ISyntheticView extends IHydratableController {
   readonly vmKind: ViewModelKind.synthetic;
   readonly definition: null;
   readonly viewModel: null;
-  hostScope: Scope | null;
-  /**
-   * The compiled render context used for composing this view. Compilation was done by the `IViewFactory` prior to creating this view.
-   */
-  readonly context: ICompiledRenderContext;
   readonly isStrictBinding: boolean;
   /**
    * The physical DOM nodes that will be appended during the attach operation.
@@ -1437,7 +1418,6 @@ export interface ISyntheticView extends IHydratableController {
     parent: IHydratedController,
     flags: LifecycleFlags,
     scope: Scope,
-    hostScope?: Scope | null,
   ): void | Promise<void>;
   deactivate(
     initiator: IHydratedController,
@@ -1447,7 +1427,7 @@ export interface ISyntheticView extends IHydratableController {
   /**
    * Lock this view's scope to the provided `Scope`. The scope, which is normally set during `activate()`, will then not change anymore.
    *
-   * This is used by `au-compose` to set the binding context of a view to a particular component instance.
+   * This is used by `au-render` to set the binding context of a view to a particular component instance.
    *
    * @param scope - The scope to lock this view to.
    */
@@ -1512,7 +1492,6 @@ export interface ICustomAttributeController<C extends ICustomAttributeViewModel 
    * The scope's `bindingContext` will be the same instance as this controller's `viewModel` property.
    */
   readonly scope: Scope;
-  hostScope: Scope | null;
   readonly children: null;
   readonly bindings: null;
   activate(
@@ -1520,7 +1499,6 @@ export interface ICustomAttributeController<C extends ICustomAttributeViewModel 
     parent: IHydratedController,
     flags: LifecycleFlags,
     scope: Scope,
-    hostScope?: Scope | null,
   ): void | Promise<void>;
   deactivate(
     initiator: IHydratedController,
@@ -1545,7 +1523,6 @@ export interface IDryCustomElementController<C extends IViewModel = IViewModel> 
    * By default, the scope's `bindingContext` will be the same instance as this controller's `viewModel` property.
    */
   scope: Scope;
-  hostScope: Scope | null;
   /**
    * The original host dom node.
    *
@@ -1562,10 +1539,7 @@ export interface IDryCustomElementController<C extends IViewModel = IViewModel> 
  * It has the same properties as `IDryCustomElementController`, as well as a render context (hence 'contextual').
  */
 export interface IContextualCustomElementController<C extends IViewModel = IViewModel> extends IDryCustomElementController<C> {
-  /**
-   * The non-compiled render context used for compiling this component's `CustomElementDefinition`.
-   */
-  readonly context: IRenderContext;
+
 }
 
 /**
@@ -1574,10 +1548,6 @@ export interface IContextualCustomElementController<C extends IViewModel = IView
  * It has the same properties as `IContextualCustomElementController`, except the context is now compiled (hence 'compiled'), as well as the nodes, and projector.
  */
 export interface ICompiledCustomElementController<C extends IViewModel = IViewModel> extends IContextualCustomElementController<C> {
-  /**
-   * The compiled render context used for hydrating this controller.
-   */
-  readonly context: ICompiledRenderContext;
   readonly isStrictBinding: boolean;
   /**
    * The ShadowRoot, if this custom element uses ShadowDOM.
@@ -1608,7 +1578,6 @@ export interface ICustomElementController<C extends ICustomElementViewModel = IC
     parent: IHydratedController | null,
     flags: LifecycleFlags,
     scope?: Scope,
-    hostScope?: Scope | null,
   ): void | Promise<void>;
   deactivate(
     initiator: IHydratedController,
@@ -1679,7 +1648,12 @@ export interface IActivationHooks<TParent> {
 export interface ICompileHooks {
   define?(
     controller: IDryCustomElementController<this>,
-    parentContainer: IContainer,
+    /**
+     * The context where this element is hydrated.
+     *
+     * This is created by the controller associated with the CE creating this this controller
+     */
+    hydrationContext: IHydrationContext | null,
     definition: CustomElementDefinition,
   ): PartialCustomElementDefinition | void;
   hydrating?(
@@ -1713,7 +1687,6 @@ export interface ICustomAttributeViewModel extends IViewModel, IActivationHooks<
   readonly $controller?: ICustomAttributeController<this>;
   link?(
     flags: LifecycleFlags,
-    parentContext: ICompiledRenderContext,
     controller: IHydratableController,
     childController: ICustomAttributeController,
     target: INode,
@@ -1733,6 +1706,15 @@ export interface IHydratedCustomAttributeViewModel extends ICustomAttributeViewM
 }
 
 export interface IControllerElementHydrationInstruction {
+  /**
+   * An internal mechanism to manually halt + resume hydration process
+   *
+   * - 0: no hydration
+   * - 1: hydrate until define() lifecycle
+   *
+   * @internal
+   */
+  readonly hydrate?: boolean;
   readonly projections: IProjections | null;
 }
 

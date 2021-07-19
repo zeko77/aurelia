@@ -21,7 +21,6 @@ import { IViewFactory } from '../../templating/view.js';
 import { bindable } from '../../bindable.js';
 
 import type { Controller, ICustomAttributeController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, IHydratableController, ISyntheticView, ControllerVisitor } from '../../templating/controller.js';
-import type { ICompiledRenderContext } from '../../templating/render-context.js';
 import type { INode } from '../../dom.js';
 import type { Instruction } from '../../renderer.js';
 
@@ -51,7 +50,6 @@ export class Switch implements ICustomAttributeViewModel {
 
   public link(
     flags: LifecycleFlags,
-    _parentContext: ICompiledRenderContext,
     _controller: IHydratableController,
     _childController: ICustomAttributeController,
     _target: INode,
@@ -64,7 +62,7 @@ export class Switch implements ICustomAttributeViewModel {
     const view = this.view;
     const $controller = this.$controller;
 
-    this.queue(() => view.activate(initiator, $controller, flags, $controller.scope, $controller.hostScope));
+    this.queue(() => view.activate(initiator, $controller, flags, $controller.scope));
     this.queue(() => this.swap(initiator, flags, this.value));
     return this.promise;
   }
@@ -177,14 +175,13 @@ export class Switch implements ICustomAttributeViewModel {
     if (length === 0) { return; }
 
     const scope = controller.scope;
-    const hostScope = controller.hostScope;
 
     // most common case
     if (length === 1) {
-      return cases[0].activate(initiator, flags, scope, hostScope);
+      return cases[0].activate(initiator, flags, scope);
     }
 
-    return resolveAll(...cases.map(($case) => $case.activate(initiator, flags, scope, hostScope)));
+    return resolveAll(...cases.map(($case) => $case.activate(initiator, flags, scope)));
   }
 
   private clearActiveCases(initiator: IHydratedController | null, flags: LifecycleFlags, newActiveCases: Case[] = []): void | Promise<void> {
@@ -276,7 +273,6 @@ export class Case implements ICustomAttributeViewModel {
 
   public link(
     flags: LifecycleFlags,
-    parentContext: ICompiledRenderContext,
     controller: IHydratableController,
     _childController: ICustomAttributeController,
     _target: INode,
@@ -324,10 +320,10 @@ export class Case implements ICustomAttributeViewModel {
     this.$switch.caseChanged(this, flags);
   }
 
-  public activate(initiator: IHydratedController | null, flags: LifecycleFlags, scope: Scope, hostScope: Scope | null): void | Promise<void> {
+  public activate(initiator: IHydratedController | null, flags: LifecycleFlags, scope: Scope): void | Promise<void> {
     const view = this.view;
     if (view.isActive) { return; }
-    return view.activate(initiator ?? view, this.$controller, flags, scope, hostScope);
+    return view.activate(initiator ?? view, this.$controller, flags, scope);
   }
 
   public deactivate(initiator: IHydratedController | null, flags: LifecycleFlags): void | Promise<void> {

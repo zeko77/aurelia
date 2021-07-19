@@ -10,7 +10,6 @@ import {
 
 import { AttributeObserver } from '../observation/element-attribute-observer.js';
 import { IPlatform } from '../platform.js';
-import { CustomElementDefinition } from '../resources/custom-element.js';
 import { BindingTargetSubscriber } from './binding-utils.js';
 
 import type {
@@ -48,8 +47,6 @@ export class AttributeBinding implements IPartialConnectableBinding {
   public isBound: boolean = false;
   public $platform: IPlatform;
   public $scope: Scope = null!;
-  public $hostScope: Scope | null = null;
-  public projection?: CustomElementDefinition;
   public task: ITask | null = null;
   private targetSubscriber: BindingTargetSubscriber | null = null;
 
@@ -89,7 +86,7 @@ export class AttributeBinding implements IPartialConnectableBinding {
 
   public updateSource(value: unknown, flags: LifecycleFlags): void {
     flags |= this.persistentFlags;
-    this.sourceExpression.assign!(flags, this.$scope, this.$hostScope, this.locator, value);
+    this.sourceExpression.assign!(flags, this.$scope, this.locator, value);
   }
 
   public handleChange(newValue: unknown, _previousValue: unknown, flags: LifecycleFlags): void {
@@ -110,19 +107,19 @@ export class AttributeBinding implements IPartialConnectableBinding {
     //  (1). determine whether this should be the behavior
     //  (2). if not, then fix tests to reflect the changes/platform to properly yield all with aurelia.start()
     const shouldQueueFlush = (flags & LifecycleFlags.fromBind) === 0 && (targetObserver.type & AccessorType.Layout) > 0;
-
+    let shouldConnect: boolean = false;
+    let task: ITask | null;
     if (sourceExpression.$kind !== ExpressionKind.AccessScope || this.obs.count > 1) {
-      const shouldConnect = (mode & oneTime) === 0;
+      shouldConnect = (mode & oneTime) === 0;
       if (shouldConnect) {
         this.obs.version++;
       }
-      newValue = sourceExpression.evaluate(flags, $scope, this.$hostScope, locator, interceptor);
+      newValue = sourceExpression.evaluate(flags, $scope, locator, interceptor);
       if (shouldConnect) {
         this.obs.clear(false);
       }
     }
 
-    let task: ITask | null;
     if (newValue !== this.value) {
       this.value = newValue;
       if (shouldQueueFlush) {
@@ -139,7 +136,7 @@ export class AttributeBinding implements IPartialConnectableBinding {
     }
   }
 
-  public $bind(flags: LifecycleFlags, scope: Scope, hostScope: Scope | null, projection?: CustomElementDefinition): void {
+  public $bind(flags: LifecycleFlags, scope: Scope): void {
     if (this.isBound) {
       if (this.$scope === scope) {
         return;
@@ -152,12 +149,10 @@ export class AttributeBinding implements IPartialConnectableBinding {
     this.persistentFlags = flags & LifecycleFlags.persistentBindingFlags;
 
     this.$scope = scope;
-    this.$hostScope = hostScope;
-    this.projection = projection;
 
     let sourceExpression = this.sourceExpression;
     if (sourceExpression.hasBind) {
-      sourceExpression.bind(flags, scope, hostScope, this.interceptor);
+      sourceExpression.bind(flags, scope, this.interceptor);
     }
 
     let targetObserver = this.targetObserver as IObserver;
@@ -175,11 +170,12 @@ export class AttributeBinding implements IPartialConnectableBinding {
     sourceExpression = this.sourceExpression;
     const $mode = this.mode;
     const interceptor = this.interceptor;
+    let shouldConnect: boolean = false;
 
     if ($mode & toViewOrOneTime) {
-      const shouldConnect = ($mode & toView) > 0;
+      shouldConnect = ($mode & toView) > 0;
       interceptor.updateTarget(
-        this.value = sourceExpression.evaluate(flags, scope, this.$hostScope, this.locator, shouldConnect ? interceptor : null),
+        this.value = sourceExpression.evaluate(flags, scope, this.locator, shouldConnect ? interceptor : null),
         flags
       );
     }
@@ -199,11 +195,9 @@ export class AttributeBinding implements IPartialConnectableBinding {
     this.persistentFlags = LifecycleFlags.none;
 
     if (this.sourceExpression.hasUnbind) {
-      this.sourceExpression.unbind(flags, this.$scope, this.$hostScope, this.interceptor);
+      this.sourceExpression.unbind(flags, this.$scope, this.interceptor);
     }
-    this.$scope
-      = this.$hostScope
-      = null!;
+    this.$scope = null!;
     this.value = void 0;
 
     if (this.targetSubscriber) {

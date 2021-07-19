@@ -24,7 +24,6 @@ export class Listener implements IBinding {
 
   public isBound: boolean = false;
   public $scope!: Scope;
-  public $hostScope: Scope | null = null;
 
   private handler: IDisposable = null!;
 
@@ -43,7 +42,7 @@ export class Listener implements IBinding {
     const overrideContext = this.$scope.overrideContext;
     overrideContext.$event = event;
 
-    const result = this.sourceExpression.evaluate(LifecycleFlags.mustEvaluate, this.$scope, this.$hostScope, this.locator, null);
+    const result = this.sourceExpression.evaluate(LifecycleFlags.mustEvaluate, this.$scope, this.locator, null);
 
     Reflect.deleteProperty(overrideContext, '$event');
 
@@ -58,7 +57,7 @@ export class Listener implements IBinding {
     this.interceptor.callSource(event);
   }
 
-  public $bind(flags: LifecycleFlags, scope: Scope, hostScope: Scope | null): void {
+  public $bind(flags: LifecycleFlags, scope: Scope): void {
     if (this.isBound) {
       if (this.$scope === scope) {
         return;
@@ -68,19 +67,17 @@ export class Listener implements IBinding {
     }
 
     this.$scope = scope;
-    this.$hostScope = hostScope;
 
     const sourceExpression = this.sourceExpression;
     if (sourceExpression.hasBind) {
-      sourceExpression.bind(flags, scope, hostScope, this.interceptor);
+      sourceExpression.bind(flags, scope, this.interceptor);
     }
 
     if (this.delegationStrategy === DelegationStrategy.none) {
       this.target.addEventListener(this.targetEvent, this);
     } else {
-      const eventTarget = this.locator.get(IEventTarget);
       this.handler = this.eventDelegator.addEventListener(
-        eventTarget,
+        this.locator.get(IEventTarget),
         this.target,
         this.targetEvent,
         this,
@@ -99,7 +96,7 @@ export class Listener implements IBinding {
 
     const sourceExpression = this.sourceExpression;
     if (sourceExpression.hasUnbind) {
-      sourceExpression.unbind(flags, this.$scope, this.$hostScope, this.interceptor);
+      sourceExpression.unbind(flags, this.$scope, this.interceptor);
     }
 
     this.$scope = null!;
@@ -114,7 +111,7 @@ export class Listener implements IBinding {
     this.isBound = false;
   }
 
-  public observeProperty(obj: IIndexable, propertyName: string): void {
+  public observe(obj: IIndexable, propertyName: string): void {
     return;
   }
 
