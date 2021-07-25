@@ -17,10 +17,13 @@ export interface IAurelia extends Aurelia {}
 export const IAurelia = DI.createInterface<IAurelia>('IAurelia');
 
 export class Aurelia implements IDisposable {
+  /** @internal */
   private _isRunning: boolean = false;
   public get isRunning(): boolean { return this._isRunning; }
+  /** @internal */
   private _isStarting: boolean = false;
   public get isStarting(): boolean { return this._isStarting; }
+  /** @internal */
   private _isStopping: boolean = false;
   public get isStopping(): boolean { return this._isStopping; }
 
@@ -29,11 +32,15 @@ export class Aurelia implements IDisposable {
   // in all other parts of the framework, root of something is always the same type of that thing
   // i.e: container.root => a container, RouteContext.root => a RouteContext
   // Aurelia.root of a controller hierarchy should behave similarly
+  /** @internal */
   private _root: IAppRoot | undefined = void 0;
   public get root(): IAppRoot {
     if (this._root == null) {
       if (this.next == null) {
-        throw new Error(`root is not defined`); // TODO: create error code
+        if (__DEV__)
+          throw new Error(`root is not defined`);
+        else
+          throw new Error('AUR0710');
       }
       return this.next;
     }
@@ -42,17 +49,21 @@ export class Aurelia implements IDisposable {
 
   private next: IAppRoot | undefined = void 0;
 
-  private readonly rootProvider: InstanceProvider<IAppRoot>;
+  /** @internal */
+  private readonly _rootProvider: InstanceProvider<IAppRoot>;
 
   public constructor(
     public readonly container: IContainer = DI.createContainer(),
   ) {
     if (container.has(IAurelia, true)) {
-      throw new Error('An instance of Aurelia is already registered with the container or an ancestor of it.');
+      if (__DEV__)
+        throw new Error('An instance of Aurelia is already registered with the container or an ancestor of it.');
+      else
+        throw new Error('AUR0711');
     }
 
     container.registerResolver(IAurelia, new InstanceProvider<IAurelia>('IAurelia', this));
-    container.registerResolver(IAppRoot, this.rootProvider = new InstanceProvider('IAppRoot'));
+    container.registerResolver(IAppRoot, this._rootProvider = new InstanceProvider('IAppRoot'));
   }
 
   public register(...params: any[]): this {
@@ -61,7 +72,7 @@ export class Aurelia implements IDisposable {
   }
 
   public app(config: ISinglePageApp): Omit<this, 'register' | 'app' | 'enhance'> {
-    this.next = new AppRoot(config, this.initPlatform(config.host), this.container, this.rootProvider);
+    this.next = new AppRoot(config, this._initPlatform(config.host), this.container, this._rootProvider);
     return this;
   }
 
@@ -71,19 +82,13 @@ export class Aurelia implements IDisposable {
   public enhance<T extends unknown, K = T extends Constructable<infer I> ? I : T>(config: IEnhancementConfig<T>, parentController?: IHydratedParentController | null): ICustomElementController<K> | Promise<ICustomElementController<K>> {
     const ctn = config.container ?? this.container.createChild();
     const host = config.host as HTMLElement;
-    const p = this.initPlatform(host);
+    const p = this._initPlatform(host);
     const comp = config.component as K;
     let bc: ICustomElementViewModel & K;
     if (typeof comp === 'function') {
       ctn.registerResolver(
-        p.HTMLElement,
-        ctn.registerResolver(
-          p.Element,
-          ctn.registerResolver(
-            p.Node,
-            ctn.registerResolver(INode, new InstanceProvider('ElementResolver', host))
-          )
-        )
+        p.Element,
+        ctn.registerResolver(INode, new InstanceProvider('ElementResolver', host))
       );
       bc = ctn.invoke(comp as unknown as Constructable<ICustomElementViewModel & K>);
     } else {
@@ -92,7 +97,7 @@ export class Aurelia implements IDisposable {
     ctn.registerResolver(IEventTarget, new InstanceProvider('IEventTarget', host));
     parentController = parentController ?? null;
 
-    const view = Controller.forCustomElement(
+    const view = Controller.$el(
       ctn,
       bc,
       host,
@@ -113,11 +118,15 @@ export class Aurelia implements IDisposable {
     await platform.taskQueue.yield();
   }
 
-  private initPlatform(host: HTMLElement): IPlatform {
+  /** @internal */
+  private _initPlatform(host: HTMLElement): IPlatform {
     let p: IPlatform;
     if (!this.container.has(IPlatform, false)) {
       if (host.ownerDocument.defaultView === null) {
-        throw new Error(`Failed to initialize the platform object. The host element's ownerDocument does not have a defaultView`);
+        if (__DEV__)
+          throw new Error(`Failed to initialize the platform object. The host element's ownerDocument does not have a defaultView`);
+        else
+          throw new Error('AUR0712');
       }
       p = new BrowserPlatform(host.ownerDocument.defaultView);
       this.container.register(Registration.instance(IPlatform, p));
@@ -127,34 +136,39 @@ export class Aurelia implements IDisposable {
     return p;
   }
 
-  private startPromise: Promise<void> | void = void 0;
+  /** @internal */
+  private _startPromise: Promise<void> | void = void 0;
   public start(root: IAppRoot | undefined = this.next): void | Promise<void> {
     if (root == null) {
-      throw new Error(`There is no composition root`);
+      if (__DEV__)
+        throw new Error(`There is no composition root`);
+      else
+        throw new Error('AUR0713');
     }
 
-    if (this.startPromise instanceof Promise) {
-      return this.startPromise;
+    if (this._startPromise instanceof Promise) {
+      return this._startPromise;
     }
 
-    return this.startPromise = onResolve(this.stop(), () => {
+    return this._startPromise = onResolve(this.stop(), () => {
       Reflect.set(root.host, '$aurelia', this);
-      this.rootProvider.prepare(this._root = root);
+      this._rootProvider.prepare(this._root = root);
       this._isStarting = true;
 
       return onResolve(root.activate(), () => {
         this._isRunning = true;
         this._isStarting = false;
-        this.startPromise = void 0;
-        this.dispatchEvent(root, 'au-started', root.host);
+        this._startPromise = void 0;
+        this._dispatchEvent(root, 'au-started', root.host);
       });
     });
   }
 
-  private stopPromise: Promise<void> | void = void 0;
+  /** @internal */
+  private _stopPromise: Promise<void> | void = void 0;
   public stop(dispose: boolean = false): void | Promise<void> {
-    if (this.stopPromise instanceof Promise) {
-      return this.stopPromise;
+    if (this._stopPromise instanceof Promise) {
+      return this._stopPromise;
     }
 
     if (this._isRunning === true) {
@@ -162,27 +176,31 @@ export class Aurelia implements IDisposable {
       this._isRunning = false;
       this._isStopping = true;
 
-      return this.stopPromise = onResolve(root.deactivate(), () => {
+      return this._stopPromise = onResolve(root.deactivate(), () => {
         Reflect.deleteProperty(root.host, '$aurelia');
         if (dispose) {
           root.dispose();
         }
         this._root = void 0;
-        this.rootProvider.dispose();
+        this._rootProvider.dispose();
         this._isStopping = false;
-        this.dispatchEvent(root, 'au-stopped', root.host);
+        this._dispatchEvent(root, 'au-stopped', root.host);
       });
     }
   }
 
   public dispose(): void {
     if (this._isRunning || this._isStopping) {
-      throw new Error(`The aurelia instance must be fully stopped before it can be disposed`);
+      if (__DEV__)
+        throw new Error(`The aurelia instance must be fully stopped before it can be disposed`);
+      else
+        throw new Error('AUR0714');
     }
     this.container.dispose();
   }
 
-  private dispatchEvent(root: IAppRoot, name: string, target: HTMLElement): void {
+  /** @internal */
+  private _dispatchEvent(root: IAppRoot, name: string, target: HTMLElement): void {
     const ev = new root.platform.window.CustomEvent(name, { detail: this, bubbles: true, cancelable: true });
     target.dispatchEvent(ev);
   }

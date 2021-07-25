@@ -16,13 +16,12 @@ import type {
   IConnectableBinding,
   ForOfStatement,
   IObserverLocator,
-  IPartialConnectableBinding,
+  IObserverLocatorBasedConnectable,
   IsBindingBehavior,
   ITask,
   QueueTaskOptions,
   Scope,
 } from '@aurelia/runtime';
-import type { IHtmlElement } from '../observation/element-attribute-observer.js';
 import type { INode } from '../dom.js';
 
 // BindingMode is not a const enum (and therefore not inlined), so assigning them to a variable to save a member accessor is a minor perf tweak
@@ -41,11 +40,11 @@ export interface AttributeBinding extends IConnectableBinding {}
 /**
  * Attribute binding. Handle attribute binding betwen view/view model. Understand Html special attributes
  */
-export class AttributeBinding implements IPartialConnectableBinding {
+export class AttributeBinding implements IObserverLocatorBasedConnectable {
   public interceptor: this = this;
 
   public isBound: boolean = false;
-  public $platform: IPlatform;
+  public p: IPlatform;
   public $scope: Scope = null!;
   public task: ITask | null = null;
   private targetSubscriber: BindingTargetSubscriber | null = null;
@@ -61,6 +60,11 @@ export class AttributeBinding implements IPartialConnectableBinding {
   public target: Element;
   public value: unknown = void 0;
 
+  /**
+   * A semi-private property used by connectable mixin
+   */
+  public oL: IObserverLocator;
+
   public constructor(
     public sourceExpression: IsBindingBehavior | ForOfStatement,
     target: INode,
@@ -72,11 +76,12 @@ export class AttributeBinding implements IPartialConnectableBinding {
     public targetAttribute: string,
     public targetProperty: string,
     public mode: BindingMode,
-    public observerLocator: IObserverLocator,
+    observerLocator: IObserverLocator,
     public locator: IServiceLocator,
   ) {
     this.target = target as Element;
-    this.$platform = locator.get(IPlatform);
+    this.p = locator.get(IPlatform);
+    this.oL = observerLocator;
   }
 
   public updateTarget(value: unknown, flags: LifecycleFlags): void {
@@ -125,7 +130,7 @@ export class AttributeBinding implements IPartialConnectableBinding {
       if (shouldQueueFlush) {
         // Queue the new one before canceling the old one, to prevent early yield
         task = this.task;
-        this.task = this.$platform.domWriteQueue.queueTask(() => {
+        this.task = this.p.domWriteQueue.queueTask(() => {
           this.task = null;
           interceptor.updateTarget(newValue, flags);
         }, taskOptions);
@@ -158,9 +163,7 @@ export class AttributeBinding implements IPartialConnectableBinding {
     let targetObserver = this.targetObserver as IObserver;
     if (!targetObserver) {
       targetObserver = this.targetObserver = new AttributeObserver(
-        this.$platform,
-        this.observerLocator,
-        this.target as IHtmlElement,
+        this.target as HTMLElement,
         this.targetProperty,
         this.targetAttribute,
       );

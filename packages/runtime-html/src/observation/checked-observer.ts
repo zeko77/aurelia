@@ -7,6 +7,8 @@ import {
   withFlushQueue,
 } from '@aurelia/runtime';
 import { getCollectionObserver } from './observer-locator.js';
+import { hasOwnProperty } from '../utilities-html.js';
+
 import type { INode } from '../dom.js';
 import type { EventSubscriber } from './event-delegator.js';
 import type { ValueAttributeObserver } from './value-attribute-observer.js';
@@ -39,27 +41,34 @@ export interface CheckedObserver extends
   ISubscriberCollection { }
 
 export class CheckedObserver implements IObserver, IFlushable, IWithFlushQueue {
+  public type: AccessorType = AccessorType.Node | AccessorType.Observer | AccessorType.Layout;
+
   public value: unknown = void 0;
-  public oldValue: unknown = void 0;
+  /** @internal */
+  private _oldValue: unknown = void 0;
 
   public readonly obj: IInputElement;
 
-  public type: AccessorType = AccessorType.Node | AccessorType.Observer | AccessorType.Layout;
-
-  public collectionObserver?: ICollectionObserver<CollectionKind> = void 0;
-  public valueObserver?: ValueAttributeObserver | SetterObserver = void 0;
+  /** @internal */
+  private _collectionObserver?: ICollectionObserver<CollectionKind> = void 0;
+  /** @internal */
+  private _valueObserver?: ValueAttributeObserver | SetterObserver = void 0;
   public readonly queue!: FlushQueue;
 
+  /** @internal */
   private f: LifecycleFlags = LifecycleFlags.none;
+  /** @internal */
+  private readonly oL: IObserverLocator;
 
   public constructor(
     obj: INode,
     // deepscan-disable-next-line
     _key: PropertyKey,
     public readonly handler: EventSubscriber,
-    public readonly observerLocator: IObserverLocator,
+    observerLocator: IObserverLocator,
   ) {
     this.obj = obj as IInputElement;
+    this.oL = observerLocator;
   }
 
   public getValue(): unknown {
@@ -72,25 +81,26 @@ export class CheckedObserver implements IObserver, IFlushable, IWithFlushQueue {
       return;
     }
     this.value = newValue;
-    this.oldValue = currentValue;
+    this._oldValue = currentValue;
     this.f = flags;
-    this.observe();
-    this.synchronizeElement();
+    this._observe();
+    this._synchronizeElement();
     this.queue.add(this);
   }
 
   public handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void {
-    this.synchronizeElement();
+    this._synchronizeElement();
   }
 
   public handleChange(newValue: unknown, previousValue: unknown, flags: LifecycleFlags): void {
-    this.synchronizeElement();
+    this._synchronizeElement();
   }
 
-  public synchronizeElement(): void {
+  /** @internal */
+  private _synchronizeElement(): void {
     const currentValue = this.value;
     const obj = this.obj;
-    const elementValue = Object.prototype.hasOwnProperty.call(obj, 'model') as boolean ? obj.model : obj.value;
+    const elementValue = hasOwnProperty.call(obj, 'model') as boolean ? obj.model : obj.value;
     const isRadio = obj.type === 'radio';
     const matcher = obj.matcher !== void 0 ? obj.matcher : defaultMatcher;
 
@@ -126,9 +136,9 @@ export class CheckedObserver implements IObserver, IFlushable, IWithFlushQueue {
   }
 
   public handleEvent(): void {
-    let currentValue = this.oldValue = this.value;
+    let currentValue = this._oldValue = this.value;
     const obj = this.obj;
-    const elementValue = Object.prototype.hasOwnProperty.call(obj, 'model') as boolean ? obj.model : obj.value;
+    const elementValue = hasOwnProperty.call(obj, 'model') as boolean ? obj.model : obj.value;
     const isChecked = obj.checked;
     const matcher = obj.matcher !== void 0 ? obj.matcher : defaultMatcher;
 
@@ -234,15 +244,15 @@ export class CheckedObserver implements IObserver, IFlushable, IWithFlushQueue {
 
   public start() {
     this.handler.subscribe(this.obj, this);
-    this.observe();
+    this._observe();
   }
 
   public stop(): void {
     this.handler.dispose();
-    this.collectionObserver?.unsubscribe(this);
-    this.collectionObserver = void 0;
+    this._collectionObserver?.unsubscribe(this);
+    this._collectionObserver = void 0;
 
-    this.valueObserver?.unsubscribe(this);
+    this._valueObserver?.unsubscribe(this);
   }
 
   public subscribe(subscriber: ISubscriber): void {
@@ -258,21 +268,22 @@ export class CheckedObserver implements IObserver, IFlushable, IWithFlushQueue {
   }
 
   public flush(): void {
-    oV = this.oldValue;
-    this.oldValue = this.value;
+    oV = this._oldValue;
+    this._oldValue = this.value;
     this.subs.notify(this.value, oV, this.f);
   }
 
-  private observe() {
+  /** @internal */
+  private _observe() {
     const obj = this.obj;
 
-    (this.valueObserver ??= obj.$observers?.model ?? obj.$observers?.value)?.subscribe(this);
+    (this._valueObserver ??= obj.$observers?.model ?? obj.$observers?.value)?.subscribe(this);
 
-    this.collectionObserver?.unsubscribe(this);
-    this.collectionObserver = void 0;
+    this._collectionObserver?.unsubscribe(this);
+    this._collectionObserver = void 0;
 
     if (obj.type === 'checkbox') {
-      (this.collectionObserver = getCollectionObserver(this.value, this.observerLocator))?.subscribe(this);
+      (this._collectionObserver = getCollectionObserver(this.value, this.oL))?.subscribe(this);
     }
   }
 }

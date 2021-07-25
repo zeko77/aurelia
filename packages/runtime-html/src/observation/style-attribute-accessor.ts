@@ -5,14 +5,17 @@ import type { IAccessor } from '@aurelia/runtime';
 const customPropertyPrefix: string = '--';
 
 export class StyleAttributeAccessor implements IAccessor {
+  public type: AccessorType = AccessorType.Node | AccessorType.Layout;
+
   public value: unknown = '';
-  public oldValue: unknown = '';
+  /** @internal */
+  private _oldValue: unknown = '';
 
   public styles: Record<string, number> = {};
   public version: number = 0;
 
-  public hasChanges: boolean = false;
-  public type: AccessorType = AccessorType.Node | AccessorType.Layout;
+  /** @internal */
+  private _hasChanges: boolean = false;
 
   public constructor(
     public readonly obj: HTMLElement,
@@ -25,13 +28,13 @@ export class StyleAttributeAccessor implements IAccessor {
 
   public setValue(newValue: unknown, flags: LifecycleFlags): void {
     this.value = newValue;
-    this.hasChanges = newValue !== this.oldValue;
+    this._hasChanges = newValue !== this._oldValue;
     if ((flags & LifecycleFlags.noFlush) === 0) {
-      this.flushChanges(flags);
+      this._flushChanges();
     }
   }
 
-  private getStyleTuplesFromString(currentValue: string): [string, string][] {
+  private _getStyleTuplesFromString(currentValue: string): [string, string][] {
     const styleTuples: [string, string][] = [];
     const urlRegexTester = /url\([^)]+$/;
     let offset = 0;
@@ -62,10 +65,11 @@ export class StyleAttributeAccessor implements IAccessor {
     return styleTuples;
   }
 
-  private getStyleTuplesFromObject(currentValue: Record<string, unknown>): [string, string][] {
+  private _getStyleTuplesFromObject(currentValue: Record<string, unknown>): [string, string][] {
     let value: unknown;
+    let property: string;
     const styles: [string, string][] = [];
-    for (const property in currentValue) {
+    for (property in currentValue) {
       value = currentValue[property];
       if (value == null) {
         continue;
@@ -80,57 +84,60 @@ export class StyleAttributeAccessor implements IAccessor {
         continue;
       }
 
-      styles.push(...this.getStyleTuples(value));
+      styles.push(...this._getStyleTuples(value));
     }
 
     return styles;
   }
 
-  private getStyleTuplesFromArray(currentValue: unknown[]): [string, string][] {
+  private _getStyleTuplesFromArray(currentValue: unknown[]): [string, string][] {
     const len = currentValue.length;
     if (len > 0) {
       const styles: [string, string][] = [];
-      for (let i = 0; i < len; ++i) {
-        styles.push(...this.getStyleTuples(currentValue[i]));
+      let i = 0;
+      for (; len > i; ++i) {
+        styles.push(...this._getStyleTuples(currentValue[i]));
       }
       return styles;
     }
     return emptyArray;
   }
 
-  private getStyleTuples(currentValue: unknown): [string, string][] {
+  private _getStyleTuples(currentValue: unknown): [string, string][] {
     if (typeof currentValue === 'string') {
-      return this.getStyleTuplesFromString(currentValue);
+      return this._getStyleTuplesFromString(currentValue);
     }
 
     if (currentValue instanceof Array) {
-      return this.getStyleTuplesFromArray(currentValue);
+      return this._getStyleTuplesFromArray(currentValue);
     }
 
     if (currentValue instanceof Object) {
-      return this.getStyleTuplesFromObject(currentValue as Record<string, unknown>);
+      return this._getStyleTuplesFromObject(currentValue as Record<string, unknown>);
     }
 
     return emptyArray;
   }
 
-  public flushChanges(flags: LifecycleFlags): void {
-    if (this.hasChanges) {
-      this.hasChanges = false;
+  /** @internal */
+  private _flushChanges(): void {
+    if (this._hasChanges) {
+      this._hasChanges = false;
       const currentValue = this.value;
       const styles = this.styles;
-      const styleTuples = this.getStyleTuples(currentValue);
+      const styleTuples = this._getStyleTuples(currentValue);
 
       let style: string;
       let version = this.version;
 
-      this.oldValue = currentValue;
+      this._oldValue = currentValue;
 
       let tuple: [string, string];
       let name: string;
       let value: string;
+      let i = 0;
       const len = styleTuples.length;
-      for (let i = 0; i < len; ++i) {
+      for (; i < len; ++i) {
         tuple = styleTuples[i];
         name = tuple[0];
         value = tuple[1];
@@ -166,6 +173,6 @@ export class StyleAttributeAccessor implements IAccessor {
   }
 
   public bind(flags: LifecycleFlags): void {
-    this.value = this.oldValue = this.obj.style.cssText;
+    this.value = this._oldValue = this.obj.style.cssText;
   }
 }

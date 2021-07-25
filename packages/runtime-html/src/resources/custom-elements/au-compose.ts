@@ -26,8 +26,6 @@ type ChangeSource = 'view' | 'viewModel' | 'model' | 'scopeBehavior';
 // <au-component view.bind="Promise<string>" view-model.bind="" model.bind="" />
 // <au-component view.bind="<string>" model.bind="" />
 //
-
-@customElement('au-compose')
 export class AuCompose {
 
   /** @internal */
@@ -52,7 +50,10 @@ export class AuCompose {
       if (v === 'scoped' || v === 'auto') {
         return v;
       }
-      throw new Error('Invalid scope behavior config. Only "scoped" or "auto" allowed.');
+      if (__DEV__)
+        throw new Error('Invalid scope behavior config. Only "scoped" or "auto" allowed.');
+      else
+        throw new Error('AUR0805');
     }
   })
   public scopeBehavior: 'auto' | 'scoped' = 'auto';
@@ -60,9 +61,9 @@ export class AuCompose {
   /** @internal */
   public readonly $controller!: ICustomElementController<AuCompose>;
 
-  private _p?: Promise<void> | void;
+  private pd?: Promise<void> | void;
   public get pending(): Promise<void> | void {
-    return this._p;
+    return this.pd;
   }
 
   /** @internal */
@@ -75,27 +76,31 @@ export class AuCompose {
 
   /** @internal */
   private readonly loc: IRenderLocation | undefined;
+  private readonly _instruction: HydrateElementInstruction;
+  private readonly _contextFactory: CompositionContextFactory;
 
   public constructor(
-    private readonly container: IContainer,
+    private readonly ctn: IContainer,
     private readonly parent: ISyntheticView | ICustomElementController,
     private readonly host: HTMLElement,
     private readonly p: IPlatform,
     // todo: use this to retrieve au-slot instruction
     //        for later enhancement related to <au-slot/> + compose
-    private readonly instruction: HydrateElementInstruction,
-    private readonly contextFactory: CompositionContextFactory,
+    instruction: HydrateElementInstruction,
+    contextFactory: CompositionContextFactory,
   ) {
     this.loc = instruction.containerless ? convertToRenderLocation(this.host) : void 0;
-    this.r = container.get(IRendering);
+    this.r = ctn.get(IRendering);
+    this._instruction = instruction;
+    this._contextFactory = contextFactory;
   }
 
   public attaching(initiator: IHydratedController, parent: IHydratedController, flags: LifecycleFlags): void | Promise<void> {
-    return this._p = onResolve(
+    return this.pd = onResolve(
       this.queue(new ChangeInfo(this.view, this.viewModel, this.model, initiator, void 0)),
       (context) => {
-        if (this.contextFactory.isCurrent(context)) {
-          this._p = void 0;
+        if (this._contextFactory.isCurrent(context)) {
+          this.pd = void 0;
         }
       }
     );
@@ -103,9 +108,9 @@ export class AuCompose {
 
   public detaching(initiator: IHydratedController): void | Promise<void> {
     const cmpstn = this.c;
-    const pending = this._p;
-    this.contextFactory.invalidate();
-    this.c = this._p = void 0;
+    const pending = this.pd;
+    this._contextFactory.invalidate();
+    this.c = this.pd = void 0;
     return onResolve(pending, () => cmpstn?.deactivate(initiator));
   }
 
@@ -116,12 +121,12 @@ export class AuCompose {
       this.c.update(this.model);
       return;
     }
-    this._p = onResolve(this._p, () =>
+    this.pd = onResolve(this.pd, () =>
       onResolve(
         this.queue(new ChangeInfo(this.view!, this.viewModel, this.model, void 0, name)),
         (context) => {
-          if (this.contextFactory.isCurrent(context)) {
-            this._p = void 0;
+          if (this._contextFactory.isCurrent(context)) {
+            this.pd = void 0;
           }
         }
       )
@@ -130,7 +135,7 @@ export class AuCompose {
 
   /** @internal */
   private queue(change: ChangeInfo): CompositionContext | Promise<CompositionContext> {
-    const factory = this.contextFactory;
+    const factory = this._contextFactory;
     const compositionCtrl = this.c;
     // todo: handle consequitive changes that create multiple queues
     return onResolve(
@@ -184,14 +189,17 @@ export class AuCompose {
     //       should it throw or try it best to proceed?
     //       current: proceed
     const { view, viewModel, model, initiator } = context.change;
-    const { container, host, $controller, loc } = this;
+    const { ctn: container, host, $controller, loc } = this;
     const srcDef = this.getDef(viewModel);
     const childCtn: IContainer = container.createChild();
     const parentNode = loc == null ? host.parentNode : loc.parentNode;
 
     if (srcDef !== null) {
       if (srcDef.containerless) {
-        throw new Error('Containerless custom element is not supported by <au-compose/>');
+        if (__DEV__)
+          throw new Error('Containerless custom element is not supported by <au-compose/>');
+        else
+          throw new Error('AUR0806');
       }
       if (loc == null) {
         compositionHost = host;
@@ -216,7 +224,7 @@ export class AuCompose {
     const compose: () => ICompositionController = () => {
       // custom element based composition
       if (srcDef !== null) {
-        const controller = Controller.forCustomElement(
+        const controller = Controller.$el(
           childCtn,
           comp,
           compositionHost as HTMLElement,
@@ -244,7 +252,7 @@ export class AuCompose {
           template: view,
         });
         const viewFactory = this.r.getViewFactory(targetDef, childCtn);
-        const controller = Controller.forSyntheticView(
+        const controller = Controller.$view(
           viewFactory,
           LifecycleFlags.fromBind,
           $controller
@@ -293,11 +301,13 @@ export class AuCompose {
 
     const p = this.p;
     const isLocation = isRenderLocation(host);
-    const nodeProvider = new InstanceProvider('ElementResolver', isLocation ? null : host as HTMLElement);
-    container.registerResolver(INode, nodeProvider);
-    container.registerResolver(p.Node, nodeProvider);
-    container.registerResolver(p.Element, nodeProvider);
-    container.registerResolver(p.HTMLElement, nodeProvider);
+    container.registerResolver(
+      p.Element,
+      container.registerResolver(
+        INode,
+        new InstanceProvider('ElementResolver', isLocation ? null : host as HTMLElement)
+      )
+    );
     container.registerResolver(
       IRenderLocation,
       new InstanceProvider('IRenderLocation', isLocation ? host as IRenderLocation : null)
@@ -319,6 +329,8 @@ export class AuCompose {
       : null;
   }
 }
+
+customElement('au-compose')(AuCompose);
 
 class EmptyComponent { }
 
@@ -410,7 +422,10 @@ class CompositionController implements ICompositionController {
 
   public activate() {
     if (this.state !== 0) {
-      throw new Error(`Composition has already been activated/deactivated. Id: ${this.controller.name}`);
+      if (__DEV__)
+        throw new Error(`Composition has already been activated/deactivated. Id: ${this.controller.name}`);
+      else
+        throw new Error(`AUR0807:${this.controller.name}`);
     }
     this.state = 1;
     return this.start();
@@ -422,7 +437,10 @@ class CompositionController implements ICompositionController {
         this.state = -1;
         return this.stop(detachInitator);
       case -1:
-        throw new Error('Composition has already been deactivated.');
+        if (__DEV__)
+          throw new Error('Composition has already been deactivated.');
+        else
+          throw new Error('AUR0808');
       default:
         this.state = -1;
     }

@@ -21,26 +21,37 @@ export type UpdateTriggerableBinding = PropertyBinding & {
   targetObserver: UpdateTriggerableObserver;
 };
 
-@bindingBehavior('updateTrigger')
 export class UpdateTriggerBindingBehavior {
-
+  public static inject = [IObserverLocator];
+  private readonly oL: IObserverLocator;
   public constructor(
-    @IObserverLocator private readonly observerLocator: IObserverLocator
-  ) {}
+    observerLocator: IObserverLocator,
+  ) {
+    this.oL = observerLocator;
+  }
 
   public bind(flags: LifecycleFlags, _scope: Scope, binding: UpdateTriggerableBinding, ...events: string[]): void {
     if (events.length === 0) {
-      throw new Error('The updateTrigger binding behavior requires at least one event name argument: eg <input value.bind="firstName & updateTrigger:\'blur\'">');
+      if (__DEV__)
+        throw new Error('The updateTrigger binding behavior requires at least one event name argument: eg <input value.bind="firstName & updateTrigger:\'blur\'">');
+      else
+        throw new Error(`AUR0802`);
     }
 
     if (binding.mode !== BindingMode.twoWay && binding.mode !== BindingMode.fromView) {
-      throw new Error('The updateTrigger binding behavior can only be applied to two-way/ from-view bindings on input/select elements.');
+      if (__DEV__)
+        throw new Error('The updateTrigger binding behavior can only be applied to two-way/ from-view bindings.');
+      else
+        throw new Error('AUR0803');
     }
 
     // ensure the binding's target observer has been set.
-    const targetObserver = this.observerLocator.getObserver(binding.target, binding.targetProperty) as UpdateTriggerableObserver;
+    const targetObserver = this.oL.getObserver(binding.target, binding.targetProperty) as UpdateTriggerableObserver;
     if (!targetObserver.handler) {
-      throw new Error('The updateTrigger binding behavior can only be applied to two-way/ from-view bindings on input/select elements.');
+      if (__DEV__)
+        throw new Error('The updateTrigger binding behavior can only be applied to two-way/ from-view bindings on input/select elements.');
+      else
+        throw new Error('AUR0804');
     }
 
     binding.targetObserver = targetObserver;
@@ -64,3 +75,5 @@ export class UpdateTriggerBindingBehavior {
     binding.targetObserver.originalHandler = null!;
   }
 }
+
+bindingBehavior('updateTrigger')(UpdateTriggerBindingBehavior);

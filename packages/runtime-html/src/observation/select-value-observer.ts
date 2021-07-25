@@ -43,36 +43,43 @@ export interface SelectValueObserver extends
   ISubscriberCollection {}
 
 export class SelectValueObserver implements IObserver, IFlushable, IWithFlushQueue {
-  public value: unknown = void 0;
-  public oldValue: unknown = void 0;
-
-  public readonly obj: ISelectElement;
-
-  public hasChanges: boolean = false;
   // ObserverType.Layout is not always true
   // but for simplicity, always treat as such
   public type: AccessorType = AccessorType.Node | AccessorType.Observer | AccessorType.Layout;
 
-  public arrayObserver?: ICollectionObserver<CollectionKind.array> = void 0;
-  public nodeObserver?: MutationObserver = void 0;
+  public value: unknown = void 0;
+  /** @internal */
+  private _oldValue: unknown = void 0;
+
+  public readonly obj: ISelectElement;
+
+  /** @internal */
+  private _hasChanges: boolean = false;
+  /** @internal */
+  private _arrayObserver?: ICollectionObserver<CollectionKind.array> = void 0;
+  /** @internal */
+  private _nodeObserver?: MutationObserver = void 0;
   public readonly queue!: FlushQueue;
 
-  private observing: boolean = false;
+  /** @internal */
+  private _observing: boolean = false;
+  private readonly oL: IObserverLocator;
 
   public constructor(
     obj: INode,
     // deepscan-disable-next-line
     _key: PropertyKey,
     public readonly handler: EventSubscriber,
-    public readonly observerLocator: IObserverLocator,
+    observerLocator: IObserverLocator,
   ) {
     this.obj = obj as ISelectElement;
+    this.oL = observerLocator;
   }
 
   public getValue(): unknown {
     // is it safe to assume the observer has the latest value?
     // todo: ability to turn on/off cache based on type
-    return this.observing
+    return this._observing
       ? this.value
       : this.obj.multiple
         ? Array.from(this.obj.options).map(o => o.value)
@@ -80,18 +87,19 @@ export class SelectValueObserver implements IObserver, IFlushable, IWithFlushQue
   }
 
   public setValue(newValue: unknown, flags: LF): void {
-    this.oldValue = this.value;
+    this._oldValue = this.value;
     this.value = newValue;
-    this.hasChanges = newValue !== this.oldValue;
-    this.observeArray(newValue instanceof Array ? newValue : null);
+    this._hasChanges = newValue !== this._oldValue;
+    this._observeArray(newValue instanceof Array ? newValue : null);
     if ((flags & LF.noFlush) === 0) {
-      this.flushChanges(flags);
+      this._flushChanges();
     }
   }
 
-  public flushChanges(flags: LF): void {
-    if (this.hasChanges) {
-      this.hasChanges = false;
+  /** @internal */
+  private _flushChanges(): void {
+    if (this._hasChanges) {
+      this._hasChanges = false;
       this.syncOptions();
     }
   }
@@ -165,10 +173,11 @@ export class SelectValueObserver implements IObserver, IFlushable, IWithFlushQue
         }
         ++i;
       }
+      let a: unknown;
       // A.1.b.ii
       i = 0;
       while (i < currentValue.length) {
-        const a = currentValue[i];
+        a = currentValue[i];
         // Todo: remove arrow fn
         if (values.findIndex(b => !!matcher(a, b)) === -1) {
           currentValue.splice(i, 1);
@@ -179,7 +188,7 @@ export class SelectValueObserver implements IObserver, IFlushable, IWithFlushQue
       // A.1.b.iii
       i = 0;
       while (i < values.length) {
-        const a = values[i];
+        a = values[i];
         // Todo: remove arrow fn
         if (currentValue.findIndex(b => !!matcher(a, b)) === -1) {
           currentValue.push(a);
@@ -192,8 +201,9 @@ export class SelectValueObserver implements IObserver, IFlushable, IWithFlushQue
     // B. single select
     // B.1
     let value: unknown = null;
+    let option: IOptionElement;
     while (i < len) {
-      const option = options[i];
+      option = options[i];
       if (option.selected) {
         value = hasOwn.call(option, 'model')
           ? option.model
@@ -203,7 +213,7 @@ export class SelectValueObserver implements IObserver, IFlushable, IWithFlushQue
       ++i;
     }
     // B.2
-    this.oldValue = this.value;
+    this._oldValue = this.value;
     // B.3
     this.value = value;
     // B.4
@@ -211,30 +221,33 @@ export class SelectValueObserver implements IObserver, IFlushable, IWithFlushQue
   }
 
   private start(): void {
-    (this.nodeObserver = new this.obj.ownerDocument.defaultView!.MutationObserver(this.handleNodeChange.bind(this)))
+    (this._nodeObserver = new this.obj.ownerDocument.defaultView!.MutationObserver(this._handleNodeChange.bind(this)))
       .observe(this.obj, childObserverOptions);
-    this.observeArray(this.value instanceof Array ? this.value : null);
-    this.observing = true;
+    this._observeArray(this.value instanceof Array ? this.value : null);
+    this._observing = true;
   }
 
   private stop(): void {
-    this.nodeObserver!.disconnect();
-    this.arrayObserver?.unsubscribe(this);
-    this.nodeObserver
-      = this.arrayObserver
+    this._nodeObserver!.disconnect();
+    this._arrayObserver?.unsubscribe(this);
+    this._nodeObserver
+      = this._arrayObserver
       = void 0;
-    this.observing = false;
+    this._observing = false;
   }
 
   // todo: observe all kind of collection
-  private observeArray(array: unknown[] | null): void {
-    this.arrayObserver?.unsubscribe(this);
-    this.arrayObserver = void 0;
+  private _observeArray(array: unknown[] | null): void {
+    this._arrayObserver?.unsubscribe(this);
+    this._arrayObserver = void 0;
     if (array != null) {
       if (!this.obj.multiple) {
-        throw new Error('Only null or Array instances can be bound to a multi-select.');
+        if (__DEV__)
+          throw new Error('Only null or Array instances can be bound to a multi-select.');
+        else
+          throw new Error('AUR0654');
       }
-      (this.arrayObserver = this.observerLocator.getArrayObserver(array)).subscribe(this);
+      (this._arrayObserver = this.oL.getArrayObserver(array)).subscribe(this);
     }
   }
 
@@ -246,7 +259,7 @@ export class SelectValueObserver implements IObserver, IFlushable, IWithFlushQue
     }
   }
 
-  public handleNodeChange(): void {
+  private _handleNodeChange(): void {
     this.syncOptions();
     const shouldNotify = this.syncValue();
     if (shouldNotify) {
@@ -269,8 +282,8 @@ export class SelectValueObserver implements IObserver, IFlushable, IWithFlushQue
   }
 
   public flush(): void {
-    oV = this.oldValue;
-    this.oldValue = this.value;
+    oV = this._oldValue;
+    this._oldValue = this.value;
     this.subs.notify(this.value, oV, LifecycleFlags.none);
   }
 }

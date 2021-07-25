@@ -249,7 +249,10 @@ export class CustomElementDefinition<C extends Constructable = Constructable> im
     if (Type === null) {
       const def = nameOrDef;
       if (typeof def === 'string') {
-        throw new Error(`Cannot create a custom element definition with only a name and no type: ${nameOrDef}`);
+        if (__DEV__)
+          throw new Error(`Cannot create a custom element definition with only a name and no type: ${nameOrDef}`);
+        else
+          throw new Error(`AUR0704:${nameOrDef}`);
       }
 
       const name = fromDefinitionOrDefault('name', def, CustomElement.generateName);
@@ -405,30 +408,37 @@ const defaultForOpts: ForOpts = {
   optional: false,
 };
 
-export const CustomElement: CustomElementKind = {
-  name: Protocol.resource.keyFor('custom-element'),
+const ceBaseName = Protocol.resource.keyFor('custom-element');
+export const CustomElement: CustomElementKind = Object.freeze({
+  name: ceBaseName,
   keyFrom(name: string): string {
-    return `${CustomElement.name}:${name}`;
+    return `${ceBaseName}:${name}`;
   },
   isType<C>(value: C): value is (C extends Constructable ? CustomElementType<C> : never) {
-    return typeof value === 'function' && Metadata.hasOwn(CustomElement.name, value);
+    return typeof value === 'function' && Metadata.hasOwn(ceBaseName, value);
   },
   for<C extends ICustomElementViewModel = ICustomElementViewModel>(node: Node, opts: ForOpts = defaultForOpts): ICustomElementController<C> {
     if (opts.name === void 0 && opts.searchParents !== true) {
-      const controller = getRef(node, CustomElement.name) as Controller<C> | null;
+      const controller = getRef(node, ceBaseName) as Controller<C> | null;
       if (controller === null) {
         if (opts.optional === true) {
           return null!;
         }
-        throw new Error(`The provided node is not a custom element or containerless host.`);
+        if (__DEV__)
+          throw new Error(`The provided node is not a custom element or containerless host.`);
+        else
+          throw new Error('AUR0705');
       }
       return controller as unknown as ICustomElementController<C>;
     }
     if (opts.name !== void 0) {
       if (opts.searchParents !== true) {
-        const controller = getRef(node, CustomElement.name) as Controller<C> | null;
+        const controller = getRef(node, ceBaseName) as Controller<C> | null;
         if (controller === null) {
-          throw new Error(`The provided node is not a custom element or containerless host.`);
+          if (__DEV__)
+            throw new Error(`The provided node is not a custom element or containerless host.`);
+          else
+            throw new Error('AUR0706');
         }
 
         if (controller.is(opts.name)) {
@@ -441,7 +451,7 @@ export const CustomElement: CustomElementKind = {
       let cur = node as INode | null;
       let foundAController = false;
       while (cur !== null) {
-        const controller = getRef(cur, CustomElement.name) as Controller<C> | null;
+        const controller = getRef(cur, ceBaseName) as Controller<C> | null;
         if (controller !== null) {
           foundAController = true;
           if (controller.is(opts.name)) {
@@ -456,12 +466,15 @@ export const CustomElement: CustomElementKind = {
         return (void 0)!;
       }
 
-      throw new Error(`The provided node does does not appear to be part of an Aurelia app DOM tree, or it was added to the DOM in a way that Aurelia cannot properly resolve its position in the component tree.`);
+      if (__DEV__)
+        throw new Error(`The provided node does does not appear to be part of an Aurelia app DOM tree, or it was added to the DOM in a way that Aurelia cannot properly resolve its position in the component tree.`);
+      else
+        throw new Error('AUR0707');
     }
 
     let cur = node as INode | null;
     while (cur !== null) {
-      const controller = getRef(cur, CustomElement.name) as Controller<C> | null;
+      const controller = getRef(cur, ceBaseName) as Controller<C> | null;
       if (controller !== null) {
         return controller as unknown as ICustomElementController<C>;
       }
@@ -469,20 +482,26 @@ export const CustomElement: CustomElementKind = {
       cur = getEffectiveParentNode(cur);
     }
 
-    throw new Error(`The provided node does does not appear to be part of an Aurelia app DOM tree, or it was added to the DOM in a way that Aurelia cannot properly resolve its position in the component tree.`);
+    if (__DEV__)
+      throw new Error(`The provided node does does not appear to be part of an Aurelia app DOM tree, or it was added to the DOM in a way that Aurelia cannot properly resolve its position in the component tree.`);
+    else
+      throw new Error('AUR0708');
   },
   define<C extends Constructable>(nameOrDef: string | PartialCustomElementDefinition, Type?: C | null): CustomElementType<C> {
     const definition = CustomElementDefinition.create(nameOrDef, Type as Constructable | null);
-    Metadata.define(CustomElement.name, definition, definition.Type);
-    Metadata.define(CustomElement.name, definition, definition);
-    Protocol.resource.appendTo(definition.Type, CustomElement.name);
+    Metadata.define(ceBaseName, definition, definition.Type);
+    Metadata.define(ceBaseName, definition, definition);
+    Protocol.resource.appendTo(definition.Type, ceBaseName);
 
     return definition.Type as CustomElementType<C>;
   },
   getDefinition<C extends Constructable>(Type: C): CustomElementDefinition<C> {
-    const def = Metadata.getOwn(CustomElement.name, Type) as CustomElementDefinition<C>;
+    const def = Metadata.getOwn(ceBaseName, Type) as CustomElementDefinition<C>;
     if (def === void 0) {
-      throw new Error(`No definition found for type ${Type.name}`);
+      if (__DEV__)
+        throw new Error(`No definition found for type ${Type.name}`);
+      else
+        throw new Error(`AUR0703:${Type.name}`);
     }
 
     return def;
@@ -554,7 +573,7 @@ export const CustomElement: CustomElementKind = {
       return Type;
     };
   })(),
-};
+});
 
 type DecoratorFactoryMethod<TClass> = (target: Constructable<TClass>, propertyKey: string, descriptor: PropertyDescriptor) => void;
 type ProcessContentHook = (node: INode, platform: IPlatform) => boolean | void;
@@ -569,7 +588,7 @@ export function processContent<TClass>(hook?: ProcessContentHook): CustomElement
     }
     : function (target: Constructable<TClass>) {
       hook = ensureHook(target, hook!);
-      const def = Metadata.getOwn(CustomElement.name, target) as CustomElementDefinition<Constructable<TClass>>;
+      const def = Metadata.getOwn(ceBaseName, target) as CustomElementDefinition<Constructable<TClass>>;
       if (def !== void 0) {
         (def as Writable<CustomElementDefinition<Constructable<TClass>>>).processContent = hook;
       } else {
@@ -587,7 +606,10 @@ function ensureHook<TClass>(target: Constructable<TClass>, hook: string | Proces
 
   const hookType = typeof hook;
   if (hookType !== 'function') {
-    throw new Error(`Invalid @processContent hook. Expected the hook to be a function (when defined in a class, it needs to be a static function) but got a ${hookType}.`);
+    if (__DEV__)
+      throw new Error(`Invalid @processContent hook. Expected the hook to be a function (when defined in a class, it needs to be a static function) but got a ${hookType}.`);
+    else
+      throw new Error(`AUR0709:${hookType}`);
   }
   return hook;
 }

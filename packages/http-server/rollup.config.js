@@ -1,5 +1,6 @@
 import typescript from '@rollup/plugin-typescript';
 import pkg from './package.json';
+import { exec } from 'child_process';
 
 export default [
   {
@@ -21,7 +22,12 @@ export default [
       typescript({
         tsconfig: 'tsconfig.build.json',
         inlineSources: true,
-      })
+      }),
+      {
+        closeBundle() {
+          exec('npm run postrollup')
+        }
+      }
     ]
   },
   {
@@ -33,12 +39,22 @@ export default [
         format: 'es',
         sourcemap: true
       },
+      {
+        file: 'dist/cjs/cli.js',
+        format: 'cjs',
+        sourcemap: true
+      },
     ],
     plugins: [
       typescript({
         tsconfig: 'tsconfig.build.json',
         inlineSources: true,
-      })
+      }),
+      {
+        closeBundle() {
+          exec('npm run postrollup')
+        }
+      }
     ]
   }
 ];
