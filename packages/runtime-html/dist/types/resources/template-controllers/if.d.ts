@@ -9,6 +9,7 @@ export declare class If implements ICustomAttributeViewModel {
     private readonly ifFactory;
     private readonly location;
     private readonly work;
+    static inject: (import("@aurelia/kernel").InterfaceSymbol<IViewFactory> | import("@aurelia/kernel").InterfaceSymbol<IRenderLocation<ChildNode>> | import("@aurelia/kernel").InterfaceSymbol<IWorkTracker>)[];
     readonly id: number;
     elseFactory?: IViewFactory;
     elseView?: ISyntheticView;
@@ -21,11 +22,9 @@ export declare class If implements ICustomAttributeViewModel {
      */
     cache: boolean;
     private pending;
-    private wantsDeactivate;
-    private swapId;
-    private ctrl;
+    private _wantsDeactivate;
+    private _swapId;
     constructor(ifFactory: IViewFactory, location: IRenderLocation, work: IWorkTracker);
-    created(): void;
     attaching(initiator: IHydratedController, parent: IHydratedController, f: LifecycleFlags): void | Promise<void>;
     detaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void>;
     valueChanged(newValue: unknown, oldValue: unknown, f: LifecycleFlags): void | Promise<void>;
@@ -34,6 +33,7 @@ export declare class If implements ICustomAttributeViewModel {
 }
 export declare class Else {
     private readonly factory;
+    static inject: import("@aurelia/kernel").InterfaceSymbol<IViewFactory>[];
     readonly id: number;
     constructor(factory: IViewFactory);
     link(flags: LifecycleFlags, controller: IHydratableController, _childController: ICustomAttributeController, _target: INode, _instruction: Instruction): void;

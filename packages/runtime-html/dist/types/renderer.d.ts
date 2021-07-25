@@ -87,7 +87,7 @@ export declare class HydrateElementInstruction {
     /**
      * Bindable instructions for the custom element instance
      */
-    instructions: IInstruction[];
+    props: IInstruction[];
     /**
      * Indicates what projections are associated with the element usage
      */
@@ -112,7 +112,7 @@ export declare class HydrateElementInstruction {
     /**
      * Bindable instructions for the custom element instance
      */
-    instructions: IInstruction[], 
+    props: IInstruction[], 
     /**
      * Indicates what projections are associated with the element usage
      */
@@ -128,13 +128,13 @@ export declare class HydrateAttributeInstruction {
     /**
      * Bindable instructions for the custom attribute instance
      */
-    instructions: IInstruction[];
+    props: IInstruction[];
     get type(): InstructionType.hydrateAttribute;
     constructor(res: string | /* Constructable |  */ CustomAttributeDefinition, alias: string | undefined, 
     /**
      * Bindable instructions for the custom attribute instance
      */
-    instructions: IInstruction[]);
+    props: IInstruction[]);
 }
 export declare class HydrateTemplateController {
     def: PartialCustomElementDefinition;
@@ -143,13 +143,13 @@ export declare class HydrateTemplateController {
     /**
      * Bindable instructions for the template controller instance
      */
-    instructions: IInstruction[];
+    props: IInstruction[];
     get type(): InstructionType.hydrateTemplateController;
     constructor(def: PartialCustomElementDefinition, res: string | /* Constructable |  */ CustomAttributeDefinition, alias: string | undefined, 
     /**
      * Bindable instructions for the template controller instance
      */
-    instructions: IInstruction[]);
+    props: IInstruction[]);
 }
 export declare class HydrateLetElementInstruction {
     instructions: LetBindingInstruction[];
@@ -277,14 +277,16 @@ export declare class SetPropertyRenderer implements IRenderer {
 }
 export declare class CustomElementRenderer implements IRenderer {
     private readonly r;
+    private readonly p;
     static get inject(): unknown[];
-    constructor(r: IRendering);
+    constructor(r: IRendering, p: IPlatform);
     render(f: LifecycleFlags, renderingCtrl: IHydratableController, target: HTMLElement, instruction: HydrateElementInstruction): void;
 }
 export declare class CustomAttributeRenderer implements IRenderer {
     private readonly r;
+    private readonly p;
     static get inject(): unknown[];
-    constructor(r: IRendering);
+    constructor(r: IRendering, p: IPlatform);
     render(f: LifecycleFlags, 
     /**
      * The cotroller that is currently invoking this renderer
@@ -293,8 +295,9 @@ export declare class CustomAttributeRenderer implements IRenderer {
 }
 export declare class TemplateControllerRenderer implements IRenderer {
     private readonly r;
+    private readonly p;
     static get inject(): unknown[];
-    constructor(r: IRendering);
+    constructor(r: IRendering, p: IPlatform);
     render(f: LifecycleFlags, renderingCtrl: IHydratableController, target: HTMLElement, instruction: HydrateTemplateController): void;
 }
 export declare class LetElementRenderer implements IRenderer {
@@ -305,7 +308,7 @@ export declare class LetElementRenderer implements IRenderer {
 }
 export declare class CallBindingRenderer implements IRenderer {
     private readonly parser;
-    private readonly observerLocator;
+    static inject: (import("@aurelia/kernel").InterfaceSymbol<IExpressionParser> | import("@aurelia/kernel").InterfaceSymbol<IObserverLocator>)[];
     constructor(parser: IExpressionParser, observerLocator: IObserverLocator);
     render(f: LifecycleFlags, renderingCtrl: IHydratableController, target: IController, instruction: CallBindingInstruction): void;
 }
@@ -346,7 +349,8 @@ export declare class TextBindingRenderer implements IRenderer {
 export declare class ListenerBindingRenderer implements IRenderer {
     private readonly parser;
     private readonly eventDelegator;
-    constructor(parser: IExpressionParser, eventDelegator: IEventDelegator);
+    private readonly p;
+    constructor(parser: IExpressionParser, eventDelegator: IEventDelegator, p: IPlatform);
     render(f: LifecycleFlags, renderingCtrl: IHydratableController, target: HTMLElement, instruction: ListenerBindingInstruction): void;
 }
 export declare class SetAttributeRenderer implements IRenderer {

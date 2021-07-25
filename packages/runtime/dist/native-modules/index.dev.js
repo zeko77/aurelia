@@ -168,7 +168,8 @@ class Signaler {
         if (listeners === undefined) {
             return;
         }
-        for (const listener of listeners.keys()) {
+        let listener;
+        for (listener of listeners.keys()) {
             listener.handleChange(undefined, undefined, flags);
         }
     }
@@ -237,13 +238,13 @@ class BindingBehaviorDefinition {
     }
 }
 class BindingBehaviorFactory {
-    constructor(container, Type) {
-        this.container = container;
+    constructor(ctn, Type) {
+        this.ctn = ctn;
         this.Type = Type;
         this.deps = DI.getDependencies(Type);
     }
     construct(binding, expr) {
-        const container = this.container;
+        const container = this.ctn;
         const deps = this.deps;
         switch (deps.length) {
             case 0:
@@ -272,8 +273,8 @@ class BindingInterceptor {
             binding = interceptor;
         }
     }
-    get observerLocator() {
-        return this.binding.observerLocator;
+    get oL() {
+        return this.binding.oL;
     }
     get locator() {
         return this.binding.locator;
@@ -318,23 +319,24 @@ class BindingInterceptor {
         this.binding.$unbind(flags);
     }
 }
-const BindingBehavior = {
-    name: Protocol.resource.keyFor('binding-behavior'),
+const bbBaseName = Protocol.resource.keyFor('binding-behavior');
+const BindingBehavior = Object.freeze({
+    name: bbBaseName,
     keyFrom(name) {
-        return `${BindingBehavior.name}:${name}`;
+        return `${bbBaseName}:${name}`;
     },
     isType(value) {
-        return typeof value === 'function' && Metadata.hasOwn(BindingBehavior.name, value);
+        return typeof value === 'function' && Metadata.hasOwn(bbBaseName, value);
     },
     define(nameOrDef, Type) {
         const definition = BindingBehaviorDefinition.create(nameOrDef, Type);
-        Metadata.define(BindingBehavior.name, definition, definition.Type);
-        Metadata.define(BindingBehavior.name, definition, definition);
-        Protocol.resource.appendTo(Type, BindingBehavior.name);
+        Metadata.define(bbBaseName, definition, definition.Type);
+        Metadata.define(bbBaseName, definition, definition);
+        Protocol.resource.appendTo(Type, bbBaseName);
         return definition.Type;
     },
     getDefinition(Type) {
-        const def = Metadata.getOwn(BindingBehavior.name, Type);
+        const def = Metadata.getOwn(bbBaseName, Type);
         if (def === void 0) {
             throw new Error(`No definition found for type ${Type.name}`);
         }
@@ -346,7 +348,7 @@ const BindingBehavior = {
     getAnnotation(Type, prop) {
         return Metadata.getOwn(Protocol.annotation.keyFor(prop), Type);
     },
-};
+});
 
 function valueConverter(nameOrDef) {
     return function (target) {
@@ -380,23 +382,24 @@ class ValueConverterDefinition {
         registerAliases(aliases, ValueConverter, key, container);
     }
 }
-const ValueConverter = {
-    name: Protocol.resource.keyFor('value-converter'),
+const vcBaseName = Protocol.resource.keyFor('value-converter');
+const ValueConverter = Object.freeze({
+    name: vcBaseName,
     keyFrom(name) {
-        return `${ValueConverter.name}:${name}`;
+        return `${vcBaseName}:${name}`;
     },
     isType(value) {
-        return typeof value === 'function' && Metadata.hasOwn(ValueConverter.name, value);
+        return typeof value === 'function' && Metadata.hasOwn(vcBaseName, value);
     },
     define(nameOrDef, Type) {
         const definition = ValueConverterDefinition.create(nameOrDef, Type);
-        Metadata.define(ValueConverter.name, definition, definition.Type);
-        Metadata.define(ValueConverter.name, definition, definition);
-        Protocol.resource.appendTo(Type, ValueConverter.name);
+        Metadata.define(vcBaseName, definition, definition.Type);
+        Metadata.define(vcBaseName, definition, definition);
+        Protocol.resource.appendTo(Type, vcBaseName);
         return definition.Type;
     },
     getDefinition(Type) {
-        const def = Metadata.getOwn(ValueConverter.name, Type);
+        const def = Metadata.getOwn(vcBaseName, Type);
         if (def === void 0) {
             throw new Error(`No definition found for type ${Type.name}`);
         }
@@ -408,7 +411,7 @@ const ValueConverter = {
     getAnnotation(Type, prop) {
         return Metadata.getOwn(Protocol.annotation.keyFor(prop), Type);
     },
-};
+});
 
 /* eslint-disable eqeqeq */
 var ExpressionKind;
@@ -707,7 +710,7 @@ class BindingBehaviorExpression {
         }
         const behavior = b.locator.get(this.behaviorKey);
         if (behavior == null) {
-            throw new Error(`BindingBehavior named '${this.name}' could not be found. Did you forget to register it as a dependency?`);
+            throw new Error(`AUR0101:${this.name}`);
         }
         if (!(behavior instanceof BindingBehaviorFactory)) {
             if (b[this.behaviorKey] === void 0) {
@@ -715,7 +718,7 @@ class BindingBehaviorExpression {
                 behavior.bind.call(behavior, f, s, b, ...this.args.map(a => a.evaluate(f, s, b.locator, null)));
             }
             else {
-                throw new Error(`BindingBehavior named '${this.name}' already applied.`);
+                throw new Error(`AUR0102:${this.name}`);
             }
         }
     }
@@ -752,7 +755,7 @@ class ValueConverterExpression {
     evaluate(f, s, l, c) {
         const vc = l.get(this.converterKey);
         if (vc == null) {
-            throw new Error(`ValueConverter named '${this.name}' could not be found. Did you forget to register it as a dependency?`);
+            throw new Error(`AUR0103:${this.name}`);
         }
         // note: the cast is expected. To connect, it just needs to be a IConnectable
         // though to work with signal, it needs to have `handleChange`
@@ -775,7 +778,7 @@ class ValueConverterExpression {
     assign(f, s, l, val) {
         const vc = l.get(this.converterKey);
         if (vc == null) {
-            throw new Error(`ValueConverter named '${this.name}' could not be found. Did you forget to register it as a dependency?`);
+            throw new Error(`AUR0104:${this.name}`);
         }
         if ('fromView' in vc) {
             val = vc.fromView(val, ...this.args.map(a => a.evaluate(f, s, l, null)));
@@ -890,7 +893,7 @@ class AccessScopeExpression {
         }
         const evaluatedValue = obj[this.name];
         if (evaluatedValue == null && this.name === '$host') {
-            throw new Error('Unable to find $host context. Did you forget [au-slot] attribute?');
+            throw new Error('AUR0105');
         }
         if (f & 1 /* isStrictBindingStrategy */) {
             return evaluatedValue;
@@ -900,7 +903,7 @@ class AccessScopeExpression {
     assign(f, s, _l, val) {
         var _a;
         if (this.name === '$host') {
-            throw new Error('Invalid assignment. $host is a reserved keyword.');
+            throw new Error('AUR0106');
         }
         const obj = BindingContext.get(s, this.name, this.ancestor, f);
         if (obj instanceof Object) {
@@ -1073,7 +1076,7 @@ class CallFunctionExpression {
         if (!(f & 8 /* mustEvaluate */) && (func == null)) {
             return void 0;
         }
-        throw new Error(`Expression is not a function.`);
+        throw new Error('AUR0107');
     }
     assign(_f, _s, _l, _obj) {
         return void 0;
@@ -1162,7 +1165,7 @@ class BinaryExpression {
             case '>=':
                 return this.left.evaluate(f, s, l, c) >= this.right.evaluate(f, s, l, c);
             default:
-                throw new Error(`Unknown binary operator: '${this.operation}'`);
+                throw new Error(`AUR0108:${this.operation}`);
         }
     }
     assign(_f, _s, _l, _obj) {
@@ -1196,7 +1199,7 @@ class UnaryExpression {
             case '+':
                 return +this.expression.evaluate(f, s, l, c);
             default:
-                throw new Error(`Unknown unary operator: '${this.operation}'`);
+                throw new Error(`AUR0109:${this.operation}`);
         }
     }
     assign(_f, _s, _l, _obj) {
@@ -1350,7 +1353,7 @@ class TaggedTemplateExpression {
         const results = this.expressions.map(e => e.evaluate(f, s, l, c));
         const func = this.func.evaluate(f, s, l, c);
         if (typeof func !== 'function') {
-            throw new Error(`Left-hand side of tagged template expression is not a function.`);
+            throw new Error(`AUR0110`);
         }
         return func(this.cooked, ...results);
     }
@@ -1545,7 +1548,7 @@ function getFunction(f, obj, name) {
     if (!(f & 8 /* mustEvaluate */) && func == null) {
         return null;
     }
-    throw new Error(`Expected '${name}' to be a function`);
+    throw new Error(`AUR0111:${name}`);
 }
 function $array(result, func) {
     for (let i = 0, ii = result.length; i < ii; ++i) {
@@ -1576,6 +1579,11 @@ function $number(result, func) {
     $array(arr, func);
 }
 
+/**
+ * A shortcut to Object.prototype.hasOwnProperty
+ * Needs to do explicit .call
+ */
+const hasOwnProp = Object.prototype.hasOwnProperty;
 const def = Reflect.defineProperty;
 function defineHiddenProp(obj, key, value) {
     def(obj, key, {
@@ -1584,9 +1592,10 @@ function defineHiddenProp(obj, key, value) {
         writable: true,
         value
     });
+    return value;
 }
 function ensureProto(proto, key, defaultValue, force = false) {
-    if (force || !Object.prototype.hasOwnProperty.call(proto, key)) {
+    if (force || !hasOwnProp.call(proto, key)) {
         defineHiddenProp(proto, key, defaultValue);
     }
 }
@@ -1892,9 +1901,7 @@ class SubscriberRecord {
     }
 }
 function getSubscriberRecord() {
-    const record = new SubscriberRecord();
-    defineHiddenProp(this, 'subs', record);
-    return record;
+    return defineHiddenProp(this, 'subs', new SubscriberRecord());
 }
 function addSubscriber(subscriber) {
     return this.subs.add(subscriber);
@@ -1912,19 +1919,19 @@ function queueableDeco(target) {
 }
 class FlushQueue {
     constructor() {
-        this.flushing = false;
-        this.items = new Set();
+        this._flushing = false;
+        this._items = new Set();
     }
     get count() {
-        return this.items.size;
+        return this._items.size;
     }
     add(callable) {
-        this.items.add(callable);
-        if (this.flushing) {
+        this._items.add(callable);
+        if (this._flushing) {
             return;
         }
-        this.flushing = true;
-        const items = this.items;
+        this._flushing = true;
+        const items = this._items;
         let item;
         try {
             for (item of items) {
@@ -1933,12 +1940,12 @@ class FlushQueue {
             }
         }
         finally {
-            this.flushing = false;
+            this._flushing = false;
         }
     }
     clear() {
-        this.items.clear();
-        this.flushing = false;
+        this._items.clear();
+        this._flushing = false;
     }
 }
 FlushQueue.instance = new FlushQueue();
@@ -2803,7 +2810,7 @@ function getMapObserver(map) {
 }
 
 function observe(obj, key) {
-    const observer = this.observerLocator.getObserver(obj, key);
+    const observer = this.oL.getObserver(obj, key);
     /* Note: we need to cast here because we can indeed get an accessor instead of an observer,
      *  in which case the call to observer.subscribe will throw. It's not very clean and we can solve this in 2 ways:
      *  1. Fail earlier: only let the locator resolve observers from .getObserver, and throw if no branches are left (e.g. it would otherwise return an accessor)
@@ -2814,9 +2821,7 @@ function observe(obj, key) {
     this.obs.add(observer);
 }
 function getObserverRecord() {
-    const record = new BindingObserverRecord(this);
-    defineHiddenProp(this, 'obs', record);
-    return record;
+    return defineHiddenProp(this, 'obs', new BindingObserverRecord(this));
 }
 function observeCollection(collection) {
     let obs;
@@ -2933,10 +2938,10 @@ function connectable(target) {
     return target == null ? connectableDecorator : connectableDecorator(target);
 }
 class BindingMediator {
-    constructor(key, binding, observerLocator, locator) {
+    constructor(key, binding, oL, locator) {
         this.key = key;
         this.binding = binding;
-        this.observerLocator = observerLocator;
+        this.oL = oL;
         this.locator = locator;
         this.interceptor = this;
     }
@@ -4669,17 +4674,17 @@ class ComputedObserver {
         this.get = get;
         this.set = set;
         this.useProxy = useProxy;
-        this.observerLocator = observerLocator;
         this.interceptor = this;
         this.type = 1 /* Observer */;
         this.value = void 0;
-        this.oldValue = void 0;
+        this._oldValue = void 0;
         // todo: maybe use a counter allow recursive call to a certain level
         /**
          * @internal
          */
         this.running = false;
-        this.isDirty = false;
+        this._isDirty = false;
+        this.oL = observerLocator;
     }
     static create(obj, key, descriptor, observerLocator, useProxy) {
         const getter = descriptor.get;
@@ -4701,9 +4706,9 @@ class ComputedObserver {
         if (this.subs.count === 0) {
             return this.get.call(this.obj, this);
         }
-        if (this.isDirty) {
+        if (this._isDirty) {
             this.compute();
-            this.isDirty = false;
+            this._isDirty = false;
         }
         return this.value;
     }
@@ -4723,13 +4728,13 @@ class ComputedObserver {
         }
     }
     handleChange() {
-        this.isDirty = true;
+        this._isDirty = true;
         if (this.subs.count > 0) {
             this.run();
         }
     }
     handleCollectionChange() {
-        this.isDirty = true;
+        this._isDirty = true;
         if (this.subs.count > 0) {
             this.run();
         }
@@ -4740,18 +4745,18 @@ class ComputedObserver {
         // though not handling for now, and wait until the merge of normal + collection subscription
         if (this.subs.add(subscriber) && this.subs.count === 1) {
             this.compute();
-            this.isDirty = false;
+            this._isDirty = false;
         }
     }
     unsubscribe(subscriber) {
         if (this.subs.remove(subscriber) && this.subs.count === 0) {
-            this.isDirty = true;
+            this._isDirty = true;
             this.obs.clear(true);
         }
     }
     flush() {
-        oV$1 = this.oldValue;
-        this.oldValue = this.value;
+        oV$1 = this._oldValue;
+        this._oldValue = this.value;
         this.subs.notify(this.value, oV$1, 0 /* none */);
     }
     run() {
@@ -4760,9 +4765,9 @@ class ComputedObserver {
         }
         const oldValue = this.value;
         const newValue = this.compute();
-        this.isDirty = false;
+        this._isDirty = false;
         if (!Object.is(newValue, oldValue)) {
-            this.oldValue = oldValue;
+            this._oldValue = oldValue;
             this.queue.add(this);
         }
     }
@@ -4824,19 +4829,19 @@ const queueTaskOpts = {
     persistent: true,
 };
 class DirtyChecker {
-    constructor(platform) {
-        this.platform = platform;
+    constructor(p) {
+        this.p = p;
         this.tracked = [];
-        this.task = null;
-        this.elapsedFrames = 0;
+        this._task = null;
+        this._elapsedFrames = 0;
         this.check = () => {
             if (DirtyCheckSettings.disabled) {
                 return;
             }
-            if (++this.elapsedFrames < DirtyCheckSettings.timeoutsPerCheck) {
+            if (++this._elapsedFrames < DirtyCheckSettings.timeoutsPerCheck) {
                 return;
             }
-            this.elapsedFrames = 0;
+            this._elapsedFrames = 0;
             const tracked = this.tracked;
             const len = tracked.length;
             let current;
@@ -4858,14 +4863,14 @@ class DirtyChecker {
     addProperty(property) {
         this.tracked.push(property);
         if (this.tracked.length === 1) {
-            this.task = this.platform.taskQueue.queueTask(this.check, queueTaskOpts);
+            this._task = this.p.taskQueue.queueTask(this.check, queueTaskOpts);
         }
     }
     removeProperty(property) {
         this.tracked.splice(this.tracked.indexOf(property), 1);
         if (this.tracked.length === 0) {
-            this.task.cancel();
-            this.task = null;
+            this._task.cancel();
+            this._task = null;
         }
     }
 }
@@ -4875,8 +4880,8 @@ class DirtyChecker {
 DirtyChecker.inject = [IPlatform];
 withFlushQueue(DirtyChecker);
 class DirtyCheckProperty {
-    constructor(dirtyChecker, obj, propertyKey) {
-        this.dirtyChecker = dirtyChecker;
+    constructor(_dirtyChecker, obj, propertyKey) {
+        this._dirtyChecker = _dirtyChecker;
         this.obj = obj;
         this.propertyKey = propertyKey;
         this.oldValue = void 0;
@@ -4902,12 +4907,12 @@ class DirtyCheckProperty {
     subscribe(subscriber) {
         if (this.subs.add(subscriber) && this.subs.count === 1) {
             this.oldValue = this.obj[this.propertyKey];
-            this.dirtyChecker.addProperty(this);
+            this._dirtyChecker.addProperty(this);
         }
     }
     unsubscribe(subscriber) {
         if (this.subs.remove(subscriber) && this.subs.count === 0) {
-            this.dirtyChecker.removeProperty(this);
+            this._dirtyChecker.removeProperty(this);
         }
     }
 }
@@ -5094,17 +5099,17 @@ class DefaultNodeObserverLocator {
     }
 }
 class ObserverLocator {
-    constructor(dirtyChecker, nodeObserverLocator) {
-        this.dirtyChecker = dirtyChecker;
-        this.nodeObserverLocator = nodeObserverLocator;
-        this.adapters = [];
+    constructor(_dirtyChecker, _nodeObserverLocator) {
+        this._dirtyChecker = _dirtyChecker;
+        this._nodeObserverLocator = _nodeObserverLocator;
+        this._adapters = [];
     }
     addAdapter(adapter) {
-        this.adapters.push(adapter);
+        this._adapters.push(adapter);
     }
     getObserver(obj, key) {
         var _a, _b;
-        return (_b = (_a = obj.$observers) === null || _a === void 0 ? void 0 : _a[key]) !== null && _b !== void 0 ? _b : this.cache(obj, key, this.createObserver(obj, key));
+        return (_b = (_a = obj.$observers) === null || _a === void 0 ? void 0 : _a[key]) !== null && _b !== void 0 ? _b : this._cache(obj, key, this.createObserver(obj, key));
     }
     getAccessor(obj, key) {
         var _a;
@@ -5112,8 +5117,8 @@ class ObserverLocator {
         if (cached !== void 0) {
             return cached;
         }
-        if (this.nodeObserverLocator.handles(obj, key, this)) {
-            return this.nodeObserverLocator.getAccessor(obj, key, this);
+        if (this._nodeObserverLocator.handles(obj, key, this)) {
+            return this._nodeObserverLocator.getAccessor(obj, key, this);
         }
         return propertyAccessor;
     }
@@ -5131,8 +5136,8 @@ class ObserverLocator {
         if (!(obj instanceof Object)) {
             return new PrimitiveObserver(obj, key);
         }
-        if (this.nodeObserverLocator.handles(obj, key, this)) {
-            return this.nodeObserverLocator.getObserver(obj, key, this);
+        if (this._nodeObserverLocator.handles(obj, key, this)) {
+            return this._nodeObserverLocator.getObserver(obj, key, this);
         }
         switch (key) {
             case 'length':
@@ -5154,14 +5159,14 @@ class ObserverLocator {
                 }
                 break;
         }
-        let pd = Object.getOwnPropertyDescriptor(obj, key);
+        let pd = getOwnPropDesc(obj, key);
         // Only instance properties will yield a descriptor here, otherwise walk up the proto chain
         if (pd === void 0) {
-            let proto = Object.getPrototypeOf(obj);
+            let proto = getProto(obj);
             while (proto !== null) {
-                pd = Object.getOwnPropertyDescriptor(proto, key);
+                pd = getOwnPropDesc(proto, key);
                 if (pd === void 0) {
-                    proto = Object.getPrototypeOf(proto);
+                    proto = getProto(proto);
                 }
                 else {
                     break;
@@ -5169,24 +5174,24 @@ class ObserverLocator {
             }
         }
         // If the descriptor does not have a 'value' prop, it must have a getter and/or setter
-        if (pd !== void 0 && !Object.prototype.hasOwnProperty.call(pd, 'value')) {
-            let obs = this.getAdapterObserver(obj, key, pd);
+        if (pd !== void 0 && !hasOwnProp.call(pd, 'value')) {
+            let obs = this._getAdapterObserver(obj, key, pd);
             if (obs == null) {
                 obs = (_d = ((_b = (_a = pd.get) === null || _a === void 0 ? void 0 : _a.getObserver) !== null && _b !== void 0 ? _b : (_c = pd.set) === null || _c === void 0 ? void 0 : _c.getObserver)) === null || _d === void 0 ? void 0 : _d(obj, this);
             }
             return obs == null
                 ? pd.configurable
                     ? ComputedObserver.create(obj, key, pd, this, /* AOT: not true for IE11 */ true)
-                    : this.dirtyChecker.createProperty(obj, key)
+                    : this._dirtyChecker.createProperty(obj, key)
                 : obs;
         }
         // Ordinary get/set observation (the common use case)
         // TODO: think about how to handle a data property that does not sit on the instance (should we do anything different?)
         return new SetterObserver(obj, key);
     }
-    getAdapterObserver(obj, propertyName, pd) {
-        if (this.adapters.length > 0) {
-            for (const adapter of this.adapters) {
+    _getAdapterObserver(obj, propertyName, pd) {
+        if (this._adapters.length > 0) {
+            for (const adapter of this._adapters) {
                 const observer = adapter.getObserver(obj, propertyName, pd, this);
                 if (observer != null) {
                     return observer;
@@ -5195,7 +5200,7 @@ class ObserverLocator {
         }
         return null;
     }
-    cache(obj, key, observer) {
+    _cache(obj, key, observer) {
         if (observer.doNotCache === true) {
             return observer;
         }
@@ -5220,11 +5225,13 @@ function getCollectionObserver(collection) {
     }
     return obs;
 }
+const getProto = Object.getPrototypeOf;
+const getOwnPropDesc = Object.getOwnPropertyDescriptor;
 
 const IObservation = DI.createInterface('IObservation', x => x.singleton(Observation));
 class Observation {
-    constructor(observerLocator) {
-        this.observerLocator = observerLocator;
+    constructor(oL) {
+        this.oL = oL;
     }
     static get inject() { return [IObserverLocator]; }
     /**
@@ -5232,15 +5239,15 @@ class Observation {
      * to re-run whenever a dependency has changed
      */
     run(fn) {
-        const effect = new Effect(this.observerLocator, fn);
+        const effect = new Effect(this.oL, fn);
         // todo: batch effect run after it's in
         effect.run();
         return effect;
     }
 }
 class Effect {
-    constructor(observerLocator, fn) {
-        this.observerLocator = observerLocator;
+    constructor(oL, fn) {
+        this.oL = oL;
         this.fn = fn;
         this.interceptor = this;
         // to configure this, potentially a 2nd parameter is needed for run
