@@ -7,7 +7,7 @@ import type { IProjections } from '../resources/slot-injectables.js';
 import type { LifecycleHooksLookup } from './lifecycle-hooks.js';
 import type { INode, INodeSequence, IRenderLocation } from '../dom.js';
 import type { IViewFactory } from './view.js';
-import type { Instruction } from '../renderer.js';
+import type { IInstruction } from '../renderer.js';
 import type { PartialCustomElementDefinition } from '../resources/custom-element.js';
 declare type BindingContext<C extends IViewModel> = Required<ICompileHooks> & Required<IActivationHooks<IHydratedController | null>> & C;
 export declare const enum MountTarget {
@@ -19,7 +19,6 @@ export declare const enum MountTarget {
 export declare class Controller<C extends IViewModel = IViewModel> implements IController<C> {
     container: IContainer;
     readonly vmKind: ViewModelKind;
-    flags: LifecycleFlags;
     readonly definition: CustomElementDefinition | CustomAttributeDefinition | null;
     /**
      * The viewFactory. Only present for synthetic views.
@@ -57,13 +56,11 @@ export declare class Controller<C extends IViewModel = IViewModel> implements IC
     state: State;
     get isActive(): boolean;
     get name(): string;
-    private _compiledDef;
     private logger;
     private debug;
-    private _fullyNamed;
-    private _childrenObs;
     readonly hooks: HooksDefinition;
-    constructor(container: IContainer, vmKind: ViewModelKind, flags: LifecycleFlags, definition: CustomElementDefinition | CustomAttributeDefinition | null, 
+    flags: LifecycleFlags;
+    constructor(container: IContainer, vmKind: ViewModelKind, definition: CustomElementDefinition | CustomAttributeDefinition | null, 
     /**
      * The viewFactory. Only present for synthetic views.
      */
@@ -90,7 +87,7 @@ export declare class Controller<C extends IViewModel = IViewModel> implements IC
      *
      * Semi private API
      */
-    static $el<C extends ICustomElementViewModel = ICustomElementViewModel>(ctn: IContainer, viewModel: C, host: HTMLElement, hydrationInst: IControllerElementHydrationInstruction | null, flags?: LifecycleFlags, definition?: CustomElementDefinition | undefined): ICustomElementController<C>;
+    static $el<C extends ICustomElementViewModel = ICustomElementViewModel>(ctn: IContainer, viewModel: C, host: HTMLElement, hydrationInst: IControllerElementHydrationInstruction | null, definition?: CustomElementDefinition | undefined): ICustomElementController<C>;
     /**
      * Create a controller for a custom attribute based on a given set of parameters
      *
@@ -101,7 +98,7 @@ export declare class Controller<C extends IViewModel = IViewModel> implements IC
      * @param definition - the definition of the custom attribute,
      * will be used to override the definition associated with the view model object contructor if given
      */
-    static $attr<C extends ICustomAttributeViewModel = ICustomAttributeViewModel>(ctn: IContainer, viewModel: C, host: HTMLElement, flags?: LifecycleFlags, 
+    static $attr<C extends ICustomAttributeViewModel = ICustomAttributeViewModel>(ctn: IContainer, viewModel: C, host: HTMLElement, 
     /**
      * The definition that will be used to hydrate the custom attribute view model
      *
@@ -117,9 +114,8 @@ export declare class Controller<C extends IViewModel = IViewModel> implements IC
      *
      * Semi private API
      */
-    static $view(viewFactory: IViewFactory, flags?: LifecycleFlags, parentController?: ISyntheticView | ICustomElementController | ICustomAttributeController | undefined): ISyntheticView;
+    static $view(viewFactory: IViewFactory, parentController?: ISyntheticView | ICustomElementController | ICustomAttributeController | undefined): ISyntheticView;
     private _hydrateCustomAttribute;
-    private _hydrateSynthetic;
     private $initiator;
     private $flags;
     activate(initiator: IHydratedController, parent: IHydratedController | null, flags: LifecycleFlags, scope?: Scope | null): void | Promise<void>;
@@ -475,7 +471,7 @@ export interface ICustomElementViewModel extends IViewModel, IActivationHooks<IH
 }
 export interface ICustomAttributeViewModel extends IViewModel, IActivationHooks<IHydratedController> {
     readonly $controller?: ICustomAttributeController<this>;
-    link?(flags: LifecycleFlags, controller: IHydratableController, childController: ICustomAttributeController, target: INode, instruction: Instruction): void;
+    link?(controller: IHydratableController, childController: ICustomAttributeController, target: INode, instruction: IInstruction): void;
     created?(controller: ICustomAttributeController<this>): void;
 }
 export interface IHydratedCustomElementViewModel extends ICustomElementViewModel {

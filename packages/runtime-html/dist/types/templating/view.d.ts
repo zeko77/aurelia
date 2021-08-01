@@ -1,6 +1,5 @@
 import { CustomElementDefinition } from '../resources/custom-element.js';
 import type { Constructable, ConstructableClass, IContainer } from '@aurelia/kernel';
-import type { LifecycleFlags } from '@aurelia/runtime';
 import type { ICustomElementViewModel, ISyntheticView, ICustomElementController, ICustomAttributeController } from './controller.js';
 import type { PartialCustomElementDefinition } from '../resources/custom-element.js';
 export interface IViewFactory extends ViewFactory {
@@ -18,7 +17,7 @@ export declare class ViewFactory implements IViewFactory {
     setCacheSize(size: number | '*', doNotOverrideIfAlreadySet: boolean): void;
     canReturnToCache(controller: ISyntheticView): boolean;
     tryReturnToCache(controller: ISyntheticView): boolean;
-    create(flags?: LifecycleFlags, parentController?: ISyntheticView | ICustomElementController | ICustomAttributeController | undefined): ISyntheticView;
+    create(parentController?: ISyntheticView | ICustomElementController | ICustomAttributeController | undefined): ISyntheticView;
 }
 export declare const Views: Readonly<{
     name: string;
@@ -38,12 +37,6 @@ export declare const IViewLocator: import("@aurelia/kernel").InterfaceSymbol<IVi
 export interface IViewLocator extends ViewLocator {
 }
 export declare class ViewLocator {
-    private readonly _modelInstanceToBoundComponent;
-    private readonly _modelTypeToUnboundComponent;
     getViewComponentForObject<T extends ClassInstance<ICustomElementViewModel>>(object: T | null | undefined, viewNameOrSelector?: string | ViewSelector): ComposableObjectComponentType<T> | null;
-    private _getOrCreateBoundComponent;
-    private _getOrCreateUnboundComponent;
-    private _getViewName;
-    private _getView;
 }
 //# sourceMappingURL=view.d.ts.map

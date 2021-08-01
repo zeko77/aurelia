@@ -3,7 +3,7 @@ import { IRenderLocation } from '../../dom.js';
 import { IViewFactory } from '../../templating/view.js';
 import { IWorkTracker } from '../../app-root.js';
 import type { ISyntheticView, ICustomAttributeController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, ControllerVisitor, IHydratableController } from '../../templating/controller.js';
-import type { Instruction } from '../../renderer.js';
+import type { IInstruction } from '../../renderer.js';
 import type { INode } from '../../dom.js';
 export declare class If implements ICustomAttributeViewModel {
     private readonly ifFactory;
@@ -31,11 +31,11 @@ export declare class If implements ICustomAttributeViewModel {
     dispose(): void;
     accept(visitor: ControllerVisitor): void | true;
 }
-export declare class Else {
+export declare class Else implements ICustomAttributeViewModel {
     private readonly factory;
     static inject: import("@aurelia/kernel").InterfaceSymbol<IViewFactory>[];
     readonly id: number;
     constructor(factory: IViewFactory);
-    link(flags: LifecycleFlags, controller: IHydratableController, _childController: ICustomAttributeController, _target: INode, _instruction: Instruction): void;
+    link(controller: IHydratableController, _childController: ICustomAttributeController, _target: INode, _instruction: IInstruction): void;
 }
 //# sourceMappingURL=if.d.ts.map

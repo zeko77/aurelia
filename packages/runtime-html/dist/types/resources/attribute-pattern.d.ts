@@ -3,15 +3,32 @@ export interface AttributePatternDefinition {
     pattern: string;
     symbols: string;
 }
+export declare class CharSpec implements ICharSpec {
+    chars: string;
+    repeat: boolean;
+    isSymbol: boolean;
+    isInverted: boolean;
+    has: (char: string) => boolean;
+    constructor(chars: string, repeat: boolean, isSymbol: boolean, isInverted: boolean);
+    equals(other: ICharSpec): boolean;
+    private _hasOfMultiple;
+    private _hasOfSingle;
+    private _hasOfNone;
+    private _hasOfMultipleInverse;
+    private _hasOfSingleInverse;
+    private _hasOfNoneInverse;
+}
 export declare class Interpretation {
     parts: readonly string[];
     get pattern(): string | null;
     set pattern(value: string | null);
-    private _pattern;
-    private readonly _currentRecord;
-    private readonly _partsRecord;
     append(pattern: string, ch: string): void;
     next(pattern: string): void;
+}
+export declare class SegmentTypes {
+    statics: number;
+    dynamics: number;
+    symbols: number;
 }
 export interface ISyntaxInterpreter extends SyntaxInterpreter {
 }
@@ -19,7 +36,6 @@ export declare const ISyntaxInterpreter: import("@aurelia/kernel").InterfaceSymb
 export declare class SyntaxInterpreter {
     rootState: State;
     private readonly initialStates;
-    add(def: AttributePatternDefinition): void;
     add(defs: AttributePatternDefinition[]): void;
     interpret(name: string): Interpretation;
     getNextStates(states: State[], ch: string, interpretation: Interpretation): State[];
@@ -40,10 +56,6 @@ export interface IAttributeParser extends AttributeParser {
 }
 export declare const IAttributeParser: import("@aurelia/kernel").InterfaceSymbol<IAttributeParser>;
 export declare class AttributeParser {
-    static inject: import("@aurelia/kernel").InterfaceSymbol<ISyntaxInterpreter>[];
-    private readonly _cache;
-    private readonly _patterns;
-    private readonly _interpreter;
     constructor(interpreter: ISyntaxInterpreter, attrPatterns: IAttributePattern[]);
     parse(name: string, value: string): AttrSyntax;
 }
@@ -63,7 +75,7 @@ export declare class AttributePatternResourceDefinition implements ResourceDefin
     constructor(Type: ResourceType<Constructable, Partial<IAttributePattern>>);
     register(container: IContainer): void;
 }
-export declare const AttributePattern: AttributePattern;
+export declare const AttributePattern: Readonly<AttributePattern>;
 export declare class DotSeparatedAttributePattern {
     'PART.PART'(rawName: string, rawValue: string, parts: string[]): AttrSyntax;
     'PART.PART.PART'(rawName: string, rawValue: string, parts: string[]): AttrSyntax;

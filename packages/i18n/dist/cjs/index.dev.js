@@ -7,7 +7,7 @@ var runtimeHtml = require('@aurelia/runtime-html');
 var runtime = require('@aurelia/runtime');
 var i18next = require('i18next');
 
-function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
+function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e['default'] : e; }
 
 var i18next__default = /*#__PURE__*/_interopDefaultLegacy(i18next);
 
@@ -75,7 +75,7 @@ const I18nWrapper = kernel.DI.createInterface('I18nextWrapper');
  */
 class I18nextWrapper {
     constructor() {
-        this.i18next = i18next__default['default'];
+        this.i18next = i18next__default;
     }
 }
 
@@ -617,23 +617,25 @@ class TranslationParametersBindingInstruction {
     }
 }
 exports.TranslationParametersBindingCommand = class TranslationParametersBindingCommand {
-    constructor(m) {
+    constructor(m, xp) {
         this.m = m;
+        this.xp = xp;
         this.bindingType = 53 /* BindCommand */;
     }
-    static get inject() { return [runtimeHtml.IAttrMapper]; }
     build(info) {
         var _a;
-        let target;
+        const attr = info.attr;
+        let target = attr.target;
         if (info.bindable == null) {
-            target = (_a = this.m.map(info.node, info.attr.target)) !== null && _a !== void 0 ? _a : kernel.camelCase(info.attr.target);
+            target = (_a = this.m.map(info.node, target)) !== null && _a !== void 0 ? _a : kernel.camelCase(target);
         }
         else {
             target = info.bindable.property;
         }
-        return new TranslationParametersBindingInstruction(info.expr, target);
+        return new TranslationParametersBindingInstruction(this.xp.parse(attr.rawValue, 53 /* BindCommand */), target);
     }
 };
+exports.TranslationParametersBindingCommand.inject = [runtimeHtml.IAttrMapper, runtimeHtml.IExpressionParser];
 exports.TranslationParametersBindingCommand = __decorate([
     runtimeHtml.bindingCommand(attribute)
 ], exports.TranslationParametersBindingCommand);
@@ -643,7 +645,7 @@ exports.TranslationParametersBindingRenderer = class TranslationParametersBindin
         this.oL = oL;
         this.p = p;
     }
-    render(f, renderingCtrl, target, instruction) {
+    render(renderingCtrl, target, instruction) {
         TranslationBinding.create({
             parser: this.parser,
             observerLocator: this.oL,
@@ -684,7 +686,6 @@ class TranslationBindingCommand {
         this.m = m;
         this.bindingType = 284 /* CustomCommand */;
     }
-    static get inject() { return [runtimeHtml.IAttrMapper]; }
     build(info) {
         var _a;
         let target;
@@ -694,16 +695,17 @@ class TranslationBindingCommand {
         else {
             target = info.bindable.property;
         }
-        return new TranslationBindingInstruction(info.expr, target);
+        return new TranslationBindingInstruction(new runtimeHtml.CustomExpression(info.attr.rawValue), target);
     }
 }
+TranslationBindingCommand.inject = [runtimeHtml.IAttrMapper];
 exports.TranslationBindingRenderer = class TranslationBindingRenderer {
     constructor(parser, oL, p) {
         this.parser = parser;
         this.oL = oL;
         this.p = p;
     }
-    render(f, renderingCtrl, target, instruction) {
+    render(renderingCtrl, target, instruction) {
         TranslationBinding.create({
             parser: this.parser,
             observerLocator: this.oL,
@@ -739,11 +741,11 @@ class TranslationBindBindingInstruction {
     }
 }
 class TranslationBindBindingCommand {
-    constructor(m) {
+    constructor(m, xp) {
         this.m = m;
+        this.xp = xp;
         this.bindingType = 53 /* BindCommand */;
     }
-    static get inject() { return [runtimeHtml.IAttrMapper]; }
     build(info) {
         var _a;
         let target;
@@ -753,16 +755,17 @@ class TranslationBindBindingCommand {
         else {
             target = info.bindable.property;
         }
-        return new TranslationBindBindingInstruction(info.expr, target);
+        return new TranslationBindBindingInstruction(this.xp.parse(info.attr.rawValue, 53 /* BindCommand */), target);
     }
 }
+TranslationBindBindingCommand.inject = [runtimeHtml.IAttrMapper, runtimeHtml.IExpressionParser];
 exports.TranslationBindBindingRenderer = class TranslationBindBindingRenderer {
     constructor(parser, oL, p) {
         this.parser = parser;
         this.oL = oL;
         this.p = p;
     }
-    render(f, renderingCtrl, target, instruction) {
+    render(renderingCtrl, target, instruction) {
         TranslationBinding.create({
             parser: this.parser,
             observerLocator: this.oL,

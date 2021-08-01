@@ -2,9 +2,10 @@ import { ILogger } from '@aurelia/kernel';
 import { LifecycleFlags, Scope } from '@aurelia/runtime';
 import { INode, IRenderLocation } from '../../dom.js';
 import { IPlatform } from '../../platform.js';
-import { Instruction } from '../../renderer.js';
+import { IInstruction } from '../../renderer.js';
 import { ICustomAttributeController, ICustomAttributeViewModel, IHydratableController, IHydratedController, IHydratedParentController, ISyntheticView } from '../../templating/controller.js';
 import { IViewFactory } from '../../templating/view.js';
+import { AttrSyntax } from '../attribute-pattern.js';
 export declare class PromiseTemplateController implements ICustomAttributeViewModel {
     private readonly factory;
     private readonly location;
@@ -22,7 +23,7 @@ export declare class PromiseTemplateController implements ICustomAttributeViewMo
     private postSettlePromise;
     private readonly logger;
     constructor(factory: IViewFactory, location: IRenderLocation, platform: IPlatform, logger: ILogger);
-    link(flags: LifecycleFlags, _controller: IHydratableController, _childController: ICustomAttributeController, _target: INode, _instruction: Instruction): void;
+    link(_controller: IHydratableController, _childController: ICustomAttributeController, _target: INode, _instruction: IInstruction): void;
     attaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void>;
     valueChanged(_newValue: boolean, _oldValue: boolean, flags: LifecycleFlags): void;
     private swap;
@@ -36,7 +37,7 @@ export declare class PendingTemplateController implements ICustomAttributeViewMo
     value: Promise<unknown>;
     view: ISyntheticView;
     constructor(factory: IViewFactory, location: IRenderLocation);
-    link(flags: LifecycleFlags, controller: IHydratableController, _childController: ICustomAttributeController, _target: INode, _instruction: Instruction): void;
+    link(controller: IHydratableController, _childController: ICustomAttributeController, _target: INode, _instruction: IInstruction): void;
     activate(initiator: IHydratedController | null, flags: LifecycleFlags, scope: Scope): void | Promise<void>;
     deactivate(initiator: IHydratedController | null, flags: LifecycleFlags): void | Promise<void>;
     detaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void>;
@@ -49,7 +50,7 @@ export declare class FulfilledTemplateController implements ICustomAttributeView
     value: unknown;
     view: ISyntheticView;
     constructor(factory: IViewFactory, location: IRenderLocation);
-    link(flags: LifecycleFlags, controller: IHydratableController, _childController: ICustomAttributeController, _target: INode, _instruction: Instruction): void;
+    link(controller: IHydratableController, _childController: ICustomAttributeController, _target: INode, _instruction: IInstruction): void;
     activate(initiator: IHydratedController | null, flags: LifecycleFlags, scope: Scope, resolvedValue: unknown): void | Promise<void>;
     deactivate(initiator: IHydratedController | null, flags: LifecycleFlags): void | Promise<void>;
     detaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void>;
@@ -62,10 +63,19 @@ export declare class RejectedTemplateController implements ICustomAttributeViewM
     value: unknown;
     view: ISyntheticView;
     constructor(factory: IViewFactory, location: IRenderLocation);
-    link(flags: LifecycleFlags, controller: IHydratableController, _childController: ICustomAttributeController, _target: INode, _instruction: Instruction): void;
+    link(controller: IHydratableController, _childController: ICustomAttributeController, _target: INode, _instruction: IInstruction): void;
     activate(initiator: IHydratedController | null, flags: LifecycleFlags, scope: Scope, error: unknown): void | Promise<void>;
     deactivate(initiator: IHydratedController | null, flags: LifecycleFlags): void | Promise<void>;
     detaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void>;
     dispose(): void;
+}
+export declare class PromiseAttributePattern {
+    'promise.resolve'(name: string, value: string, _parts: string[]): AttrSyntax;
+}
+export declare class FulfilledAttributePattern {
+    'then'(name: string, value: string, _parts: string[]): AttrSyntax;
+}
+export declare class RejectedAttributePattern {
+    'catch'(name: string, value: string, _parts: string[]): AttrSyntax;
 }
 //# sourceMappingURL=promise.d.ts.map
