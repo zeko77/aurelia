@@ -1,8 +1,6 @@
 import {
   ResourceType,
   Registration,
-  Metadata,
-  Protocol,
   mergeArrays,
   firstDefined,
   DI,
@@ -10,6 +8,7 @@ import {
 } from '@aurelia/kernel';
 import { Collection, IndexMap, LifecycleFlags } from './observation.js';
 import { registerAliases } from './alias.js';
+import { appendResourceKey, defineMetadata, getAnnotationKeyFor, getOwnMetadata, getResourceKeyFor, hasOwnMetadata } from './shared.js';
 
 import type {
   Constructable,
@@ -90,8 +89,8 @@ export class BindingBehaviorDefinition<T extends Constructable = Constructable> 
 
     return new BindingBehaviorDefinition(
       Type,
-      firstDefined(BindingBehavior.getAnnotation(Type, 'name'), name),
-      mergeArrays(BindingBehavior.getAnnotation(Type, 'aliases'), def.aliases, Type.aliases),
+      firstDefined(getBehaviorAnnotation(Type, 'name'), name),
+      mergeArrays(getBehaviorAnnotation(Type, 'aliases'), def.aliases, Type.aliases),
       BindingBehavior.keyFrom(name),
       fromAnnotationOrDefinitionOrTypeOrDefault('strategy', def, Type, () => inheritsFromInterceptor ? BindingBehaviorStrategy.interceptor : BindingBehaviorStrategy.singleton),
     );
@@ -217,35 +216,41 @@ export class BindingInterceptor implements IInterceptableBinding {
   }
 }
 
-const bbBaseName = Protocol.resource.keyFor('binding-behavior');
-export const BindingBehavior: BindingBehaviorKind = Object.freeze({
+const bbBaseName = getResourceKeyFor('binding-behavior');
+const getBehaviorAnnotation = <K extends keyof PartialBindingBehaviorDefinition>(
+  Type: Constructable,
+  prop: K,
+): PartialBindingBehaviorDefinition[K] => getOwnMetadata(getAnnotationKeyFor(prop), Type) as PartialBindingBehaviorDefinition[K];
+
+export const BindingBehavior: BindingBehaviorKind = Object.freeze<BindingBehaviorKind>({
   name: bbBaseName,
   keyFrom(name: string): string {
     return `${bbBaseName}:${name}`;
   },
   isType<T>(value: T): value is (T extends Constructable ? BindingBehaviorType<T> : never) {
-    return typeof value === 'function' && Metadata.hasOwn(bbBaseName, value);
+    return typeof value === 'function' && hasOwnMetadata(bbBaseName, value);
   },
   define<T extends Constructable<BindingBehaviorInstance>>(nameOrDef: string | PartialBindingBehaviorDefinition, Type: T): BindingBehaviorType<T> {
     const definition = BindingBehaviorDefinition.create(nameOrDef, Type as Constructable<BindingBehaviorInstance>);
-    Metadata.define(bbBaseName, definition, definition.Type);
-    Metadata.define(bbBaseName, definition, definition);
-    Protocol.resource.appendTo(Type, bbBaseName);
+    defineMetadata(bbBaseName, definition, definition.Type);
+    defineMetadata(bbBaseName, definition, definition);
+    appendResourceKey(Type, bbBaseName);
 
     return definition.Type as BindingBehaviorType<T>;
   },
   getDefinition<T extends Constructable>(Type: T): BindingBehaviorDefinition<T> {
-    const def = Metadata.getOwn(bbBaseName, Type) as BindingBehaviorDefinition<T>;
+    const def = getOwnMetadata(bbBaseName, Type) as BindingBehaviorDefinition<T>;
     if (def === void 0) {
-      throw new Error(`No definition found for type ${Type.name}`);
+      if (__DEV__)
+        throw new Error(`No definition found for type ${Type.name}`);
+      else
+        throw new Error(`AUR0151:${Type.name}`);
     }
 
     return def;
   },
   annotate<K extends keyof PartialBindingBehaviorDefinition>(Type: Constructable, prop: K, value: PartialBindingBehaviorDefinition[K]): void {
-    Metadata.define(Protocol.annotation.keyFor(prop), value, Type);
+    defineMetadata(getAnnotationKeyFor(prop), value, Type);
   },
-  getAnnotation<K extends keyof PartialBindingBehaviorDefinition>(Type: Constructable, prop: K): PartialBindingBehaviorDefinition[K] {
-    return Metadata.getOwn(Protocol.annotation.keyFor(prop), Type) as PartialBindingBehaviorDefinition[K];
-  },
+  getAnnotation: getBehaviorAnnotation,
 });

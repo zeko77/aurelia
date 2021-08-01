@@ -110,8 +110,6 @@ export {
   Char,
   Access,
   Precedence,
-  parse,
-  ParserState,
 
   ArrayObserver,
   ArrayIndexObserver,
@@ -318,12 +316,8 @@ export {
   SetStyleAttributeInstruction,
   StylePropertyBindingInstruction,
   TextBindingInstruction,
-  AttributeInstruction,
-  InstructionRow,
   isInstruction,
-  NodeInstruction,
   InstructionTypeName,
-  Instruction,
   IInstruction,
   InstructionType,
 } from './renderer.js';
@@ -436,6 +430,9 @@ export {
   AuSlotsInfo,
   IAuSlotsInfo,
 } from './resources/slot-injectables.js';
+export {
+  DefinitionType,
+} from './resources/resources-shared.js';
 
 export {
   containerless,
