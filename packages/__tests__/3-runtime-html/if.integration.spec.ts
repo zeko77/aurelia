@@ -145,13 +145,18 @@ describe(`3-runtime-html/if.integration.spec.ts`, function () {
           needsCompile: false,
         });
 
+        const ctx = BindingContext.create({
+          [ifPropName]: ifText,
+          [elsePropName]: elseText
+        });
+        const scope = Scope.create(ctx);
         const work = container.get(IWorkTracker);
         const rendering = container.get(IRendering);
         const ifFactory = rendering.getViewFactory(ifDef, container);
         const elseFactory = rendering.getViewFactory(elseDef, container);
         const sut = new If(ifFactory, ifLoc, work);
         const elseSut = new Else(elseFactory);
-        const ifController = (sut as Writable<If>).$controller = Controller.$attr(container, sut, (void 0)!);
+        const ifController = (sut as Writable<If>).$controller = Controller.$attr(container, sut, (void 0)!, scope);
         elseSut.link({ children: [ifController] } as unknown as IHydratableController, void 0!, void 0!, void 0!);
 
         const firstBindInitialNodesText: string = value1 ? ifText : elseText;
@@ -165,12 +170,6 @@ describe(`3-runtime-html/if.integration.spec.ts`, function () {
         const secondAttachFinalHostText: string = newValue2 ? ifText : elseText;
 
         // -- Round 1 --
-
-        const ctx = BindingContext.create({
-          [ifPropName]: ifText,
-          [elsePropName]: elseText
-        });
-        const scope = Scope.create(ctx);
 
         sut.value = value1;
 

@@ -11,6 +11,7 @@ import { CustomElement, CustomElementDefinition, CustomElementType } from './res
 import { IViewFactory } from './templating/view.js';
 import { IRendering } from './templating/rendering.js';
 
+import type { Scope } from '@aurelia/runtime';
 import type { ISyntheticView } from './templating/controller.js';
 
 export function createElement<C extends Constructable = Constructable>(
@@ -32,6 +33,7 @@ export function createElement<C extends Constructable = Constructable>(
  * RenderPlan. Todo: describe goal of this class
  */
 export class RenderPlan {
+  /** @internal */
   private _lazyDef?: CustomElementDefinition = void 0;
 
   public constructor(
@@ -53,8 +55,8 @@ export class RenderPlan {
     return this._lazyDef;
   }
 
-  public createView(parentContainer: IContainer): ISyntheticView {
-    return this.getViewFactory(parentContainer).create();
+  public createView(parentContainer: IContainer, scope: Scope): ISyntheticView {
+    return this.getViewFactory(parentContainer).create(scope);
   }
 
   public getViewFactory(parentContainer: IContainer): IViewFactory {

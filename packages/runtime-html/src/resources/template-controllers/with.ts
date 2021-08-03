@@ -10,7 +10,7 @@ export class With implements ICustomAttributeViewModel {
   public static inject = [IViewFactory, IRenderLocation];
   public readonly id: number = nextId('au$component');
 
-  public view: ISyntheticView;
+  public view!: ISyntheticView;
 
   public readonly $controller!: ICustomAttributeController<this>; // This is set by the controller after this instance is constructed
 
@@ -21,8 +21,10 @@ export class With implements ICustomAttributeViewModel {
     private readonly location: IRenderLocation
   ) {
     this.id = nextId('au$component');
+  }
 
-    this.view = this.factory.create().setLocation(location);
+  public created(ctrl: ICustomAttributeController): void {
+    this.view = this.factory.create(ctrl.scope).setLocation(this.location);
   }
 
   public valueChanged(

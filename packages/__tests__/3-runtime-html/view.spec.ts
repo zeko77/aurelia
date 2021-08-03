@@ -1,4 +1,5 @@
 import {
+  Scope,
   ViewFactory,
 } from '@aurelia/runtime-html';
 import {
@@ -73,6 +74,7 @@ describe.skip(`ViewFactory`, function () {
         const sut = new ViewFactory(null, context as any);
         const view1 = new StubView();
         const view2 = new StubView();
+        const scope = Scope.create({});
 
         sut.setCacheSize(size2, doNotOverride1);
 
@@ -80,9 +82,9 @@ describe.skip(`ViewFactory`, function () {
         assert.strictEqual(sut.tryReturnToCache(view1 as any), canCache, 'sut.tryReturnToCache(view1)');
         assert.strictEqual(view1.cached, canCache, 'view1.cached');
         if (canCache) {
-          const cached = sut.create();
+          const cached = sut.create(scope);
           assert.strictEqual(cached, view1, 'cached');
-          const created = sut.create();
+          const created = sut.create(scope);
           assert.strictEqual(created.nodes, context.nodes, 'created.nodes');
           assert.strictEqual(sut.tryReturnToCache(view1 as any), true, 'sut.tryReturnToCache(<any>view1)');
 
@@ -90,7 +92,7 @@ describe.skip(`ViewFactory`, function () {
             assert.strictEqual(sut.tryReturnToCache(view1 as any), false, 'sut.tryReturnToCache(view1) 2');
           }
         } else {
-          const created = sut.create();
+          const created = sut.create(scope);
           assert.strictEqual(created.nodes, context.nodes, 'created.nodes');
         }
 
@@ -105,9 +107,9 @@ describe.skip(`ViewFactory`, function () {
         assert.strictEqual(sut.tryReturnToCache(view2 as any), canCache, 'sut.tryReturnToCache(view2)');
         assert.strictEqual(view2.cached, canCache, 'view2.cached');
         if (canCache) {
-          const cached = sut.create();
+          const cached = sut.create(scope);
           assert.strictEqual(cached, view2, 'cached');
-          const created = sut.create();
+          const created = sut.create(scope);
           assert.strictEqual(created.nodes, context.nodes, 'created.nodes');
           assert.strictEqual(sut.tryReturnToCache(view2 as any), true, 'sut.tryReturnToCache(<any>view2)');
 
@@ -115,7 +117,7 @@ describe.skip(`ViewFactory`, function () {
             assert.strictEqual(sut.tryReturnToCache(view2 as any), false, 'sut.tryReturnToCache(view2) 2');
           }
         } else {
-          const created = sut.create();
+          const created = sut.create(scope);
           assert.strictEqual(created.nodes, context.nodes, 'created.nodes');
         }
 

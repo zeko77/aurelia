@@ -567,11 +567,11 @@ describe(`Repeat`, function () {
           bindings: [binding]
         } as any;
         const sut = new Repeat(loc, hydratable, itemFactory);
-        (sut as Writable<Repeat>).$controller = Controller.$attr(container, sut, (void 0)!);
+        const scope = Scope.create(BindingContext.create());
+        (sut as Writable<Repeat>).$controller = Controller.$attr(container, sut, (void 0)!, scope);
         binding.target = sut as any;
 
         // -- Round 1 --
-        const scope = Scope.create(BindingContext.create());
 
         sut.items = items;
         const expectedText1 = sut.items ? sut.items.join('') : '';

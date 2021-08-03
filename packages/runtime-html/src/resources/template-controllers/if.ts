@@ -30,7 +30,9 @@ export class If implements ICustomAttributeViewModel {
   })
   public cache: boolean = true;
   private pending: void | Promise<void> = void 0;
+  /** @internal */
   private _wantsDeactivate: boolean = false;
+  /** @internal */
   private _swapId: number = 0;
 
   public constructor(
@@ -57,13 +59,13 @@ export class If implements ICustomAttributeViewModel {
       if (this.value) {
         view = (this.view = this.ifView = this.cache && this.ifView != null
           ? this.ifView
-          : this.ifFactory.create()
+          : this.ifFactory.create(this.$controller.scope)
         );
       } else {
         // truthy -> falsy
         view = (this.view = this.elseView = this.cache && this.elseView != null
           ? this.elseView
-          : this.elseFactory?.create()
+          : this.elseFactory?.create(this.$controller.scope)
         );
       }
       if (view == null) {
@@ -131,13 +133,13 @@ export class If implements ICustomAttributeViewModel {
           if (newValue) {
             view = (this.view = this.ifView = this.cache && this.ifView != null
               ? this.ifView
-              : this.ifFactory.create()
+              : this.ifFactory.create(this.$controller.scope)
             );
           } else {
             // truthy -> falsy
             view = (this.view = this.elseView = this.cache && this.elseView != null
               ? this.elseView
-              : this.elseFactory?.create()
+              : this.elseFactory?.create(this.$controller.scope)
             );
           }
           if (view == null) {

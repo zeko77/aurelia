@@ -250,14 +250,15 @@ export class AuCompose {
           name: CustomElement.generateName(),
           template: view,
         });
-        const viewFactory = this.r.getViewFactory(targetDef, childCtn);
-        const controller = Controller.$view(
-          viewFactory,
-          $controller
-        );
         const scope = this.scopeBehavior === 'auto'
           ? Scope.fromParent(this.parent.scope, comp)
           : Scope.create(comp);
+        const viewFactory = this.r.getViewFactory(targetDef, childCtn);
+        const controller = Controller.$view(
+          scope,
+          viewFactory,
+          $controller
+        );
 
         if (isRenderLocation(compositionHost)) {
           controller.setLocation(compositionHost);

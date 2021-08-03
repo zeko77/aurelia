@@ -50,11 +50,11 @@ export class Switch implements ICustomAttributeViewModel {
 
   public link(
     _controller: IHydratableController,
-    _childController: ICustomAttributeController,
+    ctrl: ICustomAttributeController,
     _target: INode,
     _instruction: IInstruction,
   ): void {
-    this.view = this.factory.create(this.$controller).setLocation(this.location);
+    this.view = this.factory.create(ctrl.scope, ctrl).setLocation(this.location);
   }
 
   public attaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void> {
@@ -253,7 +253,7 @@ export class Case implements ICustomAttributeViewModel {
   })
   public fallThrough: boolean = false;
 
-  public view: ISyntheticView;
+  public view!: ISyntheticView;
   private $switch!: Switch;
   private readonly debug: boolean;
   private readonly logger: ILogger;
@@ -262,21 +262,21 @@ export class Case implements ICustomAttributeViewModel {
   public constructor(
     @IViewFactory private readonly factory: IViewFactory,
     @IObserverLocator private readonly locator: IObserverLocator,
-    @IRenderLocation location: IRenderLocation,
+    @IRenderLocation private readonly location: IRenderLocation,
     @ILogger logger: ILogger,
   ) {
     this.debug = logger.config.level <= LogLevel.debug;
     this.logger = logger.scopeTo(`${this.constructor.name}-#${this.id}`);
-    this.view = this.factory.create().setLocation(location);
   }
 
   public link(
-    controller: IHydratableController,
-    _childController: ICustomAttributeController,
+    renderingCtrl: IHydratableController,
+    ctrl: ICustomAttributeController,
     _target: INode,
     _instruction: IInstruction,
   ): void {
-    const switchController: IHydratedParentController = (controller as Controller).parent! as IHydratedParentController;
+    this.view = this.factory.create(ctrl.scope).setLocation(this.location);
+    const switchController: IHydratedParentController = (renderingCtrl as Controller).parent! as IHydratedParentController;
     const $switch = switchController?.viewModel;
     if ($switch instanceof Switch) {
       this.$switch = $switch;

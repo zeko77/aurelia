@@ -9,6 +9,8 @@ import { bindable } from '../../bindable.js';
 import { ControllerVisitor, ICustomElementController, ICustomElementViewModel, IHydratedController, IHydratedParentController, IHydrationContext, ISyntheticView } from '../../templating/controller.js';
 import { IRendering } from '../../templating/rendering.js';
 
+import type { Scope } from '@aurelia/runtime';
+
 export type Subject = string | IViewFactory | ISyntheticView | RenderPlan | Constructable | CustomElementDefinition;
 export type MaybeSubjectPromise = Subject | Promise<Subject> | undefined;
 
@@ -118,6 +120,7 @@ export class AuRender implements ICustomElementViewModel {
     );
   }
 
+  /** @internal */
   private _deactivate(
     view: ISyntheticView | undefined,
     initiator: IHydratedController | null,
@@ -126,6 +129,7 @@ export class AuRender implements ICustomElementViewModel {
     return view?.deactivate(initiator ?? view, this.$controller, flags);
   }
 
+  /** @internal */
   private _activate(
     view: ISyntheticView | undefined,
     initiator: IHydratedController | null,
@@ -140,19 +144,20 @@ export class AuRender implements ICustomElementViewModel {
     );
   }
 
+  /** @internal */
   private _resolveView(subject: Subject | undefined, flags: LifecycleFlags): ISyntheticView | undefined {
-    const view = this._provideViewFor(subject, flags);
+    const view = this._provideViewFor(subject, flags, this.$controller.scope);
 
     if (view) {
       view.setLocation(this.$controller.location!);
-      view.lockScope(this.$controller.scope);
       return view;
     }
 
     return void 0;
   }
 
-  private _provideViewFor(comp: Subject | undefined, flags: LifecycleFlags): ISyntheticView | undefined {
+  /** @internal */
+  private _provideViewFor(comp: Subject | undefined, flags: LifecycleFlags, scope: Scope): ISyntheticView | undefined {
     if (!comp) {
       return void 0;
     }
@@ -164,15 +169,15 @@ export class AuRender implements ICustomElementViewModel {
       }
 
       if ('createView' in comp) { // RenderPlan
-        return comp.createView(ctxContainer);
+        return comp.createView(ctxContainer, scope);
       }
 
       if ('create' in comp) { // IViewFactory
-        return comp.create();
+        return comp.create(scope);
       }
 
       if ('template' in comp) { // Raw Template Definition
-        return this.r.getViewFactory(CustomElementDefinition.getOrCreate(comp), ctxContainer).create();
+        return this.r.getViewFactory(CustomElementDefinition.getOrCreate(comp), ctxContainer).create(scope);
       }
     }
 
@@ -193,7 +198,7 @@ export class AuRender implements ICustomElementViewModel {
       comp,
       this._properties,
       this.$controller.host.childNodes,
-    ).createView(ctxContainer);
+    ).createView(ctxContainer, scope);
   }
 
   public dispose(): void {

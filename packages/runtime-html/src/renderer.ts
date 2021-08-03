@@ -491,6 +491,7 @@ export class CustomElementRenderer implements IRenderer {
       /* instruction         */instruction,
       /* definition          */def,
     );
+    childCtrl.scope.parentScope = renderingCtrl.scope;
 
     setRef(target, def.key, childCtrl);
 
@@ -563,6 +564,7 @@ export class CustomAttributeRenderer implements IRenderer {
       /* context ct */renderingCtrl.container,
       /* viewModel  */component,
       /* host       */target,
+      /* scope      */renderingCtrl.scope,
       /* definition */def,
     );
 
@@ -636,6 +638,7 @@ export class TemplateControllerRenderer implements IRenderer {
       /* container ct */renderingCtrl.container,
       /* viewModel    */component,
       /* host         */target,
+      /* scope        */renderingCtrl.scope,
       /* definition   */def,
     );
 

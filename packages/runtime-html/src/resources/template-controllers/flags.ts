@@ -8,18 +8,20 @@ import type { ISyntheticView, ICustomAttributeController, ICustomAttributeViewMo
 abstract class FlagsTemplateController implements ICustomAttributeViewModel {
   public readonly id: number;
 
-  public view: ISyntheticView;
+  public view!: ISyntheticView;
 
   public readonly $controller!: ICustomAttributeController<this>;
 
   public constructor(
     private readonly factory: IViewFactory,
-    location: IRenderLocation,
+    private readonly location: IRenderLocation,
     private readonly flags: LifecycleFlags,
   ) {
     this.id = nextId('au$component');
+  }
 
-    this.view = this.factory.create().setLocation(location);
+  public created(ctrl: ICustomAttributeController): void {
+    this.view = this.factory.create(ctrl.scope).setLocation(this.location);
   }
 
   public attaching(

@@ -204,9 +204,9 @@ export class Repeat<C extends Collection = unknown[]> implements ICustomAttribut
     const views = this.views = Array(newLen);
 
     this.forOf.iterate(flags, items, (arr, i, item) => {
-      view = views[i] = factory.create().setLocation(location);
-      view.nodes!.unlink();
       viewScope = Scope.fromParent(parentScope, BindingContext.create(local, item));
+      view = views[i] = factory.create(viewScope).setLocation(location);
+      view.nodes!.unlink();
 
       setContextualProperties(viewScope.overrideContext as IRepeatOverrideContext, i, newLen);
 
@@ -299,11 +299,13 @@ export class Repeat<C extends Collection = unknown[]> implements ICustomAttribut
     let i = 0;
 
     const { $controller, factory, local, _normalizedItems: normalizedItems, location, views } = this;
+    const parentScope = $controller.scope;
     const mapLen = indexMap.length;
 
     for (; mapLen > i; ++i) {
       if (indexMap[i] === -2) {
-        view = factory.create();
+        viewScope = Scope.fromParent(parentScope, BindingContext.create(local, normalizedItems![i]));
+        view = factory.create(viewScope);
         views.splice(i, 0, view);
       }
     }
@@ -315,7 +317,6 @@ export class Repeat<C extends Collection = unknown[]> implements ICustomAttribut
         throw new Error(`AUR0814:${views.length}!=${mapLen}`);
     }
 
-    const parentScope = $controller.scope;
     const newLen = indexMap.length;
     synchronizeIndices(views, indexMap);
 
@@ -334,7 +335,8 @@ export class Repeat<C extends Collection = unknown[]> implements ICustomAttribut
       view.nodes!.link(next?.nodes ?? location);
 
       if (indexMap[i] === -2) {
-        viewScope = Scope.fromParent(parentScope, BindingContext.create(local, normalizedItems![i]));
+        // viewScope = Scope.fromParent(parentScope, BindingContext.create(local, normalizedItems![i]));
+        viewScope = view.scope;
         setContextualProperties(viewScope.overrideContext as IRepeatOverrideContext, i, newLen);
         view.setLocation(location);
 

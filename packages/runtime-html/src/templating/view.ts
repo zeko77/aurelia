@@ -78,6 +78,7 @@ export class ViewFactory implements IViewFactory {
   }
 
   public create(
+    scope: Scope,
     parentController?: ISyntheticView | ICustomElementController | ICustomAttributeController | undefined,
   ): ISyntheticView {
     const cache = this.cache;
@@ -88,7 +89,7 @@ export class ViewFactory implements IViewFactory {
       return controller;
     }
 
-    controller = Controller.$view(this, parentController);
+    controller = Controller.$view(scope, this, parentController);
     return controller;
   }
 }

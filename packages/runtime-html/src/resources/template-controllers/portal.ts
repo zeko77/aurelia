@@ -5,7 +5,7 @@ import { IPlatform } from '../../platform.js';
 import { IViewFactory } from '../../templating/view.js';
 import { templateController } from '../custom-attribute.js';
 import { bindable } from '../../bindable.js';
-import type { ControllerVisitor, ICustomAttributeController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, ISyntheticView } from '../../templating/controller.js';
+import type { ControllerVisitor, ICustomAttributeController, ICustomAttributeViewModel, IHydratableController, IHydratedController, IHydratedParentController, ISyntheticView } from '../../templating/controller.js';
 
 export type PortalTarget<T extends Node & ParentNode = Node & ParentNode> = string | T | null | undefined;
 type ResolvedTarget<T extends Node & ParentNode = Node & ParentNode> = T | null;
@@ -13,7 +13,8 @@ type ResolvedTarget<T extends Node & ParentNode = Node & ParentNode> = T | null;
 export type PortalLifecycleCallback = (target: PortalTarget, view: ISyntheticView) => void | Promise<void>;
 
 export class Portal<T extends Node & ParentNode = Node & ParentNode> implements ICustomAttributeViewModel {
-  public static inject = [IViewFactory, IRenderLocation, IPlatform];
+  /** @internal */
+  protected static inject = [IViewFactory, IRenderLocation, IPlatform];
 
   public readonly $controller!: ICustomAttributeController<this>;
 
@@ -43,23 +44,26 @@ export class Portal<T extends Node & ParentNode = Node & ParentNode> implements 
   @bindable()
   public callbackContext: unknown;
 
-  public view: ISyntheticView;
+  public view!: ISyntheticView;
 
+  /** @internal */
   private _currentTarget?: PortalTarget;
   private readonly p: IPlatform;
 
   public constructor(
-    factory: IViewFactory,
-    originalLoc: IRenderLocation,
+    private readonly factory: IViewFactory,
+    private readonly originalLoc: IRenderLocation,
     p: IPlatform,
   ) {
     this.p = p;
     // to make the shape of this object consistent.
     // todo: is this necessary
     this._currentTarget = p.document.createElement('div');
+  }
 
-    this.view = factory.create();
-    setEffectiveParentNode(this.view.nodes!, originalLoc as unknown as Node);
+  public created(ctrl: ICustomAttributeController) {
+    this.view = this.factory.create(ctrl.scope);
+    setEffectiveParentNode(this.view.nodes!, this.originalLoc);
   }
 
   public attaching(
@@ -108,6 +112,7 @@ export class Portal<T extends Node & ParentNode = Node & ParentNode> implements 
     if (ret instanceof Promise) { ret.catch(err => { throw err; }); }
   }
 
+  /** @internal */
   private _activating(
     initiator: IHydratedController | null,
     target: T,
@@ -125,6 +130,7 @@ export class Portal<T extends Node & ParentNode = Node & ParentNode> implements 
     );
   }
 
+  /** @internal */
   private _activate(
     initiator: IHydratedController | null,
     target: T,
@@ -147,6 +153,7 @@ export class Portal<T extends Node & ParentNode = Node & ParentNode> implements 
     return this._activated(target);
   }
 
+  /** @internal */
   private _activated(
     target: T,
   ): void | Promise<void> {
@@ -155,6 +162,7 @@ export class Portal<T extends Node & ParentNode = Node & ParentNode> implements 
     return activated?.call(callbackContext, target, view);
   }
 
+  /** @internal */
   private _deactivating(
     initiator: IHydratedController | null,
     target: T,
@@ -170,6 +178,7 @@ export class Portal<T extends Node & ParentNode = Node & ParentNode> implements 
     );
   }
 
+  /** @internal */
   private _deactivate(
     initiator: IHydratedController | null,
     target: T,
@@ -191,6 +200,7 @@ export class Portal<T extends Node & ParentNode = Node & ParentNode> implements 
     return this._deactivated(target);
   }
 
+  /** @internal */
   private _deactivated(
     target: T,
   ): void | Promise<void> {
@@ -199,6 +209,7 @@ export class Portal<T extends Node & ParentNode = Node & ParentNode> implements 
     return deactivated?.call(callbackContext, target, view);
   }
 
+  /** @internal */
   private _resolveTarget(): T {
     const p = this.p;
     // with a $ in front to make it less confusing/error prone

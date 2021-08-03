@@ -47,11 +47,11 @@ export class PromiseTemplateController implements ICustomAttributeViewModel {
 
   public link(
     _controller: IHydratableController,
-    _childController: ICustomAttributeController,
+    ctrl: ICustomAttributeController,
     _target: INode,
     _instruction: IInstruction,
   ): void {
-    this.view = this.factory.create(this.$controller).setLocation(this.location);
+    this.view = this.factory.create(this.viewScope = Scope.fromParent(ctrl.scope, {}), ctrl).setLocation(this.location);
   }
 
   public attaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void> {
@@ -79,7 +79,7 @@ export class PromiseTemplateController implements ICustomAttributeViewModel {
     const fulfilled = this.fulfilled;
     const rejected = this.rejected;
     const pending = this.pending;
-    const s = this.viewScope;
+    const scope = this.viewScope;
 
     let preSettlePromise: Promise<void>;
     const defaultQueuingOptions = { reusable: false };
@@ -93,7 +93,7 @@ export class PromiseTemplateController implements ICustomAttributeViewModel {
           return resolveAll(
             fulfilled?.deactivate(initiator, flags),
             rejected?.deactivate(initiator, flags),
-            pending?.activate(initiator, flags, s)
+            pending?.activate(initiator, flags, scope)
           );
         }, defaultQueuingOptions)).result,
         value
@@ -107,7 +107,7 @@ export class PromiseTemplateController implements ICustomAttributeViewModel {
                 this.postSettlePromise = (this.postSettledTask = q.queueTask(() => resolveAll(
                   pending?.deactivate(initiator, flags),
                   rejected?.deactivate(initiator, flags),
-                  fulfilled?.activate(initiator, flags, s, data),
+                  fulfilled?.activate(initiator, flags, scope, data),
                 ), defaultQueuingOptions)).result;
               };
               if (this.preSettledTask!.status === TaskStatus.running) {
@@ -126,7 +126,7 @@ export class PromiseTemplateController implements ICustomAttributeViewModel {
                 this.postSettlePromise = (this.postSettledTask = q.queueTask(() => resolveAll(
                   pending?.deactivate(initiator, flags),
                   fulfilled?.deactivate(initiator, flags),
-                  rejected?.activate(initiator, flags, s, err),
+                  rejected?.activate(initiator, flags, scope, err),
                 ), defaultQueuingOptions)).result;
               };
               if (this.preSettledTask!.status === TaskStatus.running) {
@@ -167,22 +167,22 @@ export class PendingTemplateController implements ICustomAttributeViewModel {
 
   @bindable({ mode: BindingMode.toView }) public value!: Promise<unknown>;
 
-  public view: ISyntheticView;
+  public view!: ISyntheticView;
 
   public constructor(
     @IViewFactory private readonly factory: IViewFactory,
-    @IRenderLocation location: IRenderLocation,
+    @IRenderLocation private readonly location: IRenderLocation,
   ) {
-    this.view = this.factory.create().setLocation(location);
   }
 
   public link(
-    controller: IHydratableController,
-    _childController: ICustomAttributeController,
+    renderingCtrl: IHydratableController,
+    ctrl: ICustomAttributeController,
     _target: INode,
     _instruction: IInstruction,
   ): void {
-    getPromiseController(controller).pending = this;
+    this.view = this.factory.create(ctrl.scope).setLocation(this.location);
+    getPromiseController(renderingCtrl).pending = this;
   }
 
   public activate(initiator: IHydratedController | null, flags: LifecycleFlags, scope: Scope): void | Promise<void> {
@@ -214,22 +214,22 @@ export class FulfilledTemplateController implements ICustomAttributeViewModel {
 
   @bindable({ mode: BindingMode.toView }) public value!: unknown;
 
-  public view: ISyntheticView;
+  public view!: ISyntheticView;
 
   public constructor(
     @IViewFactory private readonly factory: IViewFactory,
-    @IRenderLocation location: IRenderLocation,
+    @IRenderLocation private readonly location: IRenderLocation,
   ) {
-    this.view = this.factory.create().setLocation(location);
   }
 
   public link(
-    controller: IHydratableController,
-    _childController: ICustomAttributeController,
+    renderingCtrl: IHydratableController,
+    ctrl: ICustomAttributeController,
     _target: INode,
     _instruction: IInstruction,
   ): void {
-    getPromiseController(controller).fulfilled = this;
+    this.view = this.factory.create(ctrl.scope).setLocation(this.location);
+    getPromiseController(renderingCtrl).fulfilled = this;
   }
 
   public activate(initiator: IHydratedController | null, flags: LifecycleFlags, scope: Scope, resolvedValue: unknown): void | Promise<void> {
@@ -262,22 +262,22 @@ export class RejectedTemplateController implements ICustomAttributeViewModel {
 
   @bindable({ mode: BindingMode.toView }) public value!: unknown;
 
-  public view: ISyntheticView;
+  public view!: ISyntheticView;
 
   public constructor(
     @IViewFactory private readonly factory: IViewFactory,
-    @IRenderLocation location: IRenderLocation,
+    @IRenderLocation private readonly location: IRenderLocation,
   ) {
-    this.view = this.factory.create().setLocation(location);
   }
 
   public link(
-    controller: IHydratableController,
-    _childController: ICustomAttributeController,
+    renderingCtrl: IHydratableController,
+    ctrl: ICustomAttributeController,
     _target: INode,
     _instruction: IInstruction,
   ): void {
-    getPromiseController(controller).rejected = this;
+    this.view = this.factory.create(ctrl.scope).setLocation(this.location);
+    getPromiseController(renderingCtrl).rejected = this;
   }
 
   public activate(initiator: IHydratedController | null, flags: LifecycleFlags, scope: Scope, error: unknown): void | Promise<void> {
