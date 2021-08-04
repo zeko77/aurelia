@@ -16,6 +16,8 @@ export class With implements ICustomAttributeViewModel {
 
   @bindable public value?: object;
 
+  private _viewScope: Scope | null = null;
+
   public constructor(
     private readonly factory: IViewFactory,
     private readonly location: IRenderLocation
@@ -23,8 +25,9 @@ export class With implements ICustomAttributeViewModel {
     this.id = nextId('au$component');
   }
 
-  public created(ctrl: ICustomAttributeController): void {
-    this.view = this.factory.create(ctrl.scope).setLocation(this.location);
+  public binding(): void {
+    this._viewScope = Scope.fromParent(this.$controller.scope, this.value === void 0 ? {} : this.value);
+    this.view = this.factory.create(this._viewScope).setLocation(this.location);
   }
 
   public valueChanged(
@@ -37,7 +40,7 @@ export class With implements ICustomAttributeViewModel {
     let scope: Scope;
     let i = 0, ii = 0;
     if ($controller.isActive && bindings != null) {
-      scope = Scope.fromParent($controller.scope, newValue === void 0 ? {} : newValue as object);
+      scope = this._viewScope = Scope.fromParent($controller.scope, newValue === void 0 ? {} : newValue as object);
       for (ii = bindings.length; ii > i; ++i) {
         bindings[i].$bind(LifecycleFlags.fromBind, scope);
       }
@@ -49,9 +52,8 @@ export class With implements ICustomAttributeViewModel {
     parent: IHydratedParentController,
     flags: LifecycleFlags,
   ): void | Promise<void> {
-    const { $controller, value } = this;
-    const scope = Scope.fromParent($controller.scope, value === void 0 ? {} : value);
-    return this.view.activate(initiator, $controller, flags, scope);
+    const { $controller } = this;
+    return this.view.activate(initiator, $controller, flags, this._viewScope!);
   }
 
   public detaching(

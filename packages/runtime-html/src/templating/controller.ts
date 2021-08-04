@@ -516,28 +516,28 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     }
     flags |= LifecycleFlags.fromBind;
 
-    switch (this.vmKind) {
-      case ViewModelKind.customElement:
-        // Custom element scope is created and assigned during hydration
-        (this.scope as Writable<Scope>).parentScope = scope ?? null;
-        break;
-      case ViewModelKind.customAttribute:
-        this.scope = scope ?? null;
-        break;
-      case ViewModelKind.synthetic:
-        // maybe only check when there's not already a scope
-        if (scope === void 0 || scope === null) {
-          if (__DEV__)
-            throw new Error(`Scope is null or undefined`);
-          else
-            throw new Error('AUR0504');
-        }
+    // switch (this.vmKind) {
+    //   case ViewModelKind.customElement:
+    //     // Custom element scope is created and assigned during hydration
+    //     (this.scope as Writable<Scope>).parentScope = scope ?? null;
+    //     break;
+    //   case ViewModelKind.customAttribute:
+    //     this.scope = scope ?? null;
+    //     break;
+    //   case ViewModelKind.synthetic:
+    //     // maybe only check when there's not already a scope
+    //     if (scope === void 0 || scope === null) {
+    //       if (__DEV__)
+    //         throw new Error(`Scope is null or undefined`);
+    //       else
+    //         throw new Error('AUR0504');
+    //     }
 
-        if (!this.hasLockedScope) {
-          this.scope = scope;
-        }
-        break;
-    }
+    //     if (!this.hasLockedScope) {
+    //       this.scope = scope;
+    //     }
+    //     break;
+    // }
 
     if (this.isStrictBinding) {
       flags |= LifecycleFlags.isStrictBindingStrategy;
@@ -820,13 +820,13 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     this.parent = null;
 
     switch (this.vmKind) {
-      case ViewModelKind.customAttribute:
-        this.scope = null;
-        break;
+      // case ViewModelKind.customAttribute:
+      //   this.scope = null;
+      //   break;
       case ViewModelKind.synthetic:
-        if (!this.hasLockedScope) {
-          this.scope = null;
-        }
+        // if (!this.hasLockedScope) {
+        //   this.scope = null;
+        // }
 
         if (
           (this.state & State.released) === State.released &&
@@ -836,9 +836,9 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
           this.dispose();
         }
         break;
-      case ViewModelKind.customElement:
-        (this.scope as Writable<Scope>).parentScope = null;
-        break;
+      // case ViewModelKind.customElement:
+      //   (this.scope as Writable<Scope>).parentScope = null;
+      //   break;
     }
 
     if ((flags & LifecycleFlags.dispose) === LifecycleFlags.dispose && this.$initiator === this) {
