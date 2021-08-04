@@ -125,7 +125,7 @@ export class AppRoot implements IDisposable {
   public activate(): void | Promise<void> {
     return onResolve(this._hydratePromise, () => {
       return onResolve(this._runAppTasks('beforeActivate'), () => {
-        return onResolve(this.controller.activate(this.controller, null, LifecycleFlags.fromBind, void 0), () => {
+        return onResolve(this.controller.activate(this.controller, null, LifecycleFlags.fromBind), () => {
           return this._runAppTasks('afterActivate');
         });
       });

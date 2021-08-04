@@ -75,12 +75,7 @@ export class AuSlot implements ICustomElementViewModel {
     parent: IHydratedParentController,
     flags: LifecycleFlags,
   ): void | Promise<void> {
-    return this.view.activate(
-      initiator,
-      this.$controller,
-      flags,
-      this._hasProjection ? this._outerScope! : this._parentScope!,
-    );
+    return this.view.activate(initiator, this.$controller, flags);
   }
 
   public detaching(

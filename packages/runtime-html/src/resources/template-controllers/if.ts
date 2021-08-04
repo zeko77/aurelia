@@ -76,7 +76,7 @@ export class If implements ICustomAttributeViewModel {
 
       // Promise return values from user VM hooks are awaited by the initiator
       this.pending = onResolve(
-        view.activate(initiator, ctrl, f, ctrl.scope),
+        view.activate(initiator, ctrl, f),
         () => {
           if (isCurrent()) {
             this.pending = void 0;
@@ -149,7 +149,7 @@ export class If implements ICustomAttributeViewModel {
           //       instead of always the if
           view.setLocation(this.location);
           return onResolve(
-            view.activate(view, ctrl, f, ctrl.scope),
+            view.activate(view, ctrl, f),
             () => {
               if (isCurrent()) {
                 this.pending = void 0;

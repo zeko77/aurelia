@@ -28,8 +28,8 @@ import {
 import { Writable } from '@aurelia/kernel';
 
 describe(`3-runtime-html/if.integration.spec.ts`, function () {
-  function runActivateLifecycle(sut: If, flags: LifecycleFlags, scope: Scope): void {
-    void sut.$controller.activate(sut.$controller, null, flags, scope);
+  function runActivateLifecycle(sut: If, flags: LifecycleFlags): void {
+    void sut.$controller.activate(sut.$controller, null, flags);
   }
   function runDeactivateLifecycle(sut: If, flags: LifecycleFlags): void {
     void sut.$controller.deactivate(sut.$controller, null, flags);
@@ -173,12 +173,12 @@ describe(`3-runtime-html/if.integration.spec.ts`, function () {
 
         sut.value = value1;
 
-        runActivateLifecycle(sut, baseFlags | activateFlags1, scope);
+        runActivateLifecycle(sut, baseFlags | activateFlags1);
 
         assert.strictEqual(sut.view.nodes.lastChild.previousSibling['textContent'], firstBindInitialNodesText, '$nodes.textContent #1');
 
         if (activateTwice) {
-          runActivateLifecycle(sut, baseFlags | activateFlags1, scope);
+          runActivateLifecycle(sut, baseFlags | activateFlags1);
         }
 
         assert.strictEqual(sut.view.nodes.lastChild.previousSibling['textContent'], firstBindFinalNodesText, '$nodes.textContent #2');
@@ -202,11 +202,11 @@ describe(`3-runtime-html/if.integration.spec.ts`, function () {
 
         sut.value = value2;
 
-        runActivateLifecycle(sut, baseFlags | activateFlags2, scope);
+        runActivateLifecycle(sut, baseFlags | activateFlags2);
 
         assert.strictEqual(sut.view.nodes.lastChild.previousSibling['textContent'], secondBindInitialNodesText, '$nodes.textContent #3');
         if (activateTwice) {
-          runActivateLifecycle(sut, baseFlags | activateFlags2, scope);
+          runActivateLifecycle(sut, baseFlags | activateFlags2);
         }
 
         assert.strictEqual(sut.view.nodes.lastChild.previousSibling['textContent'], secondBindFinalNodesText, '$nodes.textContent #4');

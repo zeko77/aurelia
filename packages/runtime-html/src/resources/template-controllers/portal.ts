@@ -143,7 +143,7 @@ export class Portal<T extends Node & ParentNode = Node & ParentNode> implements 
     } else {
       // TODO(fkleuver): fix and test possible race condition
       return onResolve(
-        view.activate(initiator ?? view, $controller, flags, $controller.scope),
+        view.activate(initiator ?? view, $controller, flags),
         () => {
           return this._activated(target);
         },

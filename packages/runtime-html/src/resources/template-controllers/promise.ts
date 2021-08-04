@@ -46,12 +46,12 @@ export class PromiseTemplateController implements ICustomAttributeViewModel {
   }
 
   public link(
-    _controller: IHydratableController,
-    ctrl: ICustomAttributeController,
+    _renderingCtrl: IHydratableController,
+    ownCtrl: ICustomAttributeController,
     _target: INode,
     _instruction: IInstruction,
   ): void {
-    this.view = this.factory.create(this.viewScope = Scope.fromParent(ctrl.scope, {}), ctrl).setLocation(this.location);
+    this.view = this.factory.create(this.viewScope = Scope.fromParent(ownCtrl.scope, {}), ownCtrl).setLocation(this.location);
   }
 
   public attaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void> {
@@ -59,7 +59,7 @@ export class PromiseTemplateController implements ICustomAttributeViewModel {
     const $controller = this.$controller;
 
     return onResolve(
-      view.activate(initiator, $controller, flags, this.viewScope = Scope.fromParent($controller.scope, {})),
+      view.activate(initiator, $controller, flags),
       () => this.swap(initiator, flags)
     );
   }
@@ -93,7 +93,7 @@ export class PromiseTemplateController implements ICustomAttributeViewModel {
           return resolveAll(
             fulfilled?.deactivate(initiator, flags),
             rejected?.deactivate(initiator, flags),
-            pending?.activate(initiator, flags, scope)
+            pending?.activate(initiator, flags)
           );
         }, defaultQueuingOptions)).result,
         value
@@ -107,7 +107,7 @@ export class PromiseTemplateController implements ICustomAttributeViewModel {
                 this.postSettlePromise = (this.postSettledTask = q.queueTask(() => resolveAll(
                   pending?.deactivate(initiator, flags),
                   rejected?.deactivate(initiator, flags),
-                  fulfilled?.activate(initiator, flags, scope, data),
+                  fulfilled?.activate(initiator, flags, data),
                 ), defaultQueuingOptions)).result;
               };
               if (this.preSettledTask!.status === TaskStatus.running) {
@@ -185,10 +185,10 @@ export class PendingTemplateController implements ICustomAttributeViewModel {
     getPromiseController(renderingCtrl).pending = this;
   }
 
-  public activate(initiator: IHydratedController | null, flags: LifecycleFlags, scope: Scope): void | Promise<void> {
+  public activate(initiator: IHydratedController | null, flags: LifecycleFlags): void | Promise<void> {
     const view = this.view;
     if (view.isActive) { return; }
-    return view.activate(view, this.$controller, flags, scope);
+    return view.activate(view, this.$controller, flags);
   }
 
   public deactivate(initiator: IHydratedController | null, flags: LifecycleFlags): void | Promise<void> {
@@ -224,19 +224,19 @@ export class FulfilledTemplateController implements ICustomAttributeViewModel {
 
   public link(
     renderingCtrl: IHydratableController,
-    ctrl: ICustomAttributeController,
+    ownCtrl: ICustomAttributeController,
     _target: INode,
     _instruction: IInstruction,
   ): void {
-    this.view = this.factory.create(ctrl.scope).setLocation(this.location);
+    this.view = this.factory.create(ownCtrl.scope).setLocation(this.location);
     getPromiseController(renderingCtrl).fulfilled = this;
   }
 
-  public activate(initiator: IHydratedController | null, flags: LifecycleFlags, scope: Scope, resolvedValue: unknown): void | Promise<void> {
+  public activate(initiator: IHydratedController | null, flags: LifecycleFlags, resolvedValue: unknown): void | Promise<void> {
     this.value = resolvedValue;
     const view = this.view;
     if (view.isActive) { return; }
-    return view.activate(view, this.$controller, flags, scope);
+    return view.activate(view, this.$controller, flags);
   }
 
   public deactivate(initiator: IHydratedController | null, flags: LifecycleFlags): void | Promise<void> {
@@ -284,7 +284,7 @@ export class RejectedTemplateController implements ICustomAttributeViewModel {
     this.value = error;
     const view = this.view;
     if (view.isActive) { return; }
-    return view.activate(view, this.$controller, flags, scope);
+    return view.activate(view, this.$controller, flags);
   }
 
   public deactivate(initiator: IHydratedController | null, flags: LifecycleFlags): void | Promise<void> {

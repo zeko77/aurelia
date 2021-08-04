@@ -210,7 +210,7 @@ export class Repeat<C extends Collection = unknown[]> implements ICustomAttribut
 
       setContextualProperties(viewScope.overrideContext as IRepeatOverrideContext, i, newLen);
 
-      ret = view.activate(initiator ?? view, $controller, flags, viewScope);
+      ret = view.activate(initiator ?? view, $controller, flags);
       if (ret instanceof Promise) {
         (promises ?? (promises = [])).push(ret);
       }
@@ -340,7 +340,7 @@ export class Repeat<C extends Collection = unknown[]> implements ICustomAttribut
         setContextualProperties(viewScope.overrideContext as IRepeatOverrideContext, i, newLen);
         view.setLocation(location);
 
-        ret = view.activate(view, $controller, flags, viewScope);
+        ret = view.activate(view, $controller, flags);
         if (ret instanceof Promise) {
           (promises ?? (promises = [])).push(ret);
         }

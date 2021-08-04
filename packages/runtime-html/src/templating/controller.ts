@@ -478,7 +478,6 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     initiator: IHydratedController,
     parent: IHydratedController | null,
     flags: LifecycleFlags,
-    scope?: Scope | null,
   ): void | Promise<void> {
     switch (this.state) {
       case State.none:
@@ -686,7 +685,7 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
       let i = 0;
       for (; i < this.children.length; ++i) {
         // Any promises returned from child activation are cumulatively awaited before this.$promise resolves
-        void this.children[i].activate(this.$initiator, this as IHydratedController, this.$flags, this.scope);
+        void this.children[i].activate(this.$initiator, this as IHydratedController, this.$flags);
       }
     }
 
@@ -1474,7 +1473,6 @@ export interface ISyntheticView extends IHydratableController {
     initiator: IHydratedController,
     parent: IHydratedController,
     flags: LifecycleFlags,
-    scope: Scope,
   ): void | Promise<void>;
   deactivate(
     initiator: IHydratedController,
@@ -1555,7 +1553,6 @@ export interface ICustomAttributeController<C extends ICustomAttributeViewModel 
     initiator: IHydratedController,
     parent: IHydratedController,
     flags: LifecycleFlags,
-    scope: Scope,
   ): void | Promise<void>;
   deactivate(
     initiator: IHydratedController,
@@ -1634,7 +1631,6 @@ export interface ICustomElementController<C extends ICustomElementViewModel = IC
     initiator: IHydratedController,
     parent: IHydratedController | null,
     flags: LifecycleFlags,
-    scope?: Scope,
   ): void | Promise<void>;
   deactivate(
     initiator: IHydratedController,

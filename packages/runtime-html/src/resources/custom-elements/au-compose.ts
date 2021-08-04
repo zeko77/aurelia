@@ -268,7 +268,7 @@ export class AuCompose {
 
         return new CompositionController(
           controller,
-          () => controller.activate(initiator ?? controller, $controller, LifecycleFlags.fromBind, scope),
+          () => controller.activate(initiator ?? controller, $controller, LifecycleFlags.fromBind),
           // todo: call deactivate on the component view model
           // a difference with composing custom element is that we leave render location/host alone
           // as they all share the same host/render location

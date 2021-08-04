@@ -53,7 +53,7 @@ export class With implements ICustomAttributeViewModel {
     flags: LifecycleFlags,
   ): void | Promise<void> {
     const { $controller } = this;
-    return this.view.activate(initiator, $controller, flags, this._viewScope!);
+    return this.view.activate(initiator, $controller, flags);
   }
 
   public detaching(

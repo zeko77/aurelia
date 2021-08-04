@@ -27,8 +27,8 @@ import {
 import { Writable } from '@aurelia/kernel';
 
 describe(`Repeat`, function () {
-  function runActivateLifecycle(sut: Repeat, flags: LifecycleFlags, scope: Scope): void {
-    void sut.$controller.activate(sut.$controller, null, flags, scope);
+  function runActivateLifecycle(sut: Repeat, flags: LifecycleFlags): void {
+    void sut.$controller.activate(sut.$controller, null, flags);
   }
   function runDeactivateLifecycle(sut: Repeat, flags: LifecycleFlags): void {
     void sut.$controller.deactivate(sut.$controller, null, flags);
@@ -576,10 +576,10 @@ describe(`Repeat`, function () {
         sut.items = items;
         const expectedText1 = sut.items ? sut.items.join('') : '';
 
-        runActivateLifecycle(sut, baseFlags | activateFlags1, scope);
+        runActivateLifecycle(sut, baseFlags | activateFlags1);
 
         if (activateTwice) {
-          runActivateLifecycle(sut, baseFlags | activateFlags1, scope);
+          runActivateLifecycle(sut, baseFlags | activateFlags1);
         }
 
         assert.strictEqual(host.textContent, expectedText1, 'host.textContent #1');
@@ -613,9 +613,9 @@ describe(`Repeat`, function () {
         sut.items = items;
         const expectedText3 = sut.items ? sut.items.join('') : '';
 
-        runActivateLifecycle(sut, baseFlags | activateFlags2, scope);
+        runActivateLifecycle(sut, baseFlags | activateFlags2);
         if (activateTwice) {
-          runActivateLifecycle(sut, baseFlags | activateFlags2, scope);
+          runActivateLifecycle(sut, baseFlags | activateFlags2);
         }
 
         assert.strictEqual(host.textContent, expectedText3, 'host.textContent #7');
