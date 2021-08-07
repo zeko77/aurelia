@@ -367,12 +367,12 @@ class TranslationBinding {
             this.task = null;
         }
         this.scope = void 0;
-        this.obs.clear(true);
+        this.obs.clearAll();
     }
     handleChange(t, s, n) {
         this.obs.version++;
         this.T = this.g ? this.expr.evaluate(n, this.scope, this.locator, this) : t;
-        this.obs.clear(false);
+        this.obs.clear();
         this.B();
         this.C(n);
     }
@@ -487,7 +487,7 @@ class ParameterBinding {
     handleChange(t, s, n) {
         this.obs.version++;
         this.value = this.expr.evaluate(n, this.scope, this.locator, this);
-        this.obs.clear(false);
+        this.obs.clear();
         this.updater(n);
     }
     $bind(t, s) {
@@ -501,7 +501,7 @@ class ParameterBinding {
         if (!this.isBound) return;
         if (this.expr.hasUnbind) this.expr.unbind(t, this.scope, this);
         this.scope = void 0;
-        this.obs.clear(true);
+        this.obs.clearAll();
     }
 }
 
@@ -537,7 +537,7 @@ exports.TranslationParametersBindingCommand = class TranslationParametersBinding
     constructor(t, s) {
         this.m = t;
         this.xp = s;
-        this.bindingType = 53;
+        this.type = 53;
     }
     build(s) {
         var n;
@@ -596,7 +596,7 @@ class TranslationBindingInstruction {
 class TranslationBindingCommand {
     constructor(t) {
         this.m = t;
-        this.bindingType = 284;
+        this.type = 284;
     }
     build(n) {
         var i;
@@ -653,7 +653,7 @@ class TranslationBindBindingCommand {
     constructor(t, s) {
         this.m = t;
         this.xp = s;
-        this.bindingType = 53;
+        this.type = 53;
     }
     build(s) {
         var n;
