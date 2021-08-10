@@ -11,20 +11,22 @@ import type {
   Scope,
 } from '@aurelia/runtime';
 import type { IAstBasedBinding } from './interfaces-bindings.js';
+import { IDomWriteTask } from '../../../platform-browser/dist/types/index.js';
+import { IPlatform } from '../platform.js';
 
 // BindingMode is not a const enum (and therefore not inlined), so assigning them to a variable to save a member accessor is a minor perf tweak
 const { oneTime, toView, fromView } = BindingMode;
 
 // pre-combining flags for bitwise checks is a minor perf tweak
 const toViewOrOneTime = toView | oneTime;
-const updateTaskOpts: QueueTaskOptions = {
-  reusable: false,
-  preempt: true,
-};
+// const updateTaskOpts: QueueTaskOptions = {
+//   reusable: false,
+//   preempt: true,
+// };
 
 export interface PropertyBinding extends IAstBasedBinding {}
 
-export class PropertyBinding implements IAstBasedBinding {
+export class PropertyBinding implements IAstBasedBinding, IDomWriteTask {
   public interceptor: this = this;
 
   public isBound: boolean = false;
@@ -34,7 +36,7 @@ export class PropertyBinding implements IAstBasedBinding {
 
   public persistentFlags: LifecycleFlags = LifecycleFlags.none;
 
-  private task: ITask | null = null;
+  // private _task: ITask | null = null;
   private targetSubscriber: BindingTargetSubscriber | null = null;
 
   /**
@@ -43,6 +45,10 @@ export class PropertyBinding implements IAstBasedBinding {
    * @internal
    */
   public readonly oL: IObserverLocator;
+  private readonly p: IPlatform;
+  /** @internal */ private _value: unknown = void 0;
+  /** @internal */ private _flags: LifecycleFlags = LifecycleFlags.none;
+  /** @internal */ private _queue = false;
 
   public constructor(
     public sourceExpression: IsBindingBehavior | ForOfStatement,
@@ -54,6 +60,7 @@ export class PropertyBinding implements IAstBasedBinding {
     private readonly taskQueue: TaskQueue,
   ) {
     this.oL = observerLocator;
+    this.p = locator.get(IPlatform);
   }
 
   public updateTarget(value: unknown, flags: LifecycleFlags): void {
@@ -64,6 +71,16 @@ export class PropertyBinding implements IAstBasedBinding {
   public updateSource(value: unknown, flags: LifecycleFlags): void {
     flags |= this.persistentFlags;
     this.sourceExpression.assign!(flags, this.$scope!, this.locator, value);
+  }
+
+  public writeDom() {
+    this._queue = false;
+    this.interceptor.updateTarget(this._value, this._flags);
+    // !queued = not updated during .updateTarget(), clean up
+    // queued = updated during .updateTarget(), leave intact
+    if (!this._queue) {
+      this._value = void (this._flags = 0);
+    }
   }
 
   public handleChange(newValue: unknown, _previousValue: unknown, flags: LifecycleFlags): void {
@@ -95,14 +112,12 @@ export class PropertyBinding implements IAstBasedBinding {
     }
 
     if (shouldQueueFlush) {
-      // Queue the new one before canceling the old one, to prevent early yield
-      task = this.task;
-      this.task = this.taskQueue.queueTask(() => {
-        this.interceptor.updateTarget(newValue, flags);
-        this.task = null;
-      }, updateTaskOpts);
-      task?.cancel();
-      task = null;
+      this._value = newValue;
+      this._flags = flags;
+      if (!this._queue) {
+        this._queue = true;
+        this.p.queueDomWrite(this);
+      }
     } else {
       this.interceptor.updateTarget(newValue, flags);
     }
@@ -174,15 +189,12 @@ export class PropertyBinding implements IAstBasedBinding {
       this.sourceExpression.unbind(flags, this.$scope!, this.interceptor);
     }
 
-    this.$scope = void 0;
+    this.$scope
+      = this._value
+      = void (this._flags = 0);
 
-    task = this.task;
     if (this.targetSubscriber) {
       (this.targetObserver as IObserver).unsubscribe(this.targetSubscriber);
-    }
-    if (task != null) {
-      task.cancel();
-      task = this.task = null;
     }
     this.obs.clearAll();
 
@@ -191,5 +203,3 @@ export class PropertyBinding implements IAstBasedBinding {
 }
 
 connectable(PropertyBinding);
-
-let task: ITask | null = null;
