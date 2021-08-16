@@ -3,17 +3,25 @@ export const terserNameCache = (() => {
   const cache = {
     props: {
       props: {
-        $_getter: 'G',
-        $_hasSetter: 'HS',
+        $_attrMapper: 'm',
+        $_callback: 'cb',
+        $_container: 'c',
+        $_exprParser: 'ep',
+        $_factory: 'f',
+        $_flags: 'fs',
+        $_getter: 'g',
+        $_hasSetter: 'hs',
         $_isDirty: 'D',
-        $_isRunning: 'R',
-        $_key: 'K',
-        $_obj: 'O',
+        $_isRunning: 'ir',
+        $_key: 'k',
+        $_obj: 'o',
         $_observerLocator: 'oL',
         $_observing: 'iO',
         $_oldValue: 'ov',
+        $_platform: 'p',
+        $_rendering: 'r',
         $_setter: 'S',
-        $_useProxy: 'uP',
+        $_useProxy: 'up',
         $_value: 'v',
       },
     }
@@ -30,5 +38,3 @@ export const terserNameCache = (() => {
 
   return cache;
 })();
-
-
