@@ -43,7 +43,7 @@ describe('FragmentNodeSequence', function () {
     }
   });
 
-  describe('insertBefore', function () {
+  describe('insertBefore (beforebegin)', function () {
     for (const width of widthArr) {
       for (const depth of depthArr.filter(d => d > 0)) {
         it(`should insert the view before the refNode under the parent of the refNode (depth=${depth},width=${width})`, function () {
@@ -55,7 +55,8 @@ describe('FragmentNodeSequence', function () {
           const ref2 = ctx.doc.createElement('div');
           parent.appendChild(ref1);
           parent.appendChild(ref2);
-          sut.insertBefore(ref2 as HTMLDivElement & Comment);
+          // sut.insertBefore(ref2 as HTMLDivElement & Comment);
+          sut.insert(ref2 as HTMLDivElement & Comment, 'beforebegin');
           assert.strictEqual(parent.childNodes.length, width + 2, `parent.childNodes.length`);
           assert.strictEqual(fragment.childNodes.length, 0, `fragment.childNodes.length`);
           assert.strictEqual(parent.childNodes.item(0) === ref1, true, `parent.childNodes.item(0) === ref1`);
@@ -71,7 +72,7 @@ describe('FragmentNodeSequence', function () {
     }
   });
 
-  describe('appendTo', function () {
+  describe('appendTo (beforeend)', function () {
     for (const width of widthArr) {
       for (const depth of depthArr.filter(d => d > 0)) {
         it(`should append the view to the parent (depth=${depth},width=${width})`, function () {
@@ -79,7 +80,8 @@ describe('FragmentNodeSequence', function () {
           const fragment = createFragment(ctx, node, 0, depth, width);
           sut = new FragmentNodeSequence(ctx.platform, fragment);
           const parent = ctx.doc.createElement('div');
-          sut.appendTo(parent);
+          // sut.appendTo(parent);
+          sut.insert(parent, 'beforeend');
           assert.strictEqual(parent.childNodes.length, width, `parent.childNodes.length`);
           assert.strictEqual(fragment.childNodes.length, 0, `fragment.childNodes.length`);
           let i = 0;

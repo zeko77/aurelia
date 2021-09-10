@@ -135,7 +135,8 @@ export class Portal<T extends Node & ParentNode = Node & ParentNode> implements 
     const { $controller, view } = this;
 
     if (initiator === null) {
-      view.nodes.appendTo(target);
+      // view.nodes.appendTo(target);
+      view.nodes.insert(target, 'beforeend');
     } else {
       // TODO(fkleuver): fix and test possible race condition
       return onResolve(

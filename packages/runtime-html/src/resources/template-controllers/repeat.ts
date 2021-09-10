@@ -251,7 +251,7 @@ export class Repeat<C extends Collection = unknown[]> implements ICustomAttribut
 
     this.forOf.iterate(flags, items, (arr, i, item) => {
       view = views[i] = factory.create().setLocation(location);
-      view.nodes!.unlink();
+      // view.nodes!.unlink();
       viewScope = Scope.fromParent(parentScope, BindingContext.create(local, item));
 
       setContextualProperties(viewScope.overrideContext as IRepeatOverrideContext, i, newLen);
@@ -373,14 +373,16 @@ export class Repeat<C extends Collection = unknown[]> implements ICustomAttribut
     const seq = longestIncreasingSubsequence(indexMap);
     const seqLen = seq.length;
 
-    let next: ISyntheticView;
+    let prev: ISyntheticView | null = null;
+    // let next: ISyntheticView;
     let j = seqLen - 1;
     i = newLen - 1;
     for (; i >= 0; --i) {
+      prev = i > 0 ? views[i - 1] : null;
       view = views[i];
-      next = views[i + 1];
+      // next = views[i + 1];
 
-      view.nodes!.link(next?.nodes ?? location);
+      // view.nodes!.link(next?.nodes ?? location);
 
       if (indexMap[i] === -2) {
         viewScope = Scope.fromParent(parentScope, BindingContext.create(local, normalizedItems![i]));
@@ -393,7 +395,12 @@ export class Repeat<C extends Collection = unknown[]> implements ICustomAttribut
         }
       } else if (j < 0 || seqLen === 1 || i !== seq[j]) {
         setContextualProperties(view.scope!.overrideContext as IRepeatOverrideContext, i, newLen);
-        view.nodes.insertBefore(view.location!);
+        // view.nodes.insertBefore(view.location!);
+        if (prev === null) {
+          view.nodes.insert(location.$start!, 'afterend');
+        } else {
+          view.nodes.insert(prev.nodes.lastChild, 'afterend');
+        }
       } else {
         if (oldLength !== newLen) {
           setContextualProperties(view.scope!.overrideContext as IRepeatOverrideContext, i, newLen);

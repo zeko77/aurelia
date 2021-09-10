@@ -61,26 +61,26 @@ export interface INodeSequence<T extends INode = INode> {
 
   insert(refNode: Node, position: `${'before' | 'after'}${'begin' | 'end'}`): void;
 
-  /**
-   * Insert this sequence as a sibling before refNode
-   */
-  insertBefore(refNode: T | IRenderLocation): void;
+  // /**
+  //  * Insert this sequence as a sibling before refNode
+  //  */
+  // insertBefore(refNode: T | IRenderLocation): void;
 
-  /**
-   * Append this sequence as a child to parent
-   */
-  appendTo(parent: T, enhance?: boolean): void;
+  // /**
+  //  * Append this sequence as a child to parent
+  //  */
+  // appendTo(parent: T): void;
 
   /**
    * Remove this sequence from the DOM.
    */
   remove(): void;
 
-  addToLinked(): void;
+  // addToLinked(): void;
 
-  unlink(): void;
+  // unlink(): void;
 
-  link(next: INodeSequence<T> | IRenderLocation | undefined): void;
+  // link(next: INodeSequence<T> | IRenderLocation | undefined): void;
 }
 
 export const enum NodeType {
@@ -273,6 +273,8 @@ export class FragmentNodeSequence implements INodeSequence {
     const parentNode = refNode.parentNode;
     const childNodes = this.childNodes;
     const childCount = childNodes.length;
+    const isMounted = this.isMounted;
+    const fragment = this.fragment;
     switch (position) {
       case 'afterend': {
         if (parentNode == null) {
@@ -280,20 +282,20 @@ export class FragmentNodeSequence implements INodeSequence {
         }
         insertRefNode = refNode.nextSibling;
         if (insertRefNode === null) {
-          if (this.isMounted) {
+          if (isMounted) {
             for (; childCount > i; ++i) {
-              parentNode.appendChild(this.childNodes[i]);
+              parentNode.appendChild(childNodes[i]);
             }
           } else {
-            parentNode.appendChild(this.fragment);
+            parentNode.appendChild(fragment);
           }
         } else {
-          if (this.isMounted) {
+          if (isMounted) {
             for (; childCount > i; ++i) {
-              parentNode.insertBefore(this.childNodes[i], insertRefNode);
+              parentNode.insertBefore(childNodes[i], insertRefNode);
             }
           } else {
-            parentNode.insertBefore(this.fragment, insertRefNode);
+            parentNode.insertBefore(fragment, insertRefNode);
           }
         }
         break;
@@ -302,101 +304,104 @@ export class FragmentNodeSequence implements INodeSequence {
         if (parentNode == null) {
           return;
         }
-        if (this.isMounted) {
+        if (isMounted) {
           for (; childCount > i; ++i) {
-            parentNode.insertBefore(this.childNodes[i], refNode);
+            parentNode.insertBefore(childNodes[i], refNode);
           }
         } else {
-          parentNode.insertBefore(this.fragment, refNode);
+          parentNode.insertBefore(fragment, refNode);
         }
         break;
       }
       case 'afterbegin': {
         insertRefNode = refNode.firstChild;
         if (insertRefNode === null) {
-          if (this.isMounted) {
+          if (isMounted) {
             for (; childCount > i; ++i) {
-              refNode.appendChild(this.childNodes[i]);
+              refNode.appendChild(childNodes[i]);
             }
           } else {
-            refNode.appendChild(this.fragment);
+            refNode.appendChild(fragment);
           }
         } else {
-          if (this.isMounted) {
+          if (isMounted) {
             for (; childCount > i; ++i) {
-              refNode.insertBefore(this.childNodes[i], insertRefNode);
+              refNode.insertBefore(childNodes[i], insertRefNode);
             }
           } else {
-            refNode.insertBefore(this.fragment, insertRefNode);
+            refNode.insertBefore(fragment, insertRefNode);
           }
         }
         break;
       }
       case 'beforeend': {
-        if (this.isMounted) {
+        if (isMounted) {
           for (; childCount > i; ++i) {
-            refNode.appendChild(this.childNodes[i]);
+            refNode.appendChild(childNodes[i]);
           }
         } else {
-          refNode.appendChild(this.fragment);
+          refNode.appendChild(fragment);
         }
         break;
       }
       default:
         throw new Error('Invalid position. Only accept "beforebegin" or "beforeend" or "afterbegin" or "afterend"');
     }
+    this.isMounted = true;
   }
 
-  public insertBefore(refNode: IRenderLocation & Comment): void {
-    if (this.isLinked && !!this.refNode) {
-      this.addToLinked();
-    } else {
-      const parent = refNode.parentNode!;
-      if (this.isMounted) {
-        let current = this.firstChild;
-        let next: Node;
-        const end = this.lastChild;
+  // public insertBefore(refNode: IRenderLocation & Comment): void {
+  //   if (this.isLinked && !!this.refNode) {
+  //     this.addToLinked();
+  //   } else {
+  //     // this.insert(refNode, 'beforebegin');
+  //     const parent = refNode.parentNode!;
+  //     if (this.isMounted) {
+  //       let current = this.firstChild;
+  //       let next: Node;
+  //       const end = this.lastChild;
 
-        while (current != null) {
-          next = current.nextSibling!;
-          parent.insertBefore(current, refNode);
+  //       while (current != null) {
+  //         next = current.nextSibling!;
+  //         parent.insertBefore(current, refNode);
 
-          if (current === end) {
-            break;
-          }
+  //         if (current === end) {
+  //           break;
+  //         }
 
-          current = next;
-        }
-      } else {
-        this.isMounted = true;
-        refNode.parentNode!.insertBefore(this.fragment, refNode);
-      }
-    }
-  }
+  //         current = next;
+  //       }
+  //     } else {
+  //       this.isMounted = true;
+  //       refNode.parentNode!.insertBefore(this.fragment, refNode);
+  //     }
+  //   }
+  // }
 
-  public appendTo(parent: Node, enhance: boolean = false): void {
-    if (this.isMounted) {
-      let current = this.firstChild;
-      let next: Node;
-      const end = this.lastChild;
+  // public appendTo(parent: Node): void {
+  //   this.insert(parent, 'afterend');
+  //   if (this.isMounted) {
+  //     let current = this.firstChild;
+  //     let next: Node;
+  //     const end = this.lastChild;
 
-      while (current != null) {
-        next = current.nextSibling!;
-        parent.appendChild(current);
+  //     while (current != null) {
+  //       next = current.nextSibling!;
+  //       parent.appendChild(current);
 
-        if (current === end) {
-          break;
-        }
+  //       if (current === end) {
+  //         break;
+  //       }
 
-        current = next;
-      }
-    } else {
-      this.isMounted = true;
-      if (!enhance) {
-        parent.appendChild(this.fragment);
-      }
-    }
-  }
+  //       current = next;
+  //     }
+  //   } else {
+  //     this.isMounted = true;
+  //     if (!enhance) {
+  //       parent.appendChild(this.fragment);
+  //     }
+  //   }
+  // }
 
   public remove(): void {
     if (this.isMounted) {
@@ -420,53 +425,53 @@ export class FragmentNodeSequence implements INodeSequence {
     }
   }
 
-  public addToLinked(): void {
-    const refNode = this.refNode!;
-    const parent = refNode.parentNode!;
-    if (this.isMounted) {
-      let current = this.firstChild;
-      let next: Node;
-      const end = this.lastChild;
+  // public addToLinked(): void {
+  //   const refNode = this.refNode!;
+  //   const parent = refNode.parentNode!;
+  //   if (this.isMounted) {
+  //     let current = this.firstChild;
+  //     let next: Node;
+  //     const end = this.lastChild;
 
-      while (current != null) {
-        next = current.nextSibling!;
-        parent.insertBefore(current, refNode);
+  //     while (current != null) {
+  //       next = current.nextSibling!;
+  //       parent.insertBefore(current, refNode);
 
-        if (current === end) {
-          break;
-        }
+  //       if (current === end) {
+  //         break;
+  //       }
 
-        current = next;
-      }
-    } else {
-      this.isMounted = true;
-      parent.insertBefore(this.fragment, refNode);
-    }
-  }
+  //       current = next;
+  //     }
+  //   } else {
+  //     this.isMounted = true;
+  //     parent.insertBefore(this.fragment, refNode);
+  //   }
+  // }
 
-  public unlink(): void {
-    this.isLinked = false;
-    this.next = void 0;
-    this.refNode = void 0;
-  }
+  // public unlink(): void {
+  //   this.isLinked = false;
+  //   this.next = void 0;
+  //   this.refNode = void 0;
+  // }
 
-  public link(next: INodeSequence | IRenderLocation & Comment | undefined): void {
-    this.isLinked = true;
-    if (isRenderLocation(next!)) {
-      this.refNode = next;
-    } else {
-      this.next = next;
-      this.obtainRefNode();
-    }
-  }
+  // public link(next: INodeSequence | IRenderLocation & Comment | undefined): void {
+  //   this.isLinked = true;
+  //   if (isRenderLocation(next!)) {
+  //     this.refNode = next;
+  //   } else {
+  //     this.next = next;
+  //     this.obtainRefNode();
+  //   }
+  // }
 
-  private obtainRefNode(): void {
-    if (this.next !== void 0) {
-      this.refNode = this.next.firstChild;
-    } else {
-      this.refNode = void 0;
-    }
-  }
+  // private obtainRefNode(): void {
+  //   if (this.next !== void 0) {
+  //     this.refNode = this.next.firstChild;
+  //   } else {
+  //     this.refNode = void 0;
+  //   }
+  // }
 }
 
 export const IWindow = DI.createInterface<IWindow>('IWindow', x => x.callback(handler => handler.get(IPlatform).window));
