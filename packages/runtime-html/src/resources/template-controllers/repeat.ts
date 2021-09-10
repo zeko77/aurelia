@@ -251,7 +251,7 @@ export class Repeat<C extends Collection = unknown[]> implements ICustomAttribut
 
     this.forOf.iterate(flags, items, (arr, i, item) => {
       view = views[i] = factory.create().setLocation(location);
-      // view.nodes!.unlink();
+      view.nodes!.unlink();
       viewScope = Scope.fromParent(parentScope, BindingContext.create(local, item));
 
       setContextualProperties(viewScope.overrideContext as IRepeatOverrideContext, i, newLen);
@@ -373,20 +373,25 @@ export class Repeat<C extends Collection = unknown[]> implements ICustomAttribut
     const seq = longestIncreasingSubsequence(indexMap);
     const seqLen = seq.length;
 
-    let prev: ISyntheticView | null = null;
-    // let next: ISyntheticView;
+    // let prev: ISyntheticView | null = null;
+    let next: ISyntheticView | null = null;
     let j = seqLen - 1;
     i = newLen - 1;
     for (; i >= 0; --i) {
-      prev = i > 0 ? views[i - 1] : null;
+      // prev = i > 0 ? views[i - 1] : null;
       view = views[i];
-      // next = views[i + 1];
+      next = i < newLen - 1 ? views[i + 1] : null;
 
-      // view.nodes!.link(next?.nodes ?? location);
+      // todo: consider linking with previous instead of next view
+      view.nodes!.link(next === null ? location : next.nodes);
 
       if (indexMap[i] === -2) {
         viewScope = Scope.fromParent(parentScope, BindingContext.create(local, normalizedItems![i]));
         setContextualProperties(viewScope.overrideContext as IRepeatOverrideContext, i, newLen);
+        // setting location here is just for normalization purpose
+        // it doesn't have an effect as when views are created
+        // their nodes are linked to each other, so that it can be inserted in the correct location
+        // regardless timing
         view.setLocation(location);
 
         ret = view.activate(view, $controller, flags, viewScope);
@@ -396,12 +401,15 @@ export class Repeat<C extends Collection = unknown[]> implements ICustomAttribut
       } else if (j < 0 || seqLen === 1 || i !== seq[j]) {
         setContextualProperties(view.scope!.overrideContext as IRepeatOverrideContext, i, newLen);
         // view.nodes.insertBefore(view.location!);
-        if (prev === null) {
-          view.nodes.insert(location.$start!, 'afterend');
-        } else {
-          view.nodes.insert(prev.nodes.lastChild, 'afterend');
-        }
+        view.nodes.insertLinked('beforebegin');
+        // if (prev === null) {
+        //   view.nodes.insert(location.$start!, 'afterend');
+        // } else {
+        //   view.nodes.insert(prev.nodes.lastChild, 'afterend');
+        // }
       } else {
+        // when the index hasn't been changed
+        // only need to check whether length has been changed
         if (oldLength !== newLen) {
           setContextualProperties(view.scope!.overrideContext as IRepeatOverrideContext, i, newLen);
         }

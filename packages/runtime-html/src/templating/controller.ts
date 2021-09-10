@@ -650,9 +650,10 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
 
     switch (this.mountTarget) {
       case MountTarget.host:
-        if (this.definition == null || !(this.definition as CustomElementDefinition).enhance)
+        if (this.definition == null || !(this.definition as CustomElementDefinition).enhance) {
           // this.nodes!.appendTo(this.host!);
-        this.nodes!.insert(this.host!, 'beforeend');
+          this.nodes!.insert(this.host!, 'beforeend');
+        }
         break;
       case MountTarget.shadowRoot: {
         const container = this.container;
@@ -792,7 +793,7 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
       case ViewModelKind.customElement:
       case ViewModelKind.synthetic:
         this.nodes!.remove();
-        // this.nodes!.unlink();
+        this.nodes!.unlink();
     }
 
     if (this.hostController !== null) {

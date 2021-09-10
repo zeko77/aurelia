@@ -61,6 +61,8 @@ export interface INodeSequence<T extends INode = INode> {
 
   insert(refNode: Node, position: `${'before' | 'after'}${'begin' | 'end'}`): void;
 
+  insertLinked(position: `${'before' | 'after'}${'begin' | 'end'}`): void;
+
   // /**
   //  * Insert this sequence as a sibling before refNode
   //  */
@@ -77,10 +79,10 @@ export interface INodeSequence<T extends INode = INode> {
   remove(): void;
 
   // addToLinked(): void;
+  link(next: INodeSequence<T> | IRenderLocation | undefined): void;
 
-  // unlink(): void;
+  unlink(): void;
 
-  // link(next: INodeSequence<T> | IRenderLocation | undefined): void;
 }
 
 export const enum NodeType {
@@ -350,6 +352,13 @@ export class FragmentNodeSequence implements INodeSequence {
     this.isMounted = true;
   }
 
+  public insertLinked(position: `${'before' | 'after'}${'begin' | 'end'}`): void {
+    if (this.refNode == null) {
+      throw new Error('There is no linked node');
+    }
+    this.insert(this.refNode, position);
+  }
+
   // public insertBefore(refNode: IRenderLocation & Comment): void {
   //   if (this.isLinked && !!this.refNode) {
   //     this.addToLinked();
@@ -449,29 +458,29 @@ export class FragmentNodeSequence implements INodeSequence {
   //   }
   // }
 
-  // public unlink(): void {
-  //   this.isLinked = false;
-  //   this.next = void 0;
-  //   this.refNode = void 0;
-  // }
+  public unlink(): void {
+    this.isLinked = false;
+    this.next = void 0;
+    this.refNode = void 0;
+  }
 
-  // public link(next: INodeSequence | IRenderLocation & Comment | undefined): void {
-  //   this.isLinked = true;
-  //   if (isRenderLocation(next!)) {
-  //     this.refNode = next;
-  //   } else {
-  //     this.next = next;
-  //     this.obtainRefNode();
-  //   }
-  // }
+  public link(next: INodeSequence | IRenderLocation & Comment | undefined): void {
+    this.isLinked = true;
+    if (isRenderLocation(next!)) {
+      this.refNode = next;
+    } else {
+      this.next = next;
+      this.obtainRefNode();
+    }
+  }
 
-  // private obtainRefNode(): void {
-  //   if (this.next !== void 0) {
-  //     this.refNode = this.next.firstChild;
-  //   } else {
-  //     this.refNode = void 0;
-  //   }
-  // }
+  private obtainRefNode(): void {
+    if (this.next !== void 0) {
+      this.refNode = this.next.firstChild;
+    } else {
+      this.refNode = void 0;
+    }
+  }
 }
 
 export const IWindow = DI.createInterface<IWindow>('IWindow', x => x.callback(handler => handler.get(IPlatform).window));
