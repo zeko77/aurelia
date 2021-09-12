@@ -374,16 +374,16 @@ export class Repeat<C extends Collection = unknown[]> implements ICustomAttribut
     const seqLen = seq.length;
 
     // let prev: ISyntheticView | null = null;
-    let next: ISyntheticView | null = null;
+    let next: ISyntheticView | undefined = void 0;
     let j = seqLen - 1;
     i = newLen - 1;
     for (; i >= 0; --i) {
       // prev = i > 0 ? views[i - 1] : null;
       view = views[i];
-      next = i < newLen - 1 ? views[i + 1] : null;
+      next = views[i + 1];
 
       // todo: consider linking with previous instead of next view
-      view.nodes!.link(next === null ? location : next.nodes);
+      view.nodes!.link(next?.nodes ?? location);
 
       if (indexMap[i] === -2) {
         viewScope = Scope.fromParent(parentScope, BindingContext.create(local, normalizedItems![i]));
@@ -401,7 +401,8 @@ export class Repeat<C extends Collection = unknown[]> implements ICustomAttribut
       } else if (j < 0 || seqLen === 1 || i !== seq[j]) {
         setContextualProperties(view.scope!.overrideContext as IRepeatOverrideContext, i, newLen);
         // view.nodes.insertBefore(view.location!);
-        view.nodes.insertLinked('beforebegin');
+        if (view.nodes.isLinked) view.nodes.insertLinked('beforebegin');
+        else view.nodes.insert(location, 'beforebegin');
         // if (prev === null) {
         //   view.nodes.insert(location.$start!, 'afterend');
         // } else {

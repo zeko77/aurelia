@@ -529,7 +529,7 @@ describe(`Repeat`, function () {
   textTemplate.content.append(marker, text);
 
   eachCartesianJoin(
-    [duplicateOperationSpecs, bindSpecs, flagsSpecs],
+    [duplicateOperationSpecs, bindSpecs.slice(-1), flagsSpecs],
     (duplicateOperationSpec, bindSpec, flagsSpec) => {
       it(`verify repeat behavior - duplicateOperationSpec ${duplicateOperationSpec.t}, bindSpec ${bindSpec.t}, flagsSpec ${flagsSpec.t}, `, function () {
         const { activateTwice, deactivateTwice } = duplicateOperationSpec;
@@ -584,6 +584,7 @@ describe(`Repeat`, function () {
 
         assert.strictEqual(host.textContent, expectedText1, 'host.textContent #1');
 
+        console.log('applying mutation', JSON.stringify(mutations))
         applyMutations(sut, mutations);
         const expectedText2 = sut.items ? sut.items.join('') : '';
 
