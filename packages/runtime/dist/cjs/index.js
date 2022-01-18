@@ -3880,7 +3880,7 @@ function _e(t) {
         return;
     }
     if (De === t) throw new Error("AUR0207");
-    Fe.push(De);
+    Fe.push(t);
     De = t;
     Ve = true;
 }

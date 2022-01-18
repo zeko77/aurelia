@@ -3876,7 +3876,7 @@ function fs(t) {
         return;
     }
     if (os === t) throw new Error("AUR0207");
-    hs.push(os);
+    hs.push(t);
     os = t;
     cs = true;
 }

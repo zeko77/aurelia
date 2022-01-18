@@ -10973,7 +10973,8 @@ exports.PromiseTemplateController = class PromiseTemplateController {
             // The order of these 3 should not necessarily be sequential (i.e. order-irrelevant).
             preSettlePromise = (this.preSettledTask = q.queueTask(() => {
                 return kernel.resolveAll(fulfilled === null || fulfilled === void 0 ? void 0 : fulfilled.deactivate(initiator, flags), rejected === null || rejected === void 0 ? void 0 : rejected.deactivate(initiator, flags), pending === null || pending === void 0 ? void 0 : pending.activate(initiator, flags, s));
-            }, defaultQueuingOptions)).result, value
+            }, defaultQueuingOptions)).result.catch((err) => { if (!(err instanceof kernel.TaskAbortError))
+                throw err; }), value
                 .then((data) => {
                 if (this.value !== value) {
                     return;
