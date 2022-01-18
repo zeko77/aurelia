@@ -4394,7 +4394,7 @@ function enterConnectable(connectable) {
     if (_connectable === connectable) {
         throw new Error('AUR0207');
     }
-    connectables.push(_connectable);
+    connectables.push(connectable);
     _connectable = connectable;
     connecting = true;
 }
