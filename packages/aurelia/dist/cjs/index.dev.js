@@ -142,6 +142,7 @@ exports.cssModules = runtimeHtml.cssModules;
 exports.customAttribute = runtimeHtml.customAttribute;
 exports.customElement = runtimeHtml.customElement;
 exports.lifecycleHooks = runtimeHtml.lifecycleHooks;
+exports.observable = runtimeHtml.observable;
 exports.registerAliases = runtimeHtml.registerAliases;
 exports.renderer = runtimeHtml.renderer;
 exports.shadowCSS = runtimeHtml.shadowCSS;

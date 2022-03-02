@@ -238,6 +238,8 @@ exports.customElement = r.customElement;
 
 exports.lifecycleHooks = r.lifecycleHooks;
 
+exports.observable = r.observable;
+
 exports.registerAliases = r.registerAliases;
 
 exports.renderer = r.renderer;
