@@ -2122,6 +2122,7 @@ class RouteNode {
         const titleParts = [
             ...this.children.map(x => x.getTitle(separator)),
             this.getTitlePart(),
+            this.context.definition.config.title,
         ].filter(x => x !== null);
         if (titleParts.length === 0) {
             return null;
@@ -2661,7 +2662,13 @@ class RouterOptions {
      *
      * Default: `ignore`
      */
-    sameUrlStrategy) {
+    sameUrlStrategy, 
+    /**
+     * An optional handler to build the title.
+     * When configured, the work of building the title string is completely handed over to this function.
+     * If this function returns `null`, the title is not updated.
+     */
+    buildTitle) {
         this.useUrlFragmentHash = useUrlFragmentHash;
         this.useHref = useHref;
         this.statefulHistoryLength = statefulHistoryLength;
@@ -2672,11 +2679,12 @@ class RouterOptions {
         this.fragmentStrategy = fragmentStrategy;
         this.historyStrategy = historyStrategy;
         this.sameUrlStrategy = sameUrlStrategy;
+        this.buildTitle = buildTitle;
     }
     static get DEFAULT() { return RouterOptions.create({}); }
     static create(input) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
-        return new RouterOptions((_a = input.useUrlFragmentHash) !== null && _a !== void 0 ? _a : false, (_b = input.useHref) !== null && _b !== void 0 ? _b : true, (_c = input.statefulHistoryLength) !== null && _c !== void 0 ? _c : 0, (_d = input.routingMode) !== null && _d !== void 0 ? _d : 'configured-first', (_e = input.swapStrategy) !== null && _e !== void 0 ? _e : 'sequential-remove-first', (_f = input.resolutionMode) !== null && _f !== void 0 ? _f : 'dynamic', (_g = input.queryParamsStrategy) !== null && _g !== void 0 ? _g : 'overwrite', (_h = input.fragmentStrategy) !== null && _h !== void 0 ? _h : 'overwrite', (_j = input.historyStrategy) !== null && _j !== void 0 ? _j : 'push', (_k = input.sameUrlStrategy) !== null && _k !== void 0 ? _k : 'ignore');
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+        return new RouterOptions((_a = input.useUrlFragmentHash) !== null && _a !== void 0 ? _a : false, (_b = input.useHref) !== null && _b !== void 0 ? _b : true, (_c = input.statefulHistoryLength) !== null && _c !== void 0 ? _c : 0, (_d = input.routingMode) !== null && _d !== void 0 ? _d : 'configured-first', (_e = input.swapStrategy) !== null && _e !== void 0 ? _e : 'sequential-remove-first', (_f = input.resolutionMode) !== null && _f !== void 0 ? _f : 'dynamic', (_g = input.queryParamsStrategy) !== null && _g !== void 0 ? _g : 'overwrite', (_h = input.fragmentStrategy) !== null && _h !== void 0 ? _h : 'overwrite', (_j = input.historyStrategy) !== null && _j !== void 0 ? _j : 'push', (_k = input.sameUrlStrategy) !== null && _k !== void 0 ? _k : 'ignore', (_l = input.buildTitle) !== null && _l !== void 0 ? _l : null);
     }
     /** @internal */
     getQueryParamsStrategy(instructions) {
@@ -2709,7 +2717,7 @@ class RouterOptions {
         }).join(',');
     }
     clone() {
-        return new RouterOptions(this.useUrlFragmentHash, this.useHref, this.statefulHistoryLength, this.routingMode, this.swapStrategy, this.resolutionMode, this.queryParamsStrategy, this.fragmentStrategy, this.historyStrategy, this.sameUrlStrategy);
+        return new RouterOptions(this.useUrlFragmentHash, this.useHref, this.statefulHistoryLength, this.routingMode, this.swapStrategy, this.resolutionMode, this.queryParamsStrategy, this.fragmentStrategy, this.historyStrategy, this.sameUrlStrategy, this.buildTitle);
     }
     toString() {
         return `RO(${this.stringifyProperties()})`;
@@ -2739,7 +2747,7 @@ class NavigationOptions extends RouterOptions {
      * Specify any kind of state to be stored together with the history entry for this navigation.
      */
     state) {
-        super(routerOptions.useUrlFragmentHash, routerOptions.useHref, routerOptions.statefulHistoryLength, routerOptions.routingMode, routerOptions.swapStrategy, routerOptions.resolutionMode, routerOptions.queryParamsStrategy, routerOptions.fragmentStrategy, routerOptions.historyStrategy, routerOptions.sameUrlStrategy);
+        super(routerOptions.useUrlFragmentHash, routerOptions.useHref, routerOptions.statefulHistoryLength, routerOptions.routingMode, routerOptions.swapStrategy, routerOptions.resolutionMode, routerOptions.queryParamsStrategy, routerOptions.fragmentStrategy, routerOptions.historyStrategy, routerOptions.sameUrlStrategy, routerOptions.buildTitle);
         this.title = title;
         this.titleSeparator = titleSeparator;
         this.append = append;
@@ -2844,6 +2852,8 @@ let Router = class Router {
         this.instructions = ViewportInstructionTree.create('');
         this.nextTr = null;
         this.locationChangeSubscription = null;
+        /** @internal */
+        this._hasTitleBuilder = false;
         this.vpaLookup = new Map();
         this.logger = logger.root.scopeTo('Router');
     }
@@ -2917,6 +2927,7 @@ let Router = class Router {
     }
     start(routerOptions, performInitialNavigation) {
         this.options = RouterOptions.create(routerOptions);
+        this._hasTitleBuilder = typeof this.options.buildTitle === 'function';
         this.locationMgr.startListening();
         this.locationChangeSubscription = this.events.subscribe('au:router:location-change', e => {
             // TODO(fkleuver): add a throttle config.
@@ -3200,8 +3211,9 @@ let Router = class Router {
                 return (_b = tr.routeTree.root.getTitle(tr.options.titleSeparator)) !== null && _b !== void 0 ? _b : '';
         }
     }
-    updateTitle(tr) {
-        const title = this.getTitle(tr);
+    updateTitle(tr = this.currentTr) {
+        var _a;
+        const title = this._hasTitleBuilder ? ((_a = this.options.buildTitle(tr)) !== null && _a !== void 0 ? _a : '') : this.getTitle(tr);
         if (title.length > 0) {
             this.p.document.title = title;
         }
