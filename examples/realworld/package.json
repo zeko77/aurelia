@@ -9,8 +9,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "aurelia": "2.0.1-dev.202203021137",
-    "marked": "^3.0.0"
+    "aurelia": "2.0.0-alpha.24",
+    "marked": "^4.0.10"
   },
   "type": "module",
   "devDependencies": {
