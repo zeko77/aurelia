@@ -1877,18 +1877,18 @@ class RouteNode {
         return t;
     }
     toString() {
-        var t, e, i, s, n;
-        const o = [];
-        const r = null !== (i = null === (e = null === (t = this.context) || void 0 === t ? void 0 : t.definition.component) || void 0 === e ? void 0 : e.name) && void 0 !== i ? i : "";
-        if (r.length > 0) o.push(`c:'${r}'`);
-        const a = null !== (n = null === (s = this.context) || void 0 === s ? void 0 : s.definition.config.path) && void 0 !== n ? n : "";
-        if (a.length > 0) o.push(`path:'${a}'`);
-        if (this.children.length > 0) o.push(`children:[${this.children.map(String).join(",")}]`);
-        if (this.residue.length > 0) o.push(`residue:${this.residue.map((function(t) {
+        var t, e, i, s, n, o;
+        const r = [];
+        const a = null !== (i = null === (e = null === (t = this.context) || void 0 === t ? void 0 : t.definition.component) || void 0 === e ? void 0 : e.name) && void 0 !== i ? i : "";
+        if (a.length > 0) r.push(`c:'${a}'`);
+        const h = null !== (n = null === (s = this.context) || void 0 === s ? void 0 : s.definition.config.path) && void 0 !== n ? n : "";
+        if (h.length > 0) r.push(`path:'${h}'`);
+        if (this.children.length > 0) r.push(`children:[${this.children.map(String).join(",")}]`);
+        if (this.residue.length > 0) r.push(`residue:${this.residue.map((function(t) {
             if ("string" === typeof t) return `'${t}'`;
             return String(t);
         })).join(",")}`);
-        return `RN(ctx:'${this.context.friendlyPath}',${o.join(",")})`;
+        return `RN(ctx:'${null === (o = this.context) || void 0 === o ? void 0 : o.friendlyPath}',${r.join(",")})`;
     }
 }
 

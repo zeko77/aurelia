@@ -2177,7 +2177,7 @@ class RouteNode {
         return clone;
     }
     toString() {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f;
         const props = [];
         const component = (_c = (_b = (_a = this.context) === null || _a === void 0 ? void 0 : _a.definition.component) === null || _b === void 0 ? void 0 : _b.name) !== null && _c !== void 0 ? _c : '';
         if (component.length > 0) {
@@ -2198,7 +2198,7 @@ class RouteNode {
                 return String(r);
             }).join(',')}`);
         }
-        return `RN(ctx:'${this.context.friendlyPath}',${props.join(',')})`;
+        return `RN(ctx:'${(_f = this.context) === null || _f === void 0 ? void 0 : _f.friendlyPath}',${props.join(',')})`;
     }
 }
 class RouteTree {
