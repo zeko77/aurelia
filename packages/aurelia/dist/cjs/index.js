@@ -12,7 +12,7 @@ var t = require("@aurelia/platform-browser");
 
 var s = require("@aurelia/fetch-client");
 
-var o = require("@aurelia/router");
+var o = require("@aurelia/router-lite");
 
 const p = t.BrowserPlatform.getOrCreate(globalThis);
 

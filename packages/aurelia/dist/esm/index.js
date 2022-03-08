@@ -10,7 +10,7 @@ import { BrowserPlatform as n } from "@aurelia/platform-browser";
 
 export { HttpClient, HttpClientConfiguration, IHttpClient, json } from "@aurelia/fetch-client";
 
-export { IRouteContext, IRouter, IRouterEvents, Route, RouteConfig, RouteNode, Router, RouterConfiguration, RouterOptions, RouterRegistration, route } from "@aurelia/router";
+export { IRouteContext, IRouter, IRouterEvents, Route, RouteConfig, RouteNode, Router, RouterConfiguration, RouterOptions, RouterRegistration, route } from "@aurelia/router-lite";
 
 const l = n.getOrCreate(globalThis);
 
