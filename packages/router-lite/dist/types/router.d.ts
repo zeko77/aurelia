@@ -84,6 +84,12 @@ export declare class RouterOptions {
      * Default: `ignore`
      */
     readonly sameUrlStrategy: ValueOrFunc<SameUrlStrategy>;
+    /**
+     * An optional handler to build the title.
+     * When configured, the work of building the title string is completely handed over to this function.
+     * If this function returns `null`, the title is not updated.
+     */
+    readonly buildTitle: ((transition: Transition) => string | null) | null;
     static get DEFAULT(): RouterOptions;
     protected constructor(useUrlFragmentHash: boolean, useHref: boolean, statefulHistoryLength: number, 
     /**
@@ -136,7 +142,13 @@ export declare class RouterOptions {
      *
      * Default: `ignore`
      */
-    sameUrlStrategy: ValueOrFunc<SameUrlStrategy>);
+    sameUrlStrategy: ValueOrFunc<SameUrlStrategy>, 
+    /**
+     * An optional handler to build the title.
+     * When configured, the work of building the title string is completely handed over to this function.
+     * If this function returns `null`, the title is not updated.
+     */
+    buildTitle: ((transition: Transition) => string | null) | null);
     static create(input: IRouterOptions): RouterOptions;
     protected stringifyProperties(): string;
     clone(): RouterOptions;
@@ -374,7 +386,7 @@ export declare class Router {
     private run;
     private applyHistoryState;
     private getTitle;
-    private updateTitle;
+    updateTitle(tr?: Transition): string;
     private cancelNavigation;
     private runNextTransition;
     private getNavigationOptions;

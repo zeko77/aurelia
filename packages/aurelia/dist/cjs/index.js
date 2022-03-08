@@ -12,7 +12,7 @@ var t = require("@aurelia/platform-browser");
 
 var s = require("@aurelia/fetch-client");
 
-var o = require("@aurelia/router");
+var o = require("@aurelia/router-lite");
 
 const p = t.BrowserPlatform.getOrCreate(globalThis);
 
@@ -237,6 +237,8 @@ exports.customAttribute = r.customAttribute;
 exports.customElement = r.customElement;
 
 exports.lifecycleHooks = r.lifecycleHooks;
+
+exports.observable = r.observable;
 
 exports.registerAliases = r.registerAliases;
 
