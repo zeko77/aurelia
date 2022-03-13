@@ -7352,9 +7352,9 @@ class TemplateCompiler {
                 //          Consider style attribute rule-value pair: <div style="rule: ruleValue">
                 isMultiBindings = attrDef.noMultiBindings === false
                     && bindingCommand === null
-                    && hasInlineBindings(attrValue);
+                    && hasInlineBindings(realAttrValue);
                 if (isMultiBindings) {
-                    attrBindableInstructions = this._compileMultiBindings(el, attrValue, attrDef, context);
+                    attrBindableInstructions = this._compileMultiBindings(el, realAttrValue, attrDef, context);
                 }
                 else {
                     primaryBindable = bindablesInfo.primary;
@@ -7362,10 +7362,10 @@ class TemplateCompiler {
                     // my-attr=""
                     // my-attr="${}"
                     if (bindingCommand === null) {
-                        expr = exprParser.parse(attrValue, 1 /* Interpolation */);
+                        expr = exprParser.parse(realAttrValue, 1 /* Interpolation */);
                         attrBindableInstructions = [
                             expr === null
-                                ? new SetPropertyInstruction(attrValue, primaryBindable.property)
+                                ? new SetPropertyInstruction(realAttrValue, primaryBindable.property)
                                 : new InterpolationInstruction(expr, primaryBindable.property)
                         ];
                     }
