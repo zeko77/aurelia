@@ -5794,12 +5794,12 @@ class TemplateCompiler {
             T = e.ue(j);
             if (null !== T) {
                 V = BindablesInfo.from(T, true);
-                D = false === T.noMultiBindings && null === F && $n(R);
-                if (D) $ = this.fe(t, R, T, e); else {
+                D = false === T.noMultiBindings && null === F && $n(N);
+                if (D) $ = this.fe(t, N, T, e); else {
                     _ = V.primary;
                     if (null === F) {
-                        M = g.parse(R, 1);
-                        $ = [ null === M ? new SetPropertyInstruction(R, _.property) : new InterpolationInstruction(M, _.property) ];
+                        M = g.parse(N, 1);
+                        $ = [ null === M ? new SetPropertyInstruction(N, _.property) : new InterpolationInstruction(M, _.property) ];
                     } else {
                         Un.node = t;
                         Un.attr = E;
