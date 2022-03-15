@@ -755,13 +755,12 @@ let ValidateBindingBehavior = class ValidateBindingBehavior extends BindingInter
         this.propertyBinding = binding;
     }
     setTarget() {
-        var _a;
         const target = this.propertyBinding.target;
         if (target instanceof this.platform.Node) {
             this.target = target;
         }
         else {
-            const controller = (_a = target) === null || _a === void 0 ? void 0 : _a.$controller;
+            const controller = target === null || target === void 0 ? void 0 : target.$controller;
             if (controller === void 0) {
                 throw new Error('Invalid binding target'); // TODO: use reporter
             }
