@@ -3998,7 +3998,7 @@ class Controller {
                 this._ensurePromise();
                 ret.then(() => {
                     this.bind();
-                }).catch(err => {
+                }).catch((err) => {
                     this._reject(err);
                 });
                 return this.$promise;
@@ -4037,7 +4037,7 @@ class Controller {
                 ret.then(() => {
                     this.isBound = true;
                     this._attach();
-                }).catch(err => {
+                }).catch((err) => {
                     this._reject(err);
                 });
                 return;
@@ -4101,7 +4101,7 @@ class Controller {
                 this._enterActivating();
                 ret.then(() => {
                     this._leaveActivating();
-                }).catch(err => {
+                }).catch((err) => {
                     this._reject(err);
                 });
             }
@@ -4159,7 +4159,7 @@ class Controller {
                 initiator._enterDetaching();
                 ret.then(() => {
                     initiator._leaveDetaching();
-                }).catch(err => {
+                }).catch((err) => {
                     initiator._reject(err);
                 });
             }
@@ -4295,7 +4295,7 @@ class Controller {
                         if (this.$initiator !== this) {
                             this.parent._leaveActivating();
                         }
-                    }).catch(err => {
+                    }).catch((err) => {
                         this._reject(err);
                     });
                     _retPromise = void 0;
@@ -4338,7 +4338,7 @@ class Controller {
                         this._enterUnbinding();
                         _retPromise.then(() => {
                             this._leaveUnbinding();
-                        }).catch(err => {
+                        }).catch((err) => {
                             this._reject(err);
                         });
                     }

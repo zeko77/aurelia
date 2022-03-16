@@ -2,6 +2,14 @@ import { Metadata, applyMetadataPolyfill, isObject } from '../../../metadata/dis
 export { Metadata, applyMetadataPolyfill, isNullOrUndefined, isObject, metadata } from '../../../metadata/dist/native-modules/index.js';
 export { Platform, Task, TaskAbortError, TaskQueue, TaskQueuePriority, TaskStatus } from '../../../platform/dist/native-modules/index.js';
 
+/** @internal */ const getOwnMetadata = Metadata.getOwn;
+/** @internal */ const hasOwnMetadata = Metadata.hasOwn;
+/** @internal */ const defineMetadata = Metadata.define;
+// eslint-disable-next-line @typescript-eslint/ban-types
+/** @internal */ const isFunction = (v) => typeof v === 'function';
+/** @internal */ const isString = (v) => typeof v === 'string';
+/** @internal */ const createObject = () => Object.create(null);
+
 const isNumericLookup = {};
 /**
  * Efficiently determine whether the provided property key is numeric
@@ -81,7 +89,7 @@ const baseCase = (function () {
         CharKind[CharKind["lower"] = 3] = "lower";
     })(CharKind || (CharKind = {}));
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    const isDigit = Object.assign(Object.create(null), {
+    const isDigit = Object.assign(createObject(), {
         '0': true,
         '1': true,
         '2': true,
@@ -157,7 +165,7 @@ const baseCase = (function () {
  * Results are cached.
  */
 const camelCase = (function () {
-    const cache = Object.create(null);
+    const cache = createObject();
     function callback(char, sep) {
         return sep ? char.toUpperCase() : char.toLowerCase();
     }
@@ -179,7 +187,7 @@ const camelCase = (function () {
  * Results are cached.
  */
 const pascalCase = (function () {
-    const cache = Object.create(null);
+    const cache = createObject();
     return function (input) {
         let output = cache[input];
         if (output === void 0) {
@@ -202,7 +210,7 @@ const pascalCase = (function () {
  * Results are cached.
  */
 const kebabCase = (function () {
-    const cache = Object.create(null);
+    const cache = createObject();
     function callback(char, sep) {
         return sep ? `-${char.toLowerCase()}` : char.toLowerCase();
     }
@@ -378,6 +386,7 @@ const getPrototypeChain = (function () {
         if (chain === void 0) {
             cache.set(Type, chain = [proto = Type]);
             i = 0;
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             while ((proto = getPrototypeOf(proto)) !== functionPrototype) {
                 chain[++i] = proto;
             }
@@ -386,7 +395,8 @@ const getPrototypeChain = (function () {
     };
 })();
 function toLookup(...objs) {
-    return Object.assign(Object.create(null), ...objs);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return Object.assign(createObject(), ...objs);
 }
 /**
  * Determine whether the value is a native function.
@@ -482,13 +492,6 @@ function resolveAll(...maybePromises) {
     return Promise.all(promises);
 }
 
-/** @internal */ const getOwnMetadata = Metadata.getOwn;
-/** @internal */ const hasOwnMetadata = Metadata.hasOwn;
-/** @internal */ const defineMetadata = Metadata.define;
-// eslint-disable-next-line @typescript-eslint/ban-types
-/** @internal */ const isFunction = (v) => typeof v === 'function';
-/** @internal */ const isString = (v) => typeof v === 'string';
-
 const annoBaseName = 'au:annotation';
 /** @internal */
 const getAnnotationKeyFor = (name, context) => {
@@ -540,9 +543,11 @@ const resource = Object.freeze({
     getAll(target) {
         const keys = getOwnMetadata(resBaseName, target);
         if (keys === void 0) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return emptyArray;
         }
         else {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return keys.map(k => getOwnMetadata(k, target));
         }
     },
@@ -618,6 +623,7 @@ function fromDefinitionOrDefault(name, def, getDefault) {
     return value;
 }
 
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 applyMetadataPolyfill(Reflect, false, false);
 class ResolverBuilder {
     constructor(container, key) {
@@ -1266,17 +1272,17 @@ class Container {
             this.root = this;
             this._resolvers = new Map();
             this._factories = new Map();
-            this.res = Object.create(null);
+            this.res = createObject();
         }
         else {
             this.root = parent.root;
             this._resolvers = new Map();
             this._factories = parent._factories;
             if (config.inheritParentResources) {
-                this.res = Object.assign(Object.create(null), parent.res, this.root.res);
+                this.res = Object.assign(createObject(), parent.res, this.root.res);
             }
             else {
-                this.res = Object.create(null);
+                this.res = createObject();
             }
         }
         this._resolvers.set(IContainer, containerResolver);
@@ -1426,6 +1432,7 @@ class Container {
         if (key.resolve !== void 0) {
             return key;
         }
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         let current = this;
         let resolver;
         while (current != null) {
@@ -1455,6 +1462,7 @@ class Container {
         if (key.$isResolver) {
             return key.resolve(this, this);
         }
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         let current = this;
         let resolver;
         while (current != null) {
@@ -1477,6 +1485,7 @@ class Container {
     }
     getAll(key, searchAncestors = false) {
         validateKey(key);
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const requestor = this;
         let current = requestor;
         let resolver;
@@ -1616,7 +1625,7 @@ class Container {
             const registrationResolver = keyAsValue.register(handler, keyAsValue);
             if (!(registrationResolver instanceof Object) || registrationResolver.resolve == null) {
                 const newResolver = handler._resolvers.get(keyAsValue);
-                if (newResolver != void 0) {
+                if (newResolver != null) {
                     return newResolver;
                 }
                 {
@@ -1638,7 +1647,7 @@ class Container {
                 }
             }
             const newResolver = handler._resolvers.get(keyAsValue);
-            if (newResolver != void 0) {
+            if (newResolver != null) {
                 return newResolver;
             }
             {
@@ -1710,8 +1719,8 @@ const Registration = {
      * Registration.instance(Foo, new Foo()));
      * ```
      *
-     * @param key
-     * @param value
+     * @param key - key to register the instance with
+     * @param value - the instance associated with the key
      */
     instance(key, value) {
         return new Resolver(key, 0 /* instance */, value);
@@ -1723,8 +1732,8 @@ const Registration = {
      * Registration.singleton(Foo, Foo);
      * ```
      *
-     * @param key
-     * @param value
+     * @param key - key to register the singleton class with
+     * @param value - the singleton class to instantiate when a container resolves the associated key
      */
     singleton(key, value) {
         return new Resolver(key, 1 /* singleton */, value);
@@ -1736,8 +1745,8 @@ const Registration = {
      * Registration.instance(Foo, Foo);
      * ```
      *
-     * @param key
-     * @param value
+     * @param key - key to register the transient class with
+     * @param value - the class to instantiate when a container resolves the associated key
      */
     transient(key, value) {
         return new Resolver(key, 2 /* transient */, value);
@@ -1750,8 +1759,8 @@ const Registration = {
      * Registration.callback(Bar, (c: IContainer) => new Bar(c.get(Foo)));
      * ```
      *
-     * @param key
-     * @param callback
+     * @param key - key to register the callback with
+     * @param callback - the callback to invoke when a container resolves the associated key
      */
     callback(key, callback) {
         return new Resolver(key, 3 /* callback */, callback);
@@ -1767,8 +1776,8 @@ const Registration = {
      * Registration.cachedCallback(Bar, (c: IContainer) => new Bar(c.get(Foo)));
      * ```
      *
-     * @param key
-     * @param callback
+     * @param key - key to register the cached callback with
+     * @param callback - the cache callback to invoke when a container resolves the associated key
      */
     cachedCallback(key, callback) {
         return new Resolver(key, 3 /* callback */, cacheCallbackResult(callback));
@@ -1783,16 +1792,16 @@ const Registration = {
      * container.getAll(MyFoos) // contains an instance of Foo
      * ```
      *
-     * @param originalKey
-     * @param aliasKey
+     * @param originalKey - the real key to resolve the get call from a container
+     * @param aliasKey - the key that a container allows to resolve the real key associated
      */
     aliasTo(originalKey, aliasKey) {
         return new Resolver(aliasKey, 5 /* alias */, originalKey);
     },
     /**
      * @internal
-     * @param key
-     * @param params
+     * @param key - the key to register a defer registration
+     * @param params - the parameters that should be passed to the resolution of the key
      */
     defer(key, ...params) {
         return new ParameterizedRegistry(key, params);
@@ -1854,10 +1863,10 @@ function createNativeInvocationError(Type) {
     return new Error(`AUR0015:${Type.name}`);
 }
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 const emptyArray = Object.freeze([]);
 const emptyObject = Object.freeze({});
-/* eslint-enable @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-explicit-any */
+/* eslint-enable @typescript-eslint/no-unsafe-assignment */
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 function noop() { }
 const IPlatform = DI.createInterface('IPlatform');
@@ -2134,7 +2143,7 @@ let DefaultLogger = class DefaultLogger {
         this.config = config;
         this.factory = factory;
         this.scope = scope;
-        this.scopedLoggers = Object.create(null);
+        this.scopedLoggers = createObject();
         let traceSinks;
         let debugSinks;
         let infoSinks;
@@ -2248,7 +2257,7 @@ let DefaultLogger = class DefaultLogger {
         return scopedLogger;
     }
     emit(sinks, level, msgOrGetMsg, optionalParams) {
-        const message = isFunction(msgOrGetMsg) ? msgOrGetMsg() : msgOrGetMsg;
+        const message = (isFunction(msgOrGetMsg) ? msgOrGetMsg() : msgOrGetMsg);
         const event = this.factory.createLogEvent(this, level, message, optionalParams);
         for (let i = 0, ii = sinks.length; i < ii; ++i) {
             sinks[i].handleEvent(event);
@@ -2456,6 +2465,7 @@ class EventAggregator {
         this.messageHandlers = [];
     }
     publish(channelOrInstance, message) {
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (!channelOrInstance) {
             throw new Error(`Invalid channel name or instance: ${channelOrInstance}.`);
         }
@@ -2478,6 +2488,7 @@ class EventAggregator {
         }
     }
     subscribe(channelOrType, callback) {
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (!channelOrType) {
             throw new Error(`Invalid channel name or type: ${channelOrType}.`);
         }

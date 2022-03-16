@@ -4,7 +4,7 @@ export interface ISignaler extends Signaler {
 }
 export declare const ISignaler: import("@aurelia/kernel").InterfaceSymbol<ISignaler>;
 export declare class Signaler {
-    signals: Record<string, Set<ISubscriber>>;
+    signals: Record<string, Set<ISubscriber> | undefined>;
     dispatchSignal(name: Signal, flags?: LifecycleFlags): void;
     addSignalListener(name: Signal, listener: ISubscriber): void;
     removeSignalListener(name: Signal, listener: ISubscriber): void;

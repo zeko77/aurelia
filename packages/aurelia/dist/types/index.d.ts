@@ -8,7 +8,7 @@ export declare class Aurelia extends $Aurelia {
     constructor(container?: IContainer);
     static start(root: IAppRoot | undefined): void | Promise<void>;
     static app(config: ISinglePageApp | unknown): Omit<Aurelia, 'register' | 'app' | 'enhance'>;
-    static enhance<T extends unknown>(config: IEnhancementConfig<T>, parentController?: IHydratedParentController): ReturnType<$Aurelia['enhance']>;
+    static enhance<T>(config: IEnhancementConfig<T>, parentController?: IHydratedParentController): ReturnType<$Aurelia['enhance']>;
     static register(...params: readonly unknown[]): Aurelia;
     app(config: ISinglePageApp | unknown): Omit<this, 'register' | 'app' | 'enhance'>;
 }

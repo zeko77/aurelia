@@ -3825,7 +3825,6 @@ class RouteDefinition {
             return `RD(config.path:${path},c.name:'${this.component.name}')`;
         }
         else {
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             return `RD(config.path:${path},redirectTo:'${this.redirectTo}')`;
         }
     }

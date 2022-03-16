@@ -371,8 +371,8 @@ export declare const Registration: {
      * Registration.instance(Foo, new Foo()));
      * ```
      *
-     * @param key
-     * @param value
+     * @param key - key to register the instance with
+     * @param value - the instance associated with the key
      */
     instance<T>(key: Key, value: T): IRegistration<T>;
     /**
@@ -382,8 +382,8 @@ export declare const Registration: {
      * Registration.singleton(Foo, Foo);
      * ```
      *
-     * @param key
-     * @param value
+     * @param key - key to register the singleton class with
+     * @param value - the singleton class to instantiate when a container resolves the associated key
      */
     singleton<T_1 extends Constructable<{}>>(key: Key, value: T_1): IRegistration<InstanceType<T_1>>;
     /**
@@ -393,8 +393,8 @@ export declare const Registration: {
      * Registration.instance(Foo, Foo);
      * ```
      *
-     * @param key
-     * @param value
+     * @param key - key to register the transient class with
+     * @param value - the class to instantiate when a container resolves the associated key
      */
     transient<T_2 extends Constructable<{}>>(key: Key, value: T_2): IRegistration<InstanceType<T_2>>;
     /**
@@ -405,8 +405,8 @@ export declare const Registration: {
      * Registration.callback(Bar, (c: IContainer) => new Bar(c.get(Foo)));
      * ```
      *
-     * @param key
-     * @param callback
+     * @param key - key to register the callback with
+     * @param callback - the callback to invoke when a container resolves the associated key
      */
     callback<T_3>(key: Key, callback: ResolveCallback<T_3>): IRegistration<Resolved<T_3>>;
     /**
@@ -420,8 +420,8 @@ export declare const Registration: {
      * Registration.cachedCallback(Bar, (c: IContainer) => new Bar(c.get(Foo)));
      * ```
      *
-     * @param key
-     * @param callback
+     * @param key - key to register the cached callback with
+     * @param callback - the cache callback to invoke when a container resolves the associated key
      */
     cachedCallback<T_4>(key: Key, callback: ResolveCallback<T_4>): IRegistration<Resolved<T_4>>;
     /**
@@ -434,14 +434,14 @@ export declare const Registration: {
      * container.getAll(MyFoos) // contains an instance of Foo
      * ```
      *
-     * @param originalKey
-     * @param aliasKey
+     * @param originalKey - the real key to resolve the get call from a container
+     * @param aliasKey - the key that a container allows to resolve the real key associated
      */
     aliasTo<T_5>(originalKey: T_5, aliasKey: Key): IRegistration<Resolved<T_5>>;
     /**
      * @internal
-     * @param key
-     * @param params
+     * @param key - the key to register a defer registration
+     * @param params - the parameters that should be passed to the resolution of the key
      */
     defer(key: Key, ...params: unknown[]): IRegistry;
 };

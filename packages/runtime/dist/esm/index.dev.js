@@ -428,10 +428,12 @@ const ValueConverter = Object.freeze({
         return definition.Type;
     },
     getDefinition(Type) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const def = getOwnMetadata(vcBaseName, Type);
         if (def === void 0) {
             throw new Error(`AUR0152:${Type.name}`);
         }
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return def;
     },
     annotate(Type, prop, value) {
@@ -2503,6 +2505,7 @@ const observe$3 = {
             while (i < itemCount) {
                 inserts[i++] = -2;
             }
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             $splice.call(indexMap, start, deleteCount, ...inserts);
         }
         else {
@@ -3423,11 +3426,12 @@ function parseExpression(input, expressionType) {
 // eslint-disable-next-line max-lines-per-function
 function parse(state, access, minPrecedence, expressionType) {
     if (expressionType === 16 /* IsCustom */) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
         return new CustomExpression(state.ip);
     }
     if (state.index === 0) {
         if (expressionType & 1 /* Interpolation */) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
             return parseInterpolation(state);
         }
         nextToken(state);
@@ -3438,7 +3442,9 @@ function parse(state, access, minPrecedence, expressionType) {
     state._assignable = 448 /* Binary */ > minPrecedence;
     let result = void 0;
     if (state._currentToken & 32768 /* UnaryOp */) {
-        /** parseUnaryExpression
+        /**
+         * parseUnaryExpression
+         *
          * https://tc39.github.io/ecma262/#sec-unary-operators
          *
          * UnaryExpression :
@@ -3461,7 +3467,9 @@ function parse(state, access, minPrecedence, expressionType) {
         state._assignable = false;
     }
     else {
-        /** parsePrimaryExpression
+        /**
+         * parsePrimaryExpression
+         *
          * https://tc39.github.io/ecma262/#sec-primary-expression
          *
          * PrimaryExpression :
@@ -3577,14 +3585,16 @@ function parse(state, access, minPrecedence, expressionType) {
                 }
         }
         if (expressionType & 2 /* IsIterator */) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
             return parseForOfStatement(state, result);
         }
         if (449 /* LeftHandSide */ < minPrecedence) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
             return result;
         }
-        /** parseMemberExpression (Token.Dot, Token.OpenBracket, Token.TemplateContinuation)
+        /**
+         * parseMemberExpression (Token.Dot, Token.OpenBracket, Token.TemplateContinuation)
+         *
          * MemberExpression :
          * 1. PrimaryExpression
          * 2. MemberExpression [ AssignmentExpression ]
@@ -3676,10 +3686,12 @@ function parse(state, access, minPrecedence, expressionType) {
         }
     }
     if (448 /* Binary */ < minPrecedence) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
         return result;
     }
-    /** parseBinaryExpression
+    /**
+     * parseBinaryExpression
+     *
      * https://tc39.github.io/ecma262/#sec-multiplicative-operators
      *
      * MultiplicativeExpression : (local precedence 6)
@@ -3716,7 +3728,7 @@ function parse(state, access, minPrecedence, expressionType) {
         state._assignable = false;
     }
     if (63 /* Conditional */ < minPrecedence) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
         return result;
     }
     /**
@@ -3737,10 +3749,12 @@ function parse(state, access, minPrecedence, expressionType) {
         state._assignable = false;
     }
     if (62 /* Assign */ < minPrecedence) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
         return result;
     }
-    /** parseAssignmentExpression
+    /**
+     * parseAssignmentExpression
+     *
      * https://tc39.github.io/ecma262/#prod-AssignmentExpression
      * Note: AssignmentExpression here is equivalent to ES Expression because we don't parse the comma operator
      *
@@ -3758,10 +3772,11 @@ function parse(state, access, minPrecedence, expressionType) {
         result = new AssignExpression(result, parse(state, access, 62 /* Assign */, expressionType));
     }
     if (61 /* Variadic */ < minPrecedence) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
         return result;
     }
-    /** parseValueConverter
+    /**
+     * parseValueConverter
      */
     while (consumeOpt(state, 1572884 /* Bar */)) {
         if (state._currentToken === 1572864 /* EOF */) {
@@ -3775,7 +3790,8 @@ function parse(state, access, minPrecedence, expressionType) {
         }
         result = new ValueConverterExpression(result, name, args);
     }
-    /** parseBindingBehavior
+    /**
+     * parseBindingBehavior
      */
     while (consumeOpt(state, 1572883 /* Ampersand */)) {
         if (state._currentToken === 1572864 /* EOF */) {
@@ -3791,7 +3807,7 @@ function parse(state, access, minPrecedence, expressionType) {
     }
     if (state._currentToken !== 1572864 /* EOF */) {
         if (expressionType & 1 /* Interpolation */) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
             return result;
         }
         if (state._tokenRaw === 'of') {
@@ -3799,7 +3815,7 @@ function parse(state, access, minPrecedence, expressionType) {
         }
         throw new Error(`AUR0162:${state.ip}`);
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
     return result;
 }
 /**
@@ -4268,9 +4284,9 @@ const AsciiIdParts = new Set();
 decompress(null, AsciiIdParts, codes.AsciiIdPart, true);
 // IdentifierPart lookup
 const IdParts = new Uint8Array(0xFFFF);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-argument
 decompress(IdParts, null, codes.IdStart, 1);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-argument
 decompress(IdParts, null, codes.Digit, 1);
 // Character scanning function lookup
 const CharScanners = new Array(0xFFFF);
@@ -5527,6 +5543,7 @@ function observable(targetOrConfig, key, descriptor) {
         const isClassDecorator = key === void 0;
         config = typeof config !== 'object'
             ? { name: config }
+            // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
             : (config || {});
         if (isClassDecorator) {
             key = config.name;
@@ -5535,6 +5552,7 @@ function observable(targetOrConfig, key, descriptor) {
             throw new Error('AUR0224');
         }
         // determine callback name based on config or convention.
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing, @typescript-eslint/strict-boolean-expressions
         const callback = config.callback || `${String(key)}Changed`;
         let initialValue = noValue;
         if (descriptor) {

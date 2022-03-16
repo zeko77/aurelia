@@ -390,7 +390,7 @@ class Task {
                         taskQueue['returnToPool'](this);
                     }
                 })
-                    .catch(err => {
+                    .catch((err) => {
                     if (!this.persistent) {
                         this.dispose();
                     }
