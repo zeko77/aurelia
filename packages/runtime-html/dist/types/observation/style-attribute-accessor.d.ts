@@ -9,11 +9,7 @@ export declare class StyleAttributeAccessor implements IAccessor {
     constructor(obj: HTMLElement);
     getValue(): string;
     setValue(newValue: unknown, flags: LifecycleFlags): void;
-    private _getStyleTuplesFromString;
-    private _getStyleTuplesFromObject;
-    private _getStyleTuplesFromArray;
-    private _getStyleTuples;
     setProperty(style: string, value: string): void;
-    bind(flags: LifecycleFlags): void;
+    bind(_flags: LifecycleFlags): void;
 }
 //# sourceMappingURL=style-attribute-accessor.d.ts.map

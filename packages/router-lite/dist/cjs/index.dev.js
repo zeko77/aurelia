@@ -1998,7 +1998,6 @@ const AST = Object.freeze({
     ParameterExpression,
 });
 
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 let nodeId = 0;
 class RouteNode {
     constructor(
@@ -3277,7 +3276,6 @@ exports.Router = __decorate([
     __param(4, ILocationManager)
 ], exports.Router);
 
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 const IViewportInstruction = kernel.DI.createInterface('IViewportInstruction');
 class ViewportInstruction {
     constructor(context, append, open, close, component, viewport, params, children) {
@@ -3795,7 +3793,6 @@ class RouteDefinition {
                 }
                 const component = context.container.find(runtimeHtml.CustomElement, typedInstruction.value);
                 if (component === null) {
-                    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                     throw new Error(`Could not find a CustomElement named '${typedInstruction.value}' in the current container scope of ${context}. This means the component is neither registered at Aurelia startup nor via the 'dependencies' decorator or static property.`);
                 }
                 return component;
@@ -3984,7 +3981,6 @@ class ComponentAgent {
     }
 }
 
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 const IRouteContext = kernel.DI.createInterface('IRouteContext');
 const RESIDUE = 'au$residue';
 /**

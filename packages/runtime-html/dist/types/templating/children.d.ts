@@ -7,7 +7,7 @@ export declare type PartialChildrenDefinition = {
     options?: MutationObserverInit;
     query?: (controller: ICustomElementController) => ArrayLike<Node>;
     filter?: (node: Node, controller?: ICustomElementController | null, viewModel?: ICustomElementViewModel) => boolean;
-    map?: (node: Node, controller?: ICustomElementController | null, viewModel?: ICustomElementViewModel) => any;
+    map?: (node: Node, controller?: ICustomElementController | null, viewModel?: ICustomElementViewModel) => unknown;
 };
 /**
  * Decorator: Specifies custom behavior for an array children property that synchronizes its items with child content nodes of the element.
@@ -40,7 +40,7 @@ export declare class ChildrenDefinition {
     readonly options?: MutationObserverInit | undefined;
     readonly query?: ((controller: ICustomElementController) => ArrayLike<Node>) | undefined;
     readonly filter?: ((node: Node, controller?: ICustomElementController<ICustomElementViewModel> | null | undefined, viewModel?: ICustomElementViewModel | undefined) => boolean) | undefined;
-    readonly map?: ((node: Node, controller?: ICustomElementController<ICustomElementViewModel> | null | undefined, viewModel?: ICustomElementViewModel | undefined) => any) | undefined;
+    readonly map?: ((node: Node, controller?: ICustomElementController<ICustomElementViewModel> | null | undefined, viewModel?: ICustomElementViewModel | undefined) => unknown) | undefined;
     private constructor();
     static create(prop: string, def?: PartialChildrenDefinition): ChildrenDefinition;
 }

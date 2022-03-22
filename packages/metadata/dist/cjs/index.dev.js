@@ -2,7 +2,6 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /**
  * Determine whether a value is an object.
  *

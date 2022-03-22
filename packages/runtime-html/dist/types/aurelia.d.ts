@@ -12,7 +12,7 @@ export declare class Aurelia implements IDisposable {
     get root(): IAppRoot;
     private next;
     constructor(container?: IContainer);
-    register(...params: any[]): this;
+    register(...params: unknown[]): this;
     app(config: ISinglePageApp): Omit<this, 'register' | 'app' | 'enhance'>;
     /**
      * @param parentController - The owning controller of the view created by this enhance call

@@ -5,7 +5,7 @@ export interface ISVGAnalyzer extends NoopSVGAnalyzer {
 }
 export declare const ISVGAnalyzer: import("@aurelia/kernel").InterfaceSymbol<ISVGAnalyzer>;
 export declare class NoopSVGAnalyzer {
-    isStandardSvgAttribute(node: INode, attributeName: string): boolean;
+    isStandardSvgAttribute(_node: INode, _attributeName: string): boolean;
 }
 export declare class SVGAnalyzer {
     static register(container: IContainer): IResolver<ISVGAnalyzer>;

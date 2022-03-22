@@ -155,6 +155,6 @@ export declare class RefBindingCommand implements BindingCommandInstance {
 export declare class SpreadBindingCommand implements BindingCommandInstance {
     readonly type: CommandType;
     get name(): string;
-    build(info: ICommandBuildInfo): IInstruction;
+    build(_info: ICommandBuildInfo): IInstruction;
 }
 //# sourceMappingURL=binding-command.d.ts.map

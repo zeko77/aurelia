@@ -27,7 +27,7 @@ export declare class AuCompose {
     /** @internal */ parent: ISyntheticView | ICustomElementController, 
     /** @internal */ host: HTMLElement, 
     /** @internal */ _platform: IPlatform, instruction: HydrateElementInstruction, contextFactory: CompositionContextFactory);
-    attaching(initiator: IHydratedController, parent: IHydratedController, flags: LifecycleFlags): void | Promise<void>;
+    attaching(initiator: IHydratedController, _parent: IHydratedController, _flags: LifecycleFlags): void | Promise<void>;
     detaching(initiator: IHydratedController): void | Promise<void>;
 }
 export interface ICompositionController {

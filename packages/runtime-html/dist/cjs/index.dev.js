@@ -224,7 +224,6 @@ const Coercer = {
 };
 function getInterceptor(prop, target, def = {}) {
     var _a, _b, _c;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const type = (_b = (_a = def.type) !== null && _a !== void 0 ? _a : Reflect.getMetadata('design:type', target, prop)) !== null && _b !== void 0 ? _b : null;
     if (type == null) {
         return kernel.noop;
@@ -410,7 +409,7 @@ class CharSpec {
     _hasOfSingle(char) {
         return this.chars === char;
     }
-    _hasOfNone(char) {
+    _hasOfNone(_char) {
         return false;
     }
     _hasOfMultipleInverse(char) {
@@ -419,7 +418,7 @@ class CharSpec {
     _hasOfSingleInverse(char) {
         return this.chars !== char;
     }
-    _hasOfNoneInverse(char) {
+    _hasOfNoneInverse(_char) {
         return true;
     }
 }
@@ -807,7 +806,7 @@ exports.DotSeparatedAttributePattern = __decorate([
     attributePattern({ pattern: 'PART.PART', symbols: '.' }, { pattern: 'PART.PART.PART', symbols: '.' })
 ], exports.DotSeparatedAttributePattern);
 exports.RefAttributePattern = class RefAttributePattern {
-    'ref'(rawName, rawValue, parts) {
+    'ref'(rawName, rawValue, _parts) {
         return new AttrSyntax(rawName, rawValue, 'element', 'ref');
     }
     'PART.ref'(rawName, rawValue, parts) {
@@ -834,7 +833,7 @@ exports.AtPrefixedTriggerAttributePattern = __decorate([
     attributePattern({ pattern: '@PART', symbols: '@' })
 ], exports.AtPrefixedTriggerAttributePattern);
 let SpreadAttributePattern = class SpreadAttributePattern {
-    '...$attrs'(rawName, rawValue, parts) {
+    '...$attrs'(rawName, rawValue, _parts) {
         return new AttrSyntax(rawName, rawValue, '', '...$attrs');
     }
 };
@@ -846,7 +845,7 @@ const IPlatform = kernel.IPlatform;
 
 const ISVGAnalyzer = kernel.DI.createInterface('ISVGAnalyzer', x => x.singleton(NoopSVGAnalyzer));
 class NoopSVGAnalyzer {
-    isStandardSvgAttribute(node, attributeName) {
+    isStandardSvgAttribute(_node, _attributeName) {
         return false;
     }
 }
@@ -2150,10 +2149,10 @@ class RefBinding {
         this.$scope = void 0;
         this.isBound = false;
     }
-    observe(obj, propertyName) {
+    observe(_obj, _propertyName) {
         return;
     }
-    handleChange(newValue, previousValue, flags) {
+    handleChange(_newValue, _previousValue, _flags) {
         return;
     }
 }
@@ -2298,12 +2297,12 @@ class ChildrenDefinition {
     }
 }
 /**
- * @internal
- *
  * A special observer for observing the children of a custom element. Unlike other observer that starts/stops
  * based on the changes in the subscriber addition/removal, this is a controlled observers.
  *
  * The controller of a custom element should totally control when this observer starts/stops.
+ *
+ * @internal
  */
 class ChildrenObserver {
     constructor(controller, obj, propertyKey, cbName, query = defaultChildQuery, filter = defaultChildFilter, map = defaultChildMap, options) {
@@ -2328,7 +2327,7 @@ class ChildrenObserver {
     getValue() {
         return this.observing ? this.children : this.get();
     }
-    setValue(value) { }
+    setValue(_value) { }
     start() {
         var _a;
         if (!this.observing) {
@@ -2362,15 +2361,19 @@ runtime.subscriberCollection()(ChildrenObserver);
 function defaultChildQuery(controller) {
     return controller.host.childNodes;
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function defaultChildFilter(node, controller, viewModel) {
     return !!viewModel;
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function defaultChildMap(node, controller, viewModel) {
     return viewModel;
 }
 const forOpts = { optional: true };
 /** @internal */
-function filterChildren(controller, query, filter, map) {
+function filterChildren(controller, query, filter, map
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+) {
     var _a;
     const nodes = query(controller);
     const ii = nodes.length;
@@ -2726,12 +2729,13 @@ const CustomElement = Object.freeze({
     getAnnotation: getElementAnnotation,
     generateName: generateElementName,
     createInjectable() {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const $injectable = function (target, property, index) {
             const annotationParamtypes = kernel.DI.getOrCreateAnnotationParamTypes(target);
             annotationParamtypes[index] = $injectable;
             return target;
         };
-        $injectable.register = function (container) {
+        $injectable.register = function (_container) {
             // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             return {
                 resolve(container, requestor) {
@@ -2849,7 +2853,7 @@ class ClassAttributeAccessor {
             // Remove classes from previous version.
             version -= 1;
             for (const name in nameIndex) {
-                if (!Object.prototype.hasOwnProperty.call(nameIndex, name) || nameIndex[name] !== version) {
+                if (!hasOwnProperty.call(nameIndex, name) || nameIndex[name] !== version) {
                     continue;
                 }
                 // TODO: this has the side-effect that classes already present which are added again,
@@ -2901,6 +2905,7 @@ function getClassesToAdd(object) {
     let property;
     for (property in object) {
         // Let non typical values also evaluate true so disable bool check
+        // eslint-disable-next-line no-extra-boolean-cast
         if (Boolean(object[property])) {
             // We must do this in case object property has a space in the name which results in two classes
             if (property.includes(' ')) {
@@ -3006,6 +3011,7 @@ class AdoptedStyleSheetsStyles {
                 sheet = styleSheetCache.get(x);
                 if (sheet === void 0) {
                     sheet = new p.CSSStyleSheet();
+                    // eslint-disable-next-line
                     sheet.replaceSync(x);
                     styleSheetCache.set(x, sheet);
                 }
@@ -3189,7 +3195,6 @@ class LifecycleHooksDefinition {
      */
     static create(def, Type) {
         const propertyNames = new Set();
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         let proto = Type.prototype;
         while (proto !== Object.prototype) {
             for (const name of Object.getOwnPropertyNames(proto)) {
@@ -3198,7 +3203,6 @@ class LifecycleHooksDefinition {
                     propertyNames.add(name);
                 }
             }
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             proto = Object.getPrototypeOf(proto);
         }
         return new LifecycleHooksDefinition(Type, propertyNames);
@@ -3207,6 +3211,7 @@ class LifecycleHooksDefinition {
         kernel.Registration.singleton(ILifecycleHooks, this.Type).register(container);
     }
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const containerLookup = new WeakMap();
 const lhBaseName = getAnnotationKeyFor('lifecycle-hooks');
 const LifecycleHooks = Object.freeze({
@@ -3295,7 +3300,7 @@ class ViewFactory {
         }
         this.isCaching = this.cacheSize > 0;
     }
-    canReturnToCache(controller) {
+    canReturnToCache(_controller) {
         return this.cache != null && this.cache.length < this.cacheSize;
     }
     tryReturnToCache(controller) {
@@ -3782,7 +3787,7 @@ class Controller {
      * @param ctn - own container associated with the custom attribute object
      * @param viewModel - the view model object
      * @param host - host element where this custom attribute is used
-     * @param flags
+     * @param flags - todo(comment)
      * @param definition - the definition of the custom attribute,
      * will be used to override the definition associated with the view model object contructor if given
      */
@@ -3810,8 +3815,8 @@ class Controller {
     /**
      * Create a synthetic view (controller) for a given factory
      *
-     * @param viewFactory
-     * @param flags
+     * @param viewFactory - todo(comment)
+     * @param flags - todo(comment)
      * @param parentController - the parent controller to connect the created view with. Used in activation
      *
      * Semi private API
@@ -4521,7 +4526,7 @@ function createChildrenObservers(controller, definition, instance) {
         let childrenDescription;
         for (; i < length; ++i) {
             name = childObserverNames[i];
-            if (observers[name] == void 0) {
+            if (observers[name] == null) {
                 childrenDescription = childrenObservers[name];
                 obs[obs.length] = observers[name] = new ChildrenObserver(controller, instance, name, childrenDescription.callback, childrenDescription.query, childrenDescription.filter, childrenDescription.map, childrenDescription.options);
             }
@@ -6080,7 +6085,7 @@ let SpreadRenderer = class SpreadRenderer {
         this._rendering = _rendering;
     }
     /** @internal */ static get inject() { return [ITemplateCompiler, IRendering]; }
-    render(renderingCtrl, target, instruction) {
+    render(renderingCtrl, target, _instruction) {
         const container = renderingCtrl.container;
         const hydrationContext = container.get(IHydrationContext);
         const renderers = this._rendering.renderers;
@@ -6142,7 +6147,7 @@ class SpreadBinding {
     get isStrictBinding() {
         return this.ctrl.isStrictBinding;
     }
-    $bind(flags, scope) {
+    $bind(flags, _scope) {
         var _a;
         if (this.isBound) {
             return;
@@ -6637,7 +6642,7 @@ let SpreadBindingCommand = class SpreadBindingCommand {
         this.type = 1 /* IgnoreAttr */;
     }
     get name() { return '...$attrs'; }
-    build(info) {
+    build(_info) {
         return new SpreadBindingInstruction();
     }
 };
@@ -8548,7 +8553,7 @@ class DataAttributeAccessor {
         return obj.getAttribute(key);
     }
     setValue(newValue, f, obj, key) {
-        if (newValue == void 0) {
+        if (newValue == null) {
             obj.removeAttribute(key);
         }
         else {
@@ -8559,10 +8564,10 @@ class DataAttributeAccessor {
 const attrAccessor = new DataAttributeAccessor();
 
 class AttrBindingBehavior {
-    bind(flags, _scope, binding) {
+    bind(_flags, _scope, binding) {
         binding.targetObserver = attrAccessor;
     }
-    unbind(flags, _scope, binding) {
+    unbind(_flags, _scope, _binding) {
         return;
     }
 }
@@ -8615,7 +8620,7 @@ class AttributeNSAccessor {
         return obj.getAttributeNS(this.ns, propertyKey);
     }
     setValue(newValue, f, obj, key) {
-        if (newValue == void 0) {
+        if (newValue == null) {
             obj.removeAttributeNS(this.ns, key);
         }
         else {
@@ -8661,10 +8666,10 @@ class CheckedObserver {
         this._synchronizeElement();
         this.queue.add(this);
     }
-    handleCollectionChange(indexMap, flags) {
+    handleCollectionChange(_indexMap, _flags) {
         this._synchronizeElement();
     }
-    handleChange(newValue, previousValue, flags) {
+    handleChange(_newValue, _previousValue, _flags) {
         this._synchronizeElement();
     }
     /** @internal */
@@ -8859,7 +8864,6 @@ runtime.withFlushQueue(CheckedObserver);
 // so that there doesn't need to create an env record for every call
 let oV$2 = void 0;
 
-const hasOwn = Object.prototype.hasOwnProperty;
 const childObserverOptions = {
     childList: true,
     subtree: true,
@@ -8932,7 +8936,7 @@ class SelectValueObserver {
         let i = options.length;
         while (i-- > 0) {
             const option = options[i];
-            const optionValue = hasOwn.call(option, 'model') ? option.model : option.value;
+            const optionValue = hasOwnProperty.call(option, 'model') ? option.model : option.value;
             if (isArray) {
                 option.selected = value.findIndex(item => !!matcher(optionValue, item)) !== -1;
                 continue;
@@ -8970,13 +8974,14 @@ class SelectValueObserver {
             // A.1.b
             // multi select
             let option;
+            // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
             const matcher = obj.matcher || defaultMatcher;
             // A.1.b.i
             const values = [];
             while (i < len) {
                 option = options[i];
                 if (option.selected) {
-                    values.push(hasOwn.call(option, 'model')
+                    values.push(hasOwnProperty.call(option, 'model')
                         ? option.model
                         : option.value);
                 }
@@ -9015,7 +9020,7 @@ class SelectValueObserver {
         while (i < len) {
             option = options[i];
             if (option.selected) {
-                value = hasOwn.call(option, 'model')
+                value = hasOwnProperty.call(option, 'model')
                     ? option.model
                     : option.value;
                 break;
@@ -9067,7 +9072,7 @@ class SelectValueObserver {
         }
     }
     /** @internal */
-    _handleNodeChange(records) {
+    _handleNodeChange(_records) {
         // syncing options first means forcing the UI to take the existing state from the model
         // example: if existing state has only 3 selected option
         //          and it's adding a 4th <option/> with selected state
@@ -9113,7 +9118,7 @@ function getSelectedOptions(options) {
     while (ii > i) {
         option = options[i];
         if (option.selected) {
-            selection[selection.length] = hasOwn.call(option, 'model') ? option.model : option.value;
+            selection[selection.length] = hasOwnProperty.call(option, 'model') ? option.model : option.value;
         }
         ++i;
     }
@@ -9146,6 +9151,7 @@ class StyleAttributeAccessor {
             this._flushChanges();
         }
     }
+    /** @internal */
     _getStyleTuplesFromString(currentValue) {
         const styleTuples = [];
         const urlRegexTester = /url\([^)]+$/;
@@ -9175,6 +9181,7 @@ class StyleAttributeAccessor {
         }
         return styleTuples;
     }
+    /** @internal */
     _getStyleTuplesFromObject(currentValue) {
         let value;
         let property;
@@ -9197,6 +9204,7 @@ class StyleAttributeAccessor {
         }
         return styles;
     }
+    /** @internal */
     _getStyleTuplesFromArray(currentValue) {
         const len = currentValue.length;
         if (len > 0) {
@@ -9209,6 +9217,7 @@ class StyleAttributeAccessor {
         }
         return kernel.emptyArray;
     }
+    /** @internal */
     _getStyleTuples(currentValue) {
         if (isString(currentValue)) {
             return this._getStyleTuplesFromString(currentValue);
@@ -9250,7 +9259,7 @@ class StyleAttributeAccessor {
             }
             version -= 1;
             for (style in styles) {
-                if (!Object.prototype.hasOwnProperty.call(styles, style) || styles[style] !== version) {
+                if (!hasOwnProperty.call(styles, style) || styles[style] !== version) {
                     continue;
                 }
                 this.obj.style.removeProperty(style);
@@ -9265,7 +9274,7 @@ class StyleAttributeAccessor {
         }
         this.obj.style.setProperty(style, value, priority);
     }
-    bind(flags) {
+    bind(_flags) {
         this.value = this._oldValue = this.obj.style.cssText;
     }
 }
@@ -9346,6 +9355,10 @@ runtime.withFlushQueue(ValueAttributeObserver);
 // so that there doesn't need to create an env record for every call
 let oV = void 0;
 
+// https://infra.spec.whatwg.org/#namespaces
+// const htmlNS = 'http://www.w3.org/1999/xhtml';
+// const mathmlNS = 'http://www.w3.org/1998/Math/MathML';
+// const svgNS = 'http://www.w3.org/2000/svg';
 const xlinkNS = 'http://www.w3.org/1999/xlink';
 const xmlNS = 'http://www.w3.org/XML/1998/namespace';
 const xmlnsNS = 'http://www.w3.org/2000/xmlns/';
@@ -9496,8 +9509,8 @@ class NodeObserverLocator {
             // but for now stick to what vCurrent does
             case 'src':
             case 'href':
-            // https://html.spec.whatwg.org/multipage/dom.html#wai-aria
             case 'role':
+                // https://html.spec.whatwg.org/multipage/dom.html#wai-aria
                 return attrAccessor;
             default: {
                 const nsProps = nsAttributes[key];
@@ -10588,7 +10601,7 @@ class With {
         this.id = kernel.nextId('au$component');
         this.view = factory.create().setLocation(location);
     }
-    valueChanged(newValue, oldValue, flags) {
+    valueChanged(newValue, _oldValue, _flags) {
         const $controller = this.$controller;
         const bindings = this.view.bindings;
         let scope;
@@ -10902,7 +10915,6 @@ __decorate([
             switch (v) {
                 case 'true': return true;
                 case 'false': return false;
-                // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
                 default: return !!v;
             }
         },
@@ -11405,7 +11417,7 @@ class AuRender {
         return void 0;
     }
     /** @internal */
-    _provideViewFor(comp, flags) {
+    _provideViewFor(comp, _flags) {
         if (!comp) {
             return void 0;
         }
@@ -11493,7 +11505,7 @@ class AuCompose {
     get composition() {
         return this._composition;
     }
-    attaching(initiator, parent, flags) {
+    attaching(initiator, _parent, _flags) {
         return this._pending = kernel.onResolve(this.queue(new ChangeInfo(this.view, this.viewModel, this.model, void 0), initiator), (context) => {
             if (this._contextFactory.isCurrent(context)) {
                 this._pending = void 0;

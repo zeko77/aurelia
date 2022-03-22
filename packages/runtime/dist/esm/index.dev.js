@@ -64,7 +64,7 @@ class BindingContext {
             else {
                 // can either be some random object or another bindingContext to clone from
                 for (const prop in keyOrObj) {
-                    if (Object.prototype.hasOwnProperty.call(keyOrObj, prop)) {
+                    if (hasOwnProp.call(keyOrObj, prop)) {
                         this[prop] = keyOrObj[prop];
                     }
                 }
@@ -428,7 +428,6 @@ const ValueConverter = Object.freeze({
         return definition.Type;
     },
     getDefinition(Type) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const def = getOwnMetadata(vcBaseName, Type);
         if (def === void 0) {
             throw new Error(`AUR0152:${Type.name}`);
@@ -442,7 +441,6 @@ const ValueConverter = Object.freeze({
     getAnnotation: getConverterAnnotation,
 });
 
-/* eslint-disable eqeqeq */
 var ExpressionKind;
 (function (ExpressionKind) {
     ExpressionKind[ExpressionKind["CallsFunction"] = 128] = "CallsFunction";
@@ -684,7 +682,7 @@ class Unparser {
     visitBindingIdentifier(expr) {
         this.text += expr.name;
     }
-    visitHtmlLiteral(expr) { throw new Error('visitHtmlLiteral'); }
+    visitHtmlLiteral(_expr) { throw new Error('visitHtmlLiteral'); }
     visitForOfStatement(expr) {
         expr.declaration.accept(this);
         this.text += ' of ';
@@ -910,6 +908,7 @@ class ConditionalExpression {
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         return this.condition.evaluate(f, s, l, c) ? this.yes.evaluate(f, s, l, c) : this.no.evaluate(f, s, l, c);
     }
     assign(_f, _s, _l, _obj) {
@@ -1020,6 +1019,7 @@ class AccessMemberExpression {
         if (c !== null && instance instanceof Object) {
             c.observe(instance, this.name);
         }
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         return instance ? instance[this.name] : '';
     }
     assign(f, s, l, val) {
@@ -1180,10 +1180,12 @@ class BinaryExpression {
                 // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
                 return this.left.evaluate(f, s, l, c) || this.right.evaluate(f, s, l, c);
             case '==':
+                // eslint-disable-next-line eqeqeq
                 return this.left.evaluate(f, s, l, c) == this.right.evaluate(f, s, l, c);
             case '===':
                 return this.left.evaluate(f, s, l, c) === this.right.evaluate(f, s, l, c);
             case '!=':
+                // eslint-disable-next-line eqeqeq
                 return this.left.evaluate(f, s, l, c) != this.right.evaluate(f, s, l, c);
             case '!==':
                 return this.left.evaluate(f, s, l, c) !== this.right.evaluate(f, s, l, c);
@@ -2505,7 +2507,6 @@ const observe$3 = {
             while (i < itemCount) {
                 inserts[i++] = -2;
             }
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             $splice.call(indexMap, start, deleteCount, ...inserts);
         }
         else {
@@ -4284,9 +4285,9 @@ const AsciiIdParts = new Set();
 decompress(null, AsciiIdParts, codes.AsciiIdPart, true);
 // IdentifierPart lookup
 const IdParts = new Uint8Array(0xFFFF);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-argument
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 decompress(IdParts, null, codes.IdStart, 1);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-argument
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 decompress(IdParts, null, codes.Digit, 1);
 // Character scanning function lookup
 const CharScanners = new Array(0xFFFF);
@@ -4676,7 +4677,7 @@ function wrappedArrayUnshift(...args) {
 function wrappedArraySplice(...args) {
     return wrap(getRaw(this).splice(...args));
 }
-function wrappedArrayReverse(...args) {
+function wrappedArrayReverse(..._args) {
     var _a;
     const raw = getRaw(this);
     const res = raw.reverse();

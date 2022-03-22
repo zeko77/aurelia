@@ -21,8 +21,8 @@ export declare class CheckedObserver implements IObserver, IFlushable, IWithFlus
     constructor(obj: INode, _key: PropertyKey, handler: EventSubscriber, observerLocator: IObserverLocator);
     getValue(): unknown;
     setValue(newValue: unknown, flags: LifecycleFlags): void;
-    handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void;
-    handleChange(newValue: unknown, previousValue: unknown, flags: LifecycleFlags): void;
+    handleCollectionChange(_indexMap: IndexMap, _flags: LifecycleFlags): void;
+    handleChange(_newValue: unknown, _previousValue: unknown, _flags: LifecycleFlags): void;
     handleEvent(): void;
     start(): void;
     stop(): void;

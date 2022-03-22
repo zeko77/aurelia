@@ -389,7 +389,6 @@ const getPrototypeChain = (function () {
         if (chain === void 0) {
             cache.set(Type, chain = [proto = Type]);
             i = 0;
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             while ((proto = getPrototypeOf(proto)) !== functionPrototype) {
                 chain[++i] = proto;
             }
@@ -546,11 +545,9 @@ const resource = Object.freeze({
     getAll(target) {
         const keys = getOwnMetadata(resBaseName, target);
         if (keys === void 0) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return emptyArray;
         }
         else {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return keys.map(k => getOwnMetadata(k, target));
         }
     },
@@ -1866,10 +1863,8 @@ function createNativeInvocationError(Type) {
     return new Error(`AUR0015:${Type.name}`);
 }
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 const emptyArray = Object.freeze([]);
 const emptyObject = Object.freeze({});
-/* eslint-enable @typescript-eslint/no-unsafe-assignment */
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 function noop() { }
 const IPlatform = DI.createInterface('IPlatform');
@@ -2441,7 +2436,6 @@ class ModuleItem {
     }
 }
 
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 /**
  * Represents a handler for an EventAggregator event.
  */
