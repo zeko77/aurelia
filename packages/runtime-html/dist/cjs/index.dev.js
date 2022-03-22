@@ -10821,14 +10821,18 @@ exports.Switch = __decorate([
     __param(1, IRenderLocation)
 ], exports.Switch);
 exports.Case = class Case {
-    constructor(factory, 
-    /** @internal */ _locator, location, logger) {
+    constructor(
+    /** @internal */ _factory, 
+    /** @internal */ _locator, 
+    /** @internal */ _location, logger) {
+        this._factory = _factory;
         this._locator = _locator;
+        this._location = _location;
         this.id = kernel.nextId('au$component');
         this.fallThrough = false;
+        this.view = void 0;
         this._debug = logger.config.level <= 1 /* debug */;
         this._logger = logger.scopeTo(`${this.constructor.name}-#${this.id}`);
-        this.view = factory.create().setLocation(location);
     }
     link(controller, _childController, _target, _instruction) {
         const switchController = controller.parent;
@@ -10870,7 +10874,10 @@ exports.Case = class Case {
         this.$switch.caseChanged(this, flags);
     }
     activate(initiator, flags, scope) {
-        const view = this.view;
+        let view = this.view;
+        if (view === void 0) {
+            view = this.view = this._factory.create().setLocation(this._location);
+        }
         if (view.isActive) {
             return;
         }
@@ -10878,7 +10885,7 @@ exports.Case = class Case {
     }
     deactivate(initiator, flags) {
         const view = this.view;
-        if (!view.isActive) {
+        if (view === void 0 || !view.isActive) {
             return;
         }
         return view.deactivate(initiator !== null && initiator !== void 0 ? initiator : view, this.$controller, flags);
@@ -11051,16 +11058,22 @@ exports.PromiseTemplateController = __decorate([
     __param(3, kernel.ILogger)
 ], exports.PromiseTemplateController);
 exports.PendingTemplateController = class PendingTemplateController {
-    constructor(factory, location) {
-        this.factory = factory;
+    constructor(
+    /** @internal */ _factory, 
+    /** @internal */ _location) {
+        this._factory = _factory;
+        this._location = _location;
         this.id = kernel.nextId('au$component');
-        this.view = this.factory.create().setLocation(location);
+        this.view = void 0;
     }
     link(controller, _childController, _target, _instruction) {
         getPromiseController(controller).pending = this;
     }
     activate(initiator, flags, scope) {
-        const view = this.view;
+        let view = this.view;
+        if (view === void 0) {
+            view = this.view = this._factory.create().setLocation(this._location);
+        }
         if (view.isActive) {
             return;
         }
@@ -11068,7 +11081,7 @@ exports.PendingTemplateController = class PendingTemplateController {
     }
     deactivate(initiator, flags) {
         const view = this.view;
-        if (!view.isActive) {
+        if (view === void 0 || !view.isActive) {
             return;
         }
         return view.deactivate(view, this.$controller, flags);
@@ -11091,17 +11104,23 @@ exports.PendingTemplateController = __decorate([
     __param(1, IRenderLocation)
 ], exports.PendingTemplateController);
 exports.FulfilledTemplateController = class FulfilledTemplateController {
-    constructor(factory, location) {
-        this.factory = factory;
+    constructor(
+    /** @internal */ _factory, 
+    /** @internal */ _location) {
+        this._factory = _factory;
+        this._location = _location;
         this.id = kernel.nextId('au$component');
-        this.view = this.factory.create().setLocation(location);
+        this.view = void 0;
     }
     link(controller, _childController, _target, _instruction) {
         getPromiseController(controller).fulfilled = this;
     }
     activate(initiator, flags, scope, resolvedValue) {
         this.value = resolvedValue;
-        const view = this.view;
+        let view = this.view;
+        if (view === void 0) {
+            view = this.view = this._factory.create().setLocation(this._location);
+        }
         if (view.isActive) {
             return;
         }
@@ -11109,7 +11128,7 @@ exports.FulfilledTemplateController = class FulfilledTemplateController {
     }
     deactivate(initiator, flags) {
         const view = this.view;
-        if (!view.isActive) {
+        if (view === void 0 || !view.isActive) {
             return;
         }
         return view.deactivate(view, this.$controller, flags);
@@ -11132,17 +11151,21 @@ exports.FulfilledTemplateController = __decorate([
     __param(1, IRenderLocation)
 ], exports.FulfilledTemplateController);
 exports.RejectedTemplateController = class RejectedTemplateController {
-    constructor(factory, location) {
-        this.factory = factory;
+    constructor(_factory, _location) {
+        this._factory = _factory;
+        this._location = _location;
         this.id = kernel.nextId('au$component');
-        this.view = this.factory.create().setLocation(location);
+        this.view = void 0;
     }
     link(controller, _childController, _target, _instruction) {
         getPromiseController(controller).rejected = this;
     }
     activate(initiator, flags, scope, error) {
         this.value = error;
-        const view = this.view;
+        let view = this.view;
+        if (view === void 0) {
+            view = this.view = this._factory.create().setLocation(this._location);
+        }
         if (view.isActive) {
             return;
         }
@@ -11150,7 +11173,7 @@ exports.RejectedTemplateController = class RejectedTemplateController {
     }
     deactivate(initiator, flags) {
         const view = this.view;
-        if (!view.isActive) {
+        if (view === void 0 || !view.isActive) {
             return;
         }
         return view.deactivate(view, this.$controller, flags);

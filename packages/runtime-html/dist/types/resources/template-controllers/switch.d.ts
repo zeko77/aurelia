@@ -34,10 +34,12 @@ export declare class Case implements ICustomAttributeViewModel {
     readonly $controller: ICustomAttributeController<this>;
     value: unknown;
     fallThrough: boolean;
-    view: ISyntheticView;
+    view: ISyntheticView | undefined;
     private $switch;
-    constructor(factory: IViewFactory, 
-    /** @internal */ _locator: IObserverLocator, location: IRenderLocation, logger: ILogger);
+    constructor(
+    /** @internal */ _factory: IViewFactory, 
+    /** @internal */ _locator: IObserverLocator, 
+    /** @internal */ _location: IRenderLocation, logger: ILogger);
     link(controller: IHydratableController, _childController: ICustomAttributeController, _target: INode, _instruction: IInstruction): void;
     detaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void>;
     isMatch(value: unknown, flags: LifecycleFlags): boolean;

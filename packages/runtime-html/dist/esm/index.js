@@ -8185,12 +8185,14 @@ Er = lt([ $e("switch"), ht(0, Si), ht(1, ls) ], Er);
 
 let Br = class Case {
     constructor(t, e, i, s) {
+        this.f = t;
         this.Ii = e;
+        this.l = i;
         this.id = w("au$component");
         this.fallThrough = false;
+        this.view = void 0;
         this.Ti = s.config.level <= 1;
         this.Ft = s.scopeTo(`${this.constructor.name}-#${this.id}`);
-        this.view = t.create().setLocation(i);
     }
     link(t, e, i, s) {
         const n = t.parent;
@@ -8224,13 +8226,14 @@ let Br = class Case {
         this.$switch.caseChanged(this, e);
     }
     activate(t, e, i) {
-        const s = this.view;
+        let s = this.view;
+        if (void 0 === s) s = this.view = this.f.create().setLocation(this.l);
         if (s.isActive) return;
         return s.activate(null !== t && void 0 !== t ? t : s, this.$controller, e, i);
     }
     deactivate(t, e) {
         const i = this.view;
-        if (!i.isActive) return;
+        if (void 0 === i || !i.isActive) return;
         return i.deactivate(null !== t && void 0 !== t ? t : i, this.$controller, e);
     }
     dispose() {
@@ -8371,21 +8374,23 @@ Tr = lt([ $e("promise"), ht(0, Si), ht(1, ls), ht(2, Yt), ht(3, k) ], Tr);
 
 let Dr = class PendingTemplateController {
     constructor(t, e) {
-        this.factory = t;
+        this.f = t;
+        this.l = e;
         this.id = w("au$component");
-        this.view = this.factory.create().setLocation(e);
+        this.view = void 0;
     }
     link(t, e, i, s) {
         $r(t).pending = this;
     }
     activate(t, e, i) {
-        const s = this.view;
+        let s = this.view;
+        if (void 0 === s) s = this.view = this.f.create().setLocation(this.l);
         if (s.isActive) return;
         return s.activate(s, this.$controller, e, i);
     }
     deactivate(t, e) {
         const i = this.view;
-        if (!i.isActive) return;
+        if (void 0 === i || !i.isActive) return;
         return i.deactivate(i, this.$controller, e);
     }
     detaching(t, e, i) {
@@ -8406,22 +8411,24 @@ Dr = lt([ $e("pending"), ht(0, Si), ht(1, ls) ], Dr);
 
 let Pr = class FulfilledTemplateController {
     constructor(t, e) {
-        this.factory = t;
+        this.f = t;
+        this.l = e;
         this.id = w("au$component");
-        this.view = this.factory.create().setLocation(e);
+        this.view = void 0;
     }
     link(t, e, i, s) {
         $r(t).fulfilled = this;
     }
     activate(t, e, i, s) {
         this.value = s;
-        const n = this.view;
+        let n = this.view;
+        if (void 0 === n) n = this.view = this.f.create().setLocation(this.l);
         if (n.isActive) return;
         return n.activate(n, this.$controller, e, i);
     }
     deactivate(t, e) {
         const i = this.view;
-        if (!i.isActive) return;
+        if (void 0 === i || !i.isActive) return;
         return i.deactivate(i, this.$controller, e);
     }
     detaching(t, e, i) {
@@ -8442,22 +8449,24 @@ Pr = lt([ $e("then"), ht(0, Si), ht(1, ls) ], Pr);
 
 let Or = class RejectedTemplateController {
     constructor(t, e) {
-        this.factory = t;
+        this.f = t;
+        this.l = e;
         this.id = w("au$component");
-        this.view = this.factory.create().setLocation(e);
+        this.view = void 0;
     }
     link(t, e, i, s) {
         $r(t).rejected = this;
     }
     activate(t, e, i, s) {
         this.value = s;
-        const n = this.view;
+        let n = this.view;
+        if (void 0 === n) n = this.view = this.f.create().setLocation(this.l);
         if (n.isActive) return;
         return n.activate(n, this.$controller, e, i);
     }
     deactivate(t, e) {
         const i = this.view;
-        if (!i.isActive) return;
+        if (void 0 === i || !i.isActive) return;
         return i.deactivate(i, this.$controller, e);
     }
     detaching(t, e, i) {
