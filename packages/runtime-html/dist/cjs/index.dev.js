@@ -7949,6 +7949,7 @@ class TemplateCompiler {
     }
     /** @internal */
     _compileLocalElement(template, context) {
+        var _a, _b;
         const root = template;
         const localTemplates = kernel.toArray(root.querySelectorAll('template[as-custom-element]'));
         const numLocalTemplates = localTemplates.length;
@@ -7959,6 +7960,7 @@ class TemplateCompiler {
             throw new Error('AUR0708');
         }
         const localTemplateNames = new Set();
+        const localElTypes = [];
         for (const localTemplate of localTemplates) {
             if (localTemplate.parentNode !== root) {
                 throw new Error('AUR0709');
@@ -8000,8 +8002,24 @@ class TemplateCompiler {
                 if (ignoredAttributes.length > 0) ;
                 content.removeChild(bindableEl);
             }
+            localElTypes.push(LocalTemplateType);
             context._addDep(CustomElement.define({ name, template: localTemplate }, LocalTemplateType));
             root.removeChild(localTemplate);
+        }
+        // if we have a template like this
+        //
+        // my-app.html
+        // <template as-custom-element="le-1">
+        //  <le-2></le-2>
+        // </template>
+        // <template as-custom-element="le-2">...</template>
+        //
+        // eagerly registering depdendencies inside the loop above
+        // will make `<le-1/>` miss `<le-2/>` as its dependency
+        let i = 0;
+        const ii = localElTypes.length;
+        for (; ii > i; ++i) {
+            CustomElement.getDefinition(localElTypes[i]).dependencies.push(...(_a = context.def.dependencies) !== null && _a !== void 0 ? _a : kernel.emptyArray, ...(_b = context.deps) !== null && _b !== void 0 ? _b : kernel.emptyArray);
         }
     }
     /** @internal */
