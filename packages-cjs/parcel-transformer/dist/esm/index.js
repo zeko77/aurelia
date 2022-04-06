@@ -1,7 +1,7 @@
 import { Transformer } from '@parcel/plugin';
 import SourceMap from '@parcel/source-map';
-import { preprocess } from '@aurelia/plugin-conventions';
-import { relative } from 'path';
+import { preprocessOptions, preprocess } from '@aurelia/plugin-conventions';
+import { extname, relative } from 'path';
 
 var index = new Transformer({
     async loadConfig({ config }) {
@@ -17,11 +17,17 @@ var index = new Transformer({
         // parcel conventions puts app's index.html inside src/ folder.
         if (asset.filePath.endsWith('src/index.html'))
             return [asset];
+        const auOptions = preprocessOptions(config);
+        // after html template is compiled to js, parcel will apply full js transformers chain,
+        // we need to skip them here, then parcel will apply the rest standard js chain.
+        if (asset.type === 'js' && auOptions.templateExtensions.includes(extname(asset.filePath))) {
+            return [asset];
+        }
         const source = await asset.getCode();
         const result = preprocess({
             path: relative(options.projectRoot, asset.filePath.slice()),
             contents: source
-        }, config);
+        }, auOptions);
         if (!result) {
             return [asset];
         }
@@ -29,7 +35,7 @@ var index = new Transformer({
         const map = new SourceMap();
         map.addVLQMap(result.map);
         asset.setMap(map);
-        if (asset.type === 'html') {
+        if (auOptions.templateExtensions.includes(`.${asset.type}`)) {
             asset.type = 'js';
         }
         // Return the asset
