@@ -1,6 +1,6 @@
 {
-  "name": "@aurelia/plugin-parcel",
-  "version": "2.0.1-dev.202203222320",
+  "name": "@aurelia/parcel-transformer",
+  "version": "2.0.0-alpha.26",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/types/index.d.ts",
@@ -16,7 +16,7 @@
   },
   "keywords": [
     "aurelia",
-    "plugin-parcel"
+    "parcel"
   ],
   "files": [
     "dist",
@@ -39,10 +39,13 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurelia/kernel": "2.0.1-dev.202203222320",
-    "@aurelia/metadata": "2.0.1-dev.202203222320",
-    "@aurelia/platform": "2.0.1-dev.202203222320",
-    "@aurelia/runtime": "2.0.1-dev.202203222320"
+    "@aurelia/kernel": "2.0.0-alpha.26",
+    "@aurelia/metadata": "2.0.0-alpha.26",
+    "@aurelia/platform": "2.0.0-alpha.26",
+    "@aurelia/plugin-conventions": "2.0.0-alpha.26",
+    "@aurelia/runtime": "2.0.0-alpha.26",
+    "@parcel/plugin": "^2.4.1",
+    "@parcel/source-map": "^2.0.2"
   },
   "devDependencies": {
     "@types/node": "^14.11.5",
