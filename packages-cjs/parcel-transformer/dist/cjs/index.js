@@ -25,7 +25,10 @@ var index = new plugin.Transformer({
         // parcel conventions puts app's index.html inside src/ folder.
         if (asset.filePath.endsWith('src/index.html'))
             return [asset];
-        const auOptions = pluginConventions.preprocessOptions(config);
+        const auOptions = pluginConventions.preprocessOptions({
+            ...config,
+            stringModuleWrap: (id) => `bundle-text:${id}`
+        });
         // after html template is compiled to js, parcel will apply full js transformers chain,
         // we need to skip them here, then parcel will apply the rest standard js chain.
         if (asset.type === 'js' && auOptions.templateExtensions.includes(path.extname(asset.filePath))) {
