@@ -14,8 +14,9 @@ var index = new Transformer({
         }
     },
     async transform({ asset, config, options }) {
-        // parcel conventions puts app's index.html inside src/ folder.
-        if (asset.filePath.endsWith('src/index.html'))
+        const source = await asset.getCode();
+        // leave the initial index.html for parcel.
+        if (asset.type === 'html' && (/^\s*<!DOCTYPE/i).exec(source))
             return [asset];
         const auOptions = preprocessOptions({
             ...config,
@@ -26,7 +27,6 @@ var index = new Transformer({
         if (asset.type === 'js' && auOptions.templateExtensions.includes(extname(asset.filePath))) {
             return [asset];
         }
-        const source = await asset.getCode();
         const result = preprocess({
             path: relative(options.projectRoot, asset.filePath.slice()),
             contents: source
