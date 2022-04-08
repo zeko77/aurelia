@@ -77,7 +77,7 @@ class BindingContext {
     static get(scope, name, ancestor, flags) {
         var _a, _b;
         if (scope == null) {
-            throw new Error(`AUR0203:${scope}`);
+            throw new Error(`Scope is ${scope}.`);
         }
         let overrideContext = scope.overrideContext;
         let currentScope = scope;
@@ -171,13 +171,13 @@ class Scope {
     }
     static fromOverride(oc) {
         if (oc == null) {
-            throw new Error(`AUR0204:${oc}`);
+            throw new Error(`OverrideContext is ${oc}`);
         }
         return new Scope(null, oc.bindingContext, oc, false);
     }
     static fromParent(ps, bc) {
         if (ps == null) {
-            throw new Error(`AUR0205:${ps}`);
+            throw new Error(`ParentScope is ${ps}`);
         }
         return new Scope(ps, bc, OverrideContext.create(bc), false);
     }
@@ -370,7 +370,7 @@ const BindingBehavior = Object.freeze({
     getDefinition(Type) {
         const def = getOwnMetadata(bbBaseName, Type);
         if (def === void 0) {
-            throw new Error(`AUR0151:${Type.name}`);
+            throw new Error(`No definition found for type ${Type.name}`);
         }
         return def;
     },
@@ -430,7 +430,7 @@ const ValueConverter = Object.freeze({
     getDefinition(Type) {
         const def = getOwnMetadata(vcBaseName, Type);
         if (def === void 0) {
-            throw new Error(`AUR0152:${Type.name}`);
+            throw new Error(`No definition found for type ${Type.name}`);
         }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return def;
@@ -782,7 +782,7 @@ class BindingBehaviorExpression {
         }
         const behavior = b.locator.get(this.behaviorKey);
         if (behavior == null) {
-            throw new Error(`AUR0101:${this.name}`);
+            throw new Error(`BindingBehavior named '${this.name}' could not be found. Did you forget to register it as a dependency?`);
         }
         if (!(behavior instanceof BindingBehaviorFactory)) {
             if (b[this.behaviorKey] === void 0) {
@@ -790,7 +790,7 @@ class BindingBehaviorExpression {
                 behavior.bind.call(behavior, f, s, b, ...this.args.map(a => a.evaluate(f, s, b.locator, null)));
             }
             else {
-                throw new Error(`AUR0102:${this.name}`);
+                throw new Error(`BindingBehavior named '${this.name}' already applied.`);
             }
         }
     }
@@ -827,7 +827,7 @@ class ValueConverterExpression {
     evaluate(f, s, l, c) {
         const vc = l.get(this.converterKey);
         if (vc == null) {
-            throw new Error(`AUR0103:${this.name}`);
+            throw new Error(`ValueConverter named '${this.name}' could not be found. Did you forget to register it as a dependency?`);
         }
         // note: the cast is expected. To connect, it just needs to be a IConnectable
         // though to work with signal, it needs to have `handleChange`
@@ -850,7 +850,7 @@ class ValueConverterExpression {
     assign(f, s, l, val) {
         const vc = l.get(this.converterKey);
         if (vc == null) {
-            throw new Error(`AUR0104:${this.name}`);
+            throw new Error(`ValueConverter named '${this.name}' could not be found. Did you forget to register it as a dependency?`);
         }
         if ('fromView' in vc) {
             val = vc.fromView(val, ...this.args.map(a => a.evaluate(f, s, l, null)));
@@ -966,7 +966,7 @@ class AccessScopeExpression {
         }
         const evaluatedValue = obj[this.name];
         if (evaluatedValue == null && this.name === '$host') {
-            throw new Error('AUR0105');
+            throw new Error('Unable to find $host context. Did you forget [au-slot] attribute?');
         }
         if (f & 1 /* isStrictBindingStrategy */) {
             return evaluatedValue;
@@ -976,7 +976,7 @@ class AccessScopeExpression {
     assign(f, s, _l, val) {
         var _a;
         if (this.name === '$host') {
-            throw new Error('AUR0106');
+            throw new Error('Invalid assignment. $host is a reserved keyword.');
         }
         const obj = BindingContext.get(s, this.name, this.ancestor, f);
         if (obj instanceof Object) {
@@ -1150,7 +1150,7 @@ class CallFunctionExpression {
         if (!(f & 8 /* mustEvaluate */) && (func == null)) {
             return void 0;
         }
-        throw new Error('AUR0107');
+        throw new Error(`Expression is not a function.`);
     }
     assign(_f, _s, _l, _obj) {
         return void 0;
@@ -1241,7 +1241,7 @@ class BinaryExpression {
             case '>=':
                 return this.left.evaluate(f, s, l, c) >= this.right.evaluate(f, s, l, c);
             default:
-                throw new Error(`AUR0108:${this.operation}`);
+                throw new Error(`Unknown binary operator: '${this.operation}'`);
         }
     }
     assign(_f, _s, _l, _obj) {
@@ -1275,7 +1275,7 @@ class UnaryExpression {
             case '+':
                 return +this.expression.evaluate(f, s, l, c);
             default:
-                throw new Error(`AUR0109:${this.operation}`);
+                throw new Error(`Unknown unary operator: '${this.operation}'`);
         }
     }
     assign(_f, _s, _l, _obj) {
@@ -1429,7 +1429,7 @@ class TaggedTemplateExpression {
         const results = this.expressions.map(e => e.evaluate(f, s, l, c));
         const func = this.func.evaluate(f, s, l, c);
         if (!isFunction(func)) {
-            throw new Error(`AUR0110`);
+            throw new Error(`Left-hand side of tagged template expression is not a function.`);
         }
         return func(this.cooked, ...results);
     }
@@ -1648,7 +1648,7 @@ class DestructuringAssignmentExpression {
                 case 106521 /* ObjectDestructuring */: {
                     if (typeof value !== 'object' || value === null) {
                         {
-                            throw new Error('AUR0112');
+                            throw new Error('Cannot use non-object value for destructuring assignment.');
                         }
                     }
                     let source = item.source.evaluate(f, Scope.create(value), l, null);
@@ -1686,7 +1686,7 @@ class DestructuringAssignmentSingleExpression {
         }
         if (typeof value !== 'object') {
             {
-                throw new Error('AUR0112');
+                throw new Error('Cannot use non-object value for destructuring assignment.');
             }
         }
         let source = this.source.evaluate(f, Scope.create(value), l, null);
@@ -1718,7 +1718,7 @@ class DestructuringAssignmentRestExpression {
         }
         if (typeof value !== 'object') {
             {
-                throw new Error('AUR0112');
+                throw new Error('Cannot use non-object value for destructuring assignment.');
             }
         }
         const indexOrProperties = this.indexOrProperties;
@@ -1726,7 +1726,7 @@ class DestructuringAssignmentRestExpression {
         if (isArrayIndex(indexOrProperties)) {
             if (!Array.isArray(value)) {
                 {
-                    throw new Error('AUR0112');
+                    throw new Error('Cannot use non-array value for array-destructuring assignment.');
                 }
             }
             restValue = value.slice(indexOrProperties);
@@ -1759,7 +1759,7 @@ function getFunction(f, obj, name) {
     if (!(f & 8 /* mustEvaluate */) && func == null) {
         return null;
     }
-    throw new Error(`AUR0111:${name}`);
+    throw new Error(`Expected '${name}' to be a function`);
 }
 function $array(result, func) {
     for (let i = 0, ii = result.length; i < ii; ++i) {
@@ -2198,7 +2198,7 @@ class CollectionSizeObserver {
         return this._obj.size;
     }
     setValue() {
-        throw new Error('AUR02');
+        throw new Error('Map/Set "size" is a readonly property');
     }
     handleCollectionChange(_, flags) {
         const oldValue = this._value;
@@ -3029,7 +3029,7 @@ function observeCollection(collection) {
         obs = getMapObserver(collection);
     }
     else {
-        throw new Error('AUR0210');
+        throw new Error('Unrecognised collection type.');
     }
     this.obs.add(obs);
 }
@@ -3037,10 +3037,10 @@ function subscribeTo(subscribable) {
     this.obs.add(subscribable);
 }
 function noopHandleChange() {
-    throw new Error(`AUR2011:handleChange`);
+    throw new Error('method "handleChange" not implemented');
 }
 function noopHandleCollectionChange() {
-    throw new Error('AUR2012:handleCollectionChange');
+    throw new Error('method "handleCollectionChange" not implemented');
 }
 class BindingObserverRecord {
     constructor(b) {
@@ -3114,10 +3114,10 @@ class BindingMediator {
         this.interceptor = this;
     }
     $bind() {
-        throw new Error('AUR0213:$bind');
+        throw new Error('Method not implemented.');
     }
     $unbind() {
-        throw new Error('AUR0214:$unbind');
+        throw new Error('Method not implemented.');
     }
     handleChange(newValue, previousValue, flags) {
         this.binding[this.key](newValue, previousValue, flags);
@@ -3155,7 +3155,7 @@ class ExpressionParser {
                     if ((expressionType & (4 /* IsFunction */ | 8 /* IsProperty */)) > 0) {
                         return PrimitiveLiteralExpression.$empty;
                     }
-                    throw new Error('AUR0169');
+                    throw new Error('Invalid expression. Empty expression is only valid in event bindings (trigger, delegate, capture etc...)');
                 }
                 found = this._expressionLookup[expression];
                 if (found === void 0) {
@@ -3437,7 +3437,7 @@ function parse(state, access, minPrecedence, expressionType) {
         }
         nextToken(state);
         if (state._currentToken & 1048576 /* ExpressionTerminal */) {
-            throw new Error(`AUR0151:${state.ip}`);
+            throw new Error(`Invalid start of expression: '${state.ip}'`);
         }
     }
     state._assignable = 448 /* Binary */ > minPrecedence;
@@ -3503,10 +3503,10 @@ function parse(state, access, minPrecedence, expressionType) {
                     access++; // ancestor
                     if (consumeOpt(state, 16393 /* Dot */)) {
                         if (state._currentToken === 16393 /* Dot */) {
-                            throw new Error(`AUR0152:${state.ip}`);
+                            throw new Error(`Double dot and spread operators are not supported: '${state.ip}'`);
                         }
                         else if (state._currentToken === 1572864 /* EOF */) {
-                            throw new Error(`AUR0153:${state.ip}`);
+                            throw new Error(`Expected identifier: '${state.ip}'`);
                         }
                     }
                     else if (state._currentToken & 524288 /* AccessScopeTerminal */) {
@@ -3516,7 +3516,7 @@ function parse(state, access, minPrecedence, expressionType) {
                         break primary;
                     }
                     else {
-                        throw new Error(`AUR0154:${state.ip}`);
+                        throw new Error(`Invalid member expression: '${state.ip}'`);
                     }
                 } while (state._currentToken === 3078 /* ParentScope */);
             // falls through
@@ -3579,10 +3579,10 @@ function parse(state, access, minPrecedence, expressionType) {
                 break;
             default:
                 if (state.index >= state.length) {
-                    throw new Error(`AUR0155:${state.ip}`);
+                    throw new Error(`Unexpected end of expression: '${state.ip}'`);
                 }
                 else {
-                    throw new Error(`AUR0156:${state.ip}`);
+                    throw new Error(`Unconsumed token: '${state.ip}'`);
                 }
         }
         if (expressionType & 2 /* IsIterator */) {
@@ -3628,7 +3628,7 @@ function parse(state, access, minPrecedence, expressionType) {
                     state._assignable = true;
                     nextToken(state);
                     if ((state._currentToken & 3072 /* IdentifierName */) === 0) {
-                        throw new Error(`AUR0153:${state.ip}`);
+                        throw new Error(`Expected identifier: '${state.ip}'`);
                     }
                     name = state._tokenValue;
                     nextToken(state);
@@ -3768,7 +3768,7 @@ function parse(state, access, minPrecedence, expressionType) {
      */
     if (consumeOpt(state, 1048616 /* Equals */)) {
         if (!state._assignable) {
-            throw new Error(`AUR0158:${state.ip}`);
+            throw new Error(`Left hand side of expression is not assignable: '${state.ip}'`);
         }
         result = new AssignExpression(result, parse(state, access, 62 /* Assign */, expressionType));
     }
@@ -3781,7 +3781,7 @@ function parse(state, access, minPrecedence, expressionType) {
      */
     while (consumeOpt(state, 1572884 /* Bar */)) {
         if (state._currentToken === 1572864 /* EOF */) {
-            throw new Error(`AUR0159:${state.ip}`);
+            throw new Error(`Expected identifier to come after ValueConverter operator: '${state.ip}'`);
         }
         const name = state._tokenValue;
         nextToken(state);
@@ -3796,7 +3796,7 @@ function parse(state, access, minPrecedence, expressionType) {
      */
     while (consumeOpt(state, 1572883 /* Ampersand */)) {
         if (state._currentToken === 1572864 /* EOF */) {
-            throw new Error(`AUR0160:${state.ip}`);
+            throw new Error(`Expected identifier to come after BindingBehavior operator: '${state.ip}'`);
         }
         const name = state._tokenValue;
         nextToken(state);
@@ -3812,9 +3812,9 @@ function parse(state, access, minPrecedence, expressionType) {
             return result;
         }
         if (state._tokenRaw === 'of') {
-            throw new Error(`AUR0161:${state.ip}`);
+            throw new Error(`Unexpected keyword "of": '${state.ip}'`);
         }
-        throw new Error(`AUR0162:${state.ip}`);
+        throw new Error(`Unconsumed token: '${state.ip}'`);
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
     return result;
@@ -3846,7 +3846,7 @@ function parseArrayDestructuring(state) {
                 break;
             default:
                 {
-                    throw new Error(`AUR0170:${state.ip}`);
+                    throw new Error(`Unexpected '${state._tokenRaw}' at position ${state.index - 1} for destructuring assignment in ${state.ip}`);
                 }
         }
     }
@@ -3912,10 +3912,10 @@ function parseArrayLiteralExpression(state, access, expressionType) {
 }
 function parseForOfStatement(state, result) {
     if ((result.$kind & 65536 /* IsForDeclaration */) === 0) {
-        throw new Error(`AUR0163:${state.ip}`);
+        throw new Error(`Invalid BindingIdentifier at left hand side of "of": '${state.ip}'`);
     }
     if (state._currentToken !== 1051180 /* OfKeyword */) {
-        throw new Error(`AUR0163:${state.ip}`);
+        throw new Error(`Invalid BindingIdentifier at left hand side of "of": '${state.ip}'`);
     }
     nextToken(state);
     const declaration = result;
@@ -3971,7 +3971,7 @@ function parseObjectLiteralExpression(state, expressionType) {
             }
         }
         else {
-            throw new Error(`AUR0164:${state.ip}`);
+            throw new Error(`Invalid or unsupported property definition in object literal: '${state.ip}'`);
         }
         if (state._currentToken !== 1835018 /* CloseBrace */) {
             consume(state, 1572876 /* Comma */);
@@ -4140,7 +4140,7 @@ function scanString(state) {
             marker = state.index;
         }
         else if (state.index >= state.length) {
-            throw new Error(`AUR0165:${state.ip}`);
+            throw new Error(`Unterminated quote in string literal: '${state.ip}'`);
         }
         else {
             nextChar(state);
@@ -4173,7 +4173,7 @@ function scanTemplate(state) {
         }
         else {
             if (state.index >= state.length) {
-                throw new Error(`AUR0166:${state.ip}`);
+                throw new Error(`Unterminated template string: '${state.ip}'`);
             }
             result += String.fromCharCode(state._currentChar);
         }
@@ -4187,7 +4187,7 @@ function scanTemplate(state) {
 }
 function scanTemplateTail(state) {
     if (state.index >= state.length) {
-        throw new Error(`AUR0166:${state.ip}`);
+        throw new Error(`Unterminated template string: '${state.ip}'`);
     }
     state.index--;
     return scanTemplate(state);
@@ -4204,7 +4204,7 @@ function consume(state, token) {
         nextToken(state);
     }
     else {
-        throw new Error(`AUR0167:${state.ip}<${token}`);
+        throw new Error(`Missing expected token: '${state.ip}'`);
     }
 }
 /**
@@ -4277,7 +4277,7 @@ function returnToken(token) {
     };
 }
 const unexpectedCharacter = s => {
-    throw new Error(`AUR0168:${s.ip}`);
+    throw new Error(`Unexpected character: '${s.ip}'`);
 };
 unexpectedCharacter.notMapped = true;
 // ASCII IdentifierPart lookup
@@ -4400,7 +4400,7 @@ function currentConnectable() {
 }
 function enterConnectable(connectable) {
     if (connectable == null) {
-        throw new Error('AUR0206');
+        throw new Error('Connectable cannot be null/undefined');
     }
     if (_connectable == null) {
         _connectable = connectable;
@@ -4409,7 +4409,7 @@ function enterConnectable(connectable) {
         return;
     }
     if (_connectable === connectable) {
-        throw new Error('AUR0207');
+        throw new Error(`Trying to enter an active connectable`);
     }
     connectables.push(connectable);
     _connectable = connectable;
@@ -4417,10 +4417,10 @@ function enterConnectable(connectable) {
 }
 function exitConnectable(connectable) {
     if (connectable == null) {
-        throw new Error('AUR0208');
+        throw new Error('Connectable cannot be null/undefined');
     }
     if (_connectable !== connectable) {
-        throw new Error('AUR0209');
+        throw new Error(`Trying to exit an unactive connectable`);
     }
     connectables.pop();
     _connectable = connectables.length > 0 ? connectables[connectables.length - 1] : null;
@@ -4925,7 +4925,7 @@ class ComputedObserver {
             }
         }
         else {
-            throw new Error('AUR0221');
+            throw new Error('Property is readonly');
         }
     }
     handleChange() {
@@ -5057,7 +5057,7 @@ class DirtyChecker {
     }
     createProperty(obj, key) {
         if (DirtyCheckSettings.throw) {
-            throw new Error(`AUR0222:${key}`);
+            throw new Error(`Property '${key}' is being dirty-checked.`);
         }
         return new DirtyCheckProperty(this, obj, key);
     }
@@ -5467,7 +5467,7 @@ class Effect {
     }
     run() {
         if (this.stopped) {
-            throw new Error('AUR0225');
+            throw new Error('Effect has already been stopped');
         }
         if (this.running) {
             return;
@@ -5492,7 +5492,7 @@ class Effect {
         if (this.queued) {
             if (this.runCount > this.maxRunCount) {
                 this.runCount = 0;
-                throw new Error(`AUR0226`);
+                throw new Error('Maximum number of recursive effect run reached. Consider handle effect dependencies differently.');
             }
             this.run();
         }
@@ -5550,7 +5550,7 @@ function observable(targetOrConfig, key, descriptor) {
             key = config.name;
         }
         if (key == null || key === '') {
-            throw new Error('AUR0224');
+            throw new Error('Invalid usage, cannot determine property name for @observable');
         }
         // determine callback name based on config or convention.
         // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing, @typescript-eslint/strict-boolean-expressions
