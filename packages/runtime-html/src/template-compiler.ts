@@ -1,4 +1,4 @@
-import { DI, emptyArray, Registration, toArray, ILogger, camelCase, ResourceDefinition, ResourceType, noop } from '@aurelia/kernel';
+import { DI, emptyArray, Registration, toArray, ILogger, camelCase, ResourceDefinition, ResourceType, noop, Key } from '@aurelia/kernel';
 import { BindingMode, ExpressionType, Char, IExpressionParser, PrimitiveLiteralExpression } from '@aurelia/runtime';
 import { IAttrMapper } from './attribute-mapper.js';
 import { ITemplateElementFactory } from './template-element-factory.js';
@@ -22,7 +22,7 @@ import { IPlatform } from './platform.js';
 import { Bindable, BindableDefinition } from './bindable.js';
 import { AttrSyntax, IAttributeParser } from './resources/attribute-pattern.js';
 import { CustomAttribute } from './resources/custom-attribute.js';
-import { CustomElement, CustomElementDefinition } from './resources/custom-element.js';
+import { CustomElement, CustomElementDefinition, CustomElementType } from './resources/custom-element.js';
 import { BindingCommand, CommandType } from './resources/binding-command.js';
 import { createLookup, isString } from './utilities.js';
 import { allResources } from './utilities-di.js';
@@ -718,7 +718,7 @@ export class TemplateCompiler implements ITemplateCompiler {
         }
 
         if (realAttrTarget !== 'au-slot') {
-          bindablesInfo = BindablesInfo.from(elDef!, false);
+          bindablesInfo = BindablesInfo.from(elDef, false);
           // if capture is on, capture everything except:
           // - as-element
           // - containerless
@@ -1432,7 +1432,7 @@ export class TemplateCompiler implements ITemplateCompiler {
   /** @internal */
   private _compileLocalElement(template: Element | DocumentFragment, context: CompilationContext) {
     const root: Element | DocumentFragment = template;
-    const localTemplates = toArray(root.querySelectorAll('template[as-custom-element]')) as HTMLTemplateElement[];
+    const localTemplates = toArray(root.querySelectorAll<HTMLTemplateElement>('template[as-custom-element]'));
     const numLocalTemplates = localTemplates.length;
     if (numLocalTemplates === 0) { return; }
     if (numLocalTemplates === root.childElementCount) {
@@ -1442,6 +1442,7 @@ export class TemplateCompiler implements ITemplateCompiler {
         throw new Error('AUR0708');
     }
     const localTemplateNames: Set<string> = new Set();
+    const localElTypes: CustomElementType[] = [];
 
     for (const localTemplate of localTemplates) {
       if (localTemplate.parentNode !== root) {
@@ -1501,9 +1502,30 @@ export class TemplateCompiler implements ITemplateCompiler {
         content.removeChild(bindableEl);
       }
 
+      localElTypes.push(LocalTemplateType);
       context._addDep(CustomElement.define({ name, template: localTemplate }, LocalTemplateType));
 
       root.removeChild(localTemplate);
+    }
+
+    // if we have a template like this
+    //
+    // my-app.html
+    // <template as-custom-element="le-1">
+    //  <le-2></le-2>
+    // </template>
+    // <template as-custom-element="le-2">...</template>
+    //
+    // eagerly registering depdendencies inside the loop above
+    // will make `<le-1/>` miss `<le-2/>` as its dependency
+
+    let i = 0;
+    const ii = localElTypes.length;
+    for (; ii > i; ++i) {
+      (CustomElement.getDefinition(localElTypes[i]).dependencies as Key[]).push(
+        ...context.def.dependencies ?? emptyArray,
+        ...context.deps ?? emptyArray,
+      );
     }
   }
 
@@ -1611,14 +1633,14 @@ class CompilationContext {
     this.def = def;
     this.ci = compilationInstruction;
     this.parent = parent;
-    this._templateFactory = hasParent ? parent!._templateFactory : container.get(ITemplateElementFactory);
+    this._templateFactory = hasParent ? parent._templateFactory : container.get(ITemplateElementFactory);
     // todo: attr parser should be retrieved based in resource semantic (current leaf + root + ignore parent)
-    this._attrParser = hasParent ? parent!._attrParser : container.get(IAttributeParser);
-    this._exprParser = hasParent ? parent!._exprParser : container.get(IExpressionParser);
-    this._attrMapper = hasParent ? parent!._attrMapper : container.get(IAttrMapper);
-    this._logger = hasParent ? parent!._logger : container.get(ILogger);
-    this.p = hasParent ? parent!.p : container.get(IPlatform);
-    this.localEls = hasParent ? parent!.localEls : new Set();
+    this._attrParser = hasParent ? parent._attrParser : container.get(IAttributeParser);
+    this._exprParser = hasParent ? parent._exprParser : container.get(IExpressionParser);
+    this._attrMapper = hasParent ? parent._attrMapper : container.get(IAttrMapper);
+    this._logger = hasParent ? parent._logger : container.get(ILogger);
+    this.p = hasParent ? parent.p : container.get(IPlatform);
+    this.localEls = hasParent ? parent.localEls : new Set();
     this.rows = instructions ?? [];
   }
 
@@ -1628,7 +1650,7 @@ class CompilationContext {
   }
 
   public h<K extends keyof HTMLElementTagNameMap>(name: K): HTMLElementTagNameMap[K];
-  public h<K extends string>(name: string): HTMLElement;
+  public h(name: string): HTMLElement;
   public h(name: string): HTMLElement {
     const el = this.p.document.createElement(name);
     if (name === 'template') {

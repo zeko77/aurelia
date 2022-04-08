@@ -1,6 +1,5 @@
 const path = require('path');
 
-
 const basePath = path.resolve(__dirname, '..', '..');
 const smsPath = path.dirname(require.resolve('source-map-support'));
 
@@ -34,7 +33,7 @@ const testDirs = [
   'validation-i18n',
 ];
 
-const baseKarmaArgs = 'karma start karma.conf.cjs  --browsers=ChromeDebugging --browsers=ChromeHeadlessOpt --browsers=FirefoxHeadless --single-run --coverage --watch-extensions js,html'.split(' ');
+const baseKarmaArgs = 'karma start karma.conf.cjs  --browsers=ChromeDebugging --browsers=ChromeHeadlessOpt --browsers=FirefoxHeadless --single-run --coverage --watch-extensions js,html --bail'.split(' ');
 const cliArgs = process.argv.slice(2).filter(arg => !baseKarmaArgs.includes(arg));
 
 const packageNames = [
@@ -68,7 +67,7 @@ module.exports = function (config) {
 
   const testFilePatterns = cliArgs.length > 0
     ? cliArgs.flatMap(arg => [
-        `${baseUrl}/**/*${arg.replace(/(?:\.spec(?:\.[tj]s)?)?$/, '*.spec.js')}`,
+        `${baseUrl}/**/*${arg.replace(/(?:\.[tj]s)?$/, '*.js')}`,
         `${baseUrl}/**/${arg}/**/*.spec.js`,
     ])
     : [`${baseUrl}/**/*.spec.js`];

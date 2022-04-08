@@ -81,7 +81,6 @@ export class RouteDefinition {
         }
         const component = context.container.find(CustomElement, typedInstruction.value);
         if (component === null) {
-          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
           throw new Error(`Could not find a CustomElement named '${typedInstruction.value}' in the current container scope of ${context}. This means the component is neither registered at Aurelia startup nor via the 'dependencies' decorator or static property.`);
         }
         return component as CustomElementDefinition;
@@ -112,7 +111,6 @@ export class RouteDefinition {
     if (this.component !== null) {
       return `RD(config.path:${path},c.name:'${this.component.name}')`;
     } else {
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       return `RD(config.path:${path},redirectTo:'${this.redirectTo}')`;
     }
   }
