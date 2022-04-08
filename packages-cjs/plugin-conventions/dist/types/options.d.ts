@@ -8,6 +8,7 @@ export interface IFileUnit {
     base?: string;
     contents: string;
     filePair?: string;
+    isViewPair?: boolean;
 }
 export interface IOptionalPreprocessOptions {
     defaultShadowOptions?: {
