@@ -60,7 +60,7 @@ const w = Object.freeze({});
 
 class BindingContext {
     constructor(t, e) {
-        if (void 0 !== t) if (void 0 !== e) this[t] = e; else for (const e in t) if (Object.prototype.hasOwnProperty.call(t, e)) this[e] = t[e];
+        if (void 0 !== t) if (void 0 !== e) this[t] = e; else for (const e in t) if (s.call(t, e)) this[e] = t[e];
     }
     static create(t, e) {
         return new BindingContext(t, e);

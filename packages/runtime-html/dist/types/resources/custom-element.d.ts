@@ -101,7 +101,7 @@ export declare type CustomElementKind = IResourceKind<CustomElementType, CustomE
     annotate<K extends keyof PartialCustomElementDefinition>(Type: Constructable, prop: K, value: PartialCustomElementDefinition[K]): void;
     getAnnotation<K extends keyof PartialCustomElementDefinition>(Type: Constructable, prop: K): PartialCustomElementDefinition[K];
     generateName(): string;
-    createInjectable<T extends Key = Key>(): InjectableToken;
+    createInjectable<T extends Key = Key>(): InjectableToken<T>;
     generateType<P extends {} = {}>(name: string, proto?: P): CustomElementType<Constructable<P>>;
 };
 export declare type CustomElementDecorator = <T extends Constructable>(Type: T) => CustomElementType<T>;
@@ -162,9 +162,9 @@ export declare class CustomElementDefinition<C extends Constructable = Construct
     readonly processContent: ProcessContentHook | null;
     get type(): DefinitionType.Element;
     private constructor();
-    static create<T extends Constructable = Constructable>(def: PartialCustomElementDefinition, Type?: null): CustomElementDefinition;
-    static create<T extends Constructable = Constructable>(name: string, Type: CustomElementType): CustomElementDefinition;
-    static create<T extends Constructable = Constructable>(nameOrDef: string | PartialCustomElementDefinition, Type?: CustomElementType | null): CustomElementDefinition;
+    static create(def: PartialCustomElementDefinition, Type?: null): CustomElementDefinition;
+    static create(name: string, Type: CustomElementType): CustomElementDefinition;
+    static create<T extends Constructable = Constructable>(nameOrDef: string | PartialCustomElementDefinition, Type?: CustomElementType<T> | null): CustomElementDefinition<T>;
     static getOrCreate(partialDefinition: PartialCustomElementDefinition): CustomElementDefinition;
     register(container: IContainer): void;
 }

@@ -81,7 +81,7 @@ export declare class DotSeparatedAttributePattern {
     'PART.PART.PART'(rawName: string, rawValue: string, parts: string[]): AttrSyntax;
 }
 export declare class RefAttributePattern {
-    'ref'(rawName: string, rawValue: string, parts: string[]): AttrSyntax;
+    'ref'(rawName: string, rawValue: string, _parts: string[]): AttrSyntax;
     'PART.ref'(rawName: string, rawValue: string, parts: string[]): AttrSyntax;
 }
 export declare class ColonPrefixedBindAttributePattern {
@@ -91,7 +91,7 @@ export declare class AtPrefixedTriggerAttributePattern {
     '@PART'(rawName: string, rawValue: string, parts: string[]): AttrSyntax;
 }
 export declare class SpreadAttributePattern {
-    '...$attrs'(rawName: string, rawValue: string, parts: string[]): AttrSyntax;
+    '...$attrs'(rawName: string, rawValue: string, _parts: string[]): AttrSyntax;
 }
 export {};
 //# sourceMappingURL=attribute-pattern.d.ts.map

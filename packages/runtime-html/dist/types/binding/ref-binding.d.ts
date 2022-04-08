@@ -14,7 +14,7 @@ export declare class RefBinding implements IAstBasedBinding {
     constructor(sourceExpression: IsBindingBehavior, target: object, locator: IServiceLocator);
     $bind(flags: LifecycleFlags, scope: Scope): void;
     $unbind(flags: LifecycleFlags): void;
-    observe(obj: IIndexable, propertyName: string): void;
-    handleChange(newValue: unknown, previousValue: unknown, flags: LifecycleFlags): void;
+    observe(_obj: IIndexable, _propertyName: string): void;
+    handleChange(_newValue: unknown, _previousValue: unknown, _flags: LifecycleFlags): void;
 }
 //# sourceMappingURL=ref-binding.d.ts.map

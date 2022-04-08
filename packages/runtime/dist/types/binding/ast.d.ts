@@ -115,7 +115,7 @@ export declare class Unparser implements IVisitor<void> {
     visitArrayBindingPattern(expr: ArrayBindingPattern): void;
     visitObjectBindingPattern(expr: ObjectBindingPattern): void;
     visitBindingIdentifier(expr: BindingIdentifier): void;
-    visitHtmlLiteral(expr: HtmlLiteralExpression): void;
+    visitHtmlLiteral(_expr: HtmlLiteralExpression): void;
     visitForOfStatement(expr: ForOfStatement): void;
     visitInterpolation(expr: Interpolation): void;
     visitDestructuringAssignmentExpression(expr: DestructuringAssignmentExpression): void;

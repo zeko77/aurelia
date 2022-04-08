@@ -479,7 +479,6 @@ async function executeSteps(store, shouldLogResults, ...steps) {
 const defaultSelector = (store) => store.state;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function connectTo(settings) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const _settings = {
         selector: typeof settings === 'function' ? settings : defaultSelector,
         ...settings
@@ -497,7 +496,6 @@ function connectTo(settings) {
             [_settings.target || 'state']: _settings.selector || defaultSelector
         };
         return Object.entries({
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ...(isSelectorObj ? _settings.selector : fallbackSelector)
         }).map(([target, selector]) => {
             var _a, _b;

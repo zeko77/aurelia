@@ -25,9 +25,18 @@ function normalizedName(name, type) {
     return kebabCase(name);
 }
 
+// a/foo-bar.xxx -> "foo-bar"
+// a/fooBar.xxx -> "foo-bar"
+// a/foo-bar/index.xxx -> "foo-bar"
+// a/fooBar/index.xxx -> "foo-bar"
+function resourceName(filePath) {
+    const parsed = path.parse(filePath);
+    const name = parsed.name === 'index' ? path.basename(parsed.dir) : parsed.name;
+    return kebabCase(name);
+}
+
 function preprocessResource(unit, options) {
-    const basename = path.basename(unit.path, path.extname(unit.path));
-    const expectedResourceName = kebabCase(basename);
+    const expectedResourceName = resourceName(unit.path);
     const sf = ts.createSourceFile(unit.path, unit.contents, ts.ScriptTarget.Latest);
     let auImport = { names: [], start: 0, end: 0 };
     let runtimeImport = { names: [], start: 0, end: 0 };
@@ -56,7 +65,7 @@ function preprocessResource(unit, options) {
         // Note this convention simply doesn't work for
         //   class Foo {}
         //   export {Foo};
-        const resource = findResource(s, expectedResourceName, unit.filePair, unit.contents);
+        const resource = findResource(s, expectedResourceName, unit.filePair, unit.isViewPair, unit.contents);
         if (!resource)
             return;
         const { localDep, needDecorator, implicitStatement, runtimeImportName, customName } = resource;
@@ -73,7 +82,6 @@ function preprocessResource(unit, options) {
             customElementName = customName;
     });
     return modifyResource(unit, {
-        expectedResourceName,
         runtimeImport,
         implicitElement,
         localDeps,
@@ -82,12 +90,12 @@ function preprocessResource(unit, options) {
     });
 }
 function modifyResource(unit, options) {
-    const { expectedResourceName, runtimeImport, implicitElement, localDeps, conventionalDecorators, customElementName } = options;
+    const { runtimeImport, implicitElement, localDeps, conventionalDecorators, customElementName } = options;
     const m = modifyCode(unit.contents, unit.path);
     if (implicitElement && unit.filePair) {
         // @view() for foo.js and foo-view.html
         // @customElement() for foo.js and foo.html
-        const dec = kebabCase(unit.filePair).startsWith(`${expectedResourceName}-view`) ? 'view' : 'customElement';
+        const dec = unit.isViewPair ? 'view' : 'customElement';
         const viewDef = '__au2ViewDef';
         m.prepend(`import * as ${viewDef} from './${unit.filePair}';\n`);
         if (localDeps.length) {
@@ -184,7 +192,7 @@ function findDecoratedResourceType(node) {
 function isKindOfSame(name1, name2) {
     return name1.replace(/-/g, '') === name2.replace(/-/g, '');
 }
-function findResource(node, expectedResourceName, filePair, code) {
+function findResource(node, expectedResourceName, filePair, isViewPair, code) {
     if (!ts.isClassDeclaration(node))
         return;
     if (!node.name)
@@ -221,7 +229,7 @@ function findResource(node, expectedResourceName, filePair, code) {
             if (isImplicitResource && filePair) {
                 return {
                     implicitStatement: { pos: pos, end: node.end },
-                    runtimeImportName: kebabCase(filePair).startsWith(`${expectedResourceName}-view`) ? 'view' : 'customElement'
+                    runtimeImportName: isViewPair ? 'view' : 'customElement'
                 };
             }
         }
@@ -429,7 +437,7 @@ function toBindingMode(mode) {
 //   import d0 from './foo.css';
 // because most bundler by default will inject that css into HTML head.
 function preprocessHtmlTemplate(unit, options) {
-    const name = kebabCase(path.basename(unit.path, path.extname(unit.path)));
+    const name = resourceName(unit.path);
     const stripped = stripMetaData(unit.contents);
     const { html, deps, containerless, hasSlot, bindables, aliases } = stripped;
     let { shadowMode } = stripped;
@@ -586,6 +594,7 @@ function preprocess(unit, options, _fileExists = fileExists) {
             const possibleViewPair = allOptions.templateExtensions.map(e => path.join(base, `${unit.path.slice(0, -ext.length)}-view${e}`));
             const viewPair = possibleViewPair.find(_fileExists);
             if (viewPair) {
+                unit.isViewPair = true;
                 if (allOptions.useProcessedFilePairFilename) {
                     unit.filePair = `${basename}-view.html`;
                 }
@@ -607,5 +616,5 @@ function fileExists(p) {
     }
 }
 
-export { defaultCssExtensions, defaultJsExtensions, defaultTemplateExtensions, nameConvention, preprocess, preprocessHtmlTemplate, preprocessOptions, preprocessResource, stripMetaData };
+export { defaultCssExtensions, defaultJsExtensions, defaultTemplateExtensions, nameConvention, preprocess, preprocessHtmlTemplate, preprocessOptions, preprocessResource, resourceName, stripMetaData };
 //# sourceMappingURL=index.js.map

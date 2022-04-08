@@ -15,7 +15,7 @@ export declare class ViewFactory implements IViewFactory {
     private cacheSize;
     constructor(container: IContainer, def: CustomElementDefinition);
     setCacheSize(size: number | '*', doNotOverrideIfAlreadySet: boolean): void;
-    canReturnToCache(controller: ISyntheticView): boolean;
+    canReturnToCache(_controller: ISyntheticView): boolean;
     tryReturnToCache(controller: ISyntheticView): boolean;
     create(parentController?: ISyntheticView | ICustomElementController | ICustomAttributeController | undefined): ISyntheticView;
 }

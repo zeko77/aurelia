@@ -374,7 +374,7 @@ export declare class SpreadRenderer implements IRenderer {
     constructor(
     /** @internal */ _compiler: ITemplateCompiler, 
     /** @internal */ _rendering: IRendering);
-    render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: SpreadBindingInstruction): void;
+    render(renderingCtrl: IHydratableController, target: HTMLElement, _instruction: SpreadBindingInstruction): void;
 }
 export {};
 //# sourceMappingURL=renderer.d.ts.map

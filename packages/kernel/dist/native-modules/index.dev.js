@@ -2,6 +2,14 @@ import { Metadata, applyMetadataPolyfill, isObject } from '../../../metadata/dis
 export { Metadata, applyMetadataPolyfill, isNullOrUndefined, isObject, metadata } from '../../../metadata/dist/native-modules/index.js';
 export { Platform, Task, TaskAbortError, TaskQueue, TaskQueuePriority, TaskStatus } from '../../../platform/dist/native-modules/index.js';
 
+/** @internal */ const getOwnMetadata = Metadata.getOwn;
+/** @internal */ const hasOwnMetadata = Metadata.hasOwn;
+/** @internal */ const defineMetadata = Metadata.define;
+// eslint-disable-next-line @typescript-eslint/ban-types
+/** @internal */ const isFunction = (v) => typeof v === 'function';
+/** @internal */ const isString = (v) => typeof v === 'string';
+/** @internal */ const createObject = () => Object.create(null);
+
 const isNumericLookup = {};
 /**
  * Efficiently determine whether the provided property key is numeric
@@ -81,7 +89,7 @@ const baseCase = (function () {
         CharKind[CharKind["lower"] = 3] = "lower";
     })(CharKind || (CharKind = {}));
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    const isDigit = Object.assign(Object.create(null), {
+    const isDigit = Object.assign(createObject(), {
         '0': true,
         '1': true,
         '2': true,
@@ -157,7 +165,7 @@ const baseCase = (function () {
  * Results are cached.
  */
 const camelCase = (function () {
-    const cache = Object.create(null);
+    const cache = createObject();
     function callback(char, sep) {
         return sep ? char.toUpperCase() : char.toLowerCase();
     }
@@ -179,7 +187,7 @@ const camelCase = (function () {
  * Results are cached.
  */
 const pascalCase = (function () {
-    const cache = Object.create(null);
+    const cache = createObject();
     return function (input) {
         let output = cache[input];
         if (output === void 0) {
@@ -202,7 +210,7 @@ const pascalCase = (function () {
  * Results are cached.
  */
 const kebabCase = (function () {
-    const cache = Object.create(null);
+    const cache = createObject();
     function callback(char, sep) {
         return sep ? `-${char.toLowerCase()}` : char.toLowerCase();
     }
@@ -386,7 +394,8 @@ const getPrototypeChain = (function () {
     };
 })();
 function toLookup(...objs) {
-    return Object.assign(Object.create(null), ...objs);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return Object.assign(createObject(), ...objs);
 }
 /**
  * Determine whether the value is a native function.
@@ -481,13 +490,6 @@ function resolveAll(...maybePromises) {
     }
     return Promise.all(promises);
 }
-
-/** @internal */ const getOwnMetadata = Metadata.getOwn;
-/** @internal */ const hasOwnMetadata = Metadata.hasOwn;
-/** @internal */ const defineMetadata = Metadata.define;
-// eslint-disable-next-line @typescript-eslint/ban-types
-/** @internal */ const isFunction = (v) => typeof v === 'function';
-/** @internal */ const isString = (v) => typeof v === 'string';
 
 const annoBaseName = 'au:annotation';
 /** @internal */
@@ -618,6 +620,7 @@ function fromDefinitionOrDefault(name, def, getDefault) {
     return value;
 }
 
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 applyMetadataPolyfill(Reflect, false, false);
 class ResolverBuilder {
     constructor(container, key) {
@@ -664,7 +667,7 @@ function cloneArrayWithPossibleProps(source) {
 const DefaultResolver = {
     none(key) {
         {
-            throw Error(`AUR0002:${key.toString()}`);
+            throw Error(`${key.toString()} not registered, did you forget to add @singleton()?`);
         }
     },
     singleton(key) { return new Resolver(key, 1 /* singleton */, key); },
@@ -745,7 +748,7 @@ const DI = {
         const Interface = function (target, property, index) {
             if (target == null || new.target !== undefined) {
                 {
-                    throw new Error(`AUR0001:${Interface.friendlyName}`);
+                    throw new Error(`No registration for interface: '${Interface.friendlyName}'`);
                 }
             }
             const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
@@ -1121,7 +1124,7 @@ class Resolver {
             case 1 /* singleton */: {
                 if (this.resolving) {
                     {
-                        throw new Error(`AUR0003:${this.state.name}`);
+                        throw new Error(`Cyclic dependency found: ${this.state.name}`);
                     }
                 }
                 this.resolving = true;
@@ -1135,7 +1138,7 @@ class Resolver {
                 const factory = handler.getFactory(this.state);
                 if (factory === null) {
                     {
-                        throw new Error(`AUR0004:${String(this.key)}`);
+                        throw new Error(`Resolver for ${String(this.key)} returned a null factory`);
                     }
                 }
                 return factory.construct(requestor);
@@ -1148,7 +1151,7 @@ class Resolver {
                 return requestor.get(this.state);
             default:
                 {
-                    throw new Error(`AUR0005:${this.strategy}`);
+                    throw new Error(`Invalid resolver strategy specified: ${this.strategy}.`);
                 }
         }
     }
@@ -1266,17 +1269,17 @@ class Container {
             this.root = this;
             this._resolvers = new Map();
             this._factories = new Map();
-            this.res = Object.create(null);
+            this.res = createObject();
         }
         else {
             this.root = parent.root;
             this._resolvers = new Map();
             this._factories = parent._factories;
             if (config.inheritParentResources) {
-                this.res = Object.assign(Object.create(null), parent.res, this.root.res);
+                this.res = Object.assign(createObject(), parent.res, this.root.res);
             }
             else {
-                this.res = Object.create(null);
+                this.res = createObject();
             }
         }
         this._resolvers.set(IContainer, containerResolver);
@@ -1290,7 +1293,7 @@ class Container {
             // Most likely cause is trying to register a plain object that does not have a
             // register method and is not a class constructor
             {
-                throw new Error(`AUR0006:${params.map(String)}`);
+                throw new Error(`Unable to autoregister dependency: [${params.map(String)}]`);
             }
         }
         let current;
@@ -1359,7 +1362,7 @@ class Container {
             if (isResourceKey(key)) {
                 if (this.res[key] !== void 0) {
                     {
-                        throw new Error(`AUR0007:${key}`);
+                        throw new Error(`Resource key "${key}" already registered`);
                     }
                 }
                 this.res[key] = resolver;
@@ -1426,6 +1429,7 @@ class Container {
         if (key.resolve !== void 0) {
             return key;
         }
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         let current = this;
         let resolver;
         while (current != null) {
@@ -1455,6 +1459,7 @@ class Container {
         if (key.$isResolver) {
             return key.resolve(this, this);
         }
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         let current = this;
         let resolver;
         while (current != null) {
@@ -1472,11 +1477,12 @@ class Container {
             }
         }
         {
-            throw new Error(`AUR0008:${key}`);
+            throw new Error(`Unable to resolve key: ${key}`);
         }
     }
     getAll(key, searchAncestors = false) {
         validateKey(key);
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const requestor = this;
         let current = requestor;
         let resolver;
@@ -1604,23 +1610,23 @@ class Container {
     _jitRegister(keyAsValue, handler) {
         if (!isFunction(keyAsValue)) {
             {
-                throw new Error(`AUR0009:${keyAsValue}`);
+                throw new Error(`Attempted to jitRegister something that is not a constructor: '${keyAsValue}'. Did you forget to register this resource?`);
             }
         }
         if (InstrinsicTypeNames.has(keyAsValue.name)) {
             {
-                throw new Error(`AUR0010:${keyAsValue.name}`);
+                throw new Error(`Attempted to jitRegister an intrinsic type: ${keyAsValue.name}. Did you forget to add @inject(Key)`);
             }
         }
         if (isRegistry(keyAsValue)) {
             const registrationResolver = keyAsValue.register(handler, keyAsValue);
             if (!(registrationResolver instanceof Object) || registrationResolver.resolve == null) {
                 const newResolver = handler._resolvers.get(keyAsValue);
-                if (newResolver != void 0) {
+                if (newResolver != null) {
                     return newResolver;
                 }
                 {
-                    throw new Error(`AUR0011`);
+                    throw new Error(`Invalid resolver returned from the static register method`);
                 }
             }
             return registrationResolver;
@@ -1638,16 +1644,16 @@ class Container {
                 }
             }
             const newResolver = handler._resolvers.get(keyAsValue);
-            if (newResolver != void 0) {
+            if (newResolver != null) {
                 return newResolver;
             }
             {
-                throw new Error(`AUR0011`);
+                throw new Error(`Invalid resolver returned from the static register method`);
             }
         }
         else if (keyAsValue.$isInterface) {
             {
-                throw new Error(`AUR0012:${keyAsValue.friendlyName}`);
+                throw new Error(`Attempted to jitRegister an interface: ${keyAsValue.friendlyName}`);
             }
         }
         else {
@@ -1710,8 +1716,8 @@ const Registration = {
      * Registration.instance(Foo, new Foo()));
      * ```
      *
-     * @param key
-     * @param value
+     * @param key - key to register the instance with
+     * @param value - the instance associated with the key
      */
     instance(key, value) {
         return new Resolver(key, 0 /* instance */, value);
@@ -1723,8 +1729,8 @@ const Registration = {
      * Registration.singleton(Foo, Foo);
      * ```
      *
-     * @param key
-     * @param value
+     * @param key - key to register the singleton class with
+     * @param value - the singleton class to instantiate when a container resolves the associated key
      */
     singleton(key, value) {
         return new Resolver(key, 1 /* singleton */, value);
@@ -1736,8 +1742,8 @@ const Registration = {
      * Registration.instance(Foo, Foo);
      * ```
      *
-     * @param key
-     * @param value
+     * @param key - key to register the transient class with
+     * @param value - the class to instantiate when a container resolves the associated key
      */
     transient(key, value) {
         return new Resolver(key, 2 /* transient */, value);
@@ -1750,8 +1756,8 @@ const Registration = {
      * Registration.callback(Bar, (c: IContainer) => new Bar(c.get(Foo)));
      * ```
      *
-     * @param key
-     * @param callback
+     * @param key - key to register the callback with
+     * @param callback - the callback to invoke when a container resolves the associated key
      */
     callback(key, callback) {
         return new Resolver(key, 3 /* callback */, callback);
@@ -1767,8 +1773,8 @@ const Registration = {
      * Registration.cachedCallback(Bar, (c: IContainer) => new Bar(c.get(Foo)));
      * ```
      *
-     * @param key
-     * @param callback
+     * @param key - key to register the cached callback with
+     * @param callback - the cache callback to invoke when a container resolves the associated key
      */
     cachedCallback(key, callback) {
         return new Resolver(key, 3 /* callback */, cacheCallbackResult(callback));
@@ -1783,16 +1789,16 @@ const Registration = {
      * container.getAll(MyFoos) // contains an instance of Foo
      * ```
      *
-     * @param originalKey
-     * @param aliasKey
+     * @param originalKey - the real key to resolve the get call from a container
+     * @param aliasKey - the key that a container allows to resolve the real key associated
      */
     aliasTo(originalKey, aliasKey) {
         return new Resolver(aliasKey, 5 /* alias */, originalKey);
     },
     /**
      * @internal
-     * @param key
-     * @param params
+     * @param key - the key to register a defer registration
+     * @param params - the parameters that should be passed to the resolution of the key
      */
     defer(key, ...params) {
         return new ParameterizedRegistry(key, params);
@@ -1821,7 +1827,7 @@ class InstanceProvider {
     resolve() {
         if (this._instance == null) {
             {
-                throw new Error(`AUR0013:${this._name}`);
+                throw new Error(`Cannot call resolve ${this._name} before calling prepare or after calling dispose.`);
             }
         }
         return this._instance;
@@ -1834,7 +1840,7 @@ class InstanceProvider {
 function validateKey(key) {
     if (key === null || key === void 0) {
         {
-            throw new Error(`AUR0014`);
+            throw new Error('key/value cannot be null or undefined. Are you trying to inject/register something that doesn\'t exist with DI?');
         }
     }
 }
@@ -1851,13 +1857,13 @@ function buildAllResponse(resolver, handler, requestor) {
     return [resolver.resolve(handler, requestor)];
 }
 function createNativeInvocationError(Type) {
-    return new Error(`AUR0015:${Type.name}`);
+    {
+        return new Error(`${Type.name} is a native function and therefore cannot be safely constructed by DI. If this is intentional, please use a callback or cachedCallback resolver.`);
+    }
 }
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-explicit-any */
 const emptyArray = Object.freeze([]);
 const emptyObject = Object.freeze({});
-/* eslint-enable @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-explicit-any */
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 function noop() { }
 const IPlatform = DI.createInterface('IPlatform');
@@ -2134,7 +2140,7 @@ let DefaultLogger = class DefaultLogger {
         this.config = config;
         this.factory = factory;
         this.scope = scope;
-        this.scopedLoggers = Object.create(null);
+        this.scopedLoggers = createObject();
         let traceSinks;
         let debugSinks;
         let infoSinks;
@@ -2248,7 +2254,7 @@ let DefaultLogger = class DefaultLogger {
         return scopedLogger;
     }
     emit(sinks, level, msgOrGetMsg, optionalParams) {
-        const message = isFunction(msgOrGetMsg) ? msgOrGetMsg() : msgOrGetMsg;
+        const message = (isFunction(msgOrGetMsg) ? msgOrGetMsg() : msgOrGetMsg);
         const event = this.factory.createLogEvent(this, level, message, optionalParams);
         for (let i = 0, ii = sinks.length; i < ii; ++i) {
             sinks[i].handleEvent(event);
@@ -2429,7 +2435,6 @@ class ModuleItem {
     }
 }
 
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 /**
  * Represents a handler for an EventAggregator event.
  */
@@ -2456,6 +2461,7 @@ class EventAggregator {
         this.messageHandlers = [];
     }
     publish(channelOrInstance, message) {
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (!channelOrInstance) {
             throw new Error(`Invalid channel name or instance: ${channelOrInstance}.`);
         }
@@ -2478,6 +2484,7 @@ class EventAggregator {
         }
     }
     subscribe(channelOrType, callback) {
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (!channelOrType) {
             throw new Error(`Invalid channel name or type: ${channelOrType}.`);
         }

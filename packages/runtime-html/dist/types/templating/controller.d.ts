@@ -95,7 +95,7 @@ export declare class Controller<C extends IViewModel = IViewModel> implements IC
      * @param ctn - own container associated with the custom attribute object
      * @param viewModel - the view model object
      * @param host - host element where this custom attribute is used
-     * @param flags
+     * @param flags - todo(comment)
      * @param definition - the definition of the custom attribute,
      * will be used to override the definition associated with the view model object contructor if given
      */
@@ -109,8 +109,8 @@ export declare class Controller<C extends IViewModel = IViewModel> implements IC
     /**
      * Create a synthetic view (controller) for a given factory
      *
-     * @param viewFactory
-     * @param flags
+     * @param viewFactory - todo(comment)
+     * @param flags - todo(comment)
      * @param parentController - the parent controller to connect the created view with. Used in activation
      *
      * Semi private API

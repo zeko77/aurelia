@@ -30,12 +30,13 @@ export declare class PromiseTemplateController implements ICustomAttributeViewMo
     dispose(): void;
 }
 export declare class PendingTemplateController implements ICustomAttributeViewModel {
-    private readonly factory;
     readonly id: number;
     readonly $controller: ICustomAttributeController<this>;
     value: Promise<unknown>;
-    view: ISyntheticView;
-    constructor(factory: IViewFactory, location: IRenderLocation);
+    view: ISyntheticView | undefined;
+    constructor(
+    /** @internal */ _factory: IViewFactory, 
+    /** @internal */ _location: IRenderLocation);
     link(controller: IHydratableController, _childController: ICustomAttributeController, _target: INode, _instruction: IInstruction): void;
     activate(initiator: IHydratedController | null, flags: LifecycleFlags, scope: Scope): void | Promise<void>;
     deactivate(initiator: IHydratedController | null, flags: LifecycleFlags): void | Promise<void>;
@@ -43,12 +44,13 @@ export declare class PendingTemplateController implements ICustomAttributeViewMo
     dispose(): void;
 }
 export declare class FulfilledTemplateController implements ICustomAttributeViewModel {
-    private readonly factory;
     readonly id: number;
     readonly $controller: ICustomAttributeController<this>;
     value: unknown;
-    view: ISyntheticView;
-    constructor(factory: IViewFactory, location: IRenderLocation);
+    view: ISyntheticView | undefined;
+    constructor(
+    /** @internal */ _factory: IViewFactory, 
+    /** @internal */ _location: IRenderLocation);
     link(controller: IHydratableController, _childController: ICustomAttributeController, _target: INode, _instruction: IInstruction): void;
     activate(initiator: IHydratedController | null, flags: LifecycleFlags, scope: Scope, resolvedValue: unknown): void | Promise<void>;
     deactivate(initiator: IHydratedController | null, flags: LifecycleFlags): void | Promise<void>;
@@ -56,12 +58,13 @@ export declare class FulfilledTemplateController implements ICustomAttributeView
     dispose(): void;
 }
 export declare class RejectedTemplateController implements ICustomAttributeViewModel {
-    private readonly factory;
+    private readonly _factory;
+    private readonly _location;
     readonly id: number;
     readonly $controller: ICustomAttributeController<this>;
     value: unknown;
-    view: ISyntheticView;
-    constructor(factory: IViewFactory, location: IRenderLocation);
+    view: ISyntheticView | undefined;
+    constructor(_factory: IViewFactory, _location: IRenderLocation);
     link(controller: IHydratableController, _childController: ICustomAttributeController, _target: INode, _instruction: IInstruction): void;
     activate(initiator: IHydratedController | null, flags: LifecycleFlags, scope: Scope, error: unknown): void | Promise<void>;
     deactivate(initiator: IHydratedController | null, flags: LifecycleFlags): void | Promise<void>;

@@ -8,7 +8,7 @@ export declare class With implements ICustomAttributeViewModel {
     readonly $controller: ICustomAttributeController<this>;
     value?: object;
     constructor(factory: IViewFactory, location: IRenderLocation);
-    valueChanged(newValue: unknown, oldValue: unknown, flags: LifecycleFlags): void;
+    valueChanged(newValue: unknown, _oldValue: unknown, _flags: LifecycleFlags): void;
     attaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void>;
     detaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void>;
     dispose(): void;

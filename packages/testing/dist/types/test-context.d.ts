@@ -18,7 +18,7 @@ export declare class TestContext {
         readonly NONE: number;
     };
     get CustomEvent(): {
-        new <T>(typeArg: string, eventInitDict?: CustomEventInit<T> | undefined): CustomEvent<T>;
+        new <T>(type: string, eventInitDict?: CustomEventInit<T> | undefined): CustomEvent<T>;
         prototype: CustomEvent<any>;
     };
     get Node(): {

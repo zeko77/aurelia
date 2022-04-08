@@ -549,12 +549,11 @@ exports.ValidateBindingBehavior = class ValidateBindingBehavior extends s.Bindin
         this.propertyBinding = t;
     }
     setTarget() {
-        var t;
-        const i = this.propertyBinding.target;
-        if (i instanceof this.platform.Node) this.target = i; else {
-            const s = null === (t = i) || void 0 === t ? void 0 : t.$controller;
-            if (void 0 === s) throw new Error("Invalid binding target");
-            this.target = s.host;
+        const t = this.propertyBinding.target;
+        if (t instanceof this.platform.Node) this.target = t; else {
+            const i = null === t || void 0 === t ? void 0 : t.$controller;
+            if (void 0 === i) throw new Error("Invalid binding target");
+            this.target = i.host;
         }
     }
     setTriggerEvent(t) {

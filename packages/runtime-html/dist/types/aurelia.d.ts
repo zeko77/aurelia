@@ -12,12 +12,12 @@ export declare class Aurelia implements IDisposable {
     get root(): IAppRoot;
     private next;
     constructor(container?: IContainer);
-    register(...params: any[]): this;
+    register(...params: unknown[]): this;
     app(config: ISinglePageApp): Omit<this, 'register' | 'app' | 'enhance'>;
     /**
      * @param parentController - The owning controller of the view created by this enhance call
      */
-    enhance<T extends unknown, K = T extends Constructable<infer I> ? I : T>(config: IEnhancementConfig<T>, parentController?: IHydratedParentController | null): ICustomElementController<K> | Promise<ICustomElementController<K>>;
+    enhance<T, K = T extends Constructable<infer I> ? I : T>(config: IEnhancementConfig<T>, parentController?: IHydratedParentController | null): ICustomElementController<K> | Promise<ICustomElementController<K>>;
     waitForIdle(): Promise<void>;
     start(root?: IAppRoot | undefined): void | Promise<void>;
     stop(dispose?: boolean): void | Promise<void>;
