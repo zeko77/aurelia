@@ -1,12 +1,11 @@
 {
   "name": "@aurelia/router",
-  "version": "2.0.0-alpha.27",
-  "main": "dist/esm/index.js",
+  "version": "2.1.0-dev.202204111455",
+  "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/types/index.d.ts",
   "typings": "dist/types/index.d.ts",
   "license": "MIT",
-  "type": "module",
   "homepage": "https://aurelia.io",
   "repository": {
     "type": "git",
@@ -41,13 +40,13 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurelia/kernel": "2.0.0-alpha.27",
-    "@aurelia/metadata": "2.0.0-alpha.27",
-    "@aurelia/platform": "2.0.0-alpha.27",
-    "@aurelia/platform-browser": "2.0.0-alpha.27",
-    "@aurelia/route-recognizer": "2.0.0-alpha.27",
-    "@aurelia/runtime": "2.0.0-alpha.27",
-    "@aurelia/runtime-html": "2.0.0-alpha.27"
+    "@aurelia/kernel": "2.1.0-dev.202204111455",
+    "@aurelia/metadata": "2.1.0-dev.202204111455",
+    "@aurelia/platform": "2.1.0-dev.202204111455",
+    "@aurelia/platform-browser": "2.1.0-dev.202204111455",
+    "@aurelia/route-recognizer": "2.1.0-dev.202204111455",
+    "@aurelia/runtime": "2.1.0-dev.202204111455",
+    "@aurelia/runtime-html": "2.1.0-dev.202204111455"
   },
   "devDependencies": {
     "typescript": "^4.6.2"

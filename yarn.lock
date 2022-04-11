@@ -25,6 +25,7 @@
     "@aurelia/platform" "2.0.0-alpha.27"
     "@aurelia/platform-browser" "2.0.0-alpha.27"
     "@aurelia/route-recognizer" "2.0.0-alpha.27"
+    "@aurelia/router" "2.0.0-alpha.27"
     "@aurelia/router-lite" "2.0.0-alpha.27"
     "@aurelia/runtime" "2.0.0-alpha.27"
     "@aurelia/runtime-html" "2.0.0-alpha.27"
@@ -177,6 +178,18 @@
 
 "@aurelia/router-lite@2.0.0-alpha.27", "@aurelia/router-lite@file:/home/circleci/repo/packages/router-lite":
   "resolved" "file:packages/router-lite"
+  "version" "2.0.0-alpha.27"
+  dependencies:
+    "@aurelia/kernel" "2.0.0-alpha.27"
+    "@aurelia/metadata" "2.0.0-alpha.27"
+    "@aurelia/platform" "2.0.0-alpha.27"
+    "@aurelia/platform-browser" "2.0.0-alpha.27"
+    "@aurelia/route-recognizer" "2.0.0-alpha.27"
+    "@aurelia/runtime" "2.0.0-alpha.27"
+    "@aurelia/runtime-html" "2.0.0-alpha.27"
+
+"@aurelia/router@2.0.0-alpha.27", "@aurelia/router@file:/home/circleci/repo/packages/router":
+  "resolved" "file:packages/router"
   "version" "2.0.0-alpha.27"
   dependencies:
     "@aurelia/kernel" "2.0.0-alpha.27"
@@ -2726,6 +2739,7 @@
     "@aurelia/platform" "2.0.0-alpha.27"
     "@aurelia/platform-browser" "2.0.0-alpha.27"
     "@aurelia/route-recognizer" "2.0.0-alpha.27"
+    "@aurelia/router" "2.0.0-alpha.27"
     "@aurelia/router-lite" "2.0.0-alpha.27"
     "@aurelia/runtime" "2.0.0-alpha.27"
     "@aurelia/runtime-html" "2.0.0-alpha.27"
@@ -7477,6 +7491,14 @@
   "resolved" "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz"
   "version" "2.1.3"
 
+"msgpackr-extract@^1.0.14":
+  "integrity" "sha512-fxdRfQUxPrL/TizyfYfMn09dK58e+d65bRD/fcaVH4052vj30QOzzqxcQIS7B0NsqlypEQ/6Du3QmP2DhWFfCA=="
+  "resolved" "https://registry.npmjs.org/msgpackr-extract/-/msgpackr-extract-1.0.16.tgz"
+  "version" "1.0.16"
+  dependencies:
+    "nan" "^2.14.2"
+    "node-gyp-build" "^4.2.3"
+
 "msgpackr@^1.5.4":
   "integrity" "sha512-JG0V47xRIQ9pyUnx6Hb4+3TrQoia2nA3UIdmyTldhxaxtKFkekkKpUW/N6fwHwod9o4BGuJGtouxOk+yCP5PEA=="
   "resolved" "https://registry.npmjs.org/msgpackr/-/msgpackr-1.5.5.tgz"
@@ -9847,7 +9869,7 @@
 "typedarray@^0.0.6":
   "version" "0.0.6"
 
-"typescript@*", "typescript@^4.0.3", "typescript@^4.3.5", "typescript@^4.6.2", "typescript@>=2.7", "typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta", "typescript@>=3.7.0", "typescript@>=3.8 <5.0":
+"typescript@*", "typescript@^4.0.3", "typescript@^4.6.2", "typescript@>=2.7", "typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta", "typescript@>=3.7.0", "typescript@>=3.8 <5.0":
   "integrity" "sha512-HM/hFigTBHZhLXshn9sN37H085+hQGeJHJ/X7LpBWLID/fbc2acUMfU+lGD98X81sKP+pFa9f0DZmCwB9GnbAg=="
   "resolved" "https://registry.npmjs.org/typescript/-/typescript-4.6.2.tgz"
   "version" "4.6.2"
@@ -9859,6 +9881,11 @@
 
 "ua-parser-js@0.7.22":
   "version" "0.7.22"
+
+"uglify-js@^3.1.4":
+  "integrity" "sha512-1Psi2MmnZJbnEsgJJIlfnd7tFlJfitusmR7zDI8lXlFI0ACD4/Rm/xdrU8bh6zF0i74aiVoBtkRiFulkrmh3AA=="
+  "resolved" "https://registry.npmjs.org/uglify-js/-/uglify-js-3.13.7.tgz"
+  "version" "3.13.7"
 
 "unbox-primitive@^1.0.1":
   "integrity" "sha512-tZU/3NqK3dA5gpE1KtyiJUrEB0lxnGkMFHptJ7q6ewdZ8s12QrODwNbhIJStmJkd1QDXa1NRA8aF2A1zk/Ypyw=="
