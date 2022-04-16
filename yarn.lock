@@ -6,33 +6,34 @@
   "resolved" "file:packages/__e2e__/router-configured-basic"
   "version" "0.8.0"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/platform-browser" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
     "perf-monitor" "latest"
 
 "@aurelia/__tests__@file:/home/circleci/repo/packages/__tests__":
   "resolved" "file:packages/__tests__"
   "version" "0.8.0"
   dependencies:
-    "@aurelia/fetch-client" "2.0.0-alpha.27"
-    "@aurelia/i18n" "2.0.0-alpha.27"
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/platform-browser" "2.0.0-alpha.27"
-    "@aurelia/route-recognizer" "2.0.0-alpha.27"
-    "@aurelia/router-lite" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
-    "@aurelia/store-v1" "2.0.0-alpha.27"
-    "@aurelia/testing" "2.0.0-alpha.27"
-    "@aurelia/validation" "2.0.0-alpha.27"
-    "@aurelia/validation-html" "2.0.0-alpha.27"
-    "@aurelia/validation-i18n" "2.0.0-alpha.27"
+    "@aurelia/fetch-client" "2.0.0-alpha.28"
+    "@aurelia/i18n" "2.0.0-alpha.28"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/route-recognizer" "2.0.0-alpha.28"
+    "@aurelia/router" "2.0.0-alpha.28"
+    "@aurelia/router-lite" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
+    "@aurelia/store-v1" "2.0.0-alpha.28"
+    "@aurelia/testing" "2.0.0-alpha.28"
+    "@aurelia/validation" "2.0.0-alpha.28"
+    "@aurelia/validation-html" "2.0.0-alpha.28"
+    "@aurelia/validation-i18n" "2.0.0-alpha.28"
     "i18next" "^17.0.0"
     "jsdom" "^15.2.1"
     "rxjs" "^6.6.7"
@@ -42,20 +43,20 @@
   "resolved" "file:packages-cjs/__tests__"
   "version" "0.8.0"
   dependencies:
-    "@aurelia/aot" "2.0.0-alpha.27"
-    "@aurelia/babel-jest" "2.0.0-alpha.27"
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/parcel-transformer" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/platform-browser" "2.0.0-alpha.27"
-    "@aurelia/plugin-conventions" "2.0.0-alpha.27"
-    "@aurelia/plugin-gulp" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
-    "@aurelia/testing" "2.0.0-alpha.27"
-    "@aurelia/ts-jest" "2.0.0-alpha.27"
-    "@aurelia/webpack-loader" "2.0.0-alpha.27"
+    "@aurelia/aot" "2.0.0-alpha.28"
+    "@aurelia/babel-jest" "2.0.0-alpha.28"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/parcel-transformer" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/plugin-conventions" "2.0.0-alpha.28"
+    "@aurelia/plugin-gulp" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
+    "@aurelia/testing" "2.0.0-alpha.28"
+    "@aurelia/ts-jest" "2.0.0-alpha.28"
+    "@aurelia/webpack-loader" "2.0.0-alpha.28"
     "@babel/core" "^7.12.10"
     "@jest/transform" "^27.0.2"
     "@jest/types" "^27.0.6"
@@ -64,224 +65,236 @@
     "typescript" "^4.6.2"
     "vinyl" "^2.2.0"
 
-"@aurelia/aot@2.0.0-alpha.27", "@aurelia/aot@file:/home/circleci/repo/packages-cjs/aot":
+"@aurelia/aot@2.0.0-alpha.28", "@aurelia/aot@file:/home/circleci/repo/packages-cjs/aot":
   "resolved" "file:packages-cjs/aot"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
     "jsdom" "^15.2.1"
     "typescript" "^4.6.2"
 
-"@aurelia/babel-jest@2.0.0-alpha.27", "@aurelia/babel-jest@file:/home/circleci/repo/packages-cjs/babel-jest":
+"@aurelia/babel-jest@2.0.0-alpha.28", "@aurelia/babel-jest@file:/home/circleci/repo/packages-cjs/babel-jest":
   "resolved" "file:packages-cjs/babel-jest"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/plugin-conventions" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/plugin-conventions" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
     "@babel/core" "^7.12.10"
     "babel-jest" "^27.0.2"
 
-"@aurelia/fetch-client@2.0.0-alpha.27", "@aurelia/fetch-client@file:/home/circleci/repo/packages/fetch-client":
+"@aurelia/fetch-client@2.0.0-alpha.28", "@aurelia/fetch-client@file:/home/circleci/repo/packages/fetch-client":
   "resolved" "file:packages/fetch-client"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
 
-"@aurelia/http-server@2.0.0-alpha.27", "@aurelia/http-server@file:/home/circleci/repo/packages/http-server":
+"@aurelia/http-server@2.0.0-alpha.28", "@aurelia/http-server@file:/home/circleci/repo/packages/http-server":
   "resolved" "file:packages/http-server"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
 
-"@aurelia/i18n@2.0.0-alpha.27", "@aurelia/i18n@file:/home/circleci/repo/packages/i18n":
+"@aurelia/i18n@2.0.0-alpha.28", "@aurelia/i18n@file:/home/circleci/repo/packages/i18n":
   "resolved" "file:packages/i18n"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
     "i18next" "^17.0.0"
 
-"@aurelia/kernel@2.0.0-alpha.27", "@aurelia/kernel@file:/home/circleci/repo/packages/kernel":
+"@aurelia/kernel@2.0.0-alpha.28", "@aurelia/kernel@file:/home/circleci/repo/packages/kernel":
   "resolved" "file:packages/kernel"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
 
-"@aurelia/metadata@2.0.0-alpha.27", "@aurelia/metadata@file:/home/circleci/repo/packages/metadata":
+"@aurelia/metadata@2.0.0-alpha.28", "@aurelia/metadata@file:/home/circleci/repo/packages/metadata":
   "resolved" "file:packages/metadata"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
 
-"@aurelia/parcel-transformer@2.0.0-alpha.27", "@aurelia/parcel-transformer@file:/home/circleci/repo/packages-cjs/parcel-transformer":
+"@aurelia/parcel-transformer@2.0.0-alpha.28", "@aurelia/parcel-transformer@file:/home/circleci/repo/packages-cjs/parcel-transformer":
   "resolved" "file:packages-cjs/parcel-transformer"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/plugin-conventions" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/plugin-conventions" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
     "@parcel/plugin" "^2.4.1"
     "@parcel/source-map" "^2.0.2"
 
-"@aurelia/platform-browser@2.0.0-alpha.27", "@aurelia/platform-browser@file:/home/circleci/repo/packages/platform-browser":
+"@aurelia/platform-browser@2.0.0-alpha.28", "@aurelia/platform-browser@file:/home/circleci/repo/packages/platform-browser":
   "resolved" "file:packages/platform-browser"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/platform" "2.0.0-alpha.27"
+    "@aurelia/platform" "2.0.0-alpha.28"
 
-"@aurelia/platform@2.0.0-alpha.27", "@aurelia/platform@file:/home/circleci/repo/packages/platform":
+"@aurelia/platform@2.0.0-alpha.28", "@aurelia/platform@file:/home/circleci/repo/packages/platform":
   "resolved" "file:packages/platform"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
 
-"@aurelia/plugin-conventions@2.0.0-alpha.27", "@aurelia/plugin-conventions@file:/home/circleci/repo/packages-cjs/plugin-conventions":
+"@aurelia/plugin-conventions@2.0.0-alpha.28", "@aurelia/plugin-conventions@file:/home/circleci/repo/packages-cjs/plugin-conventions":
   "resolved" "file:packages-cjs/plugin-conventions"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
     "modify-code" "^1.2.0"
     "parse5" "^5.1.1"
     "typescript" "^4.6.2"
 
-"@aurelia/plugin-gulp@2.0.0-alpha.27", "@aurelia/plugin-gulp@file:/home/circleci/repo/packages-cjs/plugin-gulp":
+"@aurelia/plugin-gulp@2.0.0-alpha.28", "@aurelia/plugin-gulp@file:/home/circleci/repo/packages-cjs/plugin-gulp":
   "resolved" "file:packages-cjs/plugin-gulp"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/plugin-conventions" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/plugin-conventions" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
     "vinyl" "^2.2.0"
 
-"@aurelia/route-recognizer@2.0.0-alpha.27", "@aurelia/route-recognizer@file:/home/circleci/repo/packages/route-recognizer":
+"@aurelia/route-recognizer@2.0.0-alpha.28", "@aurelia/route-recognizer@file:/home/circleci/repo/packages/route-recognizer":
   "resolved" "file:packages/route-recognizer"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
 
-"@aurelia/router-lite@2.0.0-alpha.27", "@aurelia/router-lite@file:/home/circleci/repo/packages/router-lite":
+"@aurelia/router-lite@2.0.0-alpha.28", "@aurelia/router-lite@file:/home/circleci/repo/packages/router-lite":
   "resolved" "file:packages/router-lite"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/platform-browser" "2.0.0-alpha.27"
-    "@aurelia/route-recognizer" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/route-recognizer" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
 
-"@aurelia/runtime-html@2.0.0-alpha.27", "@aurelia/runtime-html@file:/home/circleci/repo/packages/runtime-html":
+"@aurelia/router@2.0.0-alpha.28", "@aurelia/router@file:/home/circleci/repo/packages/router":
+  "resolved" "file:packages/router"
+  "version" "2.0.0-alpha.28"
+  dependencies:
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/route-recognizer" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
+
+"@aurelia/runtime-html@2.0.0-alpha.28", "@aurelia/runtime-html@file:/home/circleci/repo/packages/runtime-html":
   "resolved" "file:packages/runtime-html"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/platform-browser" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
 
-"@aurelia/runtime@2.0.0-alpha.27", "@aurelia/runtime@file:/home/circleci/repo/packages/runtime":
+"@aurelia/runtime@2.0.0-alpha.28", "@aurelia/runtime@file:/home/circleci/repo/packages/runtime":
   "resolved" "file:packages/runtime"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
 
-"@aurelia/store-v1@2.0.0-alpha.27", "@aurelia/store-v1@file:/home/circleci/repo/packages/store-v1":
+"@aurelia/store-v1@2.0.0-alpha.28", "@aurelia/store-v1@file:/home/circleci/repo/packages/store-v1":
   "resolved" "file:packages/store-v1"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
     "rxjs" "^6.6.7"
 
-"@aurelia/testing@2.0.0-alpha.27", "@aurelia/testing@file:/home/circleci/repo/packages/testing":
+"@aurelia/testing@2.0.0-alpha.28", "@aurelia/testing@file:/home/circleci/repo/packages/testing":
   "resolved" "file:packages/testing"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/platform-browser" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
 
-"@aurelia/ts-jest@2.0.0-alpha.27", "@aurelia/ts-jest@file:/home/circleci/repo/packages-cjs/ts-jest":
+"@aurelia/ts-jest@2.0.0-alpha.28", "@aurelia/ts-jest@file:/home/circleci/repo/packages-cjs/ts-jest":
   "resolved" "file:packages-cjs/ts-jest"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/plugin-conventions" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/plugin-conventions" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
     "ts-jest" "^27.0.4"
 
-"@aurelia/validation-html@2.0.0-alpha.27", "@aurelia/validation-html@file:/home/circleci/repo/packages/validation-html":
+"@aurelia/validation-html@2.0.0-alpha.28", "@aurelia/validation-html@file:/home/circleci/repo/packages/validation-html":
   "resolved" "file:packages/validation-html"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/platform-browser" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
-    "@aurelia/validation" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
+    "@aurelia/validation" "2.0.0-alpha.28"
 
-"@aurelia/validation-i18n@2.0.0-alpha.27", "@aurelia/validation-i18n@file:/home/circleci/repo/packages/validation-i18n":
+"@aurelia/validation-i18n@2.0.0-alpha.28", "@aurelia/validation-i18n@file:/home/circleci/repo/packages/validation-i18n":
   "resolved" "file:packages/validation-i18n"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/i18n" "2.0.0-alpha.27"
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/platform-browser" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
-    "@aurelia/validation" "2.0.0-alpha.27"
-    "@aurelia/validation-html" "2.0.0-alpha.27"
+    "@aurelia/i18n" "2.0.0-alpha.28"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
+    "@aurelia/validation" "2.0.0-alpha.28"
+    "@aurelia/validation-html" "2.0.0-alpha.28"
     "i18next" "^17.0.0"
 
-"@aurelia/validation@2.0.0-alpha.27", "@aurelia/validation@file:/home/circleci/repo/packages/validation":
+"@aurelia/validation@2.0.0-alpha.28", "@aurelia/validation@file:/home/circleci/repo/packages/validation":
   "resolved" "file:packages/validation"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
 
-"@aurelia/webpack-loader@2.0.0-alpha.27", "@aurelia/webpack-loader@file:/home/circleci/repo/packages-cjs/webpack-loader":
+"@aurelia/webpack-loader@2.0.0-alpha.28", "@aurelia/webpack-loader@file:/home/circleci/repo/packages-cjs/webpack-loader":
   "resolved" "file:packages-cjs/webpack-loader"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/plugin-conventions" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/plugin-conventions" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
     "loader-utils" "^2.0.0"
 
 "@azure/abort-controller@^1.0.0":
@@ -853,13 +866,13 @@
   "resolved" "file:test/benchmarking-apps/aurelia2"
   "version" "1.0.0"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/platform-browser" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
-    "@aurelia/webpack-loader" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
+    "@aurelia/webpack-loader" "2.0.0-alpha.28"
     "@benchmarking-apps/shared" "1.0.0"
 
 "@benchmarking-apps/runner@file:/home/circleci/repo/test/benchmarking-apps/runner":
@@ -885,21 +898,21 @@
   "resolved" "file:test/benchmarking-apps/viewer/client"
   "version" "1.0.0"
   dependencies:
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
-    "@aurelia/validation" "2.0.0-alpha.27"
-    "@aurelia/validation-html" "2.0.0-alpha.27"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
+    "@aurelia/validation" "2.0.0-alpha.28"
+    "@aurelia/validation-html" "2.0.0-alpha.28"
     "@benchmarking-apps/test-result" "1.0.0"
-    "aurelia" "2.0.0-alpha.27"
+    "aurelia" "2.0.0-alpha.28"
     "d3" "^6.7.0"
 
 "@benchmarking-apps/viewer-server@file:/home/circleci/repo/test/benchmarking-apps/viewer/server":
   "resolved" "file:test/benchmarking-apps/viewer/server"
   "version" "1.0.0"
   dependencies:
-    "@aurelia/http-server" "2.0.0-alpha.27"
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
+    "@aurelia/http-server" "2.0.0-alpha.28"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
     "@azure/cosmos" "^3.9.3"
     "@benchmarking-apps/storage" "1.0.0"
 
@@ -1034,12 +1047,12 @@
   "resolved" "file:examples/1kcomponents"
   "version" "0.8.0"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/platform-browser" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
     "d3-scale-chromatic" "^3.0.0"
     "perf-monitor" "latest"
 
@@ -1047,42 +1060,42 @@
   "resolved" "file:examples/doc-example"
   "version" "0.8.0"
   dependencies:
-    "@aurelia/fetch-client" "2.0.0-alpha.27"
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/platform-browser" "2.0.0-alpha.27"
-    "@aurelia/route-recognizer" "2.0.0-alpha.27"
-    "@aurelia/router-lite" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
+    "@aurelia/fetch-client" "2.0.0-alpha.28"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/route-recognizer" "2.0.0-alpha.28"
+    "@aurelia/router-lite" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
     "promise-polyfill" "^8.1.3"
 
 "@examples/fractals-tree@file:/home/circleci/repo/examples/fractals-tree":
   "resolved" "file:examples/fractals-tree"
   "version" "0.8.0"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/platform-browser" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
     "perf-monitor" "latest"
 
 "@examples/navigation-skeleton@file:/home/circleci/repo/examples/navigation-skeleton":
   "resolved" "file:examples/navigation-skeleton"
   "version" "0.8.0"
   dependencies:
-    "@aurelia/fetch-client" "2.0.0-alpha.27"
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/platform-browser" "2.0.0-alpha.27"
-    "@aurelia/route-recognizer" "2.0.0-alpha.27"
-    "@aurelia/router-lite" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
+    "@aurelia/fetch-client" "2.0.0-alpha.28"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/route-recognizer" "2.0.0-alpha.28"
+    "@aurelia/router-lite" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
     "bootstrap" "^4.3.1"
     "font-awesome" "^4.6.3"
 
@@ -1090,38 +1103,38 @@
   "resolved" "file:examples/rainbow-spiral"
   "version" "0.8.0"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/platform-browser" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
     "perf-monitor" "latest"
 
 "@examples/realworld-advanced@file:/home/circleci/repo/examples/realworld-advanced":
   "resolved" "file:examples/realworld-advanced"
   "version" "0.8.0"
   dependencies:
-    "aurelia" "2.0.0-alpha.27"
+    "aurelia" "2.0.0-alpha.28"
     "marked" "^4.0.10"
 
 "@examples/realworld@file:/home/circleci/repo/examples/realworld":
   "resolved" "file:examples/realworld"
   "version" "0.8.0"
   dependencies:
-    "aurelia" "2.0.0-alpha.27"
+    "aurelia" "2.0.0-alpha.28"
     "marked" "^4.0.10"
 
 "@examples/sierpinski-triangle@file:/home/circleci/repo/examples/sierpinski-triangle":
   "resolved" "file:examples/sierpinski-triangle"
   "version" "0.8.0"
   dependencies:
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/platform-browser" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
     "perf-monitor" "latest"
 
 "@humanwhocodes/config-array@^0.9.2":
@@ -2709,26 +2722,27 @@
 
 "au@file:/home/circleci/repo/packages/au":
   "resolved" "file:packages/au"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/http-server" "2.0.0-alpha.27"
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
+    "@aurelia/http-server" "2.0.0-alpha.28"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
 
-"aurelia@2.0.0-alpha.27", "aurelia@file:/home/circleci/repo/packages/aurelia":
+"aurelia@2.0.0-alpha.28", "aurelia@file:/home/circleci/repo/packages/aurelia":
   "resolved" "file:packages/aurelia"
-  "version" "2.0.0-alpha.27"
+  "version" "2.0.0-alpha.28"
   dependencies:
-    "@aurelia/fetch-client" "2.0.0-alpha.27"
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/platform-browser" "2.0.0-alpha.27"
-    "@aurelia/route-recognizer" "2.0.0-alpha.27"
-    "@aurelia/router-lite" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
+    "@aurelia/fetch-client" "2.0.0-alpha.28"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/route-recognizer" "2.0.0-alpha.28"
+    "@aurelia/router" "2.0.0-alpha.28"
+    "@aurelia/router-lite" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
 
 "aws-sign2@~0.7.0":
   "version" "0.7.0"
@@ -7477,6 +7491,14 @@
   "resolved" "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz"
   "version" "2.1.3"
 
+"msgpackr-extract@^1.0.14":
+  "integrity" "sha512-fxdRfQUxPrL/TizyfYfMn09dK58e+d65bRD/fcaVH4052vj30QOzzqxcQIS7B0NsqlypEQ/6Du3QmP2DhWFfCA=="
+  "resolved" "https://registry.npmjs.org/msgpackr-extract/-/msgpackr-extract-1.0.16.tgz"
+  "version" "1.0.16"
+  dependencies:
+    "nan" "^2.14.2"
+    "node-gyp-build" "^4.2.3"
+
 "msgpackr@^1.5.4":
   "integrity" "sha512-JG0V47xRIQ9pyUnx6Hb4+3TrQoia2nA3UIdmyTldhxaxtKFkekkKpUW/N6fwHwod9o4BGuJGtouxOk+yCP5PEA=="
   "resolved" "https://registry.npmjs.org/msgpackr/-/msgpackr-1.5.5.tgz"
@@ -9554,14 +9576,14 @@
   "resolved" "file:test/i18n"
   "version" "0.8.0"
   dependencies:
-    "@aurelia/i18n" "2.0.0-alpha.27"
-    "@aurelia/kernel" "2.0.0-alpha.27"
-    "@aurelia/metadata" "2.0.0-alpha.27"
-    "@aurelia/platform" "2.0.0-alpha.27"
-    "@aurelia/platform-browser" "2.0.0-alpha.27"
-    "@aurelia/runtime" "2.0.0-alpha.27"
-    "@aurelia/runtime-html" "2.0.0-alpha.27"
-    "@aurelia/validation" "2.0.0-alpha.27"
+    "@aurelia/i18n" "2.0.0-alpha.28"
+    "@aurelia/kernel" "2.0.0-alpha.28"
+    "@aurelia/metadata" "2.0.0-alpha.28"
+    "@aurelia/platform" "2.0.0-alpha.28"
+    "@aurelia/platform-browser" "2.0.0-alpha.28"
+    "@aurelia/runtime" "2.0.0-alpha.28"
+    "@aurelia/runtime-html" "2.0.0-alpha.28"
+    "@aurelia/validation" "2.0.0-alpha.28"
     "i18next" "^17.0.0"
     "i18next-fetch-backend" "^2.2.0"
     "i18next-intervalplural-postprocessor" "^1.0.0"
@@ -9847,7 +9869,7 @@
 "typedarray@^0.0.6":
   "version" "0.0.6"
 
-"typescript@*", "typescript@^4.0.3", "typescript@^4.3.5", "typescript@^4.6.2", "typescript@>=2.7", "typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta", "typescript@>=3.7.0", "typescript@>=3.8 <5.0":
+"typescript@*", "typescript@^4.0.3", "typescript@^4.6.2", "typescript@>=2.7", "typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta", "typescript@>=3.7.0", "typescript@>=3.8 <5.0":
   "integrity" "sha512-HM/hFigTBHZhLXshn9sN37H085+hQGeJHJ/X7LpBWLID/fbc2acUMfU+lGD98X81sKP+pFa9f0DZmCwB9GnbAg=="
   "resolved" "https://registry.npmjs.org/typescript/-/typescript-4.6.2.tgz"
   "version" "4.6.2"
@@ -9859,6 +9881,11 @@
 
 "ua-parser-js@0.7.22":
   "version" "0.7.22"
+
+"uglify-js@^3.1.4":
+  "integrity" "sha512-1Psi2MmnZJbnEsgJJIlfnd7tFlJfitusmR7zDI8lXlFI0ACD4/Rm/xdrU8bh6zF0i74aiVoBtkRiFulkrmh3AA=="
+  "resolved" "https://registry.npmjs.org/uglify-js/-/uglify-js-3.13.7.tgz"
+  "version" "3.13.7"
 
 "unbox-primitive@^1.0.1":
   "integrity" "sha512-tZU/3NqK3dA5gpE1KtyiJUrEB0lxnGkMFHptJ7q6ewdZ8s12QrODwNbhIJStmJkd1QDXa1NRA8aF2A1zk/Ypyw=="

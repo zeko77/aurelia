@@ -2937,6 +2937,7 @@ class CSSModulesProcessorRegistry {
         const ClassCustomAttribute = CustomAttribute.define({
             name: 'class',
             bindables: ['value'],
+            noMultiBindings: true,
         }, (_a = class CustomAttributeClass {
                 constructor(element) {
                     this.element = element;
