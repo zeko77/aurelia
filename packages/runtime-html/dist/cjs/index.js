@@ -2351,7 +2351,8 @@ class CSSModulesProcessorRegistry {
         const s = Object.assign({}, ...this.modules);
         const i = Dt.define({
             name: "class",
-            bindables: [ "value" ]
+            bindables: [ "value" ],
+            noMultiBindings: true
         }, (e = class CustomAttributeClass {
             constructor(t) {
                 this.element = t;

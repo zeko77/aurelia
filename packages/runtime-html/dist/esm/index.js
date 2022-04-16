@@ -2349,7 +2349,8 @@ class CSSModulesProcessorRegistry {
         const i = Object.assign({}, ...this.modules);
         const s = Ue.define({
             name: "class",
-            bindables: [ "value" ]
+            bindables: [ "value" ],
+            noMultiBindings: true
         }, (e = class CustomAttributeClass {
             constructor(t) {
                 this.element = t;
