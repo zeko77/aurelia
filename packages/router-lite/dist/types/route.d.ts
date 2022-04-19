@@ -12,44 +12,33 @@ import { RouteNode } from './route-tree.js';
  * as well as `IRedirectRouteConfig`
  */
 export declare type Routeable = string | IChildRouteConfig | IRedirectRouteConfig | RouteableComponent;
-export interface IRouteConfig extends Partial<Omit<RouteConfig, 'saveTo'>> {
-}
-export interface IChildRouteConfig extends IRouteConfig, Pick<ChildRouteConfig, 'component'> {
-}
-export interface IRedirectRouteConfig extends Pick<IRouteConfig, 'caseSensitive'>, Pick<RouteConfig, 'redirectTo' | 'path'> {
-}
-export declare type TransitionPlan = 'none' | 'replace' | 'invoke-lifecycles';
-export declare type TransitionPlanOrFunc = TransitionPlan | ((current: RouteNode, next: RouteNode) => TransitionPlan);
-export declare function defaultReentryBehavior(current: RouteNode, next: RouteNode): TransitionPlan;
-export declare class RouteConfig {
+export interface IRouteConfig {
     /**
      * The id for this route, which can be used in the view for generating hrefs.
-     *
-     * (TODO: decide on, and provide more details about, whether this can be specified without specifying path, and what happens in different combinations of situations)
      */
-    readonly id: string | null;
+    readonly id?: string | null;
     /**
      * The path to match against the url.
      *
-     * If left blank, the path will be derived from the component's static `path` property (if it exists), or otherwise the component name will be used (if direct routing is enabled).
+     * If left blank, the path will be derived from the component's static `path` property (if it exists).
      */
-    readonly path: string | string[] | null;
+    readonly path?: string | string[] | null;
     /**
      * The title to use for this route when matched.
      *
      * If left blank, this route will not contribute to the generated title.
      */
-    readonly title: string | ((node: RouteNode) => string | null) | null;
+    readonly title?: string | ((node: RouteNode) => string | null) | null;
     /**
      * The path to which to redirect when the url matches the path in this config.
      *
      * If the path begins with a slash (`/`), the redirect path is considered absolute, otherwise it is considered relative to the parent path.
      */
-    readonly redirectTo: string | null;
+    readonly redirectTo?: string | null;
     /**
      * Whether the `path` should be case sensitive.
      */
-    readonly caseSensitive: boolean;
+    readonly caseSensitive?: boolean;
     /**
      * How to behave when this component scheduled to be loaded again in the same viewport:
      *
@@ -59,91 +48,55 @@ export declare class RouteConfig {
      *
      * By default, calls the router lifecycle hooks only if the parameters have changed, otherwise does nothing.
      */
-    readonly transitionPlan: TransitionPlanOrFunc;
+    readonly transitionPlan?: TransitionPlanOrFunc;
     /**
      * The name of the viewport this component should be loaded into.
-     *
-     * (TODO: decide on, and provide more details about, whether this can be specified without specifying path, and what happens in different combinations of situations)
      */
-    readonly viewport: string | null;
+    readonly viewport?: string | null;
     /**
      * Any custom data that should be accessible to matched components or hooks.
      */
-    readonly data: Params;
+    readonly data?: Params;
     /**
      * The child routes that can be navigated to from this route. See `Routeable` for more information.
      */
-    readonly routes: readonly Routeable[];
-    protected constructor(
+    readonly routes?: readonly Routeable[];
     /**
-     * The id for this route, which can be used in the view for generating hrefs.
-     *
-     * (TODO: decide on, and provide more details about, whether this can be specified without specifying path, and what happens in different combinations of situations)
+     * When set, will be used to redirect unknown/unconfigured routes to this route.
+     * Can be a route-id, route-path (route), or a custom element name; this is also the resolution/fallback order.
      */
-    id: string | null, 
-    /**
-     * The path to match against the url.
-     *
-     * If left blank, the path will be derived from the component's static `path` property (if it exists), or otherwise the component name will be used (if direct routing is enabled).
-     */
-    path: string | string[] | null, 
-    /**
-     * The title to use for this route when matched.
-     *
-     * If left blank, this route will not contribute to the generated title.
-     */
-    title: string | ((node: RouteNode) => string | null) | null, 
-    /**
-     * The path to which to redirect when the url matches the path in this config.
-     *
-     * If the path begins with a slash (`/`), the redirect path is considered absolute, otherwise it is considered relative to the parent path.
-     */
-    redirectTo: string | null, 
-    /**
-     * Whether the `path` should be case sensitive.
-     */
-    caseSensitive: boolean, 
-    /**
-     * How to behave when this component scheduled to be loaded again in the same viewport:
-     *
-     * - `replace`: completely removes the current component and creates a new one, behaving as if the component changed.
-     * - `invoke-lifecycles`: calls `canUnload`, `canLoad`, `unload` and `load` (default if only the parameters have changed)
-     * - `none`: does nothing (default if nothing has changed for the viewport)
-     *
-     * By default, calls the router lifecycle hooks only if the parameters have changed, otherwise does nothing.
-     */
-    transitionPlan: TransitionPlanOrFunc, 
-    /**
-     * The name of the viewport this component should be loaded into.
-     *
-     * (TODO: decide on, and provide more details about, whether this can be specified without specifying path, and what happens in different combinations of situations)
-     */
-    viewport: string | null, 
-    /**
-     * Any custom data that should be accessible to matched components or hooks.
-     */
-    data: Params, 
-    /**
-     * The child routes that can be navigated to from this route. See `Routeable` for more information.
-     */
-    routes: readonly Routeable[]);
-    static create(configOrPath: IRouteConfig | string | string[], Type: RouteType | null): RouteConfig;
-    static configure<T extends RouteType>(configOrPath: IRouteConfig | string, Type: T): T;
-    static getConfig(Type: RouteType): RouteConfig;
-    saveTo(Type: RouteType): void;
+    readonly fallback?: string | null;
 }
-export declare class ChildRouteConfig extends RouteConfig {
+export interface IChildRouteConfig extends IRouteConfig {
     /**
      * The component to load when this route is matched.
      */
     readonly component: Routeable;
-    private constructor();
 }
-export declare class RedirectRouteConfig {
-    readonly path: string | string[];
-    readonly redirectTo: string;
+export interface IRedirectRouteConfig extends Pick<IRouteConfig, 'caseSensitive' | 'redirectTo' | 'path'> {
+}
+export declare type TransitionPlan = 'none' | 'replace' | 'invoke-lifecycles';
+export declare type TransitionPlanOrFunc = TransitionPlan | ((current: RouteNode, next: RouteNode) => TransitionPlan);
+export declare function defaultReentryBehavior(current: RouteNode, next: RouteNode): TransitionPlan;
+export declare class RouteConfig implements IRouteConfig, IChildRouteConfig {
+    readonly id: string | null;
+    readonly path: string | string[] | null;
+    readonly title: string | ((node: RouteNode) => string | null) | null;
+    readonly redirectTo: string | null;
     readonly caseSensitive: boolean;
-    private constructor();
+    readonly transitionPlan: TransitionPlanOrFunc;
+    readonly viewport: string | null;
+    readonly data: Params;
+    readonly routes: readonly Routeable[];
+    readonly fallback: string | null;
+    readonly component: Routeable;
+    protected constructor(id: string | null, path: string | string[] | null, title: string | ((node: RouteNode) => string | null) | null, redirectTo: string | null, caseSensitive: boolean, transitionPlan: TransitionPlanOrFunc, viewport: string | null, data: Params, routes: readonly Routeable[], fallback: string | null, component: Routeable);
+    static create(configOrPath: IRouteConfig | IChildRouteConfig | string | string[], Type: RouteType | null): RouteConfig;
+    /**
+     * Creates a new route config applying the child route config.
+     * Note that the current rote config is not mutated.
+     */
+    applyChildRouteConfig(config: IChildRouteConfig): RouteConfig;
 }
 export declare const Route: {
     name: string;
@@ -154,7 +107,7 @@ export declare const Route: {
     /**
      * Apply the specified configuration to the specified type, overwriting any existing configuration.
      */
-    configure<T extends RouteType<Constructable<{}>>>(configOrPath: IRouteConfig | string | string[], Type: T): T;
+    configure<T extends RouteType<Constructable<{}>>>(configOrPath: IRouteConfig | IChildRouteConfig | string | string[], Type: T): T;
     /**
      * Get the `RouteConfig` associated with the specified type, creating a new one if it does not yet exist.
      */

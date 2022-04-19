@@ -1,8 +1,8 @@
 import { ILogger } from '@aurelia/kernel';
 import { CustomElementDefinition } from '@aurelia/runtime-html';
+import { ITypedNavigationInstruction_ResolvedComponent, Params, ViewportInstruction, ViewportInstructionTree } from './instructions.js';
 import { IRouteContext } from './route-context.js';
 import { NavigationOptions } from './router.js';
-import { ViewportInstructionTree, ViewportInstruction, Params, ITypedNavigationInstruction_ResolvedComponent } from './instructions.js';
 export interface IRouteNode {
     path: string;
     finalPath: string;
@@ -22,7 +22,7 @@ export interface IRouteNode {
 }
 export declare class RouteNode implements IRouteNode {
     /**
-     * The original configured path pattern that was matched, or the component name if it was resolved via direct routing.
+     * The original configured path pattern that was matched.
      */
     path: string;
     /**

@@ -6,9 +6,6 @@ export interface IViewport {
     readonly usedBy: string;
     readonly default: string;
     readonly fallback: string;
-    readonly noScope: boolean;
-    readonly noLink: boolean;
-    readonly noHistory: boolean;
     readonly stateful: boolean;
 }
 export declare class ViewportCustomElement implements ICustomElementViewModel, IViewport {
@@ -18,9 +15,6 @@ export declare class ViewportCustomElement implements ICustomElementViewModel, I
     usedBy: string;
     default: string;
     fallback: string;
-    noScope: boolean;
-    noLink: boolean;
-    noHistory: boolean;
     stateful: boolean;
     private agent;
     private controller;

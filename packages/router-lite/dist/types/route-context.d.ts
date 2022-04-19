@@ -11,8 +11,9 @@ import { Routeable } from './route.js';
 export interface IRouteContext extends RouteContext {
 }
 export declare const IRouteContext: import("@aurelia/kernel").InterfaceSymbol<IRouteContext>;
+export declare const RESIDUE: "au$residue";
 /**
- * Holds the information of a component in the context of a specific container. May or may not have statically configured routes.
+ * Holds the information of a component in the context of a specific container.
  *
  * The `RouteContext` is cached using a 3-part composite key consisting of the CustomElementDefinition, the RouteDefinition and the RenderContext.
  *
