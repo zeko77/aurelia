@@ -126,20 +126,10 @@ export class ViewportScopeCustomElement implements ICustomElementViewModel {
   }
 
   private getAttribute(key: string, value: string | boolean, checkExists: boolean = false): string | boolean | undefined {
-    if (this.isBound) {
-      return value;
-    } else {
-      if (this.element.hasAttribute(key)) {
-        if (checkExists) {
-          return true;
-        } else {
-          value = this.element.getAttribute(key) as string;
-          if (value.length > 0) {
-            return value;
-          }
-        }
-      }
-    }
-    return void 0;
+    if (this.isBound) return value;
+    if (!this.element.hasAttribute(key)) return void 0;
+    if (checkExists) return true;
+    value = this.element.getAttribute(key) as string;
+    if (value.length > 0) return value;
   }
 }

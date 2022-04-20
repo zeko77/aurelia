@@ -74,29 +74,19 @@ export class InstructionComponent {
   }
 
   public static getName(component: ComponentAppellation): string {
-    if (InstructionComponent.isName(component)) {
-      return component;
-    } else if (InstructionComponent.isType(component)) {
-      return CustomElement.getDefinition(component).name;
-    } else {
-      return InstructionComponent.getName(component.constructor as Constructable);
-    }
+    if (InstructionComponent.isName(component)) return component;
+    if (InstructionComponent.isType(component)) return CustomElement.getDefinition(component).name;
+    return InstructionComponent.getName(component.constructor as Constructable);
   }
   public static getType(component: ComponentAppellation): RouteableComponentType | null {
-    if (InstructionComponent.isName(component)) {
-      return null;
-    } else if (InstructionComponent.isType(component)) {
-      return component;
-    } else {
-      return ((component as IRouteableComponent).constructor as RouteableComponentType);
-    }
+    if (InstructionComponent.isName(component)) return null;
+    if (InstructionComponent.isType(component)) return component;
+    return ((component as IRouteableComponent).constructor as RouteableComponentType);
+
   }
   public static getInstance(component: ComponentAppellation): IRouteableComponent | null {
-    if (InstructionComponent.isName(component) || InstructionComponent.isType(component)) {
-      return null;
-    } else {
-      return component as IRouteableComponent;
-    }
+    if (InstructionComponent.isName(component) || InstructionComponent.isType(component)) return null;
+    return component as IRouteableComponent;
   }
 
   // Instance methods
@@ -136,7 +126,7 @@ export class InstructionComponent {
       return;
     }
     // TODO(alpha): Fix the type here
-    return (this.promise as any).then((component: ComponentAppellation): void => {
+    return this.promise.then((component: ComponentAppellation): void => {
       // TODO(alpha): Fix the issues with import/module here
       if (InstructionComponent.isAppelation(component)) {
         this.set(component);
