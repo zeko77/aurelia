@@ -82,12 +82,13 @@ export interface IRoutingHookDefinition {
  * @internal - Shouldn't be used directly
  */
 export class RoutingHook {
-  public static hooks: Record<RoutingHookType, RoutingHook[]> = {
-    beforeNavigation: [],
-    transformFromUrl: [],
-    transformToUrl: [],
-    transformTitle: [],
-  };
+  public static hooks: Map<RoutingHookType, RoutingHook[]> = new Map([
+    ['beforeNavigation', []],
+    ['transformFromUrl', []],
+    ['transformToUrl', []],
+    ['transformTitle', []],
+  ]
+  );
 
   private static lastIdentity: number = 0;
 
@@ -119,27 +120,22 @@ export class RoutingHook {
   public static add(hookFunction: RoutingHookFunction, options?: IRoutingHookOptions): RoutingHookIdentity;
   public static add(hookFunction: RoutingHookFunction, options?: IRoutingHookOptions): RoutingHookIdentity {
     const hook = new RoutingHook(hookFunction, options ?? {}, ++this.lastIdentity);
-
-    this.hooks[hook.type].push(hook);
-
+    this.hooks.get(hook.type)?.push(hook);
     return this.lastIdentity;
   }
 
   public static remove(id: RoutingHookIdentity): void {
-    for (const type in this.hooks) {
-      if (Object.prototype.hasOwnProperty.call(this.hooks, type)) {
-        const index = this.hooks[type as RoutingHookType].findIndex(hook => hook.id === id);
-        if (index >= 0) {
-          this.hooks[type as RoutingHookType].splice(index, 1);
-        }
+    for (const [key, hook] of this.hooks) {
+      const index = hook.findIndex(h => h.id === id);
+      if (index > -1) {
+        hook.splice(index, 1);
+        return;
       }
     }
   }
 
   public static removeAll(): void {
-    for (const type in this.hooks) {
-      this.hooks[type as RoutingHookType] = [];
-    }
+    this.hooks.forEach(hook => hook = [])
   }
 
   public static async invokeBeforeNavigation(routingInstructions: RoutingInstruction[], navigationInstruction: Navigation): Promise<boolean | RoutingInstruction[]> {
@@ -157,18 +153,12 @@ export class RoutingHook {
 
   public static async invoke(type: RoutingHookType, navigationInstruction: Navigation, arg: RoutingHookParameter): Promise<RoutingHookResult> {
     let outcome: RoutingHookResult = arg;
-    for (const hook of this.hooks[type]) {
-      if (!hook.wantsMatch || hook.matches(arg)) {
-        outcome = await hook.invoke(navigationInstruction, arg);
-        if (typeof outcome === 'boolean') {
-          if (!outcome) {
-            return false;
-          }
-        } else {
-          arg = outcome;
-        }
-      }
-    }
+
+    this.hooks.get(type)?.filter(hook => !hook.wantsMatch || hook.matches(arg)).every(async hook => {
+      outcome = await hook.invoke(navigationInstruction, arg);
+      if (typeof outcome === 'boolean') return outcome;
+      arg = outcome;
+    });
     return outcome;
   }
 
@@ -177,6 +167,7 @@ export class RoutingHook {
   }
 
   public matches(routingInstructions: RoutingHookParameter): boolean {
+
     if (this.includeTargets.length && !this.includeTargets.some(target => target.matches(routingInstructions as RoutingInstruction[]))) {
       return false;
     }
@@ -199,40 +190,34 @@ class Target {
   public viewportName: string | null = null;
 
   public constructor(target: RoutingHookTarget) {
-    if (typeof target === 'string') {
-      this.componentName = target;
-    } else if (InstructionComponent.isType(target as RouteableComponentType)) {
+    if (typeof target === 'string') { this.componentName = target; return; }
+    if (InstructionComponent.isType(target as RouteableComponentType)) {
       this.componentType = target as RouteableComponentType;
       this.componentName = InstructionComponent.getName(target as RouteableComponentType);
-    } else {
-      const cvTarget = target as IComponentAndOrViewportOrNothing;
-      if (cvTarget.component != null) {
-        this.componentType = InstructionComponent.isType(cvTarget.component)
-          ? InstructionComponent.getType(cvTarget.component)
-          : null;
-        this.componentName = InstructionComponent.getName(cvTarget.component);
-      }
-      if (cvTarget.viewport != null) {
-        this.viewport = InstructionEndpoint.isInstance(cvTarget.viewport) ? cvTarget.viewport : null;
-        this.viewportName = InstructionEndpoint.getName(cvTarget.viewport);
-      }
+      return;
+    }
+    const component = (target as IComponentAndOrViewportOrNothing).component;
+    if (component) {
+      this.componentType = InstructionComponent.isType(component)
+        ? InstructionComponent.getType(component)
+        : null;
+      this.componentName = InstructionComponent.getName(component);
+    }
+    const viewport = (target as IComponentAndOrViewportOrNothing).viewport;
+    if (viewport) {
+      this.viewport = InstructionEndpoint.isInstance(viewport) ? viewport : null;
+      this.viewportName = InstructionEndpoint.getName(viewport);
     }
   }
 
   public matches(routingInstructions: RoutingInstruction[]): boolean {
     const instructions = routingInstructions.slice();
-    if (!instructions.length) {
-      // instructions.push(new RoutingInstruction(''));
-      instructions.push(RoutingInstruction.create('') as RoutingInstruction);
-    }
-    for (const instruction of instructions) {
-      if ((this.componentName !== null && this.componentName === instruction.component.name) ||
-        (this.componentType !== null && this.componentType === instruction.component.type) ||
-        (this.viewportName !== null && this.viewportName === instruction.endpoint.name) ||
-        (this.viewport !== null && this.viewport === instruction.endpoint.instance)) {
-        return true;
-      }
-    }
-    return false;
+    !instructions.length && instructions.push(RoutingInstruction.create('') as RoutingInstruction);
+
+    return instructions.some(instruction =>
+      this.componentName && this.componentName === instruction.component.name ||
+      this.componentType && this.componentType === instruction.component.type ||
+      this.viewportName && this.viewportName === instruction.endpoint.name ||
+      this.viewport && this.viewport === instruction.endpoint.instance);
   }
 }
