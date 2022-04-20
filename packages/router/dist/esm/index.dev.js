@@ -2889,7 +2889,7 @@ class ViewportContent extends EndpointContent {
     getLifecycleHooks(instance, name) {
         var _a;
         const hooks = ((_a = instance.$controller.lifecycleHooks[name]) !== null && _a !== void 0 ? _a : []);
-        return hooks.map(hook => hook.instance[name]);
+        return hooks.map(hook => hook.instance[name].bind(hook.instance));
     }
 }
 
