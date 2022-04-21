@@ -3,6 +3,14 @@ export interface AttributePatternDefinition {
     pattern: string;
     symbols: string;
 }
+export interface ICharSpec {
+    chars: string;
+    repeat: boolean;
+    isSymbol: boolean;
+    isInverted: boolean;
+    has(char: string): boolean;
+    equals(other: ICharSpec): boolean;
+}
 export declare class CharSpec implements ICharSpec {
     chars: string;
     repeat: boolean;
@@ -24,6 +32,18 @@ export declare class Interpretation {
     set pattern(value: string | null);
     append(pattern: string, ch: string): void;
     next(pattern: string): void;
+}
+export declare class State {
+    charSpec: ICharSpec;
+    nextStates: State[];
+    types: SegmentTypes | null;
+    patterns: string[];
+    isEndpoint: boolean;
+    get pattern(): string | null;
+    constructor(charSpec: ICharSpec, ...patterns: string[]);
+    findChild(charSpec: ICharSpec): State;
+    append(charSpec: ICharSpec, pattern: string): State;
+    findMatches(ch: string, interpretation: Interpretation): State[];
 }
 export declare class SegmentTypes {
     statics: number;

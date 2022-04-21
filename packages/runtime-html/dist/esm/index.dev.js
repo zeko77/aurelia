@@ -473,7 +473,6 @@ class Interpretation {
         }
     }
 }
-/** @internal */
 class State$1 {
     constructor(charSpec, ...patterns) {
         this.charSpec = charSpec;

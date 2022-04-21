@@ -20,6 +20,8 @@ export declare class ComputedWatcher implements IConnectableBinding, ISubscriber
     private run;
     private compute;
 }
+export interface ExpressionWatcher extends IConnectableBinding {
+}
 export declare class ExpressionWatcher implements IConnectableBinding {
     scope: Scope;
     locator: IServiceLocator;
