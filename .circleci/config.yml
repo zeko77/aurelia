@@ -563,19 +563,8 @@ workflows:
       #     <<: *filter_ignore_develop_release
       #     requires:
       #       - check_doc_abort
-      # - unit_test_cjs:
-      #     <<: *filter_ignore_develop_release
-      #     npm_command: "test-node"
-      #     requires:
-      #       - check_doc_abort
-      # #- unit_test:
-      # #   <<: *filter_ignore_develop_release
-      # #   name: test_test262
-      # #   npm_command: "test-262"
-      # #   coverage: false
-      # #   submodules: true
 
-      # - lint_packages:
+      # - benchmark_playwright:
       #     <<: *filter_ignore_develop_release
       #     requires:
       #       - check_doc_abort
@@ -609,15 +598,15 @@ workflows:
           channel: dev
           push: true
           merge_topic: false
-      # - merge_and_dist:
-      #     <<: *filter_only_topic
-      #     name: merge_and_dist_topic
-      #     requires:
-      #       - check_doc_abort
-      #     from: master
-      #     to: develop
-      #     channel: dev
-      #     dist_file_name: merge_and_dist_topic
+      - merge_and_dist:
+          <<: *filter_only_topic
+          name: merge_and_dist_topic
+          requires:
+            - check_doc_abort
+          from: master
+          to: develop
+          channel: dev
+          dist_file_name: merge_and_dist_topic
       - publish_npm:
           <<: *filter_only_master
           name: "publish_npm_dev"
