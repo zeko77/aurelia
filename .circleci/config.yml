@@ -337,7 +337,7 @@ jobs:
           steps:
             - run: git checkout << parameters.branch >>
             - run: git pull
-      - run: zip -r publish_npm_<< parameters.channel>>.zip packages/*/dist packages/*/package.json /home/circleci/.npm/_logs
+      - run: zip -r publish_npm_<< parameters.channel>>.zip packages/*/dist packages/*/package.json
       - store_artifacts:
           path: publish_npm_<< parameters.channel>>.zip
           destination: publish_npm_<< parameters.channel>>.zip
