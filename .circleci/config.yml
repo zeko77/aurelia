@@ -331,8 +331,8 @@ jobs:
         type: boolean
         default: false
     steps:
-      - checkout_install:
-          install_drivers: false
+      - checkout
+      - run: npm i -g ts-node@10
       - when:
           condition: << parameters.swap >>
           steps:
