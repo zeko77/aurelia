@@ -21,14 +21,12 @@ function _interopNamespace(e) {
                 var d = Object.getOwnPropertyDescriptor(e, k);
                 Object.defineProperty(n, k, d.get ? d : {
                     enumerable: true,
-                    get: function () {
-                        return e[k];
-                    }
+                    get: function () { return e[k]; }
                 });
             }
         });
     }
-    n['default'] = e;
+    n["default"] = e;
     return Object.freeze(n);
 }
 
@@ -122,7 +120,7 @@ function preprocessResource(unit, options) {
 }
 function modifyResource(unit, options) {
     const { runtimeImport, implicitElement, localDeps, conventionalDecorators, customElementName } = options;
-    const m = modifyCode__default['default'](unit.contents, unit.path);
+    const m = modifyCode__default["default"](unit.contents, unit.path);
     if (implicitElement && unit.filePair) {
         // @view() for foo.js and foo-view.html
         // @customElement() for foo.js and foo.html
@@ -530,7 +528,7 @@ function preprocessHtmlTemplate(unit, options) {
         statements.push(`import d${i} from ${s(d)};\n`);
         viewDeps.push(`Registration.defer('${ext}', d${i})`);
     });
-    const m = modifyCode__default['default']('', unit.path);
+    const m = modifyCode__default["default"]('', unit.path);
     m.append(`import { CustomElement } from '@aurelia/runtime-html';\n`);
     if (cssDeps.length > 0) {
         if (shadowMode !== null) {

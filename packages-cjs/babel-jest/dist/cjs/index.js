@@ -11,10 +11,10 @@ var babelTransformer__default = /*#__PURE__*/_interopDefaultLegacy(babelTransfor
 
 function _createTransformer(conventionsOptions = {}, 
 // for testing
-_preprocess = pluginConventions.preprocess, _babelProcess = babelTransformer__default['default'].process.bind(babelTransformer__default['default'])) {
+_preprocess = pluginConventions.preprocess, _babelProcess = babelTransformer__default["default"].process.bind(babelTransformer__default["default"])) {
     const au2Options = pluginConventions.preprocessOptions(conventionsOptions);
     function getCacheKey(fileData, filePath, options) {
-        const babelKey = babelTransformer__default['default'].getCacheKey(fileData, filePath, options);
+        const babelKey = babelTransformer__default["default"].getCacheKey(fileData, filePath, options);
         return `${babelKey}:${JSON.stringify(au2Options)}`;
     }
     // Wrap babel-jest process
@@ -26,7 +26,7 @@ _preprocess = pluginConventions.preprocess, _babelProcess = babelTransformer__de
         return _babelProcess(sourceText, sourcePath, transformOptions);
     }
     return {
-        canInstrument: babelTransformer__default['default'].canInstrument,
+        canInstrument: babelTransformer__default["default"].canInstrument,
         getCacheKey,
         process
     };
@@ -37,5 +37,5 @@ function createTransformer(conventionsOptions = {}) {
 const { canInstrument, getCacheKey, process } = createTransformer();
 var index = { canInstrument, getCacheKey, process, createTransformer, _createTransformer };
 
-exports['default'] = index;
+exports["default"] = index;
 //# sourceMappingURL=index.js.map

@@ -16,14 +16,12 @@ function _interopNamespace(e) {
                 var d = Object.getOwnPropertyDescriptor(e, k);
                 Object.defineProperty(n, k, d.get ? d : {
                     enumerable: true,
-                    get: function () {
-                        return e[k];
-                    }
+                    get: function () { return e[k]; }
                 });
             }
         });
     }
-    n['default'] = e;
+    n["default"] = e;
     return Object.freeze(n);
 }
 
@@ -117,7 +115,7 @@ async function parseArgs(args) {
             throw new Error(`Configuration file is missing or uneven amount of args: ${args}. Args must come in pairs of --key value`);
         }
         else {
-            const config = (await Promise.resolve().then(function () { return /*#__PURE__*/_interopNamespace(require(`file://${configurationFile}`)); })).default;
+            const config = (await (function (t) { return Promise.resolve().then(function () { return /*#__PURE__*/_interopNamespace(require(t)); }); })(`file://${configurationFile}`)).default;
             configuration.applyConfig(config);
             args = args.slice(1);
         }

@@ -11,9 +11,7 @@ var t = require("@aurelia/runtime");
 function s(e) {
     if (e && e.__esModule) return e;
     var t = Object.create(null);
-    if (e) Object.keys(e).forEach((function(s) {
-        t[s] = e[s];
-    }));
+    if (e) for (var s in e) t[s] = e[s];
     t["default"] = e;
     return Object.freeze(t);
 }

@@ -1,6 +1,7 @@
 import { preprocess, preprocessOptions } from '@aurelia/plugin-conventions';
 import { getOptions } from 'loader-utils';
 
+/* eslint-disable import/no-extraneous-dependencies */
 function index (contents, sourceMap) {
     return loader.call(this, contents);
 }

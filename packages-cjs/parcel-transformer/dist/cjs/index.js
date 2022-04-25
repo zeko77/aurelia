@@ -43,7 +43,7 @@ var index = new plugin.Transformer({
             return [asset];
         }
         asset.setCode(result.code);
-        const map = new SourceMap__default['default']();
+        const map = new SourceMap__default["default"]();
         map.addVLQMap(result.map);
         asset.setMap(map);
         if (auOptions.templateExtensions.includes(`.${asset.type}`)) {
@@ -54,5 +54,5 @@ var index = new plugin.Transformer({
     }
 });
 
-exports['default'] = index;
+exports["default"] = index;
 //# sourceMappingURL=index.js.map
