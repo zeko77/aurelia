@@ -332,7 +332,7 @@ jobs:
         default: false
     steps:
       - checkout
-      - run: sudo npm i -g ts-node@10
+      - run: sudo npm i -g ts-node@10 @types/node@14
       - when:
           condition: << parameters.swap >>
           steps:
