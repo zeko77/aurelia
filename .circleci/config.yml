@@ -331,7 +331,8 @@ jobs:
         type: boolean
         default: false
     steps:
-      - checkout
+      - checkout_install:
+          install_drivers: false
       - when:
           condition: << parameters.swap >>
           steps:
