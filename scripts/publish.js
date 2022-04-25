@@ -10,6 +10,7 @@ const child_process_1 = require("child_process");
 const path_1 = require("path");
 (async function () {
     const [, , channel /* dev or latest */] = process.argv;
+    console.log('Publishing: ' + channel);
     for (const { name, folder } of project_1.default.packages
         .filter(p => !p.name.kebab.includes('_')
         && p.folder.includes('packages'))) {
