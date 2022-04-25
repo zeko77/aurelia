@@ -594,6 +594,7 @@ workflows:
           dist_file_name: merge_and_dist_topic
       - publish_npm:
           <<: *filter_only_master
+          name: "Publish dev version"
           channel: dev
           branch: develop
           swap: true
