@@ -21,8 +21,8 @@
     "perf-monitor": "latest"
   },
   "devDependencies": {
-    "@aurelia/http-server": "2.1.0-dev.202204221016",
-    "webpack-cli": "^4.2.0",
-    "webpack": "^5.10.3"
+    "@aurelia/http-server": "2.0.0-alpha.28",
+    "webpack-cli": "^4.9.2",
+    "webpack": "^5.72.0"
   }
 }
