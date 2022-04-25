@@ -323,6 +323,10 @@ jobs:
           steps:
             - run: git checkout << parameters.branch >>
             - run: git pull
+      - run: zip -r publish_npm_<< parameters.channel>>.zip packages/*/dist packages/*/package.json
+      - store_artifacts:
+          path: publish_npm_<< parameters.channel>>.zip
+          destination: publish_npm_<< parameters.channel>>.zip
       - run:
           name: "Authenticate with registry"
           command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
@@ -594,7 +598,7 @@ workflows:
           dist_file_name: merge_and_dist_topic
       - publish_npm:
           <<: *filter_only_master
-          name: "Publish dev version"
+          name: "publish_npm_dev"
           channel: dev
           branch: develop
           swap: true
@@ -654,6 +658,7 @@ workflows:
           type: approval
       - publish_npm:
           <<: *filter_only_release
+          name: "publish_npm_latest"
           channel: latest
           branch: release
           requires:
