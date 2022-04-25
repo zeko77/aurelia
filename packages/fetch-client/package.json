@@ -1,6 +1,6 @@
 {
   "name": "@aurelia/fetch-client",
-  "version": "2.1.0-dev.202204251152",
+  "version": "2.1.0-dev.202204251203",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/types/index.d.ts",
@@ -40,8 +40,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurelia/kernel": "2.1.0-dev.202204251152",
-    "@aurelia/metadata": "2.1.0-dev.202204251152"
+    "@aurelia/kernel": "2.1.0-dev.202204251203",
+    "@aurelia/metadata": "2.1.0-dev.202204251203"
   },
   "devDependencies": {
     "typescript": "^4.6.3"
