@@ -188,10 +188,10 @@ jobs:
         type: string
         default: "test"
     executor: docker-circleci
-    parallelism: 4
+    parallelism: 5
     steps:
       - checkout_install
-      - run: npm run build:test
+      - run: npm run build:packages
       - run:
           name: "Split test glob"
           command: |
@@ -223,7 +223,7 @@ jobs:
       - checkout
       - run: echo 'export PREFERRED_WORKSPACE_MANAGER=yarn' >> $BASH_ENV
       - run: npm ci
-      - run: npm run build:test
+      - run: npm run build:packages
       - run:
           name: "Split test glob"
           command: |
@@ -248,9 +248,9 @@ jobs:
     steps:
       - checkout_install
       - run: npm run build
-      - run: npm run change-tsconfigs:invert
-      - run: npm run build
-      - run: npm run change-tsconfigs:restore
+      # - run: npm run change-tsconfigs:invert
+      # - run: npm run build
+      # - run: npm run change-tsconfigs:restore
       - run: npm run change-package-refs:release -- none
       - when:
           condition: << parameters.submodules >>
@@ -315,10 +315,6 @@ jobs:
           condition: << parameters.push >>
           steps:
             - run: git push origin << parameters.to >>
-      - run: zip -r << parameters.dist_file_name >>.zip packages/*/dist packages/*/package.json
-      - store_artifacts:
-          path: << parameters.dist_file_name >>.zip
-          destination: << parameters.dist_file_name >>.zip
 
   publish_npm:
     executor: docker-release
@@ -339,10 +335,6 @@ jobs:
           steps:
             - run: git checkout << parameters.branch >>
             - run: git pull
-      - run: zip -r publish_npm_<< parameters.channel>>.zip packages/*/dist packages/*/package.json
-      - store_artifacts:
-          path: publish_npm_<< parameters.channel>>.zip
-          destination: publish_npm_<< parameters.channel>>.zip
       - run:
           name: "Authenticate with registry"
           command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
@@ -528,73 +520,73 @@ workflows:
     jobs:
       - check_doc_abort:
           <<: *filter_ignore_develop_release
-      # - unit_test_esm:
-      #     <<: *filter_ignore_develop_release
-      #     name: unit_test_esm_chrome
-      #     npm_command: "test-chrome"
-      #     requires:
-      #       - check_doc_abort
-      # - unit_test_esm:
-      #     <<: *filter_ignore_develop_release
-      #     name: unit_test_esm_firefox
-      #     npm_command: "test-firefox"
-      #     coverage: false
-      #     requires:
-      #       - check_doc_abort
-      # - unit_test_esm_node:
-      #     <<: *filter_ignore_develop_release
-      #     requires:
-      #       - check_doc_abort
-      # - unit_test_cjs:
-      #     <<: *filter_ignore_develop_release
-      #     npm_command: "test-node"
-      #     requires:
-      #       - check_doc_abort
-      # #- unit_test_aot:
-      # #   <<: *filter_ignore_develop_release
-      # #   name: test_test262
-      # #   npm_command: "test-262"
-      # #   coverage: false
-      # #   submodules: true
+      - unit_test_esm:
+          <<: *filter_ignore_develop_release
+          name: unit_test_esm_chrome
+          npm_command: "test-chrome"
+          requires:
+            - check_doc_abort
+      - unit_test_esm:
+          <<: *filter_ignore_develop_release
+          name: unit_test_esm_firefox
+          npm_command: "test-firefox"
+          coverage: false
+          requires:
+            - check_doc_abort
+      - unit_test_esm_node:
+          <<: *filter_ignore_develop_release
+          requires:
+            - check_doc_abort
+      - unit_test_cjs:
+          <<: *filter_ignore_develop_release
+          npm_command: "test-node"
+          requires:
+            - check_doc_abort
+      #- unit_test_aot:
+      #   <<: *filter_ignore_develop_release
+      #   name: test_test262
+      #   npm_command: "test-262"
+      #   coverage: false
+      #   submodules: true
 
-      # - lint_packages:
+      - lint_packages:
+          <<: *filter_ignore_develop_release
+          requires:
+            - check_doc_abort
+      # - js_framework_benchmark:
       #     <<: *filter_ignore_develop_release
       #     requires:
       #       - check_doc_abort
-      # # - js_framework_benchmark:
-      # #     <<: *filter_ignore_develop_release
-      # #     requires:
-      # #       - check_doc_abort
 
-      # # - benchmark_playwright:
-      # #     <<: *filter_ignore_develop_release
-      # #     requires:
-      # #       - check_doc_abort
-      # - e2e_playwright:
+      # - benchmark_playwright:
       #     <<: *filter_ignore_develop_release
-      #     name: jit-webpack-conventions-ts
-      #     path: "examples/jit-webpack-conventions-ts"
       #     requires:
       #       - check_doc_abort
-      # - e2e_playwright:
-      #     <<: *filter_ignore_develop_release
-      #     name: jit-webpack-vanilla-ts
-      #     path: "examples/jit-webpack-vanilla-ts"
-      #     requires:
-      #       - check_doc_abort
+      - e2e_playwright:
+          <<: *filter_ignore_develop_release
+          name: jit-webpack-conventions-ts
+          path: "examples/jit-webpack-conventions-ts"
+          requires:
+            - check_doc_abort
+      - e2e_playwright:
+          <<: *filter_ignore_develop_release
+          name: jit-webpack-vanilla-ts
+          path: "examples/jit-webpack-vanilla-ts"
+          requires:
+            - check_doc_abort
       - merge_and_dist:
           <<: *filter_only_master
           name: merge_and_dist_master
           requires:
             - check_doc_abort
-            # - unit_test_esm_chrome
-            # - unit_test_esm_firefox
-            # - unit_test_esm_node
-            # - unit_test_cjs
-            # #- test_test262
-            # # - lint_packages
-            # - jit-webpack-conventions-ts
-            # - jit-webpack-vanilla-ts
+            - unit_test_esm_chrome
+            - unit_test_esm_firefox
+            - unit_test_esm_node
+            - unit_test_cjs
+            #- test_test262
+            # - lint_packages
+            - jit-webpack-conventions-ts
+            - jit-webpack-vanilla-ts
           from: master
           to: develop
           channel: dev
