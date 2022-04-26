@@ -295,7 +295,7 @@ function shallowEquals(a, b) {
     return true;
 }
 
-/*! *****************************************************************************
+/******************************************************************************
 Copyright (c) Microsoft Corporation.
 
 Permission to use, copy, modify, and/or distribute this software for any

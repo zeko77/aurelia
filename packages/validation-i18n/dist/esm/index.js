@@ -10,20 +10,7 @@ import { IValidator as c, ValidationMessageProvider as u } from "@aurelia/valida
 
 import { ValidationController as f, ValidationControllerFactory as d, getDefaultValidationHtmlConfiguration as m, ValidationHtmlConfiguration as h } from "@aurelia/validation-html";
 
-/*! *****************************************************************************
-Copyright (c) Microsoft Corporation.
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-PERFORMANCE OF THIS SOFTWARE.
-***************************************************************************** */ function v(t, e, i, o) {
+function v(t, e, i, o) {
     var r = arguments.length, n = r < 3 ? e : null === o ? o = Object.getOwnPropertyDescriptor(e, i) : o, a;
     if ("object" === typeof Reflect && "function" === typeof Reflect.decorate) n = Reflect.decorate(t, e, i, o); else for (var l = t.length - 1; l >= 0; l--) if (a = t[l]) n = (r < 3 ? a(n) : r > 3 ? a(e, i, n) : a(e, i)) || n;
     return r > 3 && n && Object.defineProperty(e, i, n), n;

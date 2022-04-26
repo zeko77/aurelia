@@ -7,7 +7,7 @@ import * as https from 'https';
 import * as $url from 'url';
 import { EOL } from 'os';
 
-/*! *****************************************************************************
+/******************************************************************************
 Copyright (c) Microsoft Corporation.
 
 Permission to use, copy, modify, and/or distribute this software for any

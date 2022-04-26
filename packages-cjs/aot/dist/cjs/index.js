@@ -8,7 +8,7 @@ var kernel = require('@aurelia/kernel');
 var typescript = require('typescript');
 var jsdom = require('jsdom');
 
-/*! *****************************************************************************
+/******************************************************************************
 Copyright (c) Microsoft Corporation.
 
 Permission to use, copy, modify, and/or distribute this software for any

@@ -5,7 +5,7 @@ import { IPlatform } from '../../../runtime-html/dist/native-modules/index.js';
 import { IValidator, ValidationMessageProvider } from '../../../validation/dist/native-modules/index.js';
 import { ValidationController, ValidationControllerFactory, getDefaultValidationHtmlConfiguration, ValidationHtmlConfiguration } from '../../../validation-html/dist/native-modules/index.js';
 
-/*! *****************************************************************************
+/******************************************************************************
 Copyright (c) Microsoft Corporation.
 
 Permission to use, copy, modify, and/or distribute this software for any

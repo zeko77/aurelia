@@ -1871,7 +1871,7 @@ const emptyObject = Object.freeze({});
 function noop() { }
 const IPlatform = DI.createInterface('IPlatform');
 
-/*! *****************************************************************************
+/******************************************************************************
 Copyright (c) Microsoft Corporation.
 
 Permission to use, copy, modify, and/or distribute this software for any

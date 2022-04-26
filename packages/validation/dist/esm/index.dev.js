@@ -4,7 +4,7 @@ import { IExpressionParser, Scope, PrimitiveLiteralExpression } from '@aurelia/r
 
 const IValidationExpressionHydrator = DI.createInterface('IValidationExpressionHydrator');
 
-/*! *****************************************************************************
+/******************************************************************************
 Copyright (c) Microsoft Corporation.
 
 Permission to use, copy, modify, and/or distribute this software for any

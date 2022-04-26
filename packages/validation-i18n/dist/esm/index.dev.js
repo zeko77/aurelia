@@ -5,7 +5,7 @@ import { IPlatform } from '@aurelia/runtime-html';
 import { IValidator, ValidationMessageProvider } from '@aurelia/validation';
 import { ValidationController, ValidationControllerFactory, getDefaultValidationHtmlConfiguration, ValidationHtmlConfiguration } from '@aurelia/validation-html';
 
-/*! *****************************************************************************
+/******************************************************************************
 Copyright (c) Microsoft Corporation.
 
 Permission to use, copy, modify, and/or distribute this software for any

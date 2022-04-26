@@ -7,7 +7,7 @@ var platformBrowser = require('@aurelia/platform-browser');
 var kernel = require('@aurelia/kernel');
 var runtime = require('@aurelia/runtime');
 
-/*! *****************************************************************************
+/******************************************************************************
 Copyright (c) Microsoft Corporation.
 
 Permission to use, copy, modify, and/or distribute this software for any

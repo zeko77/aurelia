@@ -4,7 +4,7 @@ import { ILogger, DI, emptyArray, IContainer, Registration } from '@aurelia/kern
 import { getLineAndCharacterOfPosition, SyntaxKind, ModifierFlags, createConstructor, createParameter, createToken, createIdentifier, createBlock, createExpressionStatement, createCall, createSuper, createSpread, NodeFlags, createSourceFile, ScriptTarget } from 'typescript';
 import { JSDOM } from 'jsdom';
 
-/*! *****************************************************************************
+/******************************************************************************
 Copyright (c) Microsoft Corporation.
 
 Permission to use, copy, modify, and/or distribute this software for any

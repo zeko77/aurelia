@@ -60,20 +60,7 @@ function w(t) {
     return "undefined" !== typeof t.present && "undefined" !== typeof t.future && "undefined" !== typeof t.past && Array.isArray(t.future) && Array.isArray(t.past);
 }
 
-/*! *****************************************************************************
-Copyright (c) Microsoft Corporation.
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-PERFORMANCE OF THIS SOFTWARE.
-***************************************************************************** */ function y(t, e, r, i) {
+function y(t, e, r, i) {
     var s = arguments.length, n = s < 3 ? e : null === i ? i = Object.getOwnPropertyDescriptor(e, r) : i, o;
     if ("object" === typeof Reflect && "function" === typeof Reflect.decorate) n = Reflect.decorate(t, e, r, i); else for (var c = t.length - 1; c >= 0; c--) if (o = t[c]) n = (s < 3 ? o(n) : s > 3 ? o(e, r, n) : o(e, r)) || n;
     return s > 3 && n && Object.defineProperty(e, r, n), n;

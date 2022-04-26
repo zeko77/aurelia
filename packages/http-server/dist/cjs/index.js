@@ -32,7 +32,7 @@ function _interopNamespace(e) {
 var https__namespace = /*#__PURE__*/_interopNamespace(https);
 var $url__namespace = /*#__PURE__*/_interopNamespace($url);
 
-/*! *****************************************************************************
+/******************************************************************************
 Copyright (c) Microsoft Corporation.
 
 Permission to use, copy, modify, and/or distribute this software for any
