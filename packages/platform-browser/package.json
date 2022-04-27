@@ -1,7 +1,7 @@
 {
   "name": "@aurelia/platform-browser",
-  "version": "2.0.0-alpha.28",
-  "main": "dist/cjs/index.js",
+  "version": "2.0.0-alpha.29",
+  "main": "dist/esm/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/types/index.d.ts",
   "typings": "dist/types/index.d.ts",
@@ -33,16 +33,17 @@
     "publish:dev": "npm publish --tag dev",
     "publish:latest": "npm publish --tag latest",
     "rollup": "rollup -c",
-    "postrollup": "tsc --emitDeclarationOnly"
+    "postrollup": "tsc --emitDeclarationOnly",
+    "build:packages": "npm run rollup"
   },
   "publishConfig": {
     "access": "public"
   },
   "dependencies": {
-    "@aurelia/platform": "2.0.0-alpha.28"
+    "@aurelia/platform": "2.0.0-alpha.29"
   },
   "devDependencies": {
-    "typescript": "^4.6.2"
+    "typescript": "^4.6.3"
   },
   "engines": {
     "node": ">=14.17.0"
