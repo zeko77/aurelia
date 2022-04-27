@@ -1,6 +1,9 @@
 import { PartialCustomElementDefinition } from '@aurelia/runtime-html';
 import { IChildRouteConfig, IRedirectRouteConfig, Routeable } from './route.js';
 import { IViewportInstruction, RouteableComponent } from './instructions.js';
+/**
+ * @returns `true` if the given `value` is an non-null, non-undefined, and non-CustomElement object.
+ */
 export declare function isNotNullishOrTypeOrViewModel(value: RouteableComponent | IChildRouteConfig | null | undefined): value is PartialCustomElementDefinition | IChildRouteConfig;
 export declare function isPartialCustomElementDefinition(value: RouteableComponent | IChildRouteConfig | null | undefined): value is PartialCustomElementDefinition;
 export declare function isPartialChildRouteConfig(value: RouteableComponent | IChildRouteConfig | IRedirectRouteConfig | null | undefined): value is IChildRouteConfig;

@@ -11,9 +11,7 @@ var t = require("@aurelia/runtime");
 function s(e) {
     if (e && e.__esModule) return e;
     var t = Object.create(null);
-    if (e) Object.keys(e).forEach((function(s) {
-        t[s] = e[s];
-    }));
+    if (e) for (var s in e) t[s] = e[s];
     t["default"] = e;
     return Object.freeze(t);
 }
@@ -22,20 +20,7 @@ var r = s(t);
 
 const i = e.DI.createInterface("IValidationExpressionHydrator");
 
-/*! *****************************************************************************
-Copyright (c) Microsoft Corporation.
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-PERFORMANCE OF THIS SOFTWARE.
-***************************************************************************** */ function n(e, t, s, r) {
+function n(e, t, s, r) {
     var i = arguments.length, n = i < 3 ? t : null === r ? r = Object.getOwnPropertyDescriptor(t, s) : r, o;
     if ("object" === typeof Reflect && "function" === typeof Reflect.decorate) n = Reflect.decorate(e, t, s, r); else for (var a = e.length - 1; a >= 0; a--) if (o = e[a]) n = (i < 3 ? o(n) : i > 3 ? o(t, s, n) : o(t, s)) || n;
     return i > 3 && n && Object.defineProperty(t, s, n), n;

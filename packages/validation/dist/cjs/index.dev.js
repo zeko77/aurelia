@@ -9,11 +9,11 @@ function _interopNamespace(e) {
     if (e && e.__esModule) return e;
     var n = Object.create(null);
     if (e) {
-        Object.keys(e).forEach(function (k) {
+        for (var k in e) {
             n[k] = e[k];
-        });
+        }
     }
-    n['default'] = e;
+    n["default"] = e;
     return Object.freeze(n);
 }
 
@@ -21,7 +21,7 @@ var AST__namespace = /*#__PURE__*/_interopNamespace(AST);
 
 const IValidationExpressionHydrator = kernel.DI.createInterface('IValidationExpressionHydrator');
 
-/*! *****************************************************************************
+/******************************************************************************
 Copyright (c) Microsoft Corporation.
 
 Permission to use, copy, modify, and/or distribute this software for any

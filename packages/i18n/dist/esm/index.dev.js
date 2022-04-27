@@ -3,7 +3,7 @@ import { bindingBehavior as bindingBehavior$1, ValueConverterExpression as Value
 import { ValueConverterExpression, bindingBehavior, ISignaler, valueConverter, connectable, CustomExpression, IExpressionParser, IObserverLocator } from '@aurelia/runtime';
 import i18next from 'i18next';
 
-/*! *****************************************************************************
+/******************************************************************************
 Copyright (c) Microsoft Corporation.
 
 Permission to use, copy, modify, and/or distribute this software for any

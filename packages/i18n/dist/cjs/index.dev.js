@@ -7,11 +7,11 @@ var runtimeHtml = require('@aurelia/runtime-html');
 var runtime = require('@aurelia/runtime');
 var i18next = require('i18next');
 
-function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e['default'] : e; }
+function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e["default"] : e; }
 
 var i18next__default = /*#__PURE__*/_interopDefaultLegacy(i18next);
 
-/*! *****************************************************************************
+/******************************************************************************
 Copyright (c) Microsoft Corporation.
 
 Permission to use, copy, modify, and/or distribute this software for any

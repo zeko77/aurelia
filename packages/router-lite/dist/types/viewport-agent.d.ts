@@ -10,7 +10,6 @@ export declare class ViewportRequest {
     readonly resolution: ResolutionMode;
     readonly append: boolean;
     constructor(viewportName: string, componentName: string, resolution: ResolutionMode, append: boolean);
-    static create(input: ViewportRequest): ViewportRequest;
     toString(): string;
 }
 export declare class ViewportAgent {

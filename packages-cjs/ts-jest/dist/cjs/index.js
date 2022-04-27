@@ -17,21 +17,19 @@ function _interopNamespace(e) {
                 var d = Object.getOwnPropertyDescriptor(e, k);
                 Object.defineProperty(n, k, d.get ? d : {
                     enumerable: true,
-                    get: function () {
-                        return e[k];
-                    }
+                    get: function () { return e[k]; }
                 });
             }
         });
     }
-    n['default'] = e;
+    n["default"] = e;
     return Object.freeze(n);
 }
 
 var tsJest__default = /*#__PURE__*/_interopDefaultLegacy(tsJest);
 var path__namespace = /*#__PURE__*/_interopNamespace(path);
 
-const tsTransformer = tsJest__default['default'].createTransformer();
+const tsTransformer = tsJest__default["default"].createTransformer();
 function _createTransformer(conventionsOptions = {}, 
 // for testing
 _preprocess = pluginConventions.preprocess, _tsProcess = tsTransformer.process.bind(tsTransformer)) {
@@ -67,5 +65,5 @@ function createTransformer(conventionsOptions = {}) {
 const { canInstrument, getCacheKey, process } = createTransformer();
 var index = { canInstrument, getCacheKey, process, createTransformer, _createTransformer };
 
-exports['default'] = index;
+exports["default"] = index;
 //# sourceMappingURL=index.js.map

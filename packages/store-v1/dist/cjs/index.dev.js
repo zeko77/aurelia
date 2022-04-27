@@ -66,7 +66,7 @@ function isStateHistory(history) {
         Array.isArray(history.past);
 }
 
-/*! *****************************************************************************
+/******************************************************************************
 Copyright (c) Microsoft Corporation.
 
 Permission to use, copy, modify, and/or distribute this software for any

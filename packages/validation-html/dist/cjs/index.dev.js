@@ -7,7 +7,7 @@ var validation = require('@aurelia/validation');
 var runtimeHtml = require('@aurelia/runtime-html');
 var runtime = require('@aurelia/runtime');
 
-/*! *****************************************************************************
+/******************************************************************************
 Copyright (c) Microsoft Corporation.
 
 Permission to use, copy, modify, and/or distribute this software for any

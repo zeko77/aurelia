@@ -3,7 +3,7 @@ import { parsePropertyName, ValidationResult, ValidateInstruction, PropertyRule,
 import { IPlatform, bindable, INode, BindingMode, customAttribute, bindingBehavior, BindingInterceptor, BindingMediator, PropertyBinding, CustomElement } from '@aurelia/runtime-html';
 import { IExpressionParser } from '@aurelia/runtime';
 
-/*! *****************************************************************************
+/******************************************************************************
 Copyright (c) Microsoft Corporation.
 
 Permission to use, copy, modify, and/or distribute this software for any

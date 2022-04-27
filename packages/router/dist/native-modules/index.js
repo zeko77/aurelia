@@ -139,20 +139,7 @@ class FoundRoute {
     }
 }
 
-/*! *****************************************************************************
-Copyright (c) Microsoft Corporation.
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-PERFORMANCE OF THIS SOFTWARE.
-***************************************************************************** */ function k(t, i, n, s) {
+function k(t, i, n, s) {
     var e = arguments.length, o = e < 3 ? i : null === s ? s = Object.getOwnPropertyDescriptor(i, n) : s, r;
     if ("object" === typeof Reflect && "function" === typeof Reflect.decorate) o = Reflect.decorate(t, i, n, s); else for (var l = t.length - 1; l >= 0; l--) if (r = t[l]) o = (e < 3 ? r(o) : e > 3 ? r(i, n, o) : r(i, n)) || o;
     return e > 3 && o && Object.defineProperty(i, n, o), o;
@@ -1638,7 +1625,7 @@ class ViewportContent extends EndpointContent {
     getLifecycleHooks(t, i) {
         var n;
         const s = null !== (n = t.$controller.lifecycleHooks[i]) && void 0 !== n ? n : [];
-        return s.map((t => t.instance[i]));
+        return s.map((t => t.instance[i].bind(t.instance)));
     }
 }
 

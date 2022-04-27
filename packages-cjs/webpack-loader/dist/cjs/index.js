@@ -5,6 +5,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 var pluginConventions = require('@aurelia/plugin-conventions');
 var loaderUtils = require('loader-utils');
 
+/* eslint-disable import/no-extraneous-dependencies */
 function index (contents, sourceMap) {
     return loader.call(this, contents);
 }
@@ -33,6 +34,6 @@ function loader(contents, _preprocess = pluginConventions.preprocess // for test
     }
 }
 
-exports['default'] = index;
+exports["default"] = index;
 exports.loader = loader;
 //# sourceMappingURL=index.js.map
