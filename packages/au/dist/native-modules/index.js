@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import { resolve } from 'path';
-import { HttpServerOptions, RuntimeNodeConfiguration, IHttpServer } from '../../../@aurelia/http-server/dist/native-modules/index.js';
-import { DI, IContainer } from '../../../@aurelia/kernel/dist/native-modules/index.js';
+import { HttpServerOptions, RuntimeNodeConfiguration, IHttpServer } from '../../../@aurelia/http-server/dist/native-modules/index.mjs';
+import { DI, IContainer } from '../../../@aurelia/kernel/dist/native-modules/index.mjs';
 
 /* eslint-disable prefer-template */
 const space = ' ';
