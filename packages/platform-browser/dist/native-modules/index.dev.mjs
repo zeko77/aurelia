@@ -3,16 +3,16 @@ import { Platform, TaskQueue } from '../../../platform/dist/native-modules/index
 const lookup = new Map();
 function notImplemented(name) {
     return function notImplemented() {
-        throw new Error(`The PLATFORM did not receive a valid reference to the global function '${name}'.`); // TODO: link to docs describing how to fix this issue
+        throw new Error(`The PLATFORM did not receive a valid reference to the global function '${name}'.`);
     };
 }
 class BrowserPlatform extends Platform {
     constructor(g, overrides = {}) {
         super(g, overrides);
-        /** @internal */ this._domReadRequested = false;
-        /** @internal */ this._domReadHandle = -1;
-        /** @internal */ this._domWriteRequested = false;
-        /** @internal */ this._domWriteHandle = -1;
+        this._domReadRequested = false;
+        this._domReadHandle = -1;
+        this._domWriteRequested = false;
+        this._domWriteHandle = -1;
         ('Node,Element,HTMLElement,CustomEvent,CSSStyleSheet,ShadowRoot,MutationObserver,'
             + 'window,document,location,history,navigator,customElements')
             .split(',')
@@ -27,7 +27,6 @@ class BrowserPlatform extends Platform {
         this.flushDomWrite = this.flushDomWrite.bind(this);
         this.domReadQueue = new TaskQueue(this, this.requestDomRead.bind(this), this.cancelDomRead.bind(this));
         this.domWriteQueue = new TaskQueue(this, this.requestDomWrite.bind(this), this.cancelDomWrite.bind(this));
-        /* eslint-enable @typescript-eslint/no-unnecessary-type-assertion */
     }
     static getOrCreate(g, overrides = {}) {
         let platform = lookup.get(g);
@@ -41,9 +40,6 @@ class BrowserPlatform extends Platform {
     }
     requestDomRead() {
         this._domReadRequested = true;
-        // Yes, this is intentional: the timing of the read can only be "found" by doing a write first.
-        // The flushDomWrite queues the read.
-        // If/when requestPostAnimationFrame is implemented in browsers, we can use that instead.
         if (this._domWriteHandle === -1) {
             this._domWriteHandle = this.requestAnimationFrame(this.flushDomWrite);
         }
@@ -75,8 +71,6 @@ class BrowserPlatform extends Platform {
     cancelDomWrite() {
         this._domWriteRequested = false;
         if (this._domWriteHandle > -1 &&
-            // if dom read is requested and there is no readHandle yet, we need the rAF to proceed regardless.
-            // The domWriteRequested=false will prevent the read flush from happening.
             (this._domReadRequested === false || this._domReadHandle > -1)) {
             this.cancelAnimationFrame(this._domWriteHandle);
             this._domWriteHandle = -1;

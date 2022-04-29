@@ -65,8 +65,7 @@ exports.LocalizedValidationMessageProvider = class LocalizedValidationMessagePro
             this.keyPrefix = namespace !== void 0 ? `${namespace}:` : '';
             this.keyPrefix = prefix !== void 0 ? `${this.keyPrefix}${prefix}.` : this.keyPrefix;
         }
-        // as this is registered singleton, disposing the subscription does not make much sense.
-        ea.subscribe("i18n:locale:changed" /* I18N_EA_CHANNEL */, () => {
+        ea.subscribe("i18n:locale:changed", () => {
             this.registeredMessages = new WeakMap();
             ea.publish(I18N_VALIDATION_EA_CHANNEL);
         });
@@ -117,10 +116,9 @@ function createConfiguration(optionsProvider) {
                 DefaultKeyPrefix: options.DefaultKeyPrefix,
             };
             return container.register(validationHtml.ValidationHtmlConfiguration.customize((opt) => {
-                // copy the customization iff the key exists in validation configuration
                 for (const key of Object.keys(opt)) {
                     if (key in options) {
-                        opt[key] = options[key]; // TS cannot infer that the value of the same key is being copied from A to B, and rejects the assignment due to type broadening
+                        opt[key] = options[key];
                     }
                 }
             }), kernel.Registration.callback(I18nKeyConfiguration, () => keyConfiguration));

@@ -122,7 +122,7 @@ function rehydrateFromLocalStorage(state, key) {
     try {
         return JSON.parse(storedState);
     }
-    catch ( /**/_a) { /**/ }
+    catch (_a) { }
     return state;
 }
 
@@ -136,7 +136,6 @@ exports.LogLevel = void 0;
 })(exports.LogLevel || (exports.LogLevel = {}));
 function getLogType(options, definition, defaultLevel) {
     var _a;
-    // eslint-disable-next-line no-prototype-builtins
     if (((_a = options.logDefinitions) === null || _a === void 0 ? void 0 : _a.hasOwnProperty(definition)) &&
         options.logDefinitions[definition] &&
         Object.values(exports.LogLevel).includes(options.logDefinitions[definition])) {
@@ -170,7 +169,6 @@ exports.Store = class Store {
         this.initialState = initialState;
         this.logger = logger;
         this._window = _window;
-        // TODO: need an alternative for the Reporter which supports multiple log levels
         this.devToolsAvailable = false;
         this.actions = new Map();
         this.middlewares = new Map();
@@ -199,7 +197,6 @@ exports.Store = class Store {
     }
     registerAction(name, reducer) {
         if (reducer.length === 0) {
-            // The reducer is expected to have one or more parameters, where the first will be the present state
             throw new ActionRegistrationError("The reducer is expected to have one or more parameters, where the first will be the present state");
         }
         this.actions.set(reducer, { type: name });
@@ -259,7 +256,6 @@ exports.Store = class Store {
         return new Promise((resolve, reject) => {
             this.dispatchQueue.push({ actions, resolve, reject });
             if (this.dispatchQueue.length === 1) {
-                // eslint-disable-next-line @typescript-eslint/no-floating-promises
                 this.handleQueue();
             }
         });
@@ -275,7 +271,6 @@ exports.Store = class Store {
                 queueItem.reject(e);
             }
             this.dispatchQueue.shift();
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             this.handleQueue();
         }
     }
@@ -302,7 +297,6 @@ exports.Store = class Store {
         if (this.options.logDispatchedActions) {
             this.logger[getLogType(this.options, "dispatchedActions", exports.LogLevel.info)](`Dispatching: ${callingAction.name}`);
         }
-        // eslint-disable-next-line @typescript-eslint/await-thenable
         const beforeMiddleswaresResult = await this.executeMiddlewares(this._state.getValue(), exports.MiddlewarePlacement.Before, callingAction);
         if (beforeMiddleswaresResult === false) {
             STORE.container.get(runtimeHtml.IWindow).performance.clearMarks();
@@ -311,7 +305,6 @@ exports.Store = class Store {
         }
         let result = beforeMiddleswaresResult;
         for (const action of pipedActions) {
-            // eslint-disable-next-line no-await-in-loop
             result = await action.reducer(result, ...action.params);
             if (result === false) {
                 STORE.container.get(runtimeHtml.IWindow).performance.clearMarks();
@@ -323,7 +316,6 @@ exports.Store = class Store {
                 throw new ReducerNoStateError("The reducer has to return a new state");
             }
         }
-        // eslint-disable-next-line @typescript-eslint/await-thenable
         let resultingState = await this.executeMiddlewares(result, exports.MiddlewarePlacement.After, callingAction);
         if (resultingState === false) {
             STORE.container.get(runtimeHtml.IWindow).performance.clearMarks();
@@ -351,10 +343,8 @@ exports.Store = class Store {
         this.updateDevToolsState({ type: callingAction.name, params: callingAction.params }, resultingState);
     }
     executeMiddlewares(state, placement, action) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return Array.from(this.middlewares)
             .filter((middleware) => middleware[1].placement === placement)
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .reduce(async (prev, curr, _) => {
             try {
                 const result = await curr[0](await prev, this._state.getValue(), curr[1].settings, action);
@@ -367,7 +357,6 @@ exports.Store = class Store {
                 if (this.options.propagateError) {
                     throw e;
                 }
-                // eslint-disable-next-line @typescript-eslint/return-await
                 return await prev;
             }
             finally {
@@ -376,11 +365,9 @@ exports.Store = class Store {
         }, state);
     }
     setupDevTools() {
-        // TODO: needs a better solution for global override
         if (this._window.__REDUX_DEVTOOLS_EXTENSION__) {
             this.logger[getLogType(this.options, "devToolsStatus", exports.LogLevel.debug)]("DevTools are available");
             this.devToolsAvailable = true;
-            // TODO: needs a better solution for global override
             this.devTools = this._window.__REDUX_DEVTOOLS_EXTENSION__.connect(this.options.devToolsOptions);
             this.devTools.init(this.initialState);
             this.devTools.subscribe((message) => {
@@ -433,7 +420,6 @@ exports.Store = class Store {
         }
     }
     registerHistoryMethods() {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.registerAction("jump", jump);
     }
 };
@@ -479,9 +465,7 @@ async function executeSteps(store, shouldLogResults, ...steps) {
     });
 }
 
-/* eslint-disable @typescript-eslint/strict-boolean-expressions */
 const defaultSelector = (store) => store.state;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function connectTo(settings) {
     const _settings = {
         selector: typeof settings === 'function' ? settings : defaultSelector,
@@ -506,8 +490,6 @@ function connectTo(settings) {
             return ({
                 targets: _settings.target && isSelectorObj ? [_settings.target, target] : [target],
                 selector,
-                // numbers are the starting index to slice all the change handling args,
-                // which are prop name, new state and old state
                 changeHandlers: {
                     [(_a = _settings.onChanged) !== null && _a !== void 0 ? _a : '']: 1,
                     [`${(_b = _settings.target) !== null && _b !== void 0 ? _b : target}Changed`]: _settings.target ? 0 : 1,
@@ -516,7 +498,6 @@ function connectTo(settings) {
             });
         });
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return function (target) {
         const originalSetup = typeof settings === 'object' && settings.setup
             ? target.prototype[settings.setup]
@@ -528,15 +509,13 @@ function connectTo(settings) {
             if (typeof settings === 'object' &&
                 typeof settings.onChanged === 'string' &&
                 !(settings.onChanged in this)) {
-                // Provided onChanged handler does not exist on target VM
                 throw new Error('Provided onChanged handler does not exist on target VM');
             }
             const store = runtimeHtml.Controller.getCached(this)
                 ? runtimeHtml.Controller.getCached(this).container.get(exports.Store)
-                : STORE.container.get(exports.Store); // TODO: need to get rid of this helper for classic unit tests
+                : STORE.container.get(exports.Store);
             this._stateSubscriptions = createSelectors().map(s => getSource(store, s.selector).subscribe((state) => {
                 const lastTargetIdx = s.targets.length - 1;
-                // eslint-disable-next-line default-param-last
                 const oldState = s.targets.reduce((accu = {}, curr) => accu[curr], this);
                 Object.entries(s.changeHandlers).forEach(([handlerName, args]) => {
                     if (handlerName in this) {
@@ -549,7 +528,6 @@ function connectTo(settings) {
                 }, this);
             }));
             if (originalSetup) {
-                // eslint-disable-next-line prefer-rest-params
                 return originalSetup.apply(this, arguments);
             }
         };
@@ -562,7 +540,6 @@ function connectTo(settings) {
                 });
             }
             if (originalTeardown) {
-                // eslint-disable-next-line prefer-rest-params
                 return originalTeardown.apply(this, arguments);
             }
         };
@@ -580,19 +557,15 @@ const StoreConfiguration = {
     },
     register(container) {
         var _a;
-        // Stores a reference of the DI container for internal use
-        // TODO: get rid of this workaround for unit tests
         STORE.container = container;
         const state = Reflect.get(this, 'state');
         const options = Reflect.get(this, 'options');
         const logger = container.get(kernel.ILogger);
         const window = container.get(runtimeHtml.IWindow);
-        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (!state) {
             throw new Error("initialState must be provided via withInitialState builder method");
         }
         let initState = state;
-        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (((_a = options === null || options === void 0 ? void 0 : options.history) === null || _a === void 0 ? void 0 : _a.undoable) && !isStateHistory(state)) {
             initState = { past: [], present: state, future: [] };
         }

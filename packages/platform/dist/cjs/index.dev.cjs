@@ -5,7 +5,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 const lookup = new Map();
 function notImplemented(name) {
     return function notImplemented() {
-        throw new Error(`The PLATFORM did not receive a valid reference to the global function '${name}'.`); // TODO: link to docs describing how to fix this issue
+        throw new Error(`The PLATFORM did not receive a valid reference to the global function '${name}'.`);
     };
 }
 class Platform {
@@ -69,8 +69,8 @@ class TaskQueue {
         this.platform = platform;
         this.$request = $request;
         this.$cancel = $cancel;
-        /** @internal */ this._suspenderTask = void 0;
-        /** @internal */ this._pendingAsyncCount = 0;
+        this._suspenderTask = void 0;
+        this._pendingAsyncCount = 0;
         this.processing = [];
         this.pending = [];
         this.delayed = [];
@@ -101,16 +101,6 @@ class TaskQueue {
             this.pending.length === 0 &&
             this.delayed.length === 0);
     }
-    /**
-     * Persistent tasks will re-queue themselves indefinitely until they are explicitly canceled,
-     * so we consider them 'infinite work' whereas non-persistent (one-off) tasks are 'finite work'.
-     *
-     * This `hasNoMoreFiniteWork` getters returns true if either all remaining tasks are persistent, or if there are no more tasks.
-     *
-     * If that is the case, we can resolve the promise that was created when `yield()` is called.
-     *
-     * @internal
-     */
     get _hasNoMoreFiniteWork() {
         return (this._pendingAsyncCount === 0 &&
             this.processing.every(isPersistent) &&
@@ -123,7 +113,6 @@ class TaskQueue {
         }
         this.flushRequested = false;
         this._lastFlush = time;
-        // Only process normally if we are *not* currently waiting for an async task to finish
         if (this._suspenderTask === void 0) {
             if (this.pending.length > 0) {
                 this.processing.push(...this.pending);
@@ -131,14 +120,13 @@ class TaskQueue {
             }
             if (this.delayed.length > 0) {
                 let i = -1;
-                while (++i < this.delayed.length && this.delayed[i].queueTime <= time) { /* do nothing */ }
+                while (++i < this.delayed.length && this.delayed[i].queueTime <= time) { }
                 this.processing.push(...this.delayed.splice(0, i));
             }
             let cur;
             while (this.processing.length > 0) {
                 (cur = this.processing.shift()).run();
-                // If it's still running, it can only be an async task
-                if (cur.status === 1 /* running */) {
+                if (cur.status === 1) {
                     if (cur.suspend === true) {
                         this._suspenderTask = cur;
                         this._requestFlush();
@@ -158,7 +146,7 @@ class TaskQueue {
             }
             if (this.delayed.length > 0) {
                 let i = -1;
-                while (++i < this.delayed.length && this.delayed[i].queueTime <= time) { /* do nothing */ }
+                while (++i < this.delayed.length && this.delayed[i].queueTime <= time) { }
                 this.processing.push(...this.delayed.splice(0, i));
             }
             if (this.processing.length > 0 || this.delayed.length > 0 || this._pendingAsyncCount > 0) {
@@ -172,20 +160,12 @@ class TaskQueue {
             }
         }
         else {
-            // If we are still waiting for an async task to finish, just schedule the next flush and do nothing else.
-            // Should the task finish before the next flush is invoked,
-            // the callback to `completeAsyncTask` will have reset `this.suspenderTask` back to undefined so processing can return back to normal next flush.
             this._requestFlush();
         }
         if (this._tracer.enabled) {
             this._tracer.leave(this, 'flush full');
         }
     }
-    /**
-     * Cancel the next flush cycle (and/or the macrotask that schedules the next flush cycle, in case this is a microtask queue), if it was requested.
-     *
-     * This operation is idempotent and will do nothing if no flush is scheduled.
-     */
     cancel() {
         if (this._tracer.enabled) {
             this._tracer.enter(this, 'cancel');
@@ -198,15 +178,6 @@ class TaskQueue {
             this._tracer.leave(this, 'cancel');
         }
     }
-    /**
-     * Returns a promise that, when awaited, resolves when:
-     * - all *non*-persistent (including async) tasks have finished;
-     * - the last-added persistent task has run exactly once;
-     *
-     * This operation is idempotent: the same promise will be returned until it resolves.
-     *
-     * If `yield()` is called multiple times in a row when there are one or more persistent tasks in the queue, each call will await exactly one cycle of those tasks.
-     */
     async yield() {
         if (this._tracer.enabled) {
             this._tracer.enter(this, 'yield');
@@ -277,9 +248,6 @@ class TaskQueue {
         }
         return task;
     }
-    /**
-     * Remove the task from this queue.
-     */
     remove(task) {
         if (this._tracer.enabled) {
             this._tracer.enter(this, 'remove');
@@ -313,19 +281,12 @@ class TaskQueue {
         }
         throw new Error(`Task #${task.id} could not be found`);
     }
-    /**
-     * Return a reusable task to the shared task pool.
-     * The next queued callback will reuse this task object instead of creating a new one, to save overhead of creating additional objects.
-     */
     returnToPool(task) {
         if (this._tracer.enabled) {
             this._tracer.trace(this, 'returnToPool');
         }
         this.taskPool[this._taskPoolSize++] = task;
     }
-    /**
-     * Reset the persistent task back to its pending state, preparing it for being invoked again on the next flush.
-     */
     resetPersistentTask(task) {
         if (this._tracer.enabled) {
             this._tracer.enter(this, 'resetPersistentTask');
@@ -341,9 +302,6 @@ class TaskQueue {
             this._tracer.leave(this, 'resetPersistentTask');
         }
     }
-    /**
-     * Notify the queue that this async task has had its promise resolved, so that the queue can proceed with consecutive tasks on the next flush.
-     */
     completeAsyncTask(task) {
         var _a;
         if (this._tracer.enabled) {
@@ -400,29 +358,27 @@ class Task {
         this.reusable = reusable;
         this.callback = callback;
         this.id = ++id;
-        /** @internal */ this._resolve = void 0;
-        /** @internal */ this._reject = void 0;
-        /** @internal */
+        this._resolve = void 0;
+        this._reject = void 0;
         this._result = void 0;
-        /** @internal */
-        this._status = 0 /* pending */;
+        this._status = 0;
         this._tracer = tracer;
     }
     get result() {
         const result = this._result;
         if (result === void 0) {
             switch (this._status) {
-                case 0 /* pending */: {
+                case 0: {
                     const promise = this._result = createExposedPromise();
                     this._resolve = promise.resolve;
                     this._reject = promise.reject;
                     return promise;
                 }
-                case 1 /* running */:
+                case 1:
                     throw new Error('Trying to await task from within task will cause a deadlock.');
-                case 2 /* completed */:
+                case 2:
                     return this._result = Promise.resolve();
-                case 3 /* canceled */:
+                case 3:
                     return this._result = Promise.reject(new TaskAbortError(this));
             }
         }
@@ -435,18 +391,15 @@ class Task {
         if (this._tracer.enabled) {
             this._tracer.enter(this, 'run');
         }
-        if (this._status !== 0 /* pending */) {
+        if (this._status !== 0) {
             if (this._tracer.enabled) {
                 this._tracer.leave(this, 'run error');
             }
             throw new Error(`Cannot run task in ${this._status} state`);
         }
-        // this.persistent could be changed while the task is running (this can only be done by the task itself if canceled, and is a valid way of stopping a loop)
-        // so we deliberately reference this.persistent instead of the local variable, but we keep it around to know whether the task *was* persistent before running it,
-        // so we can set the correct cancelation state.
         const { persistent, reusable, taskQueue, callback, _resolve: resolve, _reject: reject, createdTime, } = this;
         let ret;
-        this._status = 1 /* running */;
+        this._status = 1;
         try {
             ret = callback(time - createdTime);
             if (ret instanceof Promise) {
@@ -456,11 +409,10 @@ class Task {
                     }
                     else {
                         if (persistent) {
-                            // Persistent tasks never reach completed status. They're either pending, running, or canceled.
-                            this._status = 3 /* canceled */;
+                            this._status = 3;
                         }
                         else {
-                            this._status = 2 /* completed */;
+                            this._status = 2;
                         }
                         this.dispose();
                     }
@@ -497,11 +449,10 @@ class Task {
                 }
                 else {
                     if (persistent) {
-                        // Persistent tasks never reach completed status. They're either pending, running, or canceled.
-                        this._status = 3 /* canceled */;
+                        this._status = 3;
                     }
                     else {
-                        this._status = 2 /* completed */;
+                        this._status = 2;
                     }
                     this.dispose();
                 }
@@ -535,7 +486,7 @@ class Task {
         if (this._tracer.enabled) {
             this._tracer.enter(this, 'cancel');
         }
-        if (this._status === 0 /* pending */) {
+        if (this._status === 0) {
             const taskQueue = this.taskQueue;
             const reusable = this.reusable;
             const reject = this._reject;
@@ -543,7 +494,7 @@ class Task {
             if (taskQueue.isEmpty) {
                 taskQueue.cancel();
             }
-            this._status = 3 /* canceled */;
+            this._status = 3;
             this.dispose();
             if (reusable) {
                 taskQueue['returnToPool'](this);
@@ -556,7 +507,7 @@ class Task {
             }
             return true;
         }
-        else if (this._status === 1 /* running */ && this.persistent) {
+        else if (this._status === 1 && this.persistent) {
             this.persistent = false;
             if (this._tracer.enabled) {
                 this._tracer.leave(this, 'cancel true =running+persistent');
@@ -575,7 +526,7 @@ class Task {
         const delay = this.queueTime - this.createdTime;
         this.createdTime = time;
         this.queueTime = time + delay;
-        this._status = 0 /* pending */;
+        this._status = 0;
         this._resolve = void 0;
         this._reject = void 0;
         this._result = void 0;
@@ -593,7 +544,7 @@ class Task {
         this.persistent = persistent;
         this.suspend = suspend;
         this.callback = callback;
-        this._status = 0 /* pending */;
+        this._status = 0;
         if (this._tracer.enabled) {
             this._tracer.leave(this, 'reuse');
         }
@@ -610,10 +561,10 @@ class Task {
 }
 function taskStatus(status) {
     switch (status) {
-        case 0 /* pending */: return 'pending';
-        case 1 /* running */: return 'running';
-        case 3 /* canceled */: return 'canceled';
-        case 2 /* completed */: return 'completed';
+        case 0: return 'pending';
+        case 1: return 'running';
+        case 3: return 'canceled';
+        case 2: return 'completed';
     }
 }
 class Tracer {
@@ -674,9 +625,6 @@ function executor(resolve, reject) {
     $resolve = resolve;
     $reject = reject;
 }
-/**
- * Efficiently create a promise where the `resolve` and `reject` functions are stored as properties on the prommise itself.
- */
 function createExposedPromise() {
     const p = new Promise(executor);
     p.resolve = $resolve;

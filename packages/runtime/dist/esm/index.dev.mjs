@@ -2,18 +2,11 @@ import { Metadata, Protocol, Registration, DI, firstDefined, mergeArrays, fromAn
 export { IPlatform } from '@aurelia/kernel';
 export { Platform, Task, TaskAbortError, TaskQueue, TaskQueuePriority, TaskStatus } from '@aurelia/platform';
 
-/**
- * A shortcut to Object.prototype.hasOwnProperty
- * Needs to do explicit .call
- *
- * @internal
- */
 const hasOwnProp = Object.prototype.hasOwnProperty;
-/** @internal */ const def = Reflect.defineProperty;
-// eslint-disable-next-line @typescript-eslint/ban-types
-/** @internal */ const isFunction = (v) => typeof v === 'function';
-/** @internal */ const isString = (v) => typeof v === 'string';
-/** @internal */ function defineHiddenProp(obj, key, value) {
+const def = Reflect.defineProperty;
+const isFunction = (v) => typeof v === 'function';
+const isString = (v) => typeof v === 'string';
+function defineHiddenProp(obj, key, value) {
     def(obj, key, {
         enumerable: false,
         configurable: true,
@@ -22,18 +15,18 @@ const hasOwnProp = Object.prototype.hasOwnProperty;
     });
     return value;
 }
-/** @internal */ function ensureProto(proto, key, defaultValue, force = false) {
+function ensureProto(proto, key, defaultValue, force = false) {
     if (force || !hasOwnProp.call(proto, key)) {
         defineHiddenProp(proto, key, defaultValue);
     }
 }
-/** @internal */ const createLookup = () => Object.create(null);
-/** @internal */ const getOwnMetadata = Metadata.getOwn;
-/** @internal */ const hasOwnMetadata = Metadata.hasOwn;
-/** @internal */ const defineMetadata = Metadata.define;
-/** @internal */ const getAnnotationKeyFor = Protocol.annotation.keyFor;
-/** @internal */ const getResourceKeyFor = Protocol.resource.keyFor;
-/** @internal */ const appendResourceKey = Protocol.resource.appendTo;
+const createLookup = () => Object.create(null);
+const getOwnMetadata = Metadata.getOwn;
+const hasOwnMetadata = Metadata.hasOwn;
+const defineMetadata = Metadata.define;
+const getAnnotationKeyFor = Protocol.annotation.keyFor;
+const getResourceKeyFor = Protocol.resource.keyFor;
+const appendResourceKey = Protocol.resource.appendTo;
 
 function alias(...aliases) {
     return function (target) {
@@ -58,11 +51,9 @@ class BindingContext {
     constructor(keyOrObj, value) {
         if (keyOrObj !== void 0) {
             if (value !== void 0) {
-                // if value is defined then it's just a property and a value to initialize with
                 this[keyOrObj] = value;
             }
             else {
-                // can either be some random object or another bindingContext to clone from
                 for (const prop in keyOrObj) {
                     if (hasOwnProp.call(keyOrObj, prop)) {
                         this[prop] = keyOrObj[prop];
@@ -81,9 +72,7 @@ class BindingContext {
         }
         let overrideContext = scope.overrideContext;
         let currentScope = scope;
-        // let bc: IBindingContext | null;
         if (ancestor > 0) {
-            // jump up the required number of ancestor contexts (eg $parent.$parent requires two jumps)
             while (ancestor > 0) {
                 ancestor--;
                 currentScope = currentScope.parentScope;
@@ -92,18 +81,8 @@ class BindingContext {
                 }
             }
             overrideContext = currentScope.overrideContext;
-            // Here we are giving benefit of doubt considering the dev has used one or more `$parent` token, and thus should know what s/he is targeting.
             return name in overrideContext ? overrideContext : overrideContext.bindingContext;
         }
-        // walk the scope hierarchy until
-        // the first scope that has the property in its contexts
-        // or
-        // the closet boundary scope
-        // -------------------------
-        // this behavior is different with v1
-        // where it would fallback to the immediate scope instead of the root one
-        // TODO: maybe avoid immediate loop and return earlier
-        // -------------------------
         while (!(currentScope === null || currentScope === void 0 ? void 0 : currentScope.isBoundary)
             && overrideContext != null
             && !(name in overrideContext)
@@ -115,45 +94,7 @@ class BindingContext {
         if (overrideContext) {
             return name in overrideContext ? overrideContext : overrideContext.bindingContext;
         }
-        // This following code block is the v1 behavior of scope selection
-        // where it would walk the scope hierarchy and stop at the first scope
-        // that has matching property.
-        // if no scope in the hierarchy, until the closest boundary scope has the property
-        // then pick the scope it started with
-        // ------------------
-        // if (currentScope.isBoundary) {
-        //   if (overrideContext != null) {
-        //     if (name in overrideContext) {
-        //       return overrideContext;
-        //     }
-        //     bc = overrideContext.bindingContext;
-        //     if (bc != null && name in bc) {
-        //       return bc;
-        //     }
-        //   }
-        // } else {
-        //   // traverse the context and it's ancestors, searching for a context that has the name.
-        //   do {
-        //     if (overrideContext != null) {
-        //       if (name in overrideContext) {
-        //         return overrideContext;
-        //       }
-        //       bc = overrideContext.bindingContext;
-        //       if (bc != null && name in bc) {
-        //         return bc;
-        //       }
-        //     }
-        //     if (currentScope.isBoundary) {
-        //       break;
-        //     }
-        //     currentScope = currentScope.parentScope;
-        //     overrideContext = currentScope == null ? null : currentScope.overrideContext;
-        //   } while (currentScope != null);
-        // }
-        // still nothing found. return the root binding context (or null
-        // if this is a parent scope traversal, to ensure we fall back to the
-        // correct level)
-        if (flags & 16 /* isTraversingParentScope */) {
+        if (flags & 16) {
             return marker;
         }
         return scope.bindingContext || scope.overrideContext;
@@ -254,15 +195,15 @@ class BindingBehaviorDefinition {
             def = nameOrDef;
         }
         const inheritsFromInterceptor = Object.getPrototypeOf(Type) === BindingInterceptor;
-        return new BindingBehaviorDefinition(Type, firstDefined(getBehaviorAnnotation(Type, 'name'), name), mergeArrays(getBehaviorAnnotation(Type, 'aliases'), def.aliases, Type.aliases), BindingBehavior.keyFrom(name), fromAnnotationOrDefinitionOrTypeOrDefault('strategy', def, Type, () => inheritsFromInterceptor ? 2 /* interceptor */ : 1 /* singleton */));
+        return new BindingBehaviorDefinition(Type, firstDefined(getBehaviorAnnotation(Type, 'name'), name), mergeArrays(getBehaviorAnnotation(Type, 'aliases'), def.aliases, Type.aliases), BindingBehavior.keyFrom(name), fromAnnotationOrDefinitionOrTypeOrDefault('strategy', def, Type, () => inheritsFromInterceptor ? 2 : 1));
     }
     register(container) {
         const { Type, key, aliases, strategy } = this;
         switch (strategy) {
-            case 1 /* singleton */:
+            case 1:
                 Registration.singleton(key, Type).register(container);
                 break;
-            case 2 /* interceptor */:
+            case 2:
                 Registration.instance(key, new BindingBehaviorFactory(container, Type)).register(container);
                 break;
         }
@@ -281,7 +222,6 @@ class BindingBehaviorFactory {
         const deps = this.deps;
         switch (deps.length) {
             case 0:
-                // TODO(fkleuver): fix this cast
                 return new this.Type(binding, expr);
             case 1:
                 return new this.Type(container.get(deps[0]), binding, expr);
@@ -432,7 +372,6 @@ const ValueConverter = Object.freeze({
         if (def === void 0) {
             throw new Error(`No definition found for type ${Type.name}`);
         }
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return def;
     },
     annotate(Type, prop, value) {
@@ -454,7 +393,6 @@ var ExpressionKind;
     ExpressionKind[ExpressionKind["IsResource"] = 32768] = "IsResource";
     ExpressionKind[ExpressionKind["IsForDeclaration"] = 65536] = "IsForDeclaration";
     ExpressionKind[ExpressionKind["Type"] = 31] = "Type";
-    // ---------------------------------------------------------------------------------------------------------------------------
     ExpressionKind[ExpressionKind["AccessThis"] = 1793] = "AccessThis";
     ExpressionKind[ExpressionKind["AccessScope"] = 10082] = "AccessScope";
     ExpressionKind[ExpressionKind["ArrayLiteral"] = 17955] = "ArrayLiteral";
@@ -603,7 +541,7 @@ class Unparser {
     }
     visitUnary(expr) {
         this.text += `(${expr.operation}`;
-        if (expr.operation.charCodeAt(0) >= /* a */ 97) {
+        if (expr.operation.charCodeAt(0) >= 97) {
             this.text += ' ';
         }
         expr.expression.accept(this);
@@ -612,7 +550,7 @@ class Unparser {
     visitBinary(expr) {
         this.text += '(';
         expr.left.accept(this);
-        if (expr.operation.charCodeAt(0) === /* i */ 105) {
+        if (expr.operation.charCodeAt(0) === 105) {
             this.text += ` ${expr.operation} `;
         }
         else {
@@ -701,7 +639,7 @@ class Unparser {
     }
     visitDestructuringAssignmentExpression(expr) {
         const $kind = expr.$kind;
-        const isObjDes = $kind === 106521 /* ObjectDestructuring */;
+        const isObjDes = $kind === 106521;
         this.text += isObjDes ? '{' : '[';
         const list = expr.list;
         const len = list.length;
@@ -710,11 +648,11 @@ class Unparser {
         for (i = 0; i < len; i++) {
             item = list[i];
             switch (item.$kind) {
-                case 139289 /* DestructuringAssignmentLeaf */:
+                case 139289:
                     item.accept(this);
                     break;
-                case 90137 /* ArrayDestructuring */:
-                case 106521 /* ObjectDestructuring */: {
+                case 90137:
+                case 106521: {
                     const source = item.source;
                     if (source) {
                         source.accept(this);
@@ -767,7 +705,7 @@ class BindingBehaviorExpression {
         this.args = args;
         this.behaviorKey = BindingBehavior.keyFrom(name);
     }
-    get $kind() { return 38962 /* BindingBehavior */; }
+    get $kind() { return 38962; }
     get hasBind() { return true; }
     get hasUnbind() { return true; }
     evaluate(f, s, l, c) {
@@ -821,7 +759,7 @@ class ValueConverterExpression {
         this.args = args;
         this.converterKey = ValueConverter.keyFrom(name);
     }
-    get $kind() { return 36913 /* ValueConverter */; }
+    get $kind() { return 36913; }
     get hasBind() { return false; }
     get hasUnbind() { return true; }
     evaluate(f, s, l, c) {
@@ -829,10 +767,6 @@ class ValueConverterExpression {
         if (vc == null) {
             throw new Error(`ValueConverter named '${this.name}' could not be found. Did you forget to register it as a dependency?`);
         }
-        // note: the cast is expected. To connect, it just needs to be a IConnectable
-        // though to work with signal, it needs to have `handleChange`
-        // so having `handleChange` as a guard in the connectable as a safe measure is needed
-        // to make sure signaler works
         if (c !== null && ('handleChange' in c)) {
             const signals = vc.signals;
             if (signals != null) {
@@ -864,8 +798,6 @@ class ValueConverterExpression {
         }
         const signaler = b.locator.get(ISignaler);
         for (let i = 0; i < vc.signals.length; ++i) {
-            // the cast is correct, as the value converter expression would only add
-            // a IConnectable that also implements `ISubscriber` interface to the signaler
             signaler.removeSignalListener(vc.signals[i], b);
         }
     }
@@ -881,7 +813,7 @@ class AssignExpression {
         this.target = target;
         this.value = value;
     }
-    get $kind() { return 8208 /* Assign */; }
+    get $kind() { return 8208; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
@@ -904,11 +836,10 @@ class ConditionalExpression {
         this.yes = yes;
         this.no = no;
     }
-    get $kind() { return 63 /* Conditional */; }
+    get $kind() { return 63; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
-        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         return this.condition.evaluate(f, s, l, c) ? this.yes.evaluate(f, s, l, c) : this.no.evaluate(f, s, l, c);
     }
     assign(_f, _s, _l, _obj) {
@@ -925,7 +856,7 @@ class AccessThisExpression {
     constructor(ancestor = 0) {
         this.ancestor = ancestor;
     }
-    get $kind() { return 1793 /* AccessThis */; }
+    get $kind() { return 1793; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(_f, s, _l, _c) {
@@ -956,7 +887,7 @@ class AccessScopeExpression {
         this.name = name;
         this.ancestor = ancestor;
     }
-    get $kind() { return 10082 /* AccessScope */; }
+    get $kind() { return 10082; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, _l, c) {
@@ -968,7 +899,7 @@ class AccessScopeExpression {
         if (evaluatedValue == null && this.name === '$host') {
             throw new Error('Unable to find $host context. Did you forget [au-slot] attribute?');
         }
-        if (f & 1 /* isStrictBindingStrategy */) {
+        if (f & 1) {
             return evaluatedValue;
         }
         return evaluatedValue == null ? '' : evaluatedValue;
@@ -1002,12 +933,12 @@ class AccessMemberExpression {
         this.object = object;
         this.name = name;
     }
-    get $kind() { return 9323 /* AccessMember */; }
+    get $kind() { return 9323; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
-        const instance = this.object.evaluate(f, s, l, (f & 128 /* observeLeafPropertiesOnly */) > 0 ? null : c);
-        if (f & 1 /* isStrictBindingStrategy */) {
+        const instance = this.object.evaluate(f, s, l, (f & 128) > 0 ? null : c);
+        if (f & 1) {
             if (instance == null) {
                 return instance;
             }
@@ -1019,7 +950,6 @@ class AccessMemberExpression {
         if (c !== null && instance instanceof Object) {
             c.observe(instance, this.name);
         }
-        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         return instance ? instance[this.name] : '';
     }
     assign(f, s, l, val) {
@@ -1049,13 +979,13 @@ class AccessKeyedExpression {
         this.object = object;
         this.key = key;
     }
-    get $kind() { return 9324 /* AccessKeyed */; }
+    get $kind() { return 9324; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
-        const instance = this.object.evaluate(f, s, l, (f & 128 /* observeLeafPropertiesOnly */) > 0 ? null : c);
+        const instance = this.object.evaluate(f, s, l, (f & 128) > 0 ? null : c);
         if (instance instanceof Object) {
-            const key = this.key.evaluate(f, s, l, (f & 128 /* observeLeafPropertiesOnly */) > 0 ? null : c);
+            const key = this.key.evaluate(f, s, l, (f & 128) > 0 ? null : c);
             if (c !== null) {
                 c.observe(instance, key);
             }
@@ -1081,15 +1011,12 @@ class CallScopeExpression {
         this.args = args;
         this.ancestor = ancestor;
     }
-    get $kind() { return 1448 /* CallScope */; }
+    get $kind() { return 1448; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
         const args = this.args.map(a => a.evaluate(f, s, l, c));
         const context = BindingContext.get(s, this.name, this.ancestor, f);
-        // ideally, should observe property represents by this.name as well
-        // because it could be changed
-        // todo: did it ever surprise anyone?
         const func = getFunction(f, context, this.name);
         if (func) {
             return func.apply(context, args);
@@ -1112,11 +1039,11 @@ class CallMemberExpression {
         this.name = name;
         this.args = args;
     }
-    get $kind() { return 1161 /* CallMember */; }
+    get $kind() { return 1161; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
-        const instance = this.object.evaluate(f, s, l, (f & 128 /* observeLeafPropertiesOnly */) > 0 ? null : c);
+        const instance = this.object.evaluate(f, s, l, (f & 128) > 0 ? null : c);
         const args = this.args.map(a => a.evaluate(f, s, l, c));
         const func = getFunction(f, instance, this.name);
         if (func) {
@@ -1139,7 +1066,7 @@ class CallFunctionExpression {
         this.func = func;
         this.args = args;
     }
-    get $kind() { return 1162 /* CallFunction */; }
+    get $kind() { return 1162; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
@@ -1147,7 +1074,7 @@ class CallFunctionExpression {
         if (isFunction(func)) {
             return func(...this.args.map(a => a.evaluate(f, s, l, c)));
         }
-        if (!(f & 8 /* mustEvaluate */) && (func == null)) {
+        if (!(f & 8) && (func == null)) {
             return void 0;
         }
         throw new Error(`Expression is not a function.`);
@@ -1168,24 +1095,20 @@ class BinaryExpression {
         this.left = left;
         this.right = right;
     }
-    get $kind() { return 46 /* Binary */; }
+    get $kind() { return 46; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
         switch (this.operation) {
             case '&&':
-                // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
                 return this.left.evaluate(f, s, l, c) && this.right.evaluate(f, s, l, c);
             case '||':
-                // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
                 return this.left.evaluate(f, s, l, c) || this.right.evaluate(f, s, l, c);
             case '==':
-                // eslint-disable-next-line eqeqeq
                 return this.left.evaluate(f, s, l, c) == this.right.evaluate(f, s, l, c);
             case '===':
                 return this.left.evaluate(f, s, l, c) === this.right.evaluate(f, s, l, c);
             case '!=':
-                // eslint-disable-next-line eqeqeq
                 return this.left.evaluate(f, s, l, c) != this.right.evaluate(f, s, l, c);
             case '!==':
                 return this.left.evaluate(f, s, l, c) !== this.right.evaluate(f, s, l, c);
@@ -1203,17 +1126,12 @@ class BinaryExpression {
                 }
                 return false;
             }
-            // note: autoConvertAdd (and the null check) is removed because the default spec behavior is already largely similar
-            // and where it isn't, you kind of want it to behave like the spec anyway (e.g. return NaN when adding a number to undefined)
-            // this makes bugs in user code easier to track down for end users
-            // also, skipping these checks and leaving it to the runtime is a nice little perf boost and simplifies our code
             case '+': {
                 const left = this.left.evaluate(f, s, l, c);
                 const right = this.right.evaluate(f, s, l, c);
-                if ((f & 1 /* isStrictBindingStrategy */) > 0) {
+                if ((f & 1) > 0) {
                     return left + right;
                 }
-                // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
                 if (!left || !right) {
                     if (isNumberOrBigInt(left) || isNumberOrBigInt(right)) {
                         return (left || 0) + (right || 0);
@@ -1259,7 +1177,7 @@ class UnaryExpression {
         this.operation = operation;
         this.expression = expression;
     }
-    get $kind() { return 39 /* Unary */; }
+    get $kind() { return 39; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
@@ -1267,7 +1185,7 @@ class UnaryExpression {
             case 'void':
                 return void this.expression.evaluate(f, s, l, c);
             case 'typeof':
-                return typeof this.expression.evaluate(f | 1 /* isStrictBindingStrategy */, s, l, c);
+                return typeof this.expression.evaluate(f | 1, s, l, c);
             case '!':
                 return !this.expression.evaluate(f, s, l, c);
             case '-':
@@ -1292,7 +1210,7 @@ class PrimitiveLiteralExpression {
     constructor(value) {
         this.value = value;
     }
-    get $kind() { return 17925 /* PrimitiveLiteral */; }
+    get $kind() { return 17925; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(_f, _s, _l, _c) {
@@ -1317,7 +1235,7 @@ class HtmlLiteralExpression {
     constructor(parts) {
         this.parts = parts;
     }
-    get $kind() { return 51 /* HtmlLiteral */; }
+    get $kind() { return 51; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
@@ -1345,7 +1263,7 @@ class ArrayLiteralExpression {
     constructor(elements) {
         this.elements = elements;
     }
-    get $kind() { return 17955 /* ArrayLiteral */; }
+    get $kind() { return 17955; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
@@ -1367,7 +1285,7 @@ class ObjectLiteralExpression {
         this.keys = keys;
         this.values = values;
     }
-    get $kind() { return 17956 /* ObjectLiteral */; }
+    get $kind() { return 17956; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
@@ -1393,7 +1311,7 @@ class TemplateExpression {
         this.cooked = cooked;
         this.expressions = expressions;
     }
-    get $kind() { return 17958 /* Template */; }
+    get $kind() { return 17958; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
@@ -1422,7 +1340,7 @@ class TaggedTemplateExpression {
         this.expressions = expressions;
         cooked.raw = raw;
     }
-    get $kind() { return 1197 /* TaggedTemplate */; }
+    get $kind() { return 1197; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
@@ -1444,30 +1362,16 @@ class TaggedTemplateExpression {
     }
 }
 class ArrayBindingPattern {
-    // We'll either have elements, or keys+values, but never all 3
     constructor(elements) {
         this.elements = elements;
     }
-    get $kind() { return 65556 /* ArrayBindingPattern */; }
+    get $kind() { return 65556; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(_f, _s, _l, _c) {
-        // TODO: this should come after batch
-        // as a destructuring expression like [x, y] = value
-        //
-        // should only trigger change only once:
-        // batch(() => {
-        //   object.x = value[0]
-        //   object.y = value[1]
-        // })
-        //
-        // instead of twice:
-        // object.x = value[0]
-        // object.y = value[1]
         return void 0;
     }
     assign(_f, _s, _l, _obj) {
-        // TODO
         return void 0;
     }
     accept(visitor) {
@@ -1478,23 +1382,17 @@ class ArrayBindingPattern {
     }
 }
 class ObjectBindingPattern {
-    // We'll either have elements, or keys+values, but never all 3
     constructor(keys, values) {
         this.keys = keys;
         this.values = values;
     }
-    get $kind() { return 65557 /* ObjectBindingPattern */; }
+    get $kind() { return 65557; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(_f, _s, _l, _c) {
-        // TODO
-        // similar to array binding ast, this should only come after batch
-        // for a single notification per destructing,
-        // regardless number of property assignments on the scope binding context
         return void 0;
     }
     assign(_f, _s, _l, _obj) {
-        // TODO
         return void 0;
     }
     accept(visitor) {
@@ -1508,7 +1406,7 @@ class BindingIdentifier {
     constructor(name) {
         this.name = name;
     }
-    get $kind() { return 65558 /* BindingIdentifier */; }
+    get $kind() { return 65558; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(_f, _s, _l, _c) {
@@ -1522,14 +1420,12 @@ class BindingIdentifier {
     }
 }
 const toStringTag$1 = Object.prototype.toString;
-// https://tc39.github.io/ecma262/#sec-iteration-statements
-// https://tc39.github.io/ecma262/#sec-for-in-and-for-of-statements
 class ForOfStatement {
     constructor(declaration, iterable) {
         this.declaration = declaration;
         this.iterable = iterable;
     }
-    get $kind() { return 6199 /* ForOfStatement */; }
+    get $kind() { return 6199; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
@@ -1546,11 +1442,9 @@ class ForOfStatement {
             case '[object Number]': return result;
             case '[object Null]': return 0;
             case '[object Undefined]': return 0;
-            // todo: remove this count method
             default: throw new Error(`Cannot count ${toStringTag$1.call(result)}`);
         }
     }
-    // deepscan-disable-next-line
     iterate(f, result, func) {
         switch (toStringTag$1.call(result)) {
             case '[object Array]': return $array(result, func);
@@ -1559,7 +1453,6 @@ class ForOfStatement {
             case '[object Number]': return $number(result, func);
             case '[object Null]': return;
             case '[object Undefined]': return;
-            // todo: remove this count method
             default: throw new Error(`Cannot iterate over ${toStringTag$1.call(result)}`);
         }
     }
@@ -1580,11 +1473,6 @@ class ForOfStatement {
         return Unparser.unparse(this);
     }
 }
-/*
-* Note: this implementation is far simpler than the one in vCurrent and might be missing important stuff (not sure yet)
-* so while this implementation is identical to Template and we could reuse that one, we don't want to lock outselves in to potentially the wrong abstraction
-* but this class might be a candidate for removal if it turns out it does provide all we need
-*/
 class Interpolation {
     constructor(parts, expressions = emptyArray) {
         this.parts = parts;
@@ -1592,7 +1480,7 @@ class Interpolation {
         this.isMulti = expressions.length > 1;
         this.firstExpression = expressions[0];
     }
-    get $kind() { return 24 /* Interpolation */; }
+    get $kind() { return 24; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
@@ -1618,8 +1506,6 @@ class Interpolation {
         return Unparser.unparse(this);
     }
 }
-// spec: https://tc39.es/ecma262/#sec-destructuring-assignment
-/** This is an internal API */
 class DestructuringAssignmentExpression {
     constructor($kind, list, source, initializer) {
         this.$kind = $kind;
@@ -1641,11 +1527,11 @@ class DestructuringAssignmentExpression {
         for (i = 0; i < len; i++) {
             item = list[i];
             switch (item.$kind) {
-                case 139289 /* DestructuringAssignmentLeaf */:
+                case 139289:
                     item.assign(f, s, l, value);
                     break;
-                case 90137 /* ArrayDestructuring */:
-                case 106521 /* ObjectDestructuring */: {
+                case 90137:
+                case 106521: {
                     if (typeof value !== 'object' || value === null) {
                         {
                             throw new Error('Cannot use non-object value for destructuring assignment.');
@@ -1668,14 +1554,13 @@ class DestructuringAssignmentExpression {
         return Unparser.unparse(this);
     }
 }
-/** This is an internal API */
 class DestructuringAssignmentSingleExpression {
     constructor(target, source, initializer) {
         this.target = target;
         this.source = source;
         this.initializer = initializer;
     }
-    get $kind() { return 139289 /* DestructuringAssignmentLeaf */; }
+    get $kind() { return 139289; }
     evaluate(_f, _s, _l, _c) {
         return void 0;
     }
@@ -1702,13 +1587,12 @@ class DestructuringAssignmentSingleExpression {
         return Unparser.unparse(this);
     }
 }
-/** This is an internal API */
 class DestructuringAssignmentRestExpression {
     constructor(target, indexOrProperties) {
         this.target = target;
         this.indexOrProperties = indexOrProperties;
     }
-    get $kind() { return 139289 /* DestructuringAssignmentLeaf */; }
+    get $kind() { return 139289; }
     evaluate(_f, _s, _l, _c) {
         return void 0;
     }
@@ -1739,7 +1623,6 @@ class DestructuringAssignmentRestExpression {
                     acc[k] = v;
                 }
                 return acc;
-                // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             }, {});
         }
         this.target.assign(f, s, l, restValue);
@@ -1756,7 +1639,7 @@ function getFunction(f, obj, name) {
     if (isFunction(func)) {
         return func;
     }
-    if (!(f & 8 /* mustEvaluate */) && func == null) {
+    if (!(f & 8) && func == null) {
         return null;
     }
     throw new Error(`Expected '${name}' to be a function`);
@@ -1791,14 +1674,6 @@ function $number(result, func) {
 }
 
 const ICoercionConfiguration = DI.createInterface('ICoercionConfiguration');
-/*
-* Note: the oneTime binding now has a non-zero value for 2 reasons:
-*  - plays nicer with bitwise operations (more consistent code, more explicit settings)
-*  - allows for potentially having something like BindingMode.oneTime | BindingMode.fromView, where an initial value is set once to the view but updates from the view also propagate back to the view model
-*
-* Furthermore, the "default" mode would be for simple ".bind" expressions to make it explicit for our logic that the default is being used.
-* This essentially adds extra information which binding could use to do smarter things and allows bindingBehaviors that add a mode instead of simply overwriting it
-*/
 var BindingMode;
 (function (BindingMode) {
     BindingMode[BindingMode["oneTime"] = 1] = "oneTime";
@@ -1810,8 +1685,6 @@ var BindingMode;
 var LifecycleFlags;
 (function (LifecycleFlags) {
     LifecycleFlags[LifecycleFlags["none"] = 0] = "none";
-    // Bitmask for flags that need to be stored on a binding during $bind for mutation
-    // callbacks outside of $bind
     LifecycleFlags[LifecycleFlags["persistentBindingFlags"] = 961] = "persistentBindingFlags";
     LifecycleFlags[LifecycleFlags["allowParentScopeTraversal"] = 64] = "allowParentScopeTraversal";
     LifecycleFlags[LifecycleFlags["observeLeafPropertiesOnly"] = 128] = "observeLeafPropertiesOnly";
@@ -1826,7 +1699,6 @@ var LifecycleFlags;
     LifecycleFlags[LifecycleFlags["isTraversingParentScope"] = 16] = "isTraversingParentScope";
     LifecycleFlags[LifecycleFlags["dispose"] = 32] = "dispose";
 })(LifecycleFlags || (LifecycleFlags = {}));
-/** @internal */
 var SubscriberFlags;
 (function (SubscriberFlags) {
     SubscriberFlags[SubscriberFlags["None"] = 0] = "None";
@@ -1855,18 +1727,7 @@ var AccessorType;
     AccessorType[AccessorType["None"] = 0] = "None";
     AccessorType[AccessorType["Observer"] = 1] = "Observer";
     AccessorType[AccessorType["Node"] = 2] = "Node";
-    // misc characteristic of accessors/observers when update
-    //
-    // by default, everything is synchronous
-    // except changes that are supposed to cause reflow/heavy computation
-    // an observer can use this flag to signal binding that don't carelessly tell it to update
-    // queue it instead
-    // todo: https://gist.github.com/paulirish/5d52fb081b3570c81e3a
-    // todo: https://csstriggers.com/
     AccessorType[AccessorType["Layout"] = 4] = "Layout";
-    // by default, everything is an object
-    // eg: a property is accessed on an object
-    // unless explicitly not so
     AccessorType[AccessorType["Primtive"] = 8] = "Primtive";
     AccessorType[AccessorType["Array"] = 18] = "Array";
     AccessorType[AccessorType["Set"] = 34] = "Set";
@@ -1917,19 +1778,13 @@ function subscriberCollection(target) {
 }
 function subscriberCollectionDeco(target) {
     const proto = target.prototype;
-    // not configurable, as in devtool, the getter could be invoked on the prototype,
-    // and become permanently broken
     def(proto, 'subs', { get: getSubscriberRecord });
     ensureProto(proto, 'subscribe', addSubscriber);
     ensureProto(proto, 'unsubscribe', removeSubscriber);
 }
-/* eslint-enable @typescript-eslint/ban-types */
 class SubscriberRecord {
     constructor() {
-        /**
-         * subscriber flags: bits indicating the existence status of the subscribers of this record
-         */
-        this.sf = 0 /* None */;
+        this.sf = 0;
         this.count = 0;
     }
     add(subscriber) {
@@ -1937,44 +1792,41 @@ class SubscriberRecord {
             return false;
         }
         const subscriberFlags = this.sf;
-        if ((subscriberFlags & 1 /* Subscriber0 */) === 0) {
+        if ((subscriberFlags & 1) === 0) {
             this.s0 = subscriber;
-            this.sf |= 1 /* Subscriber0 */;
+            this.sf |= 1;
         }
-        else if ((subscriberFlags & 2 /* Subscriber1 */) === 0) {
+        else if ((subscriberFlags & 2) === 0) {
             this.s1 = subscriber;
-            this.sf |= 2 /* Subscriber1 */;
+            this.sf |= 2;
         }
-        else if ((subscriberFlags & 4 /* Subscriber2 */) === 0) {
+        else if ((subscriberFlags & 4) === 0) {
             this.s2 = subscriber;
-            this.sf |= 4 /* Subscriber2 */;
+            this.sf |= 4;
         }
-        else if ((subscriberFlags & 8 /* SubscribersRest */) === 0) {
+        else if ((subscriberFlags & 8) === 0) {
             this.sr = [subscriber];
-            this.sf |= 8 /* SubscribersRest */;
+            this.sf |= 8;
         }
         else {
-            this.sr.push(subscriber); // Non-null is implied by else branch of (subscriberFlags & SF.SubscribersRest) === 0
+            this.sr.push(subscriber);
         }
         ++this.count;
         return true;
     }
     has(subscriber) {
-        // Flags here is just a perf tweak
-        // Compared to not using flags, it's a moderate speed-up when this collection does not have the subscriber;
-        // and minor slow-down when it does, and the former is more common than the latter.
         const subscriberFlags = this.sf;
-        if ((subscriberFlags & 1 /* Subscriber0 */) > 0 && this.s0 === subscriber) {
+        if ((subscriberFlags & 1) > 0 && this.s0 === subscriber) {
             return true;
         }
-        if ((subscriberFlags & 2 /* Subscriber1 */) > 0 && this.s1 === subscriber) {
+        if ((subscriberFlags & 2) > 0 && this.s1 === subscriber) {
             return true;
         }
-        if ((subscriberFlags & 4 /* Subscriber2 */) > 0 && this.s2 === subscriber) {
+        if ((subscriberFlags & 4) > 0 && this.s2 === subscriber) {
             return true;
         }
-        if ((subscriberFlags & 8 /* SubscribersRest */) > 0) {
-            const subscribers = this.sr; // Non-null is implied by (subscriberFlags & SF.SubscribersRest) > 0
+        if ((subscriberFlags & 8) > 0) {
+            const subscribers = this.sr;
             const ii = subscribers.length;
             let i = 0;
             for (; i < ii; ++i) {
@@ -1986,37 +1838,37 @@ class SubscriberRecord {
         return false;
     }
     any() {
-        return this.sf !== 0 /* None */;
+        return this.sf !== 0;
     }
     remove(subscriber) {
         const subscriberFlags = this.sf;
-        if ((subscriberFlags & 1 /* Subscriber0 */) > 0 && this.s0 === subscriber) {
+        if ((subscriberFlags & 1) > 0 && this.s0 === subscriber) {
             this.s0 = void 0;
-            this.sf = (this.sf | 1 /* Subscriber0 */) ^ 1 /* Subscriber0 */;
+            this.sf = (this.sf | 1) ^ 1;
             --this.count;
             return true;
         }
-        else if ((subscriberFlags & 2 /* Subscriber1 */) > 0 && this.s1 === subscriber) {
+        else if ((subscriberFlags & 2) > 0 && this.s1 === subscriber) {
             this.s1 = void 0;
-            this.sf = (this.sf | 2 /* Subscriber1 */) ^ 2 /* Subscriber1 */;
+            this.sf = (this.sf | 2) ^ 2;
             --this.count;
             return true;
         }
-        else if ((subscriberFlags & 4 /* Subscriber2 */) > 0 && this.s2 === subscriber) {
+        else if ((subscriberFlags & 4) > 0 && this.s2 === subscriber) {
             this.s2 = void 0;
-            this.sf = (this.sf | 4 /* Subscriber2 */) ^ 4 /* Subscriber2 */;
+            this.sf = (this.sf | 4) ^ 4;
             --this.count;
             return true;
         }
-        else if ((subscriberFlags & 8 /* SubscribersRest */) > 0) {
-            const subscribers = this.sr; // Non-null is implied by (subscriberFlags & SF.SubscribersRest) > 0
+        else if ((subscriberFlags & 8) > 0) {
+            const subscribers = this.sr;
             const ii = subscribers.length;
             let i = 0;
             for (; i < ii; ++i) {
                 if (subscribers[i] === subscriber) {
                     subscribers.splice(i, 1);
                     if (ii === 1) {
-                        this.sf = (this.sf | 8 /* SubscribersRest */) ^ 8 /* SubscribersRest */;
+                        this.sf = (this.sf | 8) ^ 8;
                     }
                     --this.count;
                     return true;
@@ -2026,13 +1878,6 @@ class SubscriberRecord {
         return false;
     }
     notify(val, oldVal, flags) {
-        /**
-         * Note: change handlers may have the side-effect of adding/removing subscribers to this collection during this
-         * callSubscribers invocation, so we're caching them all before invoking any.
-         * Subscribers added during this invocation are not invoked (and they shouldn't be).
-         * Subscribers removed during this invocation will still be invoked (and they also shouldn't be,
-         * however this is accounted for via $isBound and similar flags on the subscriber objects)
-         */
         const sub0 = this.s0;
         const sub1 = this.s1;
         const sub2 = this.s2;
@@ -2110,9 +1955,7 @@ function queueableDeco(target) {
 }
 class FlushQueue {
     constructor() {
-        /** @internal */
         this._flushing = false;
-        /** @internal */
         this._items = new Set();
     }
     get count() {
@@ -2148,9 +1991,8 @@ function flushItem(item, _, items) {
 class CollectionLengthObserver {
     constructor(owner) {
         this.owner = owner;
-        this.type = 18 /* Array */;
-        /** @internal */
-        this.f = 0 /* none */;
+        this.type = 18;
+        this.f = 0;
         this._value = this._oldvalue = (this._obj = owner.collection).length;
     }
     getValue() {
@@ -2158,11 +2000,8 @@ class CollectionLengthObserver {
     }
     setValue(newValue, flags) {
         const currentValue = this._value;
-        // if in the template, length is two-way bound directly
-        // then there's a chance that the new value is invalid
-        // add a guard so that we don't accidentally broadcast invalid values
         if (newValue !== currentValue && isArrayIndex(newValue)) {
-            if ((flags & 256 /* noFlush */) === 0) {
+            if ((flags & 256) === 0) {
                 this._obj.length = newValue;
             }
             this._value = newValue;
@@ -2189,10 +2028,9 @@ class CollectionLengthObserver {
 class CollectionSizeObserver {
     constructor(owner) {
         this.owner = owner;
-        /** @internal */
-        this.f = 0 /* none */;
+        this.f = 0;
         this._value = this._oldvalue = (this._obj = owner.collection).size;
-        this.type = this._obj instanceof Map ? 66 /* Map */ : 34 /* Set */;
+        this.type = this._obj instanceof Map ? 66 : 34;
     }
     getValue() {
         return this._obj.size;
@@ -2234,12 +2072,9 @@ function unsubscribe(subscriber) {
 }
 implementLengthObserver(CollectionLengthObserver);
 implementLengthObserver(CollectionSizeObserver);
-// a reusable variable for `.flush()` methods of observers
-// so that there doesn't need to create an env record for every call
 let oV$2 = void 0;
 
 const observerLookup$2 = new WeakMap();
-// https://tc39.github.io/ecma262/#sec-sortcompare
 function sortCompare(x, y) {
     if (x === y) {
         return 0;
@@ -2292,7 +2127,6 @@ function quickSort(arr, indexMap, from, to, compareFn) {
     let vtmp, itmp;
     let vpivot, ipivot, lowEnd, highStart;
     let velement, ielement, order, vtopElement;
-    // eslint-disable-next-line no-constant-condition
     while (true) {
         if (to - from <= 10) {
             insertionSort(arr, indexMap, from, to, compareFn);
@@ -2362,7 +2196,6 @@ function quickSort(arr, indexMap, from, to, compareFn) {
             else if (order > 0) {
                 do {
                     highStart--;
-                    // eslint-disable-next-line eqeqeq
                     if (highStart == i) {
                         break partition;
                     }
@@ -2405,7 +2238,6 @@ const $sort = proto$2.sort;
 const native$2 = { push: $push, unshift: $unshift, pop: $pop, shift: $shift, splice: $splice, reverse: $reverse, sort: $sort };
 const methods$2 = ['push', 'unshift', 'pop', 'shift', 'splice', 'reverse', 'sort'];
 const observe$3 = {
-    // https://tc39.github.io/ecma262/#sec-array.prototype.push
     push: function (...args) {
         const o = observerLookup$2.get(this);
         if (o === void 0) {
@@ -2426,7 +2258,6 @@ const observe$3 = {
         o.notify();
         return this.length;
     },
-    // https://tc39.github.io/ecma262/#sec-array.prototype.unshift
     unshift: function (...args) {
         const o = observerLookup$2.get(this);
         if (o === void 0) {
@@ -2443,7 +2274,6 @@ const observe$3 = {
         o.notify();
         return len;
     },
-    // https://tc39.github.io/ecma262/#sec-array.prototype.pop
     pop: function () {
         const o = observerLookup$2.get(this);
         if (o === void 0) {
@@ -2451,7 +2281,6 @@ const observe$3 = {
         }
         const indexMap = o.indexMap;
         const element = $pop.call(this);
-        // only mark indices as deleted if they actually existed in the original array
         const index = indexMap.length - 1;
         if (indexMap[index] > -1) {
             indexMap.deletedItems.push(indexMap[index]);
@@ -2460,7 +2289,6 @@ const observe$3 = {
         o.notify();
         return element;
     },
-    // https://tc39.github.io/ecma262/#sec-array.prototype.shift
     shift: function () {
         const o = observerLookup$2.get(this);
         if (o === void 0) {
@@ -2468,7 +2296,6 @@ const observe$3 = {
         }
         const indexMap = o.indexMap;
         const element = $shift.call(this);
-        // only mark indices as deleted if they actually existed in the original array
         if (indexMap[0] > -1) {
             indexMap.deletedItems.push(indexMap[0]);
         }
@@ -2476,7 +2303,6 @@ const observe$3 = {
         o.notify();
         return element;
     },
-    // https://tc39.github.io/ecma262/#sec-array.prototype.splice
     splice: function (...args) {
         const start = args[0];
         const deleteCount = args[1];
@@ -2516,7 +2342,6 @@ const observe$3 = {
         o.notify();
         return deleted;
     },
-    // https://tc39.github.io/ecma262/#sec-array.prototype.reverse
     reverse: function () {
         const o = observerLookup$2.get(this);
         if (o === void 0) {
@@ -2541,8 +2366,6 @@ const observe$3 = {
         o.notify();
         return this;
     },
-    // https://tc39.github.io/ecma262/#sec-array.prototype.sort
-    // https://github.com/v8/v8/blob/master/src/js/array.js
     sort: function (compareFn) {
         const o = observerLookup$2.get(this);
         if (o === void 0) {
@@ -2561,7 +2384,7 @@ const observe$3 = {
             }
             i++;
         }
-        if (compareFn === void 0 || !isFunction(compareFn) /* spec says throw a TypeError, should we do that too? */) {
+        if (compareFn === void 0 || !isFunction(compareFn)) {
             compareFn = sortCompare;
         }
         quickSort(this, o.indexMap, 0, i, compareFn);
@@ -2589,7 +2412,7 @@ function disableArrayObservation() {
 }
 class ArrayObserver {
     constructor(array) {
-        this.type = 18 /* Array */;
+        this.type = 18;
         if (!enableArrayObservationCalled) {
             enableArrayObservationCalled = true;
             enableArrayObservation();
@@ -2604,7 +2427,7 @@ class ArrayObserver {
         const indexMap = this.indexMap;
         const length = this.collection.length;
         this.indexMap = createIndexMap(length);
-        this.subs.notifyCollection(indexMap, 0 /* none */);
+        this.subs.notifyCollection(indexMap, 0);
     }
     getLengthObserver() {
         var _a;
@@ -2613,8 +2436,6 @@ class ArrayObserver {
     getIndexObserver(index) {
         var _a;
         var _b;
-        // It's unnecessary to destroy/recreate index observer all the time,
-        // so just create once, and add/remove instead
         return (_a = (_b = this.indexObservers)[index]) !== null && _a !== void 0 ? _a : (_b[index] = new ArrayIndexObserver(this, index));
     }
 }
@@ -2639,14 +2460,9 @@ class ArrayIndexObserver {
             indexMap.deletedItems.push(indexMap[index]);
         }
         indexMap[index] = -2;
-        // do not need to update current value here
-        // as it will be updated inside handle collection change
         arrayObserver.collection[index] = newValue;
         arrayObserver.notify();
     }
-    /**
-     * From interface `ICollectionSubscriber`
-     */
     handleCollectionChange(indexMap, flags) {
         const index = this.index;
         const noChange = indexMap[index] === index;
@@ -2655,7 +2471,6 @@ class ArrayIndexObserver {
         }
         const prevValue = this.value;
         const currValue = this.value = this.getValue();
-        // hmm
         if (prevValue !== currValue) {
             this.subs.notify(currValue, prevValue, flags);
         }
@@ -2680,13 +2495,6 @@ function getArrayObserver(array) {
     }
     return observer;
 }
-/**
- * Applies offsets to the non-negative indices in the IndexMap
- * based on added and deleted items relative to those indices.
- *
- * e.g. turn `[-2, 0, 1]` into `[-2, 1, 2]`, allowing the values at the indices to be
- * used for sorting/reordering items if needed
- */
 function applyMutationsToIndices(indexMap) {
     let offset = 0;
     let j = 0;
@@ -2704,10 +2512,6 @@ function applyMutationsToIndices(indexMap) {
         }
     }
 }
-/**
- * After `applyMutationsToIndices`, this function can be used to reorder items in a derived
- * array (e.g.  the items in the `views` in the repeater are derived from the `items` property)
- */
 function synchronizeIndices(items, indexMap) {
     const copy = items.slice();
     const len = indexMap.length;
@@ -2729,10 +2533,7 @@ const $clear$1 = proto$1.clear;
 const $delete$1 = proto$1.delete;
 const native$1 = { add: $add, clear: $clear$1, delete: $delete$1 };
 const methods$1 = ['add', 'clear', 'delete'];
-// note: we can't really do much with Set due to the internal data structure not being accessible so we're just using the native calls
-// fortunately, add/delete/clear are easy to reconstruct for the indexMap
 const observe$2 = {
-    // https://tc39.github.io/ecma262/#sec-set.prototype.add
     add: function (value) {
         const o = observerLookup$1.get(this);
         if (o === undefined) {
@@ -2749,7 +2550,6 @@ const observe$2 = {
         o.notify();
         return this;
     },
-    // https://tc39.github.io/ecma262/#sec-set.prototype.clear
     clear: function () {
         const o = observerLookup$1.get(this);
         if (o === undefined) {
@@ -2759,7 +2559,6 @@ const observe$2 = {
         if (size > 0) {
             const indexMap = o.indexMap;
             let i = 0;
-            // deepscan-disable-next-line
             for (const _ of this.keys()) {
                 if (indexMap[i] > -1) {
                     indexMap.deletedItems.push(indexMap[i]);
@@ -2772,7 +2571,6 @@ const observe$2 = {
         }
         return undefined;
     },
-    // https://tc39.github.io/ecma262/#sec-set.prototype.delete
     delete: function (value) {
         const o = observerLookup$1.get(this);
         if (o === undefined) {
@@ -2826,7 +2624,7 @@ function disableSetObservation() {
 }
 class SetObserver {
     constructor(observedSet) {
-        this.type = 34 /* Set */;
+        this.type = 34;
         if (!enableSetObservationCalled) {
             enableSetObservationCalled = true;
             enableSetObservation();
@@ -2840,7 +2638,7 @@ class SetObserver {
         const indexMap = this.indexMap;
         const size = this.collection.size;
         this.indexMap = createIndexMap(size);
-        this.subs.notifyCollection(indexMap, 0 /* none */);
+        this.subs.notifyCollection(indexMap, 0);
     }
     getLengthObserver() {
         var _a;
@@ -2863,10 +2661,7 @@ const $clear = proto.clear;
 const $delete = proto.delete;
 const native = { set: $set, clear: $clear, delete: $delete };
 const methods = ['set', 'clear', 'delete'];
-// note: we can't really do much with Map due to the internal data structure not being accessible so we're just using the native calls
-// fortunately, map/delete/clear are easy to reconstruct for the indexMap
 const observe$1 = {
-    // https://tc39.github.io/ecma262/#sec-map.prototype.map
     set: function (key, value) {
         const o = observerLookup.get(this);
         if (o === undefined) {
@@ -2896,7 +2691,6 @@ const observe$1 = {
         o.notify();
         return this;
     },
-    // https://tc39.github.io/ecma262/#sec-map.prototype.clear
     clear: function () {
         const o = observerLookup.get(this);
         if (o === undefined) {
@@ -2906,7 +2700,6 @@ const observe$1 = {
         if (size > 0) {
             const indexMap = o.indexMap;
             let i = 0;
-            // deepscan-disable-next-line
             for (const _ of this.keys()) {
                 if (indexMap[i] > -1) {
                     indexMap.deletedItems.push(indexMap[i]);
@@ -2919,7 +2712,6 @@ const observe$1 = {
         }
         return undefined;
     },
-    // https://tc39.github.io/ecma262/#sec-map.prototype.delete
     delete: function (value) {
         const o = observerLookup.get(this);
         if (o === undefined) {
@@ -2973,7 +2765,7 @@ function disableMapObservation() {
 }
 class MapObserver {
     constructor(map) {
-        this.type = 66 /* Map */;
+        this.type = 66;
         if (!enableMapObservationCalled) {
             enableMapObservationCalled = true;
             enableMapObservation();
@@ -2987,7 +2779,7 @@ class MapObserver {
         const indexMap = this.indexMap;
         const size = this.collection.size;
         this.indexMap = createIndexMap(size);
-        this.subs.notifyCollection(indexMap, 0 /* none */);
+        this.subs.notifyCollection(indexMap, 0);
     }
     getLengthObserver() {
         var _a;
@@ -3005,13 +2797,6 @@ function getMapObserver(map) {
 
 function observe(obj, key) {
     const observer = this.oL.getObserver(obj, key);
-    /* Note: we need to cast here because we can indeed get an accessor instead of an observer,
-     *  in which case the call to observer.subscribe will throw. It's not very clean and we can solve this in 2 ways:
-     *  1. Fail earlier: only let the locator resolve observers from .getObserver, and throw if no branches are left (e.g. it would otherwise return an accessor)
-     *  2. Fail silently (without throwing): give all accessors a no-op subscribe method
-     *
-     * We'll probably want to implement some global configuration (like a "strict" toggle) so users can pick between enforced correctness vs. ease-of-use
-     */
     this.obs.add(observer);
 }
 function getObserverRecord() {
@@ -3046,10 +2831,6 @@ class BindingObserverRecord {
     constructor(b) {
         this.version = 0;
         this.count = 0;
-        /** @internal */
-        // a map of the observers (subscribables) that the owning binding of this record
-        // is currently subscribing to. The values are the version of the observers,
-        // as the observers version may need to be changed during different evaluation
         this.o = new Map();
         this.b = b;
     }
@@ -3059,9 +2840,6 @@ class BindingObserverRecord {
     handleCollectionChange(indexMap, flags) {
         this.b.interceptor.handleCollectionChange(indexMap, flags);
     }
-    /**
-     * Add, and subscribe to a given observer
-     */
     add(observer) {
         if (!this.o.has(observer)) {
             observer.subscribe(this);
@@ -3069,9 +2847,6 @@ class BindingObserverRecord {
         }
         this.o.set(observer, this.version);
     }
-    /**
-     * Unsubscribe the observers that are not up to date with the record version
-     */
     clear() {
         this.o.forEach(unsubscribeStale, this);
         this.count = this.o.size;
@@ -3097,7 +2872,6 @@ function connectableDecorator(target) {
     ensureProto(proto, 'observeCollection', observeCollection, true);
     ensureProto(proto, 'subscribeTo', subscribeTo, true);
     def(proto, 'obs', { get: getObserverRecord });
-    // optionally add these two methods to normalize a connectable impl
     ensureProto(proto, 'handleChange', noopHandleChange);
     ensureProto(proto, 'handleCollectionChange', noopHandleCollectionChange);
     return target;
@@ -3128,22 +2902,22 @@ connectableDecorator(BindingMediator);
 const IExpressionParser = DI.createInterface('IExpressionParser', x => x.singleton(ExpressionParser));
 class ExpressionParser {
     constructor() {
-        /** @internal */ this._expressionLookup = createLookup();
-        /** @internal */ this._forOfLookup = createLookup();
-        /** @internal */ this._interpolationLookup = createLookup();
+        this._expressionLookup = createLookup();
+        this._forOfLookup = createLookup();
+        this._interpolationLookup = createLookup();
     }
     parse(expression, expressionType) {
         let found;
         switch (expressionType) {
-            case 16 /* IsCustom */:
+            case 16:
                 return new CustomExpression(expression);
-            case 1 /* Interpolation */:
+            case 1:
                 found = this._interpolationLookup[expression];
                 if (found === void 0) {
                     found = this._interpolationLookup[expression] = this.$parse(expression, expressionType);
                 }
                 return found;
-            case 2 /* IsIterator */:
+            case 2:
                 found = this._forOfLookup[expression];
                 if (found === void 0) {
                     found = this._forOfLookup[expression] = this.$parse(expression, expressionType);
@@ -3151,8 +2925,7 @@ class ExpressionParser {
                 return found;
             default: {
                 if (expression.length === 0) {
-                    // only allow function to be empty
-                    if ((expressionType & (4 /* IsFunction */ | 8 /* IsProperty */)) > 0) {
+                    if ((expressionType & (4 | 8)) > 0) {
                         return PrimitiveLiteralExpression.$empty;
                     }
                     throw new Error('Invalid expression. Empty expression is only valid in event bindings (trigger, delegate, capture etc...)');
@@ -3170,7 +2943,7 @@ class ExpressionParser {
         $state.length = expression.length;
         $state.index = 0;
         $state._currentChar = expression.charCodeAt(0);
-        return parse($state, 0 /* Reset */, 61 /* Variadic */, expressionType === void 0 ? 8 /* IsProperty */ : expressionType);
+        return parse($state, 0, 61, expressionType === void 0 ? 8 : expressionType);
     }
 }
 var Char;
@@ -3277,15 +3050,15 @@ var Char;
 })(Char || (Char = {}));
 function unescapeCode(code) {
     switch (code) {
-        case 98 /* LowerB */: return 8 /* Backspace */;
-        case 116 /* LowerT */: return 9 /* Tab */;
-        case 110 /* LowerN */: return 10 /* LineFeed */;
-        case 118 /* LowerV */: return 11 /* VerticalTab */;
-        case 102 /* LowerF */: return 12 /* FormFeed */;
-        case 114 /* LowerR */: return 13 /* CarriageReturn */;
-        case 34 /* DoubleQuote */: return 34 /* DoubleQuote */;
-        case 39 /* SingleQuote */: return 39 /* SingleQuote */;
-        case 92 /* Backslash */: return 92 /* Backslash */;
+        case 98: return 8;
+        case 116: return 9;
+        case 110: return 10;
+        case 118: return 11;
+        case 102: return 12;
+        case 114: return 13;
+        case 34: return 34;
+        case 39: return 39;
+        case 92: return 92;
         default: return code;
     }
 }
@@ -3338,7 +3111,6 @@ var Token;
     Token[Token["NullKeyword"] = 2050] = "NullKeyword";
     Token[Token["UndefinedKeyword"] = 2051] = "UndefinedKeyword";
     Token[Token["ThisScope"] = 3076] = "ThisScope";
-    // HostScope               = 0b000000000110_000_000101,
     Token[Token["ParentScope"] = 3078] = "ParentScope";
     Token[Token["OpenParen"] = 671751] = "OpenParen";
     Token[Token["OpenBrace"] = 131080] = "OpenBrace";
@@ -3392,20 +3164,19 @@ var ExpressionType;
     ExpressionType[ExpressionType["IsProperty"] = 8] = "IsProperty";
     ExpressionType[ExpressionType["IsCustom"] = 16] = "IsCustom";
 })(ExpressionType || (ExpressionType = {}));
-/* eslint-enable @typescript-eslint/indent */
 class ParserState {
     constructor(ip) {
         this.ip = ip;
         this.index = 0;
-        /** @internal */ this._startIndex = 0;
-        /** @internal */ this._lastIndex = 0;
-        /** @internal */ this._currentToken = 1572864 /* EOF */;
-        /** @internal */ this._tokenValue = '';
-        /** @internal */ this._assignable = true;
+        this._startIndex = 0;
+        this._lastIndex = 0;
+        this._currentToken = 1572864;
+        this._tokenValue = '';
+        this._assignable = true;
         this.length = ip.length;
         this._currentChar = ip.charCodeAt(0);
     }
-    /** @internal */ get _tokenRaw() {
+    get _tokenRaw() {
         return this.ip.slice(this._startIndex, this.index);
     }
 }
@@ -3415,167 +3186,110 @@ function parseExpression(input, expressionType) {
     $state.length = input.length;
     $state.index = 0;
     $state._currentChar = input.charCodeAt(0);
-    return parse($state, 0 /* Reset */, 61 /* Variadic */, expressionType === void 0 ? 8 /* IsProperty */ : expressionType);
+    return parse($state, 0, 61, expressionType === void 0 ? 8 : expressionType);
 }
-// This is performance-critical code which follows a subset of the well-known ES spec.
-// Knowing the spec, or parsers in general, will help with understanding this code and it is therefore not the
-// single source of information for being able to figure it out.
-// It generally does not need to change unless the spec changes or spec violations are found, or optimization
-// opportunities are found (which would likely not fix these warnings in any case).
-// It's therefore not considered to have any tangible impact on the maintainability of the code base.
-// For reference, most of the parsing logic is based on: https://tc39.github.io/ecma262/#sec-ecmascript-language-expressions
-// eslint-disable-next-line max-lines-per-function
 function parse(state, access, minPrecedence, expressionType) {
-    if (expressionType === 16 /* IsCustom */) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
+    if (expressionType === 16) {
         return new CustomExpression(state.ip);
     }
     if (state.index === 0) {
-        if (expressionType & 1 /* Interpolation */) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
+        if (expressionType & 1) {
             return parseInterpolation(state);
         }
         nextToken(state);
-        if (state._currentToken & 1048576 /* ExpressionTerminal */) {
+        if (state._currentToken & 1048576) {
             throw new Error(`Invalid start of expression: '${state.ip}'`);
         }
     }
-    state._assignable = 448 /* Binary */ > minPrecedence;
+    state._assignable = 448 > minPrecedence;
     let result = void 0;
-    if (state._currentToken & 32768 /* UnaryOp */) {
-        /**
-         * parseUnaryExpression
-         *
-         * https://tc39.github.io/ecma262/#sec-unary-operators
-         *
-         * UnaryExpression :
-         * 1. LeftHandSideExpression
-         * 2. void UnaryExpression
-         * 3. typeof UnaryExpression
-         * 4. + UnaryExpression
-         * 5. - UnaryExpression
-         * 6. ! UnaryExpression
-         *
-         * IsValidAssignmentTarget
-         * 2,3,4,5,6 = false
-         * 1 = see parseLeftHandSideExpression
-         *
-         * Note: technically we should throw on ++ / -- / +++ / ---, but there's nothing to gain from that
-         */
-        const op = TokenValues[state._currentToken & 63 /* Type */];
+    if (state._currentToken & 32768) {
+        const op = TokenValues[state._currentToken & 63];
         nextToken(state);
-        result = new UnaryExpression(op, parse(state, access, 449 /* LeftHandSide */, expressionType));
+        result = new UnaryExpression(op, parse(state, access, 449, expressionType));
         state._assignable = false;
     }
     else {
-        /**
-         * parsePrimaryExpression
-         *
-         * https://tc39.github.io/ecma262/#sec-primary-expression
-         *
-         * PrimaryExpression :
-         * 1. this
-         * 2. IdentifierName
-         * 3. Literal
-         * 4. ArrayLiteralExpression
-         * 5. ObjectLiteralExpression
-         * 6. TemplateLiteral
-         * 7. ParenthesizedExpression
-         *
-         * Literal :
-         * NullLiteral
-         * BooleanLiteral
-         * NumericLiteral
-         * StringLiteral
-         *
-         * ParenthesizedExpression :
-         * ( AssignmentExpression )
-         *
-         * IsValidAssignmentTarget
-         * 1,3,4,5,6,7 = false
-         * 2 = true
-         */
         primary: switch (state._currentToken) {
-            case 3078 /* ParentScope */: // $parent
+            case 3078:
                 state._assignable = false;
                 do {
                     nextToken(state);
-                    access++; // ancestor
-                    if (consumeOpt(state, 16393 /* Dot */)) {
-                        if (state._currentToken === 16393 /* Dot */) {
+                    access++;
+                    if (consumeOpt(state, 16393)) {
+                        if (state._currentToken === 16393) {
                             throw new Error(`Double dot and spread operators are not supported: '${state.ip}'`);
                         }
-                        else if (state._currentToken === 1572864 /* EOF */) {
+                        else if (state._currentToken === 1572864) {
                             throw new Error(`Expected identifier: '${state.ip}'`);
                         }
                     }
-                    else if (state._currentToken & 524288 /* AccessScopeTerminal */) {
-                        const ancestor = access & 511 /* Ancestor */;
+                    else if (state._currentToken & 524288) {
+                        const ancestor = access & 511;
                         result = ancestor === 0 ? $this : ancestor === 1 ? $parent : new AccessThisExpression(ancestor);
-                        access = 512 /* This */;
+                        access = 512;
                         break primary;
                     }
                     else {
                         throw new Error(`Invalid member expression: '${state.ip}'`);
                     }
-                } while (state._currentToken === 3078 /* ParentScope */);
-            // falls through
-            case 1024 /* Identifier */: // identifier
-                if (expressionType & 2 /* IsIterator */) {
+                } while (state._currentToken === 3078);
+            case 1024:
+                if (expressionType & 2) {
                     result = new BindingIdentifier(state._tokenValue);
                 }
                 else {
-                    result = new AccessScopeExpression(state._tokenValue, access & 511 /* Ancestor */);
-                    access = 1024 /* Scope */;
+                    result = new AccessScopeExpression(state._tokenValue, access & 511);
+                    access = 1024;
                 }
                 state._assignable = true;
                 nextToken(state);
                 break;
-            case 3076 /* ThisScope */: // $this
+            case 3076:
                 state._assignable = false;
                 nextToken(state);
                 result = $this;
-                access = 512 /* This */;
+                access = 512;
                 break;
-            case 671751 /* OpenParen */: // parenthesized expression
+            case 671751:
                 nextToken(state);
-                result = parse(state, 0 /* Reset */, 62 /* Assign */, expressionType);
-                consume(state, 1835019 /* CloseParen */);
-                access = 0 /* Reset */;
+                result = parse(state, 0, 62, expressionType);
+                consume(state, 1835019);
+                access = 0;
                 break;
-            case 671757 /* OpenBracket */:
+            case 671757:
                 result = state.ip.search(/\s+of\s+/) > state.index ? parseArrayDestructuring(state) : parseArrayLiteralExpression(state, access, expressionType);
-                access = 0 /* Reset */;
+                access = 0;
                 break;
-            case 131080 /* OpenBrace */:
+            case 131080:
                 result = parseObjectLiteralExpression(state, expressionType);
-                access = 0 /* Reset */;
+                access = 0;
                 break;
-            case 540714 /* TemplateTail */:
+            case 540714:
                 result = new TemplateExpression([state._tokenValue]);
                 state._assignable = false;
                 nextToken(state);
-                access = 0 /* Reset */;
+                access = 0;
                 break;
-            case 540715 /* TemplateContinuation */:
+            case 540715:
                 result = parseTemplate(state, access, expressionType, result, false);
-                access = 0 /* Reset */;
+                access = 0;
                 break;
-            case 4096 /* StringLiteral */:
-            case 8192 /* NumericLiteral */:
+            case 4096:
+            case 8192:
                 result = new PrimitiveLiteralExpression(state._tokenValue);
                 state._assignable = false;
                 nextToken(state);
-                access = 0 /* Reset */;
+                access = 0;
                 break;
-            case 2050 /* NullKeyword */:
-            case 2051 /* UndefinedKeyword */:
-            case 2049 /* TrueKeyword */:
-            case 2048 /* FalseKeyword */:
-                result = TokenValues[state._currentToken & 63 /* Type */];
+            case 2050:
+            case 2051:
+            case 2049:
+            case 2048:
+                result = TokenValues[state._currentToken & 63];
                 state._assignable = false;
                 nextToken(state);
-                access = 0 /* Reset */;
+                access = 0;
                 break;
             default:
                 if (state.index >= state.length) {
@@ -3585,89 +3299,60 @@ function parse(state, access, minPrecedence, expressionType) {
                     throw new Error(`Unconsumed token: '${state.ip}'`);
                 }
         }
-        if (expressionType & 2 /* IsIterator */) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
+        if (expressionType & 2) {
             return parseForOfStatement(state, result);
         }
-        if (449 /* LeftHandSide */ < minPrecedence) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
+        if (449 < minPrecedence) {
             return result;
         }
-        /**
-         * parseMemberExpression (Token.Dot, Token.OpenBracket, Token.TemplateContinuation)
-         *
-         * MemberExpression :
-         * 1. PrimaryExpression
-         * 2. MemberExpression [ AssignmentExpression ]
-         * 3. MemberExpression . IdentifierName
-         * 4. MemberExpression TemplateLiteral
-         *
-         * IsValidAssignmentTarget
-         * 1,4 = false
-         * 2,3 = true
-         *
-         *
-         * parseCallExpression (Token.OpenParen)
-         * CallExpression :
-         * 1. MemberExpression Arguments
-         * 2. CallExpression Arguments
-         * 3. CallExpression [ AssignmentExpression ]
-         * 4. CallExpression . IdentifierName
-         * 5. CallExpression TemplateLiteral
-         *
-         * IsValidAssignmentTarget
-         * 1,2,5 = false
-         * 3,4 = true
-         */
         let name = state._tokenValue;
-        while ((state._currentToken & 16384 /* LeftHandSide */) > 0) {
+        while ((state._currentToken & 16384) > 0) {
             const args = [];
             let strings;
             switch (state._currentToken) {
-                case 16393 /* Dot */:
+                case 16393:
                     state._assignable = true;
                     nextToken(state);
-                    if ((state._currentToken & 3072 /* IdentifierName */) === 0) {
+                    if ((state._currentToken & 3072) === 0) {
                         throw new Error(`Expected identifier: '${state.ip}'`);
                     }
                     name = state._tokenValue;
                     nextToken(state);
-                    // Change $This to $Scope, change $Scope to $Member, keep $Member as-is, change $Keyed to $Member, disregard other flags
-                    access = ((access & (512 /* This */ | 1024 /* Scope */)) << 1) | (access & 2048 /* Member */) | ((access & 4096 /* Keyed */) >> 1);
-                    if (state._currentToken === 671751 /* OpenParen */) {
-                        if (access === 0 /* Reset */) { // if the left hand side is a literal, make sure we parse a CallMemberExpression
-                            access = 2048 /* Member */;
+                    access = ((access & (512 | 1024)) << 1) | (access & 2048) | ((access & 4096) >> 1);
+                    if (state._currentToken === 671751) {
+                        if (access === 0) {
+                            access = 2048;
                         }
                         continue;
                     }
-                    if (access & 1024 /* Scope */) {
+                    if (access & 1024) {
                         result = new AccessScopeExpression(name, result.ancestor);
                     }
-                    else { // if it's not $Scope, it's $Member
+                    else {
                         result = new AccessMemberExpression(result, name);
                     }
                     continue;
-                case 671757 /* OpenBracket */:
+                case 671757:
                     state._assignable = true;
                     nextToken(state);
-                    access = 4096 /* Keyed */;
-                    result = new AccessKeyedExpression(result, parse(state, 0 /* Reset */, 62 /* Assign */, expressionType));
-                    consume(state, 1835022 /* CloseBracket */);
+                    access = 4096;
+                    result = new AccessKeyedExpression(result, parse(state, 0, 62, expressionType));
+                    consume(state, 1835022);
                     break;
-                case 671751 /* OpenParen */:
+                case 671751:
                     state._assignable = false;
                     nextToken(state);
-                    while (state._currentToken !== 1835019 /* CloseParen */) {
-                        args.push(parse(state, 0 /* Reset */, 62 /* Assign */, expressionType));
-                        if (!consumeOpt(state, 1572876 /* Comma */)) {
+                    while (state._currentToken !== 1835019) {
+                        args.push(parse(state, 0, 62, expressionType));
+                        if (!consumeOpt(state, 1572876)) {
                             break;
                         }
                     }
-                    consume(state, 1835019 /* CloseParen */);
-                    if (access & 1024 /* Scope */) {
+                    consume(state, 1835019);
+                    if (access & 1024) {
                         result = new CallScopeExpression(name, args, result.ancestor);
                     }
-                    else if (access & 2048 /* Member */) {
+                    else if (access & 2048) {
                         result = new CallMemberExpression(result, name, args);
                     }
                     else {
@@ -3675,140 +3360,76 @@ function parse(state, access, minPrecedence, expressionType) {
                     }
                     access = 0;
                     break;
-                case 540714 /* TemplateTail */:
+                case 540714:
                     state._assignable = false;
                     strings = [state._tokenValue];
                     result = new TaggedTemplateExpression(strings, strings, result);
                     nextToken(state);
                     break;
-                case 540715 /* TemplateContinuation */:
+                case 540715:
                     result = parseTemplate(state, access, expressionType, result, true);
             }
         }
     }
-    if (448 /* Binary */ < minPrecedence) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
+    if (448 < minPrecedence) {
         return result;
     }
-    /**
-     * parseBinaryExpression
-     *
-     * https://tc39.github.io/ecma262/#sec-multiplicative-operators
-     *
-     * MultiplicativeExpression : (local precedence 6)
-     * UnaryExpression
-     * MultiplicativeExpression * / % UnaryExpression
-     *
-     * AdditiveExpression : (local precedence 5)
-     * MultiplicativeExpression
-     * AdditiveExpression + - MultiplicativeExpression
-     *
-     * RelationalExpression : (local precedence 4)
-     * AdditiveExpression
-     * RelationalExpression < > <= >= instanceof in AdditiveExpression
-     *
-     * EqualityExpression : (local precedence 3)
-     * RelationalExpression
-     * EqualityExpression == != === !== RelationalExpression
-     *
-     * LogicalANDExpression : (local precedence 2)
-     * EqualityExpression
-     * LogicalANDExpression && EqualityExpression
-     *
-     * LogicalORExpression : (local precedence 1)
-     * LogicalANDExpression
-     * LogicalORExpression || LogicalANDExpression
-     */
-    while ((state._currentToken & 65536 /* BinaryOp */) > 0) {
+    while ((state._currentToken & 65536) > 0) {
         const opToken = state._currentToken;
-        if ((opToken & 448 /* Precedence */) <= minPrecedence) {
+        if ((opToken & 448) <= minPrecedence) {
             break;
         }
         nextToken(state);
-        result = new BinaryExpression(TokenValues[opToken & 63 /* Type */], result, parse(state, access, opToken & 448 /* Precedence */, expressionType));
+        result = new BinaryExpression(TokenValues[opToken & 63], result, parse(state, access, opToken & 448, expressionType));
         state._assignable = false;
     }
-    if (63 /* Conditional */ < minPrecedence) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
+    if (63 < minPrecedence) {
         return result;
     }
-    /**
-     * parseConditionalExpression
-     * https://tc39.github.io/ecma262/#prod-ConditionalExpression
-     *
-     * ConditionalExpression :
-     * 1. BinaryExpression
-     * 2. BinaryExpression ? AssignmentExpression : AssignmentExpression
-     *
-     * IsValidAssignmentTarget
-     * 1,2 = false
-     */
-    if (consumeOpt(state, 1572880 /* Question */)) {
-        const yes = parse(state, access, 62 /* Assign */, expressionType);
-        consume(state, 1572879 /* Colon */);
-        result = new ConditionalExpression(result, yes, parse(state, access, 62 /* Assign */, expressionType));
+    if (consumeOpt(state, 1572880)) {
+        const yes = parse(state, access, 62, expressionType);
+        consume(state, 1572879);
+        result = new ConditionalExpression(result, yes, parse(state, access, 62, expressionType));
         state._assignable = false;
     }
-    if (62 /* Assign */ < minPrecedence) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
+    if (62 < minPrecedence) {
         return result;
     }
-    /**
-     * parseAssignmentExpression
-     *
-     * https://tc39.github.io/ecma262/#prod-AssignmentExpression
-     * Note: AssignmentExpression here is equivalent to ES Expression because we don't parse the comma operator
-     *
-     * AssignmentExpression :
-     * 1. ConditionalExpression
-     * 2. LeftHandSideExpression = AssignmentExpression
-     *
-     * IsValidAssignmentTarget
-     * 1,2 = false
-     */
-    if (consumeOpt(state, 1048616 /* Equals */)) {
+    if (consumeOpt(state, 1048616)) {
         if (!state._assignable) {
             throw new Error(`Left hand side of expression is not assignable: '${state.ip}'`);
         }
-        result = new AssignExpression(result, parse(state, access, 62 /* Assign */, expressionType));
+        result = new AssignExpression(result, parse(state, access, 62, expressionType));
     }
-    if (61 /* Variadic */ < minPrecedence) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
+    if (61 < minPrecedence) {
         return result;
     }
-    /**
-     * parseValueConverter
-     */
-    while (consumeOpt(state, 1572884 /* Bar */)) {
-        if (state._currentToken === 1572864 /* EOF */) {
+    while (consumeOpt(state, 1572884)) {
+        if (state._currentToken === 1572864) {
             throw new Error(`Expected identifier to come after ValueConverter operator: '${state.ip}'`);
         }
         const name = state._tokenValue;
         nextToken(state);
         const args = new Array();
-        while (consumeOpt(state, 1572879 /* Colon */)) {
-            args.push(parse(state, access, 62 /* Assign */, expressionType));
+        while (consumeOpt(state, 1572879)) {
+            args.push(parse(state, access, 62, expressionType));
         }
         result = new ValueConverterExpression(result, name, args);
     }
-    /**
-     * parseBindingBehavior
-     */
-    while (consumeOpt(state, 1572883 /* Ampersand */)) {
-        if (state._currentToken === 1572864 /* EOF */) {
+    while (consumeOpt(state, 1572883)) {
+        if (state._currentToken === 1572864) {
             throw new Error(`Expected identifier to come after BindingBehavior operator: '${state.ip}'`);
         }
         const name = state._tokenValue;
         nextToken(state);
         const args = new Array();
-        while (consumeOpt(state, 1572879 /* Colon */)) {
-            args.push(parse(state, access, 62 /* Assign */, expressionType));
+        while (consumeOpt(state, 1572879)) {
+            args.push(parse(state, access, 62, expressionType));
         }
         result = new BindingBehaviorExpression(result, name, args);
     }
-    if (state._currentToken !== 1572864 /* EOF */) {
-        if (expressionType & 1 /* Interpolation */) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
+    if (state._currentToken !== 1572864) {
+        if (expressionType & 1) {
             return result;
         }
         if (state._tokenRaw === 'of') {
@@ -3816,32 +3437,25 @@ function parse(state, access, minPrecedence, expressionType) {
         }
         throw new Error(`Unconsumed token: '${state.ip}'`);
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-explicit-any
     return result;
 }
-/**
- * [key,]
- * [key]
- * [,value]
- * [key,value]
- */
 function parseArrayDestructuring(state) {
     const items = [];
-    const dae = new DestructuringAssignmentExpression(90137 /* ArrayDestructuring */, items, void 0, void 0);
+    const dae = new DestructuringAssignmentExpression(90137, items, void 0, void 0);
     let target = '';
     let $continue = true;
     let index = 0;
     while ($continue) {
         nextToken(state);
         switch (state._currentToken) {
-            case 1835022 /* CloseBracket */:
+            case 1835022:
                 $continue = false;
                 addItem();
                 break;
-            case 1572876 /* Comma */:
+            case 1572876:
                 addItem();
                 break;
-            case 1024 /* Identifier */:
+            case 1024:
                 target = state._tokenRaw;
                 break;
             default:
@@ -3850,7 +3464,7 @@ function parseArrayDestructuring(state) {
                 }
         }
     }
-    consume(state, 1835022 /* CloseBracket */);
+    consume(state, 1835022);
     return dae;
     function addItem() {
         if (target !== '') {
@@ -3862,37 +3476,20 @@ function parseArrayDestructuring(state) {
         }
     }
 }
-/**
- * parseArrayLiteralExpression
- * https://tc39.github.io/ecma262/#prod-ArrayLiteralExpression
- *
- * ArrayLiteralExpression :
- * [ Elision(opt) ]
- * [ ElementList ]
- * [ ElementList, Elision(opt) ]
- *
- * ElementList :
- * Elision(opt) AssignmentExpression
- * ElementList, Elision(opt) AssignmentExpression
- *
- * Elision :
- * ,
- * Elision ,
- */
 function parseArrayLiteralExpression(state, access, expressionType) {
     nextToken(state);
     const elements = new Array();
-    while (state._currentToken !== 1835022 /* CloseBracket */) {
-        if (consumeOpt(state, 1572876 /* Comma */)) {
+    while (state._currentToken !== 1835022) {
+        if (consumeOpt(state, 1572876)) {
             elements.push($undefined);
-            if (state._currentToken === 1835022 /* CloseBracket */) {
+            if (state._currentToken === 1835022) {
                 break;
             }
         }
         else {
-            elements.push(parse(state, access, 62 /* Assign */, expressionType & ~2 /* IsIterator */));
-            if (consumeOpt(state, 1572876 /* Comma */)) {
-                if (state._currentToken === 1835022 /* CloseBracket */) {
+            elements.push(parse(state, access, 62, expressionType & ~2));
+            if (consumeOpt(state, 1572876)) {
+                if (state._currentToken === 1835022) {
                     break;
                 }
             }
@@ -3901,8 +3498,8 @@ function parseArrayLiteralExpression(state, access, expressionType) {
             }
         }
     }
-    consume(state, 1835022 /* CloseBracket */);
-    if (expressionType & 2 /* IsIterator */) {
+    consume(state, 1835022);
+    if (expressionType & 2) {
         return new ArrayBindingPattern(elements);
     }
     else {
@@ -3911,74 +3508,50 @@ function parseArrayLiteralExpression(state, access, expressionType) {
     }
 }
 function parseForOfStatement(state, result) {
-    if ((result.$kind & 65536 /* IsForDeclaration */) === 0) {
+    if ((result.$kind & 65536) === 0) {
         throw new Error(`Invalid BindingIdentifier at left hand side of "of": '${state.ip}'`);
     }
-    if (state._currentToken !== 1051180 /* OfKeyword */) {
+    if (state._currentToken !== 1051180) {
         throw new Error(`Invalid BindingIdentifier at left hand side of "of": '${state.ip}'`);
     }
     nextToken(state);
     const declaration = result;
-    const statement = parse(state, 0 /* Reset */, 61 /* Variadic */, 0 /* None */);
+    const statement = parse(state, 0, 61, 0);
     return new ForOfStatement(declaration, statement);
 }
-/**
- * parseObjectLiteralExpression
- * https://tc39.github.io/ecma262/#prod-Literal
- *
- * ObjectLiteralExpression :
- * { }
- * { PropertyDefinitionList }
- *
- * PropertyDefinitionList :
- * PropertyDefinition
- * PropertyDefinitionList, PropertyDefinition
- *
- * PropertyDefinition :
- * IdentifierName
- * PropertyName : AssignmentExpression
- *
- * PropertyName :
- * IdentifierName
- * StringLiteral
- * NumericLiteral
- */
 function parseObjectLiteralExpression(state, expressionType) {
     const keys = new Array();
     const values = new Array();
     nextToken(state);
-    while (state._currentToken !== 1835018 /* CloseBrace */) {
+    while (state._currentToken !== 1835018) {
         keys.push(state._tokenValue);
-        // Literal = mandatory colon
-        if (state._currentToken & 12288 /* StringOrNumericLiteral */) {
+        if (state._currentToken & 12288) {
             nextToken(state);
-            consume(state, 1572879 /* Colon */);
-            values.push(parse(state, 0 /* Reset */, 62 /* Assign */, expressionType & ~2 /* IsIterator */));
+            consume(state, 1572879);
+            values.push(parse(state, 0, 62, expressionType & ~2));
         }
-        else if (state._currentToken & 3072 /* IdentifierName */) {
-            // IdentifierName = optional colon
+        else if (state._currentToken & 3072) {
             const { _currentChar: currentChar, _currentToken: currentToken, index: index } = state;
             nextToken(state);
-            if (consumeOpt(state, 1572879 /* Colon */)) {
-                values.push(parse(state, 0 /* Reset */, 62 /* Assign */, expressionType & ~2 /* IsIterator */));
+            if (consumeOpt(state, 1572879)) {
+                values.push(parse(state, 0, 62, expressionType & ~2));
             }
             else {
-                // Shorthand
                 state._currentChar = currentChar;
                 state._currentToken = currentToken;
                 state.index = index;
-                values.push(parse(state, 0 /* Reset */, 450 /* Primary */, expressionType & ~2 /* IsIterator */));
+                values.push(parse(state, 0, 450, expressionType & ~2));
             }
         }
         else {
             throw new Error(`Invalid or unsupported property definition in object literal: '${state.ip}'`);
         }
-        if (state._currentToken !== 1835018 /* CloseBrace */) {
-            consume(state, 1572876 /* Comma */);
+        if (state._currentToken !== 1835018) {
+            consume(state, 1572876);
         }
     }
-    consume(state, 1835018 /* CloseBrace */);
-    if (expressionType & 2 /* IsIterator */) {
+    consume(state, 1835018);
+    if (expressionType & 2) {
         return new ObjectBindingPattern(keys, values);
     }
     else {
@@ -3993,14 +3566,14 @@ function parseInterpolation(state) {
     let result = '';
     while (state.index < length) {
         switch (state._currentChar) {
-            case 36 /* Dollar */:
-                if (state.ip.charCodeAt(state.index + 1) === 123 /* OpenBrace */) {
+            case 36:
+                if (state.ip.charCodeAt(state.index + 1) === 123) {
                     parts.push(result);
                     result = '';
                     state.index += 2;
                     state._currentChar = state.ip.charCodeAt(state.index);
                     nextToken(state);
-                    const expression = parse(state, 0 /* Reset */, 61 /* Variadic */, 1 /* Interpolation */);
+                    const expression = parse(state, 0, 61, 1);
                     expressions.push(expression);
                     continue;
                 }
@@ -4008,7 +3581,7 @@ function parseInterpolation(state) {
                     result += '$';
                 }
                 break;
-            case 92 /* Backslash */:
+            case 92:
                 result += String.fromCharCode(unescapeCode(nextChar(state)));
                 break;
             default:
@@ -4022,47 +3595,14 @@ function parseInterpolation(state) {
     }
     return null;
 }
-/**
- * parseTemplateLiteralExpression
- * https://tc39.github.io/ecma262/#prod-Literal
- *
- * TemplateExpression :
- * NoSubstitutionTemplate
- * TemplateHead
- *
- * NoSubstitutionTemplate :
- * ` TemplateCharacters(opt) `
- *
- * TemplateHead :
- * ` TemplateCharacters(opt) ${
- *
- * TemplateSubstitutionTail :
- * TemplateMiddle
- * TemplateTail
- *
- * TemplateMiddle :
- * } TemplateCharacters(opt) ${
- *
- * TemplateTail :
- * } TemplateCharacters(opt) `
- *
- * TemplateCharacters :
- * TemplateCharacter TemplateCharacters(opt)
- *
- * TemplateCharacter :
- * $ [lookahead ≠ {]
- * \ EscapeSequence
- * SourceCharacter (but not one of ` or \ or $)
- */
 function parseTemplate(state, access, expressionType, result, tagged) {
     const cooked = [state._tokenValue];
-    // TODO: properly implement raw parts / decide whether we want this
-    consume(state, 540715 /* TemplateContinuation */);
-    const expressions = [parse(state, access, 62 /* Assign */, expressionType)];
-    while ((state._currentToken = scanTemplateTail(state)) !== 540714 /* TemplateTail */) {
+    consume(state, 540715);
+    const expressions = [parse(state, access, 62, expressionType)];
+    while ((state._currentToken = scanTemplateTail(state)) !== 540714) {
         cooked.push(state._tokenValue);
-        consume(state, 540715 /* TemplateContinuation */);
-        expressions.push(parse(state, access, 62 /* Assign */, expressionType));
+        consume(state, 540715);
+        expressions.push(parse(state, access, 62, expressionType));
     }
     cooked.push(state._tokenValue);
     state._assignable = false;
@@ -4078,60 +3618,56 @@ function parseTemplate(state, access, expressionType, result, tagged) {
 function nextToken(state) {
     while (state.index < state.length) {
         state._startIndex = state.index;
-        if ((state._currentToken = (CharScanners[state._currentChar](state))) != null) { // a null token means the character must be skipped
+        if ((state._currentToken = (CharScanners[state._currentChar](state))) != null) {
             return;
         }
     }
-    state._currentToken = 1572864 /* EOF */;
+    state._currentToken = 1572864;
 }
 function nextChar(state) {
     return state._currentChar = state.ip.charCodeAt(++state.index);
 }
 function scanIdentifier(state) {
-    // run to the next non-idPart
     while (IdParts[nextChar(state)])
         ;
     const token = KeywordLookup[state._tokenValue = state._tokenRaw];
-    return token === undefined ? 1024 /* Identifier */ : token;
+    return token === undefined ? 1024 : token;
 }
 function scanNumber(state, isFloat) {
     let char = state._currentChar;
     if (isFloat === false) {
         do {
             char = nextChar(state);
-        } while (char <= 57 /* Nine */ && char >= 48 /* Zero */);
-        if (char !== 46 /* Dot */) {
+        } while (char <= 57 && char >= 48);
+        if (char !== 46) {
             state._tokenValue = parseInt(state._tokenRaw, 10);
-            return 8192 /* NumericLiteral */;
+            return 8192;
         }
-        // past this point it's always a float
         char = nextChar(state);
         if (state.index >= state.length) {
-            // unless the number ends with a dot - that behaves a little different in native ES expressions
-            // but in our AST that behavior has no effect because numbers are always stored in variables
             state._tokenValue = parseInt(state._tokenRaw.slice(0, -1), 10);
-            return 8192 /* NumericLiteral */;
+            return 8192;
         }
     }
-    if (char <= 57 /* Nine */ && char >= 48 /* Zero */) {
+    if (char <= 57 && char >= 48) {
         do {
             char = nextChar(state);
-        } while (char <= 57 /* Nine */ && char >= 48 /* Zero */);
+        } while (char <= 57 && char >= 48);
     }
     else {
         state._currentChar = state.ip.charCodeAt(--state.index);
     }
     state._tokenValue = parseFloat(state._tokenRaw);
-    return 8192 /* NumericLiteral */;
+    return 8192;
 }
 function scanString(state) {
     const quote = state._currentChar;
-    nextChar(state); // Skip initial quote.
+    nextChar(state);
     let unescaped = 0;
     const buffer = new Array();
     let marker = state.index;
     while (state._currentChar !== quote) {
-        if (state._currentChar === 92 /* Backslash */) {
+        if (state._currentChar === 92) {
             buffer.push(state.ip.slice(marker, state.index));
             nextChar(state);
             unescaped = unescapeCode(state._currentChar);
@@ -4147,19 +3683,18 @@ function scanString(state) {
         }
     }
     const last = state.ip.slice(marker, state.index);
-    nextChar(state); // Skip terminating quote.
-    // Compute the unescaped string value.
+    nextChar(state);
     buffer.push(last);
     const unescapedStr = buffer.join('');
     state._tokenValue = unescapedStr;
-    return 4096 /* StringLiteral */;
+    return 4096;
 }
 function scanTemplate(state) {
     let tail = true;
     let result = '';
-    while (nextChar(state) !== 96 /* Backtick */) {
-        if (state._currentChar === 36 /* Dollar */) {
-            if ((state.index + 1) < state.length && state.ip.charCodeAt(state.index + 1) === 123 /* OpenBrace */) {
+    while (nextChar(state) !== 96) {
+        if (state._currentChar === 36) {
+            if ((state.index + 1) < state.length && state.ip.charCodeAt(state.index + 1) === 123) {
                 state.index++;
                 tail = false;
                 break;
@@ -4168,7 +3703,7 @@ function scanTemplate(state) {
                 result += '$';
             }
         }
-        else if (state._currentChar === 92 /* Backslash */) {
+        else if (state._currentChar === 92) {
             result += String.fromCharCode(unescapeCode(nextChar(state)));
         }
         else {
@@ -4181,9 +3716,9 @@ function scanTemplate(state) {
     nextChar(state);
     state._tokenValue = result;
     if (tail) {
-        return 540714 /* TemplateTail */;
+        return 540714;
     }
-    return 540715 /* TemplateContinuation */;
+    return 540715;
 }
 function scanTemplateTail(state) {
     if (state.index >= state.length) {
@@ -4207,52 +3742,32 @@ function consume(state, token) {
         throw new Error(`Missing expected token: '${state.ip}'`);
     }
 }
-/**
- * Array for mapping tokens to token values. The indices of the values
- * correspond to the token bits 0-38.
- * For this to work properly, the values in the array must be kept in
- * the same order as the token bits.
- * Usage: TokenValues[token & Token.Type]
- */
 const TokenValues = [
-    $false, $true, $null, $undefined, '$this', null /* '$host' */, '$parent',
+    $false, $true, $null, $undefined, '$this', null, '$parent',
     '(', '{', '.', '}', ')', ',', '[', ']', ':', '?', '\'', '"',
     '&', '|', '||', '&&', '==', '!=', '===', '!==', '<', '>',
     '<=', '>=', 'in', 'instanceof', '+', '-', 'typeof', 'void', '*', '%', '/', '=', '!',
-    540714 /* TemplateTail */, 540715 /* TemplateContinuation */,
+    540714, 540715,
     'of'
 ];
 const KeywordLookup = createLookup();
-KeywordLookup.true = 2049 /* TrueKeyword */;
-KeywordLookup.null = 2050 /* NullKeyword */;
-KeywordLookup.false = 2048 /* FalseKeyword */;
-KeywordLookup.undefined = 2051 /* UndefinedKeyword */;
-KeywordLookup.$this = 3076 /* ThisScope */;
-KeywordLookup.$parent = 3078 /* ParentScope */;
-KeywordLookup.in = 1640799 /* InKeyword */;
-KeywordLookup.instanceof = 1640800 /* InstanceOfKeyword */;
-KeywordLookup.typeof = 34851 /* TypeofKeyword */;
-KeywordLookup.void = 34852 /* VoidKeyword */;
-KeywordLookup.of = 1051180 /* OfKeyword */;
-/**
- * Ranges of code points in pairs of 2 (eg 0x41-0x5B, 0x61-0x7B, ...) where the second value is not inclusive (5-7 means 5 and 6)
- * Single values are denoted by the second value being a 0
- *
- * Copied from output generated with "node build/generate-unicode.js"
- *
- * See also: https://en.wikibooks.org/wiki/Unicode/Character_reference/0000-0FFF
- */
+KeywordLookup.true = 2049;
+KeywordLookup.null = 2050;
+KeywordLookup.false = 2048;
+KeywordLookup.undefined = 2051;
+KeywordLookup.$this = 3076;
+KeywordLookup.$parent = 3078;
+KeywordLookup.in = 1640799;
+KeywordLookup.instanceof = 1640800;
+KeywordLookup.typeof = 34851;
+KeywordLookup.void = 34852;
+KeywordLookup.of = 1051180;
 const codes = {
-    /* [$0-9A-Za_a-z] */
     AsciiIdPart: [0x24, 0, 0x30, 0x3A, 0x41, 0x5B, 0x5F, 0, 0x61, 0x7B],
-    IdStart: /* IdentifierStart */ [0x24, 0, 0x41, 0x5B, 0x5F, 0, 0x61, 0x7B, 0xAA, 0, 0xBA, 0, 0xC0, 0xD7, 0xD8, 0xF7, 0xF8, 0x2B9, 0x2E0, 0x2E5, 0x1D00, 0x1D26, 0x1D2C, 0x1D5D, 0x1D62, 0x1D66, 0x1D6B, 0x1D78, 0x1D79, 0x1DBF, 0x1E00, 0x1F00, 0x2071, 0, 0x207F, 0, 0x2090, 0x209D, 0x212A, 0x212C, 0x2132, 0, 0x214E, 0, 0x2160, 0x2189, 0x2C60, 0x2C80, 0xA722, 0xA788, 0xA78B, 0xA7AF, 0xA7B0, 0xA7B8, 0xA7F7, 0xA800, 0xAB30, 0xAB5B, 0xAB5C, 0xAB65, 0xFB00, 0xFB07, 0xFF21, 0xFF3B, 0xFF41, 0xFF5B],
-    Digit: /* DecimalNumber */ [0x30, 0x3A],
-    Skip: /* Skippable */ [0, 0x21, 0x7F, 0xA1]
+    IdStart: [0x24, 0, 0x41, 0x5B, 0x5F, 0, 0x61, 0x7B, 0xAA, 0, 0xBA, 0, 0xC0, 0xD7, 0xD8, 0xF7, 0xF8, 0x2B9, 0x2E0, 0x2E5, 0x1D00, 0x1D26, 0x1D2C, 0x1D5D, 0x1D62, 0x1D66, 0x1D6B, 0x1D78, 0x1D79, 0x1DBF, 0x1E00, 0x1F00, 0x2071, 0, 0x207F, 0, 0x2090, 0x209D, 0x212A, 0x212C, 0x2132, 0, 0x214E, 0, 0x2160, 0x2189, 0x2C60, 0x2C80, 0xA722, 0xA788, 0xA78B, 0xA7AF, 0xA7B0, 0xA7B8, 0xA7F7, 0xA800, 0xAB30, 0xAB5B, 0xAB5C, 0xAB65, 0xFB00, 0xFB07, 0xFF21, 0xFF3B, 0xFF41, 0xFF5B],
+    Digit: [0x30, 0x3A],
+    Skip: [0, 0x21, 0x7F, 0xA1]
 };
-/**
- * Decompress the ranges into an array of numbers so that the char code
- * can be used as an index to the lookup
- */
 function decompress(lookup, $set, compressed, value) {
     const rangeCount = compressed.length;
     for (let i = 0; i < rangeCount; i += 2) {
@@ -4269,7 +3784,6 @@ function decompress(lookup, $set, compressed, value) {
         }
     }
 }
-// CharFuncLookup functions
 function returnToken(token) {
     return s => {
         nextChar(s);
@@ -4280,16 +3794,11 @@ const unexpectedCharacter = s => {
     throw new Error(`Unexpected character: '${s.ip}'`);
 };
 unexpectedCharacter.notMapped = true;
-// ASCII IdentifierPart lookup
 const AsciiIdParts = new Set();
 decompress(null, AsciiIdParts, codes.AsciiIdPart, true);
-// IdentifierPart lookup
 const IdParts = new Uint8Array(0xFFFF);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 decompress(IdParts, null, codes.IdStart, 1);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 decompress(IdParts, null, codes.Digit, 1);
-// Character scanning function lookup
 const CharScanners = new Array(0xFFFF);
 CharScanners.fill(unexpectedCharacter, 0, 0xFFFF);
 decompress(CharScanners, null, codes.Skip, s => {
@@ -4298,97 +3807,85 @@ decompress(CharScanners, null, codes.Skip, s => {
 });
 decompress(CharScanners, null, codes.IdStart, scanIdentifier);
 decompress(CharScanners, null, codes.Digit, s => scanNumber(s, false));
-CharScanners[34 /* DoubleQuote */] =
-    CharScanners[39 /* SingleQuote */] = s => {
+CharScanners[34] =
+    CharScanners[39] = s => {
         return scanString(s);
     };
-CharScanners[96 /* Backtick */] = s => {
+CharScanners[96] = s => {
     return scanTemplate(s);
 };
-// !, !=, !==
-CharScanners[33 /* Exclamation */] = s => {
-    if (nextChar(s) !== 61 /* Equals */) {
-        return 32809 /* Exclamation */;
+CharScanners[33] = s => {
+    if (nextChar(s) !== 61) {
+        return 32809;
     }
-    if (nextChar(s) !== 61 /* Equals */) {
-        return 1638680 /* ExclamationEquals */;
-    }
-    nextChar(s);
-    return 1638682 /* ExclamationEqualsEquals */;
-};
-// =, ==, ===
-CharScanners[61 /* Equals */] = s => {
-    if (nextChar(s) !== 61 /* Equals */) {
-        return 1048616 /* Equals */;
-    }
-    if (nextChar(s) !== 61 /* Equals */) {
-        return 1638679 /* EqualsEquals */;
+    if (nextChar(s) !== 61) {
+        return 1638680;
     }
     nextChar(s);
-    return 1638681 /* EqualsEqualsEquals */;
+    return 1638682;
 };
-// &, &&
-CharScanners[38 /* Ampersand */] = s => {
-    if (nextChar(s) !== 38 /* Ampersand */) {
-        return 1572883 /* Ampersand */;
+CharScanners[61] = s => {
+    if (nextChar(s) !== 61) {
+        return 1048616;
+    }
+    if (nextChar(s) !== 61) {
+        return 1638679;
     }
     nextChar(s);
-    return 1638614 /* AmpersandAmpersand */;
+    return 1638681;
 };
-// |, ||
-CharScanners[124 /* Bar */] = s => {
-    if (nextChar(s) !== 124 /* Bar */) {
-        return 1572884 /* Bar */;
+CharScanners[38] = s => {
+    if (nextChar(s) !== 38) {
+        return 1572883;
     }
     nextChar(s);
-    return 1638549 /* BarBar */;
+    return 1638614;
 };
-// .
-CharScanners[46 /* Dot */] = s => {
-    if (nextChar(s) <= 57 /* Nine */ && s._currentChar >= 48 /* Zero */) {
+CharScanners[124] = s => {
+    if (nextChar(s) !== 124) {
+        return 1572884;
+    }
+    nextChar(s);
+    return 1638549;
+};
+CharScanners[46] = s => {
+    if (nextChar(s) <= 57 && s._currentChar >= 48) {
         return scanNumber(s, true);
     }
-    return 16393 /* Dot */;
+    return 16393;
 };
-// <, <=
-CharScanners[60 /* LessThan */] = s => {
-    if (nextChar(s) !== 61 /* Equals */) {
-        return 1638747 /* LessThan */;
+CharScanners[60] = s => {
+    if (nextChar(s) !== 61) {
+        return 1638747;
     }
     nextChar(s);
-    return 1638749 /* LessThanEquals */;
+    return 1638749;
 };
-// >, >=
-CharScanners[62 /* GreaterThan */] = s => {
-    if (nextChar(s) !== 61 /* Equals */) {
-        return 1638748 /* GreaterThan */;
+CharScanners[62] = s => {
+    if (nextChar(s) !== 61) {
+        return 1638748;
     }
     nextChar(s);
-    return 1638750 /* GreaterThanEquals */;
+    return 1638750;
 };
-CharScanners[37 /* Percent */] = returnToken(1638886 /* Percent */);
-CharScanners[40 /* OpenParen */] = returnToken(671751 /* OpenParen */);
-CharScanners[41 /* CloseParen */] = returnToken(1835019 /* CloseParen */);
-CharScanners[42 /* Asterisk */] = returnToken(1638885 /* Asterisk */);
-CharScanners[43 /* Plus */] = returnToken(623009 /* Plus */);
-CharScanners[44 /* Comma */] = returnToken(1572876 /* Comma */);
-CharScanners[45 /* Minus */] = returnToken(623010 /* Minus */);
-CharScanners[47 /* Slash */] = returnToken(1638887 /* Slash */);
-CharScanners[58 /* Colon */] = returnToken(1572879 /* Colon */);
-CharScanners[63 /* Question */] = returnToken(1572880 /* Question */);
-CharScanners[91 /* OpenBracket */] = returnToken(671757 /* OpenBracket */);
-CharScanners[93 /* CloseBracket */] = returnToken(1835022 /* CloseBracket */);
-CharScanners[123 /* OpenBrace */] = returnToken(131080 /* OpenBrace */);
-CharScanners[125 /* CloseBrace */] = returnToken(1835018 /* CloseBrace */);
+CharScanners[37] = returnToken(1638886);
+CharScanners[40] = returnToken(671751);
+CharScanners[41] = returnToken(1835019);
+CharScanners[42] = returnToken(1638885);
+CharScanners[43] = returnToken(623009);
+CharScanners[44] = returnToken(1572876);
+CharScanners[45] = returnToken(623010);
+CharScanners[47] = returnToken(1638887);
+CharScanners[58] = returnToken(1572879);
+CharScanners[63] = returnToken(1572880);
+CharScanners[91] = returnToken(671757);
+CharScanners[93] = returnToken(1835022);
+CharScanners[123] = returnToken(131080);
+CharScanners[125] = returnToken(1835018);
 
-/**
- * Current subscription collector
- */
 let _connectable = null;
 const connectables = [];
-// eslint-disable-next-line
 let connecting = false;
-// todo: layer based collection pause/resume?
 function pauseConnecting() {
     connecting = false;
 }
@@ -4448,10 +3945,6 @@ function canWrap(obj) {
         case '[object Array]':
         case '[object Map]':
         case '[object Set]':
-            // it's unlikely that methods on the following 2 objects need to be observed for changes
-            // so while they are valid/ we don't wrap them either
-            // case '[object Math]':
-            // case '[object Reflect]':
             return true;
         default:
             return false;
@@ -4463,12 +3956,10 @@ function wrap(v) {
 }
 function getProxy(obj) {
     var _a;
-    // deepscan-disable-next-line
     return (_a = proxyMap.get(obj)) !== null && _a !== void 0 ? _a : createProxy(obj);
 }
 function getRaw(obj) {
     var _a;
-    // todo: get in a weakmap if null/undef
     return (_a = obj[rawKey]) !== null && _a !== void 0 ? _a : obj;
 }
 function unwrap(v) {
@@ -4477,8 +3968,6 @@ function unwrap(v) {
 function doNotCollect(key) {
     return key === 'constructor'
         || key === '__proto__'
-        // probably should revert to v1 naming style for consistency with builtin?
-        // __o__ is shorters & less chance of conflict with other libs as well
         || key === '$observers'
         || key === Symbol.toPrimitive
         || key === Symbol.toStringTag;
@@ -4495,7 +3984,6 @@ function createProxy(obj) {
 }
 const objectHandler = {
     get(target, key, receiver) {
-        // maybe use symbol?
         if (key === rawKey) {
             return target;
         }
@@ -4503,14 +3991,12 @@ const objectHandler = {
         if (!connecting || doNotCollect(key) || connectable == null) {
             return R$get(target, key, receiver);
         }
-        // todo: static
         connectable.observe(target, key);
         return wrap(R$get(target, key, receiver));
     },
 };
 const arrayHandler = {
     get(target, key, receiver) {
-        // maybe use symbol?
         if (key === rawKey) {
             return target;
         }
@@ -4577,7 +4063,6 @@ const arrayHandler = {
         connectable.observe(target, key);
         return wrap(R$get(target, key, receiver));
     },
-    // for (let i in array) ...
     ownKeys(target) {
         var _a;
         (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observe(target, 'length');
@@ -4587,9 +4072,7 @@ const arrayHandler = {
 function wrappedArrayMap(cb, thisArg) {
     var _a;
     const raw = getRaw(this);
-    const res = raw.map((v, i) => 
-    // do we wrap `thisArg`?
-    unwrap(cb.call(thisArg, wrap(v), i, this)));
+    const res = raw.map((v, i) => unwrap(cb.call(thisArg, wrap(v), i, this)));
     (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
     return wrap(res);
 }
@@ -4603,9 +4086,7 @@ function wrappedArrayEvery(cb, thisArg) {
 function wrappedArrayFilter(cb, thisArg) {
     var _a;
     const raw = getRaw(this);
-    const res = raw.filter((v, i) => 
-    // do we wrap `thisArg`?
-    unwrap(cb.call(thisArg, wrap(v), i, this)));
+    const res = raw.filter((v, i) => unwrap(cb.call(thisArg, wrap(v), i, this)));
     (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
     return wrap(res);
 }
@@ -4718,11 +4199,8 @@ function wrappedReduceRight(cb, initValue) {
     (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
     return wrap(res);
 }
-// the below logic takes inspiration from Vue, Mobx
-// much thanks to them for working out this
 const collectionHandler = {
     get(target, key, receiver) {
-        // maybe use symbol?
         if (key === rawKey) {
             return target;
         }
@@ -4774,7 +4252,7 @@ function wrappedForEach(cb, thisArg) {
     const raw = getRaw(this);
     (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
     return raw.forEach((v, key) => {
-        cb.call(/* should wrap or not?? */ thisArg, wrap(v), wrap(key), this);
+        cb.call(thisArg, wrap(v), wrap(key), this);
     });
 }
 function wrappedHas(v) {
@@ -4844,8 +4322,6 @@ function wrappedEntries() {
     const raw = getRaw(this);
     (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
     const iterator = raw.entries();
-    // return a wrapped iterator which returns observed versions of the
-    // values emitted from the real iterator
     return {
         next() {
             const next = iterator.next();
@@ -4871,15 +4347,10 @@ const ProxyObservable = Object.freeze({
 class ComputedObserver {
     constructor(obj, get, set, useProxy, observerLocator) {
         this.interceptor = this;
-        this.type = 1 /* Observer */;
-        /** @internal */
+        this.type = 1;
         this._value = void 0;
-        /** @internal */
         this._oldValue = void 0;
-        // todo: maybe use a counter allow recursive call to a certain level
-        /** @internal */
         this._isRunning = false;
-        /** @internal */
         this._isDirty = false;
         this._obj = obj;
         this.get = get;
@@ -4891,14 +4362,14 @@ class ComputedObserver {
         const getter = descriptor.get;
         const setter = descriptor.set;
         const observer = new ComputedObserver(obj, getter, setter, useProxy, observerLocator);
-        const $get = (( /* Computed Observer */) => observer.getValue());
+        const $get = (() => observer.getValue());
         $get.getObserver = () => observer;
         def(obj, key, {
             enumerable: descriptor.enumerable,
             configurable: true,
             get: $get,
-            set: (/* Computed Observer */ v) => {
-                observer.setValue(v, 0 /* none */);
+            set: (v) => {
+                observer.setValue(v, 0);
             },
         });
         return observer;
@@ -4913,11 +4384,9 @@ class ComputedObserver {
         }
         return this._value;
     }
-    // deepscan-disable-next-line
     setValue(v, _flags) {
         if (isFunction(this.set)) {
             if (v !== this._value) {
-                // setting running true as a form of batching
                 this._isRunning = true;
                 this.set.call(this._obj, v);
                 this._isRunning = false;
@@ -4941,9 +4410,6 @@ class ComputedObserver {
         }
     }
     subscribe(subscriber) {
-        // in theory, a collection subscriber could be added before a property subscriber
-        // and it should be handled similarly in subscribeToCollection
-        // though not handling for now, and wait until the merge of normal + collection subscription
         if (this.subs.add(subscriber) && this.subs.count === 1) {
             this.compute();
             this._isDirty = false;
@@ -4958,7 +4424,7 @@ class ComputedObserver {
     flush() {
         oV$1 = this._oldValue;
         this._oldValue = this._value;
-        this.subs.notify(this._value, oV$1, 0 /* none */);
+        this.subs.notify(this._value, oV$1, 0);
     }
     run() {
         if (this._isRunning) {
@@ -4989,37 +4455,13 @@ class ComputedObserver {
 connectable(ComputedObserver);
 subscriberCollection(ComputedObserver);
 withFlushQueue(ComputedObserver);
-// a reusable variable for `.flush()` methods of observers
-// so that there doesn't need to create an env record for every call
 let oV$1 = void 0;
 
 const IDirtyChecker = DI.createInterface('IDirtyChecker', x => x.singleton(DirtyChecker));
 const DirtyCheckSettings = {
-    /**
-     * Default: `6`
-     *
-     * Adjust the global dirty check frequency.
-     * Measures in "timeouts per check", such that (given a default of 250 timeouts per second in modern browsers):
-     * - A value of 1 will result in 250 dirty checks per second (or 1 dirty check per second for an inactive tab)
-     * - A value of 25 will result in 10 dirty checks per second (or 1 dirty check per 25 seconds for an inactive tab)
-     */
     timeoutsPerCheck: 25,
-    /**
-     * Default: `false`
-     *
-     * Disable dirty-checking entirely. Properties that cannot be observed without dirty checking
-     * or an adapter, will simply not be observed.
-     */
     disabled: false,
-    /**
-     * Default: `false`
-     *
-     * Throw an error if a property is being dirty-checked.
-     */
     throw: false,
-    /**
-     * Resets all dirty checking settings to the framework's defaults.
-     */
     resetToDefault() {
         this.timeoutsPerCheck = 6;
         this.disabled = false;
@@ -5075,17 +4517,13 @@ class DirtyChecker {
         }
     }
 }
-/**
- * @internal
- */
 DirtyChecker.inject = [IPlatform];
 withFlushQueue(DirtyChecker);
 class DirtyCheckProperty {
     constructor(dirtyChecker, obj, key) {
         this.obj = obj;
         this.key = key;
-        this.type = 0 /* None */;
-        /** @internal */
+        this.type = 0;
         this._oldValue = void 0;
         this._dirtyChecker = dirtyChecker;
     }
@@ -5093,8 +4531,6 @@ class DirtyCheckProperty {
         return this.obj[this.key];
     }
     setValue(v, f) {
-        // todo: this should be allowed, probably
-        // but the construction of dirty checker should throw instead
         throw new Error(`Trying to set value for property ${this.key} in dirty checker`);
     }
     isDirty() {
@@ -5104,7 +4540,7 @@ class DirtyCheckProperty {
         const oldValue = this._oldValue;
         const newValue = this.getValue();
         this._oldValue = newValue;
-        this.subs.notify(newValue, oldValue, 0 /* none */);
+        this.subs.notify(newValue, oldValue, 0);
     }
     subscribe(subscriber) {
         if (this.subs.add(subscriber) && this.subs.count === 1) {
@@ -5122,13 +4558,12 @@ subscriberCollection(DirtyCheckProperty);
 
 class PrimitiveObserver {
     constructor(obj, key) {
-        this.type = 0 /* None */;
+        this.type = 0;
         this._obj = obj;
         this._key = key;
     }
     get doNotCache() { return true; }
     getValue() {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-explicit-any
         return this._obj[this._key];
     }
     setValue() { }
@@ -5138,9 +4573,7 @@ class PrimitiveObserver {
 
 class PropertyAccessor {
     constructor() {
-        // the only thing can be guaranteed is it's an object
-        // even if this property accessor is used to access an element
-        this.type = 0 /* None */;
+        this.type = 0;
     }
     getValue(obj, key) {
         return obj[key];
@@ -5150,25 +4583,14 @@ class PropertyAccessor {
     }
 }
 
-// a reusable variable for `.flush()` methods of observers
-// so that there doesn't need to create an env record for every call
 let oV = void 0;
-/**
- * Observer for the mutation of object property value employing getter-setter strategy.
- * This is used for observing object properties that has no decorator.
- */
 class SetterObserver {
     constructor(obj, key) {
-        // todo(bigopon): tweak the flag based on typeof obj (array/set/map/iterator/proxy etc...)
-        this.type = 1 /* Observer */;
-        /** @internal */
+        this.type = 1;
         this._value = void 0;
-        /** @internal */
         this._oldValue = void 0;
-        /** @internal */
         this._observing = false;
-        /** @internal */
-        this.f = 0 /* none */;
+        this.f = 0;
         this._obj = obj;
         this._key = key;
     }
@@ -5186,12 +4608,6 @@ class SetterObserver {
             this.queue.add(this);
         }
         else {
-            // If subscribe() has been called, the target property descriptor is replaced by these getter/setter methods,
-            // so calling obj[propertyKey] will actually return this.value.
-            // However, if subscribe() was not yet called (indicated by !this.observing), the target descriptor
-            // is unmodified and we need to explicitly set the property value.
-            // This will happen in one-time, to-view and two-way bindings during $bind, meaning that the $bind will not actually update the target value.
-            // This wasn't visible in vCurrent due to connect-queue always doing a delayed update, so in many cases it didn't matter whether $bind updated the target or not.
             this._obj[this._key] = newValue;
         }
     }
@@ -5213,9 +4629,9 @@ class SetterObserver {
             def(this._obj, this._key, {
                 enumerable: true,
                 configurable: true,
-                get: ( /* Setter Observer */) => this.getValue(),
-                set: (/* Setter Observer */ value) => {
-                    this.setValue(value, 0 /* none */);
+                get: () => this.getValue(),
+                set: (value) => {
+                    this.setValue(value, 0);
                 },
             });
         }
@@ -5230,20 +4646,16 @@ class SetterObserver {
                 value: this._value,
             });
             this._observing = false;
-            // todo(bigopon/fred): add .removeAllSubscribers()
         }
         return this;
     }
 }
 class SetterNotifier {
     constructor(obj, callbackKey, set, initialValue) {
-        this.type = 1 /* Observer */;
-        /** @internal */
+        this.type = 1;
         this._value = void 0;
-        /** @internal */
         this._oldValue = void 0;
-        /** @internal */
-        this.f = 0 /* none */;
+        this.f = 0;
         this._obj = obj;
         this._setter = set;
         this._hasSetter = isFunction(set);
@@ -5360,7 +4772,6 @@ class ObserverLocator {
                 break;
         }
         let pd = getOwnPropDesc(obj, key);
-        // Only instance properties will yield a descriptor here, otherwise walk up the proto chain
         if (pd === void 0) {
             let proto = getProto(obj);
             while (proto !== null) {
@@ -5373,7 +4784,6 @@ class ObserverLocator {
                 }
             }
         }
-        // If the descriptor does not have a 'value' prop, it must have a getter and/or setter
         if (pd !== void 0 && !hasOwnProp.call(pd, 'value')) {
             let obs = this._getAdapterObserver(obj, key, pd);
             if (obs == null) {
@@ -5381,12 +4791,10 @@ class ObserverLocator {
             }
             return obs == null
                 ? pd.configurable
-                    ? ComputedObserver.create(obj, key, pd, this, /* AOT: not true for IE11 */ true)
+                    ? ComputedObserver.create(obj, key, pd, this, true)
                     : this._dirtyChecker.createProperty(obj, key)
                 : obs;
         }
-        // Ordinary get/set observation (the common use case)
-        // TODO: think about how to handle a data property that does not sit on the instance (should we do anything different?)
         return new SetterObserver(obj, key);
     }
     _getAdapterObserver(obj, propertyName, pd) {
@@ -5434,13 +4842,8 @@ class Observation {
         this.oL = oL;
     }
     static get inject() { return [IObserverLocator]; }
-    /**
-     * Run an effect function an track the dependencies inside it,
-     * to re-run whenever a dependency has changed
-     */
     run(fn) {
         const effect = new Effect(this.oL, fn);
-        // todo: batch effect run after it's in
         effect.run();
         return effect;
     }
@@ -5450,7 +4853,6 @@ class Effect {
         this.oL = oL;
         this.fn = fn;
         this.interceptor = this;
-        // to configure this, potentially a 2nd parameter is needed for run
         this.maxRunCount = 10;
         this.queued = false;
         this.running = false;
@@ -5485,10 +4887,6 @@ class Effect {
             this.running = false;
             exitConnectable(this);
         }
-        // when doing this.fn(this), there's a chance that it has recursive effect
-        // continue to run for a certain number before bailing
-        // whenever there's a dependency change while running, this.queued will be true
-        // so we use it as an indicator to continue to run the effect
         if (this.queued) {
             if (this.runCount > this.maxRunCount) {
                 this.runCount = 0;
@@ -5510,41 +4908,20 @@ connectable(Effect);
 function getObserversLookup(obj) {
     if (obj.$observers === void 0) {
         def(obj, '$observers', { value: {} });
-        // todo: define in a weakmap
     }
     return obj.$observers;
 }
 const noValue = {};
-// impl, wont be seen
 function observable(targetOrConfig, key, descriptor) {
-    // either this check, or arguments.length === 3
-    // or could be both, so can throw against user error for better DX
     if (key == null) {
-        // for:
-        //    @observable('prop')
-        //    class {}
-        //
-        //    @observable({ name: 'prop', callback: ... })
-        //    class {}
-        //
-        //    class {
-        //      @observable() prop
-        //      @observable({ callback: ... }) prop2
-        //    }
         return ((t, k, d) => deco(t, k, d, targetOrConfig));
     }
-    // for:
-    //    class {
-    //      @observable prop
-    //    }
     return deco(targetOrConfig, key, descriptor);
     function deco(target, key, descriptor, config) {
         var _a;
-        // class decorator?
         const isClassDecorator = key === void 0;
         config = typeof config !== 'object'
             ? { name: config }
-            // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
             : (config || {});
         if (isClassDecorator) {
             key = config.name;
@@ -5552,13 +4929,9 @@ function observable(targetOrConfig, key, descriptor) {
         if (key == null || key === '') {
             throw new Error('Invalid usage, cannot determine property name for @observable');
         }
-        // determine callback name based on config or convention.
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing, @typescript-eslint/strict-boolean-expressions
         const callback = config.callback || `${String(key)}Changed`;
         let initialValue = noValue;
         if (descriptor) {
-            // we're adding a getter and setter which means the property descriptor
-            // cannot have a "value" or "writable" attribute
             delete descriptor.value;
             delete descriptor.writable;
             initialValue = (_a = descriptor.initializer) === null || _a === void 0 ? void 0 : _a.call(descriptor);
@@ -5567,22 +4940,20 @@ function observable(targetOrConfig, key, descriptor) {
         else {
             descriptor = { configurable: true };
         }
-        // make the accessor enumerable by default, as fields are enumerable
         if (!('enumerable' in descriptor)) {
             descriptor.enumerable = true;
         }
-        // todo(bigopon/fred): discuss string api for converter
         const $set = config.set;
-        descriptor.get = function g( /* @observable */) {
+        descriptor.get = function g() {
             var _a;
             const notifier = getNotifier(this, key, callback, initialValue, $set);
             (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.subscribeTo(notifier);
             return notifier.getValue();
         };
         descriptor.set = function s(newValue) {
-            getNotifier(this, key, callback, initialValue, $set).setValue(newValue, 0 /* none */);
+            getNotifier(this, key, callback, initialValue, $set).setValue(newValue, 0);
         };
-        descriptor.get.getObserver = function gO(/* @observable */ obj) {
+        descriptor.get.getObserver = function gO(obj) {
             return getNotifier(obj, key, callback, initialValue, $set);
         };
         if (isClassDecorator) {
@@ -5602,18 +4973,6 @@ function getNotifier(obj, key, callbackKey, initialValue, set) {
     }
     return notifier;
 }
-/*
-          | typescript       | babel
-----------|------------------|-------------------------
-property  | config           | config
-w/parens  | target, key      | target, key, descriptor
-----------|------------------|-------------------------
-property  | target, key      | target, key, descriptor
-no parens | n/a              | n/a
-----------|------------------|-------------------------
-class     | config           | config
-          | target           | target
-*/
 
 export { Access, AccessKeyedExpression, AccessMemberExpression, AccessScopeExpression, AccessThisExpression, AccessorType, ArrayBindingPattern, ArrayIndexObserver, ArrayLiteralExpression, ArrayObserver, AssignExpression, BinaryExpression, BindingBehavior, BindingBehaviorDefinition, BindingBehaviorExpression, BindingBehaviorFactory, BindingBehaviorStrategy, BindingContext, BindingIdentifier, BindingInterceptor, BindingMediator, BindingMode, BindingObserverRecord, CallFunctionExpression, CallMemberExpression, CallScopeExpression, Char, CollectionKind, CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, ConditionalExpression, ConnectableSwitcher, CustomExpression, DelegationStrategy, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, DirtyCheckProperty, DirtyCheckSettings, ExpressionKind, ExpressionType, FlushQueue, ForOfStatement, HtmlLiteralExpression, ICoercionConfiguration, IDirtyChecker, IExpressionParser, INodeObserverLocator, IObservation, IObserverLocator, ISignaler, Interpolation, LifecycleFlags, MapObserver, ObjectBindingPattern, ObjectLiteralExpression, Observation, ObserverLocator, OverrideContext, ParserState, Precedence, PrimitiveLiteralExpression, PrimitiveObserver, PropertyAccessor, ProxyObservable, Scope, SetObserver, SetterObserver, SubscriberRecord, TaggedTemplateExpression, TemplateExpression, UnaryExpression, ValueConverter, ValueConverterDefinition, ValueConverterExpression, alias, applyMutationsToIndices, bindingBehavior, cloneIndexMap, connectable, copyIndexMap, createIndexMap, disableArrayObservation, disableMapObservation, disableSetObservation, enableArrayObservation, enableMapObservation, enableSetObservation, getCollectionObserver, isIndexMap, observable, parse, parseExpression, registerAliases, subscriberCollection, synchronizeIndices, valueConverter, withFlushQueue };
 //# sourceMappingURL=index.dev.mjs.map

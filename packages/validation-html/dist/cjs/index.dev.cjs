@@ -38,60 +38,27 @@ exports.ValidateEventKind = void 0;
     ValidateEventKind["validate"] = "validate";
     ValidateEventKind["reset"] = "reset";
 })(exports.ValidateEventKind || (exports.ValidateEventKind = {}));
-/**
- * The result of a call to the validation controller's validate method.
- */
 class ControllerValidateResult {
-    /**
-     * @param {boolean} valid - `true` if the validation passed, else `false`.
-     * @param {ValidationResult[]} results - The validation result of every rule that was evaluated.
-     * @param {ValidateInstruction} [instruction] - The instruction passed to the controller's validate method.
-     */
     constructor(valid, results, instruction) {
         this.valid = valid;
         this.results = results;
         this.instruction = instruction;
     }
 }
-/**
- * Describes the validation result and target elements pair.
- * Used to notify the subscribers.
- */
 class ValidationResultTarget {
     constructor(result, targets) {
         this.result = result;
         this.targets = targets;
     }
 }
-/**
- * Describes the contract of the validation event.
- * Used to notify the subscribers.
- */
 class ValidationEvent {
-    /**
-     * @param {ValidateEventKind} kind - 'validate' or 'reset'.
-     * @param {ValidationResultTarget[]} addedResults - new errors added.
-     * @param {ValidationResultTarget[]} removedResults - old errors removed.
-     * @memberof ValidationEvent
-     */
     constructor(kind, addedResults, removedResults) {
         this.kind = kind;
         this.addedResults = addedResults;
         this.removedResults = removedResults;
     }
 }
-/**
- * Describes a binding information to the validation controller.
- * This is provided by the `validate` binding behavior during binding registration.
- */
 class BindingInfo {
-    /**
-     * @param {Element} target - The HTMLElement associated with the binding.
-     * @param {Scope} scope - The binding scope.
-     * @param {PropertyRule[]} [rules] - Rules bound to the binding behavior.
-     * @param {(PropertyInfo | undefined)} [propertyInfo=void 0] - Information describing the associated property for the binding.
-     * @memberof BindingInfo
-     */
     constructor(target, scope, rules, propertyInfo = void 0) {
         this.target = target;
         this.scope = scope;
@@ -105,7 +72,7 @@ class PropertyInfo {
         this.propertyName = propertyName;
     }
 }
-function getPropertyInfo(binding, info, flags = 0 /* none */) {
+function getPropertyInfo(binding, info, flags = 0) {
     let propertyInfo = info.propertyInfo;
     if (propertyInfo !== void 0) {
         return propertyInfo;
@@ -115,33 +82,33 @@ function getPropertyInfo(binding, info, flags = 0 /* none */) {
     const locator = binding.locator;
     let toCachePropertyName = true;
     let propertyName = '';
-    while (expression !== void 0 && (expression === null || expression === void 0 ? void 0 : expression.$kind) !== 10082 /* AccessScope */) {
+    while (expression !== void 0 && (expression === null || expression === void 0 ? void 0 : expression.$kind) !== 10082) {
         let memberName;
         switch (expression.$kind) {
-            case 38962 /* BindingBehavior */:
-            case 36913 /* ValueConverter */:
+            case 38962:
+            case 36913:
                 expression = expression.expression;
                 continue;
-            case 9323 /* AccessMember */:
+            case 9323:
                 memberName = expression.name;
                 break;
-            case 9324 /* AccessKeyed */: {
+            case 9324: {
                 const keyExpr = expression.key;
                 if (toCachePropertyName) {
-                    toCachePropertyName = keyExpr.$kind === 17925 /* PrimitiveLiteral */;
+                    toCachePropertyName = keyExpr.$kind === 17925;
                 }
                 memberName = `[${keyExpr.evaluate(flags, scope, locator, null).toString()}]`;
                 break;
             }
             default:
-                throw new Error(`Unknown expression of type ${expression.constructor.name}`); // TODO: use reporter/logger
+                throw new Error(`Unknown expression of type ${expression.constructor.name}`);
         }
         const separator = propertyName.startsWith('[') ? '' : '.';
         propertyName = propertyName.length === 0 ? memberName : `${memberName}${separator}${propertyName}`;
         expression = expression.object;
     }
     if (expression === void 0) {
-        throw new Error(`Unable to parse binding expression: ${binding.sourceExpression.expression}`); // TODO: use reporter/logger
+        throw new Error(`Unable to parse binding expression: ${binding.sourceExpression.expression}`);
     }
     let object;
     if (propertyName.length === 0) {
@@ -171,12 +138,6 @@ exports.ValidationController = class ValidationController {
         this.subscribers = new Set();
         this.results = [];
         this.validating = false;
-        /**
-         * Elements related to validation results that have been rendered.
-         *
-         * @private
-         * @type {Map<ValidationResult, Element[]>}
-         */
         this.elements = new WeakMap();
         this.objects = new Map();
     }
@@ -185,7 +146,7 @@ exports.ValidationController = class ValidationController {
     }
     removeObject(object) {
         this.objects.delete(object);
-        this.processResultDelta("reset" /* reset */, this.results.filter(result => result.object === object), []);
+        this.processResultDelta("reset", this.results.filter(result => result.object === object), []);
     }
     addError(message, object, propertyName) {
         let resolvedPropertyName;
@@ -193,12 +154,12 @@ exports.ValidationController = class ValidationController {
             [resolvedPropertyName] = validation.parsePropertyName(propertyName, this.parser);
         }
         const result = new validation.ValidationResult(false, message, resolvedPropertyName, object, undefined, undefined, true);
-        this.processResultDelta("validate" /* validate */, [], [result]);
+        this.processResultDelta("validate", [], [result]);
         return result;
     }
     removeError(result) {
         if (this.results.includes(result)) {
-            this.processResultDelta("reset" /* reset */, [result], []);
+            this.processResultDelta("reset", [result], []);
         }
     }
     addSubscriber(subscriber) {
@@ -222,7 +183,6 @@ exports.ValidationController = class ValidationController {
             instructions = [new validation.ValidateInstruction(obj, instruction.propertyName, (_a = instruction.rules) !== null && _a !== void 0 ? _a : this.objects.get(obj), objectTag, instruction.propertyTag)];
         }
         else {
-            // validate all objects and bindings.
             instructions = [
                 ...Array.from(this.objects.entries())
                     .map(([object, rules]) => new validation.ValidateInstruction(object, void 0, rules, objectTag)),
@@ -246,7 +206,7 @@ exports.ValidationController = class ValidationController {
                 }, []);
                 const predicate = this.getInstructionPredicate(instruction);
                 const oldResults = this.results.filter(predicate);
-                this.processResultDelta("validate" /* validate */, oldResults, newResults);
+                this.processResultDelta("validate", oldResults, newResults);
                 return new ControllerValidateResult(newResults.find(r => !r.valid) === void 0, newResults, instruction);
             }
             finally {
@@ -258,7 +218,7 @@ exports.ValidationController = class ValidationController {
     reset(instruction) {
         const predicate = this.getInstructionPredicate(instruction);
         const oldResults = this.results.filter(predicate);
-        this.processResultDelta("reset" /* reset */, oldResults, []);
+        this.processResultDelta("reset", oldResults, []);
     }
     async validateBinding(binding) {
         if (!binding.isBound) {
@@ -312,9 +272,6 @@ exports.ValidationController = class ValidationController {
         }
         await Promise.all(promises);
     }
-    /**
-     * Interprets the instruction and returns a predicate that will identify relevant results in the list of rendered validation results.
-     */
     getInstructionPredicate(instruction) {
         if (instruction === void 0) {
             return () => true;
@@ -328,9 +285,6 @@ exports.ValidationController = class ValidationController {
                 || rules.includes(x.propertyRule)
                 || rules.some((r) => x.propertyRule === void 0 || r.$rules.flat().every(($r) => x.propertyRule.$rules.flat().includes($r))));
     }
-    /**
-     * Gets the elements associated with an object and propertyName (if any).
-     */
     getAssociatedElements({ object, propertyName }) {
         const elements = [];
         for (const [binding, info] of this.bindings.entries()) {
@@ -343,31 +297,24 @@ exports.ValidationController = class ValidationController {
     }
     processResultDelta(kind, oldResults, newResults) {
         const eventData = new ValidationEvent(kind, [], []);
-        // create a shallow copy of newResults so we can mutate it without causing side-effects.
         newResults = newResults.slice(0);
         const elements = this.elements;
         for (const oldResult of oldResults) {
             const removalTargets = elements.get(oldResult);
             elements.delete(oldResult);
             eventData.removedResults.push(new ValidationResultTarget(oldResult, removalTargets));
-            // determine if there's a corresponding new result for the old result we are removing.
             const newResultIndex = newResults.findIndex(x => x.rule === oldResult.rule && x.object === oldResult.object && x.propertyName === oldResult.propertyName);
             if (newResultIndex === -1) {
-                // no corresponding new result... simple remove.
                 this.results.splice(this.results.indexOf(oldResult), 1);
             }
             else {
-                // there is a corresponding new result...
                 const newResult = newResults.splice(newResultIndex, 1)[0];
                 const newTargets = this.getAssociatedElements(newResult);
                 elements.set(newResult, newTargets);
                 eventData.addedResults.push(new ValidationResultTarget(newResult, newTargets));
-                // do an in-place replacement of the old result with the new result.
-                // this ensures any repeats bound to this.results will not thrash.
                 this.results.splice(this.results.indexOf(oldResult), 1, newResult);
             }
         }
-        // add the remaining new results to the event data.
         for (const result of newResults) {
             const newTargets = this.getAssociatedElements(result);
             eventData.addedResults.push(new ValidationResultTarget(result, newTargets));
@@ -397,14 +344,11 @@ class ValidationControllerFactory {
     }
 }
 
-/**
- * Normalizes https://developer.mozilla.org/en-US/docs/Web/API/Node/compareDocumentPosition into values usable for Array.prototype.sort.
- */
 function compareDocumentPositionFlat(a, b) {
-    switch (a.compareDocumentPosition(b) & 2 /* DOCUMENT_POSITION_PRECEDING */) {
-        case 0: return 0; // same element
-        case 2: return 1; // preceding element
-        default: return -1; // assume following element otherwise
+    switch (a.compareDocumentPosition(b) & 2) {
+        case 0: return 0;
+        case 2: return 1;
+        default: return -1;
     }
 }
 
@@ -470,24 +414,6 @@ exports.ValidationContainerCustomElement = __decorate([
     __param(1, kernel.optional(IValidationController))
 ], exports.ValidationContainerCustomElement);
 
-/**
- * A validation errors subscriber in form of a custom attribute.
- *
- * It registers itself as a subscriber to the validation controller available for the scope.
- * The target controller can be bound via the `@bindable controller`; when omitted it takes the controller currently registered in the container.
- *
- * The set of errors related to the host element or the children of it , are exposed via the `@bindable errors`.
- *
- * @example
- * ```html
- * <div id="div1" validation-errors.bind="nameErrors">
- *   <input id="target1" type="text" value.two-way="person.name & validate">
- *   <span class="error" repeat.for="errorInfo of nameErrors">
- *     ${errorInfo.result.message}
- *   </span>
- * </div>
- * ```
- */
 exports.ValidationErrorsCustomAttribute = class ValidationErrorsCustomAttribute {
     constructor(host, scopedController) {
         this.host = host;
@@ -540,41 +466,16 @@ exports.ValidationErrorsCustomAttribute = __decorate([
     __param(1, kernel.optional(IValidationController))
 ], exports.ValidationErrorsCustomAttribute);
 
-/**
- * Validation triggers.
- */
 exports.ValidationTrigger = void 0;
 (function (ValidationTrigger) {
-    /**
-     * Manual validation.  Use the controller's `validate()` and  `reset()` methods to validate all bindings.
-     */
     ValidationTrigger["manual"] = "manual";
-    /**
-     * Validate the binding when the binding's target element fires a DOM 'blur' event.
-     */
     ValidationTrigger["blur"] = "blur";
-    /**
-     * Validate the binding when the binding's target element fires a DOM 'focusout' event.
-     */
     ValidationTrigger["focusout"] = "focusout";
-    /**
-     * Validate the binding when it updates the model due to a change in the source property (usually triggered by some change in view)
-     */
     ValidationTrigger["change"] = "change";
-    /**
-     * Validate the binding when the binding's target element fires a DOM 'blur' event and when it updates the model due to a change in the view.
-     */
     ValidationTrigger["changeOrBlur"] = "changeOrBlur";
-    /**
-     * Validate the binding when the binding's target element fires a DOM 'focusout' event and when it updates the model due to a change in the view.
-     */
     ValidationTrigger["changeOrFocusout"] = "changeOrFocusout";
 })(exports.ValidationTrigger || (exports.ValidationTrigger = {}));
-/* @internal */
 const IDefaultTrigger = kernel.DI.createInterface('IDefaultTrigger');
-/**
- * Binding behavior. Indicates the bound property should be validated.
- */
 exports.ValidateBindingBehavior = class ValidateBindingBehavior extends runtimeHtml.BindingInterceptor {
     constructor(binding, expr) {
         super(binding, expr);
@@ -598,17 +499,10 @@ exports.ValidateBindingBehavior = class ValidateBindingBehavior extends runtimeH
         this.setPropertyBinding();
     }
     updateSource(value, flags) {
-        // TODO: need better approach. If done incorrectly may cause infinite loop, stack overflow 💣
         if (this.interceptor !== this) {
             this.interceptor.updateSource(value, flags);
         }
         else {
-            // let binding = this as BindingInterceptor;
-            // while (binding.binding !== void 0) {
-            //   binding = binding.binding as unknown as BindingInterceptor;
-            // }
-            // binding.updateSource(value, flags);
-            // this is a shortcut of the above code
             this.propertyBinding.updateSource(value, flags);
         }
         this.isDirty = true;
@@ -668,7 +562,7 @@ exports.ValidateBindingBehavior = class ValidateBindingBehavior extends runtimeH
         while (expression.name !== 'validate' && expression !== void 0) {
             expression = expression.expression;
         }
-        const evaluationFlags = flags | 1 /* isStrictBindingStrategy */;
+        const evaluationFlags = flags | 1;
         const args = expression.args;
         for (let i = 0, ii = args.length; i < ii; i++) {
             const arg = args[i];
@@ -689,7 +583,6 @@ exports.ValidateBindingBehavior = class ValidateBindingBehavior extends runtimeH
         return new ValidateArgumentsDelta(this.ensureController(controller), this.ensureTrigger(trigger), rules);
     }
     validateBinding() {
-        // Queue the new one before canceling the old one, to prevent early yield
         const task = this.task;
         this.task = this.platform.domReadQueue.queueTask(() => this.controller.validateBinding(this.propertyBinding));
         if (task !== this.task) {
@@ -730,7 +623,7 @@ exports.ValidateBindingBehavior = class ValidateBindingBehavior extends runtimeH
             trigger = this.defaultTrigger;
         }
         else if (!Object.values(exports.ValidationTrigger).includes(trigger)) {
-            throw new Error(`${trigger} is not a supported validation trigger`); // TODO: use reporter
+            throw new Error(`${trigger} is not a supported validation trigger`);
         }
         return trigger;
     }
@@ -739,7 +632,7 @@ exports.ValidateBindingBehavior = class ValidateBindingBehavior extends runtimeH
             controller = this.scopedController;
         }
         else if (!(controller instanceof exports.ValidationController)) {
-            throw new Error(`${controller} is not of type ValidationController`); // TODO: use reporter
+            throw new Error(`${controller} is not of type ValidationController`);
         }
         return controller;
     }
@@ -766,7 +659,7 @@ exports.ValidateBindingBehavior = class ValidateBindingBehavior extends runtimeH
         else {
             const controller = target === null || target === void 0 ? void 0 : target.$controller;
             if (controller === void 0) {
-                throw new Error('Invalid binding target'); // TODO: use reporter
+                throw new Error('Invalid binding target');
             }
             this.target = controller.host;
         }
@@ -817,10 +710,9 @@ function createConfiguration(optionsProvider) {
             optionsProvider(options);
             container.registerFactory(IValidationController, new options.ValidationControllerFactoryType());
             container.register(validation.ValidationConfiguration.customize((opt) => {
-                // copy the customization iff the key exists in validation configuration
                 for (const optKey of Object.keys(opt)) {
                     if (optKey in options) {
-                        opt[optKey] = options[optKey]; // TS cannot infer that the value of the same key is being copied from A to B, and rejects the assignment due to type broadening
+                        opt[optKey] = options[optKey];
                     }
                 }
             }), kernel.Registration.instance(IDefaultTrigger, options.DefaultTrigger), exports.ValidateBindingBehavior);
@@ -828,7 +720,7 @@ function createConfiguration(optionsProvider) {
                 container.register(exports.ValidationErrorsCustomAttribute);
             }
             const template = options.SubscriberCustomElementTemplate;
-            if (template) { // we need the boolean coercion here to ignore null, undefined, and ''
+            if (template) {
                 container.register(runtimeHtml.CustomElement.define({ ...defaultContainerDefinition, template }, exports.ValidationContainerCustomElement));
             }
             return container;

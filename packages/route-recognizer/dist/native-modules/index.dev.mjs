@@ -25,7 +25,6 @@ class Candidate {
         this.skippedStates = skippedStates;
         this.result = result;
         this.head = states[states.length - 1];
-        // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
         this.endpoint = (_a = this.head) === null || _a === void 0 ? void 0 : _a.endpoint;
     }
     advance(ch) {
@@ -103,7 +102,6 @@ class Candidate {
     getParams() {
         const { states, chars, endpoint } = this;
         const params = {};
-        // First initialize all properties with undefined so they all exist (even if they're not filled, e.g. non-matched optional params)
         for (const name of endpoint.paramNames) {
             params[name] = void 0;
         }
@@ -121,34 +119,6 @@ class Candidate {
         }
         return params;
     }
-    /**
-     * Compares this candidate to another candidate to determine the correct sorting order.
-     *
-     * This algorithm is different from `sortSolutions` in v1's route-recognizer in that it compares
-     * the candidates segment-by-segment, rather than merely comparing the cumulative of segment types
-     *
-     * This resolves v1's ambiguity in situations like `/foo/:id/bar` vs. `/foo/bar/:id`, which had the
-     * same sorting value because they both consist of two static segments and one dynamic segment.
-     *
-     * With this algorithm, `/foo/bar/:id` would always be sorted first because the second segment is different,
-     * and static wins over dynamic.
-     *
-     * ### NOTE
-     * This algorithm violates some of the invariants of v1's algorithm,
-     * but those invariants were arguably not very sound to begin with. Example:
-     *
-     * `/foo/*path/bar/baz` vs. `/foo/bar/*path1/*path2`
-     * - in v1, the first would win because that match has fewer stars
-     * - in v2, the second will win because there is a bigger static match at the start of the pattern
-     *
-     * The algorithm should be more logical and easier to reason about in v2, but it's important to be aware of
-     * subtle difference like this which might surprise some users who happened to rely on this behavior from v1,
-     * intentionally or unintentionally.
-     *
-     * @param b - The candidate to compare this to.
-     * Parameter name is `b` because the method should be used like so: `states.sort((a, b) => a.compareTo(b))`.
-     * This will bring the candidate with the highest score to the first position of the array.
-     */
     compareTo(b) {
         const statesA = this.states;
         const statesB = b.states;
@@ -207,8 +177,6 @@ class Candidate {
                 return -1;
             }
         }
-        // This should only be possible with a single pattern with multiple consecutive star segments.
-        // TODO: probably want to warn or even throw here, but leave it be for now.
         return 0;
     }
 }
@@ -264,34 +232,31 @@ class RouteRecognizer {
         else {
             this.$add(routeOrRoutes);
         }
-        // Clear the cache whenever there are state changes, because the recognizeResults could be arbitrarily different as a result
         this.cache.clear();
     }
     $add(route) {
         const path = route.path;
         const $route = new ConfigurableRoute(route.path, route.caseSensitive === true, route.handler);
-        // Normalize leading, trailing and double slashes by ignoring empty segments
         const parts = path === '' ? [''] : path.split('/').filter(isNotEmpty);
         const paramNames = [];
         let state = this.rootState;
         for (const part of parts) {
-            // Each segment always begins with a slash, so we represent this with a non-segment state
             state = state.append(null, '/');
             switch (part.charAt(0)) {
-                case ':': { // route parameter
+                case ':': {
                     const isOptional = part.endsWith('?');
                     const name = isOptional ? part.slice(1, -1) : part.slice(1);
                     paramNames.push(name);
                     state = new DynamicSegment(name, isOptional).appendTo(state);
                     break;
                 }
-                case '*': { // dynamic route
+                case '*': {
                     const name = part.slice(1);
                     paramNames.push(name);
                     state = new StarSegment(name).appendTo(state);
                     break;
                 }
-                default: { // standard path route
+                default: {
                     state = new StaticSegment(part, $route.caseSensitive).appendTo(state);
                     break;
                 }
@@ -340,19 +305,19 @@ class State {
         this.nextStates = null;
         this.endpoint = null;
         switch (segment === null || segment === void 0 ? void 0 : segment.kind) {
-            case 2 /* dynamic */:
+            case 2:
                 this.length = prevState.length + 1;
                 this.isSeparator = false;
                 this.isDynamic = true;
                 this.isOptional = segment.optional;
                 break;
-            case 1 /* star */:
+            case 1:
                 this.length = prevState.length + 1;
                 this.isSeparator = false;
                 this.isDynamic = true;
                 this.isOptional = false;
                 break;
-            case 3 /* static */:
+            case 3:
                 this.length = prevState.length + 1;
                 this.isSeparator = false;
                 this.isDynamic = false;
@@ -399,13 +364,12 @@ class State {
     isMatch(ch) {
         const segment = this.segment;
         switch (segment === null || segment === void 0 ? void 0 : segment.kind) {
-            case 2 /* dynamic */:
+            case 2:
                 return !this.value.includes(ch);
-            case 1 /* star */:
+            case 1:
                 return true;
-            case 3 /* static */:
+            case 3:
             case undefined:
-                // segment separators (slashes) are non-segments. We could say return ch === '/' as well, technically.
                 return this.value.includes(ch);
         }
     }
@@ -424,28 +388,24 @@ class StaticSegment {
         this.value = value;
         this.caseSensitive = caseSensitive;
     }
-    get kind() { return 3 /* static */; }
+    get kind() { return 3; }
     appendTo(state) {
         const { value, value: { length } } = this;
         if (this.caseSensitive) {
             for (let i = 0; i < length; ++i) {
-                state = state.append(
-                /* segment */ this, 
-                /* value   */ value.charAt(i));
+                state = state.append(this, value.charAt(i));
             }
         }
         else {
             for (let i = 0; i < length; ++i) {
                 const ch = value.charAt(i);
-                state = state.append(
-                /* segment */ this, 
-                /* value   */ ch.toUpperCase() + ch.toLowerCase());
+                state = state.append(this, ch.toUpperCase() + ch.toLowerCase());
             }
         }
         return state;
     }
     equals(b) {
-        return (b.kind === 3 /* static */ &&
+        return (b.kind === 3 &&
             b.caseSensitive === this.caseSensitive &&
             b.value === this.value);
     }
@@ -455,15 +415,13 @@ class DynamicSegment {
         this.name = name;
         this.optional = optional;
     }
-    get kind() { return 2 /* dynamic */; }
+    get kind() { return 2; }
     appendTo(state) {
-        state = state.append(
-        /* segment */ this, 
-        /* value   */ '/');
+        state = state.append(this, '/');
         return state;
     }
     equals(b) {
-        return (b.kind === 2 /* dynamic */ &&
+        return (b.kind === 2 &&
             b.optional === this.optional &&
             b.name === this.name);
     }
@@ -472,15 +430,13 @@ class StarSegment {
     constructor(name) {
         this.name = name;
     }
-    get kind() { return 1 /* star */; }
+    get kind() { return 1; }
     appendTo(state) {
-        state = state.append(
-        /* segment */ this, 
-        /* value   */ '');
+        state = state.append(this, '');
         return state;
     }
     equals(b) {
-        return (b.kind === 1 /* star */ &&
+        return (b.kind === 1 &&
             b.name === this.name);
     }
 }

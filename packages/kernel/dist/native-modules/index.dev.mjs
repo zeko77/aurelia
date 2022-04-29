@@ -2,25 +2,14 @@ import { Metadata, applyMetadataPolyfill, isObject } from '../../../metadata/dis
 export { Metadata, applyMetadataPolyfill, isNullOrUndefined, isObject, metadata } from '../../../metadata/dist/native-modules/index.mjs';
 export { Platform, Task, TaskAbortError, TaskQueue, TaskQueuePriority, TaskStatus } from '../../../platform/dist/native-modules/index.mjs';
 
-/** @internal */ const getOwnMetadata = Metadata.getOwn;
-/** @internal */ const hasOwnMetadata = Metadata.hasOwn;
-/** @internal */ const defineMetadata = Metadata.define;
-// eslint-disable-next-line @typescript-eslint/ban-types
-/** @internal */ const isFunction = (v) => typeof v === 'function';
-/** @internal */ const isString = (v) => typeof v === 'string';
-/** @internal */ const createObject = () => Object.create(null);
+const getOwnMetadata = Metadata.getOwn;
+const hasOwnMetadata = Metadata.hasOwn;
+const defineMetadata = Metadata.define;
+const isFunction = (v) => typeof v === 'function';
+const isString = (v) => typeof v === 'string';
+const createObject = () => Object.create(null);
 
 const isNumericLookup = {};
-/**
- * Efficiently determine whether the provided property key is numeric
- * (and thus could be an array indexer) or not.
- *
- * Always returns true for values of type `'number'`.
- *
- * Otherwise, only returns true for strings that consist only of positive integers.
- *
- * Results are cached.
- */
 function isArrayIndex(value) {
     switch (typeof value) {
         case 'number':
@@ -38,7 +27,7 @@ function isArrayIndex(value) {
             let i = 0;
             for (; i < length; ++i) {
                 ch = value.charCodeAt(i);
-                if (i === 0 && ch === 0x30 && length > 1 /* must not start with 0 */ || ch < 0x30 /* 0 */ || ch > 0x39 /* 9 */) {
+                if (i === 0 && ch === 0x30 && length > 1 || ch < 0x30 || ch > 0x39) {
                     return isNumericLookup[value] = false;
                 }
             }
@@ -48,11 +37,6 @@ function isArrayIndex(value) {
             return false;
     }
 }
-/**
- * Determines if the value passed is a number or bigint for parsing purposes
- *
- * @param value - Value to evaluate
- */
 function isNumberOrBigInt(value) {
     switch (typeof value) {
         case 'number':
@@ -62,11 +46,6 @@ function isNumberOrBigInt(value) {
             return false;
     }
 }
-/**
- * Determines if the value passed is a number or bigint for parsing purposes
- *
- * @param value - Value to evaluate
- */
 function isStringOrDate(value) {
     switch (typeof value) {
         case 'string':
@@ -77,9 +56,6 @@ function isStringOrDate(value) {
             return false;
     }
 }
-/**
- * Base implementation of camel and kebab cases
- */
 const baseCase = (function () {
     let CharKind;
     (function (CharKind) {
@@ -88,7 +64,6 @@ const baseCase = (function () {
         CharKind[CharKind["upper"] = 2] = "upper";
         CharKind[CharKind["lower"] = 3] = "lower";
     })(CharKind || (CharKind = {}));
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const isDigit = Object.assign(createObject(), {
         '0': true,
         '1': true,
@@ -103,19 +78,18 @@ const baseCase = (function () {
     });
     function charToKind(char) {
         if (char === '') {
-            // We get this if we do charAt() with an index out of range
-            return 0 /* none */;
+            return 0;
         }
         if (char !== char.toUpperCase()) {
-            return 3 /* lower */;
+            return 3;
         }
         if (char !== char.toLowerCase()) {
-            return 2 /* upper */;
+            return 2;
         }
         if (isDigit[char] === true) {
-            return 1 /* digit */;
+            return 1;
         }
-        return 0 /* none */;
+        return 0;
     }
     return function (input, cb) {
         const len = input.length;
@@ -126,7 +100,7 @@ const baseCase = (function () {
         let output = '';
         let prevKind;
         let curChar = '';
-        let curKind = 0 /* none */;
+        let curKind = 0;
         let nextChar = input.charAt(0);
         let nextKind = charToKind(nextChar);
         let i = 0;
@@ -136,17 +110,14 @@ const baseCase = (function () {
             curKind = nextKind;
             nextChar = input.charAt(i + 1);
             nextKind = charToKind(nextChar);
-            if (curKind === 0 /* none */) {
+            if (curKind === 0) {
                 if (output.length > 0) {
-                    // Only set sep to true if it's not at the beginning of output.
                     sep = true;
                 }
             }
             else {
-                if (!sep && output.length > 0 && curKind === 2 /* upper */) {
-                    // Separate UAFoo into UA Foo.
-                    // Separate uaFOO into ua FOO.
-                    sep = prevKind === 3 /* lower */ || nextKind === 3 /* lower */;
+                if (!sep && output.length > 0 && curKind === 2) {
+                    sep = prevKind === 3 || nextKind === 3;
                 }
                 output += cb(curChar, sep);
                 sep = false;
@@ -155,15 +126,6 @@ const baseCase = (function () {
         return output;
     };
 })();
-/**
- * Efficiently convert a string to camelCase.
- *
- * Non-alphanumeric characters are treated as separators.
- *
- * Primarily used by Aurelia to convert DOM attribute names to ViewModel property names.
- *
- * Results are cached.
- */
 const camelCase = (function () {
     const cache = createObject();
     function callback(char, sep) {
@@ -177,15 +139,6 @@ const camelCase = (function () {
         return output;
     };
 })();
-/**
- * Efficiently convert a string to PascalCase.
- *
- * Non-alphanumeric characters are treated as separators.
- *
- * Primarily used by Aurelia to convert element names to class names for synthetic types.
- *
- * Results are cached.
- */
 const pascalCase = (function () {
     const cache = createObject();
     return function (input) {
@@ -200,15 +153,6 @@ const pascalCase = (function () {
         return output;
     };
 })();
-/**
- * Efficiently convert a string to kebab-case.
- *
- * Non-alphanumeric characters are treated as separators.
- *
- * Primarily used by Aurelia to convert ViewModel property names to DOM attribute names.
- *
- * Results are cached.
- */
 const kebabCase = (function () {
     const cache = createObject();
     function callback(char, sep) {
@@ -222,13 +166,7 @@ const kebabCase = (function () {
         return output;
     };
 })();
-/**
- * Efficiently (up to 10x faster than `Array.from`) convert an `ArrayLike` to a real array.
- *
- * Primarily used by Aurelia to convert DOM node lists to arrays.
- */
 function toArray(input) {
-    // benchmark: http://jsben.ch/xjsyF
     const { length } = input;
     const arr = Array(length);
     let i = 0;
@@ -238,46 +176,18 @@ function toArray(input) {
     return arr;
 }
 const ids = {};
-/**
- * Retrieve the next ID in a sequence for a given string, starting with `1`.
- *
- * Used by Aurelia to assign unique ID's to controllers and resources.
- *
- * Aurelia will always prepend the context name with `au$`, so as long as you avoid
- * using that convention you should be safe from collisions.
- */
 function nextId(context) {
     if (ids[context] === void 0) {
         ids[context] = 0;
     }
     return ++ids[context];
 }
-/**
- * Reset the ID for the given string, so that `nextId` will return `1` again for the next call.
- *
- * Used by Aurelia to reset ID's in between unit tests.
- */
 function resetId(context) {
     ids[context] = 0;
 }
-/**
- * A compare function to pass to `Array.prototype.sort` for sorting numbers.
- * This is needed for numeric sort, since the default sorts them as strings.
- */
 function compareNumber(a, b) {
     return a - b;
 }
-/**
- * Efficiently merge and deduplicate the (primitive) values in two arrays.
- *
- * Does not deduplicate existing values in the first array.
- *
- * Guards against null or undefined arrays.
- *
- * Returns `emptyArray` if both arrays are either `null`, `undefined` or `emptyArray`
- *
- * @param slice - If `true`, always returns a new array copy (unless neither array is/has a value)
- */
 function mergeDistinct(arr1, arr2, slice) {
     if (arr1 === void 0 || arr1 === null || arr1 === emptyArray) {
         if (arr2 === void 0 || arr2 === null || arr2 === emptyArray) {
@@ -307,10 +217,6 @@ function mergeDistinct(arr1, arr2, slice) {
     }
     return arr3;
 }
-/**
- * Decorator. (lazily) bind the method to the class instance on first call.
- */
-// eslint-disable-next-line @typescript-eslint/ban-types
 function bound(target, key, descriptor) {
     return {
         configurable: true,
@@ -394,82 +300,51 @@ const getPrototypeChain = (function () {
     };
 })();
 function toLookup(...objs) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return Object.assign(createObject(), ...objs);
 }
-/**
- * Determine whether the value is a native function.
- *
- * @param fn - The function to check.
- * @returns `true` is the function is a native function, otherwise `false`
- */
 const isNativeFunction = (function () {
-    // eslint-disable-next-line @typescript-eslint/ban-types
     const lookup = new WeakMap();
     let isNative = false;
     let sourceText = '';
     let i = 0;
-    // eslint-disable-next-line @typescript-eslint/ban-types
     return function (fn) {
         isNative = lookup.get(fn);
         if (isNative === void 0) {
             sourceText = fn.toString();
             i = sourceText.length;
-            // http://www.ecma-international.org/ecma-262/#prod-NativeFunction
-            isNative = (
-            // 29 is the length of 'function () { [native code] }' which is the smallest length of a native function string
-            i >= 29 &&
-                // 100 seems to be a safe upper bound of the max length of a native function. In Chrome and FF it's 56, in Edge it's 61.
+            isNative = (i >= 29 &&
                 i <= 100 &&
-                // This whole heuristic *could* be tricked by a comment. Do we need to care about that?
-                sourceText.charCodeAt(i - 1) === 0x7D && // }
-                // TODO: the spec is a little vague about the precise constraints, so we do need to test this across various browsers to make sure just one whitespace is a safe assumption.
-                sourceText.charCodeAt(i - 2) <= 0x20 && // whitespace
-                sourceText.charCodeAt(i - 3) === 0x5D && // ]
-                sourceText.charCodeAt(i - 4) === 0x65 && // e
-                sourceText.charCodeAt(i - 5) === 0x64 && // d
-                sourceText.charCodeAt(i - 6) === 0x6F && // o
-                sourceText.charCodeAt(i - 7) === 0x63 && // c
-                sourceText.charCodeAt(i - 8) === 0x20 && //
-                sourceText.charCodeAt(i - 9) === 0x65 && // e
-                sourceText.charCodeAt(i - 10) === 0x76 && // v
-                sourceText.charCodeAt(i - 11) === 0x69 && // i
-                sourceText.charCodeAt(i - 12) === 0x74 && // t
-                sourceText.charCodeAt(i - 13) === 0x61 && // a
-                sourceText.charCodeAt(i - 14) === 0x6E && // n
-                sourceText.charCodeAt(i - 15) === 0x58 // [
-            );
+                sourceText.charCodeAt(i - 1) === 0x7D &&
+                sourceText.charCodeAt(i - 2) <= 0x20 &&
+                sourceText.charCodeAt(i - 3) === 0x5D &&
+                sourceText.charCodeAt(i - 4) === 0x65 &&
+                sourceText.charCodeAt(i - 5) === 0x64 &&
+                sourceText.charCodeAt(i - 6) === 0x6F &&
+                sourceText.charCodeAt(i - 7) === 0x63 &&
+                sourceText.charCodeAt(i - 8) === 0x20 &&
+                sourceText.charCodeAt(i - 9) === 0x65 &&
+                sourceText.charCodeAt(i - 10) === 0x76 &&
+                sourceText.charCodeAt(i - 11) === 0x69 &&
+                sourceText.charCodeAt(i - 12) === 0x74 &&
+                sourceText.charCodeAt(i - 13) === 0x61 &&
+                sourceText.charCodeAt(i - 14) === 0x6E &&
+                sourceText.charCodeAt(i - 15) === 0x58);
             lookup.set(fn, isNative);
         }
         return isNative;
     };
 })();
-/**
- * Normalize a potential promise via a callback, to ensure things stay synchronous when they can.
- *
- * If the value is a promise, it is `then`ed before the callback is invoked. Otherwise the callback is invoked synchronously.
- */
 function onResolve(maybePromise, resolveCallback) {
     if (maybePromise instanceof Promise) {
         return maybePromise.then(resolveCallback);
     }
     return resolveCallback(maybePromise);
 }
-/**
- * Normalize an array of potential promises, to ensure things stay synchronous when they can.
- *
- * If exactly one value is a promise, then that promise is returned.
- *
- * If more than one value is a promise, a new `Promise.all` is returned.
- *
- * If none of the values is a promise, nothing is returned, to indicate that things can stay synchronous.
- */
 function resolveAll(...maybePromises) {
     let maybePromise = void 0;
     let firstPromise = void 0;
     let promises = void 0;
     let i = 0;
-    // eslint-disable-next-line
     let ii = maybePromises.length;
     for (; i < ii; ++i) {
         maybePromise = maybePromises[i];
@@ -492,14 +367,12 @@ function resolveAll(...maybePromises) {
 }
 
 const annoBaseName = 'au:annotation';
-/** @internal */
 const getAnnotationKeyFor = (name, context) => {
     if (context === void 0) {
         return `${annoBaseName}:${name}`;
     }
     return `${annoBaseName}:${name}:${context}`;
 };
-/** @internal */
 const appendAnnotation = (target, key) => {
     const keys = getOwnMetadata(annoBaseName, target);
     if (keys === void 0) {
@@ -568,20 +441,13 @@ const Protocol = {
     resource,
 };
 const hasOwn = Object.prototype.hasOwnProperty;
-/**
- * The order in which the values are checked:
- * 1. Annotations (usually set by decorators) have the highest priority; they override the definition as well as static properties on the type.
- * 2. Definition properties (usually set by the customElement decorator object literal) come next. They override static properties on the type.
- * 3. Static properties on the type come last. Note that this does not look up the prototype chain (bindables are an exception here, but we do that differently anyway)
- * 4. The default property that is provided last. The function is only called if the default property is needed
- */
 function fromAnnotationOrDefinitionOrTypeOrDefault(name, def, Type, getDefault) {
     let value = getOwnMetadata(getAnnotationKeyFor(name), Type);
     if (value === void 0) {
         value = def[name];
         if (value === void 0) {
             value = Type[name];
-            if (value === void 0 || !hasOwn.call(Type, name)) { // First just check the value (common case is faster), but do make sure it doesn't come from the proto chain
+            if (value === void 0 || !hasOwn.call(Type, name)) {
                 return getDefault();
             }
             return value;
@@ -590,28 +456,17 @@ function fromAnnotationOrDefinitionOrTypeOrDefault(name, def, Type, getDefault) 
     }
     return value;
 }
-/**
- * The order in which the values are checked:
- * 1. Annotations (usually set by decorators) have the highest priority; they override static properties on the type.
- * 2. Static properties on the typ. Note that this does not look up the prototype chain (bindables are an exception here, but we do that differently anyway)
- * 3. The default property that is provided last. The function is only called if the default property is needed
- */
 function fromAnnotationOrTypeOrDefault(name, Type, getDefault) {
     let value = getOwnMetadata(getAnnotationKeyFor(name), Type);
     if (value === void 0) {
         value = Type[name];
-        if (value === void 0 || !hasOwn.call(Type, name)) { // First just check the value (common case is faster), but do make sure it doesn't come from the proto chain
+        if (value === void 0 || !hasOwn.call(Type, name)) {
             return getDefault();
         }
         return value;
     }
     return value;
 }
-/**
- * The order in which the values are checked:
- * 1. Definition properties.
- * 2. The default property that is provided last. The function is only called if the default property is needed
- */
 function fromDefinitionOrDefault(name, def, getDefault) {
     const value = def[name];
     if (value === void 0) {
@@ -620,7 +475,6 @@ function fromDefinitionOrDefault(name, def, getDefault) {
     return value;
 }
 
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 applyMetadataPolyfill(Reflect, false, false);
 class ResolverBuilder {
     constructor(container, key) {
@@ -628,22 +482,22 @@ class ResolverBuilder {
         this.key = key;
     }
     instance(value) {
-        return this.registerResolver(0 /* instance */, value);
+        return this.registerResolver(0, value);
     }
     singleton(value) {
-        return this.registerResolver(1 /* singleton */, value);
+        return this.registerResolver(1, value);
     }
     transient(value) {
-        return this.registerResolver(2 /* transient */, value);
+        return this.registerResolver(2, value);
     }
     callback(value) {
-        return this.registerResolver(3 /* callback */, value);
+        return this.registerResolver(3, value);
     }
     cachedCallback(value) {
-        return this.registerResolver(3 /* callback */, cacheCallbackResult(value));
+        return this.registerResolver(3, cacheCallbackResult(value));
     }
     aliasTo(destinationKey) {
-        return this.registerResolver(5 /* alias */, destinationKey);
+        return this.registerResolver(5, destinationKey);
     }
     registerResolver(strategy, state) {
         const { container, key } = this;
@@ -670,8 +524,8 @@ const DefaultResolver = {
             throw Error(`${key.toString()} not registered, did you forget to add @singleton()?`);
         }
     },
-    singleton(key) { return new Resolver(key, 1 /* singleton */, key); },
-    transient(key) { return new Resolver(key, 2 /* transient */, key); },
+    singleton(key) { return new Resolver(key, 1, key); },
+    transient(key) { return new Resolver(key, 2, key); },
 };
 class ContainerConfiguration {
     constructor(inheritParentResources, defaultResolver) {
@@ -701,47 +555,6 @@ const DI = {
     },
     getOrCreateAnnotationParamTypes: getOrCreateAnnotationParamTypes,
     getDependencies: getDependencies,
-    /**
-     * creates a decorator that also matches an interface and can be used as a {@linkcode Key}.
-     * ```ts
-     * const ILogger = DI.createInterface<Logger>('Logger');
-     * container.register(Registration.singleton(ILogger, getSomeLogger()));
-     * const log = container.get(ILogger);
-     * log.info('hello world');
-     * class Foo {
-     *   constructor( @ILogger log: ILogger ) {
-     *     log.info('hello world');
-     *   }
-     * }
-     * ```
-     * you can also build default registrations into your interface.
-     * ```ts
-     * export const ILogger = DI.createInterface<Logger>('Logger', builder => builder.cachedCallback(LoggerDefault));
-     * const log = container.get(ILogger);
-     * log.info('hello world');
-     * class Foo {
-     *   constructor( @ILogger log: ILogger ) {
-     *     log.info('hello world');
-     *   }
-     * }
-     * ```
-     * but these default registrations won't work the same with other decorators that take keys, for example
-     * ```ts
-     * export const MyStr = DI.createInterface<string>('MyStr', builder => builder.instance('somestring'));
-     * class Foo {
-     *   constructor( @optional(MyStr) public readonly str: string ) {
-     *   }
-     * }
-     * container.get(Foo).str; // returns undefined
-     * ```
-     * to fix this add this line somewhere before you do a `get`
-     * ```ts
-     * container.register(MyStr);
-     * container.get(Foo).str; // returns 'somestring'
-     * ```
-     *
-     * - @param friendlyName used to improve error messaging
-     */
     createInterface(configureOrName, configuror) {
         const configure = isFunction(configureOrName) ? configureOrName : configuror;
         const friendlyName = isString(configureOrName) ? configureOrName : undefined;
@@ -768,21 +581,21 @@ const DI = {
     },
     inject(...dependencies) {
         return function (target, key, descriptor) {
-            if (typeof descriptor === 'number') { // It's a parameter decorator.
+            if (typeof descriptor === 'number') {
                 const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
                 const dep = dependencies[0];
                 if (dep !== void 0) {
                     annotationParamtypes[descriptor] = dep;
                 }
             }
-            else if (key) { // It's a property decorator. Not supported by the container without plugins.
+            else if (key) {
                 const annotationParamtypes = getOrCreateAnnotationParamTypes(target.constructor);
                 const dep = dependencies[0];
                 if (dep !== void 0) {
                     annotationParamtypes[key] = dep;
                 }
             }
-            else if (descriptor) { // It's a function decorator (not a Class constructor)
+            else if (descriptor) {
                 const fn = descriptor.value;
                 const annotationParamtypes = getOrCreateAnnotationParamTypes(fn);
                 let dep;
@@ -793,7 +606,7 @@ const DI = {
                     }
                 }
             }
-            else { // It's a class decorator.
+            else {
                 const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
                 let dep;
                 for (let i = 0; i < dependencies.length; ++i) {
@@ -805,24 +618,6 @@ const DI = {
             }
         };
     },
-    /**
-     * Registers the `target` class as a transient dependency; each time the dependency is resolved
-     * a new instance will be created.
-     *
-     * @param target - The class / constructor function to register as transient.
-     * @returns The same class, with a static `register` method that takes a container and returns the appropriate resolver.
-     *
-     * @example ```ts
-     * // On an existing class
-     * class Foo { }
-     * DI.transient(Foo);
-     *
-     * // Inline declaration
-     * const Foo = DI.transient(class { });
-     * // Foo is now strongly typed with register
-     * Foo.register(container);
-     * ```
-     */
     transient(target) {
         target.register = function register(container) {
             const registration = Registration.transient(target, target);
@@ -831,23 +626,6 @@ const DI = {
         target.registerInRequestor = false;
         return target;
     },
-    /**
-     * Registers the `target` class as a singleton dependency; the class will only be created once. Each
-     * consecutive time the dependency is resolved, the same instance will be returned.
-     *
-     * @param target - The class / constructor function to register as a singleton.
-     * @returns The same class, with a static `register` method that takes a container and returns the appropriate resolver.
-     * @example ```ts
-     * // On an existing class
-     * class Foo { }
-     * DI.singleton(Foo);
-     *
-     * // Inline declaration
-     * const Foo = DI.singleton(class { });
-     * // Foo is now strongly typed with register
-     * Foo.register(container);
-     * ```
-     */
     singleton(target, options = defaultSingletonOptions) {
         target.register = function register(container) {
             const registration = Registration.singleton(target, target);
@@ -858,26 +636,15 @@ const DI = {
     },
 };
 function getDependencies(Type) {
-    // Note: Every detail of this getDependencies method is pretty deliberate at the moment, and probably not yet 100% tested from every possible angle,
-    // so be careful with making changes here as it can have a huge impact on complex end user apps.
-    // Preferably, only make changes to the dependency resolution process via a RFC.
     const key = getAnnotationKeyFor('di:dependencies');
     let dependencies = getOwnMetadata(key, Type);
     if (dependencies === void 0) {
-        // Type.length is the number of constructor parameters. If this is 0, it could mean the class has an empty constructor
-        // but it could also mean the class has no constructor at all (in which case it inherits the constructor from the prototype).
-        // Non-zero constructor length + no paramtypes means emitDecoratorMetadata is off, or the class has no decorator.
-        // We're not doing anything with the above right now, but it's good to keep in mind for any future issues.
         const inject = Type.inject;
         if (inject === void 0) {
-            // design:paramtypes is set by tsc when emitDecoratorMetadata is enabled.
             const designParamtypes = DI.getDesignParamtypes(Type);
-            // au:annotation:di:paramtypes is set by the parameter decorator from DI.createInterface or by @inject
             const annotationParamtypes = DI.getAnnotationParamtypes(Type);
             if (designParamtypes === void 0) {
                 if (annotationParamtypes === void 0) {
-                    // Only go up the prototype if neither static inject nor any of the paramtypes is defined, as
-                    // there is no sound way to merge a type's deps with its prototype's deps
                     const Proto = Object.getPrototypeOf(Type);
                     if (isFunction(Proto) && Proto !== Function.prototype) {
                         dependencies = cloneArrayWithPossibleProps(getDependencies(Proto));
@@ -887,16 +654,13 @@ function getDependencies(Type) {
                     }
                 }
                 else {
-                    // No design:paramtypes so just use the au:annotation:di:paramtypes
                     dependencies = cloneArrayWithPossibleProps(annotationParamtypes);
                 }
             }
             else if (annotationParamtypes === void 0) {
-                // No au:annotation:di:paramtypes so just use the design:paramtypes
                 dependencies = cloneArrayWithPossibleProps(designParamtypes);
             }
             else {
-                // We've got both, so merge them (in case of conflict on same index, au:annotation:di:paramtypes take precedence)
                 dependencies = cloneArrayWithPossibleProps(designParamtypes);
                 let len = annotationParamtypes.length;
                 let auAnnotationParamtype;
@@ -920,7 +684,6 @@ function getDependencies(Type) {
             }
         }
         else {
-            // Ignore paramtypes if we have static inject
             dependencies = cloneArrayWithPossibleProps(inject);
         }
         defineMetadata(key, dependencies, Type);
@@ -981,58 +744,9 @@ function createAllResolver(getter) {
     };
 }
 const all = createAllResolver((key, handler, requestor, searchAncestors) => requestor.getAll(key, searchAncestors));
-/**
- * Lazily inject a dependency depending on whether the [[`Key`]] is present at the time of function call.
- *
- * You need to make your argument a function that returns the type, for example
- * ```ts
- * class Foo {
- *   constructor( @lazy('random') public random: () => number )
- * }
- * const foo = container.get(Foo); // instanceof Foo
- * foo.random(); // throws
- * ```
- * would throw an exception because you haven't registered `'random'` before calling the method. This, would give you a
- * new [['Math.random()']] number each time.
- * ```ts
- * class Foo {
- *   constructor( @lazy('random') public random: () => random )
- * }
- * container.register(Registration.callback('random', Math.random ));
- * container.get(Foo).random(); // some random number
- * container.get(Foo).random(); // another random number
- * ```
- * `@lazy` does not manage the lifecycle of the underlying key. If you want a singleton, you have to register as a
- * `singleton`, `transient` would also behave as you would expect, providing you a new instance each time.
- *
- * - @param key [[`Key`]]
- * see { @link DI.createInterface } on interactions with interfaces
- */
 const lazy = createResolver((key, handler, requestor) => {
     return () => requestor.get(key);
 });
-/**
- * Allows you to optionally inject a dependency depending on whether the [[`Key`]] is present, for example
- * ```ts
- * class Foo {
- *   constructor( @inject('mystring') public str: string = 'somestring' )
- * }
- * container.get(Foo); // throws
- * ```
- * would fail
- * ```ts
- * class Foo {
- *   constructor( @optional('mystring') public str: string = 'somestring' )
- * }
- * container.get(Foo).str // somestring
- * ```
- * if you use it without a default it will inject `undefined`, so rember to mark your input type as
- * possibly `undefined`!
- *
- * - @param key: [[`Key`]]
- *
- * see { @link DI.createInterface } on interactions with interfaces
- */
 const optional = createResolver((key, handler, requestor) => {
     if (requestor.has(key, true)) {
         return requestor.get(key);
@@ -1041,53 +755,17 @@ const optional = createResolver((key, handler, requestor) => {
         return undefined;
     }
 });
-/**
- * ignore tells the container not to try to inject a dependency
- */
 function ignore(target, property, descriptor) {
     DI.inject(ignore)(target, property, descriptor);
 }
 ignore.$isResolver = true;
 ignore.resolve = () => undefined;
-/**
- * Inject a function that will return a resolved instance of the [[key]] given.
- * Also supports passing extra parameters to the invocation of the resolved constructor of [[key]]
- *
- * For typings, it's a function that take 0 or more arguments and return an instance. Example:
- * ```ts
- * class Foo {
- *   constructor( @factory(MyService) public createService: (...args: unknown[]) => MyService)
- * }
- * const foo = container.get(Foo); // instanceof Foo
- * const myService_1 = foo.createService('user service')
- * const myService_2 = foo.createService('content service')
- * ```
- *
- * ```ts
- * class Foo {
- *   constructor( @factory('random') public createRandomizer: () => Randomizer)
- * }
- * container.get(Foo).createRandomizer(); // create a randomizer
- * ```
- * would throw an exception because you haven't registered `'random'` before calling the method. This, would give you a
- * new instance of Randomizer each time.
- *
- * `@factory` does not manage the lifecycle of the underlying key. If you want a singleton, you have to register as a
- * `singleton`, `transient` would also behave as you would expect, providing you a new instance each time.
- *
- * - @param key [[`Key`]]
- * see { @link DI.createInterface } on interactions with interfaces
- */
 const factory = createResolver((key, handler, requestor) => {
     return (...args) => handler.getFactory(key).construct(requestor, args);
 });
 const newInstanceForScope = createResolver((key, handler, requestor) => {
     const instance = createNewInstance(key, handler, requestor);
     const instanceProvider = new InstanceProvider(String(key), instance);
-    /**
-     * By default the new instances for scope are disposable.
-     * If need be, we can always enhance the `createNewInstance` to support a 'injection' context, to make a non/disposable registration here.
-     */
     requestor.registerResolver(key, instanceProvider, true);
     return instance;
 });
@@ -1095,7 +773,6 @@ const newInstanceOf = createResolver((key, handler, requestor) => createNewInsta
 function createNewInstance(key, handler, requestor) {
     return handler.getFactory(key).construct(requestor);
 }
-/** @internal */
 var ResolverStrategy;
 (function (ResolverStrategy) {
     ResolverStrategy[ResolverStrategy["instance"] = 0] = "instance";
@@ -1105,7 +782,6 @@ var ResolverStrategy;
     ResolverStrategy[ResolverStrategy["array"] = 4] = "array";
     ResolverStrategy[ResolverStrategy["alias"] = 5] = "alias";
 })(ResolverStrategy || (ResolverStrategy = {}));
-/** @internal */
 class Resolver {
     constructor(key, strategy, state) {
         this.key = key;
@@ -1119,9 +795,9 @@ class Resolver {
     }
     resolve(handler, requestor) {
         switch (this.strategy) {
-            case 0 /* instance */:
+            case 0:
                 return this.state;
-            case 1 /* singleton */: {
+            case 1: {
                 if (this.resolving) {
                     {
                         throw new Error(`Cyclic dependency found: ${this.state.name}`);
@@ -1129,12 +805,11 @@ class Resolver {
                 }
                 this.resolving = true;
                 this.state = handler.getFactory(this.state).construct(requestor);
-                this.strategy = 0 /* instance */;
+                this.strategy = 0;
                 this.resolving = false;
                 return this.state;
             }
-            case 2 /* transient */: {
-                // Always create transients from the requesting container
+            case 2: {
                 const factory = handler.getFactory(this.state);
                 if (factory === null) {
                     {
@@ -1143,11 +818,11 @@ class Resolver {
                 }
                 return factory.construct(requestor);
             }
-            case 3 /* callback */:
+            case 3:
                 return this.state(handler, requestor, this);
-            case 4 /* array */:
+            case 4:
                 return this.state[0].resolve(handler, requestor);
-            case 5 /* alias */:
+            case 5:
                 return requestor.get(this.state);
             default:
                 {
@@ -1158,10 +833,10 @@ class Resolver {
     getFactory(container) {
         var _a, _b, _c;
         switch (this.strategy) {
-            case 1 /* singleton */:
-            case 2 /* transient */:
+            case 1:
+            case 2:
                 return container.getFactory(this.state);
-            case 5 /* alias */:
+            case 5:
                 return (_c = (_b = (_a = container.getResolver(this.state)) === null || _a === void 0 ? void 0 : _a.getFactory) === null || _b === void 0 ? void 0 : _b.call(_a, container)) !== null && _c !== void 0 ? _c : null;
             default:
                 return null;
@@ -1174,7 +849,6 @@ function containerGetKey(d) {
 function transformInstance(inst, transform) {
     return transform(inst);
 }
-/** @internal */
 class Factory {
     constructor(Type, dependencies) {
         this.Type = Type;
@@ -1254,10 +928,7 @@ const InstrinsicTypeNames = new Set([
     'WeakMap',
     'WeakSet',
 ]);
-// const factoryKey = 'di:factory';
-// const factoryAnnotationKey = Protocol.annotation.keyFor(factoryKey);
 let containerId = 0;
-/** @internal */
 class Container {
     constructor(parent, config) {
         this.parent = parent;
@@ -1289,9 +960,6 @@ class Container {
     }
     register(...params) {
         if (++this._registerDepth === 100) {
-            // TODO: change to reporter.error and add various possible causes in description.
-            // Most likely cause is trying to register a plain object that does not have a
-            // register method and is not a class constructor
             {
                 throw new Error(`Unable to autoregister dependency: [${params.map(String)}]`);
             }
@@ -1302,7 +970,6 @@ class Container {
         let j;
         let jj;
         let i = 0;
-        // eslint-disable-next-line
         let ii = params.length;
         for (; i < ii; ++i) {
             current = params[i];
@@ -1315,7 +982,6 @@ class Container {
             else if (Protocol.resource.has(current)) {
                 const defs = Protocol.resource.getAll(current);
                 if (defs.length === 1) {
-                    // Fast path for the very common case
                     defs[0].register(this);
                 }
                 else {
@@ -1339,8 +1005,6 @@ class Container {
                     if (!isObject(value)) {
                         continue;
                     }
-                    // note: we could remove this if-branch and call this.register directly
-                    // - the extra check is just a perf tweak to create fewer unnecessary arrays by the spread operator
                     if (isRegistry(value)) {
                         value.register(this);
                     }
@@ -1368,43 +1032,17 @@ class Container {
                 this.res[key] = resolver;
             }
         }
-        else if (result instanceof Resolver && result.strategy === 4 /* array */) {
+        else if (result instanceof Resolver && result.strategy === 4) {
             result.state.push(resolver);
         }
         else {
-            resolvers.set(key, new Resolver(key, 4 /* array */, [result, resolver]));
+            resolvers.set(key, new Resolver(key, 4, [result, resolver]));
         }
         if (isDisposable) {
             this._disposableResolvers.set(key, resolver);
         }
         return resolver;
     }
-    // public deregisterResolverFor<K extends Key>(key: K, searchAncestors: boolean): void {
-    //   validateKey(key);
-    //   // eslint-disable-next-line @typescript-eslint/no-this-alias
-    //   let current: Container | null = this;
-    //   let resolver: IResolver | undefined;
-    //   while (current != null) {
-    //     resolver = current._resolvers.get(key);
-    //     if (resolver != null) {
-    //       current._resolvers.delete(key);
-    //       break;
-    //     }
-    //     if (current.parent == null) { return; }
-    //     current = searchAncestors ? current.parent : null;
-    //   }
-    //   if (resolver == null) { return; }
-    //   if (resolver instanceof Resolver && resolver.strategy === ResolverStrategy.array) {
-    //     throw new Error('Cannot deregister a resolver with array strategy');
-    //   }
-    //   if (this._disposableResolvers.has(resolver as IDisposableResolver<K>)) {
-    //     (resolver as IDisposableResolver<K>).dispose();
-    //   }
-    //   if (isResourceKey(key)) {
-    //     // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-    //     delete this.res[key];
-    //   }
-    // }
     registerTransformer(key, transformer) {
         const resolver = this.getResolver(key);
         if (resolver == null) {
@@ -1415,10 +1053,6 @@ class Container {
             if (factory == null) {
                 return false;
             }
-            // This type cast is a bit of a hacky one, necessary due to the duplicity of IResolverLike.
-            // Problem is that that interface's type arg can be of type Key, but the getFactory method only works on
-            // type Constructable. So the return type of that optional method has this additional constraint, which
-            // seems to confuse the type checker.
             factory.registerTransformer(transformer);
             return true;
         }
@@ -1429,7 +1063,6 @@ class Container {
         if (key.resolve !== void 0) {
             return key;
         }
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
         let current = this;
         let resolver;
         while (current != null) {
@@ -1459,7 +1092,6 @@ class Container {
         if (key.$isResolver) {
             return key.resolve(this, this);
         }
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
         let current = this;
         let resolver;
         while (current != null) {
@@ -1482,7 +1114,6 @@ class Container {
     }
     getAll(key, searchAncestors = false) {
         validateKey(key);
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const requestor = this;
         let current = requestor;
         let resolver;
@@ -1579,8 +1210,6 @@ class Container {
             }
             const definition = getOwnMetadata(kind.name, factory.Type);
             if (definition === void 0) {
-                // TODO: we may want to log a warning here, or even throw. This would happen if a dependency is registered with a resource-like key
-                // but does not actually have a definition associated via the type's metadata. That *should* generally not happen.
                 return null;
             }
             return definition;
@@ -1606,7 +1235,6 @@ class Container {
         }
         this._resolvers.clear();
     }
-    /** @internal */
     _jitRegister(keyAsValue, handler) {
         if (!isFunction(keyAsValue)) {
             {
@@ -1634,7 +1262,6 @@ class Container {
         else if (Protocol.resource.has(keyAsValue)) {
             const defs = Protocol.resource.getAll(keyAsValue);
             if (defs.length === 1) {
-                // Fast path for the very common case
                 defs[0].register(handler);
             }
             else {
@@ -1663,11 +1290,6 @@ class Container {
         }
     }
 }
-/**
- * An implementation of IRegistry that delegates registration to a
- * separately registered class. The ParameterizedRegistry facilitates the
- * passing of parameters to the final registry.
- */
 class ParameterizedRegistry {
     constructor(key, params) {
         this.key = key;
@@ -1698,120 +1320,32 @@ function cacheCallbackResult(fun) {
         return t;
     };
 }
-/**
- * you can use the resulting {@linkcode IRegistration} of any of the factory methods
- * to register with the container, e.g.
- * ```
- * class Foo {}
- * const container = DI.createContainer();
- * container.register(Registration.instance(Foo, new Foo()));
- * container.get(Foo);
- * ```
- */
 const Registration = {
-    /**
-     * allows you to pass an instance.
-     * Every time you request this {@linkcode Key} you will get this instance back.
-     * ```
-     * Registration.instance(Foo, new Foo()));
-     * ```
-     *
-     * @param key - key to register the instance with
-     * @param value - the instance associated with the key
-     */
     instance(key, value) {
-        return new Resolver(key, 0 /* instance */, value);
+        return new Resolver(key, 0, value);
     },
-    /**
-     * Creates an instance from the class.
-     * Every time you request this {@linkcode Key} you will get the same one back.
-     * ```
-     * Registration.singleton(Foo, Foo);
-     * ```
-     *
-     * @param key - key to register the singleton class with
-     * @param value - the singleton class to instantiate when a container resolves the associated key
-     */
     singleton(key, value) {
-        return new Resolver(key, 1 /* singleton */, value);
+        return new Resolver(key, 1, value);
     },
-    /**
-     * Creates an instance from a class.
-     * Every time you request this {@linkcode Key} you will get a new instance.
-     * ```
-     * Registration.instance(Foo, Foo);
-     * ```
-     *
-     * @param key - key to register the transient class with
-     * @param value - the class to instantiate when a container resolves the associated key
-     */
     transient(key, value) {
-        return new Resolver(key, 2 /* transient */, value);
+        return new Resolver(key, 2, value);
     },
-    /**
-     * Creates an instance from the method passed.
-     * Every time you request this {@linkcode Key} you will get a new instance.
-     * ```
-     * Registration.callback(Foo, () => new Foo());
-     * Registration.callback(Bar, (c: IContainer) => new Bar(c.get(Foo)));
-     * ```
-     *
-     * @param key - key to register the callback with
-     * @param callback - the callback to invoke when a container resolves the associated key
-     */
     callback(key, callback) {
-        return new Resolver(key, 3 /* callback */, callback);
+        return new Resolver(key, 3, callback);
     },
-    /**
-     * Creates an instance from the method passed.
-     * On the first request for the {@linkcode Key} your callback is called and returns an instance.
-     * subsequent requests for the {@linkcode Key}, the initial instance returned will be returned.
-     * If you pass the same {@linkcode Registration} to another container the same cached value will be used.
-     * Should all references to the resolver returned be removed, the cache will expire.
-     * ```
-     * Registration.cachedCallback(Foo, () => new Foo());
-     * Registration.cachedCallback(Bar, (c: IContainer) => new Bar(c.get(Foo)));
-     * ```
-     *
-     * @param key - key to register the cached callback with
-     * @param callback - the cache callback to invoke when a container resolves the associated key
-     */
     cachedCallback(key, callback) {
-        return new Resolver(key, 3 /* callback */, cacheCallbackResult(callback));
+        return new Resolver(key, 3, cacheCallbackResult(callback));
     },
-    /**
-     * creates an alternate {@linkcode Key} to retrieve an instance by.
-     * Returns the same scope as the original {@linkcode Key}.
-     * ```
-     * Register.singleton(Foo, Foo)
-     * Register.aliasTo(Foo, MyFoos);
-     *
-     * container.getAll(MyFoos) // contains an instance of Foo
-     * ```
-     *
-     * @param originalKey - the real key to resolve the get call from a container
-     * @param aliasKey - the key that a container allows to resolve the real key associated
-     */
     aliasTo(originalKey, aliasKey) {
-        return new Resolver(aliasKey, 5 /* alias */, originalKey);
+        return new Resolver(aliasKey, 5, originalKey);
     },
-    /**
-     * @internal
-     * @param key - the key to register a defer registration
-     * @param params - the parameters that should be passed to the resolution of the key
-     */
     defer(key, ...params) {
         return new ParameterizedRegistry(key, params);
     }
 };
 class InstanceProvider {
-    constructor(name, 
-    /**
-     * if not undefined, then this is the value this provider will resolve to
-     * until overridden by explicit prepare call
-     */
-    instance) {
-        /** @internal */ this._instance = null;
+    constructor(name, instance) {
+        this._instance = null;
         this._name = name;
         if (instance !== void 0) {
             this._instance = instance;
@@ -1836,7 +1370,6 @@ class InstanceProvider {
         this._instance = null;
     }
 }
-/** @internal */
 function validateKey(key) {
     if (key === null || key === void 0) {
         {
@@ -1845,7 +1378,7 @@ function validateKey(key) {
     }
 }
 function buildAllResponse(resolver, handler, requestor) {
-    if (resolver instanceof Resolver && resolver.strategy === 4 /* array */) {
+    if (resolver instanceof Resolver && resolver.strategy === 4) {
         const state = resolver.state;
         let i = state.length;
         const results = new Array(i);
@@ -1864,7 +1397,6 @@ function createNativeInvocationError(Type) {
 
 const emptyArray = Object.freeze([]);
 const emptyObject = Object.freeze({});
-// eslint-disable-next-line @typescript-eslint/no-empty-function
 function noop() { }
 const IPlatform = DI.createInterface('IPlatform');
 
@@ -1896,52 +1428,20 @@ function __param(paramIndex, decorator) {
 
 var LogLevel;
 (function (LogLevel) {
-    /**
-     * The most detailed information about internal app state.
-     *
-     * Disabled by default and should never be enabled in a production environment.
-     */
     LogLevel[LogLevel["trace"] = 0] = "trace";
-    /**
-     * Information that is useful for debugging during development and has no long-term value.
-     */
     LogLevel[LogLevel["debug"] = 1] = "debug";
-    /**
-     * Information about the general flow of the application that has long-term value.
-     */
     LogLevel[LogLevel["info"] = 2] = "info";
-    /**
-     * Unexpected circumstances that require attention but do not otherwise cause the current flow of execution to stop.
-     */
     LogLevel[LogLevel["warn"] = 3] = "warn";
-    /**
-     * Unexpected circumstances that cause the flow of execution in the current activity to stop but do not cause an app-wide failure.
-     */
     LogLevel[LogLevel["error"] = 4] = "error";
-    /**
-     * Unexpected circumstances that cause an app-wide failure or otherwise require immediate attention.
-     */
     LogLevel[LogLevel["fatal"] = 5] = "fatal";
-    /**
-     * No messages should be written.
-     */
     LogLevel[LogLevel["none"] = 6] = "none";
 })(LogLevel || (LogLevel = {}));
-/**
- * Flags to enable/disable color usage in the logging output.
- */
 var ColorOptions;
 (function (ColorOptions) {
-    /**
-     * Do not use ASCII color codes in logging output.
-     */
     ColorOptions[ColorOptions["noColors"] = 0] = "noColors";
-    /**
-     * Use ASCII color codes in logging output. By default, timestamps and the TRC and DBG prefix are colored grey. INF white, WRN yellow, and ERR and FTL red.
-     */
     ColorOptions[ColorOptions["colors"] = 1] = "colors";
 })(ColorOptions || (ColorOptions = {}));
-const ILogConfig = DI.createInterface('ILogConfig', x => x.instance(new LogConfig(0 /* noColors */, 3 /* warn */)));
+const ILogConfig = DI.createInterface('ILogConfig', x => x.instance(new LogConfig(0, 3)));
 const ISink = DI.createInterface('ISink');
 const ILogEventFactory = DI.createInterface('ILogEventFactory', x => x.singleton(DefaultLogEventFactory));
 const ILogger = DI.createInterface('ILogger', x => x.singleton(DefaultLogger));
@@ -1961,7 +1461,6 @@ function sink(definition) {
         return LoggerSink.define(target, definition);
     };
 }
-// http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
 const format = toLookup({
     red(str) {
         return `\u001b[31m${str}\u001b[39m`;
@@ -2016,35 +1515,35 @@ const getLogLevelString = (function () {
         }),
     ];
     return function (level, colorOptions) {
-        if (level <= 0 /* trace */) {
+        if (level <= 0) {
             return logLevelString[colorOptions].TRC;
         }
-        if (level <= 1 /* debug */) {
+        if (level <= 1) {
             return logLevelString[colorOptions].DBG;
         }
-        if (level <= 2 /* info */) {
+        if (level <= 2) {
             return logLevelString[colorOptions].INF;
         }
-        if (level <= 3 /* warn */) {
+        if (level <= 3) {
             return logLevelString[colorOptions].WRN;
         }
-        if (level <= 4 /* error */) {
+        if (level <= 4) {
             return logLevelString[colorOptions].ERR;
         }
-        if (level <= 5 /* fatal */) {
+        if (level <= 5) {
             return logLevelString[colorOptions].FTL;
         }
         return logLevelString[colorOptions].QQQ;
     };
 })();
 function getScopeString(scope, colorOptions) {
-    if (colorOptions === 0 /* noColors */) {
+    if (colorOptions === 0) {
         return scope.join('.');
     }
     return scope.map(format.cyan).join('.');
 }
 function getIsoString(timestamp, colorOptions) {
-    if (colorOptions === 0 /* noColors */) {
+    if (colorOptions === 0) {
         return new Date(timestamp).toISOString();
     }
     return format.grey(new Date(timestamp).toISOString());
@@ -2085,35 +1584,34 @@ let ConsoleSink = class ConsoleSink {
             if (optionalParams === void 0 || optionalParams.length === 0) {
                 const msg = event.toString();
                 switch (event.severity) {
-                    case 0 /* trace */:
-                    case 1 /* debug */:
+                    case 0:
+                    case 1:
                         return $console.debug(msg);
-                    case 2 /* info */:
+                    case 2:
                         return $console.info(msg);
-                    case 3 /* warn */:
+                    case 3:
                         return $console.warn(msg);
-                    case 4 /* error */:
-                    case 5 /* fatal */:
+                    case 4:
+                    case 5:
                         return $console.error(msg);
                 }
             }
             else {
                 let msg = event.toString();
                 let offset = 0;
-                // console.log in chrome doesn't call .toString() on object inputs (https://bugs.chromium.org/p/chromium/issues/detail?id=1146817)
                 while (msg.includes('%s')) {
                     msg = msg.replace('%s', String(optionalParams[offset++]));
                 }
                 switch (event.severity) {
-                    case 0 /* trace */:
-                    case 1 /* debug */:
+                    case 0:
+                    case 1:
                         return $console.debug(msg, ...optionalParams.slice(offset));
-                    case 2 /* info */:
+                    case 2:
                         return $console.info(msg, ...optionalParams.slice(offset));
-                    case 3 /* warn */:
+                    case 3:
                         return $console.warn(msg, ...optionalParams.slice(offset));
-                    case 4 /* error */:
-                    case 5 /* fatal */:
+                    case 4:
+                    case 5:
                         return $console.error(msg, ...optionalParams.slice(offset));
                 }
             }
@@ -2127,15 +1625,7 @@ ConsoleSink = __decorate([
     __param(0, IPlatform)
 ], ConsoleSink);
 let DefaultLogger = class DefaultLogger {
-    constructor(
-    /**
-     * The global logger configuration.
-     */
-    config, factory, sinks, 
-    /**
-     * The scopes that this logger was created for, if any.
-     */
-    scope = [], parent = null) {
+    constructor(config, factory, sinks, scope = [], parent = null) {
         var _a, _b, _c, _d, _e, _f;
         this.config = config;
         this.factory = factory;
@@ -2158,22 +1648,22 @@ let DefaultLogger = class DefaultLogger {
             fatalSinks = this.fatalSinks = [];
             for (const $sink of sinks) {
                 const handles = LoggerSink.getHandles($sink);
-                if ((_a = handles === null || handles === void 0 ? void 0 : handles.includes(0 /* trace */)) !== null && _a !== void 0 ? _a : true) {
+                if ((_a = handles === null || handles === void 0 ? void 0 : handles.includes(0)) !== null && _a !== void 0 ? _a : true) {
                     traceSinks.push($sink);
                 }
-                if ((_b = handles === null || handles === void 0 ? void 0 : handles.includes(1 /* debug */)) !== null && _b !== void 0 ? _b : true) {
+                if ((_b = handles === null || handles === void 0 ? void 0 : handles.includes(1)) !== null && _b !== void 0 ? _b : true) {
                     debugSinks.push($sink);
                 }
-                if ((_c = handles === null || handles === void 0 ? void 0 : handles.includes(2 /* info */)) !== null && _c !== void 0 ? _c : true) {
+                if ((_c = handles === null || handles === void 0 ? void 0 : handles.includes(2)) !== null && _c !== void 0 ? _c : true) {
                     infoSinks.push($sink);
                 }
-                if ((_d = handles === null || handles === void 0 ? void 0 : handles.includes(3 /* warn */)) !== null && _d !== void 0 ? _d : true) {
+                if ((_d = handles === null || handles === void 0 ? void 0 : handles.includes(3)) !== null && _d !== void 0 ? _d : true) {
                     warnSinks.push($sink);
                 }
-                if ((_e = handles === null || handles === void 0 ? void 0 : handles.includes(4 /* error */)) !== null && _e !== void 0 ? _e : true) {
+                if ((_e = handles === null || handles === void 0 ? void 0 : handles.includes(4)) !== null && _e !== void 0 ? _e : true) {
                     errorSinks.push($sink);
                 }
-                if ((_f = handles === null || handles === void 0 ? void 0 : handles.includes(5 /* fatal */)) !== null && _f !== void 0 ? _f : true) {
+                if ((_f = handles === null || handles === void 0 ? void 0 : handles.includes(5)) !== null && _f !== void 0 ? _f : true) {
                     fatalSinks.push($sink);
                 }
             }
@@ -2190,61 +1680,35 @@ let DefaultLogger = class DefaultLogger {
         }
     }
     trace(messageOrGetMessage, ...optionalParams) {
-        if (this.config.level <= 0 /* trace */) {
-            this.emit(this.traceSinks, 0 /* trace */, messageOrGetMessage, optionalParams);
+        if (this.config.level <= 0) {
+            this.emit(this.traceSinks, 0, messageOrGetMessage, optionalParams);
         }
     }
     debug(messageOrGetMessage, ...optionalParams) {
-        if (this.config.level <= 1 /* debug */) {
-            this.emit(this.debugSinks, 1 /* debug */, messageOrGetMessage, optionalParams);
+        if (this.config.level <= 1) {
+            this.emit(this.debugSinks, 1, messageOrGetMessage, optionalParams);
         }
     }
     info(messageOrGetMessage, ...optionalParams) {
-        if (this.config.level <= 2 /* info */) {
-            this.emit(this.infoSinks, 2 /* info */, messageOrGetMessage, optionalParams);
+        if (this.config.level <= 2) {
+            this.emit(this.infoSinks, 2, messageOrGetMessage, optionalParams);
         }
     }
     warn(messageOrGetMessage, ...optionalParams) {
-        if (this.config.level <= 3 /* warn */) {
-            this.emit(this.warnSinks, 3 /* warn */, messageOrGetMessage, optionalParams);
+        if (this.config.level <= 3) {
+            this.emit(this.warnSinks, 3, messageOrGetMessage, optionalParams);
         }
     }
     error(messageOrGetMessage, ...optionalParams) {
-        if (this.config.level <= 4 /* error */) {
-            this.emit(this.errorSinks, 4 /* error */, messageOrGetMessage, optionalParams);
+        if (this.config.level <= 4) {
+            this.emit(this.errorSinks, 4, messageOrGetMessage, optionalParams);
         }
     }
     fatal(messageOrGetMessage, ...optionalParams) {
-        if (this.config.level <= 5 /* fatal */) {
-            this.emit(this.fatalSinks, 5 /* fatal */, messageOrGetMessage, optionalParams);
+        if (this.config.level <= 5) {
+            this.emit(this.fatalSinks, 5, messageOrGetMessage, optionalParams);
         }
     }
-    /**
-     * Create a new logger with an additional permanent prefix added to the logging outputs.
-     * When chained, multiple scopes are separated by a dot.
-     *
-     * This is preliminary API and subject to change before alpha release.
-     *
-     * @example
-     *
-     * ```ts
-     * export class MyComponent {
-     *   constructor(@ILogger private logger: ILogger) {
-     *     this.logger.debug('before scoping');
-     *     // console output: '[DBG] before scoping'
-     *     this.logger = logger.scopeTo('MyComponent');
-     *     this.logger.debug('after scoping');
-     *     // console output: '[DBG MyComponent] after scoping'
-     *   }
-     *
-     *   public doStuff(): void {
-     *     const logger = this.logger.scopeTo('doStuff()');
-     *     logger.debug('doing stuff');
-     *     // console output: '[DBG MyComponent.doStuff()] doing stuff'
-     *   }
-     * }
-     * ```
-     */
     scopeTo(name) {
         const scopedLoggers = this.scopedLoggers;
         let scopedLogger = scopedLoggers[name];
@@ -2286,28 +1750,8 @@ DefaultLogger = __decorate([
     __param(3, optional(ILogScopes)),
     __param(4, ignore)
 ], DefaultLogger);
-/**
- * A basic `ILogger` configuration that configures a single `console` sink based on provided options.
- *
- * NOTE: You *must* register the return value of `.create` with the container / au instance, not this `LoggerConfiguration` object itself.
- *
- * @example
- * ```ts
- * container.register(LoggerConfiguration.create());
- *
- * container.register(LoggerConfiguration.create({sinks: [ConsoleSink]}))
- *
- * container.register(LoggerConfiguration.create({sinks: [ConsoleSink], level: LogLevel.debug}))
- *
- * ```
- */
 const LoggerConfiguration = toLookup({
-    /**
-     * @param $console - The `console` object to use. Can be the native `window.console` / `global.console`, but can also be a wrapper or mock that implements the same interface.
-     * @param level - The global `LogLevel` to configure. Defaults to `warn` or higher.
-     * @param colorOptions - Whether to use colors or not. Defaults to `noColors`. Colors are especially nice in nodejs environments but don't necessarily work (well) in all environments, such as browsers.
-     */
-    create({ level = 3 /* warn */, colorOptions = 0 /* noColors */, sinks = [], } = {}) {
+    create({ level = 3, colorOptions = 0, sinks = [], } = {}) {
         return toLookup({
             register(container) {
                 container.register(Registration.instance(ILogConfig, new LogConfig(colorOptions, level)));
@@ -2355,7 +1799,6 @@ class ModuleTransformer {
         });
         this._promiseCache.set(promise, ret);
         void ret.then(value => {
-            // make it synchronous for future requests
             this._promiseCache.set(promise, value);
         });
         return ret;
@@ -2368,7 +1811,6 @@ class ModuleTransformer {
         this._objectCache.set(obj, ret);
         if (ret instanceof Promise) {
             void ret.then(value => {
-                // make it synchronous for future requests
                 this._objectCache.set(obj, value);
             });
         }
@@ -2435,9 +1877,6 @@ class ModuleItem {
     }
 }
 
-/**
- * Represents a handler for an EventAggregator event.
- */
 class Handler {
     constructor(messageType, callback) {
         this.messageType = messageType;
@@ -2450,18 +1889,12 @@ class Handler {
     }
 }
 const IEventAggregator = DI.createInterface('IEventAggregator', x => x.singleton(EventAggregator));
-/**
- * Enables loosely coupled publish/subscribe messaging.
- */
 class EventAggregator {
     constructor() {
-        /** @internal */
         this.eventLookup = {};
-        /** @internal */
         this.messageHandlers = [];
     }
     publish(channelOrInstance, message) {
-        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (!channelOrInstance) {
             throw new Error(`Invalid channel name or instance: ${channelOrInstance}.`);
         }
@@ -2484,7 +1917,6 @@ class EventAggregator {
         }
     }
     subscribe(channelOrType, callback) {
-        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (!channelOrType) {
             throw new Error(`Invalid channel name or type: ${channelOrType}.`);
         }
