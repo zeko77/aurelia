@@ -84,7 +84,7 @@ export declare class RouteContext {
     createComponentAgent(hostController: ICustomElementController, routeNode: RouteNode): ComponentAgent;
     registerViewport(viewport: IViewport): ViewportAgent;
     unregisterViewport(viewport: IViewport): void;
-    recognize(path: string): $RecognizedRoute | null;
+    recognize(path: string, searchAncestor?: boolean): $RecognizedRoute | null;
     addRoute(routeable: Promise<IModule>): Promise<void>;
     addRoute(routeable: Exclude<Routeable, Promise<IModule>>): void | Promise<void>;
     private $addRoute;
@@ -96,5 +96,6 @@ export declare class $RecognizedRoute {
     readonly route: RecognizedRoute<RouteDefinition | Promise<RouteDefinition>>;
     readonly residue: string | null;
     constructor(route: RecognizedRoute<RouteDefinition | Promise<RouteDefinition>>, residue: string | null);
+    toString(): string;
 }
 //# sourceMappingURL=route-context.d.ts.map

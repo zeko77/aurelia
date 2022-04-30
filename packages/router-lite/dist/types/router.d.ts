@@ -8,6 +8,7 @@ import { IRouteViewModel } from './component-agent.js';
 import { RouteTree, RouteNode } from './route-tree.js';
 import { IViewportInstruction, NavigationInstruction, RouteContextLike, ViewportInstructionTree, Params } from './instructions.js';
 import { UnwrapPromise } from './util.js';
+import { RouteDefinition } from './route-definition.js';
 import { ViewportAgent } from './viewport-agent.js';
 export declare const AuNavId: "au-nav-id";
 export declare type AuNavId = typeof AuNavId;
@@ -298,7 +299,7 @@ export declare class Router {
      * @param container - The `controller.container` of the component hosting the viewport that the route will be loaded into.
      *
      */
-    getRouteContext(viewportAgent: ViewportAgent | null, component: CustomElementDefinition, container: IContainer): IRouteContext;
+    getRouteContext(viewportAgent: ViewportAgent | null, component: CustomElementDefinition, container: IContainer, parentDefinition: RouteDefinition | null): IRouteContext;
     createViewportInstructions(instructionOrInstructions: NavigationInstruction | readonly NavigationInstruction[], options?: INavigationOptions): ViewportInstructionTree;
     /**
      * Enqueue an instruction tree to be processed as soon as possible.

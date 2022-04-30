@@ -69,7 +69,6 @@ export declare class RouteNode implements IRouteNode {
     static create(input: IRouteNode): RouteNode;
     contains(instructions: ViewportInstructionTree): boolean;
     appendChild(child: RouteNode): void;
-    appendChildren(...children: readonly RouteNode[]): void;
     clearChildren(): void;
     getTitle(separator: string): string | null;
     getTitlePart(): string | null;
