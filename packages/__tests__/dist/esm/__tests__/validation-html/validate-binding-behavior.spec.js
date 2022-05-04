@@ -11,7 +11,8 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 import { DI, IServiceLocator, newInstanceForScope, newInstanceOf, Registration } from '@aurelia/kernel';
-import { ArrayObserver, bindable, bindingBehavior, BindingInterceptor, BindingMediator, customAttribute, CustomElement, customElement, INode, IObserverLocator, IPlatform, valueConverter, Aurelia, } from '@aurelia/runtime-html';
+import { ArrayObserver, bindingBehavior, BindingInterceptor, BindingMediator, IObserverLocator, valueConverter, } from '@aurelia/runtime';
+import { bindable, customAttribute, CustomElement, customElement, IPlatform, INode, Aurelia, } from '@aurelia/runtime-html';
 import { assert, createSpy, TestContext } from '@aurelia/testing';
 import { IValidationRules, PropertyRule, RangeRule, RequiredRule } from '@aurelia/validation';
 import { IValidationController, ValidationController, ValidationHtmlConfiguration, ValidationTrigger, } from '@aurelia/validation-html';

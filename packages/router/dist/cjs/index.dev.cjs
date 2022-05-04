@@ -4,7 +4,9 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 var kernel = require('@aurelia/kernel');
 var runtimeHtml = require('@aurelia/runtime-html');
+var metadata = require('@aurelia/metadata');
 var routeRecognizer = require('@aurelia/route-recognizer');
+var runtime = require('@aurelia/runtime');
 
 class Endpoint$1 {
     constructor(router, name, connectedCE, options = {}) {
@@ -1271,18 +1273,18 @@ class Route {
         this.data = data;
     }
     static isConfigured(Type) {
-        return kernel.Metadata.hasOwn(Route.resourceKey, Type)
+        return metadata.Metadata.hasOwn(Route.resourceKey, Type)
             || 'parameters' in Type
             || 'title' in Type;
     }
     static configure(configOrPath, Type) {
         const config = Route.create(configOrPath, Type);
-        kernel.Metadata.define(Route.resourceKey, config, Type);
+        metadata.Metadata.define(Route.resourceKey, config, Type);
         return Type;
     }
     static getConfiguration(Type) {
         var _a;
-        const config = (_a = kernel.Metadata.getOwn(Route.resourceKey, Type)) !== null && _a !== void 0 ? _a : {};
+        const config = (_a = metadata.Metadata.getOwn(Route.resourceKey, Type)) !== null && _a !== void 0 ? _a : {};
         if (Array.isArray(Type.parameters)) {
             config.parameters = Type.parameters;
         }
@@ -1363,19 +1365,19 @@ Route.resourceKey = kernel.Protocol.resource.keyFor('route');
 const Routes = {
     name: kernel.Protocol.resource.keyFor('routes'),
     isConfigured(Type) {
-        return kernel.Metadata.hasOwn(Routes.name, Type) || 'routes' in Type;
+        return metadata.Metadata.hasOwn(Routes.name, Type) || 'routes' in Type;
     },
     configure(configurationsOrTypes, Type) {
         const configurations = configurationsOrTypes.map(configOrType => Route.create(configOrType));
-        kernel.Metadata.define(Routes.name, configurations, Type);
+        metadata.Metadata.define(Routes.name, configurations, Type);
         return Type;
     },
     getConfiguration(Type) {
         const type = Type;
         const routes = [];
-        const metadata = kernel.Metadata.getOwn(Routes.name, Type);
-        if (Array.isArray(metadata)) {
-            routes.push(...metadata);
+        const metadata$1 = metadata.Metadata.getOwn(Routes.name, Type);
+        if (Array.isArray(metadata$1)) {
+            routes.push(...metadata$1);
         }
         if (Array.isArray(type.routes)) {
             routes.push(...type.routes);
@@ -5603,7 +5605,7 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
     }
 };
 __decorate([
-    runtimeHtml.bindable({ mode: runtimeHtml.BindingMode.toView })
+    runtimeHtml.bindable({ mode: runtime.BindingMode.toView })
 ], exports.LoadCustomAttribute.prototype, "value", void 0);
 exports.LoadCustomAttribute = __decorate([
     runtimeHtml.customAttribute('load'),
@@ -5660,7 +5662,7 @@ exports.HrefCustomAttribute = class HrefCustomAttribute {
     }
 };
 __decorate([
-    runtimeHtml.bindable({ mode: runtimeHtml.BindingMode.toView })
+    runtimeHtml.bindable({ mode: runtime.BindingMode.toView })
 ], exports.HrefCustomAttribute.prototype, "value", void 0);
 exports.HrefCustomAttribute = __decorate([
     runtimeHtml.customAttribute({
@@ -5676,7 +5678,7 @@ exports.HrefCustomAttribute = __decorate([
 exports.ConsideredActiveCustomAttribute = class ConsideredActiveCustomAttribute {
 };
 __decorate([
-    runtimeHtml.bindable({ mode: runtimeHtml.BindingMode.toView })
+    runtimeHtml.bindable({ mode: runtime.BindingMode.toView })
 ], exports.ConsideredActiveCustomAttribute.prototype, "value", void 0);
 exports.ConsideredActiveCustomAttribute = __decorate([
     runtimeHtml.customAttribute('considered-active')

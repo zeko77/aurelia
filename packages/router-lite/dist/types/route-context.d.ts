@@ -1,13 +1,13 @@
 import { IContainer, IModule } from '@aurelia/kernel';
 import { CustomElementDefinition, ICustomElementController } from '@aurelia/runtime-html';
 import { RecognizedRoute } from '@aurelia/route-recognizer';
-import { RouteDefinition } from './route-definition.js';
-import { ViewportAgent, ViewportRequest } from './viewport-agent.js';
-import { ComponentAgent } from './component-agent.js';
-import { RouteNode } from './route-tree.js';
-import { ResolutionMode } from './router.js';
-import { IViewport } from './resources/viewport.js';
-import { Routeable } from './route.js';
+import { RouteDefinition } from './route-definition';
+import { ViewportAgent, ViewportRequest } from './viewport-agent';
+import { ComponentAgent } from './component-agent';
+import { RouteNode } from './route-tree';
+import { ResolutionMode } from './router';
+import { IViewport } from './resources/viewport';
+import { Routeable } from './route';
 export interface IRouteContext extends RouteContext {
 }
 export declare const IRouteContext: import("@aurelia/kernel").InterfaceSymbol<IRouteContext>;

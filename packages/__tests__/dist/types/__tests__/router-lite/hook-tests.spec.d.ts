@@ -1,5 +1,6 @@
 import { Writable } from '@aurelia/kernel';
-import { ICustomElementController, IPlatform, IViewModel, LifecycleFlags as LF, IHydratedController as HC, IHydratedParentController as HPC } from '@aurelia/runtime-html';
+import { LifecycleFlags as LF } from '@aurelia/runtime';
+import { ICustomElementController, IPlatform, IViewModel, IHydratedController as HC, IHydratedParentController as HPC } from '@aurelia/runtime-html';
 import { ResolutionMode, Params as P, RouteNode as RN, NavigationInstruction as NI } from '@aurelia/router-lite';
 declare const hookNames: readonly ["binding", "bound", "attaching", "attached", "detaching", "unbinding", "canLoad", "load", "canUnload", "unload"];
 declare type HookName = typeof hookNames[number] | 'dispose';

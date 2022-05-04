@@ -7,7 +7,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { bindable, BindingMode, customAttribute, customElement, watch } from '@aurelia/runtime-html';
+import { BindingMode } from '@aurelia/runtime';
+import { bindable, customAttribute, customElement, watch } from '@aurelia/runtime-html';
 import { assert, createFixture } from '@aurelia/testing';
 describe('3-runtime-html/decorator-watch.expression.spec.ts', function () {
     const testCases = [

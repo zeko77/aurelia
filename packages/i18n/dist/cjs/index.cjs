@@ -271,16 +271,16 @@ exports.RelativeTimeValueConverter = class RelativeTimeValueConverter {
 exports.RelativeTimeValueConverter = o([ n.valueConverter("rt"), a(0, d) ], exports.RelativeTimeValueConverter);
 
 exports.TranslationBindingBehavior = class TranslationBindingBehavior {
-    bind(t, n, i) {
+    bind(t, s, i) {
         const e = i.sourceExpression.expression;
-        if (!(e instanceof s.ValueConverterExpression)) {
-            const t = new s.ValueConverterExpression(e, "t", i.sourceExpression.args);
+        if (!(e instanceof n.ValueConverterExpression)) {
+            const t = new n.ValueConverterExpression(e, "t", i.sourceExpression.args);
             i.sourceExpression.expression = t;
         }
     }
 };
 
-exports.TranslationBindingBehavior = o([ s.bindingBehavior("t") ], exports.TranslationBindingBehavior);
+exports.TranslationBindingBehavior = o([ n.bindingBehavior("t") ], exports.TranslationBindingBehavior);
 
 const f = [ "textContent", "innerHTML", "prepend", "append" ];
 
@@ -332,14 +332,14 @@ class TranslationBinding {
         }
         return r;
     }
-    $bind(t, n) {
+    $bind(t, s) {
         var i;
         if (!this.expr) throw new Error("key expression is missing");
-        this.scope = n;
-        this.C = this.expr instanceof s.Interpolation;
-        this.I = this.expr.evaluate(t, n, this.locator, this);
+        this.scope = s;
+        this.C = this.expr instanceof n.Interpolation;
+        this.I = this.expr.evaluate(t, s, this.locator, this);
         this.M();
-        null === (i = this.parameter) || void 0 === i ? void 0 : i.$bind(t, n);
+        null === (i = this.parameter) || void 0 === i ? void 0 : i.$bind(t, s);
         this.P(t);
         this.isBound = true;
     }
@@ -512,11 +512,11 @@ exports.TranslationParametersAttributePattern = o([ s.attributePattern({
 }) ], exports.TranslationParametersAttributePattern);
 
 class TranslationParametersBindingInstruction {
-    constructor(t, n) {
+    constructor(t, s) {
         this.from = t;
-        this.to = n;
+        this.to = s;
         this.type = v;
-        this.mode = s.BindingMode.toView;
+        this.mode = n.BindingMode.toView;
     }
 }
 
@@ -577,11 +577,11 @@ class TranslationAttributePattern {
 }
 
 class TranslationBindingInstruction {
-    constructor(t, n) {
+    constructor(t, s) {
         this.from = t;
-        this.to = n;
+        this.to = s;
         this.type = T;
-        this.mode = s.BindingMode.toView;
+        this.mode = n.BindingMode.toView;
     }
 }
 
@@ -638,11 +638,11 @@ class TranslationBindAttributePattern {
 }
 
 class TranslationBindBindingInstruction {
-    constructor(t, n) {
+    constructor(t, s) {
         this.from = t;
-        this.to = n;
+        this.to = s;
         this.type = B;
-        this.mode = s.BindingMode.toView;
+        this.mode = n.BindingMode.toView;
     }
 }
 
@@ -696,7 +696,7 @@ exports.TranslationValueConverter = class TranslationValueConverter {
     }
 };
 
-exports.TranslationValueConverter = o([ s.valueConverter("t"), a(0, d) ], exports.TranslationValueConverter);
+exports.TranslationValueConverter = o([ n.valueConverter("t"), a(0, d) ], exports.TranslationValueConverter);
 
 const w = [ exports.TranslationValueConverter, exports.TranslationBindingBehavior ];
 

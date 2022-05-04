@@ -1,6 +1,6 @@
 import { DI, IEventAggregator, toArray, camelCase, Registration } from '@aurelia/kernel';
-import { bindingBehavior as bindingBehavior$1, ValueConverterExpression as ValueConverterExpression$1, Interpolation, CustomElement, attributePattern, bindingCommand, renderer, AttrSyntax, BindingMode, IAttrMapper, IPlatform, valueConverter as valueConverter$1, AppTask, AttributePattern, BindingCommand } from '@aurelia/runtime-html';
-import { ValueConverterExpression, bindingBehavior, ISignaler, valueConverter, connectable, CustomExpression, IExpressionParser, IObserverLocator } from '@aurelia/runtime';
+import { CustomElement, attributePattern, bindingCommand, renderer, AttrSyntax, IAttrMapper, IPlatform, AppTask, AttributePattern, BindingCommand } from '@aurelia/runtime-html';
+import { ValueConverterExpression, bindingBehavior, ISignaler, valueConverter, connectable, CustomExpression, Interpolation, BindingMode, IExpressionParser, IObserverLocator } from '@aurelia/runtime';
 import i18next from 'i18next';
 
 /******************************************************************************
@@ -299,14 +299,14 @@ RelativeTimeValueConverter = __decorate([
 let TranslationBindingBehavior = class TranslationBindingBehavior {
     bind(flags, _scope, binding) {
         const expression = binding.sourceExpression.expression;
-        if (!(expression instanceof ValueConverterExpression$1)) {
-            const vcExpression = new ValueConverterExpression$1(expression, "t", binding.sourceExpression.args);
+        if (!(expression instanceof ValueConverterExpression)) {
+            const vcExpression = new ValueConverterExpression(expression, "t", binding.sourceExpression.args);
             binding.sourceExpression.expression = vcExpression;
         }
     }
 };
 TranslationBindingBehavior = __decorate([
-    bindingBehavior$1("t")
+    bindingBehavior("t")
 ], TranslationBindingBehavior);
 
 const contentAttributes = ['textContent', 'innerHTML', 'prepend', 'append'];
@@ -761,7 +761,7 @@ let TranslationValueConverter = class TranslationValueConverter {
     }
 };
 TranslationValueConverter = __decorate([
-    valueConverter$1("t"),
+    valueConverter("t"),
     __param(0, I18N)
 ], TranslationValueConverter);
 

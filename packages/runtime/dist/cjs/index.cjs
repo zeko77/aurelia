@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var t = require("@aurelia/kernel");
 
-var e = require("@aurelia/platform");
+var e = require("@aurelia/metadata");
 
 const s = Object.prototype.hasOwnProperty;
 
@@ -32,11 +32,11 @@ function h(t, e, r, i = false) {
 
 const c = () => Object.create(null);
 
-const u = t.Metadata.getOwn;
+const u = e.Metadata.getOwn;
 
-const a = t.Metadata.hasOwn;
+const a = e.Metadata.hasOwn;
 
-const l = t.Metadata.define;
+const l = e.Metadata.define;
 
 const f = t.Protocol.annotation.keyFor;
 
@@ -4955,20 +4955,6 @@ function er(t, e, s, r, i) {
     }
     return o;
 }
-
-exports.IPlatform = t.IPlatform;
-
-exports.Platform = e.Platform;
-
-exports.Task = e.Task;
-
-exports.TaskAbortError = e.TaskAbortError;
-
-exports.TaskQueue = e.TaskQueue;
-
-exports.TaskQueuePriority = e.TaskQueuePriority;
-
-exports.TaskStatus = e.TaskStatus;
 
 exports.AccessKeyedExpression = AccessKeyedExpression;
 

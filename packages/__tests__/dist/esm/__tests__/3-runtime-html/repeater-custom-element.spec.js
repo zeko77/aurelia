@@ -7,7 +7,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { customElement, bindable, CustomElement, Aurelia, IPlatform, BindingBehavior, } from '@aurelia/runtime-html';
+import { BindingBehavior } from '@aurelia/runtime';
+import { customElement, bindable, CustomElement, Aurelia, IPlatform, } from '@aurelia/runtime-html';
 import { assert, getVisibleText, TestContext, } from '@aurelia/testing';
 import { createSpecFunction, } from '../util.js';
 const spec = 'repeater-custom-element';

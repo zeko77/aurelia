@@ -1,12 +1,12 @@
 import { IContainer, IRegistry } from '@aurelia/kernel';
-import { ViewportCustomElement } from './resources/viewport.js';
-import { ViewportScopeCustomElement } from './resources/viewport-scope.js';
-import { LoadCustomAttribute } from './resources/load.js';
-import { HrefCustomAttribute } from './resources/href.js';
-import { ConsideredActiveCustomAttribute } from './resources/considered-active.js';
-import { IRouter } from './router.js';
-import { IRouterOptions, RouterOptions } from './router-options.js';
-import { BeforeNavigationHookFunction, IRoutingHookOptions, RoutingHookFunction, RoutingHookIdentity, TransformFromUrlHookFunction, TransformTitleHookFunction, TransformToUrlHookFunction } from './routing-hook.js';
+import { ViewportCustomElement } from './resources/viewport';
+import { ViewportScopeCustomElement } from './resources/viewport-scope';
+import { LoadCustomAttribute } from './resources/load';
+import { HrefCustomAttribute } from './resources/href';
+import { ConsideredActiveCustomAttribute } from './resources/considered-active';
+import { IRouter } from './router';
+import { IRouterOptions, RouterOptions } from './router-options';
+import { BeforeNavigationHookFunction, IRoutingHookOptions, RoutingHookFunction, RoutingHookIdentity, TransformFromUrlHookFunction, TransformTitleHookFunction, TransformToUrlHookFunction } from './routing-hook';
 export declare const IRouterConfiguration: import("@aurelia/kernel").InterfaceSymbol<IRouterConfiguration>;
 export interface IRouterConfiguration extends RouterConfiguration {
 }

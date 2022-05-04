@@ -4,7 +4,7 @@ function isObject(value) {
 function isNullOrUndefined(value) {
     return value === null || value === void 0;
 }
-const metadataInternalSlot = new WeakMap();
+let metadataInternalSlot = new WeakMap();
 function $typeError(operation, args, paramName, actualValue, expectedType) {
     return new TypeError(`${operation}(${args.map(String).join(',')}) - Expected '${paramName}' to be of type ${expectedType}, but got: ${Object.prototype.toString.call(actualValue)} (${String(actualValue)})`);
 }
@@ -302,6 +302,10 @@ function $applyMetadataPolyfill(reflect, writable, configurable) {
 function applyMetadataPolyfill(reflect, throwIfConflict = true, forceOverwrite = false, writable = true, configurable = true) {
     if (hasInternalSlot(reflect)) {
         if (reflect[internalSlotName] === metadataInternalSlot) {
+            return;
+        }
+        if (reflect[internalSlotName] instanceof WeakMap) {
+            metadataInternalSlot = reflect[internalSlotName];
             return;
         }
         throw new Error(`Conflicting @aurelia/metadata module import detected. Please make sure you have the same version of all Aurelia packages in your dependency tree.`);

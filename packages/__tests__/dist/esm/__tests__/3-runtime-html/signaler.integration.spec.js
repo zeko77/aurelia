@@ -11,7 +11,8 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 import { ConsoleSink, LoggerConfiguration } from '@aurelia/kernel';
-import { customElement, ISignaler, valueConverter, Aurelia } from '@aurelia/runtime-html';
+import { ISignaler, valueConverter } from '@aurelia/runtime';
+import { customElement, Aurelia } from '@aurelia/runtime-html';
 import { assert, TestContext } from '@aurelia/testing';
 describe('signaler.integration', function () {
     it('1 non-observed input and 2 observed inputs - toView', async function () {

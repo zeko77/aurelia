@@ -1,7 +1,7 @@
-import { INode } from '../../dom.js';
-import { IPlatform } from '../../platform.js';
-import type { ICustomAttributeViewModel } from '../../templating/controller.js';
-import type { HydrateAttributeInstruction } from '../../renderer.js';
+import { INode } from '../../dom';
+import { IPlatform } from '../../platform';
+import type { ICustomAttributeViewModel } from '../../templating/controller';
+import type { HydrateAttributeInstruction } from '../../renderer';
 export declare class Show implements ICustomAttributeViewModel {
     private readonly el;
     private readonly p;

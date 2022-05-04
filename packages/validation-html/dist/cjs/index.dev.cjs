@@ -458,7 +458,7 @@ __decorate([
     runtimeHtml.bindable
 ], exports.ValidationErrorsCustomAttribute.prototype, "controller", void 0);
 __decorate([
-    runtimeHtml.bindable({ primary: true, mode: runtimeHtml.BindingMode.twoWay })
+    runtimeHtml.bindable({ primary: true, mode: runtime.BindingMode.twoWay })
 ], exports.ValidationErrorsCustomAttribute.prototype, "errors", void 0);
 exports.ValidationErrorsCustomAttribute = __decorate([
     runtimeHtml.customAttribute('validation-errors'),
@@ -476,16 +476,16 @@ exports.ValidationTrigger = void 0;
     ValidationTrigger["changeOrFocusout"] = "changeOrFocusout";
 })(exports.ValidationTrigger || (exports.ValidationTrigger = {}));
 const IDefaultTrigger = kernel.DI.createInterface('IDefaultTrigger');
-exports.ValidateBindingBehavior = class ValidateBindingBehavior extends runtimeHtml.BindingInterceptor {
+exports.ValidateBindingBehavior = class ValidateBindingBehavior extends runtime.BindingInterceptor {
     constructor(binding, expr) {
         super(binding, expr);
         this.binding = binding;
         this.propertyBinding = (void 0);
         this.target = (void 0);
         this.isChangeTrigger = false;
-        this.triggerMediator = new runtimeHtml.BindingMediator('handleTriggerChange', this, this.oL, this.locator);
-        this.controllerMediator = new runtimeHtml.BindingMediator('handleControllerChange', this, this.oL, this.locator);
-        this.rulesMediator = new runtimeHtml.BindingMediator('handleRulesChange', this, this.oL, this.locator);
+        this.triggerMediator = new runtime.BindingMediator('handleTriggerChange', this, this.oL, this.locator);
+        this.controllerMediator = new runtime.BindingMediator('handleControllerChange', this, this.oL, this.locator);
+        this.rulesMediator = new runtime.BindingMediator('handleRulesChange', this, this.oL, this.locator);
         this.isDirty = false;
         this.validatedOnce = false;
         this.triggerEvent = null;
@@ -683,7 +683,7 @@ exports.ValidateBindingBehavior = class ValidateBindingBehavior extends runtimeH
     }
 };
 exports.ValidateBindingBehavior = __decorate([
-    runtimeHtml.bindingBehavior('validate')
+    runtime.bindingBehavior('validate')
 ], exports.ValidateBindingBehavior);
 class ValidateArgumentsDelta {
     constructor(controller, trigger, rules) {

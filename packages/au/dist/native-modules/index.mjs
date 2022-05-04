@@ -1,34 +1,12 @@
-'use strict';
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-var fs = require('fs');
-var path = require('path');
-var httpServer = require('@aurelia/http-server');
-var kernel = require('@aurelia/kernel');
-
-function _interopNamespace(e) {
-    if (e && e.__esModule) return e;
-    var n = Object.create(null);
-    if (e) {
-        Object.keys(e).forEach(function (k) {
-            if (k !== 'default') {
-                var d = Object.getOwnPropertyDescriptor(e, k);
-                Object.defineProperty(n, k, d.get ? d : {
-                    enumerable: true,
-                    get: function () { return e[k]; }
-                });
-            }
-        });
-    }
-    n["default"] = e;
-    return Object.freeze(n);
-}
+import { existsSync } from 'fs';
+import { resolve } from 'path';
+import { HttpServerOptions, RuntimeNodeConfiguration, IHttpServer } from '../../../@aurelia/http-server/dist/native-modules/index.mjs';
+import { DI, IContainer } from '../../../@aurelia/kernel/dist/native-modules/index.mjs';
 
 /* eslint-disable prefer-template */
 const space = ' ';
 class AuConfigurationOptions {
-    constructor(server = new httpServer.HttpServerOptions()) {
+    constructor(server = new HttpServerOptions()) {
         this.server = server;
     }
     /** @internal */
@@ -77,22 +55,22 @@ let DevServer = class DevServer {
     constructor(container) {
         this.container = container;
     }
-    static create(container = kernel.DI.createContainer()) {
+    static create(container = DI.createContainer()) {
         return new DevServer(container);
     }
     async run(option) {
         // wireup
         const container = this.container.createChild();
-        container.register(httpServer.RuntimeNodeConfiguration.create(option));
+        container.register(RuntimeNodeConfiguration.create(option));
         // TODO compile/bundle
         // TODO inject the entry script to index.html template (from user-space)
         // start the http/file/websocket server
-        const server = container.get(httpServer.IHttpServer);
+        const server = container.get(IHttpServer);
         await server.start();
     }
 };
 DevServer = __decorate([
-    __param(0, kernel.IContainer)
+    __param(0, IContainer)
 ], DevServer);
 
 class ParsedArgs {
@@ -110,12 +88,26 @@ async function parseArgs(args) {
     const configuration = new AuConfigurationOptions();
     if (args.length % 2 === 1) {
         // check for configuration file
-        const configurationFile = path.resolve(cwd, args[0]);
-        if (!fs.existsSync(configurationFile)) {
+        const configurationFile = resolve(cwd, args[0]);
+        if (!existsSync(configurationFile)) {
             throw new Error(`Configuration file is missing or uneven amount of args: ${args}. Args must come in pairs of --key value`);
         }
         else {
-            const config = (await (function (t) { return Promise.resolve().then(function () { return /*#__PURE__*/_interopNamespace(require(t)); }); })(`file://${configurationFile}`)).default;
+            let config;
+            try {
+                config = (await import(`${configurationFile}`)).default;
+            }
+            catch (_a) {
+                try {
+                    config = (await import(`file://${configurationFile}`)).default;
+                }
+                catch (_b) {
+                    try {
+                        config = (await import(`file:///${configurationFile}`)).default;
+                    }
+                    catch ( /*  */_c) { /*  */ }
+                }
+            }
             configuration.applyConfig(config);
             args = args.slice(1);
         }
@@ -162,5 +154,5 @@ async function parseArgs(args) {
     process.exit(1);
 });
 
-exports.AuConfigurationOptions = AuConfigurationOptions;
-//# sourceMappingURL=index.js.map
+export { AuConfigurationOptions };
+//# sourceMappingURL=index.mjs.map

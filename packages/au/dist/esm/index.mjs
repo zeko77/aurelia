@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import { resolve } from 'path';
-import { HttpServerOptions, RuntimeNodeConfiguration, IHttpServer } from '../../../@aurelia/http-server/dist/native-modules/index.mjs';
-import { DI, IContainer } from '../../../@aurelia/kernel/dist/native-modules/index.mjs';
+import { HttpServerOptions, RuntimeNodeConfiguration, IHttpServer } from '@aurelia/http-server';
+import { DI, IContainer } from '@aurelia/kernel';
 
 /* eslint-disable prefer-template */
 const space = ' ';
@@ -93,7 +93,21 @@ async function parseArgs(args) {
             throw new Error(`Configuration file is missing or uneven amount of args: ${args}. Args must come in pairs of --key value`);
         }
         else {
-            const config = (await import(`file://${configurationFile}`)).default;
+            let config;
+            try {
+                config = (await import(`${configurationFile}`)).default;
+            }
+            catch (_a) {
+                try {
+                    config = (await import(`file://${configurationFile}`)).default;
+                }
+                catch (_b) {
+                    try {
+                        config = (await import(`file:///${configurationFile}`)).default;
+                    }
+                    catch ( /*  */_c) { /*  */ }
+                }
+            }
             configuration.applyConfig(config);
             args = args.slice(1);
         }
@@ -141,4 +155,4 @@ async function parseArgs(args) {
 });
 
 export { AuConfigurationOptions };
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=index.mjs.map

@@ -380,7 +380,7 @@ o([ s.bindable ], exports.ValidationErrorsCustomAttribute.prototype, "controller
 
 o([ s.bindable({
     primary: true,
-    mode: s.BindingMode.twoWay
+    mode: e.BindingMode.twoWay
 }) ], exports.ValidationErrorsCustomAttribute.prototype, "errors", void 0);
 
 exports.ValidationErrorsCustomAttribute = o([ s.customAttribute("validation-errors"), r(0, s.INode), r(1, t.optional(l)) ], exports.ValidationErrorsCustomAttribute);
@@ -398,24 +398,24 @@ exports.ValidationTrigger = void 0;
 
 const u = t.DI.createInterface("IDefaultTrigger");
 
-exports.ValidateBindingBehavior = class ValidateBindingBehavior extends s.BindingInterceptor {
+exports.ValidateBindingBehavior = class ValidateBindingBehavior extends e.BindingInterceptor {
     constructor(t, i) {
         super(t, i);
         this.binding = t;
         this.propertyBinding = void 0;
         this.target = void 0;
         this.isChangeTrigger = false;
-        this.triggerMediator = new s.BindingMediator("handleTriggerChange", this, this.oL, this.locator);
-        this.controllerMediator = new s.BindingMediator("handleControllerChange", this, this.oL, this.locator);
-        this.rulesMediator = new s.BindingMediator("handleRulesChange", this, this.oL, this.locator);
+        this.triggerMediator = new e.BindingMediator("handleTriggerChange", this, this.oL, this.locator);
+        this.controllerMediator = new e.BindingMediator("handleControllerChange", this, this.oL, this.locator);
+        this.rulesMediator = new e.BindingMediator("handleRulesChange", this, this.oL, this.locator);
         this.isDirty = false;
         this.validatedOnce = false;
         this.triggerEvent = null;
         this.task = null;
-        const e = this.locator;
-        this.platform = e.get(s.IPlatform);
-        this.defaultTrigger = e.get(u);
-        if (e.has(l, true)) this.scopedController = e.get(l);
+        const o = this.locator;
+        this.platform = o.get(s.IPlatform);
+        this.defaultTrigger = o.get(u);
+        if (o.has(l, true)) this.scopedController = o.get(l);
         this.setPropertyBinding();
     }
     updateSource(t, i) {
@@ -563,7 +563,7 @@ exports.ValidateBindingBehavior = class ValidateBindingBehavior extends s.Bindin
     }
 };
 
-exports.ValidateBindingBehavior = o([ s.bindingBehavior("validate") ], exports.ValidateBindingBehavior);
+exports.ValidateBindingBehavior = o([ e.bindingBehavior("validate") ], exports.ValidateBindingBehavior);
 
 class ValidateArgumentsDelta {
     constructor(t, i, s) {

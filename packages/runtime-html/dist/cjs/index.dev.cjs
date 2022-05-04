@@ -2,10 +2,11 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-var platform = require('@aurelia/platform');
-var platformBrowser = require('@aurelia/platform-browser');
 var kernel = require('@aurelia/kernel');
 var runtime = require('@aurelia/runtime');
+var metadata = require('@aurelia/metadata');
+var platform = require('@aurelia/platform');
+var platformBrowser = require('@aurelia/platform-browser');
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -33,9 +34,9 @@ function __param(paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 }
 
-const getOwnMetadata = kernel.Metadata.getOwn;
-const hasOwnMetadata = kernel.Metadata.hasOwn;
-const defineMetadata = kernel.Metadata.define;
+const getOwnMetadata = metadata.Metadata.getOwn;
+const hasOwnMetadata = metadata.Metadata.hasOwn;
+const defineMetadata = metadata.Metadata.define;
 const { annotation, resource } = kernel.Protocol;
 const getAnnotationKeyFor = annotation.keyFor;
 const getResourceKeyFor = resource.keyFor;
@@ -436,7 +437,7 @@ class Interpretation {
         }
     }
 }
-class State$1 {
+class AttrParsingState {
     constructor(charSpec, ...patterns) {
         this.charSpec = charSpec;
         this.nextStates = [];
@@ -467,7 +468,7 @@ class State$1 {
         }
         let state = this.findChild(charSpec);
         if (state == null) {
-            state = new State$1(charSpec, pattern);
+            state = new AttrParsingState(charSpec, pattern);
             this.nextStates.push(state);
             if (charSpec.repeat) {
                 state.nextStates.push(state);
@@ -551,7 +552,7 @@ class SegmentTypes {
 const ISyntaxInterpreter = kernel.DI.createInterface('ISyntaxInterpreter', x => x.singleton(SyntaxInterpreter));
 class SyntaxInterpreter {
     constructor() {
-        this.rootState = new State$1(null);
+        this.rootState = new AttrParsingState(null);
         this.initialStates = [this.rootState];
     }
     add(defs) {
@@ -4189,7 +4190,7 @@ function isCustomElementController(value) {
     return value instanceof Controller && value.vmKind === 0;
 }
 function isCustomElementViewModel(value) {
-    return kernel.isObject(value) && CustomElement.isType(value.constructor);
+    return metadata.isObject(value) && CustomElement.isType(value.constructor);
 }
 class HooksDefinition {
     constructor(target) {
@@ -5005,7 +5006,7 @@ function renderer(instructionType) {
         decoratedTarget.register = function register(container) {
             kernel.Registration.singleton(IRenderer, decoratedTarget).register(container);
         };
-        const metadataKeys = kernel.Metadata.getOwnKeys(target);
+        const metadataKeys = metadata.Metadata.getOwnKeys(target);
         for (const key of metadataKeys) {
             defineMetadata(key, getOwnMetadata(key, target), decoratedTarget);
         }
@@ -9494,7 +9495,7 @@ exports.PromiseTemplateController = class PromiseTemplateController {
         const $swap = () => {
             void kernel.resolveAll(preSettlePromise = (this.preSettledTask = q.queueTask(() => {
                 return kernel.resolveAll(fulfilled === null || fulfilled === void 0 ? void 0 : fulfilled.deactivate(initiator, flags), rejected === null || rejected === void 0 ? void 0 : rejected.deactivate(initiator, flags), pending === null || pending === void 0 ? void 0 : pending.activate(initiator, flags, s));
-            }, defaultQueuingOptions)).result.catch((err) => { if (!(err instanceof kernel.TaskAbortError))
+            }, defaultQueuingOptions)).result.catch((err) => { if (!(err instanceof platform.TaskAbortError))
                 throw err; }), value
                 .then((data) => {
                 if (this.value !== value) {
@@ -10287,10 +10288,9 @@ __decorate([
 ], AuSlot.prototype, "expose", void 0);
 customElement({ name: 'au-slot', template: null, containerless: true })(AuSlot);
 
-const SCRIPT_REGEX = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
 const ISanitizer = kernel.DI.createInterface('ISanitizer', x => x.singleton(class {
-    sanitize(input) {
-        return input.replace(SCRIPT_REGEX, '');
+    sanitize() {
+        throw new Error('"sanitize" method not implemented');
     }
 }));
 exports.SanitizeValueConverter = class SanitizeValueConverter {
@@ -11114,98 +11114,6 @@ class WcCustomElementRegistry {
 }
 WcCustomElementRegistry.inject = [kernel.IContainer, IPlatform, IRendering];
 
-exports.Platform = platform.Platform;
-exports.Task = platform.Task;
-exports.TaskAbortError = platform.TaskAbortError;
-exports.TaskQueue = platform.TaskQueue;
-exports.TaskQueuePriority = platform.TaskQueuePriority;
-exports.TaskStatus = platform.TaskStatus;
-exports.BrowserPlatform = platformBrowser.BrowserPlatform;
-exports.Access = runtime.Access;
-exports.AccessKeyedExpression = runtime.AccessKeyedExpression;
-exports.AccessMemberExpression = runtime.AccessMemberExpression;
-exports.AccessScopeExpression = runtime.AccessScopeExpression;
-exports.AccessThisExpression = runtime.AccessThisExpression;
-exports.AccessorType = runtime.AccessorType;
-exports.ArrayBindingPattern = runtime.ArrayBindingPattern;
-exports.ArrayIndexObserver = runtime.ArrayIndexObserver;
-exports.ArrayLiteralExpression = runtime.ArrayLiteralExpression;
-exports.ArrayObserver = runtime.ArrayObserver;
-exports.AssignExpression = runtime.AssignExpression;
-exports.BinaryExpression = runtime.BinaryExpression;
-exports.BindingBehavior = runtime.BindingBehavior;
-exports.BindingBehaviorDefinition = runtime.BindingBehaviorDefinition;
-exports.BindingBehaviorExpression = runtime.BindingBehaviorExpression;
-exports.BindingBehaviorFactory = runtime.BindingBehaviorFactory;
-exports.BindingBehaviorStrategy = runtime.BindingBehaviorStrategy;
-exports.BindingContext = runtime.BindingContext;
-exports.BindingIdentifier = runtime.BindingIdentifier;
-exports.BindingInterceptor = runtime.BindingInterceptor;
-exports.BindingMediator = runtime.BindingMediator;
-exports.BindingMode = runtime.BindingMode;
-exports.CallFunctionExpression = runtime.CallFunctionExpression;
-exports.CallMemberExpression = runtime.CallMemberExpression;
-exports.CallScopeExpression = runtime.CallScopeExpression;
-exports.Char = runtime.Char;
-exports.CollectionKind = runtime.CollectionKind;
-exports.CollectionLengthObserver = runtime.CollectionLengthObserver;
-exports.CollectionSizeObserver = runtime.CollectionSizeObserver;
-exports.ComputedObserver = runtime.ComputedObserver;
-exports.ConditionalExpression = runtime.ConditionalExpression;
-exports.CustomExpression = runtime.CustomExpression;
-exports.DelegationStrategy = runtime.DelegationStrategy;
-exports.DirtyCheckProperty = runtime.DirtyCheckProperty;
-exports.DirtyCheckSettings = runtime.DirtyCheckSettings;
-exports.ExpressionKind = runtime.ExpressionKind;
-exports.ExpressionType = runtime.ExpressionType;
-exports.ForOfStatement = runtime.ForOfStatement;
-exports.HtmlLiteralExpression = runtime.HtmlLiteralExpression;
-exports.IDirtyChecker = runtime.IDirtyChecker;
-exports.IExpressionParser = runtime.IExpressionParser;
-exports.INodeObserverLocator = runtime.INodeObserverLocator;
-exports.IObserverLocator = runtime.IObserverLocator;
-exports.ISignaler = runtime.ISignaler;
-exports.Interpolation = runtime.Interpolation;
-exports.LifecycleFlags = runtime.LifecycleFlags;
-exports.MapObserver = runtime.MapObserver;
-exports.ObjectBindingPattern = runtime.ObjectBindingPattern;
-exports.ObjectLiteralExpression = runtime.ObjectLiteralExpression;
-exports.ObserverLocator = runtime.ObserverLocator;
-exports.OverrideContext = runtime.OverrideContext;
-exports.Precedence = runtime.Precedence;
-exports.PrimitiveLiteralExpression = runtime.PrimitiveLiteralExpression;
-exports.PrimitiveObserver = runtime.PrimitiveObserver;
-exports.PropertyAccessor = runtime.PropertyAccessor;
-exports.Scope = runtime.Scope;
-exports.SetObserver = runtime.SetObserver;
-exports.SetterObserver = runtime.SetterObserver;
-exports.TaggedTemplateExpression = runtime.TaggedTemplateExpression;
-exports.TemplateExpression = runtime.TemplateExpression;
-exports.UnaryExpression = runtime.UnaryExpression;
-exports.ValueConverter = runtime.ValueConverter;
-exports.ValueConverterDefinition = runtime.ValueConverterDefinition;
-exports.ValueConverterExpression = runtime.ValueConverterExpression;
-exports.alias = runtime.alias;
-exports.applyMutationsToIndices = runtime.applyMutationsToIndices;
-exports.bindingBehavior = runtime.bindingBehavior;
-exports.cloneIndexMap = runtime.cloneIndexMap;
-exports.connectable = runtime.connectable;
-exports.copyIndexMap = runtime.copyIndexMap;
-exports.createIndexMap = runtime.createIndexMap;
-exports.disableArrayObservation = runtime.disableArrayObservation;
-exports.disableMapObservation = runtime.disableMapObservation;
-exports.disableSetObservation = runtime.disableSetObservation;
-exports.enableArrayObservation = runtime.enableArrayObservation;
-exports.enableMapObservation = runtime.enableMapObservation;
-exports.enableSetObservation = runtime.enableSetObservation;
-exports.getCollectionObserver = runtime.getCollectionObserver;
-exports.isIndexMap = runtime.isIndexMap;
-exports.observable = runtime.observable;
-exports.parseExpression = runtime.parseExpression;
-exports.registerAliases = runtime.registerAliases;
-exports.subscriberCollection = runtime.subscriberCollection;
-exports.synchronizeIndices = runtime.synchronizeIndices;
-exports.valueConverter = runtime.valueConverter;
 exports.AdoptedStyleSheetsStyles = AdoptedStyleSheetsStyles;
 exports.AppRoot = AppRoot;
 exports.AppTask = AppTask;
@@ -11319,7 +11227,6 @@ exports.IRendering = IRendering;
 exports.ISVGAnalyzer = ISVGAnalyzer;
 exports.ISanitizer = ISanitizer;
 exports.IShadowDOMGlobalStyles = IShadowDOMGlobalStyles;
-exports.IShadowDOMStyleFactory = IShadowDOMStyleFactory;
 exports.IShadowDOMStyles = IShadowDOMStyles;
 exports.ISyntaxInterpreter = ISyntaxInterpreter;
 exports.ITemplateCompiler = ITemplateCompiler;
@@ -11336,6 +11243,7 @@ exports.IfRegistration = IfRegistration;
 exports.InterpolationBinding = InterpolationBinding;
 exports.InterpolationBindingRendererRegistration = InterpolationBindingRendererRegistration;
 exports.InterpolationInstruction = InterpolationInstruction;
+exports.InterpolationPartBinding = InterpolationPartBinding;
 exports.Interpretation = Interpretation;
 exports.IteratorBindingInstruction = IteratorBindingInstruction;
 exports.IteratorBindingRendererRegistration = IteratorBindingRendererRegistration;

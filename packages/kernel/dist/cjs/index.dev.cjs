@@ -3,7 +3,6 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 var metadata = require('@aurelia/metadata');
-var platform = require('@aurelia/platform');
 
 const getOwnMetadata = metadata.Metadata.getOwn;
 const hasOwnMetadata = metadata.Metadata.hasOwn;
@@ -1955,17 +1954,6 @@ class EventAggregator {
     }
 }
 
-exports.Metadata = metadata.Metadata;
-exports.applyMetadataPolyfill = metadata.applyMetadataPolyfill;
-exports.isNullOrUndefined = metadata.isNullOrUndefined;
-exports.isObject = metadata.isObject;
-exports.metadata = metadata.metadata;
-exports.Platform = platform.Platform;
-exports.Task = platform.Task;
-exports.TaskAbortError = platform.TaskAbortError;
-exports.TaskQueue = platform.TaskQueue;
-exports.TaskQueuePriority = platform.TaskQueuePriority;
-exports.TaskStatus = platform.TaskStatus;
 exports.AnalyzedModule = AnalyzedModule;
 exports.ContainerConfiguration = ContainerConfiguration;
 exports.DI = DI;

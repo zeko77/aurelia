@@ -1,5 +1,6 @@
 import { DI, Registration, } from '@aurelia/kernel';
-import { PropertyBinding, BindingMode, FromViewBindingBehavior, OneTimeBindingBehavior, ToViewBindingBehavior, TwoWayBindingBehavior, IPlatform, } from '@aurelia/runtime-html';
+import { BindingMode } from '@aurelia/runtime';
+import { PropertyBinding, FromViewBindingBehavior, OneTimeBindingBehavior, ToViewBindingBehavior, TwoWayBindingBehavior, IPlatform, } from '@aurelia/runtime-html';
 import { assert } from '@aurelia/testing';
 const tests = [
     { Behavior: OneTimeBindingBehavior, mode: BindingMode.oneTime },

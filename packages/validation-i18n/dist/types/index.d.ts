@@ -1,3 +1,3 @@
-export * from './localization.js';
-export * from './configuration.js';
+export * from './localization';
+export * from './configuration';
 //# sourceMappingURL=index.d.ts.map

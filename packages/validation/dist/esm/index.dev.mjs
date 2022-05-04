@@ -1,4 +1,5 @@
-import { DI, Protocol, Metadata, toArray, ILogger, IServiceLocator, Registration, noop } from '@aurelia/kernel';
+import { DI, Protocol, toArray, ILogger, IServiceLocator, Registration, noop } from '@aurelia/kernel';
+import { Metadata } from '@aurelia/metadata';
 import * as AST from '@aurelia/runtime';
 import { IExpressionParser, Scope, PrimitiveLiteralExpression } from '@aurelia/runtime';
 

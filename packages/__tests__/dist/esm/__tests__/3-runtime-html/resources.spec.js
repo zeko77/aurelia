@@ -7,9 +7,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Aurelia, customElement, customAttribute, alias, CustomAttributeDefinition } from '@aurelia/runtime-html';
-import { TestContext, assert } from "@aurelia/testing";
-import { Metadata } from '@aurelia/kernel';
+import { Metadata } from '@aurelia/metadata';
+import { alias } from '@aurelia/runtime';
+import { Aurelia, customAttribute, CustomAttributeDefinition, customElement } from '@aurelia/runtime-html';
+import { assert, TestContext } from "@aurelia/testing";
 function startAndStop(component) {
     const ctx = TestContext.create();
     const container = ctx.container;

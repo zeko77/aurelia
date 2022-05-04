@@ -2,7 +2,8 @@ import { readFile as readFile$1, access, constants as constants$1, exists as exi
 import { IncomingMessage, ServerResponse, createServer } from 'http';
 import { constants, Http2ServerRequest, Http2ServerResponse, createSecureServer } from 'http2';
 import { resolve, join, extname, relative } from 'path';
-import { DI, ILogger, bound, IContainer, all, Registration, LoggerConfiguration, ConsoleSink, IPlatform, Platform } from '../../../kernel/dist/native-modules/index.mjs';
+import { DI, ILogger, bound, IContainer, all, Registration, LoggerConfiguration, ConsoleSink, IPlatform } from '../../../kernel/dist/native-modules/index.mjs';
+import { Platform } from '../../../platform/dist/native-modules/index.mjs';
 import * as https from 'https';
 import * as $url from 'url';
 import { EOL } from 'os';

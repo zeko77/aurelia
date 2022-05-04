@@ -1,9 +1,9 @@
 import { BindingMode } from '@aurelia/runtime';
-import { DefinitionType } from './resources-shared.js';
+import { DefinitionType } from './resources-shared';
 import type { Constructable, IContainer, IResourceKind, ResourceDefinition, PartialResourceDefinition, ResourceType } from '@aurelia/kernel';
-import type { BindableDefinition, PartialBindableDefinition } from '../bindable.js';
-import type { ICustomAttributeViewModel, ICustomAttributeController } from '../templating/controller.js';
-import type { IWatchDefinition } from '../watch.js';
+import type { BindableDefinition, PartialBindableDefinition } from '../bindable';
+import type { ICustomAttributeViewModel, ICustomAttributeController } from '../templating/controller';
+import type { IWatchDefinition } from '../watch';
 declare module '@aurelia/kernel' {
     interface IContainer {
         find<T extends ICustomAttributeViewModel>(kind: typeof CustomAttribute, name: string): CustomAttributeDefinition<Constructable<T>> | null;

@@ -11,7 +11,8 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 import { assert, TestContext, PLATFORM, } from '@aurelia/testing';
-import { bindable, bindingBehavior, customAttribute, CustomElement, INode, valueConverter, CustomAttribute, ValueConverter, Aurelia, } from '@aurelia/runtime-html';
+import { bindingBehavior, valueConverter, ValueConverter, } from '@aurelia/runtime';
+import { bindable, customAttribute, CustomElement, INode, CustomAttribute, Aurelia, } from '@aurelia/runtime-html';
 describe('template-compiler.primary-bindable.spec.ts', function () {
     const testCases = [
         {

@@ -1,6 +1,6 @@
 import { PartialCustomElementDefinition } from '@aurelia/runtime-html';
-import { IChildRouteConfig, IRedirectRouteConfig, Routeable } from './route.js';
-import { IViewportInstruction, RouteableComponent } from './instructions.js';
+import { IChildRouteConfig, IRedirectRouteConfig, Routeable } from './route';
+import { IViewportInstruction, RouteableComponent } from './instructions';
 /**
  * @returns `true` if the given `value` is an non-null, non-undefined, and non-CustomElement object.
  */

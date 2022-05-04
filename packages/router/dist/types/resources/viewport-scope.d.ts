@@ -4,10 +4,11 @@
  * In its current state, it is NOT a good source for learning about the inner workings and design of the router.
  *
  */
-import { INode, LifecycleFlags, ICompiledCustomElementController, ICustomElementViewModel, ICustomElementController, IHydratedController, ISyntheticView } from '@aurelia/runtime-html';
+import { LifecycleFlags } from '@aurelia/runtime';
+import { INode, ICompiledCustomElementController, ICustomElementViewModel, ICustomElementController, IHydratedController, ISyntheticView } from '@aurelia/runtime-html';
 import { IContainer } from '@aurelia/kernel';
-import { IRouter } from '../index.js';
-import { ViewportScope } from '../endpoints/viewport-scope.js';
+import { IRouter } from '../index';
+import { ViewportScope } from '../endpoints/viewport-scope';
 export declare const ParentViewportScope: import("@aurelia/runtime-html/dist/types/resources/custom-element").InjectableToken<import("@aurelia/kernel").Key>;
 export declare class ViewportScopeCustomElement implements ICustomElementViewModel {
     private readonly router;

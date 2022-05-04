@@ -1,5 +1,6 @@
 import { IContainer, IRegistration, IRegistry } from '@aurelia/kernel';
-import { IObserverLocator, ITemplateCompiler, IPlatform } from '@aurelia/runtime-html';
+import { IObserverLocator } from '@aurelia/runtime';
+import { ITemplateCompiler, IPlatform } from '@aurelia/runtime-html';
 export declare class TestContext {
     static readonly ambient: TestContext;
     get wnd(): Window & typeof globalThis;

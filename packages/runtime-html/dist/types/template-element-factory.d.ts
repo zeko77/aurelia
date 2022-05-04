@@ -1,4 +1,4 @@
-import { IPlatform } from './platform.js';
+import { IPlatform } from './platform';
 /**
  * Utility that creates a `HTMLTemplateElement` out of string markup or an existing DOM node.
  *

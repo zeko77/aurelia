@@ -1,6 +1,8 @@
-import { Protocol, Metadata, IEventAggregator, IContainer, DI, Registration } from '@aurelia/kernel';
-import { CustomElement, isCustomElementViewModel, Controller, IWindow, IHistory, ILocation, IPlatform, IAppRoot, CustomAttribute, bindable, customElement, INode, IInstruction, IController, BindingMode, customAttribute, AppTask } from '@aurelia/runtime-html';
+import { Protocol, IEventAggregator, IContainer, DI, Registration } from '@aurelia/kernel';
+import { CustomElement, isCustomElementViewModel, Controller, IWindow, IHistory, ILocation, IPlatform, IAppRoot, CustomAttribute, bindable, customElement, INode, IInstruction, IController, customAttribute, AppTask } from '@aurelia/runtime-html';
+import { Metadata } from '@aurelia/metadata';
 import { RouteRecognizer as RouteRecognizer$1, ConfigurableRoute as ConfigurableRoute$1, RecognizedRoute as RecognizedRoute$1, Endpoint as Endpoint$2 } from '@aurelia/route-recognizer';
+import { BindingMode } from '@aurelia/runtime';
 
 class Endpoint$1 {
     constructor(router, name, connectedCE, options = {}) {

@@ -19,12 +19,6 @@ export declare class CharSpec implements ICharSpec {
     has: (char: string) => boolean;
     constructor(chars: string, repeat: boolean, isSymbol: boolean, isInverted: boolean);
     equals(other: ICharSpec): boolean;
-    private _hasOfMultiple;
-    private _hasOfSingle;
-    private _hasOfNone;
-    private _hasOfMultipleInverse;
-    private _hasOfSingleInverse;
-    private _hasOfNoneInverse;
 }
 export declare class Interpretation {
     parts: readonly string[];
@@ -33,17 +27,17 @@ export declare class Interpretation {
     append(pattern: string, ch: string): void;
     next(pattern: string): void;
 }
-export declare class State {
+export declare class AttrParsingState {
     charSpec: ICharSpec;
-    nextStates: State[];
+    nextStates: AttrParsingState[];
     types: SegmentTypes | null;
     patterns: string[];
     isEndpoint: boolean;
     get pattern(): string | null;
     constructor(charSpec: ICharSpec, ...patterns: string[]);
-    findChild(charSpec: ICharSpec): State;
-    append(charSpec: ICharSpec, pattern: string): State;
-    findMatches(ch: string, interpretation: Interpretation): State[];
+    findChild(charSpec: ICharSpec): AttrParsingState;
+    append(charSpec: ICharSpec, pattern: string): AttrParsingState;
+    findMatches(ch: string, interpretation: Interpretation): AttrParsingState[];
 }
 export declare class SegmentTypes {
     statics: number;
@@ -54,11 +48,11 @@ export interface ISyntaxInterpreter extends SyntaxInterpreter {
 }
 export declare const ISyntaxInterpreter: import("@aurelia/kernel").InterfaceSymbol<ISyntaxInterpreter>;
 export declare class SyntaxInterpreter {
-    rootState: State;
+    rootState: AttrParsingState;
     private readonly initialStates;
     add(defs: AttributePatternDefinition[]): void;
     interpret(name: string): Interpretation;
-    getNextStates(states: State[], ch: string, interpretation: Interpretation): State[];
+    getNextStates(states: AttrParsingState[], ch: string, interpretation: Interpretation): AttrParsingState[];
     private parse;
 }
 export declare class AttrSyntax {

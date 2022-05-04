@@ -1,5 +1,5 @@
 import { IContainer } from '@aurelia/kernel';
-import { StoreOptions } from './store.js';
+import { StoreOptions } from './store';
 export interface StorePluginOptions<T> extends StoreOptions {
     initialState: T;
 }
@@ -9,11 +9,11 @@ export interface IConfigure {
     register(container: IContainer): IContainer;
 }
 export declare const StoreConfiguration: IConfigure;
-export { ActionRegistrationError, DevToolsRemoteDispatchError, IStoreWindow, MiddlewareSettings, PerformanceMeasurement, PipedDispatch, Reducer, ReducerNoStateError, STORE, Store, StoreOptions, UnregisteredActionError, dispatchify, } from './store.js';
-export { StepFn, executeSteps } from './test-helpers.js';
-export { HistoryOptions, StateHistory, applyLimits, isStateHistory, jump, nextStateHistory, } from './history.js';
-export { LogDefinitions, LogLevel, getLogType, } from './logging.js';
-export { CallingAction, DEFAULT_LOCAL_STORAGE_KEY, Middleware, MiddlewarePlacement, localStorageMiddleware, logMiddleware, rehydrateFromLocalStorage, } from './middleware.js';
-export { ConnectToSettings, MultipleSelector, connectTo, } from './decorator.js';
-export { Action, ActionCreator, DevTools, DevToolsExtension, DevToolsMessage, DevToolsOptions, } from './devtools.js';
+export { ActionRegistrationError, DevToolsRemoteDispatchError, type IStoreWindow, type MiddlewareSettings, PerformanceMeasurement, type PipedDispatch, type Reducer, ReducerNoStateError, STORE, Store, type StoreOptions, UnregisteredActionError, dispatchify, } from './store';
+export { type StepFn, executeSteps } from './test-helpers';
+export { type HistoryOptions, type StateHistory, applyLimits, isStateHistory, jump, nextStateHistory, } from './history';
+export { type LogDefinitions, LogLevel, getLogType, } from './logging';
+export { type CallingAction, DEFAULT_LOCAL_STORAGE_KEY, type Middleware, MiddlewarePlacement, localStorageMiddleware, logMiddleware, rehydrateFromLocalStorage, } from './middleware';
+export { type ConnectToSettings, type MultipleSelector, connectTo, } from './decorator';
+export { type Action, type ActionCreator, type DevTools, type DevToolsExtension, type DevToolsMessage, type DevToolsOptions, } from './devtools';
 //# sourceMappingURL=index.d.ts.map

@@ -1,6 +1,6 @@
 import { Constructable } from '@aurelia/kernel';
 import { Aurelia } from '@aurelia/runtime-html';
-import { TestContext } from './test-context.js';
+import { TestContext } from './test-context';
 export declare function createFixture<T>(template: string | Node, $class?: Constructable<T>, registrations?: any[], autoStart?: boolean, ctx?: TestContext): {
     startPromise: void | Promise<void>;
     ctx: TestContext;
@@ -11,7 +11,7 @@ export declare function createFixture<T>(template: string | Node, $class?: Const
     appHost: HTMLElement;
     au: Aurelia;
     component: import("@aurelia/runtime-html").ICustomElementViewModel & T;
-    observerLocator: import("@aurelia/runtime-html").IObserverLocator;
+    observerLocator: import("@aurelia/runtime").IObserverLocator;
     start: () => Promise<void>;
     tearDown: () => Promise<void>;
 };

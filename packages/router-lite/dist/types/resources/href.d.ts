@@ -1,6 +1,6 @@
 import { ICustomAttributeViewModel, ICustomAttributeController, IEventDelegator, IEventTarget, INode, IWindow } from '@aurelia/runtime-html';
-import { IRouter } from '../router.js';
-import { IRouteContext } from '../route-context.js';
+import { IRouter } from '../router';
+import { IRouteContext } from '../route-context';
 export declare class HrefCustomAttribute implements ICustomAttributeViewModel {
     private readonly target;
     private readonly el;

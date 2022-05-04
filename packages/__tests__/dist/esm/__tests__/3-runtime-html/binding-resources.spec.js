@@ -8,7 +8,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { TestContext, assert, createFixture } from '@aurelia/testing';
-import { customElement, bindable, BindingMode, Aurelia } from '@aurelia/runtime-html';
+import { customElement, bindable, Aurelia } from '@aurelia/runtime-html';
+import { BindingMode } from '@aurelia/runtime';
 async function wait(ms) {
     await new Promise(resolve => setTimeout(resolve, ms));
 }

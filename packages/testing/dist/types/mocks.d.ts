@@ -1,7 +1,6 @@
-import { ExpressionKind, LifecycleFlags } from '@aurelia/runtime-html';
+import { ExpressionKind, LifecycleFlags } from '@aurelia/runtime';
 import type { IContainer, IDisposable, IIndexable, IServiceLocator } from '@aurelia/kernel';
-import type { Scope } from '@aurelia/runtime-html';
-import type { IBinding, IConnectableBinding, IndexMap, IObserverLocator, ISignaler, BindingObserverRecord, Collection, ISubscribable, ICollectionSubscribable } from '@aurelia/runtime';
+import type { Scope, IBinding, IConnectableBinding, IndexMap, IObserverLocator, ISignaler, BindingObserverRecord, Collection, ISubscribable, ICollectionSubscribable } from '@aurelia/runtime';
 export declare class MockBinding implements IConnectableBinding {
     interceptor: this;
     observerSlots: number;

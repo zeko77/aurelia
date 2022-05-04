@@ -1,10 +1,10 @@
 import { LifecycleFlags } from '@aurelia/runtime';
-import { IRenderLocation } from '../../dom.js';
-import { IViewFactory } from '../../templating/view.js';
-import { IWorkTracker } from '../../app-root.js';
-import type { ISyntheticView, ICustomAttributeController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, ControllerVisitor, IHydratableController } from '../../templating/controller.js';
-import type { IInstruction } from '../../renderer.js';
-import type { INode } from '../../dom.js';
+import { IRenderLocation } from '../../dom';
+import { IViewFactory } from '../../templating/view';
+import { IWorkTracker } from '../../app-root';
+import type { ISyntheticView, ICustomAttributeController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, ControllerVisitor, IHydratableController } from '../../templating/controller';
+import type { IInstruction } from '../../renderer';
+import type { INode } from '../../dom';
 export declare class If implements ICustomAttributeViewModel {
     private readonly ifFactory;
     private readonly location;

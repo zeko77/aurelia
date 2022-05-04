@@ -11,8 +11,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 // This is to test for some intrinsic properties of enhance which is otherwise difficult to test in Data-driven tests parallel to `.app`
+import { BrowserPlatform } from '@aurelia/platform-browser';
 import { DI, IContainer, Registration } from '@aurelia/kernel';
-import { CustomElement, IPlatform, Aurelia, customElement, bindable, BrowserPlatform, StandardConfiguration, IAurelia, ValueConverter, } from '@aurelia/runtime-html';
+import { ValueConverter } from '@aurelia/runtime';
+import { CustomElement, IPlatform, Aurelia, customElement, bindable, StandardConfiguration, IAurelia, } from '@aurelia/runtime-html';
 import { assert, TestContext, createFixture } from '@aurelia/testing';
 import { createSpecFunction } from '../util.js';
 describe('3-runtime/enhance.spec.ts', function () {

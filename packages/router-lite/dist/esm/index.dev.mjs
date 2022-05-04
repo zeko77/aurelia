@@ -1,6 +1,8 @@
-import { DI, IEventAggregator, ILogger, bound, onResolve, resolveAll, toArray, emptyObject, isObject, IContainer, isArrayIndex, Protocol, Metadata, emptyArray, IModuleLoader, InstanceProvider, noop, Registration } from '@aurelia/kernel';
-import { isCustomElementViewModel, IHistory, ILocation, IWindow, Controller, IPlatform, CustomElement, CustomElementDefinition, IController, IAppRoot, isCustomElementController, bindable, customElement, BindingMode, customAttribute, IEventTarget, INode, IEventDelegator, getRef, CustomAttribute, AppTask } from '@aurelia/runtime-html';
+import { isObject, Metadata } from '@aurelia/metadata';
+import { DI, IEventAggregator, ILogger, bound, onResolve, resolveAll, toArray, emptyObject, IContainer, isArrayIndex, Protocol, emptyArray, IModuleLoader, InstanceProvider, noop, Registration } from '@aurelia/kernel';
+import { isCustomElementViewModel, IHistory, ILocation, IWindow, Controller, IPlatform, CustomElement, CustomElementDefinition, IController, IAppRoot, isCustomElementController, bindable, customElement, customAttribute, IEventTarget, INode, IEventDelegator, getRef, CustomAttribute, AppTask } from '@aurelia/runtime-html';
 import { RecognizedRoute, Endpoint, ConfigurableRoute, RouteRecognizer } from '@aurelia/route-recognizer';
+import { BindingMode } from '@aurelia/runtime';
 
 class Batch {
     constructor(stack, cb, head) {

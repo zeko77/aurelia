@@ -1,21 +1,27 @@
 import { DI as e, Registration as t } from "../../../@aurelia/kernel/dist/native-modules/index.mjs";
 
-export { ColorOptions, ConsoleSink, DI, EventAggregator, IContainer, IEventAggregator, ILogger, IServiceLocator, InstanceProvider, LogLevel, LoggerConfiguration, Metadata, Registration, all, bound, camelCase, emptyArray, emptyObject, inject, isArrayIndex, kebabCase, lazy, noop, optional, pascalCase, singleton, toArray, transient } from "../../../@aurelia/kernel/dist/native-modules/index.mjs";
+export { ColorOptions, ConsoleSink, DI, EventAggregator, IContainer, IEventAggregator, ILogger, IServiceLocator, InstanceProvider, LogLevel, LoggerConfiguration, Registration, all, bound, camelCase, emptyArray, emptyObject, inject, isArrayIndex, kebabCase, lazy, noop, optional, pascalCase, singleton, toArray, transient } from "../../../@aurelia/kernel/dist/native-modules/index.mjs";
 
 import { Aurelia as o, IPlatform as r, StandardConfiguration as a, CustomElement as i } from "../../../@aurelia/runtime-html/dist/native-modules/index.mjs";
 
-export { AppTask, AuSlotsInfo, Bindable, BindingBehavior, BindingMode, ComputedObserver, ComputedWatcher, Controller, CustomAttribute, CustomElement, DefaultDialogDom, DefaultDialogDomRenderer, DefaultDialogGlobalSettings, DialogCloseResult, DialogConfiguration, DialogController, DialogDeactivationStatuses, DialogDefaultConfiguration, DialogOpenResult, DialogService, ExpressionWatcher, IAppRoot, IAttrMapper, IAttributePattern, IAuSlotsInfo, IAurelia, IDialogController, IDialogDom, IDialogDomRenderer, IDialogGlobalSettings, IDialogService, IEventTarget, ILifecycleHooks, INode, IObserverLocator, IPlatform, IRenderLocation, ISignaler, ITemplateCompiler, ITemplateCompilerHooks, IWcElementRegistry, IWorkTracker, LifecycleFlags, LifecycleHooks, NodeObserverLocator, ShortHandBindingSyntax, StyleConfiguration, TaskQueuePriority, TemplateCompilerHooks, ValueConverter, ViewFactory, Watch, WcCustomElementRegistry, alias, attributePattern, bindable, bindingBehavior, bindingCommand, children, coercer, containerless, createElement, cssModules, customAttribute, customElement, lifecycleHooks, observable, registerAliases, renderer, shadowCSS, subscriberCollection, templateCompilerHooks, templateController, useShadowDOM, valueConverter, watch } from "../../../@aurelia/runtime-html/dist/native-modules/index.mjs";
+export { AppTask, AuSlotsInfo, Bindable, Controller, CustomAttribute, CustomElement, DefaultDialogDom, DefaultDialogDomRenderer, DefaultDialogGlobalSettings, DialogCloseResult, DialogConfiguration, DialogController, DialogDeactivationStatuses, DialogDefaultConfiguration, DialogOpenResult, DialogService, IAppRoot, IAttrMapper, IAttributePattern, IAuSlotsInfo, IAurelia, IDialogController, IDialogDom, IDialogDomRenderer, IDialogGlobalSettings, IDialogService, IEventTarget, ILifecycleHooks, INode, IPlatform, IRenderLocation, ITemplateCompiler, ITemplateCompilerHooks, IWcElementRegistry, IWorkTracker, LifecycleHooks, NodeObserverLocator, ShortHandBindingSyntax, StyleConfiguration, TemplateCompilerHooks, ViewFactory, WcCustomElementRegistry, attributePattern, bindable, bindingCommand, children, coercer, containerless, createElement, cssModules, customAttribute, customElement, lifecycleHooks, renderer, shadowCSS, templateCompilerHooks, templateController, useShadowDOM } from "../../../@aurelia/runtime-html/dist/native-modules/index.mjs";
 
-import { BrowserPlatform as n } from "../../../@aurelia/platform-browser/dist/native-modules/index.mjs";
+import { BrowserPlatform as l } from "../../../@aurelia/platform-browser/dist/native-modules/index.mjs";
 
 export { HttpClient, HttpClientConfiguration, IHttpClient, json } from "../../../@aurelia/fetch-client/dist/native-modules/index.mjs";
 
+export { Metadata } from "../../../@aurelia/metadata/dist/native-modules/index.mjs";
+
+export { Platform, Task, TaskAbortError, TaskQueue, TaskQueuePriority, TaskStatus } from "../../../@aurelia/platform/dist/native-modules/index.mjs";
+
 export { IRouteContext, IRouter, IRouterEvents, Route, RouteConfig, RouteNode, Router, RouterConfiguration, RouterOptions, RouterRegistration, route } from "../../../@aurelia/router-lite/dist/native-modules/index.mjs";
 
-const l = n.getOrCreate(globalThis);
+export { BindingBehavior, BindingMode, CollectionKind, ComputedObserver, IObserverLocator, ISignaler, LifecycleFlags, ValueConverter, alias, bindingBehavior, observable, registerAliases, subscriberCollection, valueConverter } from "../../../@aurelia/runtime/dist/native-modules/index.mjs";
+
+const n = l.getOrCreate(globalThis);
 
 function u() {
-    return e.createContainer().register(t.instance(r, l), a);
+    return e.createContainer().register(t.instance(r, n), a);
 }
 
 class Aurelia extends o {
@@ -48,5 +54,5 @@ class Aurelia extends o {
     }
 }
 
-export { Aurelia, l as PLATFORM, Aurelia as default };
+export { Aurelia, n as PLATFORM, Aurelia as default };
 //# sourceMappingURL=index.mjs.map

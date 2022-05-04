@@ -3,6 +3,7 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 var kernel = require('@aurelia/kernel');
+var metadata = require('@aurelia/metadata');
 var AST = require('@aurelia/runtime');
 
 function _interopNamespace(e) {
@@ -55,7 +56,7 @@ const ValidationRuleAliasMessage = Object.freeze({
         return target;
     },
     setDefaultMessage(rule, { aliases }, append = true) {
-        const defaultMessages = append ? kernel.Metadata.getOwn(this.aliasKey, rule.prototype) : void 0;
+        const defaultMessages = append ? metadata.Metadata.getOwn(this.aliasKey, rule.prototype) : void 0;
         if (defaultMessages !== void 0) {
             const allMessages = {
                 ...Object.fromEntries(defaultMessages.map(({ name, defaultMessage }) => [name, defaultMessage])),
@@ -63,10 +64,10 @@ const ValidationRuleAliasMessage = Object.freeze({
             };
             aliases = kernel.toArray(Object.entries(allMessages)).map(([name, defaultMessage]) => ({ name, defaultMessage }));
         }
-        kernel.Metadata.define(ValidationRuleAliasMessage.aliasKey, aliases, rule instanceof Function ? rule.prototype : rule);
+        metadata.Metadata.define(ValidationRuleAliasMessage.aliasKey, aliases, rule instanceof Function ? rule.prototype : rule);
     },
     getDefaultMessages(rule) {
-        return kernel.Metadata.get(this.aliasKey, rule instanceof Function ? rule.prototype : rule);
+        return metadata.Metadata.get(this.aliasKey, rule instanceof Function ? rule.prototype : rule);
     }
 });
 function validationRule(definition) {
@@ -253,10 +254,10 @@ const validationRulesRegistrar = Object.freeze({
     defaultRuleSetName: '__default',
     set(target, rules, tag) {
         const key = `${validationRulesRegistrar.name}:${tag !== null && tag !== void 0 ? tag : validationRulesRegistrar.defaultRuleSetName}`;
-        kernel.Metadata.define(kernel.Protocol.annotation.keyFor(key), rules, target);
-        const keys = kernel.Metadata.getOwn(kernel.Protocol.annotation.name, target);
+        metadata.Metadata.define(kernel.Protocol.annotation.keyFor(key), rules, target);
+        const keys = metadata.Metadata.getOwn(kernel.Protocol.annotation.name, target);
         if (keys === void 0) {
-            kernel.Metadata.define(kernel.Protocol.annotation.name, [key], target);
+            metadata.Metadata.define(kernel.Protocol.annotation.name, [key], target);
         }
         else {
             keys.push(key);
@@ -265,13 +266,13 @@ const validationRulesRegistrar = Object.freeze({
     get(target, tag) {
         var _a;
         const key = kernel.Protocol.annotation.keyFor(validationRulesRegistrar.name, tag !== null && tag !== void 0 ? tag : validationRulesRegistrar.defaultRuleSetName);
-        return (_a = kernel.Metadata.get(key, target)) !== null && _a !== void 0 ? _a : kernel.Metadata.getOwn(key, target.constructor);
+        return (_a = metadata.Metadata.get(key, target)) !== null && _a !== void 0 ? _a : metadata.Metadata.getOwn(key, target.constructor);
     },
     unset(target, tag) {
-        const keys = kernel.Metadata.getOwn(kernel.Protocol.annotation.name, target);
+        const keys = metadata.Metadata.getOwn(kernel.Protocol.annotation.name, target);
         for (const key of keys.slice(0)) {
             if (key.startsWith(validationRulesRegistrar.name) && (tag === void 0 || key.endsWith(tag))) {
-                kernel.Metadata.delete(kernel.Protocol.annotation.keyFor(key), target);
+                metadata.Metadata.delete(kernel.Protocol.annotation.keyFor(key), target);
                 const index = keys.indexOf(key);
                 if (index > -1) {
                     keys.splice(index, 1);
@@ -280,7 +281,7 @@ const validationRulesRegistrar = Object.freeze({
         }
     },
     isValidationRulesSet(target) {
-        const keys = kernel.Metadata.getOwn(kernel.Protocol.annotation.name, target);
+        const keys = metadata.Metadata.getOwn(kernel.Protocol.annotation.name, target);
         return keys !== void 0 && keys.some((key) => key.startsWith(validationRulesRegistrar.name));
     }
 });

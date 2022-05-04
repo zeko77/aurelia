@@ -11,7 +11,8 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 import { DI, ILogger, LoggerConfiguration, pascalCase, Registration, sink, } from '@aurelia/kernel';
-import { bindingBehavior, customElement, CustomElement, IObserverLocator, Switch, valueConverter, Aurelia, IPlatform, bindable, INode, } from '@aurelia/runtime-html';
+import { bindingBehavior, IObserverLocator, valueConverter, } from '@aurelia/runtime';
+import { customElement, CustomElement, Switch, Aurelia, IPlatform, bindable, INode, } from '@aurelia/runtime-html';
 import { assert, createSpy, TestContext, } from '@aurelia/testing';
 import { createSpecFunction, } from '../util.js';
 describe('3-runtime-html/switch.spec.ts', function () {

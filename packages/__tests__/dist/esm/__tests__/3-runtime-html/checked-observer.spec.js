@@ -1,4 +1,5 @@
-import { enableArrayObservation, CustomElement, Aurelia, } from '@aurelia/runtime-html';
+import { enableArrayObservation, } from '@aurelia/runtime';
+import { CustomElement, Aurelia, } from '@aurelia/runtime-html';
 import { _, assert, createSpy, eachCartesianJoin, TestContext, } from '@aurelia/testing';
 describe('3-runtime-html/checked-observer.spec.ts', function () {
     const testCases = [

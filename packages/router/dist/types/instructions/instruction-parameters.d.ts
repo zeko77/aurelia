@@ -4,8 +4,8 @@
  * In its current state, it is NOT a good source for learning about the inner workings and design of the router.
  *
  */
-import { IRouter, IRouterConfiguration } from '../index.js';
-import { RouteableComponentType } from '../interfaces.js';
+import { IRouter, IRouterConfiguration } from '../index';
+import { RouteableComponentType } from '../interfaces';
 import { IContainer } from '@aurelia/kernel';
 export declare type Parameters = {
     [key: string]: unknown;

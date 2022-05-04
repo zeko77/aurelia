@@ -1,5 +1,5 @@
-import { IExpressionParser, IObserverLocator } from '@aurelia/runtime';
-import { BindingMode, CommandType, IHydratableController, IRenderer, IsBindingBehavior, AttrSyntax, IPlatform, IAttrMapper, ICommandBuildInfo } from '@aurelia/runtime-html';
+import { IExpressionParser, IObserverLocator, BindingMode, type IsBindingBehavior } from '@aurelia/runtime';
+import { CommandType, IHydratableController, IRenderer, AttrSyntax, IPlatform, IAttrMapper, ICommandBuildInfo } from '@aurelia/runtime-html';
 import type { CallBindingInstruction, BindingCommandInstance } from '@aurelia/runtime-html';
 export declare const TranslationParametersInstructionType = "tpt";
 declare const attribute = "t-params.bind";

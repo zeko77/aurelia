@@ -1,4 +1,5 @@
-import { DI, Protocol, Metadata, toArray, ILogger, IServiceLocator, Registration, noop } from '../../../kernel/dist/native-modules/index.mjs';
+import { DI, Protocol, toArray, ILogger, IServiceLocator, Registration, noop } from '../../../kernel/dist/native-modules/index.mjs';
+import { Metadata } from '../../../metadata/dist/native-modules/index.mjs';
 import * as AST from '../../../runtime/dist/native-modules/index.mjs';
 import { IExpressionParser, Scope, PrimitiveLiteralExpression } from '../../../runtime/dist/native-modules/index.mjs';
 

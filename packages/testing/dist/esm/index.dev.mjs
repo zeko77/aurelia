@@ -1,5 +1,7 @@
 import { noop, isArrayIndex, DI, Registration, emptyArray, kebabCase } from '@aurelia/kernel';
-import { StandardConfiguration, IPlatform, ITemplateCompiler, IObserverLocator, CustomElement, BrowserPlatform, CustomAttribute, Aurelia, valueConverter, bindable, customElement, IDirtyChecker, INodeObserverLocator, Scope, OverrideContext } from '@aurelia/runtime-html';
+import { IObserverLocator, valueConverter, IDirtyChecker, INodeObserverLocator, Scope, OverrideContext } from '@aurelia/runtime';
+import { StandardConfiguration, IPlatform, ITemplateCompiler, CustomElement, CustomAttribute, Aurelia, bindable, customElement } from '@aurelia/runtime-html';
+import { BrowserPlatform } from '@aurelia/platform-browser';
 
 const { getPrototypeOf, getOwnPropertyDescriptor, getOwnPropertyDescriptors, getOwnPropertyNames, getOwnPropertySymbols, defineProperty, defineProperties, } = Object;
 const Object_keys = Object.keys;

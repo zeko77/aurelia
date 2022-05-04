@@ -1,5 +1,5 @@
-import { LifecycleFlags } from '@aurelia/runtime-html';
-import { BindingWithBehavior } from '../utils.js';
+import { LifecycleFlags } from '@aurelia/runtime';
+import { BindingWithBehavior } from '../utils';
 import type { Scope } from '@aurelia/runtime';
 export declare class TranslationBindingBehavior {
     bind(flags: LifecycleFlags, _scope: Scope, binding: BindingWithBehavior): void;

@@ -1,12 +1,12 @@
 import { IExpressionParser } from '@aurelia/runtime';
-import { IAttrMapper } from '../attribute-mapper.js';
-import { PropertyBindingInstruction } from '../renderer.js';
+import { IAttrMapper } from '../attribute-mapper';
+import { PropertyBindingInstruction } from '../renderer';
 import type { Constructable, IContainer, IResourceKind, ResourceType, ResourceDefinition, PartialResourceDefinition } from '@aurelia/kernel';
-import type { IInstruction } from '../renderer.js';
-import type { AttrSyntax } from './attribute-pattern.js';
-import type { BindableDefinition } from '../bindable.js';
-import type { CustomAttributeDefinition } from './custom-attribute.js';
-import type { CustomElementDefinition } from './custom-element.js';
+import type { IInstruction } from '../renderer';
+import type { AttrSyntax } from './attribute-pattern';
+import type { BindableDefinition } from '../bindable';
+import type { CustomAttributeDefinition } from './custom-attribute';
+import type { CustomElementDefinition } from './custom-element';
 /**
  * Characteristics of a binding command.
  */

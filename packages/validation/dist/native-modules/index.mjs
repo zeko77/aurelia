@@ -1,4 +1,6 @@
-import { DI as e, Protocol as t, Metadata as s, toArray as i, ILogger as r, IServiceLocator as n, Registration as a, noop as o } from "../../../kernel/dist/native-modules/index.mjs";
+import { DI as e, Protocol as t, toArray as s, ILogger as i, IServiceLocator as r, Registration as n, noop as a } from "../../../kernel/dist/native-modules/index.mjs";
+
+import { Metadata as o } from "../../../metadata/dist/native-modules/index.mjs";
 
 import * as u from "../../../runtime/dist/native-modules/index.mjs";
 
@@ -26,22 +28,22 @@ const p = Object.freeze({
         p.setDefaultMessage(e, t);
         return e;
     },
-    setDefaultMessage(e, {aliases: t}, r = true) {
-        const n = r ? s.getOwn(this.aliasKey, e.prototype) : void 0;
-        if (void 0 !== n) {
+    setDefaultMessage(e, {aliases: t}, i = true) {
+        const r = i ? o.getOwn(this.aliasKey, e.prototype) : void 0;
+        if (void 0 !== r) {
             const e = {
-                ...Object.fromEntries(n.map((({name: e, defaultMessage: t}) => [ e, t ]))),
+                ...Object.fromEntries(r.map((({name: e, defaultMessage: t}) => [ e, t ]))),
                 ...Object.fromEntries(t.map((({name: e, defaultMessage: t}) => [ e, t ])))
             };
-            t = i(Object.entries(e)).map((([e, t]) => ({
+            t = s(Object.entries(e)).map((([e, t]) => ({
                 name: e,
                 defaultMessage: t
             })));
         }
-        s.define(p.aliasKey, t, e instanceof Function ? e.prototype : e);
+        o.define(p.aliasKey, t, e instanceof Function ? e.prototype : e);
     },
     getDefaultMessages(e) {
-        return s.get(this.aliasKey, e instanceof Function ? e.prototype : e);
+        return o.get(this.aliasKey, e instanceof Function ? e.prototype : e);
     }
 });
 
@@ -249,28 +251,28 @@ RuleProperty.$TYPE = "RuleProperty";
 const M = Object.freeze({
     name: "validation-rules",
     defaultRuleSetName: "__default",
-    set(e, i, r) {
-        const n = `${M.name}:${null !== r && void 0 !== r ? r : M.defaultRuleSetName}`;
-        s.define(t.annotation.keyFor(n), i, e);
-        const a = s.getOwn(t.annotation.name, e);
-        if (void 0 === a) s.define(t.annotation.name, [ n ], e); else a.push(n);
+    set(e, s, i) {
+        const r = `${M.name}:${null !== i && void 0 !== i ? i : M.defaultRuleSetName}`;
+        o.define(t.annotation.keyFor(r), s, e);
+        const n = o.getOwn(t.annotation.name, e);
+        if (void 0 === n) o.define(t.annotation.name, [ r ], e); else n.push(r);
     },
-    get(e, i) {
-        var r;
-        const n = t.annotation.keyFor(M.name, null !== i && void 0 !== i ? i : M.defaultRuleSetName);
-        return null !== (r = s.get(n, e)) && void 0 !== r ? r : s.getOwn(n, e.constructor);
+    get(e, s) {
+        var i;
+        const r = t.annotation.keyFor(M.name, null !== s && void 0 !== s ? s : M.defaultRuleSetName);
+        return null !== (i = o.get(r, e)) && void 0 !== i ? i : o.getOwn(r, e.constructor);
     },
-    unset(e, i) {
-        const r = s.getOwn(t.annotation.name, e);
-        for (const n of r.slice(0)) if (n.startsWith(M.name) && (void 0 === i || n.endsWith(i))) {
-            s.delete(t.annotation.keyFor(n), e);
-            const i = r.indexOf(n);
-            if (i > -1) r.splice(i, 1);
+    unset(e, s) {
+        const i = o.getOwn(t.annotation.name, e);
+        for (const r of i.slice(0)) if (r.startsWith(M.name) && (void 0 === s || r.endsWith(s))) {
+            o.delete(t.annotation.keyFor(r), e);
+            const s = i.indexOf(r);
+            if (s > -1) i.splice(s, 1);
         }
     },
     isValidationRulesSet(e) {
-        const i = s.getOwn(t.annotation.name, e);
-        return void 0 !== i && i.some((e => e.startsWith(M.name)));
+        const s = o.getOwn(t.annotation.name, e);
+        return void 0 !== s && s.some((e => e.startsWith(M.name)));
     }
 });
 
@@ -509,7 +511,7 @@ let z = class ValidationRules {
     }
 };
 
-z = $([ m(0, n), m(1, l), m(2, f), m(3, d) ], z);
+z = $([ m(0, r), m(1, l), m(2, f), m(3, d) ], z);
 
 const N = /^function\s*\([$_\w\d]+\)\s*\{(?:\s*["']{1}use strict["']{1};)?(?:[$_\s\w\d\/\*.['"\]+;]+)?\s*return\s+[$_\w\d]+((\.[$_\w\d]+|\[['"$_\w\d]+\])+)\s*;?\s*\}$/;
 
@@ -604,7 +606,7 @@ let j = class ValidationMessageProvider {
     }
 };
 
-j = $([ m(0, l), m(1, r), m(2, b) ], j);
+j = $([ m(0, l), m(1, i), m(2, b) ], j);
 
 var O;
 
@@ -1111,7 +1113,7 @@ let C = class ValidationDeserializer {
     }
 };
 
-C = $([ m(0, n), m(1, f), m(2, l) ], C);
+C = $([ m(0, r), m(1, f), m(2, l) ], C);
 
 let _ = class ModelValidationExpressionHydrator {
     constructor(e, t, s) {
@@ -1250,7 +1252,7 @@ let _ = class ModelValidationExpressionHydrator {
     }
 };
 
-_ = $([ m(0, n), m(1, f), m(2, l) ], _);
+_ = $([ m(0, r), m(1, f), m(2, l) ], _);
 
 class ValidateInstruction {
     constructor(e = void 0, t = void 0, s = void 0, i = void 0, r = void 0, n = 0) {
@@ -1296,7 +1298,7 @@ function Z(e) {
         register(t) {
             const s = K();
             e(s);
-            t.register(a.instance(b, s.CustomMessages), a.singleton(k, s.ValidatorType), a.singleton(f, s.MessageProviderType), a.singleton(d, s.HydratorType), a.transient(T, z), C);
+            t.register(n.instance(b, s.CustomMessages), n.singleton(k, s.ValidatorType), n.singleton(f, s.MessageProviderType), n.singleton(d, s.HydratorType), n.transient(T, z), C);
             return t;
         },
         customize(t) {
@@ -1305,7 +1307,7 @@ function Z(e) {
     };
 }
 
-const F = Z(o);
+const F = Z(a);
 
 export { v as BaseValidationRule, Deserializer, P as EqualsRule, b as ICustomMessages, d as IValidationExpressionHydrator, f as IValidationMessageProvider, T as IValidationRules, k as IValidator, x as LengthRule, ModelBasedRule, _ as ModelValidationExpressionHydrator, PropertyRule, E as RangeRule, y as RegexRule, w as RequiredRule, RuleProperty, Serializer, R as SizeRule, StandardValidator, ValidateInstruction, F as ValidationConfiguration, C as ValidationDeserializer, j as ValidationMessageProvider, ValidationResult, p as ValidationRuleAliasMessage, z as ValidationRules, ValidationSerializer, B as deserializePrimitive, K as getDefaultValidationConfiguration, S as parsePropertyName, A as rootObjectSymbol, L as serializePrimitive, I as serializePrimitives, g as validationRule, M as validationRulesRegistrar };
 //# sourceMappingURL=index.mjs.map

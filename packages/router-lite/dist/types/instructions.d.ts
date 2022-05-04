@@ -1,9 +1,9 @@
 import { IModule } from '@aurelia/kernel';
 import { ICustomElementViewModel, ICustomElementController, PartialCustomElementDefinition, CustomElementDefinition } from '@aurelia/runtime-html';
-import { IRouteViewModel } from './component-agent.js';
-import { RouteType } from './route.js';
-import { IRouteContext } from './route-context.js';
-import { INavigationOptions, NavigationOptions } from './router.js';
+import { IRouteViewModel } from './component-agent';
+import { RouteType } from './route';
+import { IRouteContext } from './route-context';
+import { INavigationOptions, NavigationOptions } from './router';
 export declare type RouteContextLike = IRouteContext | ICustomElementViewModel | ICustomElementController | HTMLElement;
 /**
  * Either a `RouteableComponent`, a string (name) that can be resolved to one or a ViewportInstruction:

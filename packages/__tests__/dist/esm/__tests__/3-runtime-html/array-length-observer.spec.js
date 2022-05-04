@@ -1,5 +1,5 @@
 import { assert, createFixture, eachCartesianJoin, } from '@aurelia/testing';
-import { ValueConverter, } from '@aurelia/runtime-html';
+import { ValueConverter, } from '@aurelia/runtime';
 describe('3-runtime-html/array-length-observer.spec.ts', function () {
     class TestClass {
         constructor() {

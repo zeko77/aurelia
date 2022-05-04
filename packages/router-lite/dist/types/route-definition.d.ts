@@ -1,8 +1,8 @@
 import { IContainer, IModule } from '@aurelia/kernel';
 import { CustomElementDefinition } from '@aurelia/runtime-html';
-import { Params } from './instructions.js';
-import { RouteConfig, IChildRouteConfig, Routeable, IRedirectRouteConfig } from './route.js';
-import { IRouteContext } from './route-context.js';
+import { Params } from './instructions';
+import { RouteConfig, IChildRouteConfig, type Routeable, IRedirectRouteConfig } from './route';
+import { IRouteContext } from './route-context';
 export declare const defaultViewportName = "default";
 export declare class RouteDefinition {
     readonly config: RouteConfig;

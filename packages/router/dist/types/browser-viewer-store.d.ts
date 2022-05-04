@@ -1,4 +1,4 @@
-import { INavigatorState } from './navigator.js';
+import { INavigatorState } from './navigator';
 export declare class NavigatorStateChangeEvent {
     readonly eventName: string;
     readonly viewerState: NavigatorViewerState;

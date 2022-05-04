@@ -8,7 +8,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { I18N, I18nConfiguration } from '@aurelia/i18n';
-import { Aurelia, bindable, customElement, IPlatform, ISignaler } from '@aurelia/runtime-html';
+import { ISignaler } from '@aurelia/runtime';
+import { Aurelia, bindable, customElement, IPlatform } from '@aurelia/runtime-html';
 import { assert, PLATFORM, TestContext } from '@aurelia/testing';
 import { createSpecFunction } from '../../util.js';
 describe('translation-integration', function () {

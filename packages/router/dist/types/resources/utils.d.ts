@@ -1,7 +1,7 @@
 import { IEventAggregator } from '@aurelia/kernel';
-import { IRouter } from '../router.js';
+import { IRouter } from '../router';
 import { IHydratedController } from '@aurelia/runtime-html';
-import { RoutingInstruction } from '../instructions/routing-instruction.js';
+import { RoutingInstruction } from '../instructions/routing-instruction';
 /**
  * Get either a provided value or the value of an html attribute,
  * depending on `useValue`. If `doExistCheck` is `true` the

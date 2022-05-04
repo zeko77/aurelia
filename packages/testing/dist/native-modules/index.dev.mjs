@@ -1,5 +1,7 @@
 import { noop, isArrayIndex, DI, Registration, emptyArray, kebabCase } from '../../../kernel/dist/native-modules/index.mjs';
-import { StandardConfiguration, IPlatform, ITemplateCompiler, IObserverLocator, CustomElement, BrowserPlatform, CustomAttribute, Aurelia, valueConverter, bindable, customElement, IDirtyChecker, INodeObserverLocator, Scope, OverrideContext } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { IObserverLocator, valueConverter, IDirtyChecker, INodeObserverLocator, Scope, OverrideContext } from '../../../runtime/dist/native-modules/index.mjs';
+import { StandardConfiguration, IPlatform, ITemplateCompiler, CustomElement, CustomAttribute, Aurelia, bindable, customElement } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { BrowserPlatform } from '../../../platform-browser/dist/native-modules/index.mjs';
 
 const { getPrototypeOf, getOwnPropertyDescriptor, getOwnPropertyDescriptors, getOwnPropertyNames, getOwnPropertySymbols, defineProperty, defineProperties, } = Object;
 const Object_keys = Object.keys;

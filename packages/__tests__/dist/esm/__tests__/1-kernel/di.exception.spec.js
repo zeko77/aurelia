@@ -41,7 +41,14 @@ describe('Exception', function () {
             __param(0, optional(IFoo)),
             __metadata("design:paramtypes", [Object])
         ], Foo);
-        assert.throws(() => container.get(IFoo), /AUR0003:Foo/, 'test');
+        let ex;
+        try {
+            container.get(IFoo);
+        }
+        catch (e) {
+            ex = e;
+        }
+        assert.match(ex === null || ex === void 0 ? void 0 : ex.message, /AUR0003:Foo/, 'container.get(IFoo) - cyclic dep');
         // assert.throws(() => container.get(IFoo), /.*Cycl*/, 'test');
     });
 });

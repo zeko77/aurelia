@@ -8,8 +8,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { kebabCase, LoggerConfiguration, DefaultLogger, camelCase, Registration, } from '@aurelia/kernel';
-import { ForOfStatement, Interpolation, parseExpression, } from '@aurelia/runtime';
-import { AccessScopeExpression, bindable, BindableDefinition, BindingIdentifier, BindingMode, customAttribute, CustomAttribute, customElement, CustomElement, DelegationStrategy, PrimitiveLiteralExpression, CustomElementDefinition, AuSlot, Aurelia, HydrateElementInstruction, IExpressionParser, ITemplateCompilerHooks, IAttributeParser, HydrateAttributeInstruction, AttrSyntax, If, attributePattern, PropertyBindingInstruction, InterpolationInstruction, } from '@aurelia/runtime-html';
+import { ForOfStatement, Interpolation, parseExpression, AccessScopeExpression, BindingIdentifier, BindingMode, DelegationStrategy, PrimitiveLiteralExpression, IExpressionParser, } from '@aurelia/runtime';
+import { bindable, BindableDefinition, customAttribute, CustomAttribute, customElement, CustomElement, CustomElementDefinition, AuSlot, Aurelia, HydrateElementInstruction, ITemplateCompilerHooks, IAttributeParser, HydrateAttributeInstruction, AttrSyntax, If, attributePattern, PropertyBindingInstruction, InterpolationInstruction, } from '@aurelia/runtime-html';
 import { assert, eachCartesianJoinFactory, TestContext, verifyBindingInstructionsEqual, generateCartesianProduct, } from '@aurelia/testing';
 export function createAttribute(name, value) {
     const attr = document.createAttribute(name);

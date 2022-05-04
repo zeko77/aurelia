@@ -1,4 +1,5 @@
-import { AccessScopeExpression, BindingContext, Else, If, Scope, Controller, CustomElementDefinition, PropertyBindingRendererRegistration, TextBindingRendererRegistration, TextBindingInstruction, Interpolation, IWorkTracker, INodeObserverLocatorRegistration, CustomAttribute, IRendering, } from '@aurelia/runtime-html';
+import { Scope, Interpolation, AccessScopeExpression, BindingContext } from '@aurelia/runtime';
+import { Else, If, Controller, CustomElementDefinition, PropertyBindingRendererRegistration, TextBindingRendererRegistration, TextBindingInstruction, IWorkTracker, INodeObserverLocatorRegistration, CustomAttribute, IRendering, } from '@aurelia/runtime-html';
 import { eachCartesianJoin, assert, PLATFORM, createContainer, createFixture, } from '@aurelia/testing';
 describe(`3-runtime-html/if.integration.spec.ts`, function () {
     function runActivateLifecycle(sut, flags, scope) {

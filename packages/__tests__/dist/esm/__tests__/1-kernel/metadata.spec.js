@@ -7,7 +7,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Metadata, metadata, singleton } from '@aurelia/kernel';
+import { Metadata, metadata } from '@aurelia/metadata';
+import { singleton } from '@aurelia/kernel';
 import { assert } from '@aurelia/testing';
 describe('Metadata', function () {
     describe('define', function () {

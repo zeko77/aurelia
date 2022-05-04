@@ -1,17 +1,17 @@
 import { BindingMode, IExpressionParser, IObserverLocator } from '@aurelia/runtime';
-import { IEventDelegator } from './observation/event-delegator.js';
-import { CustomElementDefinition } from './resources/custom-element.js';
-import { IProjections } from './resources/slot-injectables.js';
-import { CustomAttributeDefinition } from './resources/custom-attribute.js';
-import { INode } from './dom.js';
-import { IController } from './templating/controller.js';
-import { IPlatform } from './platform.js';
-import { IRendering } from './templating/rendering.js';
-import { AttrSyntax } from './resources/attribute-pattern.js';
+import { IEventDelegator } from './observation/event-delegator';
+import { CustomElementDefinition } from './resources/custom-element';
+import { IProjections } from './resources/slot-injectables';
+import { CustomAttributeDefinition } from './resources/custom-attribute';
+import { INode } from './dom';
+import { IController } from './templating/controller';
+import { IPlatform } from './platform';
+import { IRendering } from './templating/rendering';
+import { AttrSyntax } from './resources/attribute-pattern';
 import type { IServiceLocator, IContainer, Class, IRegistry } from '@aurelia/kernel';
 import type { Interpolation, IsBindingBehavior, IInterceptableBinding, ForOfStatement, DelegationStrategy } from '@aurelia/runtime';
-import type { IHydratableController } from './templating/controller.js';
-import type { PartialCustomElementDefinition } from './resources/custom-element.js';
+import type { IHydratableController } from './templating/controller';
+import type { PartialCustomElementDefinition } from './resources/custom-element';
 export declare const enum InstructionType {
     hydrateElement = "ra",
     hydrateAttribute = "rb",

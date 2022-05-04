@@ -5,14 +5,14 @@
  *
  */
 import { CustomElementType } from '@aurelia/runtime-html';
-import { IRouter } from '../router.js';
-import { RoutingInstruction } from '../instructions/routing-instruction.js';
-import { TransitionAction, RoutingScope } from '../routing-scope.js';
-import { Navigation } from '../navigation.js';
-import { NavigationCoordinator } from '../navigation-coordinator.js';
-import { Step } from '../utilities/runner.js';
-import { Route } from '../route.js';
-import { Endpoint, IConnectedCustomElement, IEndpointOptions } from './endpoint.js';
+import { IRouter } from '../router';
+import { RoutingInstruction } from '../instructions/routing-instruction';
+import { TransitionAction, RoutingScope } from '../routing-scope';
+import { Navigation } from '../navigation';
+import { NavigationCoordinator } from '../navigation-coordinator';
+import { Step } from '../utilities/runner';
+import { Route } from '../route';
+import { Endpoint, IConnectedCustomElement, IEndpointOptions } from './endpoint';
 /**
  * The viewport scope is an endpoint that encapsulates an au-viewport-scope custom
  * element instance. Its content isn't managed by, or even relevant for, the viewport

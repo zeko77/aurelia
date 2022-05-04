@@ -1,5 +1,6 @@
 /* eslint-disable no-constant-condition, mocha/no-hooks, mocha/no-sibling-hooks */
-import { DI, ISink, Metadata, Protocol, Registration } from '@aurelia/kernel';
+import { Metadata } from '@aurelia/metadata';
+import { DI, ISink, Protocol, Registration } from '@aurelia/kernel';
 import { Interpolation, PrimitiveLiteralExpression, IExpressionParser, Scope } from '@aurelia/runtime';
 import { assert, TestContext } from '@aurelia/testing';
 import { EqualsRule, IValidationMessageProvider, IValidationRules, LengthRule, PropertyRule, RangeRule, RegexRule, RequiredRule, SizeRule, ValidationConfiguration, BaseValidationRule, parsePropertyName, ValidationRuleAliasMessage, validationRulesRegistrar, rootObjectSymbol, } from '@aurelia/validation';

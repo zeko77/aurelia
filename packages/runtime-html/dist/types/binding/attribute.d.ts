@@ -1,9 +1,10 @@
 import { IServiceLocator } from '@aurelia/kernel';
 import { BindingMode, LifecycleFlags, IObserver } from '@aurelia/runtime';
-import { IPlatform } from '../platform.js';
-import type { ForOfStatement, IObserverLocator, IsBindingBehavior, ITask, Scope } from '@aurelia/runtime';
-import type { INode } from '../dom.js';
-import type { IAstBasedBinding } from './interfaces-bindings.js';
+import { IPlatform } from '../platform';
+import type { ITask } from '@aurelia/platform';
+import type { ForOfStatement, IObserverLocator, IsBindingBehavior, Scope } from '@aurelia/runtime';
+import type { INode } from '../dom';
+import type { IAstBasedBinding } from './interfaces-bindings';
 export interface AttributeBinding extends IAstBasedBinding {
 }
 /**

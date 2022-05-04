@@ -1,6 +1,7 @@
 import { Store, STORE } from '@aurelia/store-v1';
+import { BrowserPlatform } from '@aurelia/platform-browser';
 import { DI, ILogger, IPlatform, Registration } from '@aurelia/kernel';
-import { BrowserPlatform, IWindow } from '@aurelia/runtime-html';
+import { IWindow } from '@aurelia/runtime-html';
 export class DevToolsMock {
     constructor(devToolsOptions) {
         this.devToolsOptions = devToolsOptions;

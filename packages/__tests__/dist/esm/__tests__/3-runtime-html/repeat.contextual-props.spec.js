@@ -1,5 +1,6 @@
 import { noop } from '@aurelia/kernel';
-import { CustomElement, ValueConverter, Aurelia, } from '@aurelia/runtime-html';
+import { ValueConverter } from '@aurelia/runtime';
+import { CustomElement, Aurelia, } from '@aurelia/runtime-html';
 import { assert, TestContext } from '@aurelia/testing';
 describe(`[repeat.contextual-prop.spec.ts]`, function () {
     // todo: enable tests that create new collection via value converter

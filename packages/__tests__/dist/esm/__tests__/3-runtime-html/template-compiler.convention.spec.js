@@ -1,4 +1,5 @@
-import { BindingMode, ITemplateCompiler, } from '@aurelia/runtime-html';
+import { BindingMode, } from '@aurelia/runtime';
+import { ITemplateCompiler, } from '@aurelia/runtime-html';
 import { assert, TestContext } from '@aurelia/testing';
 describe('3-runtime-html/template-compiler.convention.spec.ts \n\thtml convention', function () {
     const bindToTwoWayCombos = [

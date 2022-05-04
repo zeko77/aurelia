@@ -1,5 +1,6 @@
 import { Writable } from '@aurelia/kernel';
-import { ICustomElementController, IPlatform, IViewModel, LifecycleFlags as LF, IHydratedController as HC, IHydratedParentController as HPC } from '@aurelia/runtime-html';
+import { LifecycleFlags as LF } from '@aurelia/runtime';
+import { ICustomElementController, IPlatform, IViewModel, IHydratedController as HC, IHydratedParentController as HPC } from '@aurelia/runtime-html';
 import { Parameters as P, Navigation, RoutingInstruction } from '@aurelia/router';
 import { ResolutionMode, SwapStrategy } from './_shared/create-fixture.js';
 declare const hookNames: readonly ["binding", "bound", "attaching", "attached", "detaching", "unbinding", "canLoad", "load", "canUnload", "unload"];

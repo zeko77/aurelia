@@ -1,6 +1,5 @@
-import { Metadata, Protocol, Registration, DI, firstDefined, mergeArrays, fromAnnotationOrDefinitionOrTypeOrDefault, isNumberOrBigInt, isStringOrDate, emptyArray, isArrayIndex, IPlatform, ILogger } from '../../../kernel/dist/native-modules/index.mjs';
-export { IPlatform } from '../../../kernel/dist/native-modules/index.mjs';
-export { Platform, Task, TaskAbortError, TaskQueue, TaskQueuePriority, TaskStatus } from '../../../platform/dist/native-modules/index.mjs';
+import { Protocol, Registration, DI, firstDefined, mergeArrays, fromAnnotationOrDefinitionOrTypeOrDefault, isNumberOrBigInt, isStringOrDate, emptyArray, isArrayIndex, IPlatform, ILogger } from '../../../kernel/dist/native-modules/index.mjs';
+import { Metadata } from '../../../metadata/dist/native-modules/index.mjs';
 
 const hasOwnProp = Object.prototype.hasOwnProperty;
 const def = Reflect.defineProperty;
@@ -2449,7 +2448,7 @@ class ArrayIndexObserver {
     getValue() {
         return this.owner.collection[this.index];
     }
-    setValue(newValue, flags) {
+    setValue(newValue, flag) {
         if (newValue === this.getValue()) {
             return;
         }

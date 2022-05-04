@@ -1,6 +1,4 @@
 import { Metadata, applyMetadataPolyfill, isObject } from '../../../metadata/dist/native-modules/index.mjs';
-export { Metadata, applyMetadataPolyfill, isNullOrUndefined, isObject, metadata } from '../../../metadata/dist/native-modules/index.mjs';
-export { Platform, Task, TaskAbortError, TaskQueue, TaskQueuePriority, TaskStatus } from '../../../platform/dist/native-modules/index.mjs';
 
 const getOwnMetadata = Metadata.getOwn;
 const hasOwnMetadata = Metadata.hasOwn;

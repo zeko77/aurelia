@@ -10,7 +10,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { bindable, alias, customAttribute, INode, CustomAttribute } from '@aurelia/runtime-html';
+import { alias } from '@aurelia/runtime';
+import { bindable, customAttribute, INode, CustomAttribute } from '@aurelia/runtime-html';
 import { assert, eachCartesianJoin, createFixture } from '@aurelia/testing';
 describe('custom-attributes', function () {
     // custom elements

@@ -1,4 +1,5 @@
-import { AccessScopeExpression, BindingContext, BindingIdentifier, ForOfStatement, Scope, Repeat, Controller, CustomElementDefinition, PropertyBindingRendererRegistration, TextBindingRendererRegistration, TextBindingInstruction, Interpolation, INodeObserverLocatorRegistration, IRendering, } from '@aurelia/runtime-html';
+import { Scope, Interpolation, AccessScopeExpression, ForOfStatement, BindingIdentifier, BindingContext } from '@aurelia/runtime';
+import { Repeat, Controller, CustomElementDefinition, PropertyBindingRendererRegistration, TextBindingRendererRegistration, TextBindingInstruction, INodeObserverLocatorRegistration, IRendering, } from '@aurelia/runtime-html';
 import { eachCartesianJoin, assert, PLATFORM, createContainer, } from '@aurelia/testing';
 describe(`Repeat`, function () {
     function runActivateLifecycle(sut, flags, scope) {

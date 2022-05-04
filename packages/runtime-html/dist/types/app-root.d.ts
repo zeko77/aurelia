@@ -1,7 +1,7 @@
 import { InstanceProvider, ILogger } from '@aurelia/kernel';
 import type { IContainer, IDisposable } from '@aurelia/kernel';
-import type { ICustomElementController } from './templating/controller.js';
-import type { IPlatform } from './platform.js';
+import type { ICustomElementController } from './templating/controller';
+import type { IPlatform } from './platform';
 export interface ISinglePageApp {
     host: HTMLElement;
     component: unknown;

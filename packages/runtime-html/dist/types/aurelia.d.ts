@@ -1,5 +1,5 @@
-import { IAppRoot, ISinglePageApp } from './app-root.js';
-import { ICustomElementController, IHydratedParentController } from './templating/controller.js';
+import { IAppRoot, ISinglePageApp } from './app-root';
+import { ICustomElementController, IHydratedParentController } from './templating/controller';
 import type { Constructable, IContainer, IDisposable } from '@aurelia/kernel';
 export interface IAurelia extends Aurelia {
 }

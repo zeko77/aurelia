@@ -1,6 +1,6 @@
-import { IContainer, IRegistry } from './di.js';
-import { Class, Constructable } from './interfaces.js';
-import { IPlatform } from './platform.js';
+import { IContainer, IRegistry } from './di';
+import { Class, Constructable } from './interfaces';
+import { IPlatform } from './platform';
 export declare const enum LogLevel {
     /**
      * The most detailed information about internal app state.
@@ -148,11 +148,11 @@ export interface ISink {
  */
 export interface ILogger extends DefaultLogger {
 }
-export declare const ILogConfig: import("./di.js").InterfaceSymbol<ILogConfig>;
-export declare const ISink: import("./di.js").InterfaceSymbol<ISink>;
-export declare const ILogEventFactory: import("./di.js").InterfaceSymbol<ILogEventFactory>;
-export declare const ILogger: import("./di.js").InterfaceSymbol<ILogger>;
-export declare const ILogScopes: import("./di.js").InterfaceSymbol<string[]>;
+export declare const ILogConfig: import("./di").InterfaceSymbol<ILogConfig>;
+export declare const ISink: import("./di").InterfaceSymbol<ISink>;
+export declare const ILogEventFactory: import("./di").InterfaceSymbol<ILogEventFactory>;
+export declare const ILogger: import("./di").InterfaceSymbol<ILogger>;
+export declare const ILogScopes: import("./di").InterfaceSymbol<string[]>;
 interface SinkDefinition {
     handles: Exclude<LogLevel, LogLevel.none>[];
 }

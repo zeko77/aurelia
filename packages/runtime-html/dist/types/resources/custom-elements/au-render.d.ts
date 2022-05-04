@@ -1,12 +1,12 @@
 import { Constructable } from '@aurelia/kernel';
 import { LifecycleFlags } from '@aurelia/runtime';
-import { RenderPlan } from '../../create-element.js';
-import { HydrateElementInstruction } from '../../renderer.js';
-import { IPlatform } from '../../platform.js';
-import { IViewFactory } from '../../templating/view.js';
-import { CustomElementDefinition } from '../custom-element.js';
-import { ControllerVisitor, ICustomElementController, ICustomElementViewModel, IHydratedController, IHydratedParentController, IHydrationContext, ISyntheticView } from '../../templating/controller.js';
-import { IRendering } from '../../templating/rendering.js';
+import { RenderPlan } from '../../create-element';
+import { HydrateElementInstruction } from '../../renderer';
+import { IPlatform } from '../../platform';
+import { IViewFactory } from '../../templating/view';
+import { CustomElementDefinition } from '../custom-element';
+import { ControllerVisitor, ICustomElementController, ICustomElementViewModel, IHydratedController, IHydratedParentController, IHydrationContext, ISyntheticView } from '../../templating/controller';
+import { IRendering } from '../../templating/rendering';
 export declare type Subject = string | IViewFactory | ISyntheticView | RenderPlan | Constructable | CustomElementDefinition;
 export declare type MaybeSubjectPromise = Subject | Promise<Subject> | undefined;
 export declare class AuRender implements ICustomElementViewModel {

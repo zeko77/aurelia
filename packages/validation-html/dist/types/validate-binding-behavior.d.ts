@@ -1,6 +1,5 @@
-import { BindingInterceptor, LifecycleFlags, BindingBehaviorExpression } from '@aurelia/runtime-html';
-import { BindingWithBehavior, ValidationResultsSubscriber, ValidationEvent } from './validation-controller.js';
-import type { Scope } from '@aurelia/runtime';
+import { BindingBehaviorExpression, BindingInterceptor, LifecycleFlags, Scope } from '@aurelia/runtime';
+import { BindingWithBehavior, ValidationResultsSubscriber, ValidationEvent } from './validation-controller';
 /**
  * Validation triggers.
  */

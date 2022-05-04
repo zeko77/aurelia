@@ -3,7 +3,9 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 var kernel = require('@aurelia/kernel');
+var runtime = require('@aurelia/runtime');
 var runtimeHtml = require('@aurelia/runtime-html');
+var platformBrowser = require('@aurelia/platform-browser');
 
 const { getPrototypeOf, getOwnPropertyDescriptor, getOwnPropertyDescriptors, getOwnPropertyNames, getOwnPropertySymbols, defineProperty, defineProperties, } = Object;
 const Object_keys = Object.keys;
@@ -877,7 +879,7 @@ class TestContext {
     }
     get observerLocator() {
         if (this.oL === void 0) {
-            this.oL = this.container.get(runtimeHtml.IObserverLocator);
+            this.oL = this.container.get(runtime.IObserverLocator);
         }
         return this.oL;
     }
@@ -2340,7 +2342,7 @@ function verifyBindingInstructionsEqual(actual, expected, errors, path) {
 
 function ensureTaskQueuesEmpty(platform) {
     if (!platform) {
-        platform = runtimeHtml.BrowserPlatform.getOrCreate(globalThis);
+        platform = platformBrowser.BrowserPlatform.getOrCreate(globalThis);
     }
     platform.taskQueue.flush();
     platform.taskQueue['pending'].forEach((x) => x.cancel());
@@ -2944,7 +2946,7 @@ const areTaskQueuesEmpty = (function () {
         return info;
     }
     return function $areTaskQueuesEmpty(clearBeforeThrow) {
-        const platform = runtimeHtml.BrowserPlatform.getOrCreate(globalThis);
+        const platform = platformBrowser.BrowserPlatform.getOrCreate(globalThis);
         const domWriteQueue = platform.domWriteQueue;
         const taskQueue = platform.taskQueue;
         const domReadQueue = platform.domReadQueue;
@@ -7929,7 +7931,7 @@ exports.SortValueConverter = class SortValueConverter {
     }
 };
 exports.SortValueConverter = __decorate([
-    runtimeHtml.valueConverter('sort')
+    runtime.valueConverter('sort')
 ], exports.SortValueConverter);
 exports.JsonValueConverter = class JsonValueConverter {
     toView(input) {
@@ -7940,7 +7942,7 @@ exports.JsonValueConverter = class JsonValueConverter {
     }
 };
 exports.JsonValueConverter = __decorate([
-    runtimeHtml.valueConverter('json')
+    runtime.valueConverter('json')
 ], exports.JsonValueConverter);
 let NameTag = class NameTag {
 };
@@ -8125,14 +8127,14 @@ function createObserverLocator(containerOrLifecycle) {
             return false;
         }
     };
-    kernel.Registration.instance(runtimeHtml.IDirtyChecker, null).register(container);
-    kernel.Registration.instance(runtimeHtml.INodeObserverLocator, dummyLocator).register(container);
-    return container.get(runtimeHtml.IObserverLocator);
+    kernel.Registration.instance(runtime.IDirtyChecker, null).register(container);
+    kernel.Registration.instance(runtime.INodeObserverLocator, dummyLocator).register(container);
+    return container.get(runtime.IObserverLocator);
 }
 function createScopeForTest(bindingContext = {}, parentBindingContext, isBoundary) {
     return parentBindingContext
-        ? runtimeHtml.Scope.fromParent(runtimeHtml.Scope.create(parentBindingContext), bindingContext)
-        : runtimeHtml.Scope.create(bindingContext, runtimeHtml.OverrideContext.create(bindingContext), isBoundary);
+        ? runtime.Scope.fromParent(runtime.Scope.create(parentBindingContext), bindingContext)
+        : runtime.Scope.create(bindingContext, runtime.OverrideContext.create(bindingContext), isBoundary);
 }
 
 class Call {

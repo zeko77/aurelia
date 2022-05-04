@@ -1,4 +1,5 @@
-import { ICustomElementController, IHydratedController, IHydratedParentController, LifecycleFlags } from '@aurelia/runtime-html';
+import { LifecycleFlags } from '@aurelia/runtime';
+import { ICustomElementController, IHydratedController, IHydratedParentController } from '@aurelia/runtime-html';
 import { Params, RouteNode, NavigationInstruction, IRouteViewModel } from '@aurelia/router-lite';
 import { IHookInvocationAggregator } from './hook-invocation-tracker.js';
 import { IHookSpec } from './hook-spec.js';

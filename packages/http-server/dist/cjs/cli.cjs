@@ -4,6 +4,7 @@ var fs = require('fs');
 var path = require('path');
 var os = require('os');
 var kernel = require('@aurelia/kernel');
+var platform = require('@aurelia/platform');
 var http = require('http');
 var https = require('https');
 var http2 = require('http2');
@@ -676,7 +677,7 @@ const HttpServerConfiguration = {
         opts.validate();
         return {
             register(container) {
-                container.register(kernel.Registration.instance(IHttpServerOptions, opts), kernel.Registration.singleton(IRequestHandler, PushStateHandler), kernel.Registration.singleton(IRequestHandler, FileServer), kernel.Registration.singleton(IHttp2FileServer, Http2FileServer), kernel.LoggerConfiguration.create({ sinks: [kernel.ConsoleSink], level: opts.level, colorOptions: 1 /* colors */ }), kernel.Registration.instance(kernel.IPlatform, new kernel.Platform(globalThis)));
+                container.register(kernel.Registration.instance(IHttpServerOptions, opts), kernel.Registration.singleton(IRequestHandler, PushStateHandler), kernel.Registration.singleton(IRequestHandler, FileServer), kernel.Registration.singleton(IHttp2FileServer, Http2FileServer), kernel.LoggerConfiguration.create({ sinks: [kernel.ConsoleSink], level: opts.level, colorOptions: 1 /* colors */ }), kernel.Registration.instance(kernel.IPlatform, new platform.Platform(globalThis)));
                 if (opts.useHttp2) {
                     container.register(kernel.Registration.singleton(IHttpServer, Http2Server));
                 }
@@ -717,6 +718,9 @@ async function parseArgs(args) {
                     }
                     catch ( /*  */_c) { /*  */ }
                 }
+            }
+            if (config === void 0) {
+                throw new Error('Unable to load configuration');
             }
             configuration.applyConfig(config);
             args = args.slice(1);

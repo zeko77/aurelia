@@ -1,6 +1,10 @@
 import { noop as e, isArrayIndex as t, DI as n, Registration as i, emptyArray as r, kebabCase as a } from "@aurelia/kernel";
 
-import { StandardConfiguration as s, IPlatform as o, ITemplateCompiler as l, IObserverLocator as u, CustomElement as c, BrowserPlatform as f, CustomAttribute as d, Aurelia as h, valueConverter as p, bindable as g, customElement as m, IDirtyChecker as b, INodeObserverLocator as v, Scope as y, OverrideContext as $ } from "@aurelia/runtime-html";
+import { IObserverLocator as s, valueConverter as o, IDirtyChecker as l, INodeObserverLocator as u, Scope as c, OverrideContext as f } from "@aurelia/runtime";
+
+import { StandardConfiguration as d, IPlatform as h, ITemplateCompiler as p, CustomElement as g, CustomAttribute as m, Aurelia as b, bindable as v, customElement as y } from "@aurelia/runtime-html";
+
+import { BrowserPlatform as $ } from "@aurelia/platform-browser";
 
 const {getPrototypeOf: x, getOwnPropertyDescriptor: w, getOwnPropertyDescriptors: k, getOwnPropertyNames: C, getOwnPropertySymbols: S, defineProperty: O, defineProperties: E} = Object;
 
@@ -726,22 +730,22 @@ class TestContext {
     get container() {
         if (void 0 === this.c) {
             this.c = n.createContainer();
-            s.register(this.c);
+            d.register(this.c);
             this.c.register(i.instance(TestContext, this));
-            if (false === this.c.has(o, true)) this.c.register(bt);
+            if (false === this.c.has(h, true)) this.c.register(bt);
         }
         return this.c;
     }
     get platform() {
-        if (void 0 === this.p) this.p = this.container.get(o);
+        if (void 0 === this.p) this.p = this.container.get(h);
         return this.p;
     }
     get templateCompiler() {
-        if (void 0 === this.t) this.t = this.container.get(l);
+        if (void 0 === this.t) this.t = this.container.get(p);
         return this.t;
     }
     get observerLocator() {
-        if (void 0 === this.oL) this.oL = this.container.get(u);
+        if (void 0 === this.oL) this.oL = this.container.get(s);
         return this.oL;
     }
     get domParser() {
@@ -778,7 +782,7 @@ let bt;
 
 function vt(e) {
     mt = e;
-    bt = i.instance(o, e);
+    bt = i.instance(h, e);
 }
 
 function yt(...e) {
@@ -1780,7 +1784,7 @@ function Ln(e, t) {
 
 function zn(e, t) {
     var n, i, r, a, s;
-    return null !== (s = null !== (a = null !== (r = null === (i = null === (n = c.for(t, {
+    return null !== (s = null !== (a = null !== (r = null === (i = null === (n = g.for(t, {
         optional: true
     })) || void 0 === n ? void 0 : n.shadowRoot) || void 0 === i ? void 0 : i.firstChild) && void 0 !== r ? r : t.firstChild) && void 0 !== a ? a : t.nextSibling) && void 0 !== s ? s : Ln(e, t);
 }
@@ -1788,7 +1792,7 @@ function zn(e, t) {
 function Tn(e, t) {
     var n, i, r;
     let a = "";
-    let s = null !== (r = null === (i = null === (n = c.for(e, {
+    let s = null !== (r = null === (i = null === (n = g.for(e, {
         optional: true
     })) || void 0 === n ? void 0 : n.shadowRoot) || void 0 === i ? void 0 : i.firstChild) && void 0 !== r ? r : e.firstChild;
     while (null !== s) {
@@ -1877,7 +1881,7 @@ function Nn(e, t, n, i) {
 }
 
 function In(e) {
-    if (!e) e = f.getOrCreate(globalThis);
+    if (!e) e = $.getOrCreate(globalThis);
     e.taskQueue.flush();
     e.taskQueue["pending"].forEach((e => e.cancel()));
     e.domWriteQueue.flush();
@@ -2287,7 +2291,7 @@ function xi(e, t, n) {
 }
 
 function wi(e, t) {
-    if (!c.isType(e)) Bn({
+    if (!g.isType(e)) Bn({
         actual: false,
         expected: true,
         message: t,
@@ -2297,7 +2301,7 @@ function wi(e, t) {
 }
 
 function ki(e, t) {
-    if (!d.isType(e)) Bn({
+    if (!m.isType(e)) Bn({
         actual: false,
         expected: true,
         message: t,
@@ -2418,7 +2422,7 @@ const qi = function() {
         return o;
     }
     return function e(t) {
-        const i = f.getOrCreate(globalThis);
+        const i = $.getOrCreate(globalThis);
         const r = i.domWriteQueue;
         const a = i.taskQueue;
         const s = i.domReadQueue;
@@ -3645,42 +3649,42 @@ function _i(e, t, n = [], i = true, r = TestContext.create()) {
     a.register(...n);
     const l = r.doc.body.appendChild(r.doc.createElement("div"));
     const u = l.appendChild(r.createElement("app"));
-    const f = new h(a);
-    const d = c.define({
+    const c = new b(a);
+    const f = g.define({
         name: "app",
         template: e
     }, t || class {});
-    if (a.has(d, true)) throw new Error("Container of the context cotains instance of the application root component. " + "Consider using a different class, or context as it will likely cause surprises in tests.");
-    const p = a.get(d);
-    let g;
+    if (a.has(f, true)) throw new Error("Container of the context cotains instance of the application root component. " + "Consider using a different class, or context as it will likely cause surprises in tests.");
+    const d = a.get(f);
+    let h;
     if (i) {
-        f.app({
+        c.app({
             host: u,
-            component: p
+            component: d
         });
-        g = f.start();
+        h = c.start();
     }
     return {
-        startPromise: g,
+        startPromise: h,
         ctx: r,
         host: r.doc.firstElementChild,
         container: a,
         platform: s,
         testHost: l,
         appHost: u,
-        au: f,
-        component: p,
+        au: c,
+        component: d,
         observerLocator: o,
         start: async () => {
-            await f.app({
+            await c.app({
                 host: u,
-                component: p
+                component: d
             }).start();
         },
         tearDown: async () => {
-            await f.stop();
+            await c.stop();
             l.remove();
-            f.dispose();
+            c.dispose();
         }
     };
 }
@@ -4054,7 +4058,7 @@ let Yi = class SortValueConverter {
     }
 };
 
-Yi = Gi([ p("sort") ], Yi);
+Yi = Gi([ o("sort") ], Yi);
 
 let Ki = class JsonValueConverter {
     toView(e) {
@@ -4065,13 +4069,13 @@ let Ki = class JsonValueConverter {
     }
 };
 
-Ki = Gi([ p("json") ], Ki);
+Ki = Gi([ o("json") ], Ki);
 
 let Qi = class NameTag {};
 
-Gi([ g() ], Qi.prototype, "name", void 0);
+Gi([ v() ], Qi.prototype, "name", void 0);
 
-Qi = Gi([ m({
+Qi = Gi([ y({
     name: "name-tag",
     template: `<template>\${name}</template>`,
     needsCompile: true,
@@ -4231,13 +4235,13 @@ function ur(e) {
             return false;
         }
     };
-    i.instance(b, null).register(t);
-    i.instance(v, n).register(t);
-    return t.get(u);
+    i.instance(l, null).register(t);
+    i.instance(u, n).register(t);
+    return t.get(s);
 }
 
 function cr(e = {}, t, n) {
-    return t ? y.fromParent(y.create(t), e) : y.create(e, $.create(e), n);
+    return t ? c.fromParent(c.create(t), e) : c.create(e, f.create(e), n);
 }
 
 class Call {

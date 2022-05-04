@@ -1,6 +1,6 @@
-import { LifecycleFlags } from '../observation.js';
+import { LifecycleFlags } from '../observation';
 import type { IIndexable } from '@aurelia/kernel';
-import type { IBinding, IBindingContext, IOverrideContext } from '../observation.js';
+import type { IBinding, IBindingContext, IOverrideContext } from '../observation';
 export declare class BindingContext implements IBindingContext {
     [key: string]: unknown;
     private constructor();

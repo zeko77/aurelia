@@ -1,6 +1,4 @@
 import { Metadata, applyMetadataPolyfill, isObject } from '@aurelia/metadata';
-export { Metadata, applyMetadataPolyfill, isNullOrUndefined, isObject, metadata } from '@aurelia/metadata';
-export { Platform, Task, TaskAbortError, TaskQueue, TaskQueuePriority, TaskStatus } from '@aurelia/platform';
 
 const getOwnMetadata = Metadata.getOwn;
 const hasOwnMetadata = Metadata.hasOwn;

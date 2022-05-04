@@ -2,9 +2,9 @@ import { DI as t, IServiceLocator as i, optional as s, Registration as e, noop a
 
 import { parsePropertyName as o, ValidationResult as r, ValidateInstruction as l, PropertyRule as a, IValidator as h, getDefaultValidationConfiguration as c, ValidationConfiguration as u } from "@aurelia/validation";
 
-import { IPlatform as d, bindable as f, INode as v, BindingMode as g, customAttribute as w, bindingBehavior as p, BindingInterceptor as m, BindingMediator as b, PropertyBinding as V, CustomElement as y } from "@aurelia/runtime-html";
+import { IPlatform as d, bindable as f, INode as v, customAttribute as g, PropertyBinding as w, CustomElement as p } from "@aurelia/runtime-html";
 
-import { IExpressionParser as C } from "@aurelia/runtime";
+import { IExpressionParser as m, BindingMode as b, bindingBehavior as V, BindingInterceptor as y, BindingMediator as C } from "@aurelia/runtime";
 
 function E(t, i, s, e) {
     var n = arguments.length, o = n < 3 ? i : null === e ? e = Object.getOwnPropertyDescriptor(i, s) : e, r;
@@ -263,7 +263,7 @@ let j = class ValidationController {
     }
 };
 
-j = E([ R(0, h), R(1, C), R(2, d), R(3, i) ], j);
+j = E([ R(0, h), R(1, m), R(2, d), R(3, i) ], j);
 
 class ValidationControllerFactory {
     constructor() {
@@ -374,10 +374,10 @@ E([ f ], M.prototype, "controller", void 0);
 
 E([ f({
     primary: true,
-    mode: g.twoWay
+    mode: b.twoWay
 }) ], M.prototype, "errors", void 0);
 
-M = E([ w("validation-errors"), R(0, v), R(1, s(B)) ], M);
+M = E([ g("validation-errors"), R(0, v), R(1, s(B)) ], M);
 
 var O;
 
@@ -392,16 +392,16 @@ var O;
 
 const P = t.createInterface("IDefaultTrigger");
 
-let S = class ValidateBindingBehavior extends m {
+let S = class ValidateBindingBehavior extends y {
     constructor(t, i) {
         super(t, i);
         this.binding = t;
         this.propertyBinding = void 0;
         this.target = void 0;
         this.isChangeTrigger = false;
-        this.triggerMediator = new b("handleTriggerChange", this, this.oL, this.locator);
-        this.controllerMediator = new b("handleControllerChange", this, this.oL, this.locator);
-        this.rulesMediator = new b("handleRulesChange", this, this.oL, this.locator);
+        this.triggerMediator = new C("handleTriggerChange", this, this.oL, this.locator);
+        this.controllerMediator = new C("handleControllerChange", this, this.oL, this.locator);
+        this.rulesMediator = new C("handleRulesChange", this, this.oL, this.locator);
         this.isDirty = false;
         this.validatedOnce = false;
         this.triggerEvent = null;
@@ -525,7 +525,7 @@ let S = class ValidateBindingBehavior extends m {
     }
     setPropertyBinding() {
         let t = this.binding;
-        while (!(t instanceof V) && void 0 !== t) t = t.binding;
+        while (!(t instanceof w) && void 0 !== t) t = t.binding;
         if (void 0 === t) throw new Error("Unable to set property binding");
         this.propertyBinding = t;
     }
@@ -557,7 +557,7 @@ let S = class ValidateBindingBehavior extends m {
     }
 };
 
-S = E([ p("validate") ], S);
+S = E([ V("validate") ], S);
 
 class ValidateArgumentsDelta {
     constructor(t, i, s) {
@@ -589,7 +589,7 @@ function F(t) {
             })), e.instance(P, s.DefaultTrigger), S);
             if (s.UseSubscriberCustomAttribute) i.register(M);
             const n = s.SubscriberCustomElementTemplate;
-            if (n) i.register(y.define({
+            if (n) i.register(p.define({
                 ...I,
                 template: n
             }, D));

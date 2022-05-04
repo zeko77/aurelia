@@ -1,7 +1,7 @@
 import { LifecycleFlags } from '@aurelia/runtime';
 import type { IIndexable, IServiceLocator } from '@aurelia/kernel';
 import type { IsBindingBehavior, Scope } from '@aurelia/runtime';
-import type { IAstBasedBinding } from './interfaces-bindings.js';
+import type { IAstBasedBinding } from './interfaces-bindings';
 export interface RefBinding extends IAstBasedBinding {
 }
 export declare class RefBinding implements IAstBasedBinding {

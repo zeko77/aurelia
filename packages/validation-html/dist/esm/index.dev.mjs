@@ -1,7 +1,7 @@
 import { DI, IServiceLocator, optional, Registration, noop } from '@aurelia/kernel';
 import { parsePropertyName, ValidationResult, ValidateInstruction, PropertyRule, IValidator, getDefaultValidationConfiguration, ValidationConfiguration } from '@aurelia/validation';
-import { IPlatform, bindable, INode, BindingMode, customAttribute, bindingBehavior, BindingInterceptor, BindingMediator, PropertyBinding, CustomElement } from '@aurelia/runtime-html';
-import { IExpressionParser } from '@aurelia/runtime';
+import { IPlatform, bindable, INode, customAttribute, PropertyBinding, CustomElement } from '@aurelia/runtime-html';
+import { IExpressionParser, BindingMode, bindingBehavior, BindingInterceptor, BindingMediator } from '@aurelia/runtime';
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.

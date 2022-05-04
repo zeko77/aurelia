@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { Store } from './store.js';
+import { Store } from './store';
 export interface ConnectToSettings<T, R = T | any> {
     onChanged?: string;
     selector: ((store: Store<T>) => Observable<R>) | MultipleSelector<T, R>;

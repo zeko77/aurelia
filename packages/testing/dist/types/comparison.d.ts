@@ -1,5 +1,5 @@
 import { Primitive } from '@aurelia/kernel';
-import { FloatArray, TypedArray } from './util.js';
+import { FloatArray, TypedArray } from './util';
 export declare const enum IterationType {
     noIterator = 0,
     isArray = 1,

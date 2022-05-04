@@ -1,10 +1,11 @@
-import { ICustomElementController, IHydratedController, LifecycleFlags, ICustomElementViewModel, ILifecycleHooks } from '@aurelia/runtime-html';
-import { RouteDefinition } from './route-definition.js';
-import { RouteNode } from './route-tree.js';
-import { IRouteContext } from './route-context.js';
-import { Params, NavigationInstruction } from './instructions.js';
-import { Transition } from './router.js';
-import { Batch } from './util.js';
+import { LifecycleFlags } from '@aurelia/runtime';
+import { ICustomElementController, IHydratedController, ICustomElementViewModel, ILifecycleHooks } from '@aurelia/runtime-html';
+import { RouteDefinition } from './route-definition';
+import { RouteNode } from './route-tree';
+import { IRouteContext } from './route-context';
+import { Params, NavigationInstruction } from './instructions';
+import { Transition } from './router';
+import { Batch } from './util';
 export interface IRouteViewModel extends ICustomElementViewModel {
     canLoad?(params: Params, next: RouteNode, current: RouteNode | null): boolean | NavigationInstruction | NavigationInstruction[] | Promise<boolean | NavigationInstruction | NavigationInstruction[]>;
     load?(params: Params, next: RouteNode, current: RouteNode | null): void | Promise<void>;

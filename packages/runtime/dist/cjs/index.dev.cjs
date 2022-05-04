@@ -3,7 +3,7 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 var kernel = require('@aurelia/kernel');
-var platform = require('@aurelia/platform');
+var metadata = require('@aurelia/metadata');
 
 const hasOwnProp = Object.prototype.hasOwnProperty;
 const def = Reflect.defineProperty;
@@ -24,9 +24,9 @@ function ensureProto(proto, key, defaultValue, force = false) {
     }
 }
 const createLookup = () => Object.create(null);
-const getOwnMetadata = kernel.Metadata.getOwn;
-const hasOwnMetadata = kernel.Metadata.hasOwn;
-const defineMetadata = kernel.Metadata.define;
+const getOwnMetadata = metadata.Metadata.getOwn;
+const hasOwnMetadata = metadata.Metadata.hasOwn;
+const defineMetadata = metadata.Metadata.define;
 const getAnnotationKeyFor = kernel.Protocol.annotation.keyFor;
 const getResourceKeyFor = kernel.Protocol.resource.keyFor;
 const appendResourceKey = kernel.Protocol.resource.appendTo;
@@ -2452,7 +2452,7 @@ class ArrayIndexObserver {
     getValue() {
         return this.owner.collection[this.index];
     }
-    setValue(newValue, flags) {
+    setValue(newValue, flag) {
         if (newValue === this.getValue()) {
             return;
         }
@@ -4977,13 +4977,6 @@ function getNotifier(obj, key, callbackKey, initialValue, set) {
     return notifier;
 }
 
-exports.IPlatform = kernel.IPlatform;
-exports.Platform = platform.Platform;
-exports.Task = platform.Task;
-exports.TaskAbortError = platform.TaskAbortError;
-exports.TaskQueue = platform.TaskQueue;
-exports.TaskQueuePriority = platform.TaskQueuePriority;
-exports.TaskStatus = platform.TaskStatus;
 exports.AccessKeyedExpression = AccessKeyedExpression;
 exports.AccessMemberExpression = AccessMemberExpression;
 exports.AccessScopeExpression = AccessScopeExpression;

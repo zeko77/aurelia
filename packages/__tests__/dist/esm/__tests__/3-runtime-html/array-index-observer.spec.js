@@ -1,5 +1,6 @@
 import { assert, eachCartesianJoin, TestContext, } from '@aurelia/testing';
-import { Aurelia, ArrayIndexObserver, CustomElement, IDirtyChecker, } from '@aurelia/runtime-html';
+import { Aurelia, CustomElement, } from '@aurelia/runtime-html';
+import { IDirtyChecker, ArrayIndexObserver } from '@aurelia/runtime';
 describe('simple Computed Observer test case', function () {
     class TestClass {
         constructor() {

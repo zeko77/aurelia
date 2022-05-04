@@ -1,8 +1,8 @@
 import { Constructable, IContainer } from '@aurelia/kernel';
 import { LifecycleFlags } from '@aurelia/runtime';
-import { IPlatform } from '../../platform.js';
-import { HydrateElementInstruction } from '../../renderer.js';
-import { ICustomElementController, IHydratedController, ISyntheticView } from '../../templating/controller.js';
+import { IPlatform } from '../../platform';
+import { HydrateElementInstruction } from '../../renderer';
+import { ICustomElementController, IHydratedController, ISyntheticView } from '../../templating/controller';
 /**
  * An optional interface describing the dialog activate convention.
  */

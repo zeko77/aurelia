@@ -1,9 +1,9 @@
 import { IContainer, ILogger } from '@aurelia/kernel';
 import { Observable } from 'rxjs';
-import { HistoryOptions } from './history.js';
-import { Middleware, MiddlewarePlacement } from './middleware.js';
-import { LogDefinitions } from './logging.js';
-import { DevToolsOptions, DevToolsExtension } from './devtools.js';
+import { HistoryOptions } from './history';
+import { Middleware, MiddlewarePlacement } from './middleware';
+import { LogDefinitions } from './logging';
+import { DevToolsOptions, DevToolsExtension } from './devtools';
 export declare type Reducer<T, P extends unknown[] = unknown[]> = (state: T, ...params: P) => T | false | Promise<T | false>;
 export declare enum PerformanceMeasurement {
     StartEnd = "startEnd",

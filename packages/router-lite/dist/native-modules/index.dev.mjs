@@ -1,6 +1,8 @@
-import { DI, IEventAggregator, ILogger, bound, onResolve, resolveAll, toArray, emptyObject, isObject, IContainer, isArrayIndex, Protocol, Metadata, emptyArray, IModuleLoader, InstanceProvider, noop, Registration } from '../../../kernel/dist/native-modules/index.mjs';
-import { isCustomElementViewModel, IHistory, ILocation, IWindow, Controller, IPlatform, CustomElement, CustomElementDefinition, IController, IAppRoot, isCustomElementController, bindable, customElement, BindingMode, customAttribute, IEventTarget, INode, IEventDelegator, getRef, CustomAttribute, AppTask } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { isObject, Metadata } from '../../../metadata/dist/native-modules/index.mjs';
+import { DI, IEventAggregator, ILogger, bound, onResolve, resolveAll, toArray, emptyObject, IContainer, isArrayIndex, Protocol, emptyArray, IModuleLoader, InstanceProvider, noop, Registration } from '../../../kernel/dist/native-modules/index.mjs';
+import { isCustomElementViewModel, IHistory, ILocation, IWindow, Controller, IPlatform, CustomElement, CustomElementDefinition, IController, IAppRoot, isCustomElementController, bindable, customElement, customAttribute, IEventTarget, INode, IEventDelegator, getRef, CustomAttribute, AppTask } from '../../../runtime-html/dist/native-modules/index.mjs';
 import { RecognizedRoute, Endpoint, ConfigurableRoute, RouteRecognizer } from '../../../route-recognizer/dist/native-modules/index.mjs';
+import { BindingMode } from '../../../runtime/dist/native-modules/index.mjs';
 
 class Batch {
     constructor(stack, cb, head) {

@@ -10,7 +10,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { bindable, alias, customAttribute, INode, valueConverter } from '@aurelia/runtime-html';
+import { alias, valueConverter } from '@aurelia/runtime';
+import { bindable, customAttribute, INode, } from '@aurelia/runtime-html';
 import { assert, createFixture } from '@aurelia/testing';
 // TemplateCompiler - value converter integration
 describe('value-converters', function () {

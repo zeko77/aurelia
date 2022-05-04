@@ -1,6 +1,6 @@
-import { IPlatform } from '../platform.js';
+import { IPlatform } from '../platform';
 import type { IContainer, IResolver } from '@aurelia/kernel';
-import type { INode } from '../dom.js';
+import type { INode } from '../dom';
 export interface ISVGAnalyzer extends NoopSVGAnalyzer {
 }
 export declare const ISVGAnalyzer: import("@aurelia/kernel").InterfaceSymbol<ISVGAnalyzer>;

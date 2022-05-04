@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 import { assert, createContainer, createFixture, createObserverLocator, createScopeForTest, } from '@aurelia/testing';
-import { CustomElement, InterpolationBinding, Interpolation, ConditionalExpression, AccessScopeExpression, BindingMode, SVGAnalyzerRegistration, IPlatform, ValueConverter, } from '@aurelia/runtime-html';
+import { Interpolation, ConditionalExpression, AccessScopeExpression, BindingMode, ValueConverter } from '@aurelia/runtime';
+import { CustomElement, InterpolationBinding, SVGAnalyzerRegistration, IPlatform, } from '@aurelia/runtime-html';
 const testDateString = new Date('Sat Feb 02 2002 00:00:00 GMT+0000 (Coordinated Universal Time)').toString();
 const ThreeHoursAheadDateString = new Date('Sat Feb 02 2002 03:00:00 GMT+0000 (Coordinated Universal Time)').toString();
 const ThreeDaysDateString = new Date('Sat Feb 03 2002 00:00:00 GMT+0000 (Coordinated Universal Time)').toString();

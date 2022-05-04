@@ -1,7 +1,8 @@
 import { BindingMode, LifecycleFlags } from '@aurelia/runtime';
-import type { IServiceLocator, TaskQueue } from '@aurelia/kernel';
+import type { TaskQueue } from '@aurelia/platform';
+import type { IServiceLocator } from '@aurelia/kernel';
 import type { AccessorOrObserver, ForOfStatement, IObserverLocator, IsBindingBehavior, Scope } from '@aurelia/runtime';
-import type { IAstBasedBinding } from './interfaces-bindings.js';
+import type { IAstBasedBinding } from './interfaces-bindings';
 export interface PropertyBinding extends IAstBasedBinding {
 }
 export declare class PropertyBinding implements IAstBasedBinding {

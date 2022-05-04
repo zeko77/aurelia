@@ -1,5 +1,5 @@
 import { IContainer } from '@aurelia/kernel';
-import { IPlatform } from '../platform.js';
+import { IPlatform } from '../platform';
 import type { IRegistry } from '@aurelia/kernel';
 export declare function cssModules(...modules: (Record<string, string>)[]): CSSModulesProcessorRegistry;
 export declare class CSSModulesProcessorRegistry implements IRegistry {

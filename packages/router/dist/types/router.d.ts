@@ -6,18 +6,18 @@
  */
 import { IContainer, Key, EventAggregator } from '@aurelia/kernel';
 import { ICustomElementViewModel, ICustomElementController } from '@aurelia/runtime-html';
-import { LoadInstruction } from './interfaces.js';
-import { Navigator } from './navigator.js';
-import { Viewport } from './endpoints/viewport.js';
-import { RoutingInstruction } from './instructions/routing-instruction.js';
-import { RoutingScope } from './routing-scope.js';
-import { ViewportScope } from './endpoints/viewport-scope.js';
-import { BrowserViewerStore } from './browser-viewer-store.js';
-import { Navigation } from './navigation.js';
-import { Endpoint, EndpointTypeName, IConnectedCustomElement } from './endpoints/endpoint.js';
-import { NavigationCoordinator } from './navigation-coordinator.js';
-import { Step } from './utilities/runner.js';
-import { IRouterConfiguration } from './index.js';
+import { LoadInstruction } from './interfaces';
+import { Navigator } from './navigator';
+import { Viewport } from './endpoints/viewport';
+import { RoutingInstruction } from './instructions/routing-instruction';
+import { RoutingScope } from './routing-scope';
+import { ViewportScope } from './endpoints/viewport-scope';
+import { BrowserViewerStore } from './browser-viewer-store';
+import { Navigation } from './navigation';
+import { Endpoint, EndpointTypeName, IConnectedCustomElement } from './endpoints/endpoint';
+import { NavigationCoordinator } from './navigation-coordinator';
+import { Step } from './utilities/runner';
+import { IRouterConfiguration } from './index';
 /**
  * The router is the "main entry point" into routing. Its primary responsibilities are
  * - provide configuration api

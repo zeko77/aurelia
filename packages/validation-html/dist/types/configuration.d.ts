@@ -1,5 +1,5 @@
 import { IContainer } from '@aurelia/kernel';
-import { ValidationHtmlCustomizationOptions } from './validation-customization-options.js';
+import { ValidationHtmlCustomizationOptions } from './validation-customization-options';
 export declare type ValidationConfigurationProvider = (options: ValidationHtmlCustomizationOptions) => void;
 export declare function getDefaultValidationHtmlConfiguration(): ValidationHtmlCustomizationOptions;
 export declare const ValidationHtmlConfiguration: {

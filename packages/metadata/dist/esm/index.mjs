@@ -6,7 +6,7 @@ function e(t) {
     return null === t || void 0 === t;
 }
 
-const n = new WeakMap;
+let n = new WeakMap;
 
 function r(t, e, n, r, a) {
     return new TypeError(`${t}(${e.map(String).join(",")}) - Expected '${n}' to be of type ${a}, but got: ${Object.prototype.toString.call(r)} (${String(r)})`);
@@ -232,7 +232,7 @@ function E(e, n, o) {
     return h(n, e, a(o));
 }
 
-const A = {
+const k = {
     define: O,
     has: m,
     hasOwn: j,
@@ -243,7 +243,7 @@ const A = {
     delete: E
 };
 
-function k(t, e, n, r, a) {
+function A(t, e, n, r, a) {
     if (!Reflect.defineProperty(t, e, {
         writable: r,
         enumerable: false,
@@ -259,22 +259,26 @@ function C(t) {
 }
 
 function I(t, e, r) {
-    k(t, R, n, e, r);
-    k(t, "metadata", g, e, r);
-    k(t, "decorate", p, e, r);
-    k(t, "defineMetadata", O, e, r);
-    k(t, "hasMetadata", m, e, r);
-    k(t, "hasOwnMetadata", j, e, r);
-    k(t, "getMetadata", v, e, r);
-    k(t, "getOwnMetadata", $, e, r);
-    k(t, "getMetadataKeys", F, e, r);
-    k(t, "getOwnMetadataKeys", K, e, r);
-    k(t, "deleteMetadata", E, e, r);
+    A(t, R, n, e, r);
+    A(t, "metadata", g, e, r);
+    A(t, "decorate", p, e, r);
+    A(t, "defineMetadata", O, e, r);
+    A(t, "hasMetadata", m, e, r);
+    A(t, "hasOwnMetadata", j, e, r);
+    A(t, "getMetadata", v, e, r);
+    A(t, "getOwnMetadata", $, e, r);
+    A(t, "getMetadataKeys", F, e, r);
+    A(t, "getOwnMetadataKeys", K, e, r);
+    A(t, "deleteMetadata", E, e, r);
 }
 
 function S(t, e = true, r = false, a = true, o = true) {
     if (C(t)) {
         if (t[R] === n) return;
+        if (t[R] instanceof WeakMap) {
+            n = t[R];
+            return;
+        }
         throw new Error(`Conflicting @aurelia/metadata module import detected. Please make sure you have the same version of all Aurelia packages in your dependency tree.`);
     }
     const i = [ "metadata", "decorate", "defineMetadata", "hasMetadata", "hasOwnMetadata", "getMetadata", "getOwnMetadata", "getMetadataKeys", "getOwnMetadataKeys", "deleteMetadata" ].filter((function(t) {
@@ -291,5 +295,5 @@ function S(t, e = true, r = false, a = true, o = true) {
     } else I(t, a, o);
 }
 
-export { A as Metadata, S as applyMetadataPolyfill, e as isNullOrUndefined, t as isObject, g as metadata };
+export { k as Metadata, S as applyMetadataPolyfill, e as isNullOrUndefined, t as isObject, g as metadata };
 //# sourceMappingURL=index.mjs.map

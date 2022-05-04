@@ -5,7 +5,8 @@ import * as ce_a_b from './modules/ce-a-b.js';
 import * as ce_default from './modules/ce-default.js';
 import * as kitchen_sink from './modules/kitchen-sink.js';
 import { assert } from '@aurelia/testing';
-import { BindingBehavior, CustomAttribute, CustomElement, ValueConverter } from '@aurelia/runtime-html';
+import { CustomAttribute, CustomElement } from '@aurelia/runtime-html';
+import { BindingBehavior, ValueConverter } from '@aurelia/runtime';
 describe('ModuleLoader', function () {
     function createFixture() {
         const container = DI.createContainer();

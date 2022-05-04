@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { observable, SetterObserver, ValueConverter, IObserverLocator } from '@aurelia/runtime-html';
+import { observable, SetterObserver, ValueConverter, IObserverLocator } from '@aurelia/runtime';
 import { assert, createFixture } from '@aurelia/testing';
 import { noop } from '@aurelia/kernel';
 describe('3-runtime-html/decorator-observable.spec.ts', function () {

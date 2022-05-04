@@ -1,5 +1,5 @@
-import { ComputedObserver } from '@aurelia/runtime';
-import { IObserverLocator, CustomElement, IDirtyChecker, Aurelia, } from '@aurelia/runtime-html';
+import { ComputedObserver, IDirtyChecker, IObserverLocator } from '@aurelia/runtime';
+import { CustomElement, Aurelia, } from '@aurelia/runtime-html';
 import { assert, eachCartesianJoin, TestContext, } from '@aurelia/testing';
 describe('3-runtime-html/computed-observer.spec.ts', function () {
     const computedObserverTestCases = [

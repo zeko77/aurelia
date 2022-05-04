@@ -1,15 +1,16 @@
-import { LifecycleFlags, IHydratedController, IHydratedParentController } from '@aurelia/runtime-html';
-import { ComponentAppellation, IRouteableComponent, LoadInstruction } from '../interfaces.js';
-import { IRouter } from '../router.js';
-import { ViewportContent } from './viewport-content.js';
-import { RoutingInstruction } from '../instructions/routing-instruction.js';
-import { TransitionAction, RoutingScope } from '../routing-scope.js';
-import { Navigation } from '../navigation.js';
-import { NavigationCoordinator } from '../navigation-coordinator.js';
-import { Step } from '../utilities/runner.js';
-import { Route } from '../route.js';
-import { Endpoint, IConnectedCustomElement } from './endpoint.js';
-import { IViewportOptions, ViewportOptions } from './viewport-options.js';
+import { IHydratedController, IHydratedParentController } from '@aurelia/runtime-html';
+import { ComponentAppellation, IRouteableComponent, LoadInstruction } from '../interfaces';
+import { IRouter } from '../router';
+import { ViewportContent } from './viewport-content';
+import { RoutingInstruction } from '../instructions/routing-instruction';
+import { TransitionAction, RoutingScope } from '../routing-scope';
+import { Navigation } from '../navigation';
+import { NavigationCoordinator } from '../navigation-coordinator';
+import { Step } from '../utilities/runner';
+import { Route } from '../route';
+import { Endpoint, IConnectedCustomElement } from './endpoint';
+import { IViewportOptions, ViewportOptions } from './viewport-options';
+import { LifecycleFlags } from '@aurelia/runtime';
 /**
  * The viewport is an endpoint that encapsulates an au-viewport custom element
  * instance. It always has at least one viewport content -- the current and also

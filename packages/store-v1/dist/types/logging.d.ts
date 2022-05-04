@@ -1,4 +1,4 @@
-import type { StoreOptions } from './store.js';
+import type { StoreOptions } from './store';
 export declare enum LogLevel {
     trace = "trace",
     debug = "debug",

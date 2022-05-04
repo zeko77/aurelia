@@ -1,8 +1,6 @@
-import { Metadata as t, Protocol as e, Registration as s, DI as r, firstDefined as i, mergeArrays as n, fromAnnotationOrDefinitionOrTypeOrDefault as o, isNumberOrBigInt as h, isStringOrDate as c, emptyArray as u, isArrayIndex as a, IPlatform as l, ILogger as f } from "../../../kernel/dist/native-modules/index.mjs";
+import { Protocol as t, Registration as e, DI as s, firstDefined as r, mergeArrays as i, fromAnnotationOrDefinitionOrTypeOrDefault as n, isNumberOrBigInt as o, isStringOrDate as h, emptyArray as c, isArrayIndex as u, IPlatform as a, ILogger as l } from "../../../kernel/dist/native-modules/index.mjs";
 
-export { IPlatform } from "../../../kernel/dist/native-modules/index.mjs";
-
-export { Platform, Task, TaskAbortError, TaskQueue, TaskQueuePriority, TaskStatus } from "../../../platform/dist/native-modules/index.mjs";
+import { Metadata as f } from "../../../metadata/dist/native-modules/index.mjs";
 
 const d = Object.prototype.hasOwnProperty;
 
@@ -28,17 +26,17 @@ function b(t, e, s, r = false) {
 
 const E = () => Object.create(null);
 
-const A = t.getOwn;
+const A = f.getOwn;
 
-const y = t.hasOwn;
+const y = f.hasOwn;
 
-const m = t.define;
+const m = f.define;
 
-const U = e.annotation.keyFor;
+const U = t.annotation.keyFor;
 
-const x = e.resource.keyFor;
+const x = t.resource.keyFor;
 
-const S = e.resource.appendTo;
+const S = t.resource.appendTo;
 
 function O(...t) {
     return function(e) {
@@ -48,11 +46,11 @@ function O(...t) {
     };
 }
 
-function C(t, e, r, i) {
-    for (let n = 0, o = t.length; n < o; ++n) s.aliasTo(r, e.keyFrom(t[n])).register(i);
+function C(t, s, r, i) {
+    for (let n = 0, o = t.length; n < o; ++n) e.aliasTo(r, s.keyFrom(t[n])).register(i);
 }
 
-const k = Object.freeze({});
+const B = Object.freeze({});
 
 class BindingContext {
     constructor(t, e) {
@@ -80,7 +78,7 @@ class BindingContext {
             o = null !== (n = null === h || void 0 === h ? void 0 : h.overrideContext) && void 0 !== n ? n : null;
         }
         if (o) return e in o ? o : o.bindingContext;
-        if (16 & r) return k;
+        if (16 & r) return B;
         return t.bindingContext || t.overrideContext;
     }
 }
@@ -114,7 +112,7 @@ class OverrideContext {
     }
 }
 
-const B = r.createInterface("ISignaler", (t => t.singleton(Signaler)));
+const k = s.createInterface("ISignaler", (t => t.singleton(Signaler)));
 
 class Signaler {
     constructor() {
@@ -160,31 +158,31 @@ class BindingBehaviorDefinition {
     }
     static create(t, e) {
         let s;
-        let r;
+        let o;
         if (g(t)) {
             s = t;
-            r = {
+            o = {
                 name: s
             };
         } else {
             s = t.name;
-            r = t;
+            o = t;
         }
         const h = Object.getPrototypeOf(e) === BindingInterceptor;
-        return new BindingBehaviorDefinition(e, i(P(e, "name"), s), n(P(e, "aliases"), r.aliases, e.aliases), T.keyFrom(s), o("strategy", r, e, (() => h ? 2 : 1)));
+        return new BindingBehaviorDefinition(e, r(P(e, "name"), s), i(P(e, "aliases"), o.aliases, e.aliases), T.keyFrom(s), n("strategy", o, e, (() => h ? 2 : 1)));
     }
     register(t) {
-        const {Type: e, key: r, aliases: i, strategy: n} = this;
+        const {Type: s, key: r, aliases: i, strategy: n} = this;
         switch (n) {
           case 1:
-            s.singleton(r, e).register(t);
+            e.singleton(r, s).register(t);
             break;
 
           case 2:
-            s.instance(r, new BindingBehaviorFactory(t, e)).register(t);
+            e.instance(r, new BindingBehaviorFactory(t, s)).register(t);
             break;
         }
-        s.aliasTo(r, e).register(t);
+        e.aliasTo(r, s).register(t);
         C(i, T, r, t);
     }
 }
@@ -193,7 +191,7 @@ class BindingBehaviorFactory {
     constructor(t, e) {
         this.ctn = t;
         this.Type = e;
-        this.deps = r.getDependencies(e);
+        this.deps = s.getDependencies(e);
     }
     construct(t, e) {
         const s = this.ctn;
@@ -318,22 +316,22 @@ class ValueConverterDefinition {
     }
     static create(t, e) {
         let s;
-        let r;
+        let n;
         if (g(t)) {
             s = t;
-            r = {
+            n = {
                 name: s
             };
         } else {
             s = t.name;
-            r = t;
+            n = t;
         }
-        return new ValueConverterDefinition(e, i(M(e, "name"), s), n(M(e, "aliases"), r.aliases, e.aliases), D.keyFrom(s));
+        return new ValueConverterDefinition(e, r(M(e, "name"), s), i(M(e, "aliases"), n.aliases, e.aliases), D.keyFrom(s));
     }
     register(t) {
-        const {Type: e, key: r, aliases: i} = this;
-        s.singleton(r, e).register(t);
-        s.aliasTo(r, e).register(t);
+        const {Type: s, key: r, aliases: i} = this;
+        e.singleton(r, s).register(t);
+        e.aliasTo(r, s).register(t);
         C(i, D, r, t);
     }
 }
@@ -736,7 +734,7 @@ class ValueConverterExpression {
         if (null !== r && "handleChange" in r) {
             const t = i.signals;
             if (null != t) {
-                const e = s.get(B);
+                const e = s.get(k);
                 for (let s = 0, i = t.length; s < i; ++s) e.addSignalListener(t[s], r);
             }
         }
@@ -752,7 +750,7 @@ class ValueConverterExpression {
     unbind(t, e, s) {
         const r = s.locator.get(this.converterKey);
         if (void 0 === r.signals) return;
-        const i = s.locator.get(B);
+        const i = s.locator.get(k);
         for (let t = 0; t < r.signals.length; ++t) i.removeSignalListener(r.signals[t], s);
     }
     accept(t) {
@@ -1127,8 +1125,8 @@ class BinaryExpression {
                 const n = this.right.evaluate(t, e, s, r);
                 if ((1 & t) > 0) return i + n;
                 if (!i || !n) {
-                    if (h(i) || h(n)) return (i || 0) + (n || 0);
-                    if (c(i) || c(n)) return (i || "") + (n || "");
+                    if (o(i) || o(n)) return (i || 0) + (n || 0);
+                    if (h(i) || h(n)) return (i || "") + (n || "");
                 }
                 return i + n;
             }
@@ -1315,7 +1313,7 @@ class ArrayLiteralExpression {
     }
 }
 
-ArrayLiteralExpression.$empty = new ArrayLiteralExpression(u);
+ArrayLiteralExpression.$empty = new ArrayLiteralExpression(c);
 
 class ObjectLiteralExpression {
     constructor(t, e) {
@@ -1347,10 +1345,10 @@ class ObjectLiteralExpression {
     }
 }
 
-ObjectLiteralExpression.$empty = new ObjectLiteralExpression(u, u);
+ObjectLiteralExpression.$empty = new ObjectLiteralExpression(c, c);
 
 class TemplateExpression {
-    constructor(t, e = u) {
+    constructor(t, e = c) {
         this.cooked = t;
         this.expressions = e;
     }
@@ -1385,7 +1383,7 @@ class TemplateExpression {
 TemplateExpression.$empty = new TemplateExpression([ "" ]);
 
 class TaggedTemplateExpression {
-    constructor(t, e, s, r = u) {
+    constructor(t, e, s, r = c) {
         this.cooked = t;
         this.func = s;
         this.expressions = r;
@@ -1554,7 +1552,7 @@ class ForOfStatement {
             return H(e, s);
 
           case "[object Number]":
-            return Q(e, s);
+            return _(e, s);
 
           case "[object Null]":
             return;
@@ -1581,7 +1579,7 @@ class ForOfStatement {
 }
 
 class Interpolation {
-    constructor(t, e = u) {
+    constructor(t, e = c) {
         this.parts = t;
         this.expressions = e;
         this.isMulti = e.length > 1;
@@ -1710,7 +1708,7 @@ class DestructuringAssignmentRestExpression {
         if ("object" !== typeof r) throw new Error("AUR0112");
         const i = this.indexOrProperties;
         let n;
-        if (a(i)) {
+        if (u(i)) {
             if (!Array.isArray(r)) throw new Error("AUR0112");
             n = r.slice(i);
         } else n = Object.entries(r).reduce(((t, [e, s]) => {
@@ -1752,13 +1750,13 @@ function H(t, e) {
     K(s, e);
 }
 
-function Q(t, e) {
+function _(t, e) {
     const s = Array(t);
     for (let e = 0; e < t; ++e) s[e] = e;
     K(s, e);
 }
 
-const _ = r.createInterface("ICoercionConfiguration");
+const Q = s.createInterface("ICoercionConfiguration");
 
 var z;
 
@@ -2057,7 +2055,7 @@ class CollectionLengthObserver {
     }
     setValue(t, e) {
         const s = this.v;
-        if (t !== s && a(t)) {
+        if (t !== s && u(t)) {
             if (0 === (256 & e)) this.o.length = t;
             this.v = t;
             this.h = s;
@@ -2285,16 +2283,16 @@ const Ot = yt.splice;
 
 const Ct = yt.reverse;
 
-const kt = yt.sort;
+const Bt = yt.sort;
 
-const Bt = {
+const kt = {
     push: mt,
     unshift: Ut,
     pop: xt,
     shift: St,
     splice: Ot,
     reverse: Ct,
-    sort: kt
+    sort: Bt
 };
 
 const $t = [ "push", "unshift", "pop", "shift", "splice", "reverse", "sort" ];
@@ -2406,7 +2404,7 @@ const Lt = {
     sort: function(t) {
         const e = gt.get(this);
         if (void 0 === e) {
-            kt.call(this, t);
+            Bt.call(this, t);
             return this;
         }
         const s = this.length;
@@ -2438,7 +2436,7 @@ function Pt() {
 }
 
 function Tt() {
-    for (const t of $t) if (true === yt[t].observing) w(yt, t, Bt[t]);
+    for (const t of $t) if (true === yt[t].observing) w(yt, t, kt[t]);
 }
 
 class ArrayObserver {
@@ -2560,7 +2558,7 @@ const qt = {
 
 const Ht = [ "add", "clear", "delete" ];
 
-const Qt = {
+const _t = {
     add: function(t) {
         const e = Dt.get(this);
         if (void 0 === e) {
@@ -2613,13 +2611,13 @@ const Qt = {
     }
 };
 
-const _t = {
+const Qt = {
     writable: true,
     enumerable: false,
     configurable: true
 };
 
-for (const t of Ht) v(Qt[t], "observing", {
+for (const t of Ht) v(_t[t], "observing", {
     value: true,
     writable: false,
     configurable: false,
@@ -2630,14 +2628,14 @@ let zt = false;
 
 function Wt() {
     for (const t of Ht) if (true !== Ft[t].observing) v(Ft, t, {
-        ..._t,
-        value: Qt[t]
+        ...Qt,
+        value: _t[t]
     });
 }
 
 function Gt() {
     for (const t of Ht) if (true === Ft[t].observing) v(Ft, t, {
-        ..._t,
+        ...Qt,
         value: qt[t]
     });
 }
@@ -2928,7 +2926,7 @@ class BindingMediator {
 
 be(BindingMediator);
 
-const Ae = r.createInterface("IExpressionParser", (t => t.singleton(ExpressionParser)));
+const Ae = s.createInterface("IExpressionParser", (t => t.singleton(ExpressionParser)));
 
 class ExpressionParser {
     constructor() {
@@ -3206,9 +3204,9 @@ const Oe = PrimitiveLiteralExpression.$false;
 
 const Ce = PrimitiveLiteralExpression.$true;
 
-const ke = PrimitiveLiteralExpression.$null;
+const Be = PrimitiveLiteralExpression.$null;
 
-const Be = PrimitiveLiteralExpression.$undefined;
+const ke = PrimitiveLiteralExpression.$undefined;
 
 const $e = AccessThisExpression.$this;
 
@@ -3487,7 +3485,7 @@ function Me(t, e, s) {
     Ke(t);
     const r = new Array;
     while (1835022 !== t.$) if (Ge(t, 1572876)) {
-        r.push(Be);
+        r.push(ke);
         if (1835022 === t.$) break;
     } else {
         r.push(je(t, e, 62, ~2 & s));
@@ -3614,7 +3612,7 @@ function He(t) {
     return void 0 === e ? 1024 : e;
 }
 
-function Qe(t, e) {
+function _e(t, e) {
     let s = t.O;
     if (false === e) {
         do {
@@ -3637,7 +3635,7 @@ function Qe(t, e) {
     return 8192;
 }
 
-function _e(t) {
+function Qe(t) {
     const e = t.O;
     qe(t);
     let s = 0;
@@ -3694,7 +3692,7 @@ function Ze(t, e) {
     if (t.$ === e) Ke(t); else throw new Error(`AUR0167:${t.ip}<${e}`);
 }
 
-const Je = [ Oe, Ce, ke, Be, "$this", null, "$parent", "(", "{", ".", "}", ")", ",", "[", "]", ":", "?", "'", '"', "&", "|", "||", "&&", "==", "!=", "===", "!==", "<", ">", "<=", ">=", "in", "instanceof", "+", "-", "typeof", "void", "*", "%", "/", "=", "!", 540714, 540715, "of" ];
+const Je = [ Oe, Ce, Be, ke, "$this", null, "$parent", "(", "{", ".", "}", ")", ",", "[", "]", ":", "?", "'", '"', "&", "|", "||", "&&", "==", "!=", "===", "!==", "<", ">", "<=", ">=", "in", "instanceof", "+", "-", "typeof", "void", "*", "%", "/", "=", "!", 540714, 540715, "of" ];
 
 const Xe = E();
 
@@ -3772,9 +3770,9 @@ ts(ns, null, Ye.Skip, (t => {
 
 ts(ns, null, Ye.IdStart, He);
 
-ts(ns, null, Ye.Digit, (t => Qe(t, false)));
+ts(ns, null, Ye.Digit, (t => _e(t, false)));
 
-ns[34] = ns[39] = t => _e(t);
+ns[34] = ns[39] = t => Qe(t);
 
 ns[96] = t => ze(t);
 
@@ -3805,7 +3803,7 @@ ns[124] = t => {
 };
 
 ns[46] = t => {
-    if (qe(t) <= 57 && t.O >= 48) return Qe(t, true);
+    if (qe(t) <= 57 && t.O >= 48) return _e(t, true);
     return 16393;
 };
 
@@ -3973,7 +3971,7 @@ const Cs = {
             return t.length;
 
           case "map":
-            return ks;
+            return Bs;
 
           case "includes":
             return Ls;
@@ -3985,7 +3983,7 @@ const Cs = {
             return Ps;
 
           case "every":
-            return Bs;
+            return ks;
 
           case "filter":
             return $s;
@@ -4033,10 +4031,10 @@ const Cs = {
             return qs;
 
           case "some":
-            return Qs;
+            return _s;
 
           case "sort":
-            return _s;
+            return Qs;
 
           case "keys":
             return ir;
@@ -4058,7 +4056,7 @@ const Cs = {
     }
 };
 
-function ks(t, e) {
+function Bs(t, e) {
     var s;
     const r = ms(this);
     const i = r.map(((s, r) => Us(t.call(e, As(s), r, this))));
@@ -4066,7 +4064,7 @@ function ks(t, e) {
     return As(i);
 }
 
-function Bs(t, e) {
+function ks(t, e) {
     var s;
     const r = ms(this);
     const i = r.every(((s, r) => t.call(e, As(s), r, this)));
@@ -4171,7 +4169,7 @@ function Hs(...t) {
     return As(r);
 }
 
-function Qs(t, e) {
+function _s(t, e) {
     var s;
     const r = ms(this);
     const i = r.some(((s, r) => Us(t.call(e, As(s), r, this))));
@@ -4179,7 +4177,7 @@ function Qs(t, e) {
     return i;
 }
 
-function _s(t) {
+function Qs(t) {
     var e;
     const s = ms(this);
     const r = s.sort(t);
@@ -4484,7 +4482,7 @@ ct(ComputedObserver);
 
 let cr;
 
-const ur = r.createInterface("IDirtyChecker", (t => t.singleton(DirtyChecker)));
+const ur = s.createInterface("IDirtyChecker", (t => t.singleton(DirtyChecker)));
 
 const ar = {
     timeoutsPerCheck: 25,
@@ -4538,7 +4536,7 @@ class DirtyChecker {
     }
 }
 
-DirtyChecker.inject = [ l ];
+DirtyChecker.inject = [ a ];
 
 ct(DirtyChecker);
 
@@ -4713,10 +4711,10 @@ ct(SetterNotifier);
 
 const dr = new PropertyAccessor;
 
-const vr = r.createInterface("IObserverLocator", (t => t.singleton(ObserverLocator)));
+const vr = s.createInterface("IObserverLocator", (t => t.singleton(ObserverLocator)));
 
-const pr = r.createInterface("INodeObserverLocator", (t => t.cachedCallback((t => {
-    t.getAll(f).forEach((t => {
+const pr = s.createInterface("INodeObserverLocator", (t => t.cachedCallback((t => {
+    t.getAll(l).forEach((t => {
         t.error("Using default INodeObserverLocator implementation. Will not be able to observe nodes (HTML etc...).");
     }));
     return new DefaultNodeObserverLocator;
@@ -4777,7 +4775,7 @@ class ObserverLocator {
             break;
 
           default:
-            if (t instanceof Array && a(e)) return jt(t).getIndexObserver(Number(e));
+            if (t instanceof Array && u(e)) return jt(t).getIndexObserver(Number(e));
             break;
         }
         let o = br(t, e);
@@ -4828,7 +4826,7 @@ const wr = Object.getPrototypeOf;
 
 const br = Object.getOwnPropertyDescriptor;
 
-const Er = r.createInterface("IObservation", (t => t.singleton(Observation)));
+const Er = s.createInterface("IObservation", (t => t.singleton(Observation)));
 
 class Observation {
     constructor(t) {
@@ -4952,5 +4950,5 @@ function Ur(t, e, s, r, i) {
     return o;
 }
 
-export { Ue as Access, AccessKeyedExpression, AccessMemberExpression, AccessScopeExpression, AccessThisExpression, X as AccessorType, ArrayBindingPattern, ArrayIndexObserver, ArrayLiteralExpression, ArrayObserver, AssignExpression, BinaryExpression, T as BindingBehavior, BindingBehaviorDefinition, BindingBehaviorExpression, BindingBehaviorFactory, $ as BindingBehaviorStrategy, BindingContext, BindingIdentifier, BindingInterceptor, BindingMediator, z as BindingMode, BindingObserverRecord, CallFunctionExpression, CallMemberExpression, CallScopeExpression, ye as Char, J as CollectionKind, CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, ConditionalExpression, vs as ConnectableSwitcher, CustomExpression, Z as DelegationStrategy, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, DirtyCheckProperty, ar as DirtyCheckSettings, F as ExpressionKind, Re as ExpressionType, FlushQueue, ForOfStatement, HtmlLiteralExpression, _ as ICoercionConfiguration, ur as IDirtyChecker, Ae as IExpressionParser, pr as INodeObserverLocator, Er as IObservation, vr as IObserverLocator, B as ISignaler, Interpolation, W as LifecycleFlags, MapObserver, ObjectBindingPattern, ObjectLiteralExpression, Observation, ObserverLocator, OverrideContext, ParserState, xe as Precedence, PrimitiveLiteralExpression, PrimitiveObserver, PropertyAccessor, hr as ProxyObservable, Scope, SetObserver, SetterObserver, SubscriberRecord, TaggedTemplateExpression, TemplateExpression, UnaryExpression, D as ValueConverter, ValueConverterDefinition, ValueConverterExpression, O as alias, It as applyMutationsToIndices, L as bindingBehavior, et as cloneIndexMap, Ee as connectable, Y as copyIndexMap, tt as createIndexMap, Tt as disableArrayObservation, ce as disableMapObservation, Gt as disableSetObservation, Pt as enableArrayObservation, he as enableMapObservation, Wt as enableSetObservation, gr as getCollectionObserver, st as isIndexMap, mr as observable, je as parse, Te as parseExpression, C as registerAliases, rt as subscriberCollection, Mt as synchronizeIndices, j as valueConverter, ct as withFlushQueue };
+export { Ue as Access, AccessKeyedExpression, AccessMemberExpression, AccessScopeExpression, AccessThisExpression, X as AccessorType, ArrayBindingPattern, ArrayIndexObserver, ArrayLiteralExpression, ArrayObserver, AssignExpression, BinaryExpression, T as BindingBehavior, BindingBehaviorDefinition, BindingBehaviorExpression, BindingBehaviorFactory, $ as BindingBehaviorStrategy, BindingContext, BindingIdentifier, BindingInterceptor, BindingMediator, z as BindingMode, BindingObserverRecord, CallFunctionExpression, CallMemberExpression, CallScopeExpression, ye as Char, J as CollectionKind, CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, ConditionalExpression, vs as ConnectableSwitcher, CustomExpression, Z as DelegationStrategy, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, DirtyCheckProperty, ar as DirtyCheckSettings, F as ExpressionKind, Re as ExpressionType, FlushQueue, ForOfStatement, HtmlLiteralExpression, Q as ICoercionConfiguration, ur as IDirtyChecker, Ae as IExpressionParser, pr as INodeObserverLocator, Er as IObservation, vr as IObserverLocator, k as ISignaler, Interpolation, W as LifecycleFlags, MapObserver, ObjectBindingPattern, ObjectLiteralExpression, Observation, ObserverLocator, OverrideContext, ParserState, xe as Precedence, PrimitiveLiteralExpression, PrimitiveObserver, PropertyAccessor, hr as ProxyObservable, Scope, SetObserver, SetterObserver, SubscriberRecord, TaggedTemplateExpression, TemplateExpression, UnaryExpression, D as ValueConverter, ValueConverterDefinition, ValueConverterExpression, O as alias, It as applyMutationsToIndices, L as bindingBehavior, et as cloneIndexMap, Ee as connectable, Y as copyIndexMap, tt as createIndexMap, Tt as disableArrayObservation, ce as disableMapObservation, Gt as disableSetObservation, Pt as enableArrayObservation, he as enableMapObservation, Wt as enableSetObservation, gr as getCollectionObserver, st as isIndexMap, mr as observable, je as parse, Te as parseExpression, C as registerAliases, rt as subscriberCollection, Mt as synchronizeIndices, j as valueConverter, ct as withFlushQueue };
 //# sourceMappingURL=index.mjs.map

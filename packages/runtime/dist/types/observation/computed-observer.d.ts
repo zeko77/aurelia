@@ -1,8 +1,8 @@
-import { LifecycleFlags, AccessorType, IObserver } from '../observation.js';
-import type { ISubscriber, ICollectionSubscriber, ISubscriberCollection, IConnectable } from '../observation.js';
-import type { IConnectableBinding } from '../binding/connectable.js';
-import type { IObserverLocator } from './observer-locator.js';
-import type { FlushQueue, IFlushable, IWithFlushQueue } from './flush-queue.js';
+import { LifecycleFlags, AccessorType, IObserver } from '../observation';
+import type { ISubscriber, ICollectionSubscriber, ISubscriberCollection, IConnectable } from '../observation';
+import type { IConnectableBinding } from '../binding/connectable';
+import type { IObserverLocator } from './observer-locator';
+import type { FlushQueue, IFlushable, IWithFlushQueue } from './flush-queue';
 export interface ComputedObserver extends IConnectableBinding, ISubscriberCollection {
 }
 export declare class ComputedObserver implements IObserver, IConnectableBinding, ISubscriber, ICollectionSubscriber, ISubscriberCollection, IWithFlushQueue, IFlushable {

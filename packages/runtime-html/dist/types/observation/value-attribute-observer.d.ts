@@ -1,6 +1,6 @@
 import { LifecycleFlags, AccessorType } from '@aurelia/runtime';
-import type { EventSubscriber } from './event-delegator.js';
-import type { INode } from '../dom.js';
+import type { EventSubscriber } from './event-delegator';
+import type { INode } from '../dom';
 import type { ISubscriberCollection, ISubscriber, IObserver, IFlushable, IWithFlushQueue, FlushQueue } from '@aurelia/runtime';
 export interface ValueAttributeObserver extends ISubscriberCollection {
 }

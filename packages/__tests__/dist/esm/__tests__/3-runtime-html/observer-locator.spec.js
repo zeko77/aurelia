@@ -1,5 +1,5 @@
-import { ComputedObserver } from '@aurelia/runtime';
-import { CollectionLengthObserver, DirtyCheckProperty, PrimitiveObserver, PropertyAccessor, SetterObserver, CollectionSizeObserver, AttributeNSAccessor, CheckedObserver, ClassAttributeAccessor, DataAttributeAccessor, SelectValueObserver, StyleAttributeAccessor, ValueAttributeObserver, } from '@aurelia/runtime-html';
+import { CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, DirtyCheckProperty, PrimitiveObserver, PropertyAccessor, SetterObserver } from '@aurelia/runtime';
+import { AttributeNSAccessor, CheckedObserver, ClassAttributeAccessor, DataAttributeAccessor, SelectValueObserver, StyleAttributeAccessor, ValueAttributeObserver, } from '@aurelia/runtime-html';
 import { _, TestContext, assert, PLATFORM } from '@aurelia/testing';
 describe('ObserverLocator', function () {
     function createFixture() {

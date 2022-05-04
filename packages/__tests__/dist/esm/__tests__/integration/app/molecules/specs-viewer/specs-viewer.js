@@ -7,7 +7,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { bindable, customElement, valueConverter } from '@aurelia/runtime-html';
+import { valueConverter } from '@aurelia/runtime';
+import { bindable, customElement } from '@aurelia/runtime-html';
 import { Thing, ThingViewer } from './thing-viewer.js';
 import { Camera, CameraSpecsViewer } from './camera-specs-viewer.js';
 import { Laptop, LaptopSpecsViewer } from './laptop-specs-viewer.js';

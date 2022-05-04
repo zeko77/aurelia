@@ -1,9 +1,10 @@
-import { IHydratedController, LifecycleFlags, ICustomElementController } from '@aurelia/runtime-html';
-import { IViewport } from './resources/viewport.js';
-import { RouteNode } from './route-tree.js';
-import { IRouteContext } from './route-context.js';
-import { Transition, ResolutionMode, NavigationOptions } from './router.js';
-import { Batch } from './util.js';
+import { LifecycleFlags } from '@aurelia/runtime';
+import { IHydratedController, ICustomElementController } from '@aurelia/runtime-html';
+import { IViewport } from './resources/viewport';
+import { RouteNode } from './route-tree';
+import { IRouteContext } from './route-context';
+import { Transition, ResolutionMode, NavigationOptions } from './router';
+import { Batch } from './util';
 export declare class ViewportRequest {
     readonly viewportName: string;
     readonly componentName: string;

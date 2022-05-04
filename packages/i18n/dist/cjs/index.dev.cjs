@@ -307,14 +307,14 @@ exports.RelativeTimeValueConverter = __decorate([
 exports.TranslationBindingBehavior = class TranslationBindingBehavior {
     bind(flags, _scope, binding) {
         const expression = binding.sourceExpression.expression;
-        if (!(expression instanceof runtimeHtml.ValueConverterExpression)) {
-            const vcExpression = new runtimeHtml.ValueConverterExpression(expression, "t", binding.sourceExpression.args);
+        if (!(expression instanceof runtime.ValueConverterExpression)) {
+            const vcExpression = new runtime.ValueConverterExpression(expression, "t", binding.sourceExpression.args);
             binding.sourceExpression.expression = vcExpression;
         }
     }
 };
 exports.TranslationBindingBehavior = __decorate([
-    runtimeHtml.bindingBehavior("t")
+    runtime.bindingBehavior("t")
 ], exports.TranslationBindingBehavior);
 
 const contentAttributes = ['textContent', 'innerHTML', 'prepend', 'append'];
@@ -366,7 +366,7 @@ class TranslationBinding {
             throw new Error('key expression is missing');
         }
         this.scope = scope;
-        this._isInterpolation = this.expr instanceof runtimeHtml.Interpolation;
+        this._isInterpolation = this.expr instanceof runtime.Interpolation;
         this._keyExpression = this.expr.evaluate(flags, scope, this.locator, this);
         this._ensureKeyExpression();
         (_a = this.parameter) === null || _a === void 0 ? void 0 : _a.$bind(flags, scope);
@@ -589,7 +589,7 @@ class TranslationParametersBindingInstruction {
         this.from = from;
         this.to = to;
         this.type = TranslationParametersInstructionType;
-        this.mode = runtimeHtml.BindingMode.toView;
+        this.mode = runtime.BindingMode.toView;
     }
 }
 exports.TranslationParametersBindingCommand = class TranslationParametersBindingCommand {
@@ -653,7 +653,7 @@ class TranslationBindingInstruction {
         this.from = from;
         this.to = to;
         this.type = TranslationInstructionType;
-        this.mode = runtimeHtml.BindingMode.toView;
+        this.mode = runtime.BindingMode.toView;
     }
 }
 class TranslationBindingCommand {
@@ -711,7 +711,7 @@ class TranslationBindBindingInstruction {
         this.from = from;
         this.to = to;
         this.type = TranslationBindInstructionType;
-        this.mode = runtimeHtml.BindingMode.toView;
+        this.mode = runtime.BindingMode.toView;
     }
 }
 class TranslationBindBindingCommand {
@@ -769,7 +769,7 @@ exports.TranslationValueConverter = class TranslationValueConverter {
     }
 };
 exports.TranslationValueConverter = __decorate([
-    runtimeHtml.valueConverter("t"),
+    runtime.valueConverter("t"),
     __param(0, I18N)
 ], exports.TranslationValueConverter);
 

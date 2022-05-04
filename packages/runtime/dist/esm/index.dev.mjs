@@ -1,6 +1,5 @@
-import { Metadata, Protocol, Registration, DI, firstDefined, mergeArrays, fromAnnotationOrDefinitionOrTypeOrDefault, isNumberOrBigInt, isStringOrDate, emptyArray, isArrayIndex, IPlatform, ILogger } from '@aurelia/kernel';
-export { IPlatform } from '@aurelia/kernel';
-export { Platform, Task, TaskAbortError, TaskQueue, TaskQueuePriority, TaskStatus } from '@aurelia/platform';
+import { Protocol, Registration, DI, firstDefined, mergeArrays, fromAnnotationOrDefinitionOrTypeOrDefault, isNumberOrBigInt, isStringOrDate, emptyArray, isArrayIndex, IPlatform, ILogger } from '@aurelia/kernel';
+import { Metadata } from '@aurelia/metadata';
 
 const hasOwnProp = Object.prototype.hasOwnProperty;
 const def = Reflect.defineProperty;
@@ -2449,7 +2448,7 @@ class ArrayIndexObserver {
     getValue() {
         return this.owner.collection[this.index];
     }
-    setValue(newValue, flags) {
+    setValue(newValue, flag) {
         if (newValue === this.getValue()) {
             return;
         }

@@ -1,9 +1,10 @@
 import { IContainer, IEventAggregator } from '@aurelia/kernel';
-import { INode, LifecycleFlags, HydrateElementInstruction, ICompiledCustomElementController, ICustomElementViewModel, ICustomElementController, IHydratedController, IHydratedParentController, ISyntheticView } from '@aurelia/runtime-html';
-import { IRouter, NavigationFlags } from '../index.js';
-import { Viewport } from '../endpoints/viewport.js';
-import { Step } from '../utilities/runner.js';
-import { OpenPromise } from '../utilities/open-promise.js';
+import { LifecycleFlags } from '@aurelia/runtime';
+import { INode, HydrateElementInstruction, ICompiledCustomElementController, ICustomElementViewModel, ICustomElementController, IHydratedController, IHydratedParentController, ISyntheticView } from '@aurelia/runtime-html';
+import { IRouter, NavigationFlags } from '../index';
+import { Viewport } from '../endpoints/viewport';
+import { Step } from '../utilities/runner';
+import { OpenPromise } from '../utilities/open-promise';
 export declare const ParentViewport: import("@aurelia/runtime-html/dist/types/resources/custom-element").InjectableToken<import("@aurelia/kernel").Key>;
 export declare class ViewportCustomElement implements ICustomElementViewModel {
     private readonly router;

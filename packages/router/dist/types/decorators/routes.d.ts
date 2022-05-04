@@ -1,7 +1,7 @@
-import { CustomElementType } from '@aurelia/runtime-html';
 import { Constructable } from '@aurelia/kernel';
-import { IRoute, Route } from '../route.js';
-import { RouteableComponentType } from '../interfaces.js';
+import { CustomElementType } from '@aurelia/runtime-html';
+import { IRoute, Route } from '../route';
+import { RouteableComponentType } from '../interfaces';
 export declare const Routes: {
     name: string;
     isConfigured<T extends CustomElementType>(Type: T): boolean;

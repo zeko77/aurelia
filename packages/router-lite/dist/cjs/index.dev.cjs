@@ -2,9 +2,11 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+var metadata = require('@aurelia/metadata');
 var kernel = require('@aurelia/kernel');
 var runtimeHtml = require('@aurelia/runtime-html');
 var routeRecognizer = require('@aurelia/route-recognizer');
+var runtime = require('@aurelia/runtime');
 
 class Batch {
     constructor(stack, cb, head) {
@@ -2280,7 +2282,7 @@ function createFallbackNode(log, rd, node, vi, append) {
 const emptyQuery = Object.freeze(new URLSearchParams());
 const AuNavId = 'au-nav-id';
 function isManagedState(state) {
-    return kernel.isObject(state) && Object.prototype.hasOwnProperty.call(state, AuNavId) === true;
+    return metadata.isObject(state) && Object.prototype.hasOwnProperty.call(state, AuNavId) === true;
 }
 function toManagedState(state, navId) {
     return { ...state, [AuNavId]: navId };
@@ -2993,7 +2995,7 @@ class TypedNavigationInstruction {
         }
         if (typeof instruction === 'string')
             return new TypedNavigationInstruction(0, instruction);
-        if (!kernel.isObject(instruction))
+        if (!metadata.isObject(instruction))
             expectType('function/class or object', '', instruction);
         if (typeof instruction === 'function') {
             if (runtimeHtml.CustomElement.isType(instruction)) {
@@ -3136,18 +3138,18 @@ class RouteConfig {
 const Route = {
     name: kernel.Protocol.resource.keyFor('route-configuration'),
     isConfigured(Type) {
-        return kernel.Metadata.hasOwn(Route.name, Type);
+        return metadata.Metadata.hasOwn(Route.name, Type);
     },
     configure(configOrPath, Type) {
         const config = RouteConfig.create(configOrPath, Type);
-        kernel.Metadata.define(Route.name, config, Type);
+        metadata.Metadata.define(Route.name, config, Type);
         return Type;
     },
     getConfig(Type) {
         if (!Route.isConfigured(Type)) {
             Route.configure({}, Type);
         }
-        return kernel.Metadata.getOwn(Route.name, Type);
+        return metadata.Metadata.getOwn(Route.name, Type);
     },
 };
 function route(configOrPath) {
@@ -3237,14 +3239,14 @@ class RouteDefinition {
 const $RouteDefinition = {
     name: kernel.Protocol.resource.keyFor('route-definition'),
     isDefined(def) {
-        return kernel.Metadata.hasOwn($RouteDefinition.name, def);
+        return metadata.Metadata.hasOwn($RouteDefinition.name, def);
     },
     define(routeDefinition, customElementDefinition) {
-        kernel.Metadata.define($RouteDefinition.name, routeDefinition, customElementDefinition);
+        metadata.Metadata.define($RouteDefinition.name, routeDefinition, customElementDefinition);
     },
     get(customElementDefinition) {
         return $RouteDefinition.isDefined(customElementDefinition)
-            ? kernel.Metadata.getOwn($RouteDefinition.name, customElementDefinition)
+            ? metadata.Metadata.getOwn($RouteDefinition.name, customElementDefinition)
             : null;
     },
 };
@@ -3929,16 +3931,16 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
     }
 };
 __decorate([
-    runtimeHtml.bindable({ mode: runtimeHtml.BindingMode.toView, primary: true, callback: 'valueChanged' })
+    runtimeHtml.bindable({ mode: runtime.BindingMode.toView, primary: true, callback: 'valueChanged' })
 ], exports.LoadCustomAttribute.prototype, "route", void 0);
 __decorate([
-    runtimeHtml.bindable({ mode: runtimeHtml.BindingMode.toView, callback: 'valueChanged' })
+    runtimeHtml.bindable({ mode: runtime.BindingMode.toView, callback: 'valueChanged' })
 ], exports.LoadCustomAttribute.prototype, "params", void 0);
 __decorate([
-    runtimeHtml.bindable({ mode: runtimeHtml.BindingMode.toView })
+    runtimeHtml.bindable({ mode: runtime.BindingMode.toView })
 ], exports.LoadCustomAttribute.prototype, "attribute", void 0);
 __decorate([
-    runtimeHtml.bindable({ mode: runtimeHtml.BindingMode.fromView })
+    runtimeHtml.bindable({ mode: runtime.BindingMode.fromView })
 ], exports.LoadCustomAttribute.prototype, "active", void 0);
 exports.LoadCustomAttribute = __decorate([
     runtimeHtml.customAttribute('load'),
@@ -4020,7 +4022,7 @@ exports.HrefCustomAttribute = class HrefCustomAttribute {
     }
 };
 __decorate([
-    runtimeHtml.bindable({ mode: runtimeHtml.BindingMode.toView })
+    runtimeHtml.bindable({ mode: runtime.BindingMode.toView })
 ], exports.HrefCustomAttribute.prototype, "value", void 0);
 exports.HrefCustomAttribute = __decorate([
     runtimeHtml.customAttribute({ name: 'href', noMultiBindings: true }),
@@ -4046,7 +4048,7 @@ const DefaultResources = [
 ];
 function configure(container, config) {
     return container.register(runtimeHtml.AppTask.hydrated(kernel.IContainer, RouteContext.setRoot), runtimeHtml.AppTask.afterActivate(IRouter, router => {
-        if (kernel.isObject(config)) {
+        if (metadata.isObject(config)) {
             if (typeof config === 'function') {
                 return config(router);
             }

@@ -1,7 +1,8 @@
 import { readFileSync, readFile as readFile$1, access, constants as constants$1, exists as exists$1, readdirSync, statSync, openSync, existsSync } from 'fs';
 import { resolve, join, extname, relative } from 'path';
 import { EOL } from 'os';
-import { DI, IContainer, all, bound, ILogger, Registration, LoggerConfiguration, ConsoleSink, IPlatform, Platform } from '@aurelia/kernel';
+import { DI, IContainer, all, bound, ILogger, Registration, LoggerConfiguration, ConsoleSink, IPlatform } from '@aurelia/kernel';
+import { Platform } from '@aurelia/platform';
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import * as https from 'https';
 import { constants, createSecureServer, Http2ServerRequest, Http2ServerResponse } from 'http2';
@@ -694,6 +695,9 @@ async function parseArgs(args) {
                     }
                     catch ( /*  */_c) { /*  */ }
                 }
+            }
+            if (config === void 0) {
+                throw new Error('Unable to load configuration');
             }
             configuration.applyConfig(config);
             args = args.slice(1);

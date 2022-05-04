@@ -1,5 +1,5 @@
 import { IContainer, IRegistry } from '@aurelia/kernel';
-import { AuSlot } from './resources/custom-elements/au-slot.js';
+import { AuSlot } from './resources/custom-elements/au-slot';
 import { ICoercionConfiguration } from '@aurelia/runtime';
 export declare const DebounceBindingBehaviorRegistration: IRegistry;
 export declare const OneTimeBindingBehaviorRegistration: IRegistry;

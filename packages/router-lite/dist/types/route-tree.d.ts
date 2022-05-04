@@ -1,8 +1,8 @@
 import { ILogger } from '@aurelia/kernel';
 import { CustomElementDefinition } from '@aurelia/runtime-html';
-import { ITypedNavigationInstruction_ResolvedComponent, Params, ViewportInstruction, ViewportInstructionTree } from './instructions.js';
-import { IRouteContext } from './route-context.js';
-import { NavigationOptions } from './router.js';
+import { ITypedNavigationInstruction_ResolvedComponent, Params, ViewportInstruction, ViewportInstructionTree } from './instructions';
+import { IRouteContext } from './route-context';
+import { NavigationOptions } from './router';
 export interface IRouteNode {
     path: string;
     finalPath: string;

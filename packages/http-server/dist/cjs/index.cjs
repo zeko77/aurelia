@@ -7,6 +7,7 @@ var http = require('http');
 var http2 = require('http2');
 var path = require('path');
 var kernel = require('@aurelia/kernel');
+var platform = require('@aurelia/platform');
 var https = require('https');
 var $url = require('url');
 var os = require('os');
@@ -684,7 +685,7 @@ const HttpServerConfiguration = {
         opts.validate();
         return {
             register(container) {
-                container.register(kernel.Registration.instance(IHttpServerOptions, opts), kernel.Registration.singleton(IRequestHandler, PushStateHandler), kernel.Registration.singleton(IRequestHandler, exports.FileServer), kernel.Registration.singleton(IHttp2FileServer, Http2FileServer), kernel.LoggerConfiguration.create({ sinks: [kernel.ConsoleSink], level: opts.level, colorOptions: 1 /* colors */ }), kernel.Registration.instance(kernel.IPlatform, new kernel.Platform(globalThis)));
+                container.register(kernel.Registration.instance(IHttpServerOptions, opts), kernel.Registration.singleton(IRequestHandler, PushStateHandler), kernel.Registration.singleton(IRequestHandler, exports.FileServer), kernel.Registration.singleton(IHttp2FileServer, Http2FileServer), kernel.LoggerConfiguration.create({ sinks: [kernel.ConsoleSink], level: opts.level, colorOptions: 1 /* colors */ }), kernel.Registration.instance(kernel.IPlatform, new platform.Platform(globalThis)));
                 if (opts.useHttp2) {
                     container.register(kernel.Registration.singleton(IHttpServer, Http2Server));
                 }

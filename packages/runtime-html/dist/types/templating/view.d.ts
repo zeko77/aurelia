@@ -1,7 +1,7 @@
-import { CustomElementDefinition } from '../resources/custom-element.js';
+import { CustomElementDefinition } from '../resources/custom-element';
 import type { Constructable, ConstructableClass, IContainer } from '@aurelia/kernel';
-import type { ICustomElementViewModel, ISyntheticView, ICustomElementController, ICustomAttributeController } from './controller.js';
-import type { PartialCustomElementDefinition } from '../resources/custom-element.js';
+import type { ICustomElementViewModel, ISyntheticView, ICustomElementController, ICustomAttributeController } from './controller';
+import type { PartialCustomElementDefinition } from '../resources/custom-element';
 export interface IViewFactory extends ViewFactory {
 }
 export declare const IViewFactory: import("@aurelia/kernel").InterfaceSymbol<IViewFactory>;

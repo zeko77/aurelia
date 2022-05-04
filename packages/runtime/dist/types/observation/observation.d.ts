@@ -1,5 +1,5 @@
-import { IObserverLocator } from './observer-locator.js';
-import type { IConnectable } from '../observation.js';
+import { IObserverLocator } from './observer-locator';
+import type { IConnectable } from '../observation';
 export interface IObservation extends Observation {
 }
 export declare const IObservation: import("@aurelia/kernel").InterfaceSymbol<IObservation>;

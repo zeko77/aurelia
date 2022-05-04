@@ -1,4 +1,4 @@
-import { ISVGAnalyzer } from './observation/svg-analyzer.js';
+import { ISVGAnalyzer } from './observation/svg-analyzer';
 export interface IAttrMapper extends AttrMapper {
 }
 export declare const IAttrMapper: import("@aurelia/kernel").InterfaceSymbol<IAttrMapper>;
