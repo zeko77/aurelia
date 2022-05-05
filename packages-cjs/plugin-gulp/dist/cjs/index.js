@@ -1,20 +1,21 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.plugin = void 0;
-const stream_1 = require("stream");
-const plugin_conventions_1 = require("@aurelia/plugin-conventions");
-function default_1(options = {}) {
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+var stream = require('stream');
+var pluginConventions = require('@aurelia/plugin-conventions');
+
+function index (options = {}) {
     return plugin({
         ...options,
         useProcessedFilePairFilename: true,
         stringModuleWrap
     });
 }
-exports.default = default_1;
-function plugin(options, _preprocess = plugin_conventions_1.preprocess // for testing
+function plugin(options, _preprocess = pluginConventions.preprocess // for testing
 ) {
-    const allOptions = (0, plugin_conventions_1.preprocessOptions)(options);
-    return new stream_1.Transform({
+    const allOptions = pluginConventions.preprocessOptions(options);
+    return new stream.Transform({
         objectMode: true,
         transform: function (file, enc, cb) {
             if (file.isStream()) {
@@ -43,8 +44,10 @@ function plugin(options, _preprocess = plugin_conventions_1.preprocess // for te
         }
     });
 }
-exports.plugin = plugin;
 function stringModuleWrap(id) {
     return `text!${id}`;
 }
+
+exports["default"] = index;
+exports.plugin = plugin;
 //# sourceMappingURL=index.js.map

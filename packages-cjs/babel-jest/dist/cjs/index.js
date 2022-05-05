@@ -1,13 +1,20 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const plugin_conventions_1 = require("@aurelia/plugin-conventions");
-const babel_jest_1 = require("babel-jest");
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+var pluginConventions = require('@aurelia/plugin-conventions');
+var babelTransformer = require('babel-jest');
+
+function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
+
+var babelTransformer__default = /*#__PURE__*/_interopDefaultLegacy(babelTransformer);
+
 function _createTransformer(conventionsOptions = {}, 
 // for testing
-_preprocess = plugin_conventions_1.preprocess, _babelProcess = babel_jest_1.default.process.bind(babel_jest_1.default)) {
-    const au2Options = (0, plugin_conventions_1.preprocessOptions)(conventionsOptions);
+_preprocess = pluginConventions.preprocess, _babelProcess = babelTransformer__default["default"].process.bind(babelTransformer__default["default"])) {
+    const au2Options = pluginConventions.preprocessOptions(conventionsOptions);
     function getCacheKey(fileData, filePath, options) {
-        const babelKey = babel_jest_1.default.getCacheKey(fileData, filePath, options);
+        const babelKey = babelTransformer__default["default"].getCacheKey(fileData, filePath, options);
         return `${babelKey}:${JSON.stringify(au2Options)}`;
     }
     // Wrap babel-jest process
@@ -19,7 +26,7 @@ _preprocess = plugin_conventions_1.preprocess, _babelProcess = babel_jest_1.defa
         return _babelProcess(sourceText, sourcePath, transformOptions);
     }
     return {
-        canInstrument: babel_jest_1.default.canInstrument,
+        canInstrument: babelTransformer__default["default"].canInstrument,
         getCacheKey,
         process
     };
@@ -28,5 +35,7 @@ function createTransformer(conventionsOptions = {}) {
     return _createTransformer(conventionsOptions);
 }
 const { canInstrument, getCacheKey, process } = createTransformer();
-exports.default = { canInstrument, getCacheKey, process, createTransformer, _createTransformer };
+var index = { canInstrument, getCacheKey, process, createTransformer, _createTransformer };
+
+exports["default"] = index;
 //# sourceMappingURL=index.js.map
