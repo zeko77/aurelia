@@ -2,8 +2,8 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-var kernel = require('@aurelia/kernel');
 var runtime = require('@aurelia/runtime');
+var kernel = require('@aurelia/kernel');
 var metadata = require('@aurelia/metadata');
 var platform = require('@aurelia/platform');
 var platformBrowser = require('@aurelia/platform-browser');
@@ -11114,6 +11114,7 @@ class WcCustomElementRegistry {
 }
 WcCustomElementRegistry.inject = [kernel.IContainer, IPlatform, IRendering];
 
+exports.LifecycleFlags = runtime.LifecycleFlags;
 exports.AdoptedStyleSheetsStyles = AdoptedStyleSheetsStyles;
 exports.AppRoot = AppRoot;
 exports.AppTask = AppTask;

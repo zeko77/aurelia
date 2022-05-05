@@ -35,11 +35,87 @@ function resourceName(filePath) {
     return kebabCase(name);
 }
 
+/**
+ * This is the minimum required runtime modules for HMR
+ */
+const hmrRuntimeModules = ['CustomElement', 'LifecycleFlags', 'IHydrationContext', 'Controller'];
+/**
+ * This is the minimum required metadata modules for HMR
+ */
+const hmrMetadataModules = ['Metadata'];
+/**
+ * This gets the generated HMR code for the specified class
+ *
+ * @param className - The name of the class to generate HMR code for
+ * @param moduleText -  Usually module but Vite uses import instead
+ * @param type - CustomElement | CustomAttribute
+ * @returns Generated HMR code
+ */
+const getHmrCode = (className, moduleText = 'module', type = 'CustomElement') => {
+    const code = `
+    const controllers = [];
+    if ((${moduleText} as any).hot) {
+    (${moduleText} as any).hot.accept();
+    const hot = (${moduleText} as any).hot;
+    let aurelia = hot.data?.aurelia;
+    document.addEventListener('au-started', (event) => {aurelia= (event as any).detail; });
+    const currentClassType = ${className};
+    const proto = (${className} as any).prototype
+    const ogCreated = proto ? proto.created : undefined;
+
+    if(proto){
+      proto.created = (controller) => {
+        ogCreated && ogCreated(controller);
+        controllers.push(controller);
+      }
+    }
+
+    hot.dispose(function (data) {
+      data.controllers = controllers;
+      data.aurelia = aurelia;
+    });
+
+    if (hot.data?.aurelia) {
+      const newDefinition = CustomElement.getDefinition(currentClassType);
+      Metadata.define(newDefinition.name, newDefinition, currentClassType);
+      Metadata.define(newDefinition.name, newDefinition, newDefinition);
+      (hot.data.aurelia.container as any).res[CustomElement.keyFrom(newDefinition.name)] = newDefinition;
+
+
+      (hot.data.controllers as any).forEach(controller => {
+        const values = { ...controller.viewModel };
+        const hydrationContext = controller.container.get(IHydrationContext)
+        const hydrationInst = hydrationContext.instruction;
+
+        Object.keys(values).forEach(key => {
+          if (!controller.bindings?.some(y => (y as any).sourceExpression?.name === key && (y as any).targetProperty)) {
+            delete values[key];
+          }
+        });
+        const h = (controller as any).host;
+        delete (controller as any)._compiledDef;
+        (controller.viewModel as any) = new currentClassType();
+        (controller.definition as any) = newDefinition;
+        Object.assign(controller.viewModel, values);
+        (controller.hooks as any) = new (controller.hooks as any).constructor(controller.viewModel);
+        (controller as any)._hydrateCustomElement(hydrationInst, hydrationContext);
+        h.parentNode.replaceChild((controller as any).host, h);
+        (controller as any).hostController = null;
+        (controller as any).deactivate(controller, controller.parent ?? null, LifecycleFlags.none);
+        (controller as any).activate(controller, controller.parent ?? null, LifecycleFlags.none);
+      });
+    }
+  }`;
+    return type === 'CustomElementHtml' ? code.replace(/ as any/g, '') : code;
+};
+
 function preprocessResource(unit, options) {
     const expectedResourceName = resourceName(unit.path);
     const sf = ts.createSourceFile(unit.path, unit.contents, ts.ScriptTarget.Latest);
+    let exportedClassName;
     let auImport = { names: [], start: 0, end: 0 };
     let runtimeImport = { names: [], start: 0, end: 0 };
+    let metadataImport = { names: [], start: 0, end: 0 };
     let implicitElement;
     let customElementName; // for @customName('custom-name')
     // When there are multiple exported classes (e.g. local value converters),
@@ -52,6 +128,13 @@ function preprocessResource(unit, options) {
         if (au) {
             // Assumes only one import statement for @aurelia/runtime-html
             auImport = au;
+            return;
+        }
+        // Find existing import {Metadata} from '@aurelia/metadata';
+        const metadata = captureImport(s, '@aurelia/metadata', unit.contents);
+        if (metadata) {
+            // Assumes only one import statement for @aurelia/runtime-html
+            metadataImport = metadata;
             return;
         }
         // Find existing import {customElement} from '@aurelia/runtime-html';
@@ -68,7 +151,7 @@ function preprocessResource(unit, options) {
         const resource = findResource(s, expectedResourceName, unit.filePair, unit.isViewPair, unit.contents);
         if (!resource)
             return;
-        const { localDep, needDecorator, implicitStatement, runtimeImportName, customName } = resource;
+        const { className, localDep, needDecorator, implicitStatement, runtimeImportName, customName } = resource;
         if (localDep)
             localDeps.push(localDep);
         if (needDecorator)
@@ -78,20 +161,57 @@ function preprocessResource(unit, options) {
         if (runtimeImportName && !auImport.names.includes(runtimeImportName)) {
             ensureTypeIsExported(runtimeImport.names, runtimeImportName);
         }
+        if (className && options.hmr && process.env.NODE_ENV !== 'production') {
+            exportedClassName = className;
+            hmrRuntimeModules.forEach(m => {
+                if (!auImport.names.includes(m)) {
+                    ensureTypeIsExported(runtimeImport.names, m);
+                }
+            });
+            hmrMetadataModules.forEach(m => {
+                if (!auImport.names.includes(m)) {
+                    ensureTypeIsExported(metadataImport.names, m);
+                }
+            });
+        }
         if (customName)
             customElementName = customName;
     });
-    return modifyResource(unit, {
-        runtimeImport,
-        implicitElement,
-        localDeps,
-        conventionalDecorators,
-        customElementName
-    });
+    let m = modifyCode(unit.contents, unit.path);
+    const hmrEnabled = options.hmr && exportedClassName && process.env.NODE_ENV !== 'production';
+    if (options.enableConventions || hmrEnabled) {
+        if (hmrEnabled && metadataImport.names.length) {
+            let metadataImportStatement = `import { ${metadataImport.names.join(', ')} } from '@aurelia/metadata';`;
+            if (metadataImport.end === metadataImport.start)
+                metadataImportStatement += '\n';
+            m.replace(metadataImport.start, metadataImport.end, metadataImportStatement);
+        }
+        if (runtimeImport.names.length) {
+            let runtimeImportStatement = `import { ${runtimeImport.names.join(', ')} } from '@aurelia/runtime-html';`;
+            if (runtimeImport.end === runtimeImport.start)
+                runtimeImportStatement += '\n';
+            m.replace(runtimeImport.start, runtimeImport.end, runtimeImportStatement);
+        }
+    }
+    if (options.enableConventions) {
+        m = modifyResource(unit, m, {
+            runtimeImport,
+            metadataImport,
+            exportedClassName,
+            implicitElement,
+            localDeps,
+            conventionalDecorators,
+            customElementName
+        });
+    }
+    if (options.hmr && exportedClassName && process.env.NODE_ENV !== 'production') {
+        const hmr = getHmrCode(exportedClassName, options.hmrModule);
+        m.append(hmr);
+    }
+    return m.transform();
 }
-function modifyResource(unit, options) {
-    const { runtimeImport, implicitElement, localDeps, conventionalDecorators, customElementName } = options;
-    const m = modifyCode(unit.contents, unit.path);
+function modifyResource(unit, m, options) {
+    const { implicitElement, localDeps, conventionalDecorators, customElementName } = options;
     if (implicitElement && unit.filePair) {
         // @view() for foo.js and foo-view.html
         // @customElement() for foo.js and foo.html
@@ -124,15 +244,9 @@ function modifyResource(unit, options) {
         }
     }
     if (conventionalDecorators.length) {
-        if (runtimeImport.names.length) {
-            let runtimeImportStatement = `import { ${runtimeImport.names.join(', ')} } from '@aurelia/runtime-html';`;
-            if (runtimeImport.end === runtimeImport.start)
-                runtimeImportStatement += '\n';
-            m.replace(runtimeImport.start, runtimeImport.end, runtimeImportStatement);
-        }
         conventionalDecorators.forEach(([pos, str]) => m.insert(pos, str));
     }
-    return m.transform();
+    return m;
 }
 function captureImport(s, lib, code) {
     if (ts.isImportDeclaration(s) &&
@@ -209,7 +323,10 @@ function findResource(node, expectedResourceName, filePair, isViewPair, code) {
         if (!isImplicitResource &&
             foundType.type !== 'customElement' &&
             foundType.type !== 'view') {
-            return { localDep: className };
+            return {
+                className,
+                localDep: className
+            };
         }
         if (isImplicitResource &&
             foundType.type === 'customElement' &&
@@ -218,16 +335,21 @@ function findResource(node, expectedResourceName, filePair, isViewPair, code) {
             // @customElement('custom-name')
             const customName = foundType.expression.arguments[0];
             return {
+                className,
                 implicitStatement: { pos: pos, end: node.end },
                 customName: { pos: ensureTokenStart(customName.pos, code), end: customName.end }
             };
         }
+        return {
+            className,
+        };
     }
     else {
         if (type === 'customElement') {
             // Custom element can only be implicit resource
             if (isImplicitResource && filePair) {
                 return {
+                    className,
                     implicitStatement: { pos: pos, end: node.end },
                     runtimeImportName: isViewPair ? 'view' : 'customElement'
                 };
@@ -235,6 +357,7 @@ function findResource(node, expectedResourceName, filePair, isViewPair, code) {
         }
         else {
             const result = {
+                className,
                 needDecorator: [pos, `@${type}('${name}')\n`],
                 localDep: className,
             };
@@ -436,7 +559,7 @@ function toBindingMode(mode) {
 // We cannot use
 //   import d0 from './foo.css';
 // because most bundler by default will inject that css into HTML head.
-function preprocessHtmlTemplate(unit, options) {
+function preprocessHtmlTemplate(unit, options, hasViewModel) {
     const name = resourceName(unit.path);
     const stripped = stripMetaData(unit.contents);
     const { html, deps, containerless, hasSlot, bindables, aliases } = stripped;
@@ -500,7 +623,14 @@ function preprocessHtmlTemplate(unit, options) {
         viewDeps.push(`Registration.defer('${ext}', d${i})`);
     });
     const m = modifyCode('', unit.path);
-    m.append(`import { CustomElement } from '@aurelia/runtime-html';\n`);
+    const hmrEnabled = !hasViewModel && options.hmr && process.env.NODE_ENV !== 'production';
+    if (hmrEnabled) {
+        m.append(`import { ${hmrRuntimeModules.join(', ')} } from '@aurelia/runtime-html';\n`);
+        m.append(`import { ${hmrMetadataModules.join(', ')} } from '@aurelia/metadata';\n`);
+    }
+    else {
+        m.append(`import { CustomElement } from '@aurelia/runtime-html';\n`);
+    }
     if (cssDeps.length > 0) {
         if (shadowMode !== null) {
             m.append(`import { shadowCSS } from '@aurelia/runtime-html';\n`);
@@ -529,7 +659,14 @@ export const dependencies = [ ${viewDeps.join(', ')} ];
     if (aliases.length > 0) {
         m.append(`export const aliases = ${JSON.stringify(aliases)};\n`);
     }
-    m.append(`let _e;
+    if (hmrEnabled) {
+        m.append(`const _e = CustomElement.define({ name, template, dependencies${shadowMode !== null ? ', shadowOptions' : ''}${containerless ? ', containerless' : ''}${Object.keys(bindables).length > 0 ? ', bindables' : ''}${aliases.length > 0 ? ', aliases' : ''} });
+      export function register(container) {
+        container.register(_e);
+      }`);
+    }
+    else {
+        m.append(`let _e;
 export function register(container) {
   if (!_e) {
     _e = CustomElement.define({ name, template, dependencies${shadowMode !== null ? ', shadowOptions' : ''}${containerless ? ', containerless' : ''}${Object.keys(bindables).length > 0 ? ', bindables' : ''}${aliases.length > 0 ? ', aliases' : ''} });
@@ -537,6 +674,10 @@ export function register(container) {
   container.register(_e);
 }
 `);
+    }
+    if (hmrEnabled) {
+        m.append(getHmrCode('_e', options.hmrModule, 'CustomElementHtml'));
+    }
     const { code, map } = m.transform();
     map.sourcesContent = [unit.contents];
     return { code, map };
@@ -549,12 +690,15 @@ const defaultCssExtensions = ['.css', '.scss', '.sass', '.less', '.styl'];
 const defaultJsExtensions = ['.js', '.jsx', '.ts', '.tsx', '.coffee'];
 const defaultTemplateExtensions = ['.html', '.md', '.pug', '.haml', '.jade', '.slim', '.slm'];
 function preprocessOptions(options = {}) {
-    const { cssExtensions = [], jsExtensions = [], templateExtensions = [], useCSSModule = false, ...others } = options;
+    const { cssExtensions = [], jsExtensions = [], templateExtensions = [], useCSSModule = false, hmr = true, enableConventions = true, hmrModule = 'module', ...others } = options;
     return {
         cssExtensions: Array.from(new Set([...defaultCssExtensions, ...cssExtensions])).sort(),
         jsExtensions: Array.from(new Set([...defaultJsExtensions, ...jsExtensions])).sort(),
         templateExtensions: Array.from(new Set([...defaultTemplateExtensions, ...templateExtensions])).sort(),
         useCSSModule,
+        hmr,
+        hmrModule,
+        enableConventions,
         ...others
     };
 }
@@ -564,7 +708,7 @@ function preprocess(unit, options, _fileExists = fileExists) {
     const basename = path.basename(unit.path, ext);
     const allOptions = preprocessOptions(options);
     const base = unit.base || '';
-    if (allOptions.templateExtensions.includes(ext)) {
+    if (options.enableConventions && allOptions.templateExtensions.includes(ext)) {
         const possibleFilePair = allOptions.cssExtensions.map(e => path.join(base, unit.path.slice(0, -ext.length) + e));
         const filePair = possibleFilePair.find(_fileExists);
         if (filePair) {
@@ -575,7 +719,8 @@ function preprocess(unit, options, _fileExists = fileExists) {
                 unit.filePair = path.basename(filePair);
             }
         }
-        return preprocessHtmlTemplate(unit, allOptions);
+        const hasViewModel = Boolean(allOptions.jsExtensions.map(e => path.join(base, unit.path.slice(0, -ext.length) + e)).find(_fileExists));
+        return preprocessHtmlTemplate(unit, allOptions, hasViewModel);
     }
     else if (allOptions.jsExtensions.includes(ext)) {
         const possibleFilePair = allOptions.templateExtensions.map(e => path.join(base, unit.path.slice(0, -ext.length) + e));
@@ -603,7 +748,7 @@ function preprocess(unit, options, _fileExists = fileExists) {
                 }
             }
         }
-        return preprocessResource(unit);
+        return preprocessResource(unit, allOptions);
     }
 }
 function fileExists(p) {

@@ -1,4 +1,5 @@
 /// <reference path="../../../global.d.ts" />
+export { LifecycleFlags, } from '@aurelia/runtime';
 export { bindable, Bindable, BindableDefinition, type PartialBindableDefinition, coercer, } from './bindable';
 export { BindableObserver, } from './observation/bindable-observer';
 export { DebounceBindingBehaviorRegistration, OneTimeBindingBehaviorRegistration, ToViewBindingBehaviorRegistration, FromViewBindingBehaviorRegistration, SignalBindingBehaviorRegistration, ThrottleBindingBehaviorRegistration, TwoWayBindingBehaviorRegistration, } from './configuration';
