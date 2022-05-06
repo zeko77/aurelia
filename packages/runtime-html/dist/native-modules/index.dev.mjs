@@ -60,6 +60,7 @@ const isDataAttribute = (obj, key, svgAnalyzer) => {
 const isPromise = (v) => v instanceof Promise;
 const isFunction = (v) => typeof v === 'function';
 const isString = (v) => typeof v === 'string';
+const defineProp = Object.defineProperty;
 
 function bindable(configOrTarget, prop) {
     let config;
@@ -3223,7 +3224,7 @@ class Rendering {
     get renderers() {
         return this.rs == null
             ? (this.rs = this._ctn.getAll(IRenderer, false).reduce((all, r) => {
-                all[r.instructionType] = r;
+                all[r.target] = r;
                 return all;
             }, createLookup()))
             : this.rs;
@@ -4604,20 +4605,26 @@ const IWindow = DI.createInterface('IWindow', x => x.callback(handler => handler
 const ILocation = DI.createInterface('ILocation', x => x.callback(handler => handler.get(IWindow).location));
 const IHistory = DI.createInterface('IHistory', x => x.callback(handler => handler.get(IWindow).history));
 
-const options = {
+const addListenerOptions = {
     [DelegationStrategy.capturing]: { capture: true },
     [DelegationStrategy.bubbling]: { capture: false },
 };
+class ListenerOptions {
+    constructor(prevent, strategy, expAsHandler) {
+        this.prevent = prevent;
+        this.strategy = strategy;
+        this.expAsHandler = expAsHandler;
+    }
+}
 class Listener {
-    constructor(platform, targetEvent, delegationStrategy, sourceExpression, target, preventDefault, eventDelegator, locator) {
+    constructor(platform, targetEvent, sourceExpression, target, eventDelegator, locator, _options) {
         this.platform = platform;
         this.targetEvent = targetEvent;
-        this.delegationStrategy = delegationStrategy;
         this.sourceExpression = sourceExpression;
         this.target = target;
-        this.preventDefault = preventDefault;
         this.eventDelegator = eventDelegator;
         this.locator = locator;
+        this._options = _options;
         this.interceptor = this;
         this.isBound = false;
         this.handler = null;
@@ -4625,9 +4632,15 @@ class Listener {
     callSource(event) {
         const overrideContext = this.$scope.overrideContext;
         overrideContext.$event = event;
-        const result = this.sourceExpression.evaluate(8, this.$scope, this.locator, null);
-        Reflect.deleteProperty(overrideContext, '$event');
-        if (result !== true && this.preventDefault) {
+        let result = this.sourceExpression.evaluate(8, this.$scope, this.locator, null);
+        delete overrideContext.$event;
+        if (this._options.expAsHandler) {
+            if (!isFunction(result)) {
+                throw new Error(`Handler of "${this.targetEvent}" event is not a function.`);
+            }
+            result = result(event);
+        }
+        if (result !== true && this._options.prevent) {
             event.preventDefault();
         }
         return result;
@@ -4647,11 +4660,11 @@ class Listener {
         if (sourceExpression.hasBind) {
             sourceExpression.bind(flags, scope, this.interceptor);
         }
-        if (this.delegationStrategy === DelegationStrategy.none) {
+        if (this._options.strategy === DelegationStrategy.none) {
             this.target.addEventListener(this.targetEvent, this);
         }
         else {
-            this.handler = this.eventDelegator.addEventListener(this.locator.get(IEventTarget), this.target, this.targetEvent, this, options[this.delegationStrategy]);
+            this.handler = this.eventDelegator.addEventListener(this.locator.get(IEventTarget), this.target, this.targetEvent, this, addListenerOptions[this._options.strategy]);
         }
         this.isBound = true;
     }
@@ -4664,7 +4677,7 @@ class Listener {
             sourceExpression.unbind(flags, this.$scope, this.interceptor);
         }
         this.$scope = null;
-        if (this.delegationStrategy === DelegationStrategy.none) {
+        if (this._options.strategy === DelegationStrategy.none) {
             this.target.removeEventListener(this.targetEvent, this);
         }
         else {
@@ -4995,23 +5008,14 @@ const ITemplateCompiler = DI.createInterface('ITemplateCompiler');
 const IRenderer = DI.createInterface('IRenderer');
 function renderer(instructionType) {
     return function decorator(target) {
-        const decoratedTarget = function (...args) {
-            const instance = new target(...args);
-            instance.instructionType = instructionType;
-            return instance;
+        target.register = function register(container) {
+            Registration.singleton(IRenderer, this).register(container);
         };
-        decoratedTarget.register = function register(container) {
-            Registration.singleton(IRenderer, decoratedTarget).register(container);
-        };
-        const metadataKeys = Metadata.getOwnKeys(target);
-        for (const key of metadataKeys) {
-            defineMetadata(key, getOwnMetadata(key, target), decoratedTarget);
-        }
-        const ownProperties = Object.getOwnPropertyDescriptors(target);
-        Object.keys(ownProperties).filter(prop => prop !== 'prototype').forEach(prop => {
-            Reflect.defineProperty(decoratedTarget, prop, ownProperties[prop]);
+        defineProp(target.prototype, 'target', {
+            configurable: true,
+            get: function () { return instructionType; }
         });
-        return decoratedTarget;
+        return target;
     };
 }
 function ensureExpression(parser, srcOrExpr, expressionType) {
@@ -5375,21 +5379,28 @@ TextBindingRenderer.inject = [IExpressionParser, IObserverLocator, IPlatform];
 TextBindingRenderer = __decorate([
     renderer("ha")
 ], TextBindingRenderer);
+const IListenerBehaviorOptions = DI.createInterface('IListenerBehaviorOptions', x => x.singleton(ListenerBehaviorOptions));
+class ListenerBehaviorOptions {
+    constructor() {
+        this.expAsHandler = false;
+    }
+}
 let ListenerBindingRenderer = class ListenerBindingRenderer {
-    constructor(parser, eventDelegator, p) {
+    constructor(parser, eventDelegator, p, listenerBehaviorOptions) {
         this._exprParser = parser;
         this._eventDelegator = eventDelegator;
         this._platform = p;
+        this._listenerBehaviorOptions = listenerBehaviorOptions;
     }
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.from, 4);
-        const binding = new Listener(this._platform, instruction.to, instruction.strategy, expr, target, instruction.preventDefault, this._eventDelegator, renderingCtrl.container);
+        const binding = new Listener(this._platform, instruction.to, expr, target, this._eventDelegator, renderingCtrl.container, new ListenerOptions(instruction.preventDefault, instruction.strategy, this._listenerBehaviorOptions.expAsHandler));
         renderingCtrl.addBinding(expr.$kind === 38962
             ? applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }
 };
-ListenerBindingRenderer.inject = [IExpressionParser, IEventDelegator, IPlatform];
+ListenerBindingRenderer.inject = [IExpressionParser, IEventDelegator, IPlatform, IListenerBehaviorOptions];
 ListenerBindingRenderer = __decorate([
     renderer("hb")
 ], ListenerBindingRenderer);
@@ -11111,5 +11122,5 @@ class WcCustomElementRegistry {
 }
 WcCustomElementRegistry.inject = [IContainer, IPlatform, IRendering];
 
-export { AdoptedStyleSheetsStyles, AppRoot, AppTask, AtPrefixedTriggerAttributePattern, AtPrefixedTriggerAttributePatternRegistration, AttrBindingBehavior, AttrBindingBehaviorRegistration, AttrBindingCommand, AttrBindingCommandRegistration, AttrSyntax, AttributeBinding, AttributeBindingInstruction, AttributeBindingRendererRegistration, AttributeNSAccessor, AttributePattern, AuCompose, AuRender, AuRenderRegistration, AuSlot, AuSlotsInfo, Aurelia, Bindable, BindableDefinition, BindableObserver, BindablesInfo, BindingCommand, BindingCommandDefinition, BindingModeBehavior, CSSModulesProcessorRegistry, CallBinding, CallBindingCommand, CallBindingCommandRegistration, CallBindingInstruction, CallBindingRendererRegistration, CaptureBindingCommand, CaptureBindingCommandRegistration, Case, CheckedObserver, Children, ChildrenDefinition, ChildrenObserver, ClassAttributeAccessor, ClassBindingCommand, ClassBindingCommandRegistration, ColonPrefixedBindAttributePattern, ColonPrefixedBindAttributePatternRegistration, CommandType, ComputedWatcher, Controller, CustomAttribute, CustomAttributeDefinition, CustomAttributeRendererRegistration, CustomElement, CustomElementDefinition, CustomElementRendererRegistration, DataAttributeAccessor, DebounceBindingBehavior, DebounceBindingBehaviorRegistration, DefaultBindingCommand, DefaultBindingCommandRegistration, DefaultBindingLanguage, DefaultBindingSyntax, DefaultCase, DefaultComponents, DefaultDialogDom, DefaultDialogDomRenderer, DefaultDialogGlobalSettings, DefaultRenderers, DefaultResources, DefinitionType, DelegateBindingCommand, DelegateBindingCommandRegistration, DialogCloseResult, DialogConfiguration, DialogController, DialogDeactivationStatuses, DialogDefaultConfiguration, DialogOpenResult, DialogService, DotSeparatedAttributePattern, DotSeparatedAttributePatternRegistration, Else, ElseRegistration, EventDelegator, EventSubscriber, ExpressionWatcher, Focus, ForBindingCommand, ForBindingCommandRegistration, FragmentNodeSequence, FrequentMutations, FromViewBindingBehavior, FromViewBindingBehaviorRegistration, FromViewBindingCommand, FromViewBindingCommandRegistration, FulfilledTemplateController, HydrateAttributeInstruction, HydrateElementInstruction, HydrateLetElementInstruction, HydrateTemplateController, IAppRoot, IAppTask, IAttrMapper, IAttributeParser, IAttributePattern, IAuSlotsInfo, IAurelia, IController, IDialogController, IDialogDom, IDialogDomRenderer, IDialogGlobalSettings, IDialogService, IEventDelegator, IEventTarget, IHistory, IHydrationContext, IInstruction, ILifecycleHooks, ILocation, INode, INodeObserverLocatorRegistration, IPlatform, IProjections, IRenderLocation, IRenderer, IRendering, ISVGAnalyzer, ISanitizer, IShadowDOMGlobalStyles, IShadowDOMStyles, ISyntaxInterpreter, ITemplateCompiler, ITemplateCompilerHooks, ITemplateCompilerRegistration, ITemplateElementFactory, IViewFactory, IViewLocator, IWcElementRegistry, IWindow, IWorkTracker, If, IfRegistration, InstructionType, InterpolationBinding, InterpolationBindingRendererRegistration, InterpolationInstruction, InterpolationPartBinding, Interpretation, IteratorBindingInstruction, IteratorBindingRendererRegistration, LetBinding, LetBindingInstruction, LetElementRendererRegistration, LifecycleHooks, LifecycleHooksDefinition, LifecycleHooksEntry, Listener, ListenerBindingInstruction, ListenerBindingRendererRegistration, NodeObserverConfig, NodeObserverLocator, NodeType, NoopSVGAnalyzer, ObserveShallow, OneTimeBindingBehavior, OneTimeBindingBehaviorRegistration, OneTimeBindingCommand, OneTimeBindingCommandRegistration, PendingTemplateController, Portal, PromiseTemplateController, PropertyBinding, PropertyBindingInstruction, PropertyBindingRendererRegistration, RefAttributePattern, RefAttributePatternRegistration, RefBinding, RefBindingCommandRegistration, RefBindingInstruction, RefBindingRendererRegistration, RejectedTemplateController, RenderPlan, Rendering, Repeat, RepeatRegistration, SVGAnalyzer, SVGAnalyzerRegistration, SanitizeValueConverter, SanitizeValueConverterRegistration, SelectValueObserver, SelfBindingBehavior, SelfBindingBehaviorRegistration, SetAttributeInstruction, SetAttributeRendererRegistration, SetClassAttributeInstruction, SetClassAttributeRendererRegistration, SetPropertyInstruction, SetPropertyRendererRegistration, SetStyleAttributeInstruction, SetStyleAttributeRendererRegistration, ShadowDOMRegistry, ShortHandBindingSyntax, SignalBindingBehavior, SignalBindingBehaviorRegistration, StandardConfiguration, StyleAttributeAccessor, StyleBindingCommand, StyleBindingCommandRegistration, StyleConfiguration, StyleElementStyles, StylePropertyBindingInstruction, StylePropertyBindingRendererRegistration, Switch, TemplateCompiler, TemplateCompilerHooks, TemplateControllerRendererRegistration, TextBindingInstruction, TextBindingRendererRegistration, ThrottleBindingBehavior, ThrottleBindingBehaviorRegistration, ToViewBindingBehavior, ToViewBindingBehaviorRegistration, ToViewBindingCommand, ToViewBindingCommandRegistration, TriggerBindingCommand, TriggerBindingCommandRegistration, TwoWayBindingBehavior, TwoWayBindingBehaviorRegistration, TwoWayBindingCommand, TwoWayBindingCommandRegistration, UpdateTriggerBindingBehavior, UpdateTriggerBindingBehaviorRegistration, ValueAttributeObserver, ViewFactory, ViewLocator, ViewModelKind, ViewValueConverter, ViewValueConverterRegistration, Views, Watch, WcCustomElementRegistry, With, WithRegistration, allResources, attributePattern, bindable, bindingCommand, children, coercer, containerless, convertToRenderLocation, createElement, cssModules, customAttribute, customElement, getEffectiveParentNode, getRef, isCustomElementController, isCustomElementViewModel, isInstruction, isRenderLocation, lifecycleHooks, processContent, renderer, setEffectiveParentNode, setRef, shadowCSS, templateCompilerHooks, templateController, useShadowDOM, view, watch };
+export { AdoptedStyleSheetsStyles, AppRoot, AppTask, AtPrefixedTriggerAttributePattern, AtPrefixedTriggerAttributePatternRegistration, AttrBindingBehavior, AttrBindingBehaviorRegistration, AttrBindingCommand, AttrBindingCommandRegistration, AttrSyntax, AttributeBinding, AttributeBindingInstruction, AttributeBindingRendererRegistration, AttributeNSAccessor, AttributePattern, AuCompose, AuRender, AuRenderRegistration, AuSlot, AuSlotsInfo, Aurelia, Bindable, BindableDefinition, BindableObserver, BindablesInfo, BindingCommand, BindingCommandDefinition, BindingModeBehavior, CSSModulesProcessorRegistry, CallBinding, CallBindingCommand, CallBindingCommandRegistration, CallBindingInstruction, CallBindingRendererRegistration, CaptureBindingCommand, CaptureBindingCommandRegistration, Case, CheckedObserver, Children, ChildrenDefinition, ChildrenObserver, ClassAttributeAccessor, ClassBindingCommand, ClassBindingCommandRegistration, ColonPrefixedBindAttributePattern, ColonPrefixedBindAttributePatternRegistration, CommandType, ComputedWatcher, Controller, CustomAttribute, CustomAttributeDefinition, CustomAttributeRendererRegistration, CustomElement, CustomElementDefinition, CustomElementRendererRegistration, DataAttributeAccessor, DebounceBindingBehavior, DebounceBindingBehaviorRegistration, DefaultBindingCommand, DefaultBindingCommandRegistration, DefaultBindingLanguage, DefaultBindingSyntax, DefaultCase, DefaultComponents, DefaultDialogDom, DefaultDialogDomRenderer, DefaultDialogGlobalSettings, DefaultRenderers, DefaultResources, DefinitionType, DelegateBindingCommand, DelegateBindingCommandRegistration, DialogCloseResult, DialogConfiguration, DialogController, DialogDeactivationStatuses, DialogDefaultConfiguration, DialogOpenResult, DialogService, DotSeparatedAttributePattern, DotSeparatedAttributePatternRegistration, Else, ElseRegistration, EventDelegator, EventSubscriber, ExpressionWatcher, Focus, ForBindingCommand, ForBindingCommandRegistration, FragmentNodeSequence, FrequentMutations, FromViewBindingBehavior, FromViewBindingBehaviorRegistration, FromViewBindingCommand, FromViewBindingCommandRegistration, FulfilledTemplateController, HydrateAttributeInstruction, HydrateElementInstruction, HydrateLetElementInstruction, HydrateTemplateController, IAppRoot, IAppTask, IAttrMapper, IAttributeParser, IAttributePattern, IAuSlotsInfo, IAurelia, IController, IDialogController, IDialogDom, IDialogDomRenderer, IDialogGlobalSettings, IDialogService, IEventDelegator, IEventTarget, IHistory, IHydrationContext, IInstruction, ILifecycleHooks, IListenerBehaviorOptions, ILocation, INode, INodeObserverLocatorRegistration, IPlatform, IProjections, IRenderLocation, IRenderer, IRendering, ISVGAnalyzer, ISanitizer, IShadowDOMGlobalStyles, IShadowDOMStyles, ISyntaxInterpreter, ITemplateCompiler, ITemplateCompilerHooks, ITemplateCompilerRegistration, ITemplateElementFactory, IViewFactory, IViewLocator, IWcElementRegistry, IWindow, IWorkTracker, If, IfRegistration, InstructionType, InterpolationBinding, InterpolationBindingRendererRegistration, InterpolationInstruction, InterpolationPartBinding, Interpretation, IteratorBindingInstruction, IteratorBindingRendererRegistration, LetBinding, LetBindingInstruction, LetElementRendererRegistration, LifecycleHooks, LifecycleHooksDefinition, LifecycleHooksEntry, Listener, ListenerBindingInstruction, ListenerBindingRendererRegistration, NodeObserverConfig, NodeObserverLocator, NodeType, NoopSVGAnalyzer, ObserveShallow, OneTimeBindingBehavior, OneTimeBindingBehaviorRegistration, OneTimeBindingCommand, OneTimeBindingCommandRegistration, PendingTemplateController, Portal, PromiseTemplateController, PropertyBinding, PropertyBindingInstruction, PropertyBindingRendererRegistration, RefAttributePattern, RefAttributePatternRegistration, RefBinding, RefBindingCommandRegistration, RefBindingInstruction, RefBindingRendererRegistration, RejectedTemplateController, RenderPlan, Rendering, Repeat, RepeatRegistration, SVGAnalyzer, SVGAnalyzerRegistration, SanitizeValueConverter, SanitizeValueConverterRegistration, SelectValueObserver, SelfBindingBehavior, SelfBindingBehaviorRegistration, SetAttributeInstruction, SetAttributeRendererRegistration, SetClassAttributeInstruction, SetClassAttributeRendererRegistration, SetPropertyInstruction, SetPropertyRendererRegistration, SetStyleAttributeInstruction, SetStyleAttributeRendererRegistration, ShadowDOMRegistry, ShortHandBindingSyntax, SignalBindingBehavior, SignalBindingBehaviorRegistration, StandardConfiguration, StyleAttributeAccessor, StyleBindingCommand, StyleBindingCommandRegistration, StyleConfiguration, StyleElementStyles, StylePropertyBindingInstruction, StylePropertyBindingRendererRegistration, Switch, TemplateCompiler, TemplateCompilerHooks, TemplateControllerRendererRegistration, TextBindingInstruction, TextBindingRendererRegistration, ThrottleBindingBehavior, ThrottleBindingBehaviorRegistration, ToViewBindingBehavior, ToViewBindingBehaviorRegistration, ToViewBindingCommand, ToViewBindingCommandRegistration, TriggerBindingCommand, TriggerBindingCommandRegistration, TwoWayBindingBehavior, TwoWayBindingBehaviorRegistration, TwoWayBindingCommand, TwoWayBindingCommandRegistration, UpdateTriggerBindingBehavior, UpdateTriggerBindingBehaviorRegistration, ValueAttributeObserver, ViewFactory, ViewLocator, ViewModelKind, ViewValueConverter, ViewValueConverterRegistration, Views, Watch, WcCustomElementRegistry, With, WithRegistration, allResources, attributePattern, bindable, bindingCommand, children, coercer, containerless, convertToRenderLocation, createElement, cssModules, customAttribute, customElement, getEffectiveParentNode, getRef, isCustomElementController, isCustomElementViewModel, isInstruction, isRenderLocation, lifecycleHooks, processContent, renderer, setEffectiveParentNode, setRef, shadowCSS, templateCompilerHooks, templateController, useShadowDOM, view, watch };
 //# sourceMappingURL=index.dev.mjs.map

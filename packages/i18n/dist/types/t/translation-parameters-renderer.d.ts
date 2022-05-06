@@ -20,6 +20,7 @@ export declare class TranslationParametersBindingCommand implements BindingComma
     build(info: ICommandBuildInfo): TranslationParametersBindingInstruction;
 }
 export declare class TranslationParametersBindingRenderer implements IRenderer {
+    target: typeof TranslationParametersInstructionType;
     constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator, p: IPlatform);
     render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: CallBindingInstruction): void;
 }

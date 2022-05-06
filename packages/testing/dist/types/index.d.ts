@@ -2,7 +2,7 @@ export { assert, fail } from './assert';
 export { globalAttributeNames, CSS_PROPERTIES, PSEUDO_ELEMENTS, } from './data';
 export { eachCartesianJoinFactory, eachCartesianJoin, eachCartesianJoinAsync, generateCartesianProduct, } from './each-cartesian-join';
 export { h, hJsx, } from './h';
-export { createFixture } from './startup';
+export { createFixture, type IFixture, onFixtureCreated, } from './startup';
 export { TestContext, PLATFORM, PLATFORMRegistration, setPlatform, createContainer, } from './test-context';
 export { inspect, } from './inspect';
 export { MockBinding, MockBindingBehavior, MockBrowserHistoryLocation, MockContext, MockPropertySubscriber, MockServiceLocator, MockSignaler, MockTracingExpression, MockValueConverter, CollectionChangeSet, ChangeSet, ProxyChangeSet, SpySubscriber, } from './mocks';

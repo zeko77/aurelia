@@ -63,6 +63,7 @@ const isDataAttribute = (obj, key, svgAnalyzer) => {
 const isPromise = (v) => v instanceof Promise;
 const isFunction = (v) => typeof v === 'function';
 const isString = (v) => typeof v === 'string';
+const defineProp = Object.defineProperty;
 
 function bindable(configOrTarget, prop) {
     let config;
@@ -3226,7 +3227,7 @@ class Rendering {
     get renderers() {
         return this.rs == null
             ? (this.rs = this._ctn.getAll(IRenderer, false).reduce((all, r) => {
-                all[r.instructionType] = r;
+                all[r.target] = r;
                 return all;
             }, createLookup()))
             : this.rs;
@@ -4607,20 +4608,26 @@ const IWindow = kernel.DI.createInterface('IWindow', x => x.callback(handler => 
 const ILocation = kernel.DI.createInterface('ILocation', x => x.callback(handler => handler.get(IWindow).location));
 const IHistory = kernel.DI.createInterface('IHistory', x => x.callback(handler => handler.get(IWindow).history));
 
-const options = {
+const addListenerOptions = {
     [runtime.DelegationStrategy.capturing]: { capture: true },
     [runtime.DelegationStrategy.bubbling]: { capture: false },
 };
+class ListenerOptions {
+    constructor(prevent, strategy, expAsHandler) {
+        this.prevent = prevent;
+        this.strategy = strategy;
+        this.expAsHandler = expAsHandler;
+    }
+}
 class Listener {
-    constructor(platform, targetEvent, delegationStrategy, sourceExpression, target, preventDefault, eventDelegator, locator) {
+    constructor(platform, targetEvent, sourceExpression, target, eventDelegator, locator, _options) {
         this.platform = platform;
         this.targetEvent = targetEvent;
-        this.delegationStrategy = delegationStrategy;
         this.sourceExpression = sourceExpression;
         this.target = target;
-        this.preventDefault = preventDefault;
         this.eventDelegator = eventDelegator;
         this.locator = locator;
+        this._options = _options;
         this.interceptor = this;
         this.isBound = false;
         this.handler = null;
@@ -4628,9 +4635,15 @@ class Listener {
     callSource(event) {
         const overrideContext = this.$scope.overrideContext;
         overrideContext.$event = event;
-        const result = this.sourceExpression.evaluate(8, this.$scope, this.locator, null);
-        Reflect.deleteProperty(overrideContext, '$event');
-        if (result !== true && this.preventDefault) {
+        let result = this.sourceExpression.evaluate(8, this.$scope, this.locator, null);
+        delete overrideContext.$event;
+        if (this._options.expAsHandler) {
+            if (!isFunction(result)) {
+                throw new Error(`Handler of "${this.targetEvent}" event is not a function.`);
+            }
+            result = result(event);
+        }
+        if (result !== true && this._options.prevent) {
             event.preventDefault();
         }
         return result;
@@ -4650,11 +4663,11 @@ class Listener {
         if (sourceExpression.hasBind) {
             sourceExpression.bind(flags, scope, this.interceptor);
         }
-        if (this.delegationStrategy === runtime.DelegationStrategy.none) {
+        if (this._options.strategy === runtime.DelegationStrategy.none) {
             this.target.addEventListener(this.targetEvent, this);
         }
         else {
-            this.handler = this.eventDelegator.addEventListener(this.locator.get(IEventTarget), this.target, this.targetEvent, this, options[this.delegationStrategy]);
+            this.handler = this.eventDelegator.addEventListener(this.locator.get(IEventTarget), this.target, this.targetEvent, this, addListenerOptions[this._options.strategy]);
         }
         this.isBound = true;
     }
@@ -4667,7 +4680,7 @@ class Listener {
             sourceExpression.unbind(flags, this.$scope, this.interceptor);
         }
         this.$scope = null;
-        if (this.delegationStrategy === runtime.DelegationStrategy.none) {
+        if (this._options.strategy === runtime.DelegationStrategy.none) {
             this.target.removeEventListener(this.targetEvent, this);
         }
         else {
@@ -4998,23 +5011,14 @@ const ITemplateCompiler = kernel.DI.createInterface('ITemplateCompiler');
 const IRenderer = kernel.DI.createInterface('IRenderer');
 function renderer(instructionType) {
     return function decorator(target) {
-        const decoratedTarget = function (...args) {
-            const instance = new target(...args);
-            instance.instructionType = instructionType;
-            return instance;
+        target.register = function register(container) {
+            kernel.Registration.singleton(IRenderer, this).register(container);
         };
-        decoratedTarget.register = function register(container) {
-            kernel.Registration.singleton(IRenderer, decoratedTarget).register(container);
-        };
-        const metadataKeys = metadata.Metadata.getOwnKeys(target);
-        for (const key of metadataKeys) {
-            defineMetadata(key, getOwnMetadata(key, target), decoratedTarget);
-        }
-        const ownProperties = Object.getOwnPropertyDescriptors(target);
-        Object.keys(ownProperties).filter(prop => prop !== 'prototype').forEach(prop => {
-            Reflect.defineProperty(decoratedTarget, prop, ownProperties[prop]);
+        defineProp(target.prototype, 'target', {
+            configurable: true,
+            get: function () { return instructionType; }
         });
-        return decoratedTarget;
+        return target;
     };
 }
 function ensureExpression(parser, srcOrExpr, expressionType) {
@@ -5378,21 +5382,28 @@ TextBindingRenderer.inject = [runtime.IExpressionParser, runtime.IObserverLocato
 TextBindingRenderer = __decorate([
     renderer("ha")
 ], TextBindingRenderer);
+const IListenerBehaviorOptions = kernel.DI.createInterface('IListenerBehaviorOptions', x => x.singleton(ListenerBehaviorOptions));
+class ListenerBehaviorOptions {
+    constructor() {
+        this.expAsHandler = false;
+    }
+}
 let ListenerBindingRenderer = class ListenerBindingRenderer {
-    constructor(parser, eventDelegator, p) {
+    constructor(parser, eventDelegator, p, listenerBehaviorOptions) {
         this._exprParser = parser;
         this._eventDelegator = eventDelegator;
         this._platform = p;
+        this._listenerBehaviorOptions = listenerBehaviorOptions;
     }
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.from, 4);
-        const binding = new Listener(this._platform, instruction.to, instruction.strategy, expr, target, instruction.preventDefault, this._eventDelegator, renderingCtrl.container);
+        const binding = new Listener(this._platform, instruction.to, expr, target, this._eventDelegator, renderingCtrl.container, new ListenerOptions(instruction.preventDefault, instruction.strategy, this._listenerBehaviorOptions.expAsHandler));
         renderingCtrl.addBinding(expr.$kind === 38962
             ? applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }
 };
-ListenerBindingRenderer.inject = [runtime.IExpressionParser, IEventDelegator, IPlatform];
+ListenerBindingRenderer.inject = [runtime.IExpressionParser, IEventDelegator, IPlatform, IListenerBehaviorOptions];
 ListenerBindingRenderer = __decorate([
     renderer("hb")
 ], ListenerBindingRenderer);
@@ -11217,6 +11228,7 @@ exports.IHistory = IHistory;
 exports.IHydrationContext = IHydrationContext;
 exports.IInstruction = IInstruction;
 exports.ILifecycleHooks = ILifecycleHooks;
+exports.IListenerBehaviorOptions = IListenerBehaviorOptions;
 exports.ILocation = ILocation;
 exports.INode = INode;
 exports.INodeObserverLocatorRegistration = INodeObserverLocatorRegistration;

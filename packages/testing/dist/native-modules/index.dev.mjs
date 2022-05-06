@@ -1,4 +1,4 @@
-import { noop, isArrayIndex, DI, Registration, emptyArray, kebabCase } from '../../../kernel/dist/native-modules/index.mjs';
+import { noop, isArrayIndex, DI, Registration, emptyArray, kebabCase, EventAggregator } from '../../../kernel/dist/native-modules/index.mjs';
 import { IObserverLocator, valueConverter, IDirtyChecker, INodeObserverLocator, Scope, OverrideContext } from '../../../runtime/dist/native-modules/index.mjs';
 import { StandardConfiguration, IPlatform, ITemplateCompiler, CustomElement, CustomAttribute, Aurelia, bindable, customElement } from '../../../runtime-html/dist/native-modules/index.mjs';
 import { BrowserPlatform } from '../../../platform-browser/dist/native-modules/index.mjs';
@@ -7470,14 +7470,34 @@ const hJsx = function (name, attrs, ...children) {
     return el;
 };
 
+const fixtureHooks = new EventAggregator();
+const onFixtureCreated = (callback) => {
+    return fixtureHooks.subscribe('fixture:created', (fixture) => {
+        try {
+            callback(fixture);
+        }
+        catch (ex) {
+            console.log('(!) Error in fixture:created callback');
+            console.log(ex);
+        }
+    });
+};
 function createFixture(template, $class, registrations = [], autoStart = true, ctx = TestContext.create()) {
     const { container, platform, observerLocator } = ctx;
     container.register(...registrations);
     const root = ctx.doc.body.appendChild(ctx.doc.createElement('div'));
     const host = root.appendChild(ctx.createElement('app'));
     const au = new Aurelia(container);
-    const App = CustomElement.define({ name: 'app', template }, $class || class {
-    });
+    const $$class = typeof $class === 'function'
+        ? $class
+        : $class == null
+            ? class {
+            }
+            : function $Ctor() {
+                Object.setPrototypeOf($class, $Ctor.prototype);
+                return $class;
+            };
+    const App = CustomElement.define({ name: 'app', template }, $$class);
     if (container.has(App, true)) {
         throw new Error('Container of the context cotains instance of the application root component. ' +
             'Consider using a different class, or context as it will likely cause surprises in tests.');
@@ -7488,26 +7508,89 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
         au.app({ host: host, component });
         startPromise = au.start();
     }
-    return {
-        startPromise,
-        ctx,
-        host: ctx.doc.firstElementChild,
-        container,
-        platform,
-        testHost: root,
-        appHost: host,
-        au,
-        component,
-        observerLocator,
-        start: async () => {
+    let tornCount = 0;
+    const getBy = (selector) => {
+        const elements = host.querySelectorAll(selector);
+        if (elements.length > 1) {
+            throw new Error(`There is more than 1 element with selector "${selector}": ${elements.length} found`);
+        }
+        if (elements.length === 0) {
+            throw new Error(`No element found for selector: "${selector}"`);
+        }
+        return elements[0];
+    };
+    const getAllBy = (selector) => {
+        return Array.from(host.querySelectorAll(selector));
+    };
+    const queryBy = (selector) => {
+        const elements = host.querySelectorAll(selector);
+        if (elements.length > 1) {
+            throw new Error(`There is more than 1 element with selector "${selector}": ${elements.length} found`);
+        }
+        return elements.length === 0 ? null : elements[0];
+    };
+    const assertText = (selector, text) => {
+        const el = queryBy(selector);
+        if (el === null) {
+            throw new Error(`No element found for selector "${selector}" to compare text content with "${text}"`);
+        }
+        assert.strictEqual(el.textContent, text);
+    };
+    const trigger = ((selector, event, init) => {
+        const el = queryBy(selector);
+        if (el === null) {
+            throw new Error(`No element found for selector "${selector}" to fire event "${event}"`);
+        }
+        el.dispatchEvent(new ctx.CustomEvent(event, init));
+    });
+    ['click', 'change', 'input'].forEach(event => {
+        Object.defineProperty(trigger, event, { configurable: true, writable: true, value: (selector, init) => {
+                const el = queryBy(selector);
+                if (el === null) {
+                    throw new Error(`No element found for selector "${selector}" to fire event "${event}"`);
+                }
+                el.dispatchEvent(new ctx.CustomEvent(event, init));
+            } });
+    });
+    const fixture = new class Results {
+        constructor() {
+            this.startPromise = startPromise;
+            this.ctx = ctx;
+            this.host = ctx.doc.firstElementChild;
+            this.container = container;
+            this.platform = platform;
+            this.testHost = root;
+            this.appHost = host;
+            this.au = au;
+            this.component = component;
+            this.observerLocator = observerLocator;
+            this.getBy = getBy;
+            this.getAllBy = getAllBy;
+            this.queryBy = queryBy;
+            this.assertText = assertText;
+            this.trigger = trigger;
+        }
+        async start() {
             await au.app({ host: host, component }).start();
-        },
-        tearDown: async () => {
+        }
+        async tearDown() {
+            if (++tornCount === 2) {
+                console.log('(!) Fixture has already been torn down');
+                return;
+            }
             await au.stop();
             root.remove();
             au.dispose();
         }
-    };
+        get torn() {
+            return tornCount > 0;
+        }
+        get promise() {
+            return Promise.resolve(startPromise).then(() => this);
+        }
+    }();
+    fixtureHooks.publish('fixture:created', fixture);
+    return fixture;
 }
 
 class MockBinding {
@@ -8237,5 +8320,5 @@ function trace(calls) {
     };
 }
 
-export { CSS_PROPERTIES, Call, CallCollection, ChangeSet, CollectionChangeSet, JsonValueConverter, MockBinding, MockBindingBehavior, MockBrowserHistoryLocation, MockContext, MockPropertySubscriber, MockServiceLocator, MockSignaler, MockTracingExpression, MockValueConverter, PLATFORM, PLATFORMRegistration, PSEUDO_ELEMENTS, ProxyChangeSet, SortValueConverter, SpySubscriber, TestConfiguration, TestContext, _, assert, createContainer, createFixture, createObserverLocator, createScopeForTest, createSpy, eachCartesianJoin, eachCartesianJoinAsync, eachCartesianJoinFactory, ensureTaskQueuesEmpty, fail, generateCartesianProduct, getVisibleText, globalAttributeNames, h, hJsx, htmlStringify, inspect, instructionTypeName, jsonStringify, padLeft, padRight, recordCalls, setPlatform, stopRecordingCalls, stringify, trace, trimFull, verifyBindingInstructionsEqual, verifyEqual };
+export { CSS_PROPERTIES, Call, CallCollection, ChangeSet, CollectionChangeSet, JsonValueConverter, MockBinding, MockBindingBehavior, MockBrowserHistoryLocation, MockContext, MockPropertySubscriber, MockServiceLocator, MockSignaler, MockTracingExpression, MockValueConverter, PLATFORM, PLATFORMRegistration, PSEUDO_ELEMENTS, ProxyChangeSet, SortValueConverter, SpySubscriber, TestConfiguration, TestContext, _, assert, createContainer, createFixture, createObserverLocator, createScopeForTest, createSpy, eachCartesianJoin, eachCartesianJoinAsync, eachCartesianJoinFactory, ensureTaskQueuesEmpty, fail, generateCartesianProduct, getVisibleText, globalAttributeNames, h, hJsx, htmlStringify, inspect, instructionTypeName, jsonStringify, onFixtureCreated, padLeft, padRight, recordCalls, setPlatform, stopRecordingCalls, stringify, trace, trimFull, verifyBindingInstructionsEqual, verifyEqual };
 //# sourceMappingURL=index.dev.mjs.map

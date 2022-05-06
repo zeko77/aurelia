@@ -20,6 +20,7 @@ export declare class TranslationBindingCommand implements BindingCommandInstance
     build(info: ICommandBuildInfo): TranslationBindingInstruction;
 }
 export declare class TranslationBindingRenderer implements IRenderer {
+    target: typeof TranslationInstructionType;
     constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator, p: IPlatform);
     render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: CallBindingInstruction): void;
 }
@@ -45,6 +46,7 @@ export declare class TranslationBindBindingRenderer implements IRenderer {
     private readonly parser;
     private readonly oL;
     private readonly p;
+    target: typeof TranslationBindInstructionType;
     constructor(parser: IExpressionParser, oL: IObserverLocator, p: IPlatform);
     render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: CallBindingInstruction): void;
 }
