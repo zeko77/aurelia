@@ -1,12 +1,12 @@
 import { DI, IContainer } from '@aurelia/kernel';
 
-import { FragmentNodeSequence, INode, INodeSequence } from '../dom.js';
-import { IPlatform } from '../platform.js';
-import { ICompliationInstruction, IInstruction, IRenderer, ITemplateCompiler } from '../renderer.js';
-import { CustomElementDefinition, PartialCustomElementDefinition } from '../resources/custom-element.js';
-import { createLookup, isString } from '../utilities.js';
-import { IViewFactory, ViewFactory } from './view.js';
-import type { IHydratableController } from './controller.js';
+import { FragmentNodeSequence, INode, INodeSequence } from '../dom';
+import { IPlatform } from '../platform';
+import { ICompliationInstruction, IInstruction, IRenderer, ITemplateCompiler } from '../renderer';
+import { CustomElementDefinition, PartialCustomElementDefinition } from '../resources/custom-element';
+import { createLookup, isString } from '../utilities';
+import { IViewFactory, ViewFactory } from './view';
+import type { IHydratableController } from './controller';
 
 export const IRendering = DI.createInterface<IRendering>('IRendering', x => x.singleton(Rendering));
 export interface IRendering extends Rendering { }
@@ -29,7 +29,7 @@ export class Rendering {
   public get renderers(): Record<string, IRenderer> {
     return this.rs == null
       ? (this.rs = this._ctn.getAll(IRenderer, false).reduce((all, r) => {
-          all[r.instructionType!] = r;
+          all[r.target] = r;
           return all;
         }, createLookup<IRenderer>()))
       : this.rs;

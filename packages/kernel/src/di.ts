@@ -1,17 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { isObject, applyMetadataPolyfill } from '@aurelia/metadata';
 
 applyMetadataPolyfill(Reflect, false, false);
 
-import { isArrayIndex, isNativeFunction } from './functions.js';
-import { Class, Constructable, IDisposable } from './interfaces.js';
-import { emptyArray } from './platform.js';
-import { appendAnnotation, getAnnotationKeyFor, IResourceKind, Protocol, ResourceDefinition, ResourceType } from './resource.js';
-import { createObject, defineMetadata, getOwnMetadata, isFunction, isString } from './utilities.js';
+import { isArrayIndex, isNativeFunction } from './functions';
+import { Class, Constructable, IDisposable } from './interfaces';
+import { emptyArray } from './platform';
+import { appendAnnotation, getAnnotationKeyFor, IResourceKind, Protocol, ResourceDefinition, ResourceType } from './resource';
+import { createObject, defineMetadata, getOwnMetadata, isFunction, isString } from './utilities';
 
 export type ResolveCallback<T = any> = (handler: IContainer, requestor: IContainer, resolver: IResolver<T>) => T;
 
@@ -269,7 +269,7 @@ export const DI = {
 
     if (configure != null) {
       Interface.register = function (container: IContainer, key?: Key): IResolver<K> {
-          return configure(new ResolverBuilder(container, key ?? Interface));
+        return configure(new ResolverBuilder(container, key ?? Interface));
       };
     }
 

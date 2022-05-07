@@ -17,7 +17,21 @@ async function parseArgs(args: string[]): Promise<null | HttpServerOptions> {
     if (!existsSync(configurationFile)) {
       throw new Error(`Configuration file is missing or uneven amount of args: ${args}. Args must come in pairs of --key value`);
     } else {
-      const config = (await import(`file://${configurationFile}`)).default;
+      let config;
+      try {
+        config = (await import(`${configurationFile}`)).default;
+      } catch {
+        try {
+          config = (await import(`file://${configurationFile}`)).default;
+        } catch {
+          try {
+            config = (await import(`file:///${configurationFile}`)).default;
+          } catch {/*  */}
+        }
+      }
+      if (config === void 0) {
+        throw new Error('Unable to load configuration');
+      }
       configuration.applyConfig(config);
       args = args.slice(1);
     }

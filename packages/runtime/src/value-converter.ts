@@ -3,8 +3,8 @@ import {
   mergeArrays,
   firstDefined,
 } from '@aurelia/kernel';
-import { registerAliases } from './alias.js';
-import { appendResourceKey, defineMetadata, getAnnotationKeyFor, getOwnMetadata, getResourceKeyFor, hasOwnMetadata, isFunction, isString } from './utilities-objects.js';
+import { registerAliases } from './alias';
+import { appendResourceKey, defineMetadata, getAnnotationKeyFor, getOwnMetadata, getResourceKeyFor, hasOwnMetadata, isFunction, isString } from './utilities-objects';
 
 import type {
   Constructable,
@@ -87,7 +87,6 @@ const vcBaseName = getResourceKeyFor('value-converter');
 const getConverterAnnotation = <K extends keyof PartialValueConverterDefinition>(
   Type: Constructable,
   prop: K,
-// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 ): PartialValueConverterDefinition[K] => getOwnMetadata(getAnnotationKeyFor(prop), Type);
 
 export const ValueConverter = Object.freeze<ValueConverterKind>({
@@ -113,7 +112,6 @@ export const ValueConverter = Object.freeze<ValueConverterKind>({
         throw new Error(`AUR0152:${Type.name}`);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return def;
   },
   annotate<K extends keyof PartialValueConverterDefinition>(Type: Constructable, prop: K, value: PartialValueConverterDefinition[K]): void {
