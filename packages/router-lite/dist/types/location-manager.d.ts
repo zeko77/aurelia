@@ -1,6 +1,6 @@
 import { ILogger } from '@aurelia/kernel';
 import { IHistory, ILocation, IWindow } from '@aurelia/runtime-html';
-import { IRouterEvents } from './router-events.js';
+import { IRouterEvents } from './router-events';
 export interface IPopStateEvent extends PopStateEvent {
 }
 export interface IHashChangeEvent extends HashChangeEvent {

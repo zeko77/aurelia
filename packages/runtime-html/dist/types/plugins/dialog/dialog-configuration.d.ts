@@ -1,5 +1,5 @@
 import { IContainer, IRegistry } from '@aurelia/kernel';
-import { IDialogGlobalSettings } from './dialog-interfaces.js';
+import { IDialogGlobalSettings } from './dialog-interfaces';
 export declare type DialogConfigurationProvider = (settings: IDialogGlobalSettings) => void | Promise<unknown>;
 export interface DialogConfiguration extends IRegistry {
     settingsProvider: DialogConfigurationProvider;

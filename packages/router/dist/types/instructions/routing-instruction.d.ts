@@ -1,11 +1,11 @@
-import { InstructionParameters, Parameters } from './instruction-parameters.js';
-import { InstructionComponent } from './instruction-component.js';
-import { ComponentAppellation, ComponentParameters, LoadInstruction } from '../interfaces.js';
-import { RoutingScope } from '../routing-scope.js';
-import { FoundRoute } from '../found-route.js';
+import { InstructionParameters, Parameters } from './instruction-parameters';
+import { InstructionComponent } from './instruction-component';
+import { ComponentAppellation, ComponentParameters, LoadInstruction } from '../interfaces';
+import { RoutingScope } from '../routing-scope';
+import { FoundRoute } from '../found-route';
 import { Endpoint, EndpointType } from '../endpoints/endpoint';
-import { IRouter, IRouterConfiguration, Navigation } from '../index.js';
-import { EndpointHandle, InstructionEndpoint } from './instruction-endpoint.js';
+import { IRouter, IRouterConfiguration, Navigation } from '../index';
+import { EndpointHandle, InstructionEndpoint } from './instruction-endpoint';
 import { IContainer } from '@aurelia/kernel';
 /**
  * The routing instructions are the core of the router's navigations. All

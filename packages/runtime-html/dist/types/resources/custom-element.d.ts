@@ -1,12 +1,12 @@
-import { DefinitionType } from './resources-shared.js';
+import { DefinitionType } from './resources-shared';
 import type { Constructable, IContainer, IResourceKind, ResourceType, PartialResourceDefinition, Key, ResourceDefinition, Injectable } from '@aurelia/kernel';
-import type { BindableDefinition, PartialBindableDefinition } from '../bindable.js';
-import type { INode } from '../dom.js';
-import type { PartialChildrenDefinition, ChildrenDefinition } from '../templating/children.js';
-import type { ICustomElementViewModel, ICustomElementController } from '../templating/controller.js';
-import type { IPlatform } from '../platform.js';
-import type { IInstruction } from '../renderer.js';
-import type { IWatchDefinition } from '../watch.js';
+import type { BindableDefinition, PartialBindableDefinition } from '../bindable';
+import type { INode } from '../dom';
+import type { PartialChildrenDefinition, ChildrenDefinition } from '../templating/children';
+import type { ICustomElementViewModel, ICustomElementController } from '../templating/controller';
+import type { IPlatform } from '../platform';
+import type { IInstruction } from '../renderer';
+import type { IWatchDefinition } from '../watch';
 declare module '@aurelia/kernel' {
     interface IContainer {
         find<T extends ICustomElementViewModel>(kind: CustomElementKind, name: string): CustomElementDefinition<Constructable<T>> | null;
@@ -156,6 +156,9 @@ export declare class CustomElementDefinition<C extends Constructable = Construct
     readonly shadowOptions: {
         mode: 'open' | 'closed';
     } | null;
+    /**
+     * Indicates whether the custom element has <slot/> in its template
+     */
     readonly hasSlots: boolean;
     readonly enhance: boolean;
     readonly watches: IWatchDefinition[];

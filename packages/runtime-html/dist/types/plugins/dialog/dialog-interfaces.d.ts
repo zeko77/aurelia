@@ -1,5 +1,5 @@
 import type { Constructable, IContainer, IDisposable } from '@aurelia/kernel';
-import type { ICustomElementViewModel } from '../../templating/controller.js';
+import type { ICustomElementViewModel } from '../../templating/controller';
 /**
  * The dialog service for composing view & view model into a dialog
  */

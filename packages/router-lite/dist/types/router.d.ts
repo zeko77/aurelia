@@ -1,14 +1,15 @@
 import { IContainer, ILogger } from '@aurelia/kernel';
 import { CustomElementDefinition, IPlatform, PartialCustomElementDefinition } from '@aurelia/runtime-html';
-import { IRouteContext } from './route-context.js';
-import { IRouterEvents } from './router-events.js';
-import { ILocationManager } from './location-manager.js';
-import { RouteType } from './route.js';
-import { IRouteViewModel } from './component-agent.js';
-import { RouteTree, RouteNode } from './route-tree.js';
-import { IViewportInstruction, NavigationInstruction, RouteContextLike, ViewportInstructionTree, Params } from './instructions.js';
-import { UnwrapPromise } from './util.js';
-import { ViewportAgent } from './viewport-agent.js';
+import { IRouteContext } from './route-context';
+import { IRouterEvents } from './router-events';
+import { ILocationManager } from './location-manager';
+import { RouteType } from './route';
+import { IRouteViewModel } from './component-agent';
+import { RouteTree, RouteNode } from './route-tree';
+import { IViewportInstruction, NavigationInstruction, RouteContextLike, ViewportInstructionTree, Params } from './instructions';
+import { UnwrapPromise } from './util';
+import { RouteDefinition } from './route-definition';
+import { ViewportAgent } from './viewport-agent';
 export declare const AuNavId: "au-nav-id";
 export declare type AuNavId = typeof AuNavId;
 export declare type ManagedState = {
@@ -298,7 +299,7 @@ export declare class Router {
      * @param container - The `controller.container` of the component hosting the viewport that the route will be loaded into.
      *
      */
-    getRouteContext(viewportAgent: ViewportAgent | null, component: CustomElementDefinition, container: IContainer): IRouteContext;
+    getRouteContext(viewportAgent: ViewportAgent | null, component: CustomElementDefinition, container: IContainer, parentDefinition: RouteDefinition | null): IRouteContext;
     createViewportInstructions(instructionOrInstructions: NavigationInstruction | readonly NavigationInstruction[], options?: INavigationOptions): ViewportInstructionTree;
     /**
      * Enqueue an instruction tree to be processed as soon as possible.

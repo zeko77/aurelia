@@ -1,5 +1,5 @@
-import { ComposableObjectComponentType, IViewLocator, ViewSelector } from '../../templating/view.js';
-import type { ICustomElementViewModel } from '../../templating/controller.js';
+import { ComposableObjectComponentType, IViewLocator, ViewSelector } from '../../templating/view';
+import type { ICustomElementViewModel } from '../../templating/controller';
 export declare class ViewValueConverter {
     constructor(
     /** @internal */ _viewLocator: IViewLocator);

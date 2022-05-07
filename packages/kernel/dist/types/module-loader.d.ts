@@ -1,13 +1,13 @@
-import type { IRegistry } from './di.js';
-import type { Constructable, IDisposable } from './interfaces.js';
-import type { ResourceDefinition } from './resource.js';
+import type { IRegistry } from './di';
+import type { Constructable, IDisposable } from './interfaces';
+import type { ResourceDefinition } from './resource';
 export interface IModule {
     [key: string]: unknown;
     default?: unknown;
 }
 export interface IModuleLoader extends ModuleLoader {
 }
-export declare const IModuleLoader: import("./di.js").InterfaceSymbol<IModuleLoader>;
+export declare const IModuleLoader: import("./di").InterfaceSymbol<IModuleLoader>;
 export declare class ModuleLoader implements IDisposable {
     private readonly transformers;
     /**

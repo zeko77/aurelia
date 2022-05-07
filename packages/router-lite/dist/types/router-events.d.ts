@@ -1,6 +1,6 @@
 import { IEventAggregator, IDisposable, ILogger } from '@aurelia/kernel';
-import { ManagedState } from './router.js';
-import { ViewportInstructionTree } from './instructions.js';
+import { ManagedState } from './router';
+import { ViewportInstructionTree } from './instructions';
 export declare const IRouterEvents: import("@aurelia/kernel").InterfaceSymbol<IRouterEvents>;
 export interface IRouterEvents extends RouterEvents {
 }

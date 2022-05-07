@@ -1,7 +1,7 @@
 import { Collection, ForOfStatement, IndexMap, LifecycleFlags as LF } from '@aurelia/runtime';
-import { IRenderLocation } from '../../dom.js';
-import { IViewFactory } from '../../templating/view.js';
-import type { ISyntheticView, ICustomAttributeController, IHydratableController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, ControllerVisitor } from '../../templating/controller.js';
+import { IRenderLocation } from '../../dom';
+import { IViewFactory } from '../../templating/view';
+import type { ISyntheticView, ICustomAttributeController, IHydratableController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, ControllerVisitor } from '../../templating/controller';
 declare type Items<C extends Collection = unknown[]> = C | undefined;
 export declare class Repeat<C extends Collection = unknown[]> implements ICustomAttributeViewModel {
     readonly id: number;

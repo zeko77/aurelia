@@ -1,4 +1,4 @@
-import { Resolved } from '@aurelia/kernel';
+import { type Resolved } from '@aurelia/kernel';
 import type { IResolver, Key } from '@aurelia/kernel';
 /**
  * A resolver builder for resolving all registrations of a key

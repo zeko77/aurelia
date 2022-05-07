@@ -1,6 +1,6 @@
 import type { IServiceLocator } from '@aurelia/kernel';
 import type { ICollectionSubscriber, IConnectable, IConnectableBinding, IObservable, IObserverLocator, IsBindingBehavior, ISubscriber, Scope } from '@aurelia/runtime';
-import type { IWatcherCallback } from '../watch.js';
+import type { IWatcherCallback } from '../watch';
 export interface ComputedWatcher extends IConnectableBinding {
 }
 export declare class ComputedWatcher implements IConnectableBinding, ISubscriber, ICollectionSubscriber {

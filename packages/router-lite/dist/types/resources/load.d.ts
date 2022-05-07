@@ -1,8 +1,8 @@
 import { ICustomAttributeViewModel, IEventDelegator, IEventTarget, INode } from '@aurelia/runtime-html';
-import { IRouter } from '../router.js';
-import { IRouteContext } from '../route-context.js';
-import { IRouterEvents } from '../router-events.js';
-import { ILocationManager } from '../location-manager.js';
+import { IRouter } from '../router';
+import { IRouteContext } from '../route-context';
+import { IRouterEvents } from '../router-events';
+import { ILocationManager } from '../location-manager';
 export declare class LoadCustomAttribute implements ICustomAttributeViewModel {
     private readonly target;
     private readonly el;

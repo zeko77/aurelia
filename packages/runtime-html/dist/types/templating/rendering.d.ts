@@ -1,9 +1,9 @@
 import { IContainer } from '@aurelia/kernel';
-import { INode, INodeSequence } from '../dom.js';
-import { ICompliationInstruction, IRenderer } from '../renderer.js';
-import { CustomElementDefinition, PartialCustomElementDefinition } from '../resources/custom-element.js';
-import { IViewFactory } from './view.js';
-import type { IHydratableController } from './controller.js';
+import { INode, INodeSequence } from '../dom';
+import { ICompliationInstruction, IRenderer } from '../renderer';
+import { CustomElementDefinition, PartialCustomElementDefinition } from '../resources/custom-element';
+import { IViewFactory } from './view';
+import type { IHydratableController } from './controller';
 export declare const IRendering: import("@aurelia/kernel").InterfaceSymbol<IRendering>;
 export interface IRendering extends Rendering {
 }

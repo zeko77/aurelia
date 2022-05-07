@@ -1,6 +1,6 @@
-import { IDirtyChecker } from './dirty-checker.js';
-import { PropertyAccessor } from './property-accessor.js';
-import type { Collection, IAccessor, ICollectionObserver, IObserver, AccessorOrObserver, CollectionKind, CollectionObserver } from '../observation.js';
+import { IDirtyChecker } from './dirty-checker';
+import { PropertyAccessor } from './property-accessor';
+import type { Collection, IAccessor, ICollectionObserver, IObserver, AccessorOrObserver, CollectionKind, CollectionObserver } from '../observation';
 export declare const propertyAccessor: PropertyAccessor;
 export interface IObjectObservationAdapter {
     getObserver(object: unknown, propertyName: string, descriptor: PropertyDescriptor, requestor: IObserverLocator): AccessorOrObserver | null;
@@ -37,7 +37,6 @@ export declare class ObserverLocator {
     getMapObserver(observedMap: Map<unknown, unknown>): ICollectionObserver<CollectionKind.map>;
     getSetObserver(observedSet: Set<unknown>): ICollectionObserver<CollectionKind.set>;
     private createObserver;
-    private _getAdapterObserver;
     private _cache;
 }
 export declare type RepeatableCollection = Collection | null | undefined | number;

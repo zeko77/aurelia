@@ -1,6 +1,6 @@
 import type { Class, IServiceLocator } from '@aurelia/kernel';
-import type { IConnectable, ISubscribable, ISubscriber, IBinding, ICollectionSubscriber, IndexMap, ICollectionSubscribable, LifecycleFlags } from '../observation.js';
-import type { IObserverLocator } from '../observation/observer-locator.js';
+import type { IConnectable, ISubscribable, ISubscriber, IBinding, ICollectionSubscriber, IndexMap, ICollectionSubscribable, LifecycleFlags } from '../observation';
+import type { IObserverLocator } from '../observation/observer-locator';
 export interface IObserverLocatorBasedConnectable extends IBinding, ISubscriber, ICollectionSubscriber {
     oL: IObserverLocator;
 }

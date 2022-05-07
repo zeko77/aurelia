@@ -1,3 +1,4 @@
+/// <reference path="../../../global.d.ts" />
 export declare class Platform<TGlobal extends typeof globalThis = typeof globalThis> {
     readonly globalThis: TGlobal;
     readonly decodeURI: TGlobal['decodeURI'];

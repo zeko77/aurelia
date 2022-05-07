@@ -1,4 +1,4 @@
-import { Navigation, INavigation } from './navigation.js';
+import { Navigation, INavigation } from './navigation';
 export declare class NavigatorNavigateEvent {
     readonly eventName: string;
     readonly navigation: Navigation;

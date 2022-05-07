@@ -1,8 +1,8 @@
 import { IPlatform } from '@aurelia/kernel';
-import { AccessorType, IObserver, ISubscriberCollection, LifecycleFlags } from '../observation.js';
+import { AccessorType, IObserver, ISubscriberCollection, LifecycleFlags } from '../observation';
 import type { IIndexable } from '@aurelia/kernel';
 import type { IObservable, ISubscriber } from '../observation';
-import { FlushQueue, IFlushable, IWithFlushQueue } from './flush-queue.js';
+import { FlushQueue, IFlushable, IWithFlushQueue } from './flush-queue';
 export interface IDirtyChecker extends DirtyChecker {
 }
 export declare const IDirtyChecker: import("@aurelia/kernel").InterfaceSymbol<IDirtyChecker>;

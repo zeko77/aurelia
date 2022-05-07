@@ -1,8 +1,8 @@
 import { IContainer, IRegistry } from '@aurelia/kernel';
-import { IRouterOptions, IRouter } from './router.js';
-import { ViewportCustomElement } from './resources/viewport.js';
-import { LoadCustomAttribute } from './resources/load.js';
-import { HrefCustomAttribute } from './resources/href.js';
+import { IRouterOptions, IRouter } from './router';
+import { ViewportCustomElement } from './resources/viewport';
+import { LoadCustomAttribute } from './resources/load';
+import { HrefCustomAttribute } from './resources/href';
 export declare const RouterRegistration: IRegistry;
 /**
  * Default runtime/environment-agnostic implementations for the following interfaces:

@@ -1,6 +1,6 @@
-import { AccessorType, CollectionKind, LifecycleFlags } from '../observation.js';
-import type { ICollectionObserver, IndexMap, ISubscriberCollection, ICollectionSubscriber } from '../observation.js';
-import type { FlushQueue, IFlushable, IWithFlushQueue } from './flush-queue.js';
+import { AccessorType, CollectionKind, LifecycleFlags } from '../observation';
+import type { ICollectionObserver, IndexMap, ISubscriberCollection, ICollectionSubscriber } from '../observation';
+import type { FlushQueue, IFlushable, IWithFlushQueue } from './flush-queue';
 export interface CollectionLengthObserver extends ISubscriberCollection {
 }
 export declare class CollectionLengthObserver implements IWithFlushQueue, ICollectionSubscriber, IFlushable {

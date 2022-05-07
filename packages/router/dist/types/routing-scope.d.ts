@@ -1,14 +1,14 @@
 import { NavigationCoordinator } from './navigation-coordinator';
-import { IViewportScopeOptions, ViewportScope } from './endpoints/viewport-scope.js';
+import { IViewportScopeOptions, ViewportScope } from './endpoints/viewport-scope';
 import { ICustomElementController, ICustomElementViewModel } from '@aurelia/runtime-html';
-import { FoundRoute } from './found-route.js';
-import { IRouter } from './router.js';
-import { RoutingInstruction } from './instructions/routing-instruction.js';
-import { Viewport } from './endpoints/viewport.js';
-import { IViewportOptions } from './endpoints/viewport-options.js';
-import { Step } from './utilities/runner.js';
-import { Endpoint, IConnectedCustomElement } from './endpoints/endpoint.js';
-import { EndpointContent, Navigation } from './index.js';
+import { FoundRoute } from './found-route';
+import { IRouter } from './router';
+import { RoutingInstruction } from './instructions/routing-instruction';
+import { Viewport } from './endpoints/viewport';
+import { IViewportOptions } from './endpoints/viewport-options';
+import { Step } from './utilities/runner';
+import { Endpoint, IConnectedCustomElement } from './endpoints/endpoint';
+import { EndpointContent, Navigation } from './index';
 import { IContainer } from '@aurelia/kernel';
 export declare type TransitionAction = 'skip' | 'reload' | 'swap' | '';
 /**

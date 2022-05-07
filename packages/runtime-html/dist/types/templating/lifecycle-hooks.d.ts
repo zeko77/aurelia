@@ -1,16 +1,13 @@
-import type { Constructable, IContainer } from '@aurelia/kernel';
-declare type FuncPropNames<T> = {
-    [K in keyof T]: K extends 'constructor' ? never : Required<T>[K] extends Function ? K : never;
-}[keyof T];
-export declare type LifecycleHook<TViewModel, TKey extends FuncPropNames<TViewModel>> = (vm: TViewModel, ...args: Parameters<Required<TViewModel>[TKey]>) => ReturnType<Required<TViewModel>[TKey]>;
-export declare type ILifecycleHooks<TViewModel = {}, TKey extends FuncPropNames<TViewModel> = FuncPropNames<TViewModel>> = {
-    [K in TKey]: LifecycleHook<TViewModel, K>;
+import type { Constructable, IContainer, AnyFunction, FunctionPropNames } from '@aurelia/kernel';
+export declare type LifecycleHook<TViewModel, TKey extends keyof TViewModel, P extends TViewModel[TKey] = TViewModel[TKey]> = P extends AnyFunction ? (vm: TViewModel, ...args: Parameters<NonNullable<P>>) => ReturnType<NonNullable<P>> : never;
+export declare type ILifecycleHooks<TViewModel = {}, TKey extends keyof TViewModel = keyof TViewModel> = {
+    [K in TKey]-?: LifecycleHook<TViewModel, K>;
 };
 export declare const ILifecycleHooks: import("@aurelia/kernel").InterfaceSymbol<ILifecycleHooks<{}, never>>;
 export declare type LifecycleHooksLookup<TViewModel = {}> = {
-    [K in FuncPropNames<TViewModel>]?: readonly LifecycleHooksEntry<TViewModel, K>[];
+    [K in FunctionPropNames<TViewModel>]?: readonly LifecycleHooksEntry<TViewModel, K>[];
 };
-export declare class LifecycleHooksEntry<TViewModel = {}, TKey extends FuncPropNames<TViewModel> = FuncPropNames<TViewModel>, THooks extends Constructable = Constructable> {
+export declare class LifecycleHooksEntry<TViewModel = {}, TKey extends keyof TViewModel = keyof TViewModel, THooks extends Constructable = Constructable> {
     readonly definition: LifecycleHooksDefinition<THooks>;
     readonly instance: ILifecycleHooks<TViewModel, TKey>;
     constructor(definition: LifecycleHooksDefinition<THooks>, instance: ILifecycleHooks<TViewModel, TKey>);
@@ -42,5 +39,4 @@ export declare const LifecycleHooks: Readonly<{
  * Decorator: Indicates that the decorated class is a custom element.
  */
 export declare function lifecycleHooks(): <T extends Constructable>(target: T) => T;
-export {};
 //# sourceMappingURL=lifecycle-hooks.d.ts.map

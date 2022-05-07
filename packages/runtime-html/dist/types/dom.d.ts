@@ -1,5 +1,5 @@
-import { IPlatform } from './platform.js';
-import type { IHydratedController } from './templating/controller.js';
+import { IPlatform } from './platform';
+import type { IHydratedController } from './templating/controller';
 export declare class Refs {
     [key: string]: IHydratedController | undefined;
 }

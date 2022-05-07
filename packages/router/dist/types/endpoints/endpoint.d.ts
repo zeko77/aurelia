@@ -1,6 +1,6 @@
 import { IContainer } from '@aurelia/kernel';
 import { ICustomElementController, ICustomElementViewModel } from '@aurelia/runtime-html';
-import { LoadInstruction, IRouter, TransitionAction, RoutingScope, Step, Route, RoutingInstruction, Navigation, NavigationCoordinator, IViewportOptions, IViewportScopeOptions, EndpointContent, Viewport, ViewportScope, NavigationFlags } from '../index.js';
+import { LoadInstruction, IRouter, TransitionAction, RoutingScope, Step, Route, RoutingInstruction, Navigation, NavigationCoordinator, IViewportOptions, IViewportScopeOptions, EndpointContent, Viewport, ViewportScope, NavigationFlags } from '../index';
 /**
  * An endpoint is anything that can receive and process a routing instruction.
  */

@@ -1,5 +1,6 @@
 import { BindingMode, LifecycleFlags } from '@aurelia/runtime';
-import type { IServiceLocator, ITask, TaskQueue } from '@aurelia/kernel';
+import type { ITask, TaskQueue } from '@aurelia/platform';
+import type { IServiceLocator } from '@aurelia/kernel';
 import type { ICollectionSubscriber, IndexMap, Interpolation, IObserverLocator, IsExpression, IBinding, Scope } from '@aurelia/runtime';
 import type { IPlatform } from '../platform';
 import type { IAstBasedBinding } from './interfaces-bindings';

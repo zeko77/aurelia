@@ -1,5 +1,5 @@
-import { RoutingInstruction } from './instructions/routing-instruction.js';
-import { RoutingScope } from './routing-scope.js';
+import { RoutingInstruction } from './instructions/routing-instruction';
+import { RoutingScope } from './routing-scope';
 /**
  * The EndpointMatcher finds endpoints, viewports and viewport scopes, that matches routing instructions' criteria.
  * It works based on RoutingScope and is a pure helper class to it. The only public method, `matchEndpoints`, is

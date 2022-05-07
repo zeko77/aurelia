@@ -6,12 +6,12 @@
  */
 import { Constructable } from '@aurelia/kernel';
 import { CustomElementType, ICustomElementController, ICustomElementViewModel } from '@aurelia/runtime-html';
-import { Viewport } from './endpoints/viewport.js';
-import { RoutingInstruction } from './instructions/routing-instruction.js';
-import { Navigation } from './navigation.js';
-import { IRoute } from './route.js';
+import { Viewport } from './endpoints/viewport';
+import { RoutingInstruction } from './instructions/routing-instruction';
+import { Navigation } from './navigation';
+import { IRoute } from './route';
 import { ILoadOptions } from './router';
-import { Parameters } from './instructions/instruction-parameters.js';
+import { Parameters } from './instructions/instruction-parameters';
 export interface IPopStateEvent extends PopStateEvent {
 }
 export interface IHashChangeEvent extends HashChangeEvent {

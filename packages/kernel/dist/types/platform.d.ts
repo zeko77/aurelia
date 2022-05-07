@@ -4,5 +4,5 @@ export declare const emptyObject: any;
 export declare function noop(): void;
 export interface IPlatform extends Platform {
 }
-export declare const IPlatform: import("./di.js").InterfaceSymbol<IPlatform>;
+export declare const IPlatform: import("./di").InterfaceSymbol<IPlatform>;
 //# sourceMappingURL=platform.d.ts.map

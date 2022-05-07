@@ -1,5 +1,5 @@
-import { Constructable, IDisposable } from './interfaces.js';
-import { IResourceKind, ResourceDefinition, ResourceType } from './resource.js';
+import { Constructable, IDisposable } from './interfaces';
+import { IResourceKind, ResourceDefinition, ResourceType } from './resource';
 export declare type ResolveCallback<T = any> = (handler: IContainer, requestor: IContainer, resolver: IResolver<T>) => T;
 export declare type InterfaceSymbol<K = any> = (target: Injectable<K>, property: string, index: number) => void;
 interface IResolverLike<C, K = any> {

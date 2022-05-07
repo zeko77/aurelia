@@ -1,6 +1,6 @@
 import { BindingBehaviorInstance, BindingMode, LifecycleFlags } from '@aurelia/runtime';
 import type { Scope } from '@aurelia/runtime';
-import type { PropertyBinding } from '../binding/property-binding.js';
+import type { PropertyBinding } from '../binding/property-binding';
 export declare abstract class BindingModeBehavior implements BindingBehaviorInstance {
     private readonly mode;
     constructor(mode: BindingMode);

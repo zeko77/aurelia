@@ -1,6 +1,6 @@
 import { IPlatform } from '@aurelia/runtime-html';
 import { ValidationResult } from '@aurelia/validation';
-import { ValidationEvent, ValidationResultsSubscriber } from '../validation-controller.js';
+import { ValidationEvent, ValidationResultsSubscriber } from '../validation-controller';
 export declare class ValidationResultPresenterService implements ValidationResultsSubscriber {
     private readonly platform;
     constructor(platform: IPlatform);

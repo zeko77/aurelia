@@ -1,8 +1,8 @@
 import { IContainer, IModule } from '@aurelia/kernel';
 import { CustomElementDefinition } from '@aurelia/runtime-html';
-import { Params } from './instructions.js';
-import { RouteConfig, IChildRouteConfig, Routeable, IRedirectRouteConfig } from './route.js';
-import { IRouteContext } from './route-context.js';
+import { Params } from './instructions';
+import { RouteConfig, IChildRouteConfig, type Routeable, IRedirectRouteConfig } from './route';
+import { IRouteContext } from './route-context';
 export declare const defaultViewportName = "default";
 export declare class RouteDefinition {
     readonly config: RouteConfig;
@@ -15,12 +15,12 @@ export declare class RouteDefinition {
     readonly id: string;
     readonly data: Params;
     readonly fallback: string | null;
-    constructor(config: RouteConfig, component: CustomElementDefinition | null);
-    static resolve(routeable: Promise<IModule>, context: IRouteContext): RouteDefinition | Promise<RouteDefinition>;
-    static resolve(routeable: string | IChildRouteConfig, context: IRouteContext): RouteDefinition;
-    static resolve(routeable: string | IChildRouteConfig | Promise<IModule>): never;
-    static resolve(routeable: Exclude<Routeable, Promise<IModule> | string | IChildRouteConfig>): RouteDefinition;
-    static resolve(routeable: Routeable, context: IRouteContext): RouteDefinition | Promise<RouteDefinition>;
+    constructor(config: RouteConfig, component: CustomElementDefinition | null, parentDefinition: RouteDefinition | null);
+    static resolve(routeable: Promise<IModule>, parentDefinition: RouteDefinition | null, context: IRouteContext): RouteDefinition | Promise<RouteDefinition>;
+    static resolve(routeable: string | IChildRouteConfig, parentDefinition: RouteDefinition | null, context: IRouteContext): RouteDefinition;
+    static resolve(routeable: string | IChildRouteConfig | Promise<IModule>, parentDefinition: RouteDefinition | null): never;
+    static resolve(routeable: Exclude<Routeable, Promise<IModule> | string | IChildRouteConfig>, parentDefinition: RouteDefinition | null): RouteDefinition;
+    static resolve(routeable: Routeable, parentDefinition: RouteDefinition | null, context: IRouteContext): RouteDefinition | Promise<RouteDefinition>;
     static resolveCustomElementDefinition(routeable: Exclude<Routeable, IRedirectRouteConfig>, context?: IRouteContext): CustomElementDefinition | Promise<CustomElementDefinition>;
     register(container: IContainer): void;
     toUrlComponent(): string;

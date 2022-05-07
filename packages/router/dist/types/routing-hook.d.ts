@@ -4,9 +4,9 @@
  * In its current state, it is NOT a good source for learning about the inner workings and design of the router.
  *
  */
-import { ComponentAppellation, IComponentAndOrViewportOrNothing } from './interfaces.js';
-import { RoutingInstruction } from './instructions/routing-instruction.js';
-import { Navigation } from './navigation.js';
+import { ComponentAppellation, IComponentAndOrViewportOrNothing } from './interfaces';
+import { RoutingInstruction } from './instructions/routing-instruction';
+import { Navigation } from './navigation';
 /**
  * Public API
  */

@@ -20,6 +20,9 @@ export interface IOptionalPreprocessOptions {
     templateExtensions?: string[];
     useProcessedFilePairFilename?: boolean;
     useCSSModule?: boolean;
+    hmr?: boolean;
+    enableConventions?: boolean;
+    hmrModule?: string;
 }
 export interface IPreprocessOptions {
     defaultShadowOptions?: {
@@ -31,6 +34,9 @@ export interface IPreprocessOptions {
     templateExtensions: string[];
     useProcessedFilePairFilename?: boolean;
     useCSSModule: boolean;
+    hmr?: boolean;
+    enableConventions?: boolean;
+    hmrModule?: string;
 }
 export declare const defaultCssExtensions: string[];
 export declare const defaultJsExtensions: string[];

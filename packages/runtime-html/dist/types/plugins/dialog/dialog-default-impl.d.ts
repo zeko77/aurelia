@@ -1,5 +1,5 @@
-import { IPlatform } from '../../platform.js';
-import { IDialogDomRenderer, IDialogDom, IDialogGlobalSettings } from './dialog-interfaces.js';
+import { IPlatform } from '../../platform';
+import { IDialogDomRenderer, IDialogDom, IDialogGlobalSettings } from './dialog-interfaces';
 import { IContainer } from '@aurelia/kernel';
 export declare class DefaultDialogGlobalSettings implements IDialogGlobalSettings {
     static register(container: IContainer): void;

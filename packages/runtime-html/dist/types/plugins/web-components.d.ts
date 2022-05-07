@@ -1,7 +1,7 @@
 import { Constructable, IContainer } from '@aurelia/kernel';
-import { IPlatform } from '../platform.js';
-import { PartialCustomElementDefinition } from '../resources/custom-element.js';
-import { IRendering } from '../templating/rendering.js';
+import { IPlatform } from '../platform';
+import { PartialCustomElementDefinition } from '../resources/custom-element';
+import { IRendering } from '../templating/rendering';
 export declare const IWcElementRegistry: import("@aurelia/kernel").InterfaceSymbol<IAuElementRegistry>;
 export interface IAuElementRegistry {
     /**

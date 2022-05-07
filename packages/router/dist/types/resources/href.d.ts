@@ -1,7 +1,7 @@
 import { IEventAggregator } from '@aurelia/kernel';
 import { INode, ICustomAttributeViewModel, ICustomAttributeController } from '@aurelia/runtime-html';
-import { IRouter } from '../router.js';
-import { ILinkHandler } from './link-handler.js';
+import { IRouter } from '../router';
+import { ILinkHandler } from './link-handler';
 export declare class HrefCustomAttribute implements ICustomAttributeViewModel {
     private readonly element;
     private readonly router;

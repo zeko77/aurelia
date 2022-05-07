@@ -1,7 +1,7 @@
-import { AccessorType, LifecycleFlags } from '../observation.js';
+import { AccessorType, LifecycleFlags } from '../observation';
 import type { IIndexable } from '@aurelia/kernel';
-import type { IAccessor, InterceptorFunc, ISubscriber, ISubscriberCollection } from '../observation.js';
-import { FlushQueue, IFlushable, IWithFlushQueue } from './flush-queue.js';
+import type { IAccessor, InterceptorFunc, ISubscriber, ISubscriberCollection } from '../observation';
+import { FlushQueue, IFlushable, IWithFlushQueue } from './flush-queue';
 export interface SetterObserver extends IAccessor, ISubscriberCollection {
 }
 /**

@@ -1,15 +1,15 @@
 import { Scope, LifecycleFlags } from '@aurelia/runtime';
-import { CustomElementDefinition } from '../resources/custom-element.js';
-import { CustomAttributeDefinition } from '../resources/custom-attribute.js';
+import { CustomElementDefinition } from '../resources/custom-element';
+import { CustomAttributeDefinition } from '../resources/custom-attribute';
 import type { IContainer, Writable, IDisposable } from '@aurelia/kernel';
 import type { IBinding } from '@aurelia/runtime';
-import type { AttrSyntax } from '../resources/attribute-pattern.js';
-import type { IProjections } from '../resources/slot-injectables.js';
-import type { LifecycleHooksLookup } from './lifecycle-hooks.js';
-import type { INode, INodeSequence, IRenderLocation } from '../dom.js';
-import type { IViewFactory } from './view.js';
-import type { IInstruction } from '../renderer.js';
-import type { PartialCustomElementDefinition } from '../resources/custom-element.js';
+import type { AttrSyntax } from '../resources/attribute-pattern';
+import type { IProjections } from '../resources/slot-injectables';
+import type { LifecycleHooksLookup } from './lifecycle-hooks';
+import type { INode, INodeSequence, IRenderLocation } from '../dom';
+import type { IViewFactory } from './view';
+import type { IInstruction } from '../renderer';
+import type { PartialCustomElementDefinition } from '../resources/custom-element';
 declare type BindingContext<C extends IViewModel> = Required<ICompileHooks> & Required<IActivationHooks<IHydratedController | null>> & C;
 export declare const enum MountTarget {
     none = 0,

@@ -1,4 +1,4 @@
-import { RouteNode } from './route-tree.js';
+import { RouteNode } from './route-tree';
 export declare type UnwrapPromise<T> = T extends Promise<infer R> ? R : T;
 export declare class Batch {
     private stack;

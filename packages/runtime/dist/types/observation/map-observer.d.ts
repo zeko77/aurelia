@@ -1,6 +1,6 @@
-import { AccessorType } from '../observation.js';
-import { CollectionSizeObserver } from './collection-length-observer.js';
-import type { CollectionKind, ICollectionObserver, ICollectionSubscriberCollection } from '../observation.js';
+import { AccessorType } from '../observation';
+import { CollectionSizeObserver } from './collection-length-observer';
+import type { CollectionKind, ICollectionObserver, ICollectionSubscriberCollection } from '../observation';
 export declare function enableMapObservation(): void;
 export declare function disableMapObservation(): void;
 export interface MapObserver extends ICollectionObserver<CollectionKind.map>, ICollectionSubscriberCollection {

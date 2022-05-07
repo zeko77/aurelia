@@ -1,5 +1,5 @@
 import { IWindow } from '@aurelia/runtime-html';
-import { IRouter } from '../router.js';
+import { IRouter } from '../router';
 export declare const ILinkHandler: import("@aurelia/kernel").InterfaceSymbol<ILinkHandler>;
 export interface ILinkHandler extends LinkHandler {
 }

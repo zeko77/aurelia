@@ -1,5 +1,5 @@
-import { IExpressionParser, IObserverLocator, IsBindingBehavior } from '@aurelia/runtime';
-import { BindingMode, CommandType, IRenderer, IHydratableController, AttrSyntax, IPlatform, IAttrMapper, ICommandBuildInfo } from '@aurelia/runtime-html';
+import { IExpressionParser, IObserverLocator, type IsBindingBehavior, BindingMode } from '@aurelia/runtime';
+import { CommandType, IRenderer, IHydratableController, AttrSyntax, IPlatform, IAttrMapper, ICommandBuildInfo } from '@aurelia/runtime-html';
 import type { CallBindingInstruction, BindingCommandInstance } from '@aurelia/runtime-html';
 export declare const TranslationInstructionType = "tt";
 export declare class TranslationAttributePattern {
@@ -20,6 +20,7 @@ export declare class TranslationBindingCommand implements BindingCommandInstance
     build(info: ICommandBuildInfo): TranslationBindingInstruction;
 }
 export declare class TranslationBindingRenderer implements IRenderer {
+    target: typeof TranslationInstructionType;
     constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator, p: IPlatform);
     render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: CallBindingInstruction): void;
 }
@@ -45,6 +46,7 @@ export declare class TranslationBindBindingRenderer implements IRenderer {
     private readonly parser;
     private readonly oL;
     private readonly p;
+    target: typeof TranslationBindInstructionType;
     constructor(parser: IExpressionParser, oL: IObserverLocator, p: IPlatform);
     render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: CallBindingInstruction): void;
 }

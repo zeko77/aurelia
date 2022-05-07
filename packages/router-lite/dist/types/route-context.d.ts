@@ -1,13 +1,13 @@
 import { IContainer, IModule } from '@aurelia/kernel';
 import { CustomElementDefinition, ICustomElementController } from '@aurelia/runtime-html';
 import { RecognizedRoute } from '@aurelia/route-recognizer';
-import { RouteDefinition } from './route-definition.js';
-import { ViewportAgent, ViewportRequest } from './viewport-agent.js';
-import { ComponentAgent } from './component-agent.js';
-import { RouteNode } from './route-tree.js';
-import { ResolutionMode } from './router.js';
-import { IViewport } from './resources/viewport.js';
-import { Routeable } from './route.js';
+import { RouteDefinition } from './route-definition';
+import { ViewportAgent, ViewportRequest } from './viewport-agent';
+import { ComponentAgent } from './component-agent';
+import { RouteNode } from './route-tree';
+import { ResolutionMode } from './router';
+import { IViewport } from './resources/viewport';
+import { Routeable } from './route';
 export interface IRouteContext extends RouteContext {
 }
 export declare const IRouteContext: import("@aurelia/kernel").InterfaceSymbol<IRouteContext>;
@@ -84,7 +84,7 @@ export declare class RouteContext {
     createComponentAgent(hostController: ICustomElementController, routeNode: RouteNode): ComponentAgent;
     registerViewport(viewport: IViewport): ViewportAgent;
     unregisterViewport(viewport: IViewport): void;
-    recognize(path: string): $RecognizedRoute | null;
+    recognize(path: string, searchAncestor?: boolean): $RecognizedRoute | null;
     addRoute(routeable: Promise<IModule>): Promise<void>;
     addRoute(routeable: Exclude<Routeable, Promise<IModule>>): void | Promise<void>;
     private $addRoute;
@@ -96,5 +96,6 @@ export declare class $RecognizedRoute {
     readonly route: RecognizedRoute<RouteDefinition | Promise<RouteDefinition>>;
     readonly residue: string | null;
     constructor(route: RecognizedRoute<RouteDefinition | Promise<RouteDefinition>>, residue: string | null);
+    toString(): string;
 }
 //# sourceMappingURL=route-context.d.ts.map

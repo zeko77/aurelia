@@ -1,4 +1,4 @@
-import type { ICollectionSubscriber, IndexMap, ISubscriber, ISubscriberRecord, LifecycleFlags as LF } from '../observation.js';
+import type { ICollectionSubscriber, IndexMap, ISubscriber, ISubscriberRecord, LifecycleFlags as LF } from '../observation';
 export declare type IAnySubscriber = ISubscriber | ICollectionSubscriber;
 export declare function subscriberCollection(): ClassDecorator;
 export declare function subscriberCollection(target: Function): void;

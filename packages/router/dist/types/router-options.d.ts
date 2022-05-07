@@ -1,10 +1,10 @@
 import { IContainer } from '@aurelia/kernel';
-import { INavigatorOptions } from './navigator.js';
-import { NavigationState } from './navigation-coordinator.js';
-import { RoutingInstruction } from './instructions/routing-instruction.js';
-import { IRoutingHookDefinition } from './routing-hook.js';
-import { IRouter, IRouterConfiguration, RouterConfiguration } from './index.js';
-import { Navigation } from './navigation.js';
+import { INavigatorOptions } from './navigator';
+import { NavigationState } from './navigation-coordinator';
+import { RoutingInstruction } from './instructions/routing-instruction';
+import { IRoutingHookDefinition } from './routing-hook';
+import { IRouter, IRouterConfiguration, RouterConfiguration } from './index';
+import { Navigation } from './navigation';
 /**
  * How contents are swapped in a viewport when transitioning. Default: `attach-next-detach-current`
  */

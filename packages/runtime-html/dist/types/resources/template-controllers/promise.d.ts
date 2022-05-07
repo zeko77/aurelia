@@ -1,11 +1,11 @@
 import { ILogger } from '@aurelia/kernel';
 import { LifecycleFlags, Scope } from '@aurelia/runtime';
-import { INode, IRenderLocation } from '../../dom.js';
-import { IPlatform } from '../../platform.js';
-import { IInstruction } from '../../renderer.js';
-import { ICustomAttributeController, ICustomAttributeViewModel, IHydratableController, IHydratedController, IHydratedParentController, ISyntheticView } from '../../templating/controller.js';
-import { IViewFactory } from '../../templating/view.js';
-import { AttrSyntax } from '../attribute-pattern.js';
+import { INode, IRenderLocation } from '../../dom';
+import { IPlatform } from '../../platform';
+import { IInstruction } from '../../renderer';
+import { ICustomAttributeController, ICustomAttributeViewModel, IHydratableController, IHydratedController, IHydratedParentController, ISyntheticView } from '../../templating/controller';
+import { IViewFactory } from '../../templating/view';
+import { AttrSyntax } from '../attribute-pattern';
 export declare class PromiseTemplateController implements ICustomAttributeViewModel {
     readonly id: number;
     readonly $controller: ICustomAttributeController<this>;
