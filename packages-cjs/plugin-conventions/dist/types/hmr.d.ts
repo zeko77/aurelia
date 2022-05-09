@@ -14,5 +14,5 @@ export declare const hmrMetadataModules: string[];
  * @param type - CustomElement | CustomAttribute
  * @returns Generated HMR code
  */
-export declare const getHmrCode: (className: string, moduleText?: string, type?: 'CustomElementHtml' | 'CustomElement' | 'CustomAttribute') => string;
+export declare const getHmrCode: (className: string, moduleText?: string) => string;
 //# sourceMappingURL=hmr.d.ts.map
