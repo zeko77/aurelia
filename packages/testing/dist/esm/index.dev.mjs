@@ -7573,14 +7573,20 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
         async start() {
             await au.app({ host: host, component }).start();
         }
-        async tearDown() {
+        tearDown() {
             if (++tornCount === 2) {
                 console.log('(!) Fixture has already been torn down');
                 return;
             }
-            await au.stop();
-            root.remove();
-            au.dispose();
+            const dispose = () => {
+                root.remove();
+                au.dispose();
+            };
+            const ret = au.stop();
+            if (ret instanceof Promise)
+                return ret.then(dispose);
+            else
+                return dispose();
         }
         get torn() {
             return tornCount > 0;
@@ -7592,6 +7598,34 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
     fixtureHooks.publish('fixture:created', fixture);
     return fixture;
 }
+class FixtureBuilder {
+    html(html, ...htmlArgs) {
+        this._html = html;
+        this._htmlArgs = htmlArgs;
+        return this;
+    }
+    component(comp) {
+        this._comp = comp;
+        return this;
+    }
+    deps(...args) {
+        this._args = args;
+        return this;
+    }
+    build() {
+        var _a;
+        if (this._html === void 0) {
+            throw new Error('Builder is not ready, missing template, call .html()/.html`` first');
+        }
+        return createFixture(typeof this._html === 'string' ? this._html : brokenProcessFastTemplate(this._html, ...(_a = this._htmlArgs) !== null && _a !== void 0 ? _a : []), this._comp, this._args);
+    }
+}
+function brokenProcessFastTemplate(html, ..._args) {
+    return html.join('');
+}
+createFixture.html = (html, ...values) => new FixtureBuilder().html(html, ...values);
+createFixture.component = (component) => new FixtureBuilder().component(component);
+createFixture.deps = (...deps) => new FixtureBuilder().deps(...deps);
 
 class MockBinding {
     constructor() {
