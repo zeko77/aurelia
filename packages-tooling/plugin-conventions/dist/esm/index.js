@@ -112,7 +112,7 @@ const getHmrCode = (className, moduleText = 'module') => {
         });
         const h = controller.host;
         delete controller._compiledDef;
-        controller.viewModel = new currentClassType();
+        controller.viewModel = controller.invoke(currentClassType);
         controller.definition = newDefinition;
         Object.assign(controller.viewModel, values);
         controller.hooks = new controller.hooks.constructor(controller.viewModel);

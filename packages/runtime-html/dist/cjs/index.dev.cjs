@@ -11340,6 +11340,7 @@ exports.WcCustomElementRegistry = WcCustomElementRegistry;
 exports.With = With;
 exports.WithRegistration = WithRegistration;
 exports.allResources = allResources;
+exports.applyBindingBehavior = applyBindingBehavior;
 exports.attributePattern = attributePattern;
 exports.bindable = bindable;
 exports.bindingCommand = bindingCommand;

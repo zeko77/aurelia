@@ -45,11 +45,11 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurelia/kernel": "2.0.0-alpha.30",
-    "@aurelia/metadata": "2.0.0-alpha.30",
-    "@aurelia/platform-browser": "2.0.0-alpha.30",
-    "@aurelia/runtime": "2.0.0-alpha.30",
-    "@aurelia/runtime-html": "2.0.0-alpha.30"
+    "@aurelia/kernel": "2.1.0-dev.202205111353",
+    "@aurelia/metadata": "2.1.0-dev.202205111353",
+    "@aurelia/platform-browser": "2.1.0-dev.202205111353",
+    "@aurelia/runtime": "2.1.0-dev.202205111353",
+    "@aurelia/runtime-html": "2.1.0-dev.202205111353"
   },
   "devDependencies": {
     "typescript": "^4.6.3"

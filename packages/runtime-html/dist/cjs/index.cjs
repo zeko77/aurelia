@@ -10212,6 +10212,8 @@ exports.WithRegistration = nr;
 
 exports.allResources = us;
 
+exports.applyBindingBehavior = Li;
+
 exports.attributePattern = _;
 
 exports.bindable = R;
