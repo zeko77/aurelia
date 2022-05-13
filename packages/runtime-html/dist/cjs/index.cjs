@@ -2920,7 +2920,7 @@ const Te = {
 const De = new WeakMap;
 
 class Controller {
-    constructor(t, i, s, n, r, o) {
+    constructor(t, i, s, n, r, o, l) {
         this.container = t;
         this.vmKind = i;
         this.definition = s;
@@ -2956,6 +2956,7 @@ class Controller {
         this.gt = 0;
         this.wt = 0;
         this.bt = 0;
+        this.location = l;
         this.r = t.root.get(Be);
         switch (i) {
           case 1:
@@ -3002,27 +3003,27 @@ class Controller {
         if (void 0 === e) throw new Error(`AUR0500:${t}`);
         return e;
     }
-    static $el(t, i, s, n, r = void 0) {
+    static $el(t, i, s, n, r = void 0, o = null) {
         if (De.has(i)) return De.get(i);
         r = null !== r && void 0 !== r ? r : Qt.getDefinition(i.constructor);
-        const o = new Controller(t, 0, r, null, i, s);
-        const l = t.get(e.optional(We));
+        const l = new Controller(t, 0, r, null, i, s, o);
+        const h = t.get(e.optional(We));
         if (r.dependencies.length > 0) t.register(...r.dependencies);
-        t.registerResolver(We, new e.InstanceProvider("IHydrationContext", new HydrationContext(o, n, l)));
-        De.set(i, o);
-        if (null == n || false !== n.hydrate) o.hE(n, l);
-        return o;
+        t.registerResolver(We, new e.InstanceProvider("IHydrationContext", new HydrationContext(l, n, h)));
+        De.set(i, l);
+        if (null == n || false !== n.hydrate) l.hE(n, h);
+        return l;
     }
     static $attr(t, e, i, s) {
         if (De.has(e)) return De.get(e);
         s = null !== s && void 0 !== s ? s : $t.getDefinition(e.constructor);
-        const n = new Controller(t, 1, s, null, e, i);
+        const n = new Controller(t, 1, s, null, e, i, null);
         De.set(e, n);
         n.yt();
         return n;
     }
     static $view(t, e = void 0) {
-        const i = new Controller(t.container, 2, null, t, null, null);
+        const i = new Controller(t.container, 2, null, t, null, null, null);
         i.parent = null !== e && void 0 !== e ? e : null;
         i.kt();
         return i;
@@ -3051,19 +3052,20 @@ class Controller {
     hS(t) {
         if (this.hooks.hasHydrating) this.viewModel.hydrating(this);
         const e = this.Ct = this.r.compile(this.definition, this.container, t);
-        const {shadowOptions: i, isStrictBinding: s, hasSlots: n, containerless: r} = e;
+        const {shadowOptions: i, isStrictBinding: s, hasSlots: n} = e;
+        const r = this.location;
         this.isStrictBinding = s;
         if (null !== (this.hostController = Qt.for(this.host, Te))) this.host = this.container.root.get(H).document.createElement(this.definition.name);
         Je(this.host, Qt.name, this);
         Je(this.host, this.definition.key, this);
         if (null !== i || n) {
-            if (r) throw new Error("AUR0501");
+            if (null != r) throw new Error("AUR0501");
             Je(this.shadowRoot = this.host.attachShadow(null !== i && void 0 !== i ? i : Me), Qt.name, this);
             Je(this.shadowRoot, this.definition.key, this);
             this.mountTarget = 2;
-        } else if (r) {
-            Je(this.location = ri(this.host), Qt.name, this);
-            Je(this.location, this.definition.key, this);
+        } else if (null != r) {
+            Je(r, Qt.name, this);
+            Je(r, this.definition.key, this);
             this.mountTarget = 3;
         } else this.mountTarget = 1;
         this.viewModel.$controller = this;
@@ -4476,7 +4478,6 @@ let Ai = class CustomElementRenderer {
         const h = s.res;
         const a = s.projections;
         const c = t.container;
-        const u = Zi(this.p, t, i, s, i, null == a ? void 0 : new AuSlotsInfo(Object.keys(a)));
         switch (typeof h) {
           case "string":
             n = c.find(Qt, h);
@@ -4486,20 +4487,23 @@ let Ai = class CustomElementRenderer {
           default:
             n = h;
         }
+        const u = s.containerless || n.containerless;
+        const f = u ? ri(i) : null;
+        const d = Zi(this.p, t, i, s, f, null == a ? void 0 : new AuSlotsInfo(Object.keys(a)));
         r = n.Type;
-        o = u.invoke(r);
-        u.registerResolver(r, new e.InstanceProvider(n.key, o));
-        l = Controller.$el(u, o, i, s, n);
+        o = d.invoke(r);
+        d.registerResolver(r, new e.InstanceProvider(n.key, o));
+        l = Controller.$el(d, o, i, s, n, f);
         Je(i, n.key, l);
-        const f = this.r.renderers;
-        const d = s.props;
-        const p = d.length;
-        let m = 0;
-        let v;
-        while (p > m) {
-            v = d[m];
-            f[v.type].render(t, l, v);
-            ++m;
+        const p = this.r.renderers;
+        const m = s.props;
+        const v = m.length;
+        let x = 0;
+        let g;
+        while (v > x) {
+            g = m[x];
+            p[g.type].render(t, l, g);
+            ++x;
         }
         t.addChild(l);
     }
@@ -4956,7 +4960,7 @@ function Zi(t, i, s, n, r, o) {
     l.registerResolver(t.HTMLElement, l.registerResolver(t.Element, l.registerResolver(Qe, new e.InstanceProvider("ElementResolver", s))));
     l.registerResolver(Ne, new e.InstanceProvider(Gi, i));
     l.registerResolver(mi, new e.InstanceProvider(Xi, n));
-    l.registerResolver(ei, null == r ? Qi : new e.InstanceProvider(Ki, r));
+    l.registerResolver(ei, null == r ? Qi : new RenderLocationProvider(r));
     l.registerResolver(be, ts);
     l.registerResolver(pi, null == o ? es : new e.InstanceProvider(Yi, o));
     return l;
@@ -4989,7 +4993,22 @@ function Ji(t, i, s, n, r, o, l, h) {
     return a.invoke(i.Type);
 }
 
-const Qi = new e.InstanceProvider(Ki);
+class RenderLocationProvider {
+    constructor(t) {
+        this.l = t;
+    }
+    get name() {
+        return "IRenderLocation";
+    }
+    get $isResolver() {
+        return true;
+    }
+    resolve() {
+        return this.l;
+    }
+}
+
+const Qi = new RenderLocationProvider(null);
 
 const ts = new ViewFactoryProvider(null);
 
@@ -5944,7 +5963,7 @@ class TemplateCompiler {
                 }
                 q.projections = h;
             }
-            if (null !== d && d.containerless) this.be(t, i);
+            if (N || null !== d && d.containerless) this.be(t, i);
             W = null === d || !d.containerless && !N && false !== j;
             if (W) if ("TEMPLATE" === t.nodeName) this.oe(t.content, n); else {
                 k = t.firstChild;
@@ -6017,7 +6036,7 @@ class TemplateCompiler {
                 }
                 q.projections = r;
             }
-            if (null !== d && d.containerless) this.be(t, i);
+            if (N || null !== d && d.containerless) this.be(t, i);
             W = null === d || !d.containerless && !N && false !== j;
             if (W && t.childNodes.length > 0) {
                 e = t.firstChild;
@@ -8741,20 +8760,20 @@ function mn(t) {
 }
 
 class AuCompose {
-    constructor(t, e, i, s, n, r) {
+    constructor(t, e, i, s, n, r, o) {
         this.c = t;
         this.parent = e;
         this.host = i;
-        this.p = s;
+        this.l = s;
+        this.p = n;
         this.scopeBehavior = "auto";
         this._i = void 0;
-        this.l = n.containerless ? ri(this.host) : void 0;
         this.r = t.get(Be);
-        this.$i = n;
-        this.Mi = r;
+        this.$i = r;
+        this.Mi = o;
     }
     static get inject() {
-        return [ e.IContainer, Ne, Qe, H, mi, e.transient(CompositionContextFactory) ];
+        return [ e.IContainer, Ne, Qe, ei, H, mi, e.transient(CompositionContextFactory) ];
     }
     get pending() {
         return this.Vi;

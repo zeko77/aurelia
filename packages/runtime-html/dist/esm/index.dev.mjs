@@ -3337,7 +3337,7 @@ var MountTarget;
 const optionalCeFind = { optional: true };
 const controllerLookup = new WeakMap();
 class Controller {
-    constructor(container, vmKind, definition, viewFactory, viewModel, host) {
+    constructor(container, vmKind, definition, viewFactory, viewModel, host, location) {
         this.container = container;
         this.vmKind = vmKind;
         this.definition = definition;
@@ -3377,6 +3377,7 @@ class Controller {
             this.logger = null;
             this.debug = false;
         }
+        this.location = location;
         this._rendering = container.root.get(IRendering);
         switch (vmKind) {
             case 1:
@@ -3424,12 +3425,12 @@ class Controller {
         }
         return $el;
     }
-    static $el(ctn, viewModel, host, hydrationInst, definition = void 0) {
+    static $el(ctn, viewModel, host, hydrationInst, definition = void 0, location = null) {
         if (controllerLookup.has(viewModel)) {
             return controllerLookup.get(viewModel);
         }
         definition = definition !== null && definition !== void 0 ? definition : CustomElement.getDefinition(viewModel.constructor);
-        const controller = new Controller(ctn, 0, definition, null, viewModel, host);
+        const controller = new Controller(ctn, 0, definition, null, viewModel, host, location);
         const hydrationContext = ctn.get(optional(IHydrationContext));
         if (definition.dependencies.length > 0) {
             ctn.register(...definition.dependencies);
@@ -3446,13 +3447,13 @@ class Controller {
             return controllerLookup.get(viewModel);
         }
         definition = definition !== null && definition !== void 0 ? definition : CustomAttribute.getDefinition(viewModel.constructor);
-        const controller = new Controller(ctn, 1, definition, null, viewModel, host);
+        const controller = new Controller(ctn, 1, definition, null, viewModel, host, null);
         controllerLookup.set(viewModel, controller);
         controller._hydrateCustomAttribute();
         return controller;
     }
     static $view(viewFactory, parentController = void 0) {
-        const controller = new Controller(viewFactory.container, 2, null, viewFactory, null, null);
+        const controller = new Controller(viewFactory.container, 2, null, viewFactory, null, null, null);
         controller.parent = parentController !== null && parentController !== void 0 ? parentController : null;
         controller._hydrateSynthetic();
         return controller;
@@ -3502,7 +3503,8 @@ class Controller {
             this.viewModel.hydrating(this);
         }
         const compiledDef = this._compiledDef = this._rendering.compile(this.definition, this.container, hydrationInst);
-        const { shadowOptions, isStrictBinding, hasSlots, containerless } = compiledDef;
+        const { shadowOptions, isStrictBinding, hasSlots } = compiledDef;
+        const location = this.location;
         this.isStrictBinding = isStrictBinding;
         if ((this.hostController = CustomElement.for(this.host, optionalCeFind)) !== null) {
             this.host = this.container.root.get(IPlatform).document.createElement(this.definition.name);
@@ -3510,16 +3512,16 @@ class Controller {
         setRef(this.host, CustomElement.name, this);
         setRef(this.host, this.definition.key, this);
         if (shadowOptions !== null || hasSlots) {
-            if (containerless) {
+            if (location != null) {
                 throw new Error('You cannot combine the containerless custom element option with Shadow DOM.');
             }
             setRef(this.shadowRoot = this.host.attachShadow(shadowOptions !== null && shadowOptions !== void 0 ? shadowOptions : defaultShadowOptions), CustomElement.name, this);
             setRef(this.shadowRoot, this.definition.key, this);
             this.mountTarget = 2;
         }
-        else if (containerless) {
-            setRef(this.location = convertToRenderLocation(this.host), CustomElement.name, this);
-            setRef(this.location, this.definition.key, this);
+        else if (location != null) {
+            setRef(location, CustomElement.name, this);
+            setRef(location, this.definition.key, this);
             this.mountTarget = 3;
         }
         else {
@@ -5082,7 +5084,6 @@ let CustomElementRenderer = class CustomElementRenderer {
         const res = instruction.res;
         const projections = instruction.projections;
         const ctxContainer = renderingCtrl.container;
-        const container = createElementContainer(this._platform, renderingCtrl, target, instruction, target, projections == null ? void 0 : new AuSlotsInfo(Object.keys(projections)));
         switch (typeof res) {
             case 'string':
                 def = ctxContainer.find(CustomElement, res);
@@ -5093,10 +5094,13 @@ let CustomElementRenderer = class CustomElementRenderer {
             default:
                 def = res;
         }
+        const containerless = instruction.containerless || def.containerless;
+        const location = containerless ? convertToRenderLocation(target) : null;
+        const container = createElementContainer(this._platform, renderingCtrl, target, instruction, location, projections == null ? void 0 : new AuSlotsInfo(Object.keys(projections)));
         Ctor = def.Type;
         component = container.invoke(Ctor);
         container.registerResolver(Ctor, new InstanceProvider(def.key, component));
-        childCtrl = Controller.$el(container, component, target, instruction, def);
+        childCtrl = Controller.$el(container, component, target, instruction, def, location);
         setRef(target, def.key, childCtrl);
         const renderers = this._rendering.renderers;
         const props = instruction.props;
@@ -5582,7 +5586,7 @@ function createElementContainer(p, renderingCtrl, host, instruction, location, a
     ctn.registerResolver(IInstruction, new InstanceProvider(instructionProviderName, instruction));
     ctn.registerResolver(IRenderLocation, location == null
         ? noLocationProvider
-        : new InstanceProvider(locationProviderName, location));
+        : new RenderLocationProvider(location));
     ctn.registerResolver(IViewFactory, noViewFactoryProvider);
     ctn.registerResolver(IAuSlotsInfo, auSlotsInfo == null
         ? noAuSlotProvider
@@ -5624,7 +5628,17 @@ function invokeAttribute(p, definition, renderingCtrl, host, instruction, viewFa
         : new InstanceProvider(slotInfoProviderName, auSlotsInfo));
     return ctn.invoke(definition.Type);
 }
-const noLocationProvider = new InstanceProvider(locationProviderName);
+class RenderLocationProvider {
+    constructor(_location) {
+        this._location = _location;
+    }
+    get name() { return 'IRenderLocation'; }
+    get $isResolver() { return true; }
+    resolve() {
+        return this._location;
+    }
+}
+const noLocationProvider = new RenderLocationProvider(null);
 const noViewFactoryProvider = new ViewFactoryProvider(null);
 const noAuSlotProvider = new InstanceProvider(slotInfoProviderName, new AuSlotsInfo(emptyArray));
 
@@ -6673,7 +6687,7 @@ class TemplateCompiler {
                 }
                 elementInstruction.projections = projections;
             }
-            if (elDef !== null && elDef.containerless) {
+            if (hasContainerless || elDef !== null && elDef.containerless) {
                 this._replaceByMarker(el, context);
             }
             shouldCompileContent = elDef === null || !elDef.containerless && !hasContainerless && processContentResult !== false;
@@ -6779,7 +6793,7 @@ class TemplateCompiler {
                 }
                 elementInstruction.projections = projections;
             }
-            if (elDef !== null && elDef.containerless) {
+            if (hasContainerless || elDef !== null && elDef.containerless) {
                 this._replaceByMarker(el, context);
             }
             shouldCompileContent = elDef === null || !elDef.containerless && !hasContainerless && processContentResult !== false;
@@ -9980,20 +9994,20 @@ function isController(subject) {
 }
 
 class AuCompose {
-    constructor(_container, parent, host, _platform, instruction, contextFactory) {
+    constructor(_container, parent, host, _location, _platform, instruction, contextFactory) {
         this._container = _container;
         this.parent = parent;
         this.host = host;
+        this._location = _location;
         this._platform = _platform;
         this.scopeBehavior = 'auto';
         this._composition = void 0;
-        this._location = instruction.containerless ? convertToRenderLocation(this.host) : void 0;
         this._rendering = _container.get(IRendering);
         this._instruction = instruction;
         this._contextFactory = contextFactory;
     }
     static get inject() {
-        return [IContainer, IController, INode, IPlatform, IInstruction, transient(CompositionContextFactory)];
+        return [IContainer, IController, INode, IRenderLocation, IPlatform, IInstruction, transient(CompositionContextFactory)];
     }
     get pending() {
         return this._pending;
@@ -10059,11 +10073,11 @@ class AuCompose {
         let removeCompositionHost;
         const { view, viewModel, model } = context.change;
         const { _container: container, host, $controller, _location: loc } = this;
-        const srcDef = this.getDef(viewModel);
+        const vmDef = this.getDef(viewModel);
         const childCtn = container.createChild();
         const parentNode = loc == null ? host.parentNode : loc.parentNode;
-        if (srcDef !== null) {
-            if (srcDef.containerless) {
+        if (vmDef !== null) {
+            if (vmDef.containerless) {
                 throw new Error('Containerless custom element is not supported by <au-compose/>');
             }
             if (loc == null) {
@@ -10072,7 +10086,7 @@ class AuCompose {
                 };
             }
             else {
-                compositionHost = parentNode.insertBefore(this._platform.document.createElement(srcDef.name), loc);
+                compositionHost = parentNode.insertBefore(this._platform.document.createElement(vmDef.name), loc);
                 removeCompositionHost = () => {
                     compositionHost.remove();
                 };
@@ -10086,8 +10100,8 @@ class AuCompose {
             comp = this.getVm(childCtn, viewModel, compositionHost);
         }
         const compose = () => {
-            if (srcDef !== null) {
-                const controller = Controller.$el(childCtn, comp, compositionHost, { projections: this._instruction.projections }, srcDef);
+            if (vmDef !== null) {
+                const controller = Controller.$el(childCtn, comp, compositionHost, { projections: this._instruction.projections }, vmDef);
                 return new CompositionController(controller, (attachInitiator) => controller.activate(attachInitiator !== null && attachInitiator !== void 0 ? attachInitiator : controller, $controller, 2, $controller.scope.parentScope), (deactachInitiator) => onResolve(controller.deactivate(deactachInitiator !== null && deactachInitiator !== void 0 ? deactachInitiator : controller, $controller, 4), removeCompositionHost), (model) => { var _a; return (_a = comp.activate) === null || _a === void 0 ? void 0 : _a.call(comp, model); }, context);
             }
             else {

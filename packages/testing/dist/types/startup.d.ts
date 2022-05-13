@@ -23,7 +23,7 @@ export interface IFixture<T> {
     readonly torn: boolean;
     start(): Promise<void>;
     tearDown(): void | Promise<void>;
-    readonly promise: Promise<IFixture<T>>;
+    readonly started: Promise<IFixture<T>>;
     /**
      * Returns the first element that is a descendant of node that matches selectors, and throw if there is more than one, or none found
      */
@@ -42,6 +42,7 @@ export interface IFixture<T> {
     queryBy<K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null;
     queryBy<K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null;
     queryBy<E extends Element = Element>(selectors: string): E | null;
+    assertText(text: string): void;
     assertText(selector: string, text: string): void;
     trigger: ITrigger;
 }

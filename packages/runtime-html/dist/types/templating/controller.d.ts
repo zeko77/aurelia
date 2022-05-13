@@ -77,7 +77,11 @@ export declare class Controller<C extends IViewModel = IViewModel> implements IC
      *
      * For ShadowDOM elements, this will be the original declaring element, NOT the shadow root (the shadow root is stored on the `shadowRoot` property)
      */
-    host: HTMLElement | null);
+    host: HTMLElement | null, 
+    /**
+     * The render location replacement for the host on containerless elements
+     */
+    location: IRenderLocation | null);
     static getCached<C extends ICustomElementViewModel = ICustomElementViewModel>(viewModel: C): ICustomElementController<C> | undefined;
     static getCachedOrThrow<C extends ICustomElementViewModel = ICustomElementViewModel>(viewModel: C): ICustomElementController<C>;
     /**
@@ -88,7 +92,7 @@ export declare class Controller<C extends IViewModel = IViewModel> implements IC
      *
      * Semi private API
      */
-    static $el<C extends ICustomElementViewModel = ICustomElementViewModel>(ctn: IContainer, viewModel: C, host: HTMLElement, hydrationInst: IControllerElementHydrationInstruction | null, definition?: CustomElementDefinition | undefined): ICustomElementController<C>;
+    static $el<C extends ICustomElementViewModel = ICustomElementViewModel>(ctn: IContainer, viewModel: C, host: HTMLElement, hydrationInst: IControllerElementHydrationInstruction | null, definition?: CustomElementDefinition | undefined, location?: IRenderLocation | null): ICustomElementController<C>;
     /**
      * Create a controller for a custom attribute based on a given set of parameters
      *
@@ -472,6 +476,10 @@ export interface IControllerElementHydrationInstruction {
      * A list of captured attributes/binding in raw format
      */
     readonly captures?: AttrSyntax[];
+    /**
+     * Indicates whether the custom element was used with "containerless" attribute
+     */
+    readonly containerless?: boolean;
 }
 export {};
 //# sourceMappingURL=controller.d.ts.map

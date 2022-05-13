@@ -1,5 +1,6 @@
 import { Constructable, IContainer } from '@aurelia/kernel';
 import { LifecycleFlags } from '@aurelia/runtime';
+import { IRenderLocation } from '../../dom';
 import { IPlatform } from '../../platform';
 import { HydrateElementInstruction } from '../../renderer';
 import { ICustomElementController, IHydratedController, ISyntheticView } from '../../templating/controller';
@@ -26,6 +27,7 @@ export declare class AuCompose {
     /** @internal */ _container: IContainer, 
     /** @internal */ parent: ISyntheticView | ICustomElementController, 
     /** @internal */ host: HTMLElement, 
+    /** @internal */ _location: IRenderLocation, 
     /** @internal */ _platform: IPlatform, instruction: HydrateElementInstruction, contextFactory: CompositionContextFactory);
     attaching(initiator: IHydratedController, _parent: IHydratedController, _flags: LifecycleFlags): void | Promise<void>;
     detaching(initiator: IHydratedController): void | Promise<void>;

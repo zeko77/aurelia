@@ -3693,9 +3693,11 @@ function Ki(e, t, n = [], i = true, r = TestContext.create()) {
         return 0 === t.length ? null : t[0];
     };
     const x = (e, t) => {
-        const n = $(e);
-        if (null === n) throw new Error(`No element found for selector "${e}" to compare text content with "${t}"`);
-        Li.strictEqual(n.textContent, t);
+        if (2 === arguments.length) {
+            const n = $(e);
+            if (null === n) throw new Error(`No element found for selector "${e}" to compare text content with "${t}"`);
+            Li.strictEqual(n.textContent, t);
+        } else Li.strictEqual(u.textContent, e);
     };
     const w = (e, t, n) => {
         const i = $(e);
@@ -3752,7 +3754,7 @@ function Ki(e, t, n = [], i = true, r = TestContext.create()) {
         get torn() {
             return m > 0;
         }
-        get promise() {
+        get started() {
             return Promise.resolve(p).then((() => this));
         }
     };

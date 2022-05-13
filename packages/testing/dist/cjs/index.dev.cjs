@@ -7534,11 +7534,16 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
         return elements.length === 0 ? null : elements[0];
     };
     const assertText = (selector, text) => {
-        const el = queryBy(selector);
-        if (el === null) {
-            throw new Error(`No element found for selector "${selector}" to compare text content with "${text}"`);
+        if (arguments.length === 2) {
+            const el = queryBy(selector);
+            if (el === null) {
+                throw new Error(`No element found for selector "${selector}" to compare text content with "${text}"`);
+            }
+            assert.strictEqual(el.textContent, text);
         }
-        assert.strictEqual(el.textContent, text);
+        else {
+            assert.strictEqual(host.textContent, selector);
+        }
     };
     const trigger = ((selector, event, init) => {
         const el = queryBy(selector);
@@ -7595,7 +7600,7 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
         get torn() {
             return tornCount > 0;
         }
-        get promise() {
+        get started() {
             return Promise.resolve(startPromise).then(() => this);
         }
     }();

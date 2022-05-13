@@ -3699,9 +3699,11 @@ function Ri(e, t, i = [], r = true, s = TestContext.create()) {
         return 0 === t.length ? null : t[0];
     };
     const y = (e, t) => {
-        const n = x(e);
-        if (null === n) throw new Error(`No element found for selector "${e}" to compare text content with "${t}"`);
-        di.strictEqual(n.textContent, t);
+        if (2 === arguments.length) {
+            const n = x(e);
+            if (null === n) throw new Error(`No element found for selector "${e}" to compare text content with "${t}"`);
+            di.strictEqual(n.textContent, t);
+        } else di.strictEqual(c.textContent, e);
     };
     const $ = (e, t, n) => {
         const i = x(e);
@@ -3758,7 +3760,7 @@ function Ri(e, t, i = [], r = true, s = TestContext.create()) {
         get torn() {
             return m > 0;
         }
-        get promise() {
+        get started() {
             return Promise.resolve(g).then((() => this));
         }
     };
