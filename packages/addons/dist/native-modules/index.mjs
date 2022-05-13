@@ -5,4 +5,4 @@ const r = {
 };
 
 export { r as AddonsConfiguration };
-//# sourceMappingURL=index.mjs.map
+

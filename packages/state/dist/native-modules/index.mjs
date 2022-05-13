@@ -374,4 +374,4 @@ const O = (t, i) => ({
 const x = O({}, []);
 
 export { S as Action, A as DispatchAttributePattern, $ as DispatchBindingCommand, DispatchBindingInstruction, _ as DispatchBindingInstructionRenderer, g as IReducerAction, w as IState, v as IStateContainer, x as StandardStateConfiguration, R as StateAttributePattern, I as StateBinding, P as StateBindingCommand, StateBindingInstruction, D as StateBindingInstructionRenderer, StateContainer, C as StateDispatchActionBinding };
-//# sourceMappingURL=index.mjs.map
+

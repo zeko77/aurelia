@@ -3752,4 +3752,4 @@ class ScrollStateManager {
 }
 
 export { wt as AST, ActionExpression, Ot as AuNavId, ComponentAgent, ComponentExpression, CompositeSegmentExpression, ci as DefaultComponents, fi as DefaultResources, pt as ExpressionKind, hi as HrefCustomAttribute, di as HrefCustomAttributeRegistration, ht as IBaseHrefProvider, ct as ILocationManager, Xt as IRouteContext, Mt as IRouter, ot as IRouterEvents, wi as IStateManager, zt as IViewportInstruction, ri as LoadCustomAttribute, li as LoadCustomAttributeRegistration, LocationChangeEvent, Navigation, NavigationCancelEvent, NavigationEndEvent, NavigationErrorEvent, NavigationOptions, NavigationStartEvent, ParameterExpression, ParameterListExpression, Jt as Route, RouteConfig, RouteContext, RouteDefinition, RouteExpression, RouteNode, RouteTree, Ht as Router, vi as RouterConfiguration, RouterOptions, ai as RouterRegistration, ScopedSegmentExpression, SegmentExpression, SegmentGroupExpression, Transition, ViewportAgent, ni as ViewportCustomElement, ui as ViewportCustomElementRegistration, ViewportExpression, jt as isManagedState, _t as route, Bt as toManagedState };
-//# sourceMappingURL=index.mjs.map
+

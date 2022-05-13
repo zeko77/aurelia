@@ -1987,7 +1987,7 @@ const $t = Object.freeze({
 });
 
 function Ot(t, e) {
-    if (!t) throw new Error("AUR0772");
+    if (!t) throw new Error(`AUR0772`);
     return function i(s, n, r) {
         const o = null == n;
         const l = o ? s : s.constructor;
@@ -2153,14 +2153,14 @@ const Qt = Object.freeze({
             const i = Ze(t, Xt);
             if (null === i) {
                 if (true === e.optional) return null;
-                throw new Error("AUR0762");
+                throw new Error(`AUR0762`);
             }
             return i;
         }
         if (void 0 !== e.name) {
             if (true !== e.searchParents) {
                 const i = Ze(t, Xt);
-                if (null === i) throw new Error("AUR0763");
+                if (null === i) throw new Error(`AUR0763`);
                 if (i.is(e.name)) return i;
                 return;
             }
@@ -2175,7 +2175,7 @@ const Qt = Object.freeze({
                 i = si(i);
             }
             if (s) return;
-            throw new Error("AUR0764");
+            throw new Error(`AUR0764`);
         }
         let i = t;
         while (null !== i) {
@@ -2183,7 +2183,7 @@ const Qt = Object.freeze({
             if (null !== t) return t;
             i = si(i);
         }
-        throw new Error("AUR0765");
+        throw new Error(`AUR0765`);
     },
     define(t, e) {
         const i = CustomElementDefinition.create(t, e);
@@ -3059,7 +3059,7 @@ class Controller {
         Je(this.host, Qt.name, this);
         Je(this.host, this.definition.key, this);
         if (null !== i || n) {
-            if (null != r) throw new Error("AUR0501");
+            if (null != r) throw new Error(`AUR0501`);
             Je(this.shadowRoot = this.host.attachShadow(null !== i && void 0 !== i ? i : Me), Qt.name, this);
             Je(this.shadowRoot, this.definition.key, this);
             this.mountTarget = 2;
@@ -3119,7 +3119,7 @@ class Controller {
             break;
 
           case 2:
-            if (void 0 === s || null === s) throw new Error("AUR0504");
+            if (void 0 === s || null === s) throw new Error(`AUR0504`);
             if (!this.hasLockedScope) this.scope = s;
             break;
         }
@@ -4435,7 +4435,7 @@ function ki(t, e) {
         return Qt.for(t);
 
       case "view":
-        throw new Error("AUR0750");
+        throw new Error(`AUR0750`);
 
       case "view-model":
         return Qt.for(t).viewModel;
@@ -4975,8 +4975,8 @@ class ViewFactoryProvider {
     }
     resolve() {
         const t = this.f;
-        if (null === t) throw new Error("AUR7055");
-        if (!C(t.name) || 0 === t.name.length) throw new Error("AUR0756");
+        if (null === t) throw new Error(`AUR7055`);
+        if (!C(t.name) || 0 === t.name.length) throw new Error(`AUR0756`);
         return t;
     }
 }
@@ -5460,7 +5460,7 @@ class TemplateCompiler {
             null === (r = (n = d[m]).compiling) || void 0 === r ? void 0 : r.call(n, c);
             ++m;
         }
-        if (c.hasAttribute(ks)) throw new Error("AUR0701");
+        if (c.hasAttribute(ks)) throw new Error(`AUR0701`);
         this.re(f, a);
         this.oe(f, a);
         return CustomElementDefinition.create({
@@ -6120,11 +6120,11 @@ class TemplateCompiler {
         const o = e.toArray(r.querySelectorAll("template[as-custom-element]"));
         const l = o.length;
         if (0 === l) return;
-        if (l === r.childElementCount) throw new Error("AUR0708");
+        if (l === r.childElementCount) throw new Error(`AUR0708`);
         const h = new Set;
         const a = [];
         for (const t of o) {
-            if (t.parentNode !== r) throw new Error("AUR0709");
+            if (t.parentNode !== r) throw new Error(`AUR0709`);
             const s = Cs(t, h);
             const n = class LocalTemplate {};
             const o = t.content;
@@ -6133,9 +6133,9 @@ class TemplateCompiler {
             const u = new Set;
             const f = new Set;
             for (const t of l) {
-                if (t.parentNode !== o) throw new Error("AUR0710");
+                if (t.parentNode !== o) throw new Error(`AUR0710`);
                 const e = t.getAttribute("property");
-                if (null === e) throw new Error("AUR0711");
+                if (null === e) throw new Error(`AUR0711`);
                 const i = t.getAttribute("attribute");
                 if (null !== i && f.has(i) || u.has(e)) throw new Error(`AUR0712:${e}+${i}`); else {
                     if (null !== i) f.add(i);
@@ -6354,7 +6354,7 @@ const ks = "as-custom-element";
 
 function Cs(t, e) {
     const i = t.getAttribute(ks);
-    if (null === i || "" === i) throw new Error("AUR0715");
+    if (null === i || "" === i) throw new Error(`AUR0715`);
     if (e.has(i)) throw new Error(`AUR0716:${i}`); else {
         e.add(i);
         t.removeAttribute(ks);
@@ -6527,8 +6527,8 @@ class SignalBindingBehavior {
         this.Ae = t;
     }
     bind(t, e, i, ...s) {
-        if (!("handleChange" in i)) throw new Error("AUR0817");
-        if (0 === s.length) throw new Error("AUR0818");
+        if (!("handleChange" in i)) throw new Error(`AUR0817`);
+        if (0 === s.length) throw new Error(`AUR0818`);
         this.Yt.set(i, s);
         let n;
         for (n of s) this.Ae.addSignalListener(n, i);
@@ -6645,7 +6645,7 @@ function Os(t) {
 
 class SelfBindingBehavior {
     bind(t, e, i) {
-        if (!i.callSource || !i.targetEvent) throw new Error("AUR0801");
+        if (!i.callSource || !i.targetEvent) throw new Error(`AUR0801`);
         i.selfEventCallSource = i.callSource;
         i.callSource = Os;
     }
@@ -6931,7 +6931,7 @@ class SelectValueObserver {
         null === (e = this.De) || void 0 === e ? void 0 : e.unsubscribe(this);
         this.De = void 0;
         if (null != t) {
-            if (!this.o.multiple) throw new Error("AUR0654");
+            if (!this.o.multiple) throw new Error(`AUR0654`);
             (this.De = this.oL.getArrayObserver(t)).subscribe(this);
         }
     }
@@ -7364,9 +7364,9 @@ class UpdateTriggerBindingBehavior {
     }
     bind(e, i, s, ...n) {
         if (0 === n.length) throw new Error(`AUR0802`);
-        if (s.mode !== t.BindingMode.twoWay && s.mode !== t.BindingMode.fromView) throw new Error("AUR0803");
+        if (s.mode !== t.BindingMode.twoWay && s.mode !== t.BindingMode.fromView) throw new Error(`AUR0803`);
         const r = this.oL.getObserver(s.target, s.targetProperty);
-        if (!r.handler) throw new Error("AUR0804");
+        if (!r.handler) throw new Error(`AUR0804`);
         s.targetObserver = r;
         const o = r.handler;
         r.originalHandler = o;
@@ -7543,7 +7543,7 @@ class Portal {
         let i = this.target;
         let s = this.renderContext;
         if ("" === i) {
-            if (this.strict) throw new Error("AUR0811");
+            if (this.strict) throw new Error(`AUR0811`);
             return e.body;
         }
         if (C(i)) {
@@ -7554,7 +7554,7 @@ class Portal {
         }
         if (i instanceof t.Node) return i;
         if (null == i) {
-            if (this.strict) throw new Error("AUR0812");
+            if (this.strict) throw new Error(`AUR0812`);
             return e.body;
         }
         return i;
@@ -7731,7 +7731,7 @@ class Else {
     link(t, e, i, s) {
         const n = t.children;
         const r = n[n.length - 1];
-        if (r instanceof If) r.elseFactory = this.factory; else if (r.viewModel instanceof If) r.viewModel.elseFactory = this.factory; else throw new Error("AUR0810");
+        if (r instanceof If) r.elseFactory = this.factory; else if (r.viewModel instanceof If) r.viewModel.elseFactory = this.factory; else throw new Error(`AUR0810`);
     }
 }
 
@@ -8234,7 +8234,7 @@ exports.Case = class Case {
         if (r instanceof exports.Switch) {
             this.$switch = r;
             this.linkToSwitch(r);
-        } else throw new Error("AUR0815");
+        } else throw new Error(`AUR0815`);
     }
     detaching(t, e, i) {
         return this.deactivate(t, i);
@@ -8315,7 +8315,7 @@ exports.Case = r([ It("case") ], exports.Case);
 
 exports.DefaultCase = class DefaultCase extends exports.Case {
     linkToSwitch(t) {
-        if (void 0 !== t.defaultCase) throw new Error("AUR0816");
+        if (void 0 !== t.defaultCase) throw new Error(`AUR0816`);
         t.defaultCase = this;
     }
 };
@@ -8523,7 +8523,7 @@ function on(t) {
     const e = t.parent;
     const i = null === e || void 0 === e ? void 0 : e.viewModel;
     if (i instanceof exports.PromiseTemplateController) return i;
-    throw new Error("AUR0813");
+    throw new Error(`AUR0813`);
 }
 
 let ln = class PromiseAttributePattern {
@@ -8832,7 +8832,7 @@ class AuCompose {
         const p = a.createChild();
         const m = null == f ? c.parentNode : f.parentNode;
         if (null !== d) {
-            if (d.containerless) throw new Error("AUR0806");
+            if (d.containerless) throw new Error(`AUR0806`);
             if (null == f) {
                 n = c;
                 r = () => {};
@@ -8899,7 +8899,7 @@ r([ R ], AuCompose.prototype, "model", void 0);
 r([ R({
     set: t => {
         if ("scoped" === t || "auto" === t) return t;
-        throw new Error("AUR0805");
+        throw new Error(`AUR0805`);
     }
 }) ], AuCompose.prototype, "scopeBehavior", void 0);
 
@@ -8971,7 +8971,7 @@ class CompositionController {
             return this.stop(t);
 
           case -1:
-            throw new Error("AUR0808");
+            throw new Error(`AUR0808`);
 
           default:
             this.state = -1;
@@ -9262,7 +9262,7 @@ class Aurelia {
         this.next = void 0;
         this.Yi = void 0;
         this.Zi = void 0;
-        if (t.has(Hr, true)) throw new Error("AUR0768");
+        if (t.has(Hr, true)) throw new Error(`AUR0768`);
         t.registerResolver(Hr, new e.InstanceProvider("IAurelia", this));
         t.registerResolver(Ke, this.Ji = new e.InstanceProvider("IAppRoot"));
     }
@@ -9277,7 +9277,7 @@ class Aurelia {
     }
     get root() {
         if (null == this.Ki) {
-            if (null == this.next) throw new Error("AUR0767");
+            if (null == this.next) throw new Error(`AUR0767`);
             return this.next;
         }
         return this.Ki;
@@ -9319,14 +9319,14 @@ class Aurelia {
     Qi(t) {
         let i;
         if (!this.container.has(H, false)) {
-            if (null === t.ownerDocument.defaultView) throw new Error("AUR0769");
+            if (null === t.ownerDocument.defaultView) throw new Error(`AUR0769`);
             i = new n.BrowserPlatform(t.ownerDocument.defaultView);
             this.container.register(e.Registration.instance(H, i));
         } else i = this.container.get(H);
         return i;
     }
     start(t = this.next) {
-        if (null == t) throw new Error("AUR0770");
+        if (null == t) throw new Error(`AUR0770`);
         if (this.Yi instanceof Promise) return this.Yi;
         return this.Yi = e.onResolve(this.stop(), (() => {
             Reflect.set(t.host, "$aurelia", this);
@@ -9357,7 +9357,7 @@ class Aurelia {
         }
     }
     dispose() {
-        if (this.ir || this.Xi) throw new Error("AUR0771");
+        if (this.ir || this.Xi) throw new Error(`AUR0771`);
         this.container.dispose();
     }
     ts(t, e, i) {
@@ -9580,7 +9580,7 @@ class DialogService {
                 const i = r.invoke(DialogController);
                 r.register(e.Registration.instance(Gr, i));
                 r.register(e.Registration.callback(DialogController, (() => {
-                    throw new Error("AUR0902");
+                    throw new Error(`AUR0902`);
                 })));
                 return e.onResolve(i.activate(t), (t => {
                     if (!t.wasCancelled) {
@@ -9632,7 +9632,7 @@ class DialogSettings {
         return n instanceof Promise ? n.then((() => t)) : t;
     }
     ls() {
-        if (null == this.component && null == this.template) throw new Error("AUR0903");
+        if (null == this.component && null == this.template) throw new Error(`AUR0903`);
         return this;
     }
     os() {
@@ -9718,7 +9718,7 @@ function so(t, e) {
 }
 
 const no = so((() => {
-    throw new Error("AUR0904");
+    throw new Error(`AUR0904`);
 }), [ class NoopDialogGlobalSettings {
     static register(t) {
         t.register(e.Registration.singleton(Yr, this));

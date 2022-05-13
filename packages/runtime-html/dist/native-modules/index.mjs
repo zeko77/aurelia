@@ -1983,7 +1983,7 @@ const _e = Object.freeze({
 });
 
 function Me(t, e) {
-    if (!t) throw new Error("AUR0772");
+    if (!t) throw new Error(`AUR0772`);
     return function i(s, n, r) {
         const o = null == n;
         const l = o ? s : s.constructor;
@@ -2149,14 +2149,14 @@ const ri = Object.freeze({
             const i = ns(t, ti);
             if (null === i) {
                 if (true === e.optional) return null;
-                throw new Error("AUR0762");
+                throw new Error(`AUR0762`);
             }
             return i;
         }
         if (void 0 !== e.name) {
             if (true !== e.searchParents) {
                 const i = ns(t, ti);
-                if (null === i) throw new Error("AUR0763");
+                if (null === i) throw new Error(`AUR0763`);
                 if (i.is(e.name)) return i;
                 return;
             }
@@ -2171,7 +2171,7 @@ const ri = Object.freeze({
                 i = us(i);
             }
             if (s) return;
-            throw new Error("AUR0764");
+            throw new Error(`AUR0764`);
         }
         let i = t;
         while (null !== i) {
@@ -2179,7 +2179,7 @@ const ri = Object.freeze({
             if (null !== t) return t;
             i = us(i);
         }
-        throw new Error("AUR0765");
+        throw new Error(`AUR0765`);
     },
     define(t, e) {
         const i = CustomElementDefinition.create(t, e);
@@ -3055,7 +3055,7 @@ class Controller {
         rs(this.host, ri.name, this);
         rs(this.host, this.definition.key, this);
         if (null !== i || n) {
-            if (null != r) throw new Error("AUR0501");
+            if (null != r) throw new Error(`AUR0501`);
             rs(this.shadowRoot = this.host.attachShadow(null !== i && void 0 !== i ? i : zi), ri.name, this);
             rs(this.shadowRoot, this.definition.key, this);
             this.mountTarget = 2;
@@ -3115,7 +3115,7 @@ class Controller {
             break;
 
           case 2:
-            if (void 0 === s || null === s) throw new Error("AUR0504");
+            if (void 0 === s || null === s) throw new Error(`AUR0504`);
             if (!this.hasLockedScope) this.scope = s;
             break;
         }
@@ -4431,7 +4431,7 @@ function Ds(t, e) {
         return ri.for(t);
 
       case "view":
-        throw new Error("AUR0750");
+        throw new Error(`AUR0750`);
 
       case "view-model":
         return ri.for(t).viewModel;
@@ -4971,8 +4971,8 @@ class ViewFactoryProvider {
     }
     resolve() {
         const t = this.f;
-        if (null === t) throw new Error("AUR7055");
-        if (!Rt(t.name) || 0 === t.name.length) throw new Error("AUR0756");
+        if (null === t) throw new Error(`AUR7055`);
+        if (!Rt(t.name) || 0 === t.name.length) throw new Error(`AUR0756`);
         return t;
     }
 }
@@ -5456,7 +5456,7 @@ class TemplateCompiler {
             null === (n = (s = f[m]).compiling) || void 0 === n ? void 0 : n.call(s, a);
             ++m;
         }
-        if (a.hasAttribute(zn)) throw new Error("AUR0701");
+        if (a.hasAttribute(zn)) throw new Error(`AUR0701`);
         this.re(u, h);
         this.oe(u, h);
         return CustomElementDefinition.create({
@@ -6116,11 +6116,11 @@ class TemplateCompiler {
         const r = J(n.querySelectorAll("template[as-custom-element]"));
         const o = r.length;
         if (0 === o) return;
-        if (o === n.childElementCount) throw new Error("AUR0708");
+        if (o === n.childElementCount) throw new Error(`AUR0708`);
         const l = new Set;
         const h = [];
         for (const t of r) {
-            if (t.parentNode !== n) throw new Error("AUR0709");
+            if (t.parentNode !== n) throw new Error(`AUR0709`);
             const i = Gn(t, l);
             const s = class LocalTemplate {};
             const r = t.content;
@@ -6129,9 +6129,9 @@ class TemplateCompiler {
             const c = new Set;
             const u = new Set;
             for (const t of o) {
-                if (t.parentNode !== r) throw new Error("AUR0710");
+                if (t.parentNode !== r) throw new Error(`AUR0710`);
                 const e = t.getAttribute("property");
-                if (null === e) throw new Error("AUR0711");
+                if (null === e) throw new Error(`AUR0711`);
                 const i = t.getAttribute("attribute");
                 if (null !== i && u.has(i) || c.has(e)) throw new Error(`AUR0712:${e}+${i}`); else {
                     if (null !== i) u.add(i);
@@ -6350,7 +6350,7 @@ const zn = "as-custom-element";
 
 function Gn(t, e) {
     const i = t.getAttribute(zn);
-    if (null === i || "" === i) throw new Error("AUR0715");
+    if (null === i || "" === i) throw new Error(`AUR0715`);
     if (e.has(i)) throw new Error(`AUR0716:${i}`); else {
         e.add(i);
         t.removeAttribute(zn);
@@ -6523,8 +6523,8 @@ class SignalBindingBehavior {
         this.Ae = t;
     }
     bind(t, e, i, ...s) {
-        if (!("handleChange" in i)) throw new Error("AUR0817");
-        if (0 === s.length) throw new Error("AUR0818");
+        if (!("handleChange" in i)) throw new Error(`AUR0817`);
+        if (0 === s.length) throw new Error(`AUR0818`);
         this.Yt.set(i, s);
         let n;
         for (n of s) this.Ae.addSignalListener(n, i);
@@ -6641,7 +6641,7 @@ function nr(t) {
 
 class SelfBindingBehavior {
     bind(t, e, i) {
-        if (!i.callSource || !i.targetEvent) throw new Error("AUR0801");
+        if (!i.callSource || !i.targetEvent) throw new Error(`AUR0801`);
         i.selfEventCallSource = i.callSource;
         i.callSource = nr;
     }
@@ -6927,7 +6927,7 @@ class SelectValueObserver {
         null === (e = this.De) || void 0 === e ? void 0 : e.unsubscribe(this);
         this.De = void 0;
         if (null != t) {
-            if (!this.o.multiple) throw new Error("AUR0654");
+            if (!this.o.multiple) throw new Error(`AUR0654`);
             (this.De = this.oL.getArrayObserver(t)).subscribe(this);
         }
     }
@@ -7360,9 +7360,9 @@ class UpdateTriggerBindingBehavior {
     }
     bind(e, i, s, ...n) {
         if (0 === n.length) throw new Error(`AUR0802`);
-        if (s.mode !== t.twoWay && s.mode !== t.fromView) throw new Error("AUR0803");
+        if (s.mode !== t.twoWay && s.mode !== t.fromView) throw new Error(`AUR0803`);
         const r = this.oL.getObserver(s.target, s.targetProperty);
-        if (!r.handler) throw new Error("AUR0804");
+        if (!r.handler) throw new Error(`AUR0804`);
         s.targetObserver = r;
         const o = r.handler;
         r.originalHandler = o;
@@ -7539,7 +7539,7 @@ class Portal {
         let i = this.target;
         let s = this.renderContext;
         if ("" === i) {
-            if (this.strict) throw new Error("AUR0811");
+            if (this.strict) throw new Error(`AUR0811`);
             return e.body;
         }
         if (Rt(i)) {
@@ -7550,7 +7550,7 @@ class Portal {
         }
         if (i instanceof t.Node) return i;
         if (null == i) {
-            if (this.strict) throw new Error("AUR0812");
+            if (this.strict) throw new Error(`AUR0812`);
             return e.body;
         }
         return i;
@@ -7727,7 +7727,7 @@ class Else {
     link(t, e, i, s) {
         const n = t.children;
         const r = n[n.length - 1];
-        if (r instanceof If) r.elseFactory = this.factory; else if (r.viewModel instanceof If) r.viewModel.elseFactory = this.factory; else throw new Error("AUR0810");
+        if (r instanceof If) r.elseFactory = this.factory; else if (r.viewModel instanceof If) r.viewModel.elseFactory = this.factory; else throw new Error(`AUR0810`);
     }
 }
 
@@ -8230,7 +8230,7 @@ let Tr = class Case {
         if (r instanceof Ir) {
             this.$switch = r;
             this.linkToSwitch(r);
-        } else throw new Error("AUR0815");
+        } else throw new Error(`AUR0815`);
     }
     detaching(t, e, i) {
         return this.deactivate(t, i);
@@ -8311,7 +8311,7 @@ Tr = lt([ Le("case") ], Tr);
 
 let Dr = class DefaultCase extends Tr {
     linkToSwitch(t) {
-        if (void 0 !== t.defaultCase) throw new Error("AUR0816");
+        if (void 0 !== t.defaultCase) throw new Error(`AUR0816`);
         t.defaultCase = this;
     }
 };
@@ -8519,7 +8519,7 @@ function qr(t) {
     const e = t.parent;
     const i = null === e || void 0 === e ? void 0 : e.viewModel;
     if (i instanceof Pr) return i;
-    throw new Error("AUR0813");
+    throw new Error(`AUR0813`);
 }
 
 let Ur = class PromiseAttributePattern {
@@ -8828,7 +8828,7 @@ class AuCompose {
         const d = h.createChild();
         const m = null == u ? a.parentNode : u.parentNode;
         if (null !== f) {
-            if (f.containerless) throw new Error("AUR0806");
+            if (f.containerless) throw new Error(`AUR0806`);
             if (null == u) {
                 i = a;
                 s = () => {};
@@ -8895,7 +8895,7 @@ lt([ Et ], AuCompose.prototype, "model", void 0);
 lt([ Et({
     set: t => {
         if ("scoped" === t || "auto" === t) return t;
-        throw new Error("AUR0805");
+        throw new Error(`AUR0805`);
     }
 }) ], AuCompose.prototype, "scopeBehavior", void 0);
 
@@ -8967,7 +8967,7 @@ class CompositionController {
             return this.stop(t);
 
           case -1:
-            throw new Error("AUR0808");
+            throw new Error(`AUR0808`);
 
           default:
             this.state = -1;
@@ -9258,7 +9258,7 @@ class Aurelia {
         this.next = void 0;
         this.Yi = void 0;
         this.Zi = void 0;
-        if (t.has(Al, true)) throw new Error("AUR0768");
+        if (t.has(Al, true)) throw new Error(`AUR0768`);
         t.registerResolver(Al, new G("IAurelia", this));
         t.registerResolver(is, this.Ji = new G("IAppRoot"));
     }
@@ -9273,7 +9273,7 @@ class Aurelia {
     }
     get root() {
         if (null == this.Ki) {
-            if (null == this.next) throw new Error("AUR0767");
+            if (null == this.next) throw new Error(`AUR0767`);
             return this.next;
         }
         return this.Ki;
@@ -9315,14 +9315,14 @@ class Aurelia {
     Qi(t) {
         let e;
         if (!this.container.has(Zt, false)) {
-            if (null === t.ownerDocument.defaultView) throw new Error("AUR0769");
+            if (null === t.ownerDocument.defaultView) throw new Error(`AUR0769`);
             e = new ot(t.ownerDocument.defaultView);
             this.container.register(U.instance(Zt, e));
         } else e = this.container.get(Zt);
         return e;
     }
     start(t = this.next) {
-        if (null == t) throw new Error("AUR0770");
+        if (null == t) throw new Error(`AUR0770`);
         if (this.Yi instanceof Promise) return this.Yi;
         return this.Yi = K(this.stop(), (() => {
             Reflect.set(t.host, "$aurelia", this);
@@ -9353,7 +9353,7 @@ class Aurelia {
         }
     }
     dispose() {
-        if (this.ir || this.Xi) throw new Error("AUR0771");
+        if (this.ir || this.Xi) throw new Error(`AUR0771`);
         this.container.dispose();
     }
     ts(t, e, i) {
@@ -9576,7 +9576,7 @@ class DialogService {
                 const e = n.invoke(DialogController);
                 n.register(U.instance(El, e));
                 n.register(U.callback(DialogController, (() => {
-                    throw new Error("AUR0902");
+                    throw new Error(`AUR0902`);
                 })));
                 return K(e.activate(t), (t => {
                     if (!t.wasCancelled) {
@@ -9628,7 +9628,7 @@ class DialogSettings {
         return s instanceof Promise ? s.then((() => t)) : t;
     }
     ls() {
-        if (null == this.component && null == this.template) throw new Error("AUR0903");
+        if (null == this.component && null == this.template) throw new Error(`AUR0903`);
         return this;
     }
     os() {
@@ -9714,7 +9714,7 @@ function Fl(t, e) {
 }
 
 const _l = Fl((() => {
-    throw new Error("AUR0904");
+    throw new Error(`AUR0904`);
 }), [ class NoopDialogGlobalSettings {
     static register(t) {
         t.register(U.singleton(Tl, this));
@@ -9798,4 +9798,4 @@ class WcCustomElementRegistry {
 WcCustomElementRegistry.inject = [ W, Zt, Oi ];
 
 export { AdoptedStyleSheetsStyles, AppRoot, ke as AppTask, Kt as AtPrefixedTriggerAttributePattern, oo as AtPrefixedTriggerAttributePatternRegistration, AttrBindingBehavior, Xo as AttrBindingBehaviorRegistration, Bn as AttrBindingCommand, Ro as AttrBindingCommandRegistration, AttrSyntax, AttributeBinding, AttributeBindingInstruction, ml as AttributeBindingRendererRegistration, AttributeNSAccessor, Ht as AttributePattern, AuCompose, AuRender, Zo as AuRenderRegistration, AuSlot, AuSlotsInfo, Aurelia, Tt as Bindable, BindableDefinition, BindableObserver, BindablesInfo, pn as BindingCommand, BindingCommandDefinition, BindingModeBehavior, CSSModulesProcessorRegistry, CallBinding, Cn as CallBindingCommand, mo as CallBindingCommandRegistration, CallBindingInstruction, sl as CallBindingRendererRegistration, En as CaptureBindingCommand, Ao as CaptureBindingCommandRegistration, Tr as Case, CheckedObserver, Ee as Children, ChildrenDefinition, ChildrenObserver, ClassAttributeAccessor, Tn as ClassBindingCommand, So as ClassBindingCommandRegistration, Xt as ColonPrefixedBindAttributePattern, lo as ColonPrefixedBindAttributePatternRegistration, fn as CommandType, ComputedWatcher, Controller, _e as CustomAttribute, CustomAttributeDefinition, nl as CustomAttributeRendererRegistration, ri as CustomElement, CustomElementDefinition, rl as CustomElementRendererRegistration, DataAttributeAccessor, DebounceBindingBehavior, Kr as DebounceBindingBehaviorRegistration, kn as DefaultBindingCommand, vo as DefaultBindingCommandRegistration, Io as DefaultBindingLanguage, uo as DefaultBindingSyntax, Dr as DefaultCase, no as DefaultComponents, DefaultDialogDom, DefaultDialogDomRenderer, DefaultDialogGlobalSettings, yl as DefaultRenderers, il as DefaultResources, Rl as DefinitionType, Sn as DelegateBindingCommand, Co as DelegateBindingCommandRegistration, DialogCloseResult, _l as DialogConfiguration, DialogController, Dl as DialogDeactivationStatuses, Ml as DialogDefaultConfiguration, DialogOpenResult, DialogService, zt as DotSeparatedAttributePattern, ao as DotSeparatedAttributePatternRegistration, Else, Lo as ElseRegistration, EventDelegator, EventSubscriber, ExpressionWatcher, Focus, An as ForBindingCommand, go as ForBindingCommandRegistration, FragmentNodeSequence, FrequentMutations, FromViewBindingBehavior, Jr as FromViewBindingBehaviorRegistration, xn as FromViewBindingCommand, po as FromViewBindingCommandRegistration, Or as FulfilledTemplateController, HydrateAttributeInstruction, HydrateElementInstruction, HydrateLetElementInstruction, HydrateTemplateController, is as IAppRoot, ye as IAppTask, te as IAttrMapper, Mt as IAttributeParser, _t as IAttributePattern, ks as IAuSlotsInfo, Al as IAurelia, Yi as IController, El as IDialogController, Il as IDialogDom, Bl as IDialogDomRenderer, Tl as IDialogGlobalSettings, Sl as IDialogService, xs as IEventDelegator, ls as IEventTarget, ps as IHistory, Zi as IHydrationContext, As as IInstruction, yi as ILifecycleHooks, zs as IListenerBehaviorOptions, gs as ILocation, os as INode, so as INodeObserverLocatorRegistration, Zt as IPlatform, ys as IProjections, hs as IRenderLocation, Es as IRenderer, Oi as IRendering, Jt as ISVGAnalyzer, zr as ISanitizer, vi as IShadowDOMGlobalStyles, mi as IShadowDOMStyles, qt as ISyntaxInterpreter, Ss as ITemplateCompiler, Kn as ITemplateCompilerHooks, io as ITemplateCompilerRegistration, $n as ITemplateElementFactory, Si as IViewFactory, $i as IViewLocator, Vl as IWcElementRegistry, vs as IWindow, ss as IWorkTracker, If, Oo as IfRegistration, Cs as InstructionType, InterpolationBinding, ol as InterpolationBindingRendererRegistration, InterpolationInstruction, InterpolationPartBinding, Interpretation, IteratorBindingInstruction, ll as IteratorBindingRendererRegistration, LetBinding, LetBindingInstruction, hl as LetElementRendererRegistration, Ai as LifecycleHooks, LifecycleHooksDefinition, LifecycleHooksEntry, Listener, ListenerBindingInstruction, dl as ListenerBindingRendererRegistration, NodeObserverConfig, NodeObserverLocator, as as NodeType, NoopSVGAnalyzer, ObserveShallow, OneTimeBindingBehavior, Yr as OneTimeBindingBehaviorRegistration, wn as OneTimeBindingCommand, wo as OneTimeBindingCommandRegistration, $r as PendingTemplateController, Portal, Pr as PromiseTemplateController, PropertyBinding, PropertyBindingInstruction, al as PropertyBindingRendererRegistration, Gt as RefAttributePattern, ho as RefAttributePatternRegistration, RefBinding, yo as RefBindingCommandRegistration, RefBindingInstruction, cl as RefBindingRendererRegistration, Lr as RejectedTemplateController, RenderPlan, Rendering, Repeat, qo as RepeatRegistration, SVGAnalyzer, ro as SVGAnalyzerRegistration, Gr as SanitizeValueConverter, To as SanitizeValueConverterRegistration, SelectValueObserver, SelfBindingBehavior, Ko as SelfBindingBehaviorRegistration, SetAttributeInstruction, vl as SetAttributeRendererRegistration, SetClassAttributeInstruction, gl as SetClassAttributeRendererRegistration, SetPropertyInstruction, ul as SetPropertyRendererRegistration, SetStyleAttributeInstruction, pl as SetStyleAttributeRendererRegistration, ShadowDOMRegistry, fo as ShortHandBindingSyntax, SignalBindingBehavior, Qr as SignalBindingBehaviorRegistration, kl as StandardConfiguration, StyleAttributeAccessor, In as StyleBindingCommand, Eo as StyleBindingCommandRegistration, gi as StyleConfiguration, StyleElementStyles, StylePropertyBindingInstruction, wl as StylePropertyBindingRendererRegistration, Ir as Switch, TemplateCompiler, Jn as TemplateCompilerHooks, fl as TemplateControllerRendererRegistration, TextBindingInstruction, bl as TextBindingRendererRegistration, ThrottleBindingBehavior, to as ThrottleBindingBehaviorRegistration, ToViewBindingBehavior, Zr as ToViewBindingBehaviorRegistration, bn as ToViewBindingCommand, bo as ToViewBindingCommandRegistration, Rn as TriggerBindingCommand, ko as TriggerBindingCommandRegistration, TwoWayBindingBehavior, eo as TwoWayBindingBehaviorRegistration, yn as TwoWayBindingCommand, xo as TwoWayBindingCommandRegistration, UpdateTriggerBindingBehavior, Yo as UpdateTriggerBindingBehaviorRegistration, ValueAttributeObserver, ViewFactory, ViewLocator, Gi as ViewModelKind, Xr as ViewValueConverter, Do as ViewValueConverterRegistration, Di as Views, Ne as Watch, WcCustomElementRegistry, With, Uo as WithRegistration, Ln as allResources, Ws as applyBindingBehavior, Vt as attributePattern, Et as bindable, dn as bindingCommand, Ae as children, Dt as coercer, ze as containerless, ds as convertToRenderLocation, Mr as createElement, ui as cssModules, Oe as customAttribute, We as customElement, us as getEffectiveParentNode, ns as getRef, Wi as isCustomElementController, Hi as isCustomElementViewModel, Rs as isInstruction, ms as isRenderLocation, Ri as lifecycleHooks, li as processContent, Bs as renderer, fs as setEffectiveParentNode, rs as setRef, fi as shadowCSS, Qn as templateCompilerHooks, Le as templateController, He as useShadowDOM, Pi as view, Me as watch };
-//# sourceMappingURL=index.mjs.map
+

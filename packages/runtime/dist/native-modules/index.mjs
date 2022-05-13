@@ -876,13 +876,13 @@ class AccessScopeExpression {
         const i = BindingContext.get(e, this.name, this.ancestor, t);
         if (null !== r) r.observe(i, this.name);
         const n = i[this.name];
-        if (null == n && "$host" === this.name) throw new Error("AUR0105");
+        if (null == n && "$host" === this.name) throw new Error(`AUR0105`);
         if (1 & t) return n;
         return null == n ? "" : n;
     }
     assign(t, e, s, r) {
         var i;
-        if ("$host" === this.name) throw new Error("AUR0106");
+        if ("$host" === this.name) throw new Error(`AUR0106`);
         const n = BindingContext.get(e, this.name, this.ancestor, t);
         if (n instanceof Object) if (void 0 !== (null === (i = n.$observers) || void 0 === i ? void 0 : i[this.name])) {
             n.$observers[this.name].setValue(r, t);
@@ -1057,7 +1057,7 @@ class CallFunctionExpression {
         const i = this.func.evaluate(t, e, s, r);
         if (p(i)) return i(...this.args.map((i => i.evaluate(t, e, s, r))));
         if (!(8 & t) && null == i) return;
-        throw new Error("AUR0107");
+        throw new Error(`AUR0107`);
     }
     assign(t, e, s, r) {
         return;
@@ -1647,7 +1647,7 @@ class DestructuringAssignmentExpression {
               case 90137:
               case 106521:
                 {
-                    if ("object" !== typeof r || null === r) throw new Error("AUR0112");
+                    if ("object" !== typeof r || null === r) throw new Error(`AUR0112`);
                     let n = c.source.evaluate(t, Scope.create(r), s, null);
                     if (void 0 === n) n = null === (i = c.initializer) || void 0 === i ? void 0 : i.evaluate(t, e, s, null);
                     c.assign(t, e, s, n);
@@ -1679,7 +1679,7 @@ class DestructuringAssignmentSingleExpression {
     assign(t, e, s, r) {
         var i;
         if (null == r) return;
-        if ("object" !== typeof r) throw new Error("AUR0112");
+        if ("object" !== typeof r) throw new Error(`AUR0112`);
         let n = this.source.evaluate(t, Scope.create(r), s, null);
         if (void 0 === n) n = null === (i = this.initializer) || void 0 === i ? void 0 : i.evaluate(t, e, s, null);
         this.target.assign(t, e, s, n);
@@ -1705,11 +1705,11 @@ class DestructuringAssignmentRestExpression {
     }
     assign(t, e, s, r) {
         if (null == r) return;
-        if ("object" !== typeof r) throw new Error("AUR0112");
+        if ("object" !== typeof r) throw new Error(`AUR0112`);
         const i = this.indexOrProperties;
         let n;
         if (u(i)) {
-            if (!Array.isArray(r)) throw new Error("AUR0112");
+            if (!Array.isArray(r)) throw new Error(`AUR0112`);
             n = r.slice(i);
         } else n = Object.entries(r).reduce(((t, [e, s]) => {
             if (!i.includes(e)) t[e] = s;
@@ -2090,7 +2090,7 @@ class CollectionSizeObserver {
         return this.o.size;
     }
     setValue() {
-        throw new Error("AUR02");
+        throw new Error(`AUR02`);
     }
     handleCollectionChange(t, e) {
         const s = this.v;
@@ -2830,7 +2830,7 @@ function le() {
 
 function fe(t) {
     let e;
-    if (t instanceof Array) e = jt(t); else if (t instanceof Set) e = Zt(t); else if (t instanceof Map) e = ue(t); else throw new Error("AUR0210");
+    if (t instanceof Array) e = jt(t); else if (t instanceof Set) e = Zt(t); else if (t instanceof Map) e = ue(t); else throw new Error(`AUR0210`);
     this.obs.add(e);
 }
 
@@ -2843,7 +2843,7 @@ function ve() {
 }
 
 function pe() {
-    throw new Error("AUR2012:handleCollectionChange");
+    throw new Error(`AUR2012:handleCollectionChange`);
 }
 
 class BindingObserverRecord {
@@ -2914,10 +2914,10 @@ class BindingMediator {
         this.interceptor = this;
     }
     $bind() {
-        throw new Error("AUR0213:$bind");
+        throw new Error(`AUR0213:$bind`);
     }
     $unbind() {
-        throw new Error("AUR0214:$unbind");
+        throw new Error(`AUR0214:$unbind`);
     }
     handleChange(t, e, s) {
         this.binding[this.key](t, e, s);
@@ -2953,7 +2953,7 @@ class ExpressionParser {
           default:
             if (0 === t.length) {
                 if ((e & (4 | 8)) > 0) return PrimitiveLiteralExpression.$empty;
-                throw new Error("AUR0169");
+                throw new Error(`AUR0169`);
             }
             s = this.u[t];
             if (void 0 === s) s = this.u[t] = this.$parse(t, e);
@@ -3866,22 +3866,22 @@ function ls() {
 }
 
 function fs(t) {
-    if (null == t) throw new Error("AUR0206");
+    if (null == t) throw new Error(`AUR0206`);
     if (null == os) {
         os = t;
         hs[0] = os;
         cs = true;
         return;
     }
-    if (os === t) throw new Error("AUR0207");
+    if (os === t) throw new Error(`AUR0207`);
     hs.push(t);
     os = t;
     cs = true;
 }
 
 function ds(t) {
-    if (null == t) throw new Error("AUR0208");
-    if (os !== t) throw new Error("AUR0209");
+    if (null == t) throw new Error(`AUR0208`);
+    if (os !== t) throw new Error(`AUR0209`);
     hs.pop();
     os = hs.length > 0 ? hs[hs.length - 1] : null;
     cs = null != os;
@@ -4423,7 +4423,7 @@ class ComputedObserver {
                 this.ir = false;
                 this.run();
             }
-        } else throw new Error("AUR0221");
+        } else throw new Error(`AUR0221`);
     }
     handleChange() {
         this.D = true;
@@ -4862,7 +4862,7 @@ class Effect {
         this.run();
     }
     run() {
-        if (this.stopped) throw new Error("AUR0225");
+        if (this.stopped) throw new Error(`AUR0225`);
         if (this.running) return;
         ++this.runCount;
         this.running = true;
@@ -4911,7 +4911,7 @@ function mr(t, e, s) {
             name: r
         } : r || {};
         if (n) e = r.name;
-        if (null == e || "" === e) throw new Error("AUR0224");
+        if (null == e || "" === e) throw new Error(`AUR0224`);
         const o = r.callback || `${String(e)}Changed`;
         let h = yr;
         if (s) {
@@ -4951,4 +4951,4 @@ function Ur(t, e, s, r, i) {
 }
 
 export { Ue as Access, AccessKeyedExpression, AccessMemberExpression, AccessScopeExpression, AccessThisExpression, X as AccessorType, ArrayBindingPattern, ArrayIndexObserver, ArrayLiteralExpression, ArrayObserver, AssignExpression, BinaryExpression, T as BindingBehavior, BindingBehaviorDefinition, BindingBehaviorExpression, BindingBehaviorFactory, $ as BindingBehaviorStrategy, BindingContext, BindingIdentifier, BindingInterceptor, BindingMediator, z as BindingMode, BindingObserverRecord, CallFunctionExpression, CallMemberExpression, CallScopeExpression, ye as Char, J as CollectionKind, CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, ConditionalExpression, vs as ConnectableSwitcher, CustomExpression, Z as DelegationStrategy, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, DirtyCheckProperty, ar as DirtyCheckSettings, F as ExpressionKind, Re as ExpressionType, FlushQueue, ForOfStatement, HtmlLiteralExpression, Q as ICoercionConfiguration, ur as IDirtyChecker, Ae as IExpressionParser, pr as INodeObserverLocator, Er as IObservation, vr as IObserverLocator, k as ISignaler, Interpolation, W as LifecycleFlags, MapObserver, ObjectBindingPattern, ObjectLiteralExpression, Observation, ObserverLocator, OverrideContext, ParserState, xe as Precedence, PrimitiveLiteralExpression, PrimitiveObserver, PropertyAccessor, hr as ProxyObservable, Scope, SetObserver, SetterObserver, SubscriberRecord, TaggedTemplateExpression, TemplateExpression, UnaryExpression, D as ValueConverter, ValueConverterDefinition, ValueConverterExpression, O as alias, It as applyMutationsToIndices, L as bindingBehavior, et as cloneIndexMap, Ee as connectable, Y as copyIndexMap, tt as createIndexMap, Tt as disableArrayObservation, ce as disableMapObservation, Gt as disableSetObservation, Pt as enableArrayObservation, he as enableMapObservation, Wt as enableSetObservation, gr as getCollectionObserver, st as isIndexMap, mr as observable, je as parse, Te as parseExpression, C as registerAliases, rt as subscriberCollection, Mt as synchronizeIndices, j as valueConverter, ct as withFlushQueue };
-//# sourceMappingURL=index.mjs.map
+

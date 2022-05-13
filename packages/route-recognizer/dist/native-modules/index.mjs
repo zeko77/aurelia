@@ -360,4 +360,4 @@ class StarSegment {
 }
 
 export { ConfigurableRoute, Endpoint, RecognizedRoute, RouteRecognizer };
-//# sourceMappingURL=index.mjs.map
+

@@ -29,27 +29,50 @@ export interface IFixture<T> {
      */
     getBy<K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K];
     getBy<K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K];
-    getBy<E extends Element = Element>(selectors: string): E | null;
+    getBy<E extends HTMLElement = HTMLElement>(selectors: string): E | null;
     /**
      * Returns all element descendants of node that match selectors.
      */
     getAllBy<K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K][];
     getAllBy<K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K][];
-    getAllBy<E extends Element = Element>(selectors: string): E[];
+    getAllBy<E extends HTMLElement = HTMLElement>(selectors: string): E[];
     /**
      * Returns the first element that is a descendant of node that matches selectors, and null if none found
      */
     queryBy<K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null;
     queryBy<K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null;
-    queryBy<E extends Element = Element>(selectors: string): E | null;
+    queryBy<E extends HTMLElement = HTMLElement>(selectors: string): E | null;
+    /**
+     * Assert the text content of the current application host equals to a given string
+     */
     assertText(text: string): void;
+    /**
+     * Assert the text content of an element matching the given selector inside the application host equals to a given string.
+     *
+     * Will throw if there' more than one elements with matching selector
+     */
     assertText(selector: string, text: string): void;
+    /**
+     * Assert the inner html of the current application host equals to the given html string
+     */
+    assertHtml(html: string): void;
+    /**
+     * Assert the inner html of an element matching the selector inside the current application host equals to the given html string.
+     *
+     * Will throw if there' more than one elements with matching selector
+     */
+    assertHtml(selector: string, html: string): void;
     trigger: ITrigger;
+    /**
+     * A helper to scroll and trigger a scroll even on an element matching the given selector
+     */
+    scrollBy(selector: string, options: number | ScrollToOptions): void;
 }
 export declare type ITrigger = ((selector: string, event: string, init?: CustomEventInit) => void) & {
     click(selector: string, init?: CustomEventInit): void;
     change(selector: string, init?: CustomEventInit): void;
     input(selector: string, init?: CustomEventInit): void;
+    scroll(selector: string, init?: CustomEventInit): void;
 };
 export interface IFixtureBuilderBase<T, E = {}> {
     html(html: string): this & E;

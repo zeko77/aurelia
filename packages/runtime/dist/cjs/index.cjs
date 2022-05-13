@@ -882,13 +882,13 @@ class AccessScopeExpression {
         const i = BindingContext.get(e, this.name, this.ancestor, t);
         if (null !== r) r.observe(i, this.name);
         const n = i[this.name];
-        if (null == n && "$host" === this.name) throw new Error("AUR0105");
+        if (null == n && "$host" === this.name) throw new Error(`AUR0105`);
         if (1 & t) return n;
         return null == n ? "" : n;
     }
     assign(t, e, s, r) {
         var i;
-        if ("$host" === this.name) throw new Error("AUR0106");
+        if ("$host" === this.name) throw new Error(`AUR0106`);
         const n = BindingContext.get(e, this.name, this.ancestor, t);
         if (n instanceof Object) if (void 0 !== (null === (i = n.$observers) || void 0 === i ? void 0 : i[this.name])) {
             n.$observers[this.name].setValue(r, t);
@@ -1063,7 +1063,7 @@ class CallFunctionExpression {
         const n = this.func.evaluate(t, e, s, r);
         if (i(n)) return n(...this.args.map((i => i.evaluate(t, e, s, r))));
         if (!(8 & t) && null == n) return;
-        throw new Error("AUR0107");
+        throw new Error(`AUR0107`);
     }
     assign(t, e, s, r) {
         return;
@@ -1653,7 +1653,7 @@ class DestructuringAssignmentExpression {
               case 90137:
               case 106521:
                 {
-                    if ("object" !== typeof r || null === r) throw new Error("AUR0112");
+                    if ("object" !== typeof r || null === r) throw new Error(`AUR0112`);
                     let n = c.source.evaluate(t, Scope.create(r), s, null);
                     if (void 0 === n) n = null === (i = c.initializer) || void 0 === i ? void 0 : i.evaluate(t, e, s, null);
                     c.assign(t, e, s, n);
@@ -1685,7 +1685,7 @@ class DestructuringAssignmentSingleExpression {
     assign(t, e, s, r) {
         var i;
         if (null == r) return;
-        if ("object" !== typeof r) throw new Error("AUR0112");
+        if ("object" !== typeof r) throw new Error(`AUR0112`);
         let n = this.source.evaluate(t, Scope.create(r), s, null);
         if (void 0 === n) n = null === (i = this.initializer) || void 0 === i ? void 0 : i.evaluate(t, e, s, null);
         this.target.assign(t, e, s, n);
@@ -1711,11 +1711,11 @@ class DestructuringAssignmentRestExpression {
     }
     assign(e, s, r, i) {
         if (null == i) return;
-        if ("object" !== typeof i) throw new Error("AUR0112");
+        if ("object" !== typeof i) throw new Error(`AUR0112`);
         const n = this.indexOrProperties;
         let o;
         if (t.isArrayIndex(n)) {
-            if (!Array.isArray(i)) throw new Error("AUR0112");
+            if (!Array.isArray(i)) throw new Error(`AUR0112`);
             o = i.slice(n);
         } else o = Object.entries(i).reduce(((t, [e, s]) => {
             if (!n.includes(e)) t[e] = s;
@@ -2096,7 +2096,7 @@ class CollectionSizeObserver {
         return this.o.size;
     }
     setValue() {
-        throw new Error("AUR02");
+        throw new Error(`AUR02`);
     }
     handleCollectionChange(t, e) {
         const s = this.v;
@@ -2836,7 +2836,7 @@ function zt() {
 
 function Wt(t) {
     let e;
-    if (t instanceof Array) e = wt(t); else if (t instanceof Set) e = Rt(t); else if (t instanceof Map) e = Ht(t); else throw new Error("AUR0210");
+    if (t instanceof Array) e = wt(t); else if (t instanceof Set) e = Rt(t); else if (t instanceof Map) e = Ht(t); else throw new Error(`AUR0210`);
     this.obs.add(e);
 }
 
@@ -2849,7 +2849,7 @@ function Zt() {
 }
 
 function Jt() {
-    throw new Error("AUR2012:handleCollectionChange");
+    throw new Error(`AUR2012:handleCollectionChange`);
 }
 
 class BindingObserverRecord {
@@ -2920,10 +2920,10 @@ class BindingMediator {
         this.interceptor = this;
     }
     $bind() {
-        throw new Error("AUR0213:$bind");
+        throw new Error(`AUR0213:$bind`);
     }
     $unbind() {
-        throw new Error("AUR0214:$unbind");
+        throw new Error(`AUR0214:$unbind`);
     }
     handleChange(t, e, s) {
         this.binding[this.key](t, e, s);
@@ -2959,7 +2959,7 @@ class ExpressionParser {
           default:
             if (0 === t.length) {
                 if ((e & (4 | 8)) > 0) return PrimitiveLiteralExpression.$empty;
-                throw new Error("AUR0169");
+                throw new Error(`AUR0169`);
             }
             s = this.u[t];
             if (void 0 === s) s = this.u[t] = this.$parse(t, e);
@@ -3872,22 +3872,22 @@ function qe() {
 }
 
 function _e(t) {
-    if (null == t) throw new Error("AUR0206");
+    if (null == t) throw new Error(`AUR0206`);
     if (null == De) {
         De = t;
         Fe[0] = De;
         Ve = true;
         return;
     }
-    if (De === t) throw new Error("AUR0207");
+    if (De === t) throw new Error(`AUR0207`);
     Fe.push(t);
     De = t;
     Ve = true;
 }
 
 function He(t) {
-    if (null == t) throw new Error("AUR0208");
-    if (De !== t) throw new Error("AUR0209");
+    if (null == t) throw new Error(`AUR0208`);
+    if (De !== t) throw new Error(`AUR0209`);
     Fe.pop();
     De = Fe.length > 0 ? Fe[Fe.length - 1] : null;
     Ve = null != De;
@@ -4429,7 +4429,7 @@ class ComputedObserver {
                 this.ir = false;
                 this.run();
             }
-        } else throw new Error("AUR0221");
+        } else throw new Error(`AUR0221`);
     }
     handleChange() {
         this.D = true;
@@ -4868,7 +4868,7 @@ class Effect {
         this.run();
     }
     run() {
-        if (this.stopped) throw new Error("AUR0225");
+        if (this.stopped) throw new Error(`AUR0225`);
         if (this.running) return;
         ++this.runCount;
         this.running = true;
@@ -4917,7 +4917,7 @@ function tr(t, e, s) {
             name: i
         } : i || {};
         if (o) e = i.name;
-        if (null == e || "" === e) throw new Error("AUR0224");
+        if (null == e || "" === e) throw new Error(`AUR0224`);
         const h = i.callback || `${String(e)}Changed`;
         let c = Ys;
         if (s) {

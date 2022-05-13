@@ -7545,6 +7545,18 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             assert.strictEqual(host.textContent, selector);
         }
     };
+    const assertHtml = (selector, html) => {
+        if (arguments.length === 2) {
+            const el = queryBy(selector);
+            if (el === null) {
+                throw new Error(`No element found for selector "${selector}" to compare innerHTML with "${html}"`);
+            }
+            assert.strictEqual(el.innerHTML, html);
+        }
+        else {
+            assert.strictEqual(host.innerHTML, selector);
+        }
+    };
     const trigger = ((selector, event, init) => {
         const el = queryBy(selector);
         if (el === null) {
@@ -7552,7 +7564,7 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
         }
         el.dispatchEvent(new ctx.CustomEvent(event, init));
     });
-    ['click', 'change', 'input'].forEach(event => {
+    ['click', 'change', 'input', 'scroll'].forEach(event => {
         Object.defineProperty(trigger, event, { configurable: true, writable: true, value: (selector, init) => {
                 const el = queryBy(selector);
                 if (el === null) {
@@ -7561,6 +7573,14 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
                 el.dispatchEvent(new ctx.CustomEvent(event, init));
             } });
     });
+    const scrollBy = (selector, init) => {
+        const el = queryBy(selector);
+        if (el === null) {
+            throw new Error(`No element found for selector "${selector}" to scroll by "${JSON.stringify(init)}"`);
+        }
+        el.scrollBy(typeof init === 'number' ? { top: init } : init);
+        el.dispatchEvent(new Event('scroll'));
+    };
     const fixture = new class Results {
         constructor() {
             this.startPromise = startPromise;
@@ -7577,7 +7597,9 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             this.getAllBy = getAllBy;
             this.queryBy = queryBy;
             this.assertText = assertText;
+            this.assertHtml = assertHtml;
             this.trigger = trigger;
+            this.scrollBy = scrollBy;
         }
         async start() {
             await au.app({ host: host, component }).start();
@@ -7601,7 +7623,10 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             return tornCount > 0;
         }
         get started() {
-            return Promise.resolve(startPromise).then(() => this);
+            if (startPromise instanceof Promise) {
+                return Promise.resolve(startPromise).then(() => this);
+            }
+            return Promise.resolve(this);
         }
     }();
     fixtureHooks.publish('fixture:created', fixture);

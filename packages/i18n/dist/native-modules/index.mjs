@@ -751,4 +751,4 @@ function ht(t) {
 const lt = ht((() => {}));
 
 export { k as DateFormatBindingBehavior, _ as DateFormatValueConverter, O as I18N, lt as I18nConfiguration, E as I18nInitOptions, I18nKeyEvaluationResult, V as I18nService, D as NumberFormatBindingBehavior, F as NumberFormatValueConverter, j as RelativeTimeBindingBehavior, K as RelativeTimeValueConverter, A as Signals, TranslationAttributePattern, TranslationBindAttributePattern, TranslationBindBindingCommand, TranslationBindBindingInstruction, nt as TranslationBindBindingRenderer, tt as TranslationBindInstructionType, TranslationBinding, S as TranslationBindingBehavior, TranslationBindingCommand, TranslationBindingInstruction, Z as TranslationBindingRenderer, X as TranslationInstructionType, q as TranslationParametersAttributePattern, J as TranslationParametersBindingCommand, TranslationParametersBindingInstruction, Q as TranslationParametersBindingRenderer, G as TranslationParametersInstructionType, it as TranslationValueConverter };
-//# sourceMappingURL=index.mjs.map
+

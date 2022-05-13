@@ -2,7 +2,7 @@ import { noop as e, isArrayIndex as t, DI as n, Registration as i, emptyArray as
 
 import { IObserverLocator as o, valueConverter as l, IDirtyChecker as u, INodeObserverLocator as c, Scope as f, OverrideContext as h } from "@aurelia/runtime";
 
-import { StandardConfiguration as d, IPlatform as p, ITemplateCompiler as m, CustomElement as g, CustomAttribute as b, Aurelia as v, bindable as y, customElement as $ } from "@aurelia/runtime-html";
+import { StandardConfiguration as d, IPlatform as p, ITemplateCompiler as m, CustomElement as g, CustomAttribute as b, Aurelia as v, bindable as $, customElement as y } from "@aurelia/runtime-html";
 
 import { BrowserPlatform as x } from "@aurelia/platform-browser";
 
@@ -12,18 +12,18 @@ const A = Object.keys;
 
 const R = Object.is;
 
-const q = Object.freeze;
+const M = Object.freeze;
 
-const M = Object.assign;
+const q = Object.assign;
 
 const L = Number.isNaN;
 
-const z = Reflect.apply;
+const T = Reflect.apply;
 
-const T = ArrayBuffer.isView;
+const z = ArrayBuffer.isView;
 
 function F(e) {
-    return (t, ...n) => z(e, t, n);
+    return (t, ...n) => T(e, t, n);
 }
 
 const N = F(Object.prototype.hasOwnProperty);
@@ -138,11 +138,11 @@ function ve(e) {
     return e instanceof Symbol;
 }
 
-function ye(e) {
+function $e(e) {
     return me(e) || ge(e) || be(e) || ve(e);
 }
 
-function $e(e) {
+function ye(e) {
     return void 0 !== I(e);
 }
 
@@ -186,11 +186,11 @@ function Re(e) {
     return "[object Arguments]" === D(e);
 }
 
-function qe(e) {
+function Me(e) {
     return "[object DataView]" === D(e);
 }
 
-function Me(e) {
+function qe(e) {
     return "[object Promise]" === D(e);
 }
 
@@ -198,11 +198,11 @@ function Le(e) {
     return "[object WeakSet]" === D(e);
 }
 
-function ze(e) {
+function Te(e) {
     return "[object WeakMap]" === D(e);
 }
 
-function Te(e, n) {
+function ze(e, n) {
     if (n) return S(e).filter((e => !t(e))); else return A(e).filter((e => !t(e)));
 }
 
@@ -210,7 +210,7 @@ function Fe(e, t) {
     return t.filter((t => P(e, t)));
 }
 
-const Ne = q({
+const Ne = M({
     bold(e) {
         return `[1m${e}[22m`;
     },
@@ -279,7 +279,7 @@ function He(e, t) {
     return n;
 }
 
-const Je = q([ "\\u0000", "\\u0001", "\\u0002", "\\u0003", "\\u0004", "\\u0005", "\\u0006", "\\u0007", "\\b", "\\t", "\\n", "\\u000b", "\\f", "\\r", "\\u000e", "\\u000f", "\\u0010", "\\u0011", "\\u0012", "\\u0013", "\\u0014", "\\u0015", "\\u0016", "\\u0017", "\\u0018", "\\u0019", "\\u001a", "\\u001b", "\\u001c", "\\u001d", "\\u001e", "\\u001f", "", "", "", "", "", "", "", "\\'", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "\\\\" ]);
+const Je = M([ "\\u0000", "\\u0001", "\\u0002", "\\u0003", "\\u0004", "\\u0005", "\\u0006", "\\u0007", "\\b", "\\t", "\\n", "\\u000b", "\\f", "\\r", "\\u000e", "\\u000f", "\\u0010", "\\u0011", "\\u0012", "\\u0013", "\\u0014", "\\u0015", "\\u0016", "\\u0017", "\\u0018", "\\u0019", "\\u001a", "\\u001b", "\\u001c", "\\u001d", "\\u001e", "\\u001f", "", "", "", "", "", "", "", "\\'", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "\\\\" ]);
 
 function We(e, t) {
     if (-1 === t) return `"${e}"`;
@@ -475,8 +475,8 @@ function at(e, t, n, i) {
     if ("[object URLSearchParams]" === r) return at(Array.from(e.entries()), Array.from(t.entries()), n, i);
     if (Array.isArray(e)) {
         if (e.length !== t.length) return false;
-        const r = Te(e, false);
-        const a = Te(t, false);
+        const r = ze(e, false);
+        const a = ze(t, false);
         if (r.length !== a.length) return false;
         return st(e, t, n, i, 1, r);
     }
@@ -487,12 +487,12 @@ function at(e, t, n, i) {
         if (!Ze(e, t)) return false;
     } else if (pe(e)) {
         if (e.message !== t.message || e.name !== t.name) return false;
-    } else if (T(e)) {
+    } else if (z(e)) {
         if (!n && (je(e) || Ae(e))) {
             if (!et(e, t)) return false;
         } else if (!nt(e, t)) return false;
-        const r = Te(e, false);
-        const a = Te(t, false);
+        const r = ze(e, false);
+        const a = ze(t, false);
         if (r.length !== a.length) return false;
         return st(e, t, n, i, 0, r);
     } else if (he(e)) {
@@ -503,7 +503,7 @@ function at(e, t, n, i) {
         return st(e, t, n, i, 3);
     } else if (oe(e)) {
         if (!it(e, t)) return false;
-    } else if (ye(e) && !rt(e, t)) return false;
+    } else if ($e(e) && !rt(e, t)) return false;
     return st(e, t, n, i, 0);
 }
 
@@ -780,12 +780,12 @@ let bt;
 
 let vt;
 
-function yt(e) {
+function $t(e) {
     bt = e;
     vt = i.instance(p, e);
 }
 
-function $t(...e) {
+function yt(...e) {
     return n.createContainer().register(vt, ...e);
 }
 
@@ -806,7 +806,7 @@ function kt(e) {
     return e.name === xt && e.message === wt;
 }
 
-const Ct = q({
+const Ct = M({
     showHidden: false,
     depth: 2,
     colors: true,
@@ -818,7 +818,7 @@ const Ct = q({
     sorted: false,
     getters: false,
     userOptions: void 0,
-    stylize: qt
+    stylize: Mt
 });
 
 const St = A(Ct);
@@ -826,7 +826,7 @@ const St = A(Ct);
 function Ot(e) {
     const t = {};
     for (const n of St) t[n] = e[n];
-    if (void 0 !== e.userOptions) M(t, e.userOptions);
+    if (void 0 !== e.userOptions) q(t, e.userOptions);
     return t;
 }
 
@@ -837,14 +837,14 @@ function Et(e) {
         indentationLvl: 0,
         seen: [],
         currentDepth: 0,
-        stylize: e.colors ? qt : Mt
+        stylize: e.colors ? Mt : qt
     };
     for (const n of St) if (N(e, n)) t[n] = e[n];
     if (void 0 === t.userOptions) t.userOptions = e;
     return t;
 }
 
-const jt = q({
+const jt = M({
     special: "cyan",
     number: "yellow",
     boolean: "yellow",
@@ -856,7 +856,7 @@ const jt = q({
     regexp: "red"
 });
 
-const At = q({
+const At = M({
     deepStrictEqual: "Expected values to be strictly deep-equal:",
     strictEqual: "Expected values to be strictly equal:",
     strictEqualObject: 'Expected "actual" to be reference-equal to "expected":',
@@ -872,12 +872,12 @@ const At = q({
 
 const Rt = Symbol.for("customInspect");
 
-function qt(e, t) {
+function Mt(e, t) {
     const n = jt[t];
     if (ee(n)) return Ne[n](e); else return e;
 }
 
-function Mt(e, t) {
+function qt(e, t) {
     return e;
 }
 
@@ -887,9 +887,9 @@ class AssertionError extends Error {
         const s = Error.stackTraceLimit;
         Error.stackTraceLimit = 0;
         let o = null == i ? "" : `${i} - `;
-        if ("deepStrictEqual" === r || "strictEqual" === r) super(`${o}${zt(t, n, r)}`); else if ("notDeepStrictEqual" === r || "notStrictEqual" === r) {
+        if ("deepStrictEqual" === r || "strictEqual" === r) super(`${o}${Tt(t, n, r)}`); else if ("notDeepStrictEqual" === r || "notStrictEqual" === r) {
             let e = At[r];
-            let n = Mn(t).split("\n");
+            let n = qn(t).split("\n");
             if ("notStrictEqual" === r && ie(t)) e = At.notStrictEqualObject;
             if (n.length > 30) {
                 n[26] = Ne.blue("...");
@@ -897,14 +897,14 @@ class AssertionError extends Error {
             }
             if (1 === n.length) super(`${o}${e} ${n[0]}`); else super(`${o}${e}\n\n${He(n, "\n")}\n`);
         } else {
-            let e = Mn(t);
+            let e = qn(t);
             let i = "";
             const a = At[r];
             if ("notDeepEqual" === r || "notEqual" === r) {
                 e = `${At[r]}\n\n${e}`;
                 if (e.length > 1024) e = `${e.slice(0, 1021)}...`;
             } else {
-                i = `${Mn(n)}`;
+                i = `${qn(n)}`;
                 if (e.length > 512) e = `${e.slice(0, 509)}...`;
                 if (i.length > 512) i = `${i.slice(0, 509)}...`;
                 if ("deepEqual" === r || "equal" === r) e = `${a}\n\n${e}\n\nshould equal\n\n`; else i = ` ${r} ${i}`;
@@ -938,7 +938,7 @@ class AssertionError extends Error {
         return `${this.name} [${this.code}]: ${this.message}`;
     }
     [Rt](e, t) {
-        return qn(this, {
+        return Mn(this, {
             ...t,
             customInspect: false,
             depth: 0
@@ -948,15 +948,15 @@ class AssertionError extends Error {
 
 const Lt = 10;
 
-function zt(e, t, n) {
+function Tt(e, t, n) {
     let i = "";
     let r = "";
     let a = 0;
     let s = "";
     let o = false;
-    const l = Mn(e);
+    const l = qn(e);
     const u = l.split("\n");
-    const c = Mn(t).split("\n");
+    const c = qn(t).split("\n");
     let f = 0;
     let h = "";
     if ("strictEqual" === n && ie(e) && ie(t)) n = "strictEqualObject";
@@ -1072,7 +1072,7 @@ function zt(e, t, n) {
     return `${b}${o ? v : ""}\n${r}${i}${s}${h}`;
 }
 
-const Tt = 0;
+const zt = 0;
 
 const Ft = 1;
 
@@ -1145,7 +1145,7 @@ function _t(e, t, n, i, r) {
     throw t;
 }
 
-const Gt = q([ "BYTES_PER_ELEMENT", "length", "byteLength", "byteOffset", "buffer" ]);
+const Gt = M([ "BYTES_PER_ELEMENT", "length", "byteLength", "byteOffset", "buffer" ]);
 
 function Yt(e) {
     const t = [];
@@ -1191,7 +1191,7 @@ function Xt(e, t) {
         ...t,
         customInspect: false
     };
-    return `<${qn(n, i)}>`;
+    return `<${Mn(n, i)}>`;
 }
 
 function Zt() {
@@ -1207,7 +1207,7 @@ function en(e, t, n) {
     return `${e} `;
 }
 
-const tn = dn.bind(null, Mt);
+const tn = dn.bind(null, qt);
 
 function nn(e, t) {
     let n;
@@ -1226,7 +1226,7 @@ function rn(e, t) {
     return e || t || "Object";
 }
 
-const an = q([ [ xe, Uint8Array ], [ we, Uint8ClampedArray ], [ ke, Uint16Array ], [ Ce, Uint32Array ], [ Se, Int8Array ], [ Oe, Int16Array ], [ Ee, Int32Array ], [ je, Float32Array ], [ Ae, Float64Array ] ]);
+const an = M([ [ xe, Uint8Array ], [ we, Uint8ClampedArray ], [ ke, Uint16Array ], [ Ce, Uint32Array ], [ Se, Int8Array ], [ Oe, Int16Array ], [ Ee, Int32Array ], [ je, Float32Array ], [ Ae, Float64Array ] ]);
 
 const sn = an.length;
 
@@ -1276,7 +1276,7 @@ function fn(e, t, n) {
     } else if (Array.isArray(t)) {
         const e = cn(Array, "Array");
         i = new e(t.length);
-    } else if ($e(t)) {
+    } else if (ye(t)) {
         const e = on(t);
         const n = cn(e, e.name);
         i = new n(t);
@@ -1402,7 +1402,7 @@ function vn(e, t, n) {
     return a;
 }
 
-function yn(e, t, n) {
+function $n(e, t, n) {
     const i = [];
     e.indentationLvl += 2;
     for (const r of t) i.push(Rn(e, r, n));
@@ -1411,7 +1411,7 @@ function yn(e, t, n) {
     return i;
 }
 
-function $n(e, t, n) {
+function yn(e, t, n) {
     const i = [];
     e.indentationLvl += 2;
     for (const [r, a] of t) i.push(`${Rn(e, r, n)} => ${Rn(e, a, n)}`);
@@ -1499,7 +1499,7 @@ function jn(e, t, n, i, r) {
         enumerable: true
     };
     if (void 0 !== l.value) {
-        const t = r !== Tt || true !== e.compact ? 2 : 3;
+        const t = r !== zt || true !== e.compact ? 2 : 3;
         e.indentationLvl += t;
         s = Rn(e, l.value, n);
         if (3 === t) {
@@ -1551,11 +1551,11 @@ function An(e, t, n, i) {
     let u;
     let c = true;
     let f = 0;
-    let h = Tt;
+    let h = zt;
     if (t[Symbol.iterator]) {
         c = false;
         if (Array.isArray(t)) {
-            r = Te(t, e.showHidden);
+            r = ze(t, e.showHidden);
             const n = en(a, s, "Array");
             u = [ `${"Array " === n ? "" : n}[`, "]" ];
             if (0 === t.length && 0 === r.length) return `${u[0]}]`;
@@ -1566,15 +1566,15 @@ function An(e, t, n, i) {
             const n = en(a, s, "Set");
             if (0 === t.size && 0 === r.length) return `${n}{}`;
             u = [ `${n}{`, "}" ];
-            l = yn;
+            l = $n;
         } else if (ue(t)) {
             r = nn(t, e.showHidden);
             const n = en(a, s, "Map");
             if (0 === t.size && 0 === r.length) return `${n}{}`;
             u = [ `${n}{`, "}" ];
-            l = $n;
-        } else if ($e(t)) {
-            r = Te(t, e.showHidden);
+            l = yn;
+        } else if (ye(t)) {
+            r = ze(t, e.showHidden);
             const n = null !== a ? en(a, s) : en(a, s, on(t).name);
             u = [ `${n}[`, "]" ];
             if (0 === t.length && 0 === r.length && !e.showHidden) return `${u[0]}]`;
@@ -1631,19 +1631,19 @@ function An(e, t, n, i) {
             if (void 0 === i) l = gn; else if (0 === r.length) return `${o}{ byteLength: ${hn(e.stylize, t.byteLength)} }`;
             u[0] = `${o}{`;
             r.unshift("byteLength");
-        } else if (qe(t)) {
+        } else if (Me(t)) {
             u[0] = `${en(a, s, "DataView")}{`;
             r.unshift("byteLength", "byteOffset", "buffer");
-        } else if (Me(t)) {
+        } else if (qe(t)) {
             u[0] = `${en(a, s, "Promise")}{`;
             l = En;
         } else if (Le(t)) {
             u[0] = `${en(a, s, "WeakSet")}{`;
             l = e.showHidden ? Cn : kn;
-        } else if (ze(t)) {
+        } else if (Te(t)) {
             u[0] = `${en(a, s, "WeakMap")}{`;
             l = e.showHidden ? Sn : kn;
-        } else if (ye(t)) {
+        } else if ($e(t)) {
             let n;
             if (me(t)) {
                 o = `[Number: ${tn(K(t), e)}]`;
@@ -1694,7 +1694,7 @@ function An(e, t, n, i) {
     e.seen.pop();
     if (e.sorted) {
         const t = true === e.sorted ? void 0 : e.sorted;
-        if (h === Tt) d.sort(t); else if (r.length > 1) {
+        if (h === zt) d.sort(t); else if (r.length > 1) {
             const e = d.slice(d.length - r.length).sort(t);
             d.splice(d.length - r.length, r.length, ...e);
         }
@@ -1722,7 +1722,7 @@ function Rn(e, t, n, i) {
     }
     if (e.customInspect) {
         const i = t[Rt];
-        if (re(i) && i !== qn && !(t.constructor && t.constructor.prototype === t)) {
+        if (re(i) && i !== Mn && !(t.constructor && t.constructor.prototype === t)) {
             const r = null === e.depth ? null : e.depth - n;
             const a = i.call(t, r, Ot(e));
             if (a !== t) {
@@ -1735,13 +1735,13 @@ function Rn(e, t, n, i) {
     return An(e, t, n, i);
 }
 
-function qn(e, t = {}) {
+function Mn(e, t = {}) {
     const n = Et(t);
     return Rn(n, e, 0);
 }
 
-function Mn(e) {
-    return qn(e, {
+function qn(e) {
+    return Mn(e, {
         compact: false,
         customInspect: false,
         depth: 100,
@@ -1775,18 +1775,18 @@ function Ln(e, t, n, i, r) {
     }
 }
 
-function zn(e, t) {
+function Tn(e, t) {
     var n, i, r;
     const a = null !== (i = null !== (n = t.parentNode) && void 0 !== n ? n : t.host) && void 0 !== i ? i : null;
     if (null === a || a === e) return null;
-    return null !== (r = a.nextSibling) && void 0 !== r ? r : zn(e, a);
+    return null !== (r = a.nextSibling) && void 0 !== r ? r : Tn(e, a);
 }
 
-function Tn(e, t) {
+function zn(e, t) {
     var n, i, r, a, s;
     return null !== (s = null !== (a = null !== (r = null === (i = null === (n = g.for(t, {
         optional: true
-    })) || void 0 === n ? void 0 : n.shadowRoot) || void 0 === i ? void 0 : i.firstChild) && void 0 !== r ? r : t.firstChild) && void 0 !== a ? a : t.nextSibling) && void 0 !== s ? s : zn(e, t);
+    })) || void 0 === n ? void 0 : n.shadowRoot) || void 0 === i ? void 0 : i.firstChild) && void 0 !== r ? r : t.firstChild) && void 0 !== a ? a : t.nextSibling) && void 0 !== s ? s : Tn(e, t);
 }
 
 function Fn(e, t) {
@@ -1797,7 +1797,7 @@ function Fn(e, t) {
     })) || void 0 === n ? void 0 : n.shadowRoot) || void 0 === i ? void 0 : i.firstChild) && void 0 !== r ? r : e.firstChild;
     while (null !== s) {
         if (3 === s.nodeType) a += s.data;
-        s = Tn(e, s);
+        s = zn(e, s);
     }
     return t && a ? a.replace(/\s\s+/g, " ").trim() : a;
 }
@@ -2250,23 +2250,23 @@ function vi(e, t, n) {
     });
 }
 
-function yi(e, t, n) {
+function $i(e, t, n) {
     if (!R(e, t)) Dn({
         actual: e,
         expected: t,
         message: n,
         operator: "strictEqual",
-        stackStartFn: yi
+        stackStartFn: $i
     });
 }
 
-function $i(e, t, n) {
+function yi(e, t, n) {
     if (R(e, t)) Dn({
         actual: e,
         expected: t,
         message: n,
         operator: "notStrictEqual",
-        stackStartFn: $i
+        stackStartFn: yi
     });
 }
 
@@ -2381,7 +2381,7 @@ function Ri(e, t, n) {
     }
 }
 
-function qi(e, t, n) {
+function Mi(e, t, n) {
     const i = Ai(e, t);
     if (i.isMatch) {
         const e = Object.entries(t).map((([e, t]) => `${e}:${t}`)).join(",");
@@ -2390,12 +2390,12 @@ function qi(e, t, n) {
             expected: e,
             message: n,
             operator: "!=",
-            stackStartFn: qi
+            stackStartFn: Mi
         });
     }
 }
 
-const Mi = function() {
+const qi = function() {
     function e(e) {
         return (10 * e + .5 | 0) / 10;
     }
@@ -2453,7 +2453,7 @@ const Mi = function() {
     };
 }();
 
-const Li = q({
+const Li = M({
     throws: Yn,
     doesNotThrow: Qn,
     rejects: Kn,
@@ -2477,30 +2477,30 @@ const Li = q({
     notDeepEqual: gi,
     deepStrictEqual: bi,
     notDeepStrictEqual: vi,
-    strictEqual: yi,
-    notStrictEqual: $i,
+    strictEqual: $i,
+    notStrictEqual: yi,
     match: xi,
     notMatch: wi,
     visibleTextEqual: ti,
-    areTaskQueuesEmpty: Mi,
+    areTaskQueuesEmpty: qi,
     isCustomElementType: ki,
     isCustomAttributeType: Ci,
     strict: {
         deepEqual: bi,
         notDeepEqual: vi,
-        equal: yi,
-        notEqual: $i
+        equal: $i,
+        notEqual: yi
     },
     html: {
         textContent: Oi,
         innerEqual: ji,
         value: Ei,
         computedStyle: Ri,
-        notComputedStyle: qi
+        notComputedStyle: Mi
     }
 });
 
-const zi = {
+const Ti = {
     "align-content": {
         values: [ "baseline", "center", "end", "first baseline", "flex-end", "flex-start", "inherit", "initial", "last baseline", "normal", "safe", "space-around", "space-between", "space-evenly", "start", "stretch", "unsafe", "unset" ]
     },
@@ -3472,7 +3472,7 @@ const zi = {
     }
 };
 
-const Ti = [ ":after", ":before", ":backdrop", ":cue", ":first-letter", ":first-line", ":selection", ":placeholder" ];
+const zi = [ ":after", ":before", ":backdrop", ":cue", ":first-letter", ":first-line", ":selection", ":placeholder" ];
 
 const Fi = [ "xml:lang", "xml:base", "accesskey", "autocapitalize", "aria-foo", "class", "contenteditable", "contextmenu", "data-foo", "dir", "draggable", "dropzone", "hidden", "id", "is", "itemid", "itemprop", "itemref", "itemscope", "itemtype", "lang", "slot", "spellcheck", "style", "tabindex", "title", "translate", "onabort", "onautocomplete", "onautocompleteerror", "onblur", "oncancel", "oncanplay", "oncanplaythrough", "onchange", "onclick", "onclose", "oncontextmenu", "oncuechange", "ondblclick", "ondrag", "ondragend", "ondragenter", "ondragexit", "ondragleave", "ondragover", "ondragstart", "ondrop", "ondurationchange", "onemptied", "onended", "onerror", "onfocus", "oninput", "oninvalid", "onkeydown", "onkeypress", "onkeyup", "onload", "onloadeddata", "onloadedmetadata", "onloadstart", "onmousedown", "onmouseenter", "onmouseleave", "onmousemove", "onmouseout", "onmouseover", "onmouseup", "onmousewheel", "onpause", "onplay", "onplaying", "onprogress", "onratechange", "onreset", "onresize", "onscroll", "onseeked", "onseeking", "onselect", "onshow", "onsort", "onstalled", "onsubmit", "onsuspend", "ontimeupdate", "ontoggle", "onvolumechange", "onwaiting" ];
 
@@ -3686,36 +3686,51 @@ function Ki(e, t, n = [], i = true, r = TestContext.create()) {
         if (0 === t.length) throw new Error(`No element found for selector: "${e}"`);
         return t[0];
     };
-    const y = e => Array.from(u.querySelectorAll(e));
-    const $ = e => {
+    const $ = e => Array.from(u.querySelectorAll(e));
+    const y = e => {
         const t = u.querySelectorAll(e);
         if (t.length > 1) throw new Error(`There is more than 1 element with selector "${e}": ${t.length} found`);
         return 0 === t.length ? null : t[0];
     };
     const x = (e, t) => {
         if (2 === arguments.length) {
-            const n = $(e);
+            const n = y(e);
             if (null === n) throw new Error(`No element found for selector "${e}" to compare text content with "${t}"`);
             Li.strictEqual(n.textContent, t);
         } else Li.strictEqual(u.textContent, e);
     };
-    const w = (e, t, n) => {
-        const i = $(e);
+    const w = (e, t) => {
+        if (2 === arguments.length) {
+            const n = y(e);
+            if (null === n) throw new Error(`No element found for selector "${e}" to compare innerHTML with "${t}"`);
+            Li.strictEqual(n.innerHTML, t);
+        } else Li.strictEqual(u.innerHTML, e);
+    };
+    const k = (e, t, n) => {
+        const i = y(e);
         if (null === i) throw new Error(`No element found for selector "${e}" to fire event "${t}"`);
         i.dispatchEvent(new r.CustomEvent(t, n));
     };
-    [ "click", "change", "input" ].forEach((e => {
-        Object.defineProperty(w, e, {
+    [ "click", "change", "input", "scroll" ].forEach((e => {
+        Object.defineProperty(k, e, {
             configurable: true,
             writable: true,
             value: (t, n) => {
-                const i = $(t);
+                const i = y(t);
                 if (null === i) throw new Error(`No element found for selector "${t}" to fire event "${e}"`);
                 i.dispatchEvent(new r.CustomEvent(e, n));
             }
         });
     }));
-    const k = new class Results {
+    const C = (e, t) => {
+        const n = y(e);
+        if (null === n) throw new Error(`No element found for selector "${e}" to scroll by "${JSON.stringify(t)}"`);
+        n.scrollBy("number" === typeof t ? {
+            top: t
+        } : t);
+        n.dispatchEvent(new Event("scroll"));
+    };
+    const S = new class Results {
         constructor() {
             this.startPromise = p;
             this.ctx = r;
@@ -3728,10 +3743,12 @@ function Ki(e, t, n = [], i = true, r = TestContext.create()) {
             this.component = d;
             this.observerLocator = o;
             this.getBy = b;
-            this.getAllBy = y;
-            this.queryBy = $;
+            this.getAllBy = $;
+            this.queryBy = y;
             this.assertText = x;
-            this.trigger = w;
+            this.assertHtml = w;
+            this.trigger = k;
+            this.scrollBy = C;
         }
         async start() {
             await c.app({
@@ -3755,11 +3772,12 @@ function Ki(e, t, n = [], i = true, r = TestContext.create()) {
             return m > 0;
         }
         get started() {
-            return Promise.resolve(p).then((() => this));
+            if (p instanceof Promise) return Promise.resolve(p).then((() => this));
+            return Promise.resolve(this);
         }
     };
-    Gi.publish("fixture:created", k);
-    return k;
+    Gi.publish("fixture:created", S);
+    return S;
 }
 
 class FixtureBuilder {
@@ -4093,8 +4111,8 @@ class SpySubscriber {
     constructor() {
         this.A = void 0;
         this.R = void 0;
-        this.q = void 0;
-        this.M = 0;
+        this.M = void 0;
+        this.q = 0;
     }
     get changes() {
         if (void 0 === this.A) return r;
@@ -4105,8 +4123,8 @@ class SpySubscriber {
         return this.R;
     }
     get collectionChanges() {
-        if (void 0 === this.q) return r;
-        return this.q;
+        if (void 0 === this.M) return r;
+        return this.M;
     }
     get hasChanges() {
         return void 0 !== this.A;
@@ -4115,19 +4133,19 @@ class SpySubscriber {
         return void 0 !== this.R;
     }
     get hasCollectionChanges() {
-        return void 0 !== this.q;
+        return void 0 !== this.M;
     }
     get callCount() {
-        return this.M;
+        return this.q;
     }
     handleChange(e, t, n) {
-        if (void 0 === this.A) this.A = [ new ChangeSet(this.M++, n, e, t) ]; else this.A.push(new ChangeSet(this.M++, n, e, t));
+        if (void 0 === this.A) this.A = [ new ChangeSet(this.q++, n, e, t) ]; else this.A.push(new ChangeSet(this.q++, n, e, t));
     }
     handleProxyChange(e, t, n, i) {
-        if (void 0 === this.R) this.R = [ new ProxyChangeSet(this.M++, i, e, t, n) ]; else this.R.push(new ProxyChangeSet(this.M++, i, e, t, n));
+        if (void 0 === this.R) this.R = [ new ProxyChangeSet(this.q++, i, e, t, n) ]; else this.R.push(new ProxyChangeSet(this.q++, i, e, t, n));
     }
     handleCollectionChange(e, t) {
-        if (void 0 === this.q) this.q = [ new CollectionChangeSet(this.M++, t, e) ]; else this.q.push(new CollectionChangeSet(this.M++, t, e));
+        if (void 0 === this.M) this.M = [ new CollectionChangeSet(this.q++, t, e) ]; else this.M.push(new CollectionChangeSet(this.q++, t, e));
     }
     dispose() {
         if (void 0 !== this.A) {
@@ -4138,11 +4156,11 @@ class SpySubscriber {
             this.R.forEach((e => e.dispose()));
             this.R = void 0;
         }
-        if (void 0 !== this.q) {
-            this.q.forEach((e => e.dispose()));
-            this.q = void 0;
+        if (void 0 !== this.M) {
+            this.M.forEach((e => e.dispose()));
+            this.M = void 0;
         }
-        this.M = 0;
+        this.q = 0;
     }
 }
 
@@ -4177,9 +4195,9 @@ er = Xi([ l("json") ], er);
 
 let tr = class NameTag {};
 
-Xi([ y() ], tr.prototype, "name", void 0);
+Xi([ $() ], tr.prototype, "name", void 0);
 
-tr = Xi([ $({
+tr = Xi([ y({
     name: "name-tag",
     template: `<template>\${name}</template>`,
     needsCompile: true,
@@ -4333,7 +4351,7 @@ function hr(e, t) {
 
 function dr(e) {
     let t;
-    if (void 0 === e || !("get" in e)) t = $t(); else t = e;
+    if (void 0 === e || !("get" in e)) t = yt(); else t = e;
     const n = {
         handles() {
             return false;
@@ -4379,7 +4397,7 @@ function mr(e, t) {
             const i = a.value;
             const r = function(...n) {
                 t.addCall(this, e, ...n);
-                return z(i, this, n);
+                return T(i, this, n);
             };
             Reflect.defineProperty(r, "original", {
                 value: i,
@@ -4399,7 +4417,7 @@ function mr(e, t) {
             if (i) {
                 o = function() {
                     t.addCall(this, `get ${e}`, r);
-                    return z(i, this, r);
+                    return T(i, this, r);
                 };
                 Reflect.defineProperty(o, "original", {
                     value: i
@@ -4408,7 +4426,7 @@ function mr(e, t) {
             if (s) {
                 l = function(n) {
                     t.addCall(this, `get ${e}`, r);
-                    z(s, this, [ n ]);
+                    T(s, this, [ n ]);
                 };
                 Reflect.defineProperty(l, "original", {
                     value: s
@@ -4450,5 +4468,5 @@ function br(e) {
     };
 }
 
-export { zi as CSS_PROPERTIES, Call, CallCollection, ChangeSet, CollectionChangeSet, er as JsonValueConverter, MockBinding, MockBindingBehavior, MockBrowserHistoryLocation, MockContext, MockPropertySubscriber, MockServiceLocator, MockSignaler, MockTracingExpression, MockValueConverter, bt as PLATFORM, vt as PLATFORMRegistration, Ti as PSEUDO_ELEMENTS, ProxyChangeSet, Zi as SortValueConverter, SpySubscriber, ir as TestConfiguration, TestContext, rr as _, Li as assert, $t as createContainer, Ki as createFixture, dr as createObserverLocator, pr as createScopeForTest, Qe as createSpy, Bi as eachCartesianJoin, Ii as eachCartesianJoinAsync, Ni as eachCartesianJoinFactory, Bn as ensureTaskQueuesEmpty, ei as fail, Vi as generateCartesianProduct, Fn as getVisibleText, Fi as globalAttributeNames, Hi as h, _i as hJsx, cr as htmlStringify, qn as inspect, Nn as instructionTypeName, ur as jsonStringify, Yi as onFixtureCreated, hr as padLeft, fr as padRight, mr as recordCalls, yt as setPlatform, gr as stopRecordingCalls, lr as stringify, br as trace, Ke as trimFull, Pn as verifyBindingInstructionsEqual, Ln as verifyEqual };
+export { Ti as CSS_PROPERTIES, Call, CallCollection, ChangeSet, CollectionChangeSet, er as JsonValueConverter, MockBinding, MockBindingBehavior, MockBrowserHistoryLocation, MockContext, MockPropertySubscriber, MockServiceLocator, MockSignaler, MockTracingExpression, MockValueConverter, bt as PLATFORM, vt as PLATFORMRegistration, zi as PSEUDO_ELEMENTS, ProxyChangeSet, Zi as SortValueConverter, SpySubscriber, ir as TestConfiguration, TestContext, rr as _, Li as assert, yt as createContainer, Ki as createFixture, dr as createObserverLocator, pr as createScopeForTest, Qe as createSpy, Bi as eachCartesianJoin, Ii as eachCartesianJoinAsync, Ni as eachCartesianJoinFactory, Bn as ensureTaskQueuesEmpty, ei as fail, Vi as generateCartesianProduct, Fn as getVisibleText, Fi as globalAttributeNames, Hi as h, _i as hJsx, cr as htmlStringify, Mn as inspect, Nn as instructionTypeName, ur as jsonStringify, Yi as onFixtureCreated, hr as padLeft, fr as padRight, mr as recordCalls, $t as setPlatform, gr as stopRecordingCalls, lr as stringify, br as trace, Ke as trimFull, Pn as verifyBindingInstructionsEqual, Ln as verifyEqual };
 //# sourceMappingURL=index.mjs.map

@@ -55,4 +55,4 @@ class Aurelia extends o {
 }
 
 export { Aurelia, n as PLATFORM, Aurelia as default };
-//# sourceMappingURL=index.mjs.map
+
