@@ -13,9 +13,6 @@ declare abstract class FlagsTemplateController implements ICustomAttributeViewMo
     dispose(): void;
     accept(visitor: ControllerVisitor): void | true;
 }
-export declare class FrequentMutations extends FlagsTemplateController {
-    constructor(factory: IViewFactory, location: IRenderLocation);
-}
 export declare class ObserveShallow extends FlagsTemplateController {
     constructor(factory: IViewFactory, location: IRenderLocation);
 }

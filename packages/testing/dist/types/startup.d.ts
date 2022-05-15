@@ -4,6 +4,11 @@ import { Aurelia, IPlatform, type ICustomElementViewModel } from '@aurelia/runti
 import { TestContext } from './test-context';
 export declare const onFixtureCreated: <T>(callback: (fixture: IFixture<T>) => unknown) => import("@aurelia/kernel").IDisposable;
 export declare function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>(template: string | Node, $class?: T, registrations?: unknown[], autoStart?: boolean, ctx?: TestContext): IFixture<ICustomElementViewModel & K>;
+export declare namespace createFixture {
+    var html: <T = Record<string, any>>(html: string | TemplateStringsArray, ...values: TemplateValues<T>[]) => CreateBuilder<T, "component" | "deps">;
+    var component: <T>(component: T) => CreateBuilder<T, "html" | "deps">;
+    var deps: <T = Record<string, any>>(...deps: unknown[]) => CreateBuilder<T, "html" | "component">;
+}
 export interface IFixture<T> {
     readonly startPromise: void | Promise<void>;
     readonly ctx: TestContext;
@@ -17,17 +22,78 @@ export interface IFixture<T> {
     readonly observerLocator: IObserverLocator;
     readonly torn: boolean;
     start(): Promise<void>;
-    tearDown(): Promise<void>;
-    readonly promise: Promise<IFixture<T>>;
-    getBy(selector: string): HTMLElement;
-    getAllBy(selector: string): HTMLElement[];
-    queryBy(selector: string): HTMLElement | null;
+    tearDown(): void | Promise<void>;
+    readonly started: Promise<IFixture<T>>;
+    /**
+     * Returns the first element that is a descendant of node that matches selectors, and throw if there is more than one, or none found
+     */
+    getBy<K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K];
+    getBy<K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K];
+    getBy<E extends HTMLElement = HTMLElement>(selectors: string): E | null;
+    /**
+     * Returns all element descendants of node that match selectors.
+     */
+    getAllBy<K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K][];
+    getAllBy<K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K][];
+    getAllBy<E extends HTMLElement = HTMLElement>(selectors: string): E[];
+    /**
+     * Returns the first element that is a descendant of node that matches selectors, and null if none found
+     */
+    queryBy<K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null;
+    queryBy<K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null;
+    queryBy<E extends HTMLElement = HTMLElement>(selectors: string): E | null;
+    /**
+     * Assert the text content of the current application host equals to a given string
+     */
+    assertText(text: string): void;
+    /**
+     * Assert the text content of an element matching the given selector inside the application host equals to a given string.
+     *
+     * Will throw if there' more than one elements with matching selector
+     */
     assertText(selector: string, text: string): void;
+    /**
+     * Assert the inner html of the current application host equals to the given html string
+     */
+    assertHtml(html: string): void;
+    /**
+     * Assert the inner html of an element matching the selector inside the current application host equals to the given html string.
+     *
+     * Will throw if there' more than one elements with matching selector
+     */
+    assertHtml(selector: string, html: string): void;
     trigger: ITrigger;
+    /**
+     * A helper to scroll and trigger a scroll even on an element matching the given selector
+     */
+    scrollBy(selector: string, options: number | ScrollToOptions): void;
 }
-export declare type ITrigger = ((selector: string, event: string, init: CustomEventInit) => void) & {
+export declare type ITrigger = ((selector: string, event: string, init?: CustomEventInit) => void) & {
     click(selector: string, init?: CustomEventInit): void;
     change(selector: string, init?: CustomEventInit): void;
     input(selector: string, init?: CustomEventInit): void;
+    scroll(selector: string, init?: CustomEventInit): void;
 };
+export interface IFixtureBuilderBase<T, E = {}> {
+    html(html: string): this & E;
+    html<M>(html: TemplateStringsArray, ...values: TemplateValues<M>[]): this & E;
+    component(comp: T): this & E;
+    deps(...args: unknown[]): this & E;
+}
+declare type BuilderMethodNames = 'html' | 'component' | 'deps';
+declare type CreateBuilder<T, Availables extends BuilderMethodNames = BuilderMethodNames> = {
+    [key in Availables]: key extends 'html' ? {
+        (html: string): CreateBuilder<T, Exclude<Availables, 'html'>> & {
+            build(): IFixture<T>;
+        };
+        (html: TemplateStringsArray, ...values: TemplateValues<T>[]): CreateBuilder<T, Exclude<Availables, 'html'>> & {
+            build(): IFixture<T>;
+        };
+    } : (...args: Parameters<IFixtureBuilderBase<T>[key]>) => CreateBuilder<T, Exclude<Availables, key>>;
+} & (never extends Availables ? {
+    build(): IFixture<T>;
+} : {});
+declare type TaggedTemplateLambda<M> = (vm: M) => unknown;
+declare type TemplateValues<M> = string | number | TaggedTemplateLambda<M>;
+export {};
 //# sourceMappingURL=startup.d.ts.map

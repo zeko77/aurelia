@@ -79,4 +79,4 @@ class BrowserPlatform extends t {
 }
 
 export { BrowserPlatform };
-//# sourceMappingURL=index.mjs.map
+

@@ -534,17 +534,17 @@ const K = {
         };
     },
     transient(t) {
-        t.register = function e(n) {
-            const r = Et.transient(t, t);
-            return r.register(n, t);
+        t.register = function(e) {
+            const n = Et.transient(t, t);
+            return n.register(e, t);
         };
         t.registerInRequestor = false;
         return t;
     },
     singleton(t, e = tt) {
-        t.register = function e(n) {
-            const r = Et.singleton(t, t);
-            return r.register(n, t);
+        t.register = function(e) {
+            const n = Et.singleton(t, t);
+            return n.register(e, t);
         };
         t.registerInRequestor = e.scoped;
         return t;
@@ -1616,4 +1616,4 @@ class EventAggregator {
 }
 
 export { AnalyzedModule, Dt as ColorOptions, Vt as ConsoleSink, ContainerConfiguration, K as DI, DefaultLogEvent, Ht as DefaultLogEventFactory, qt as DefaultLogger, G as DefaultResolver, EventAggregator, V as IContainer, Zt as IEventAggregator, Pt as ILogConfig, Nt as ILogEventFactory, Wt as ILogger, Xt as IModuleLoader, Ft as IPlatform, q as IServiceLocator, St as ISink, InstanceProvider, LogConfig, Tt as LogLevel, Jt as LoggerConfiguration, ModuleItem, N as Protocol, Et as Registration, rt as all, $ as bound, v as camelCase, b as compareNumber, Ot as emptyArray, kt as emptyObject, ut as factory, j as firstDefined, xt as format, B as fromAnnotationOrDefinitionOrTypeOrDefault, z as fromAnnotationOrTypeOrDefault, Q as fromDefinitionOrDefault, I as getPrototypeChain, ot as ignore, X as inject, f as isArrayIndex, k as isNativeFunction, a as isNumberOrBigInt, h as isStringOrDate, g as kebabCase, it as lazy, E as mergeArrays, C as mergeDistinct, A as mergeObjects, lt as newInstanceForScope, ct as newInstanceOf, p as nextId, Mt as noop, M as onResolve, st as optional, w as pascalCase, y as resetId, F as resolveAll, et as singleton, Qt as sink, R as toArray, Z as transient };
-//# sourceMappingURL=index.mjs.map
+

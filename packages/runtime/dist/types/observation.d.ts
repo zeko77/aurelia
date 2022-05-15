@@ -26,19 +26,15 @@ export declare enum BindingMode {
 }
 export declare const enum LifecycleFlags {
     none = 0,
-    persistentBindingFlags = 961,
-    allowParentScopeTraversal = 64,
-    observeLeafPropertiesOnly = 128,
-    targetObserverFlags = 769,
-    noFlush = 256,
-    persistentTargetObserverQueue = 512,
+    persistentBindingFlags = 97,
+    observeLeafPropertiesOnly = 32,
+    noFlush = 64,
     bindingStrategy = 1,
     isStrictBindingStrategy = 1,
     fromBind = 2,
     fromUnbind = 4,
     mustEvaluate = 8,
-    isTraversingParentScope = 16,
-    dispose = 32
+    dispose = 16
 }
 export interface IConnectable {
     observe(obj: object, key: PropertyKey): void;

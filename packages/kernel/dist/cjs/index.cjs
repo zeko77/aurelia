@@ -540,17 +540,17 @@ const Q = {
         };
     },
     transient(t) {
-        t.register = function e(r) {
-            const n = bt.transient(t, t);
-            return n.register(r, t);
+        t.register = function(e) {
+            const r = bt.transient(t, t);
+            return r.register(e, t);
         };
         t.registerInRequestor = false;
         return t;
     },
     singleton(t, e = Y) {
-        t.register = function e(r) {
-            const n = bt.singleton(t, t);
-            return n.register(r, t);
+        t.register = function(e) {
+            const r = bt.singleton(t, t);
+            return r.register(e, t);
         };
         t.registerInRequestor = e.scoped;
         return t;

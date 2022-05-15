@@ -296,4 +296,4 @@ function S(t, e = true, r = false, a = true, o = true) {
 }
 
 export { k as Metadata, S as applyMetadataPolyfill, e as isNullOrUndefined, t as isObject, g as metadata };
-//# sourceMappingURL=index.mjs.map
+

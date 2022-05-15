@@ -503,4 +503,4 @@ const C = {
 };
 
 export { ActionRegistrationError, m as DEFAULT_LOCAL_STORAGE_KEY, DevToolsRemoteDispatchError, R as LogLevel, E as MiddlewarePlacement, b as PerformanceMeasurement, ReducerNoStateError, j as STORE, O as Store, C as StoreConfiguration, UnregisteredActionError, v as applyLimits, x as connectTo, M as dispatchify, N as executeSteps, S as getLogType, w as isStateHistory, f as jump, A as localStorageMiddleware, T as logMiddleware, p as nextStateHistory, D as rehydrateFromLocalStorage };
-//# sourceMappingURL=index.mjs.map
+

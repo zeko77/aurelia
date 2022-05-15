@@ -1921,7 +1921,7 @@ class Viewport extends Endpoint$1 {
         var n;
         if (this.isEmpty) return;
         const s = this.router.statefulHistory || (null !== (n = this.options.stateful) && void 0 !== n ? n : false);
-        return Runner.run(t, (() => i.addEndpointState(this, "bound")), (() => i.waitForSyncState("bound")), (t => this.deactivate(t, null, this.connectedController, s ? 0 : 32)), (() => s ? this.dispose() : void 0));
+        return Runner.run(t, (() => i.addEndpointState(this, "bound")), (() => i.waitForSyncState("bound")), (t => this.deactivate(t, null, this.connectedController, s ? 0 : 16)), (() => s ? this.dispose() : void 0));
     }
     activate(t, i, n, s, e) {
         if (null !== this.activeContent.componentInstance) return Runner.run(t, (() => this.activeContent.canLoad()), (t => this.activeContent.load(t)), (t => this.activeContent.activateComponent(t, i, n, s, this.connectedCE, (() => null === e || void 0 === e ? void 0 : e.addEndpointState(this, "bound")), null === e || void 0 === e ? void 0 : e.waitForSyncState("bound"))));
@@ -4603,4 +4603,4 @@ RouterConfiguration.configurationCall = t => {
 };
 
 export { U as ConfigurableRoute, nt as ConsideredActiveCustomAttribute, ot as DefaultComponents, at as DefaultResources, Endpoint$1 as Endpoint, EndpointContent, FoundRoute, it as HrefCustomAttribute, ht as HrefCustomAttributeRegistration, B as ILinkHandler, L as IRouter, st as IRouterConfiguration, InstructionParameters, q as LinkHandler, tt as LoadCustomAttribute, ut as LoadCustomAttributeRegistration, Navigation, NavigationCoordinator, NavigationFlags, x as Navigator, F as RecognizedRoute, j as RecognizerEndpoint, Q as ReloadBehavior, Route, M as RouteRecognizer, Router, RouterConfiguration, RouterNavigationCancelEvent, RouterNavigationCompleteEvent, RouterNavigationEndEvent, RouterNavigationErrorEvent, RouterNavigationStartEvent, RouterOptions, et as RouterRegistration, RouterStartEvent, RouterStopEvent, A as Routes, RoutingHook, RoutingInstruction, RoutingScope, Runner, Step, Viewport, ViewportContent, Z as ViewportCustomElement, rt as ViewportCustomElementRegistration, ViewportOptions, ViewportScope, ViewportScopeContent, Y as ViewportScopeCustomElement, lt as ViewportScopeCustomElementRegistration, D as route, O as routes };
-//# sourceMappingURL=index.mjs.map
+

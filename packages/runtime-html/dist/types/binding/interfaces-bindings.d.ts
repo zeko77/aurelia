@@ -10,6 +10,6 @@ export declare const enum BindingFlags {
     /**
      * Indicates that a binding should only observe leaf properties in its expression
      */
-    leafOnly = 128
+    leafOnly = 32
 }
 //# sourceMappingURL=interfaces-bindings.d.ts.map

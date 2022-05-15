@@ -295,7 +295,7 @@ export declare const IRenderer: import("@aurelia/kernel").InterfaceSymbol<IRende
 declare type DecoratableInstructionRenderer<TType extends string, TProto, TClass> = Class<TProto & Partial<IInstructionTypeClassifier<TType> & Pick<IRenderer, 'render'>>, TClass> & Partial<IRegistry>;
 declare type DecoratedInstructionRenderer<TType extends string, TProto, TClass> = Class<TProto & IInstructionTypeClassifier<TType> & Pick<IRenderer, 'render'>, TClass> & IRegistry;
 declare type InstructionRendererDecorator<TType extends string> = <TProto, TClass>(target: DecoratableInstructionRenderer<TType, TProto, TClass>) => DecoratedInstructionRenderer<TType, TProto, TClass>;
-export declare function renderer<TType extends string>(instructionType: TType): InstructionRendererDecorator<TType>;
+export declare function renderer<TType extends string>(targetType: TType): InstructionRendererDecorator<TType>;
 export declare class SetPropertyRenderer implements IRenderer {
     target: InstructionType.setProperty;
     render(renderingCtrl: IHydratableController, target: IController, instruction: SetPropertyInstruction): void;

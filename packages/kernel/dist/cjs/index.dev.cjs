@@ -523,7 +523,7 @@ function cloneArrayWithPossibleProps(source) {
 const DefaultResolver = {
     none(key) {
         {
-            throw Error(`${key.toString()} not registered, did you forget to add @singleton()?`);
+            throw Error(`AUR0002: ${key.toString()} not registered, did you forget to add @singleton()?`);
         }
     },
     singleton(key) { return new Resolver(key, 1, key); },
@@ -563,7 +563,7 @@ const DI = {
         const Interface = function (target, property, index) {
             if (target == null || new.target !== undefined) {
                 {
-                    throw new Error(`No registration for interface: '${Interface.friendlyName}'`);
+                    throw new Error(`AUR0001: No registration for interface: '${Interface.friendlyName}'`);
                 }
             }
             const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
@@ -621,7 +621,7 @@ const DI = {
         };
     },
     transient(target) {
-        target.register = function register(container) {
+        target.register = function (container) {
             const registration = Registration.transient(target, target);
             return registration.register(container, target);
         };
@@ -629,7 +629,7 @@ const DI = {
         return target;
     },
     singleton(target, options = defaultSingletonOptions) {
-        target.register = function register(container) {
+        target.register = function (container) {
             const registration = Registration.singleton(target, target);
             return registration.register(container, target);
         };
@@ -802,7 +802,7 @@ class Resolver {
             case 1: {
                 if (this.resolving) {
                     {
-                        throw new Error(`Cyclic dependency found: ${this.state.name}`);
+                        throw new Error(`AUR0003: Cyclic dependency found: ${this.state.name}`);
                     }
                 }
                 this.resolving = true;
@@ -815,7 +815,7 @@ class Resolver {
                 const factory = handler.getFactory(this.state);
                 if (factory === null) {
                     {
-                        throw new Error(`Resolver for ${String(this.key)} returned a null factory`);
+                        throw new Error(`AUR0004: Resolver for ${String(this.key)} returned a null factory`);
                     }
                 }
                 return factory.construct(requestor);
@@ -828,7 +828,7 @@ class Resolver {
                 return requestor.get(this.state);
             default:
                 {
-                    throw new Error(`Invalid resolver strategy specified: ${this.strategy}.`);
+                    throw new Error(`AUR0005: Invalid resolver strategy specified: ${this.strategy}.`);
                 }
         }
     }
@@ -963,7 +963,7 @@ class Container {
     register(...params) {
         if (++this._registerDepth === 100) {
             {
-                throw new Error(`Unable to autoregister dependency: [${params.map(String)}]`);
+                throw new Error(`AUR0006: Unable to autoregister dependency: [${params.map(String)}]`);
             }
         }
         let current;
@@ -1028,7 +1028,7 @@ class Container {
             if (isResourceKey(key)) {
                 if (this.res[key] !== void 0) {
                     {
-                        throw new Error(`Resource key "${key}" already registered`);
+                        throw new Error(`AUR0007: Resource key "${key}" already registered`);
                     }
                 }
                 this.res[key] = resolver;
@@ -1111,7 +1111,7 @@ class Container {
             }
         }
         {
-            throw new Error(`Unable to resolve key: ${key}`);
+            throw new Error(`AUR0008: Unable to resolve key: ${key}`);
         }
     }
     getAll(key, searchAncestors = false) {
@@ -1240,12 +1240,12 @@ class Container {
     _jitRegister(keyAsValue, handler) {
         if (!isFunction(keyAsValue)) {
             {
-                throw new Error(`Attempted to jitRegister something that is not a constructor: '${keyAsValue}'. Did you forget to register this resource?`);
+                throw new Error(`AUR0009: Attempted to jitRegister something that is not a constructor: '${keyAsValue}'. Did you forget to register this resource?`);
             }
         }
         if (InstrinsicTypeNames.has(keyAsValue.name)) {
             {
-                throw new Error(`Attempted to jitRegister an intrinsic type: ${keyAsValue.name}. Did you forget to add @inject(Key)`);
+                throw new Error(`AUR0010: Attempted to jitRegister an intrinsic type: ${keyAsValue.name}. Did you forget to add @inject(Key)`);
             }
         }
         if (isRegistry(keyAsValue)) {
@@ -1256,7 +1256,7 @@ class Container {
                     return newResolver;
                 }
                 {
-                    throw new Error(`Invalid resolver returned from the static register method`);
+                    throw new Error(`AUR0011: Invalid resolver returned from the static register method`);
                 }
             }
             return registrationResolver;
@@ -1277,12 +1277,12 @@ class Container {
                 return newResolver;
             }
             {
-                throw new Error(`Invalid resolver returned from the static register method`);
+                throw new Error(`AUR0011: Invalid resolver returned from the static register method`);
             }
         }
         else if (keyAsValue.$isInterface) {
             {
-                throw new Error(`Attempted to jitRegister an interface: ${keyAsValue.friendlyName}`);
+                throw new Error(`AUR0012: Attempted to jitRegister an interface: ${keyAsValue.friendlyName}`);
             }
         }
         else {
@@ -1363,7 +1363,7 @@ class InstanceProvider {
     resolve() {
         if (this._instance == null) {
             {
-                throw new Error(`Cannot call resolve ${this._name} before calling prepare or after calling dispose.`);
+                throw new Error(`AUR0013: Cannot call resolve ${this._name} before calling prepare or after calling dispose.`);
             }
         }
         return this._instance;
@@ -1375,7 +1375,7 @@ class InstanceProvider {
 function validateKey(key) {
     if (key === null || key === void 0) {
         {
-            throw new Error('key/value cannot be null or undefined. Are you trying to inject/register something that doesn\'t exist with DI?');
+            throw new Error(`AUR0014: key/value cannot be null or undefined. Are you trying to inject/register something that doesn't exist with DI?`);
         }
     }
 }
@@ -1393,7 +1393,7 @@ function buildAllResponse(resolver, handler, requestor) {
 }
 function createNativeInvocationError(Type) {
     {
-        return new Error(`${Type.name} is a native function and therefore cannot be safely constructed by DI. If this is intentional, please use a callback or cachedCallback resolver.`);
+        return new Error(`AUR0015: ${Type.name} is a native function and therefore cannot be safely constructed by DI. If this is intentional, please use a callback or cachedCallback resolver.`);
     }
 }
 

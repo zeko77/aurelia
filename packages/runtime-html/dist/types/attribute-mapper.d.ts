@@ -2,7 +2,7 @@ import { ISVGAnalyzer } from './observation/svg-analyzer';
 export interface IAttrMapper extends AttrMapper {
 }
 export declare const IAttrMapper: import("@aurelia/kernel").InterfaceSymbol<IAttrMapper>;
-declare type IsTwoWayPredicate = (element: Element, attribute: string) => boolean;
+export declare type IsTwoWayPredicate = (element: Element, attribute: string) => boolean;
 export declare class AttrMapper {
     private readonly svg;
     constructor(svg: ISVGAnalyzer);
@@ -30,5 +30,4 @@ export declare class AttrMapper {
      */
     map(node: Element, attr: string): string | null;
 }
-export {};
 //# sourceMappingURL=attribute-mapper.d.ts.map

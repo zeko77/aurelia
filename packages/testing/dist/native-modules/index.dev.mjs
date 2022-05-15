@@ -7499,7 +7499,7 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             };
     const App = CustomElement.define({ name: 'app', template }, $$class);
     if (container.has(App, true)) {
-        throw new Error('Container of the context cotains instance of the application root component. ' +
+        throw new Error('Container of the context contains instance of the application root component. ' +
             'Consider using a different class, or context as it will likely cause surprises in tests.');
     }
     const component = container.get(App);
@@ -7530,11 +7530,28 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
         return elements.length === 0 ? null : elements[0];
     };
     const assertText = (selector, text) => {
-        const el = queryBy(selector);
-        if (el === null) {
-            throw new Error(`No element found for selector "${selector}" to compare text content with "${text}"`);
+        if (arguments.length === 2) {
+            const el = queryBy(selector);
+            if (el === null) {
+                throw new Error(`No element found for selector "${selector}" to compare text content with "${text}"`);
+            }
+            assert.strictEqual(el.textContent, text);
         }
-        assert.strictEqual(el.textContent, text);
+        else {
+            assert.strictEqual(host.textContent, selector);
+        }
+    };
+    const assertHtml = (selector, html) => {
+        if (arguments.length === 2) {
+            const el = queryBy(selector);
+            if (el === null) {
+                throw new Error(`No element found for selector "${selector}" to compare innerHTML with "${html}"`);
+            }
+            assert.strictEqual(el.innerHTML, html);
+        }
+        else {
+            assert.strictEqual(host.innerHTML, selector);
+        }
     };
     const trigger = ((selector, event, init) => {
         const el = queryBy(selector);
@@ -7543,7 +7560,7 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
         }
         el.dispatchEvent(new ctx.CustomEvent(event, init));
     });
-    ['click', 'change', 'input'].forEach(event => {
+    ['click', 'change', 'input', 'scroll'].forEach(event => {
         Object.defineProperty(trigger, event, { configurable: true, writable: true, value: (selector, init) => {
                 const el = queryBy(selector);
                 if (el === null) {
@@ -7552,6 +7569,14 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
                 el.dispatchEvent(new ctx.CustomEvent(event, init));
             } });
     });
+    const scrollBy = (selector, init) => {
+        const el = queryBy(selector);
+        if (el === null) {
+            throw new Error(`No element found for selector "${selector}" to scroll by "${JSON.stringify(init)}"`);
+        }
+        el.scrollBy(typeof init === 'number' ? { top: init } : init);
+        el.dispatchEvent(new Event('scroll'));
+    };
     const fixture = new class Results {
         constructor() {
             this.startPromise = startPromise;
@@ -7568,30 +7593,69 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             this.getAllBy = getAllBy;
             this.queryBy = queryBy;
             this.assertText = assertText;
+            this.assertHtml = assertHtml;
             this.trigger = trigger;
+            this.scrollBy = scrollBy;
         }
         async start() {
             await au.app({ host: host, component }).start();
         }
-        async tearDown() {
+        tearDown() {
             if (++tornCount === 2) {
                 console.log('(!) Fixture has already been torn down');
                 return;
             }
-            await au.stop();
-            root.remove();
-            au.dispose();
+            const dispose = () => {
+                root.remove();
+                au.dispose();
+            };
+            const ret = au.stop();
+            if (ret instanceof Promise)
+                return ret.then(dispose);
+            else
+                return dispose();
         }
         get torn() {
             return tornCount > 0;
         }
-        get promise() {
-            return Promise.resolve(startPromise).then(() => this);
+        get started() {
+            if (startPromise instanceof Promise) {
+                return Promise.resolve(startPromise).then(() => this);
+            }
+            return Promise.resolve(this);
         }
     }();
     fixtureHooks.publish('fixture:created', fixture);
     return fixture;
 }
+class FixtureBuilder {
+    html(html, ...htmlArgs) {
+        this._html = html;
+        this._htmlArgs = htmlArgs;
+        return this;
+    }
+    component(comp) {
+        this._comp = comp;
+        return this;
+    }
+    deps(...args) {
+        this._args = args;
+        return this;
+    }
+    build() {
+        var _a;
+        if (this._html === void 0) {
+            throw new Error('Builder is not ready, missing template, call .html()/.html`` first');
+        }
+        return createFixture(typeof this._html === 'string' ? this._html : brokenProcessFastTemplate(this._html, ...(_a = this._htmlArgs) !== null && _a !== void 0 ? _a : []), this._comp, this._args);
+    }
+}
+function brokenProcessFastTemplate(html, ..._args) {
+    return html.join('');
+}
+createFixture.html = (html, ...values) => new FixtureBuilder().html(html, ...values);
+createFixture.component = (component) => new FixtureBuilder().component(component);
+createFixture.deps = (...deps) => new FixtureBuilder().deps(...deps);
 
 class MockBinding {
     constructor() {
