@@ -49,7 +49,7 @@ function registerAliases(aliases, resource, key, container) {
     }
 }
 
-const marker = Object.freeze({});
+Object.freeze({});
 class BindingContext {
     constructor(keyOrObj, value) {
         if (keyOrObj !== void 0) {
@@ -96,9 +96,6 @@ class BindingContext {
         }
         if (overrideContext) {
             return name in overrideContext ? overrideContext : overrideContext.bindingContext;
-        }
-        if (flags & 16) {
-            return marker;
         }
         return scope.bindingContext || scope.overrideContext;
     }
@@ -940,7 +937,7 @@ class AccessMemberExpression {
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
-        const instance = this.object.evaluate(f, s, l, (f & 128) > 0 ? null : c);
+        const instance = this.object.evaluate(f, s, l, (f & 32) > 0 ? null : c);
         if (f & 1) {
             if (instance == null) {
                 return instance;
@@ -986,9 +983,9 @@ class AccessKeyedExpression {
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
-        const instance = this.object.evaluate(f, s, l, (f & 128) > 0 ? null : c);
+        const instance = this.object.evaluate(f, s, l, (f & 32) > 0 ? null : c);
         if (instance instanceof Object) {
-            const key = this.key.evaluate(f, s, l, (f & 128) > 0 ? null : c);
+            const key = this.key.evaluate(f, s, l, (f & 32) > 0 ? null : c);
             if (c !== null) {
                 c.observe(instance, key);
             }
@@ -1046,7 +1043,7 @@ class CallMemberExpression {
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
-        const instance = this.object.evaluate(f, s, l, (f & 128) > 0 ? null : c);
+        const instance = this.object.evaluate(f, s, l, (f & 32) > 0 ? null : c);
         const args = this.args.map(a => a.evaluate(f, s, l, c));
         const func = getFunction(f, instance, this.name);
         if (func) {
@@ -1688,19 +1685,15 @@ exports.BindingMode = void 0;
 exports.LifecycleFlags = void 0;
 (function (LifecycleFlags) {
     LifecycleFlags[LifecycleFlags["none"] = 0] = "none";
-    LifecycleFlags[LifecycleFlags["persistentBindingFlags"] = 961] = "persistentBindingFlags";
-    LifecycleFlags[LifecycleFlags["allowParentScopeTraversal"] = 64] = "allowParentScopeTraversal";
-    LifecycleFlags[LifecycleFlags["observeLeafPropertiesOnly"] = 128] = "observeLeafPropertiesOnly";
-    LifecycleFlags[LifecycleFlags["targetObserverFlags"] = 769] = "targetObserverFlags";
-    LifecycleFlags[LifecycleFlags["noFlush"] = 256] = "noFlush";
-    LifecycleFlags[LifecycleFlags["persistentTargetObserverQueue"] = 512] = "persistentTargetObserverQueue";
+    LifecycleFlags[LifecycleFlags["persistentBindingFlags"] = 97] = "persistentBindingFlags";
+    LifecycleFlags[LifecycleFlags["observeLeafPropertiesOnly"] = 32] = "observeLeafPropertiesOnly";
+    LifecycleFlags[LifecycleFlags["noFlush"] = 64] = "noFlush";
     LifecycleFlags[LifecycleFlags["bindingStrategy"] = 1] = "bindingStrategy";
     LifecycleFlags[LifecycleFlags["isStrictBindingStrategy"] = 1] = "isStrictBindingStrategy";
     LifecycleFlags[LifecycleFlags["fromBind"] = 2] = "fromBind";
     LifecycleFlags[LifecycleFlags["fromUnbind"] = 4] = "fromUnbind";
     LifecycleFlags[LifecycleFlags["mustEvaluate"] = 8] = "mustEvaluate";
-    LifecycleFlags[LifecycleFlags["isTraversingParentScope"] = 16] = "isTraversingParentScope";
-    LifecycleFlags[LifecycleFlags["dispose"] = 32] = "dispose";
+    LifecycleFlags[LifecycleFlags["dispose"] = 16] = "dispose";
 })(exports.LifecycleFlags || (exports.LifecycleFlags = {}));
 var SubscriberFlags;
 (function (SubscriberFlags) {
@@ -2004,7 +1997,7 @@ class CollectionLengthObserver {
     setValue(newValue, flags) {
         const currentValue = this._value;
         if (newValue !== currentValue && kernel.isArrayIndex(newValue)) {
-            if ((flags & 256) === 0) {
+            if ((flags & 64) === 0) {
                 this._obj.length = newValue;
             }
             this._value = newValue;

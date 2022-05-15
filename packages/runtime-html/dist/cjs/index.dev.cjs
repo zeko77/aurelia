@@ -1220,7 +1220,7 @@ class AttributeObserver {
     setValue(value, flags) {
         this._value = value;
         this._hasChanges = value !== this._oldValue;
-        if ((flags & 256) === 0) {
+        if ((flags & 64) === 0) {
             this._flushChanges();
         }
     }
@@ -1422,7 +1422,7 @@ class AttributeBinding {
             }
             this.interceptor.$unbind(flags | 2);
         }
-        this.persistentFlags = flags & 961;
+        this.persistentFlags = flags & 97;
         this.$scope = scope;
         let sourceExpression = this.sourceExpression;
         if (sourceExpression.hasBind) {
@@ -1873,7 +1873,7 @@ class PropertyBinding {
             this.interceptor.$unbind(flags | 2);
         }
         flags |= 1;
-        this.persistentFlags = flags & 961;
+        this.persistentFlags = flags & 97;
         this.$scope = scope;
         let sourceExpression = this.sourceExpression;
         if (sourceExpression.hasBind) {
@@ -2579,7 +2579,7 @@ class ClassAttributeAccessor {
     setValue(newValue, flags) {
         this.value = newValue;
         this._hasChanges = newValue !== this._oldValue;
-        if ((flags & 256) === 0) {
+        if ((flags & 64) === 0) {
             this._flushChanges();
         }
     }
@@ -3854,7 +3854,7 @@ class Controller {
                 this.scope.parentScope = null;
                 break;
         }
-        if ((flags & 32) === 32 && this.$initiator === this) {
+        if ((flags & 16) === 16 && this.$initiator === this) {
             this.dispose();
         }
         this.state = (this.state & 32) | 8;
@@ -5011,14 +5011,14 @@ class SpreadElementPropBindingInstruction {
 }
 const ITemplateCompiler = kernel.DI.createInterface('ITemplateCompiler');
 const IRenderer = kernel.DI.createInterface('IRenderer');
-function renderer(instructionType) {
+function renderer(targetType) {
     return function decorator(target) {
-        target.register = function register(container) {
+        target.register = function (container) {
             kernel.Registration.singleton(IRenderer, this).register(container);
         };
         defineProp(target.prototype, 'target', {
             configurable: true,
-            get: function () { return instructionType; }
+            get: function () { return targetType; }
         });
         return target;
     };
@@ -7690,7 +7690,7 @@ class SelectValueObserver {
         this._value = newValue;
         this._hasChanges = newValue !== this._oldValue;
         this._observeArray(newValue instanceof Array ? newValue : null);
-        if ((flags & 256) === 0) {
+        if ((flags & 64) === 0) {
             this._flushChanges();
         }
     }
@@ -7875,7 +7875,7 @@ class StyleAttributeAccessor {
     setValue(newValue, flags) {
         this.value = newValue;
         this._hasChanges = newValue !== this._oldValue;
-        if ((flags & 256) === 0) {
+        if ((flags & 64) === 0) {
             this._flushChanges();
         }
     }
@@ -8020,7 +8020,7 @@ class ValueAttributeObserver {
         this._oldValue = this._value;
         this._value = newValue;
         this._hasChanges = true;
-        if (!this.handler.config.readonly && (flags & 256) === 0) {
+        if (!this.handler.config.readonly && (flags & 64) === 0) {
             this._flushChanges(flags);
         }
     }
@@ -8606,19 +8606,12 @@ class FlagsTemplateController {
         }
     }
 }
-class FrequentMutations extends FlagsTemplateController {
-    constructor(factory, location) {
-        super(factory, location, 512);
-    }
-}
-FrequentMutations.inject = [IViewFactory, IRenderLocation];
 class ObserveShallow extends FlagsTemplateController {
     constructor(factory, location) {
-        super(factory, location, 128);
+        super(factory, location, 32);
     }
 }
 ObserveShallow.inject = [IViewFactory, IRenderLocation];
-templateController('frequent-mutations')(FrequentMutations);
 templateController('observe-shallow')(ObserveShallow);
 
 class If {
@@ -10410,7 +10403,6 @@ const DefaultBindingLanguage = [
 ];
 const SanitizeValueConverterRegistration = exports.SanitizeValueConverter;
 const ViewValueConverterRegistration = exports.ViewValueConverter;
-const FrequentMutationsRegistration = FrequentMutations;
 const ObserveShallowRegistration = ObserveShallow;
 const IfRegistration = If;
 const ElseRegistration = Else;
@@ -10444,7 +10436,6 @@ const DefaultResources = [
     TwoWayBindingBehaviorRegistration,
     SanitizeValueConverterRegistration,
     ViewValueConverterRegistration,
-    FrequentMutationsRegistration,
     ObserveShallowRegistration,
     IfRegistration,
     ElseRegistration,
@@ -11216,7 +11207,6 @@ exports.ExpressionWatcher = ExpressionWatcher;
 exports.Focus = Focus;
 exports.ForBindingCommandRegistration = ForBindingCommandRegistration;
 exports.FragmentNodeSequence = FragmentNodeSequence;
-exports.FrequentMutations = FrequentMutations;
 exports.FromViewBindingBehavior = FromViewBindingBehavior;
 exports.FromViewBindingBehaviorRegistration = FromViewBindingBehaviorRegistration;
 exports.FromViewBindingCommandRegistration = FromViewBindingCommandRegistration;

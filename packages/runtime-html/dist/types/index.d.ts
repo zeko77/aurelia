@@ -35,7 +35,7 @@ export { AttrBindingBehavior, } from './resources/binding-behaviors/attr';
 export { type SelfableBinding, SelfBindingBehavior, } from './resources/binding-behaviors/self';
 export { UpdateTriggerBindingBehavior, type UpdateTriggerableBinding, type UpdateTriggerableObserver, } from './resources/binding-behaviors/update-trigger';
 export { customAttribute, type CustomAttributeDecorator, CustomAttribute, CustomAttributeDefinition, type CustomAttributeKind, type CustomAttributeType, type PartialCustomAttributeDefinition, templateController, } from './resources/custom-attribute';
-export { FrequentMutations, ObserveShallow, } from './resources/template-controllers/flags';
+export { ObserveShallow, } from './resources/template-controllers/flags';
 export { If, Else, } from './resources/template-controllers/if';
 export { Repeat } from './resources/template-controllers/repeat';
 export { With } from './resources/template-controllers/with';

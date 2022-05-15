@@ -2365,7 +2365,7 @@ class Viewport extends Endpoint$1 {
             return;
         }
         const manualDispose = this.router.statefulHistory || ((_a = this.options.stateful) !== null && _a !== void 0 ? _a : false);
-        return Runner.run(step, () => coordinator.addEndpointState(this, 'bound'), () => coordinator.waitForSyncState('bound'), (innerStep) => this.deactivate(innerStep, null, this.connectedController, manualDispose ? 0 : 32), () => manualDispose ? this.dispose() : void 0);
+        return Runner.run(step, () => coordinator.addEndpointState(this, 'bound'), () => coordinator.waitForSyncState('bound'), (innerStep) => this.deactivate(innerStep, null, this.connectedController, manualDispose ? 0 : 16), () => manualDispose ? this.dispose() : void 0);
     }
     activate(step, initiator, parent, flags, coordinator) {
         if (this.activeContent.componentInstance !== null) {

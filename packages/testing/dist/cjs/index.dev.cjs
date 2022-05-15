@@ -7503,7 +7503,7 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             };
     const App = runtimeHtml.CustomElement.define({ name: 'app', template }, $$class);
     if (container.has(App, true)) {
-        throw new Error('Container of the context cotains instance of the application root component. ' +
+        throw new Error('Container of the context contains instance of the application root component. ' +
             'Consider using a different class, or context as it will likely cause surprises in tests.');
     }
     const component = container.get(App);

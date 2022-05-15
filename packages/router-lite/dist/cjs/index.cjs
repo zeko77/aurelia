@@ -1379,7 +1379,7 @@ class ViewportAgent {
               case "replace":
                 {
                     const s = this.hostController;
-                    const n = this.viewport.stateful ? 0 : 32;
+                    const n = this.viewport.stateful ? 0 : 16;
                     e.run((() => this.curCA.deactivate(t, s, n)), (() => {
                         i.pop();
                     }));
@@ -1488,7 +1488,7 @@ class ViewportAgent {
                 const i = this.hostController;
                 const s = this.curCA;
                 const n = this.nextCA;
-                const o = this.viewport.stateful ? 0 : 32;
+                const o = this.viewport.stateful ? 0 : 16;
                 const r = 0;
                 e.push();
                 Batch.start((e => {

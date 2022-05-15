@@ -621,7 +621,7 @@ const DI = {
         };
     },
     transient(target) {
-        target.register = function register(container) {
+        target.register = function (container) {
             const registration = Registration.transient(target, target);
             return registration.register(container, target);
         };
@@ -629,7 +629,7 @@ const DI = {
         return target;
     },
     singleton(target, options = defaultSingletonOptions) {
-        target.register = function register(container) {
+        target.register = function (container) {
             const registration = Registration.singleton(target, target);
             return registration.register(container, target);
         };

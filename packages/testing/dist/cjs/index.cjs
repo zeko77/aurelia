@@ -3675,7 +3675,7 @@ function Ri(e, t, i = [], r = true, s = TestContext.create()) {
         name: "app",
         template: e
     }, h);
-    if (o.has(d, true)) throw new Error("Container of the context cotains instance of the application root component. " + "Consider using a different class, or context as it will likely cause surprises in tests.");
+    if (o.has(d, true)) throw new Error("Container of the context contains instance of the application root component. " + "Consider using a different class, or context as it will likely cause surprises in tests.");
     const p = o.get(d);
     let m;
     if (r) {

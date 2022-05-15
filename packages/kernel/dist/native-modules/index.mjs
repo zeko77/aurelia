@@ -534,17 +534,17 @@ const K = {
         };
     },
     transient(t) {
-        t.register = function e(n) {
-            const r = Et.transient(t, t);
-            return r.register(n, t);
+        t.register = function(e) {
+            const n = Et.transient(t, t);
+            return n.register(e, t);
         };
         t.registerInRequestor = false;
         return t;
     },
     singleton(t, e = tt) {
-        t.register = function e(n) {
-            const r = Et.singleton(t, t);
-            return r.register(n, t);
+        t.register = function(e) {
+            const n = Et.singleton(t, t);
+            return n.register(e, t);
         };
         t.registerInRequestor = e.scoped;
         return t;

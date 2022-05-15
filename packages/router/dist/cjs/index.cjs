@@ -1927,7 +1927,7 @@ class Viewport extends Endpoint$1 {
         var n;
         if (this.isEmpty) return;
         const s = this.router.statefulHistory || (null !== (n = this.options.stateful) && void 0 !== n ? n : false);
-        return Runner.run(t, (() => i.addEndpointState(this, "bound")), (() => i.waitForSyncState("bound")), (t => this.deactivate(t, null, this.connectedController, s ? 0 : 32)), (() => s ? this.dispose() : void 0));
+        return Runner.run(t, (() => i.addEndpointState(this, "bound")), (() => i.waitForSyncState("bound")), (t => this.deactivate(t, null, this.connectedController, s ? 0 : 16)), (() => s ? this.dispose() : void 0));
     }
     activate(t, i, n, s, e) {
         if (null !== this.activeContent.componentInstance) return Runner.run(t, (() => this.activeContent.canLoad()), (t => this.activeContent.load(t)), (t => this.activeContent.activateComponent(t, i, n, s, this.connectedCE, (() => null === e || void 0 === e ? void 0 : e.addEndpointState(this, "bound")), null === e || void 0 === e ? void 0 : e.waitForSyncState("bound"))));

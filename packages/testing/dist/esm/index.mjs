@@ -3669,7 +3669,7 @@ function Ki(e, t, n = [], i = true, r = TestContext.create()) {
         name: "app",
         template: e
     }, f);
-    if (a.has(h, true)) throw new Error("Container of the context cotains instance of the application root component. " + "Consider using a different class, or context as it will likely cause surprises in tests.");
+    if (a.has(h, true)) throw new Error("Container of the context contains instance of the application root component. " + "Consider using a different class, or context as it will likely cause surprises in tests.");
     const d = a.get(h);
     let p;
     if (i) {
