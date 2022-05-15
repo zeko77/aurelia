@@ -1,6 +1,7 @@
 // eslint-disable-next-line
 document.write(`<script type="importmap">${JSON.stringify({
   imports: [
+    'addons',
     'aurelia',
     'platform',
     'platform-browser',
@@ -10,6 +11,7 @@ document.write(`<script type="importmap">${JSON.stringify({
     'runtime-html',
     'route-recognizer',
     'fetch-client',
+    'state',
     'store-v1',
     'i18n',
     'router',

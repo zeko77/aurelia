@@ -52,7 +52,7 @@ export class BindingContext implements IBindingContext {
   public static get(scope: Scope, name: string, ancestor: number, flags: LifecycleFlags): IBindingContext | IOverrideContext | IBinding | undefined | null {
     if (scope == null) {
       if (__DEV__)
-        throw new Error(`Scope is ${scope}.`);
+        throw new Error(`AUR0203: Scope is ${scope}.`);
       else
         throw new Error(`AUR0203:${scope}`);
     }
@@ -137,12 +137,6 @@ export class BindingContext implements IBindingContext {
     //   } while (currentScope != null);
     // }
 
-    // still nothing found. return the root binding context (or null
-    // if this is a parent scope traversal, to ensure we fall back to the
-    // correct level)
-    if (flags & LifecycleFlags.isTraversingParentScope) {
-      return marker;
-    }
     return scope.bindingContext || scope.overrideContext;
   }
 }
@@ -191,7 +185,7 @@ export class Scope {
   public static fromOverride(oc: IOverrideContext): Scope {
     if (oc == null) {
       if (__DEV__)
-        throw new Error(`OverrideContext is ${oc}`);
+        throw new Error(`AUR0204: OverrideContext is ${oc}`);
       else
         throw new Error(`AUR0204:${oc}`);
     }
@@ -201,7 +195,7 @@ export class Scope {
   public static fromParent(ps: Scope | null, bc: object): Scope {
     if (ps == null) {
       if (__DEV__)
-        throw new Error(`ParentScope is ${ps}`);
+        throw new Error(`AUR0205: ParentScope is ${ps}`);
       else
         throw new Error(`AUR0205:${ps}`);
     }

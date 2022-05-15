@@ -2,8 +2,8 @@
   "files": [],
   "references": [
     { "path": "__tests__" },
-    { "path": "au" },
     { "path": "aurelia" },
+    { "path": "addons" },
     { "path": "fetch-client" },
     { "path": "kernel" },
     { "path": "metadata" },
@@ -17,9 +17,9 @@
     { "path": "runtime-html" },
     { "path": "store-v1" },
     { "path": "testing" },
+    { "path": "ui-virtualization" },
     { "path": "validation" },
     { "path": "validation-html" },
-    { "path": "validation-i18n" },
-    { "path": "http-server" }
+    { "path": "validation-i18n" }
   ]
 }

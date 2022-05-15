@@ -3,6 +3,33 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<a name="2.0.0-alpha.31"></a>
+# 2.0.0-alpha.31 (2022-05-15)
+
+### Features:
+
+* **testing:** add html assertion helpers for IFixture ([fbb85d0](https://github.com/aurelia/aurelia/commit/fbb85d0))
+* **testing:** enable builder pattern for fixture creation (#1414) ([af64b4c](https://github.com/aurelia/aurelia/commit/af64b4c))
+* **runtime-html:** ability to override `containerless` config from view (#1417) ([26968cc](https://github.com/aurelia/aurelia/commit/26968cc))
+* **plugin:** prepare store (v2) plugin (#1412) ([6989de0](https://github.com/aurelia/aurelia/commit/6989de0))
+* **plugin:** prepare an addons package (#1415) ([d32b847](https://github.com/aurelia/aurelia/commit/d32b847))
+* **plugin:** prepare ui-virtualization plugin ([3e61198](https://github.com/aurelia/aurelia/commit/3e61198))
+
+
+### Bug Fixes:
+
+* **hmr:** invoke created with correct this ([d78d301](https://github.com/aurelia/aurelia/commit/d78d301))
+* **hmr:** works with components that has created lifecycle ([3e61198](https://github.com/aurelia/aurelia/commit/3e61198))
+* **hmr:** create view model with injection ([bda3e1f](https://github.com/aurelia/aurelia/commit/bda3e1f))
+* **hmr:** HMR works with both TS and JS ([3c3fe36](https://github.com/aurelia/aurelia/commit/3c3fe36))
+
+
+### Refactorings:
+
+* **runtime:** cleanup unused flags ([c4ce901](https://github.com/aurelia/aurelia/commit/c4ce901))
+* **all:** add code to DEV err msg, unify error message quote ([b4909fb](https://github.com/aurelia/aurelia/commit/b4909fb))
+  Both prod and dev error messages should have the same start pattern now: `AURxxxx:`.
+
 <a name="2.0.0-alpha.30"></a>
 # 2.0.0-alpha.30 (2022-05-07)
 
@@ -24,6 +51,52 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Refactorings:
 
 * **all:** remove re-barrelled imports/exports ([973ae46](https://github.com/aurelia/aurelia/commit/973ae46))
+
+
+In this version, the extensions of all package dist are changed to `.cjs` and `.mjs` for `commonjs` and `esm` module formats respectively.
+This may cause a breakage for applications that were created with the old skeleton, as their webpack config may have the wrong module alias resolution, that looks like this:
+
+```ts
+alias: production ? {
+  // add your production aliasing here
+} : {
+  ...[
+    'fetch-client',
+    ...
+  ].reduce((map, pkg) => {
+    const name = `@aurelia/${pkg}`;
+    map[name] = path.resolve(__dirname, 'node_modules', name, 'dist/esm/index.dev.js');
+    return map;
+  }, {
+    'aurelia': path.resolve(__dirname, 'node_modules/aurelia/dist/esm/index.dev.js'),
+    // add your development aliasing here
+  })
+}
+```
+The error will look like this:
+```
+Module not found: Error: Can't resolve 'aurelia' in  ...
+```
+
+Changing the above webpack configuration to the following
+```ts
+alias: production ? {
+  // add your production aliasing here
+} : {
+  ...[
+    'fetch-client',
+    ...
+  ].reduce((map, pkg) => {
+    const name = `@aurelia/${pkg}`;
+    map[name] = path.resolve(__dirname, 'node_modules', name, 'dist/esm/index.dev.mjs');
+    return map;
+  }, {
+    'aurelia': path.resolve(__dirname, 'node_modules/aurelia/dist/esm/index.dev.mjs'),
+    // add your development aliasing here
+  })
+}
+```
+will fix the issue.
 
 <a name="2.0.0-alpha.29"></a>
 # 2.0.0-alpha.29 (2022-04-27)

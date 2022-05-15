@@ -1,7 +1,7 @@
 import { Constructable, IContainer, InstanceProvider, onResolve, transient } from '@aurelia/kernel';
 import { LifecycleFlags, Scope } from '@aurelia/runtime';
 import { bindable } from '../../bindable';
-import { convertToRenderLocation, INode, IRenderLocation, isRenderLocation } from '../../dom';
+import { INode, IRenderLocation, isRenderLocation } from '../../dom';
 import { IPlatform } from '../../platform';
 import { HydrateElementInstruction, IInstruction } from '../../renderer';
 import { Controller, IController, ICustomElementController, IHydratedController, ISyntheticView } from '../../templating/controller';
@@ -31,7 +31,7 @@ export class AuCompose {
 
   /** @internal */
   protected static get inject() {
-    return [IContainer, IController, INode, IPlatform, IInstruction, transient(CompositionContextFactory)];
+    return [IContainer, IController, INode, IRenderLocation, IPlatform, IInstruction, transient(CompositionContextFactory)];
   }
 
   /* determine what template used to compose the component */
@@ -52,9 +52,9 @@ export class AuCompose {
         return v;
       }
       if (__DEV__)
-        throw new Error('Invalid scope behavior config. Only "scoped" or "auto" allowed.');
+        throw new Error(`AUR0805: Invalid scope behavior config. Only "scoped" or "auto" allowed.`);
       else
-        throw new Error('AUR0805');
+        throw new Error(`AUR0805`);
     }
   })
   public scopeBehavior: 'auto' | 'scoped' = 'auto';
@@ -75,7 +75,6 @@ export class AuCompose {
   }
 
   /** @internal */ private readonly _rendering: IRendering;
-  /** @internal */ private readonly _location: IRenderLocation | undefined;
   /** @internal */ private readonly _instruction: HydrateElementInstruction;
   /** @internal */ private readonly _contextFactory: CompositionContextFactory;
 
@@ -83,13 +82,13 @@ export class AuCompose {
     /** @internal */ private readonly _container: IContainer,
     /** @internal */ private readonly parent: ISyntheticView | ICustomElementController,
     /** @internal */ private readonly host: HTMLElement,
+    /** @internal */ private readonly _location: IRenderLocation,
     /** @internal */ private readonly _platform: IPlatform,
     // todo: use this to retrieve au-slot instruction
     //        for later enhancement related to <au-slot/> + compose
     instruction: HydrateElementInstruction,
     contextFactory: CompositionContextFactory,
   ) {
-    this._location = instruction.containerless ? convertToRenderLocation(this.host) : void 0;
     this._rendering = _container.get(IRendering);
     this._instruction = instruction;
     this._contextFactory = contextFactory;
@@ -190,16 +189,16 @@ export class AuCompose {
     //       current: proceed
     const { view, viewModel, model } = context.change;
     const { _container: container, host, $controller, _location: loc } = this;
-    const srcDef = this.getDef(viewModel);
+    const vmDef = this.getDef(viewModel);
     const childCtn: IContainer = container.createChild();
     const parentNode = loc == null ? host.parentNode : loc.parentNode;
 
-    if (srcDef !== null) {
-      if (srcDef.containerless) {
+    if (vmDef !== null) {
+      if (vmDef.containerless) {
         if (__DEV__)
-          throw new Error('Containerless custom element is not supported by <au-compose/>');
+          throw new Error(`AUR0806: Containerless custom element is not supported by <au-compose/>`);
         else
-          throw new Error('AUR0806');
+          throw new Error(`AUR0806`);
       }
       if (loc == null) {
         compositionHost = host;
@@ -209,7 +208,7 @@ export class AuCompose {
         };
       } else {
         // todo: should the host be appended later, during the activation phase instead?
-        compositionHost = parentNode!.insertBefore(this._platform.document.createElement(srcDef.name), loc);
+        compositionHost = parentNode!.insertBefore(this._platform.document.createElement(vmDef.name), loc);
         removeCompositionHost = () => {
           compositionHost.remove();
         };
@@ -223,13 +222,13 @@ export class AuCompose {
     }
     const compose: () => ICompositionController = () => {
       // custom element based composition
-      if (srcDef !== null) {
+      if (vmDef !== null) {
         const controller = Controller.$el(
           childCtn,
           comp,
           compositionHost as HTMLElement,
           { projections: this._instruction.projections },
-          srcDef,
+          vmDef,
         );
 
         return new CompositionController(
@@ -415,7 +414,7 @@ class CompositionController implements ICompositionController {
   public activate(initiator?: IHydratedController) {
     if (this.state !== 0) {
       if (__DEV__)
-        throw new Error(`Composition has already been activated/deactivated. Id: ${this.controller.name}`);
+        throw new Error(`AUR0807: Composition has already been activated/deactivated. Id: ${this.controller.name}`);
       else
         throw new Error(`AUR0807:${this.controller.name}`);
     }
@@ -430,9 +429,9 @@ class CompositionController implements ICompositionController {
         return this.stop(detachInitator);
       case -1:
         if (__DEV__)
-          throw new Error('Composition has already been deactivated.');
+          throw new Error(`AUR0808: Composition has already been deactivated.`);
         else
-          throw new Error('AUR0808');
+          throw new Error(`AUR0808`);
       default:
         this.state = -1;
     }

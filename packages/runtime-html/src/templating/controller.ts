@@ -18,7 +18,7 @@ import {
   ICoercionConfiguration,
 } from '@aurelia/runtime';
 import { BindableObserver } from '../observation/bindable-observer';
-import { convertToRenderLocation, setRef } from '../dom';
+import { setRef } from '../dom';
 import { CustomElementDefinition, CustomElement } from '../resources/custom-element';
 import { CustomAttributeDefinition, CustomAttribute } from '../resources/custom-attribute';
 import { ChildrenDefinition, ChildrenObserver } from './children';
@@ -155,11 +155,16 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
      * For ShadowDOM elements, this will be the original declaring element, NOT the shadow root (the shadow root is stored on the `shadowRoot` property)
      */
     public host: HTMLElement | null,
+    /**
+     * The render location replacement for the host on containerless elements
+     */
+    location: IRenderLocation | null,
   ) {
     if (__DEV__) {
       this.logger = null!;
       this.debug = false;
     }
+    this.location = location;
     this._rendering = container.root.get(IRendering);
     switch (vmKind) {
       case ViewModelKind.customAttribute:
@@ -181,7 +186,7 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     const $el = Controller.getCached(viewModel);
     if ($el === void 0) {
       if (__DEV__)
-        throw new Error(`There is no cached controller for the provided ViewModel: ${viewModel}`);
+        throw new Error(`AUR0500: There is no cached controller for the provided ViewModel: ${viewModel}`);
       else
         throw new Error(`AUR0500:${viewModel}`);
     }
@@ -204,6 +209,9 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     // Use this when `instance.constructor` is not a custom element type
     // to pass on the CustomElement definition
     definition: CustomElementDefinition | undefined = void 0,
+    // the associated render location of the host
+    // if the element is containerless
+    location: IRenderLocation | null = null,
   ): ICustomElementController<C> {
     if (controllerLookup.has(viewModel)) {
       return controllerLookup.get(viewModel) as unknown as ICustomElementController<C>;
@@ -218,6 +226,7 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
       /* viewFactory    */null,
       /* viewModel      */viewModel as BindingContext<C>,
       /* host           */host,
+      /* location       */location,
     );
     // the hydration context this controller is provided with
     const hydrationContext = ctn.get(optional(IHydrationContext)) as IHydrationContext;
@@ -276,7 +285,8 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
       /* definition     */definition,
       /* viewFactory    */null,
       /* viewModel      */viewModel as BindingContext<C>,
-      /* host           */host
+      /* host           */host,
+      /* location       */null
     );
 
     controllerLookup.set(viewModel, controller as Controller);
@@ -306,6 +316,7 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
       /* viewFactory    */viewFactory,
       /* viewModel      */null,
       /* host           */null,
+      /* location       */null
     );
     controller.parent = parentController ?? null;
 
@@ -389,7 +400,8 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     }
 
     const compiledDef = this._compiledDef = this._rendering.compile(this.definition as CustomElementDefinition, this.container, hydrationInst);
-    const { shadowOptions, isStrictBinding, hasSlots, containerless } = compiledDef;
+    const { shadowOptions, isStrictBinding, hasSlots } = compiledDef;
+    const location = this.location;
 
     this.isStrictBinding = isStrictBinding;
 
@@ -400,18 +412,18 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
     setRef(this.host!, CustomElement.name, this as IHydratedController);
     setRef(this.host!, this.definition!.key, this as IHydratedController);
     if (shadowOptions !== null || hasSlots) {
-      if (containerless) {
+      if (location != null) {
         if (__DEV__)
-          throw new Error('You cannot combine the containerless custom element option with Shadow DOM.');
+          throw new Error(`AUR0501: You cannot combine the containerless custom element option with Shadow DOM.`);
         else
-          throw new Error('AUR0501');
+          throw new Error(`AUR0501`);
       }
       setRef(this.shadowRoot = this.host!.attachShadow(shadowOptions ?? defaultShadowOptions), CustomElement.name, this as IHydratedController);
       setRef(this.shadowRoot!, this.definition!.key, this as IHydratedController);
       this.mountTarget = MountTarget.shadowRoot;
-    } else if (containerless) {
-      setRef(this.location = convertToRenderLocation(this.host!), CustomElement.name, this as IHydratedController);
-      setRef(this.location!, this.definition!.key, this as IHydratedController);
+    } else if (location != null) {
+      setRef(location, CustomElement.name, this as IHydratedController);
+      setRef(location, this.definition!.key, this as IHydratedController);
       this.mountTarget = MountTarget.location;
     } else {
       this.mountTarget = MountTarget.host;
@@ -499,12 +511,12 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
         return;
       case State.disposed:
         if (__DEV__)
-          throw new Error(`${this.name} trying to activate a controller that is disposed.`);
+          throw new Error(`AUR0502: ${this.name} trying to activate a controller that is disposed.`);
         else
           throw new Error(`AUR0502:${this.name}`);
       default:
         if (__DEV__)
-          throw new Error(`${this.name} unexpected state: ${stringifyState(this.state)}.`);
+          throw new Error(`AUR0503: ${this.name} unexpected state: ${stringifyState(this.state)}.`);
         else
           throw new Error(`AUR0503:${this.name} ${stringifyState(this.state)}`);
     }
@@ -528,9 +540,9 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
         // maybe only check when there's not already a scope
         if (scope === void 0 || scope === null) {
           if (__DEV__)
-            throw new Error(`Scope is null or undefined`);
+            throw new Error(`AUR0504: Scope is null or undefined`);
           else
-            throw new Error('AUR0504');
+            throw new Error(`AUR0504`);
         }
 
         if (!this.hasLockedScope) {
@@ -714,7 +726,7 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
         return;
       default:
         if (__DEV__)
-          throw new Error(`${this.name} unexpected state: ${stringifyState(this.state)}.`);
+          throw new Error(`AUR0505: ${this.name} unexpected state: ${stringifyState(this.state)}.`);
         else
           throw new Error(`AUR0505:${this.name} ${stringifyState(this.state)}`);
     }
@@ -1257,7 +1269,7 @@ function createWatchers(
       : Reflect.get(instance, callback) as IWatcherCallback<object>;
     if (!isFunction(callback)) {
       if (__DEV__)
-        throw new Error(`Invalid callback for @watch decorator: ${String(callback)}`);
+        throw new Error(`AUR0506: Invalid callback for @watch decorator: ${String(callback)}`);
       else
         throw new Error(`AUR0506:${String(callback)}`);
     }
@@ -1793,6 +1805,10 @@ export interface IControllerElementHydrationInstruction {
    * A list of captured attributes/binding in raw format
    */
   readonly captures?: AttrSyntax[];
+  /**
+   * Indicates whether the custom element was used with "containerless" attribute
+   */
+  readonly containerless?: boolean;
 }
 
 function callDispose(disposable: IDisposable): void {

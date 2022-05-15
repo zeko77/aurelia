@@ -21,7 +21,7 @@ const log = createLogger('generate-native-modules');
     !pkg.name.kebab.includes('_')
     && pkg.folder.includes('packages')
     && !pkg.folder.includes('__e2e__')
-    && !pkg.folder.includes('packages-cjs')
+    && !pkg.folder.includes('packages-tooling')
   );
 
   for (const pkg of packages) {
@@ -30,7 +30,7 @@ const log = createLogger('generate-native-modules');
     const nativeModulesPath = path.join(distPath, 'native-modules');
 
     log.info(`Processing '${esmPath}'`);
-    const files = await getFiles(esmPath);
+    const files = (await getFiles(esmPath)).filter(file => !file.path.endsWith('.map'));
     for (const file of files) {
       log.info(`Processing '${file.path.replace(project.path, '')}'`);
 
@@ -74,7 +74,7 @@ const log = createLogger('generate-native-modules');
       if (!fs.existsSync(newDir)) {
         fs.mkdirSync(newDir, { recursive: true });
       }
-      fs.writeFileSync(newPath, content);
+      fs.writeFileSync(newPath, content.replace('//# sourceMappingURL=index.mjs.map', ''));
     }
   }
 

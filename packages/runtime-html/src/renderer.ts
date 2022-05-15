@@ -374,14 +374,14 @@ type DecoratedInstructionRenderer<TType extends string, TProto, TClass> =  Class
 
 type InstructionRendererDecorator<TType extends string> = <TProto, TClass>(target: DecoratableInstructionRenderer<TType, TProto, TClass>) => DecoratedInstructionRenderer<TType, TProto, TClass>;
 
-export function renderer<TType extends string>(instructionType: TType): InstructionRendererDecorator<TType> {
+export function renderer<TType extends string>(targetType: TType): InstructionRendererDecorator<TType> {
   return function decorator<TProto, TClass>(target: DecoratableInstructionRenderer<TType, TProto, TClass>): DecoratedInstructionRenderer<TType, TProto, TClass> {
-    target.register = function register(container: IContainer): void {
+    target.register = function (container: IContainer): void {
       Registration.singleton(IRenderer, this).register(container);
     };
     defineProp(target.prototype, 'target', {
       configurable: true,
-      get: function () { return instructionType; }
+      get: function () { return targetType; }
     });
     return target as DecoratedInstructionRenderer<TType, TProto, TClass>;
   };
@@ -412,9 +412,9 @@ function getRefTarget(refHost: INode, refTargetName: string): object {
     case 'view':
       // todo: returns node sequences for fun?
       if (__DEV__)
-        throw new Error('Not supported API');
+        throw new Error(`AUR0750: Not supported API`);
       else
-        throw new Error('AUR0750');
+        throw new Error(`AUR0750`);
     case 'view-model':
       // this means it supports returning undefined
       return CustomElement.for(refHost)!.viewModel;
@@ -426,7 +426,7 @@ function getRefTarget(refHost: INode, refTargetName: string): object {
       const ceController = CustomElement.for(refHost, { name: refTargetName });
       if (ceController === void 0) {
         if (__DEV__)
-          throw new Error(`Attempted to reference "${refTargetName}", but it was not found amongst the target's API.`);
+          throw new Error(`AUR0751: Attempted to reference "${refTargetName}", but it was not found amongst the target's API.`);
         else
           throw new Error(`AUR0751:${refTargetName}`);
       }
@@ -481,20 +481,12 @@ export class CustomElementRenderer implements IRenderer {
     const res = instruction.res;
     const projections = instruction.projections;
     const ctxContainer = renderingCtrl.container;
-    const container = createElementContainer(
-      /* platform         */this._platform,
-      /* parentController */renderingCtrl,
-      /* host             */target,
-      /* instruction      */instruction,
-      /* location         */target,
-      /* auSlotsInfo      */projections == null ? void 0 : new AuSlotsInfo(Object.keys(projections)),
-    );
     switch (typeof res) {
       case 'string':
         def = ctxContainer.find(CustomElement, res);
         if (def == null) {
           if (__DEV__)
-            throw new Error(`Element ${res} is not registered in ${(renderingCtrl as Controller)['name']}.`);
+            throw new Error(`AUR0752: Element ${res} is not registered in ${(renderingCtrl as Controller)['name']}.`);
           else
             throw new Error(`AUR0752:${res}@${(renderingCtrl as Controller)['name']}`);
         }
@@ -509,6 +501,16 @@ export class CustomElementRenderer implements IRenderer {
       default:
         def = res;
     }
+    const containerless = instruction.containerless || def.containerless;
+    const location = containerless ? convertToRenderLocation(target) : null;
+    const container = createElementContainer(
+      /* platform         */this._platform,
+      /* parentController */renderingCtrl,
+      /* host             */target,
+      /* instruction      */instruction,
+      /* location         */location,
+      /* auSlotsInfo      */projections == null ? void 0 : new AuSlotsInfo(Object.keys(projections)),
+    );
     Ctor = def.Type;
     component = container.invoke(Ctor);
     container.registerResolver(Ctor, new InstanceProvider<typeof Ctor>(def.key, component));
@@ -518,6 +520,7 @@ export class CustomElementRenderer implements IRenderer {
       /* host                */target,
       /* instruction         */instruction,
       /* definition          */def,
+      /* location            */location
     );
 
     setRef(target, def.key, childCtrl);
@@ -568,7 +571,7 @@ export class CustomAttributeRenderer implements IRenderer {
         def = ctxContainer.find(CustomAttribute, instruction.res);
         if (def == null) {
           if (__DEV__)
-            throw new Error(`Attribute ${instruction.res} is not registered in ${(renderingCtrl as Controller)['name']}.`);
+            throw new Error(`AUR0753: Attribute ${instruction.res} is not registered in ${(renderingCtrl as Controller)['name']}.`);
           else
             throw new Error(`AUR0753:${instruction.res}@${(renderingCtrl as Controller)['name']}`);
         }
@@ -643,7 +646,7 @@ export class TemplateControllerRenderer implements IRenderer {
         def = ctxContainer.find(CustomAttribute, instruction.res);
         if (def == null) {
           if (__DEV__)
-            throw new Error(`Attribute ${instruction.res} is not registered in ${(renderingCtrl as Controller)['name']}.`);
+            throw new Error(`AUR0754: Attribute ${instruction.res} is not registered in ${(renderingCtrl as Controller)['name']}.`);
           else
             throw new Error(`AUR0754:${instruction.res}@${(renderingCtrl as Controller)['name']}`);
         }
@@ -1309,7 +1312,7 @@ function createElementContainer(
   renderingCtrl: IController,
   host: HTMLElement,
   instruction: HydrateElementInstruction,
-  location?: IRenderLocation,
+  location: IRenderLocation | null,
   auSlotsInfo?: IAuSlotsInfo,
 ): IContainer {
   const ctn = renderingCtrl.container.createChild();
@@ -1330,7 +1333,7 @@ function createElementContainer(
   ctn.registerResolver(IInstruction, new InstanceProvider(instructionProviderName, instruction));
   ctn.registerResolver(IRenderLocation, location == null
     ? noLocationProvider
-    : new InstanceProvider(locationProviderName, location));
+    : new RenderLocationProvider(location));
   ctn.registerResolver(IViewFactory, noViewFactoryProvider);
   ctn.registerResolver(IAuSlotsInfo, auSlotsInfo == null
     ? noAuSlotProvider
@@ -1358,15 +1361,15 @@ class ViewFactoryProvider implements IResolver {
     const f = this.f;
     if (f === null) {
       if (__DEV__)
-        throw new Error('Cannot resolve ViewFactory before the provider was prepared.');
+        throw new Error(`AUR7055: Cannot resolve ViewFactory before the provider was prepared.`);
       else
-        throw new Error('AUR7055');
+        throw new Error(`AUR7055`);
     }
     if (!isString(f.name) || f.name.length === 0) {
       if (__DEV__)
-        throw new Error('Cannot resolve ViewFactory without a (valid) name.');
+        throw new Error(`AUR0756: Cannot resolve ViewFactory without a (valid) name.`);
       else
-        throw new Error('AUR0756');
+        throw new Error(`AUR0756`);
     }
     return f;
   }
@@ -1408,6 +1411,19 @@ function invokeAttribute(
   return ctn.invoke(definition.Type);
 }
 
-const noLocationProvider = new InstanceProvider<IRenderLocation>(locationProviderName);
+class RenderLocationProvider implements IResolver {
+  public get name() { return 'IRenderLocation'; }
+  public get $isResolver(): true { return true; }
+
+  public constructor(
+    private readonly _location: IRenderLocation | null
+  ) {}
+
+  public resolve(): IRenderLocation | null {
+    return this._location;
+  }
+}
+
+const noLocationProvider = new RenderLocationProvider(null);
 const noViewFactoryProvider = new ViewFactoryProvider(null);
 const noAuSlotProvider = new InstanceProvider<IAuSlotsInfo>(slotInfoProviderName, new AuSlotsInfo(emptyArray));
