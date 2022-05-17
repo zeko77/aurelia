@@ -17,7 +17,7 @@ export declare function isArrayIndex(value: unknown): value is number | string;
  */
 export declare function isNumberOrBigInt(value: unknown): value is number | bigint;
 /**
- * Determines if the value passed is a number or bigint for parsing purposes
+ * Determines if the value passed is a string or Date for parsing purposes
  *
  * @param value - Value to evaluate
  */
