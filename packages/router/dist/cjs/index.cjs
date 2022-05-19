@@ -2215,6 +2215,10 @@ class RoutingInstruction {
     get viewportScope() {
         return this.endpoint.instance instanceof ViewportScope || null === this.endpoint.endpointType ? this.endpoint : null;
     }
+    get previous() {
+        var t, i;
+        return null === (i = null === (t = this.endpoint.instance) || void 0 === t ? void 0 : t.getContent()) || void 0 === i ? void 0 : i.instruction;
+    }
     isAdd(t) {
         return this.component.name === Separators.for(t).add;
     }

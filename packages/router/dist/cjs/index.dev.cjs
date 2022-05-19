@@ -2778,6 +2778,10 @@ class RoutingInstruction {
             ? this.endpoint
             : null;
     }
+    get previous() {
+        var _a, _b;
+        return (_b = (_a = this.endpoint.instance) === null || _a === void 0 ? void 0 : _a.getContent()) === null || _b === void 0 ? void 0 : _b.instruction;
+    }
     isAdd(context) {
         return this.component.name === Separators.for(context).add;
     }
