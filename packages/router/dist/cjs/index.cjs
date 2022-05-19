@@ -1523,13 +1523,13 @@ class ViewportContent extends EndpointContent {
             fullStateInstruction: "",
             previous: this.navigation
         });
-        const n = this.getLifecycleHooks(i, "canUnload").map((t => n => {
-            const s = t(i, this.instruction, this.navigation);
-            if ("boolean" === typeof s) {
-                if (false === s) n.exit();
-                return s;
+        const n = this.getLifecycleHooks(i, "canUnload").map((n => s => {
+            const e = n(i, this.instruction, t);
+            if ("boolean" === typeof e) {
+                if (false === e) s.exit();
+                return e;
             }
-            return s;
+            return e;
         }));
         if (0 !== n.length) {
             const t = Runner.run(null, ...n);
@@ -1574,7 +1574,7 @@ class ViewportContent extends EndpointContent {
             fullStateInstruction: "",
             previous: this.navigation
         });
-        const n = this.getLifecycleHooks(i, "unload").map((t => () => t(i, this.instruction, this.navigation)));
+        const n = this.getLifecycleHooks(i, "unload").map((n => () => n(i, this.instruction, t)));
         if (0 !== n.length) {
             if (null != i.unload) n.push((() => i.unload(this.instruction, t)));
             return Runner.run(null, ...n);
