@@ -60,12 +60,12 @@ export declare class BindingInterceptor implements IInterceptableBinding {
     readonly binding: IInterceptableBinding;
     readonly expr: BindingBehaviorExpression;
     interceptor: this;
-    get oL(): IObserverLocator;
-    get locator(): IServiceLocator;
-    get $scope(): Scope | undefined;
-    get isBound(): boolean;
-    get obs(): BindingObserverRecord;
-    get sourceExpression(): IsBindingBehavior | ForOfStatement;
+    readonly oL: IObserverLocator;
+    readonly locator: IServiceLocator;
+    readonly $scope: Scope | undefined;
+    readonly isBound: boolean;
+    readonly obs: BindingObserverRecord;
+    readonly sourceExpression: IsBindingBehavior | ForOfStatement;
     constructor(binding: IInterceptableBinding, expr: BindingBehaviorExpression);
     updateTarget(value: unknown, flags: LifecycleFlags): void;
     updateSource(value: unknown, flags: LifecycleFlags): void;

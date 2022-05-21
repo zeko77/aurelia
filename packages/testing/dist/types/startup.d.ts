@@ -1,4 +1,4 @@
-import { Constructable, IContainer } from '@aurelia/kernel';
+import { Constructable, IContainer, ILogger } from '@aurelia/kernel';
 import { IObserverLocator } from '@aurelia/runtime';
 import { Aurelia, IPlatform, type ICustomElementViewModel } from '@aurelia/runtime-html';
 import { TestContext } from './test-context';
@@ -20,6 +20,7 @@ export interface IFixture<T> {
     readonly au: Aurelia;
     readonly component: ICustomElementViewModel & T;
     readonly observerLocator: IObserverLocator;
+    readonly logger: ILogger;
     readonly torn: boolean;
     start(): Promise<void>;
     tearDown(): void | Promise<void>;
@@ -67,6 +68,7 @@ export interface IFixture<T> {
      * A helper to scroll and trigger a scroll even on an element matching the given selector
      */
     scrollBy(selector: string, options: number | ScrollToOptions): void;
+    flush(): void;
 }
 export declare type ITrigger = ((selector: string, event: string, init?: CustomEventInit) => void) & {
     click(selector: string, init?: CustomEventInit): void;

@@ -7581,6 +7581,9 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
         el.scrollBy(typeof init === 'number' ? { top: init } : init);
         el.dispatchEvent(new Event('scroll'));
     };
+    const flush = (time) => {
+        ctx.platform.domWriteQueue.flush(time);
+    };
     const fixture = new class Results {
         constructor() {
             this.startPromise = startPromise;
@@ -7593,6 +7596,7 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             this.au = au;
             this.component = component;
             this.observerLocator = observerLocator;
+            this.logger = container.get(kernel.ILogger);
             this.getBy = getBy;
             this.getAllBy = getAllBy;
             this.queryBy = queryBy;
@@ -7600,6 +7604,7 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             this.assertHtml = assertHtml;
             this.trigger = trigger;
             this.scrollBy = scrollBy;
+            this.flush = flush;
         }
         async start() {
             await au.app({ host: host, component }).start();

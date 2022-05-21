@@ -244,24 +244,6 @@ class BindingInterceptor {
             binding = interceptor;
         }
     }
-    get oL() {
-        return this.binding.oL;
-    }
-    get locator() {
-        return this.binding.locator;
-    }
-    get $scope() {
-        return this.binding.$scope;
-    }
-    get isBound() {
-        return this.binding.isBound;
-    }
-    get obs() {
-        return this.binding.obs;
-    }
-    get sourceExpression() {
-        return this.binding.sourceExpression;
-    }
     updateTarget(value, flags) {
         this.binding.updateTarget(value, flags);
     }
@@ -290,6 +272,16 @@ class BindingInterceptor {
         this.binding.$unbind(flags);
     }
 }
+const interceptableProperties = ['isBound', '$scope', 'obs', 'sourceExpression', 'locator', 'oL'];
+interceptableProperties.forEach(prop => {
+    def(BindingInterceptor.prototype, prop, {
+        enumerable: false,
+        configurable: true,
+        get: function () {
+            return this.binding[prop];
+        },
+    });
+});
 const bbBaseName = getResourceKeyFor('binding-behavior');
 const getBehaviorAnnotation = (Type, prop) => getOwnMetadata(getAnnotationKeyFor(prop), Type);
 const BindingBehavior = Object.freeze({
