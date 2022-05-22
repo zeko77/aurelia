@@ -2932,12 +2932,21 @@ class LifecycleHooksDefinition {
         }
         return new LifecycleHooksDefinition(Type, propertyNames);
     }
+    static fromCallback(lifecycle, callback) {
+        const Type = class {
+            constructor() {
+                this[lifecycle] = callback;
+            }
+        };
+        return new LifecycleHooksDefinition(Type, new Set([lifecycle]));
+    }
     register(container) {
         kernel.Registration.singleton(ILifecycleHooks, this.Type).register(container);
     }
 }
 const containerLookup = new WeakMap();
 const lhBaseName = getAnnotationKeyFor('lifecycle-hooks');
+const callbackHooksName = `${lhBaseName}:callback`;
 const LifecycleHooks = Object.freeze({
     name: lhBaseName,
     define(def, Type) {
@@ -2946,15 +2955,26 @@ const LifecycleHooks = Object.freeze({
         appendResourceKey(Type, lhBaseName);
         return definition.Type;
     },
+    fromCallback(lifecycle, callback) {
+        return LifecycleHooksDefinition.fromCallback(lifecycle, callback);
+    },
+    add(Type, lifecycle, callback) {
+        var _a;
+        let existing = getOwnMetadata(Type, callbackHooksName);
+        if (existing === void 0) {
+            defineMetadata(callbackHooksName, existing = {}, Type);
+        }
+        ((_a = existing[lifecycle]) !== null && _a !== void 0 ? _a : (existing[lifecycle] = [])).push(callback);
+    },
     resolve(ctx) {
         let lookup = containerLookup.get(ctx);
         if (lookup === void 0) {
-            lookup = new LifecycleHooksLookupImpl();
+            containerLookup.set(ctx, lookup = new LifecycleHooksLookupImpl());
             const root = ctx.root;
             const instances = root.id === ctx.id
                 ? ctx.getAll(ILifecycleHooks)
                 : ctx.has(ILifecycleHooks, false)
-                    ? [...root.getAll(ILifecycleHooks), ...ctx.getAll(ILifecycleHooks)]
+                    ? root.getAll(ILifecycleHooks).concat(ctx.getAll(ILifecycleHooks))
                     : root.getAll(ILifecycleHooks);
             let instance;
             let definition;
@@ -3541,6 +3561,9 @@ class Controller {
     }
     _hydrateChildren() {
         this._rendering.render(this, this.nodes.findTargets(), this._compiledDef, this.host);
+        if (this.lifecycleHooks.created !== void 0) {
+            this.lifecycleHooks.created.forEach(callCreatedHook, this);
+        }
         if (this.hooks.hasCreated) {
             if (this.debug) {
                 this.logger.trace(`invoking created() hook`);
@@ -4264,6 +4287,9 @@ class HydrationContext {
 }
 function callDispose(disposable) {
     disposable.dispose();
+}
+function callCreatedHook(l) {
+    l.instance.created(this.viewModel, this);
 }
 let _resolve;
 let _reject;

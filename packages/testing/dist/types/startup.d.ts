@@ -1,13 +1,13 @@
-import { Constructable, IContainer } from '@aurelia/kernel';
+import { Constructable, IContainer, ILogger } from '@aurelia/kernel';
 import { IObserverLocator } from '@aurelia/runtime';
 import { Aurelia, IPlatform, type ICustomElementViewModel } from '@aurelia/runtime-html';
 import { TestContext } from './test-context';
 export declare const onFixtureCreated: <T>(callback: (fixture: IFixture<T>) => unknown) => import("@aurelia/kernel").IDisposable;
 export declare function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>(template: string | Node, $class?: T, registrations?: unknown[], autoStart?: boolean, ctx?: TestContext): IFixture<ICustomElementViewModel & K>;
 export declare namespace createFixture {
-    var html: <T = Record<string, any>>(html: string | TemplateStringsArray, ...values: TemplateValues<T>[]) => CreateBuilder<T, "component" | "deps">;
+    var html: <T = Record<PropertyKey, any>>(html: string | TemplateStringsArray, ...values: TemplateValues<T>[]) => CreateBuilder<T, "component" | "deps">;
     var component: <T>(component: T) => CreateBuilder<T, "html" | "deps">;
-    var deps: <T = Record<string, any>>(...deps: unknown[]) => CreateBuilder<T, "html" | "component">;
+    var deps: <T = Record<PropertyKey, any>>(...deps: unknown[]) => CreateBuilder<T, "html" | "component">;
 }
 export interface IFixture<T> {
     readonly startPromise: void | Promise<void>;
@@ -20,6 +20,7 @@ export interface IFixture<T> {
     readonly au: Aurelia;
     readonly component: ICustomElementViewModel & T;
     readonly observerLocator: IObserverLocator;
+    readonly logger: ILogger;
     readonly torn: boolean;
     start(): Promise<void>;
     tearDown(): void | Promise<void>;
@@ -67,6 +68,7 @@ export interface IFixture<T> {
      * A helper to scroll and trigger a scroll even on an element matching the given selector
      */
     scrollBy(selector: string, options: number | ScrollToOptions): void;
+    flush(): void;
 }
 export declare type ITrigger = ((selector: string, event: string, init?: CustomEventInit) => void) & {
     click(selector: string, init?: CustomEventInit): void;

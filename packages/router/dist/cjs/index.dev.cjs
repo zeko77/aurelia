@@ -1837,7 +1837,7 @@ class ViewportContent extends EndpointContent {
             });
         }
         const hooks = this.getLifecycleHooks(instance, 'canUnload').map(hook => ((innerStep) => {
-            const result = hook(instance, this.instruction, this.navigation);
+            const result = hook(instance, this.instruction, navigation);
             if (typeof result === 'boolean') {
                 if (result === false) {
                     innerStep.exit();
@@ -1902,7 +1902,7 @@ class ViewportContent extends EndpointContent {
                 previous: this.navigation,
             });
         }
-        const hooks = this.getLifecycleHooks(instance, 'unload').map(hook => () => hook(instance, this.instruction, this.navigation));
+        const hooks = this.getLifecycleHooks(instance, 'unload').map(hook => () => hook(instance, this.instruction, navigation));
         if (hooks.length !== 0) {
             if (instance.unload != null) {
                 hooks.push(() => instance.unload(this.instruction, navigation));
@@ -2777,6 +2777,10 @@ class RoutingInstruction {
             this.endpoint.endpointType === null
             ? this.endpoint
             : null;
+    }
+    get previous() {
+        var _a, _b;
+        return (_b = (_a = this.endpoint.instance) === null || _a === void 0 ? void 0 : _a.getContent()) === null || _b === void 0 ? void 0 : _b.instruction;
     }
     isAdd(context) {
         return this.component.name === Separators.for(context).add;

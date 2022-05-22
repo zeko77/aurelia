@@ -1,47 +1,43 @@
 import { DI, Registration, optional, all, ILogger, camelCase } from '@aurelia/kernel';
-import { connectable, Scope, IExpressionParser, IObserverLocator } from '@aurelia/runtime';
-import { attributePattern, bindingCommand, renderer, AttrSyntax, IAttrMapper, applyBindingBehavior } from '@aurelia/runtime-html';
+import { Scope, connectable, BindingMode, bindingBehavior, BindingInterceptor, IExpressionParser, IObserverLocator } from '@aurelia/runtime';
+import { attributePattern, bindingCommand, renderer, AttrSyntax, IAttrMapper, IPlatform, applyBindingBehavior } from '@aurelia/runtime-html';
 
-const IReducerAction = DI.createInterface('IReducerAction');
-const reducerActionName = '__reducer__';
-const Action = Object.freeze(new class {
-    constructor() {
-        this.isType = (r) => typeof r === 'function' && reducerActionName in r;
-    }
-    define(actionOrName, action) {
-        const reg = typeof actionOrName === 'string'
-            ? [actionOrName, action]
-            : [actionOrName, actionOrName];
-        const $action = reg[1];
-        function registry(state, ...params) {
-            return $action(state, ...params);
+const IReducer = DI.createInterface('IReducer');
+const IStore = DI.createInterface('IStore');
+const IState = DI.createInterface('IState');
+
+const reducerSymbol = '__reducer__';
+const Reducer = Object.freeze({
+    define(reducer) {
+        function registry(state, actionType, ...params) {
+            return reducer(state, actionType, ...params);
         }
-        registry[reducerActionName] = true;
+        registry[reducerSymbol] = true;
         registry.register = function (c) {
-            Registration.instance(IReducerAction, reg).register(c);
+            Registration.instance(IReducer, reducer).register(c);
         };
         return registry;
-    }
-}());
+    },
+    isType: (r) => typeof r === 'function' && reducerSymbol in r,
+});
 
-const IStateContainer = DI.createInterface('IStateContainer');
-const IState = DI.createInterface('IState');
-class StateContainer {
-    constructor(initialState, actions, logger) {
+class Store {
+    constructor(initialState, reducers, logger) {
         this._subs = new Set();
         this._publishing = 0;
         this._dispatchQueues = [];
         this._state = initialState !== null && initialState !== void 0 ? initialState : new State();
-        this._reducers = new Map(actions);
+        this._reducers = reducers;
         this._logger = logger;
     }
     static register(c) {
-        Registration.singleton(IStateContainer, this).register(c);
+        Registration.singleton(IStore, this).register(c);
     }
     subscribe(subscriber) {
         {
             if (this._subs.has(subscriber)) {
                 this._logger.warn('A subscriber is trying to subscribe to state change again.');
+                return;
             }
         }
         this._subs.add(subscriber);
@@ -50,6 +46,7 @@ class StateContainer {
         {
             if (!this._subs.has(subscriber)) {
                 this._logger.warn('Unsubscribing a non-listening subscriber');
+                return;
             }
         }
         this._subs.delete(subscriber);
@@ -64,77 +61,50 @@ class StateContainer {
             return new Proxy(this._state, new StateProxyHandler(this, this._logger));
         }
     }
-    _getAction(action) {
-        return this._reducers.get(action);
-    }
     dispatch(action, ...params) {
         if (this._publishing > 0) {
-            this._dispatchQueues.push({ action: action, params });
+            this._dispatchQueues.push({ type: action, params });
             return;
         }
         this._publishing++;
-        const dispatch = ($action, $params) => {
-            if ($action == null) {
-                {
-                    this._logger.warn('Dispatching an invalid action: undefined');
-                }
-                return;
+        let $$action;
+        const reduce = ($state, $action, params) => this._reducers.reduce(($state, r) => {
+            if ($state instanceof Promise) {
+                return $state.then($ => r($, $action, ...params !== null && params !== void 0 ? params : []));
             }
-            $action = this._getAction($action);
-            if ($action == null) {
-                if (typeof action === 'string') {
-                    {
-                        this._logger.warn(`Unrecognized action type "${action}"`);
-                    }
-                    return;
-                }
-                $action = action;
-            }
-            let newState = void 0;
-            try {
-                newState = $action(this._state, ...$params);
-            }
-            catch (ex) {
-                this._publishing--;
-                throw ex;
-            }
-            if (newState instanceof Promise) {
-                return newState.then(s => {
-                    this._setState(s);
-                    return afterDispatch();
-                }).then(() => {
-                    this._publishing--;
-                }, ex => {
-                    this._publishing--;
-                    throw ex;
-                });
-            }
-            else {
-                this._setState(newState);
-                const res = afterDispatch();
-                if (res instanceof Promise) {
-                    return res.then(() => {
-                        this._publishing--;
-                    }, ex => {
-                        this._publishing--;
-                        throw ex;
-                    });
+            return r($state, $action, ...params !== null && params !== void 0 ? params : []);
+        }, $state);
+        const afterDispatch = ($state) => {
+            if (this._dispatchQueues.length > 0) {
+                $$action = this._dispatchQueues.shift();
+                const newState = reduce($state, $$action.type, $$action.params);
+                if (newState instanceof Promise) {
+                    return newState.then($ => afterDispatch($));
                 }
                 else {
-                    this._publishing--;
+                    return afterDispatch(newState);
                 }
             }
         };
-        const afterDispatch = () => {
-            if (this._dispatchQueues.length > 0) {
-                const queuedItem = this._dispatchQueues.shift();
-                return dispatch(queuedItem.action, queuedItem.params);
-            }
-        };
-        return dispatch(action, params);
+        const newState = reduce(this._state, action, params);
+        if (newState instanceof Promise) {
+            return newState.then($state => {
+                this._setState($state);
+                this._publishing--;
+                return afterDispatch(this._state);
+            }, ex => {
+                this._publishing--;
+                throw ex;
+            });
+        }
+        else {
+            this._setState(newState);
+            this._publishing--;
+            return afterDispatch(this._state);
+        }
     }
 }
-StateContainer.inject = [optional(IState), all(IReducerAction), ILogger];
+Store.inject = [optional(IState), all(IReducer), ILogger];
 class State {
 }
 class StateProxyHandler {
@@ -170,57 +140,70 @@ function __decorate(decorators, target, key, desc) {
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 }
 
+function createStateBindingScope(state, scope) {
+    const overrideContext = { bindingContext: state };
+    const stateScope = Scope.create(state, overrideContext, true);
+    stateScope.parentScope = scope;
+    return stateScope;
+}
+const defProto = (klass, prop, desc) => Reflect.defineProperty(klass.prototype, prop, desc);
+
+const { toView, oneTime } = BindingMode;
 let StateBinding = class StateBinding {
-    constructor(locator, stateContainer, observerLocator, expr, target, prop) {
+    constructor(locator, taskQueue, store, observerLocator, expr, target, prop) {
         this.interceptor = this;
         this.isBound = false;
+        this.task = null;
         this._value = void 0;
         this._sub = void 0;
         this._updateCount = 0;
+        this.persistentFlags = 0;
+        this.mode = toView;
         this.locator = locator;
-        this._stateContainer = stateContainer;
-        this._observerLocator = observerLocator;
-        this.expr = expr;
+        this.taskQueue = taskQueue;
+        this._store = store;
+        this.oL = observerLocator;
+        this.sourceExpression = expr;
         this.target = target;
-        this.prop = prop;
+        this.targetProperty = prop;
     }
-    updateTarget(value) {
-        const targetAccessor = this._targetAccessor;
+    updateTarget(value, flags) {
+        const targetAccessor = this.targetObserver;
         const target = this.target;
-        const prop = this.prop;
+        const prop = this.targetProperty;
         const updateCount = this._updateCount++;
+        const isCurrentValue = () => updateCount === this._updateCount - 1;
         this._unsub();
         if (isSubscribable(value)) {
             this._sub = value.subscribe($value => {
-                if (updateCount === this._updateCount - 1) {
-                    targetAccessor.setValue($value, 0, target, prop);
+                if (isCurrentValue()) {
+                    targetAccessor.setValue($value, flags, target, prop);
                 }
             });
             return;
         }
         if (value instanceof Promise) {
             void value.then($value => {
-                if (updateCount === this._updateCount - 1) {
-                    targetAccessor.setValue($value, 0, target, prop);
+                if (isCurrentValue()) {
+                    targetAccessor.setValue($value, flags, target, prop);
                 }
             }, () => { });
             return;
         }
-        targetAccessor.setValue(value, 0, target, prop);
+        targetAccessor.setValue(value, flags, target, prop);
     }
     $bind(flags, scope) {
         if (this.isBound) {
             return;
         }
         this.isBound = true;
-        this._targetAccessor = this._observerLocator.getAccessor(this.target, this.prop);
-        const state = this._stateContainer.getState();
-        const overrideContext = { bindingContext: state, $state: state, $store: this._stateContainer };
-        (this.$scope = Scope.fromOverride(overrideContext)).parentScope = scope;
-        this._stateContainer.subscribe(this);
-        this.updateTarget(this._value = this.expr.evaluate(1, this.$scope, this.locator, null));
+        this.targetObserver = this.oL.getAccessor(this.target, this.targetProperty);
+        this.$scope = createStateBindingScope(this._store.getState(), scope);
+        this._store.subscribe(this);
+        this.updateTarget(this._value = this.sourceExpression.evaluate(1, this.$scope, this.locator, this.mode > oneTime ? this : null), 0);
     }
     $unbind() {
+        var _a;
         if (!this.isBound) {
             return;
         }
@@ -228,24 +211,65 @@ let StateBinding = class StateBinding {
         this._updateCount++;
         this.isBound = false;
         this.$scope = void 0;
-        this._stateContainer.unsubscribe(this);
+        (_a = this.task) === null || _a === void 0 ? void 0 : _a.cancel();
+        this.task = null;
+        this._store.unsubscribe(this);
+    }
+    handleChange(newValue, previousValue, flags) {
+        if (!this.isBound) {
+            return;
+        }
+        flags |= this.persistentFlags;
+        const shouldQueueFlush = (flags & 2) === 0 && (this.targetObserver.type & 4) > 0;
+        const obsRecord = this.obs;
+        obsRecord.version++;
+        newValue = this.sourceExpression.evaluate(flags, this.$scope, this.locator, this.interceptor);
+        obsRecord.clear();
+        let task;
+        if (shouldQueueFlush) {
+            task = this.task;
+            this.task = this.taskQueue.queueTask(() => {
+                this.interceptor.updateTarget(newValue, flags);
+                this.task = null;
+            }, updateTaskOpts);
+            task === null || task === void 0 ? void 0 : task.cancel();
+            task = null;
+        }
+        else {
+            this.interceptor.updateTarget(newValue, flags);
+        }
     }
     handleStateChange(state) {
         const $scope = this.$scope;
         const overrideContext = $scope.overrideContext;
         $scope.bindingContext = overrideContext.bindingContext = overrideContext.$state = state;
-        const value = this.expr.evaluate(1, $scope, this.locator, null);
-        if (value !== this._value) {
-            this._value = value;
-            this.updateTarget(value);
+        const value = this.sourceExpression.evaluate(1, $scope, this.locator, this.mode > oneTime ? this : null);
+        const shouldQueueFlush = (this.targetObserver.type & 4) > 0;
+        if (value === this._value) {
+            return;
+        }
+        this._value = value;
+        let task = null;
+        if (shouldQueueFlush) {
+            task = this.task;
+            this.task = this.taskQueue.queueTask(() => {
+                this.interceptor.updateTarget(value, 1);
+                this.task = null;
+            }, updateTaskOpts);
+            task === null || task === void 0 ? void 0 : task.cancel();
+        }
+        else {
+            this.interceptor.updateTarget(this._value, 0);
         }
     }
     _unsub() {
+        var _a, _b, _c, _d;
         if (typeof this._sub === 'function') {
             this._sub();
         }
         else if (this._sub !== void 0) {
-            this._sub.dispose();
+            (_b = (_a = this._sub).dispose) === null || _b === void 0 ? void 0 : _b.call(_a);
+            (_d = (_c = this._sub).unsubscribe) === null || _d === void 0 ? void 0 : _d.call(_c);
         }
         this._sub = void 0;
     }
@@ -256,23 +280,58 @@ StateBinding = __decorate([
 function isSubscribable(v) {
     return v instanceof Object && 'subscribe' in v;
 }
+const updateTaskOpts = {
+    reusable: false,
+    preempt: true,
+};
 
-let StateDispatchActionBinding = class StateDispatchActionBinding {
-    constructor(locator, stateContainer, expr, target, prop) {
+let StateBindingBehavior = class StateBindingBehavior extends BindingInterceptor {
+    constructor(store, binding, expr) {
+        super(binding, expr);
+        this._store = store;
+    }
+    $bind(flags, scope) {
+        const binding = this.binding;
+        const $scope = binding instanceof StateBinding ? scope : createStateBindingScope(this._store.getState(), scope);
+        binding.$bind(flags, $scope);
+    }
+};
+StateBindingBehavior.inject = [IStore];
+StateBindingBehavior = __decorate([
+    bindingBehavior('state')
+], StateBindingBehavior);
+['target', 'targetProperty'].forEach(p => {
+    defProto(StateBindingBehavior, p, {
+        enumerable: false,
+        configurable: true,
+        get() {
+            return this.binding[p];
+        },
+        set(v) {
+            this.binding[p] = v;
+        }
+    });
+});
+
+let StateDispatchBinding = class StateDispatchBinding {
+    constructor(locator, store, expr, target, prop) {
         this.interceptor = this;
         this.isBound = false;
         this.locator = locator;
-        this._stateContainer = stateContainer;
+        this._store = store;
         this.expr = expr;
         this.target = target;
-        this.prop = prop;
+        this.targetProperty = prop;
     }
     callSource(e) {
         const $scope = this.$scope;
         $scope.overrideContext.$event = e;
         const value = this.expr.evaluate(1, $scope, this.locator, null);
         delete $scope.overrideContext.$event;
-        void this._stateContainer.dispatch('event', { target: this.target, event: this.prop, value });
+        if (!this.isAction(value)) {
+            throw new Error(`Invalid dispatch value from expression on ${this.target} on event: "${e.type}"`);
+        }
+        void this._store.dispatch(value.type, ...(value.params instanceof Array ? value.params : []));
     }
     handleEvent(e) {
         this.interceptor.callSource(e);
@@ -282,10 +341,9 @@ let StateDispatchActionBinding = class StateDispatchActionBinding {
             return;
         }
         this.isBound = true;
-        const state = this._stateContainer.getState();
-        const overrideContext = { bindingContext: state, $state: state, $store: this._stateContainer };
-        (this.$scope = Scope.fromOverride(overrideContext)).parentScope = scope;
-        this.target.addEventListener(this.prop, this);
+        this.$scope = createStateBindingScope(this._store.getState(), scope);
+        this.target.addEventListener(this.targetProperty, this);
+        this._store.subscribe(this);
     }
     $unbind() {
         if (!this.isBound) {
@@ -293,12 +351,23 @@ let StateDispatchActionBinding = class StateDispatchActionBinding {
         }
         this.isBound = false;
         this.$scope = void 0;
-        this.target.removeEventListener(this.prop, this);
+        this.target.removeEventListener(this.targetProperty, this);
+        this._store.unsubscribe(this);
+    }
+    handleStateChange(state) {
+        const $scope = this.$scope;
+        const overrideContext = $scope.overrideContext;
+        $scope.bindingContext = overrideContext.bindingContext = state;
+    }
+    isAction(value) {
+        return value != null
+            && typeof value === 'object'
+            && 'type' in value;
     }
 };
-StateDispatchActionBinding = __decorate([
+StateDispatchBinding = __decorate([
     connectable()
-], StateDispatchActionBinding);
+], StateDispatchBinding);
 
 let StateAttributePattern = class StateAttributePattern {
     'PART.state'(rawName, rawValue, parts) {
@@ -344,8 +413,7 @@ StateBindingCommand = __decorate([
     bindingCommand('state')
 ], StateBindingCommand);
 let DispatchBindingCommand = class DispatchBindingCommand {
-    constructor(_attrMapper) {
-        this._attrMapper = _attrMapper;
+    constructor() {
         this.type = 1;
     }
     get name() { return 'dispatch'; }
@@ -354,7 +422,6 @@ let DispatchBindingCommand = class DispatchBindingCommand {
         return new DispatchBindingInstruction(attr.target, attr.rawValue);
     }
 };
-DispatchBindingCommand.inject = [IAttrMapper];
 DispatchBindingCommand = __decorate([
     bindingCommand('dispatch')
 ], DispatchBindingCommand);
@@ -373,35 +440,35 @@ class DispatchBindingInstruction {
     }
 }
 let StateBindingInstructionRenderer = class StateBindingInstructionRenderer {
-    constructor(_exprParser, _observerLocator, _stateContainer) {
+    constructor(_exprParser, _observerLocator, _stateContainer, p) {
         this._exprParser = _exprParser;
         this._observerLocator = _observerLocator;
         this._stateContainer = _stateContainer;
+        this.p = p;
     }
     render(renderingCtrl, target, instruction) {
-        const binding = new StateBinding(renderingCtrl.container, this._stateContainer, this._observerLocator, ensureExpression(this._exprParser, instruction.from, 4), target, instruction.to);
+        const binding = new StateBinding(renderingCtrl.container, this.p.domWriteQueue, this._stateContainer, this._observerLocator, ensureExpression(this._exprParser, instruction.from, 4), target, instruction.to);
         renderingCtrl.addBinding(binding);
     }
 };
-StateBindingInstructionRenderer.inject = [IExpressionParser, IObserverLocator, IStateContainer];
+StateBindingInstructionRenderer.inject = [IExpressionParser, IObserverLocator, IStore, IPlatform];
 StateBindingInstructionRenderer = __decorate([
     renderer('sb')
 ], StateBindingInstructionRenderer);
 let DispatchBindingInstructionRenderer = class DispatchBindingInstructionRenderer {
-    constructor(_exprParser, _observerLocator, _stateContainer) {
+    constructor(_exprParser, _stateContainer) {
         this._exprParser = _exprParser;
-        this._observerLocator = _observerLocator;
         this._stateContainer = _stateContainer;
     }
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.expr, 8);
-        const binding = new StateDispatchActionBinding(renderingCtrl.container, this._stateContainer, expr, target, instruction.from);
+        const binding = new StateDispatchBinding(renderingCtrl.container, this._stateContainer, expr, target, instruction.from);
         renderingCtrl.addBinding(expr.$kind === 38962
             ? applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }
 };
-DispatchBindingInstructionRenderer.inject = [IExpressionParser, IObserverLocator, IStateContainer];
+DispatchBindingInstructionRenderer.inject = [IExpressionParser, IStore];
 DispatchBindingInstructionRenderer = __decorate([
     renderer('sd')
 ], DispatchBindingInstructionRenderer);
@@ -419,15 +486,17 @@ const standardRegistrations = [
     DispatchAttributePattern,
     DispatchBindingCommand,
     DispatchBindingInstructionRenderer,
-    StateContainer,
+    Store,
 ];
 const createConfiguration = (initialState, reducers) => {
     return {
-        register: (c) => c.register(...standardRegistrations, Registration.instance(IState, initialState), ...reducers.map(r => Action.isType(r) ? r : Action.define(r.target, r.action))),
+        register: (c) => {
+            c.register(...standardRegistrations, Registration.instance(IState, initialState), StateBindingBehavior, ...reducers.map(Reducer.define));
+        },
         init: (state, ...reducers) => createConfiguration(state, reducers),
     };
 };
-const StandardStateConfiguration = createConfiguration({}, []);
+const StateDefaultConfiguration = createConfiguration({}, []);
 
-export { Action, DispatchAttributePattern, DispatchBindingCommand, DispatchBindingInstruction, DispatchBindingInstructionRenderer, IReducerAction, IState, IStateContainer, StandardStateConfiguration, StateAttributePattern, StateBinding, StateBindingCommand, StateBindingInstruction, StateBindingInstructionRenderer, StateContainer, StateDispatchActionBinding };
+export { Reducer as Action, DispatchAttributePattern, DispatchBindingCommand, DispatchBindingInstruction, DispatchBindingInstructionRenderer, IReducer, IState, IStore, StateAttributePattern, StateBinding, StateBindingBehavior, StateBindingCommand, StateBindingInstruction, StateBindingInstructionRenderer, StateDefaultConfiguration, StateDispatchBinding };
 //# sourceMappingURL=index.dev.mjs.map

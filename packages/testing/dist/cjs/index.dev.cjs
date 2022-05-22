@@ -7489,7 +7489,7 @@ const onFixtureCreated = (callback) => {
 function createFixture(template, $class, registrations = [], autoStart = true, ctx = TestContext.create()) {
     const { container, platform, observerLocator } = ctx;
     container.register(...registrations);
-    const root = ctx.doc.body.appendChild(ctx.doc.createElement('div'));
+    const root = ctx.doc.body.appendChild(ctx.createElement('div'));
     const host = root.appendChild(ctx.createElement('app'));
     const au = new runtimeHtml.Aurelia(container);
     const $$class = typeof $class === 'function'
@@ -7501,7 +7501,12 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
                 Object.setPrototypeOf($class, $Ctor.prototype);
                 return $class;
             };
-    const App = runtimeHtml.CustomElement.define({ name: 'app', template }, $$class);
+    const existingDefs = (runtimeHtml.CustomElement.isType($$class) ? runtimeHtml.CustomElement.getDefinition($$class) : {});
+    const App = runtimeHtml.CustomElement.define({
+        ...existingDefs,
+        name: 'app',
+        template,
+    }, $$class);
     if (container.has(App, true)) {
         throw new Error('Container of the context contains instance of the application root component. ' +
             'Consider using a different class, or context as it will likely cause surprises in tests.');
@@ -7581,6 +7586,9 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
         el.scrollBy(typeof init === 'number' ? { top: init } : init);
         el.dispatchEvent(new Event('scroll'));
     };
+    const flush = (time) => {
+        ctx.platform.domWriteQueue.flush(time);
+    };
     const fixture = new class Results {
         constructor() {
             this.startPromise = startPromise;
@@ -7593,6 +7601,7 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             this.au = au;
             this.component = component;
             this.observerLocator = observerLocator;
+            this.logger = container.get(kernel.ILogger);
             this.getBy = getBy;
             this.getAllBy = getAllBy;
             this.queryBy = queryBy;
@@ -7600,6 +7609,7 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             this.assertHtml = assertHtml;
             this.trigger = trigger;
             this.scrollBy = scrollBy;
+            this.flush = flush;
         }
         async start() {
             await au.app({ host: host, component }).start();

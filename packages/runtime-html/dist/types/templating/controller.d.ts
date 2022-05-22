@@ -53,7 +53,9 @@ export declare class Controller<C extends IViewModel = IViewModel> implements IC
     shadowRoot: ShadowRoot | null;
     nodes: INodeSequence | null;
     location: IRenderLocation | null;
-    lifecycleHooks: LifecycleHooksLookup | null;
+    lifecycleHooks: LifecycleHooksLookup<{
+        created: ICompileHooks['created'];
+    }> | null;
     state: State;
     get isActive(): boolean;
     get name(): string;

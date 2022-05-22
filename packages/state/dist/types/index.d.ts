@@ -1,8 +1,9 @@
 /// <reference path="../../../global.d.ts" />
-export { StandardStateConfiguration } from './configuration';
-export { IReducerAction, Action, type IRegistrableReducer, } from './reducer';
-export { IState, IStateContainer, StateContainer, type IStateSubscriber, } from './state';
+export { StateDefaultConfiguration } from './configuration';
+export { Reducer as Action, } from './reducer';
+export { IState, IStore, type IStoreSubscriber, IReducer, type IRegistrableReducer, type IAction, } from './interfaces';
 export { StateBinding, } from './state-binding';
-export { StateDispatchActionBinding, } from './state-dispatch';
+export { StateDispatchBinding } from './state-dispatch-binding';
 export { StateAttributePattern, StateBindingCommand, StateBindingInstruction, StateBindingInstructionRenderer, DispatchAttributePattern, DispatchBindingCommand, DispatchBindingInstruction, DispatchBindingInstructionRenderer, } from './state-templating';
+export { StateBindingBehavior } from './state-binding-behavior';
 //# sourceMappingURL=index.d.ts.map

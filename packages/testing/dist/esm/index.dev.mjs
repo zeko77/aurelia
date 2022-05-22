@@ -1,4 +1,4 @@
-import { noop, isArrayIndex, DI, Registration, emptyArray, kebabCase, EventAggregator } from '@aurelia/kernel';
+import { noop, isArrayIndex, DI, Registration, emptyArray, kebabCase, EventAggregator, ILogger } from '@aurelia/kernel';
 import { IObserverLocator, valueConverter, IDirtyChecker, INodeObserverLocator, Scope, OverrideContext } from '@aurelia/runtime';
 import { StandardConfiguration, IPlatform, ITemplateCompiler, CustomElement, CustomAttribute, Aurelia, bindable, customElement } from '@aurelia/runtime-html';
 import { BrowserPlatform } from '@aurelia/platform-browser';
@@ -7485,7 +7485,7 @@ const onFixtureCreated = (callback) => {
 function createFixture(template, $class, registrations = [], autoStart = true, ctx = TestContext.create()) {
     const { container, platform, observerLocator } = ctx;
     container.register(...registrations);
-    const root = ctx.doc.body.appendChild(ctx.doc.createElement('div'));
+    const root = ctx.doc.body.appendChild(ctx.createElement('div'));
     const host = root.appendChild(ctx.createElement('app'));
     const au = new Aurelia(container);
     const $$class = typeof $class === 'function'
@@ -7497,7 +7497,12 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
                 Object.setPrototypeOf($class, $Ctor.prototype);
                 return $class;
             };
-    const App = CustomElement.define({ name: 'app', template }, $$class);
+    const existingDefs = (CustomElement.isType($$class) ? CustomElement.getDefinition($$class) : {});
+    const App = CustomElement.define({
+        ...existingDefs,
+        name: 'app',
+        template,
+    }, $$class);
     if (container.has(App, true)) {
         throw new Error('Container of the context contains instance of the application root component. ' +
             'Consider using a different class, or context as it will likely cause surprises in tests.');
@@ -7577,6 +7582,9 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
         el.scrollBy(typeof init === 'number' ? { top: init } : init);
         el.dispatchEvent(new Event('scroll'));
     };
+    const flush = (time) => {
+        ctx.platform.domWriteQueue.flush(time);
+    };
     const fixture = new class Results {
         constructor() {
             this.startPromise = startPromise;
@@ -7589,6 +7597,7 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             this.au = au;
             this.component = component;
             this.observerLocator = observerLocator;
+            this.logger = container.get(ILogger);
             this.getBy = getBy;
             this.getAllBy = getAllBy;
             this.queryBy = queryBy;
@@ -7596,6 +7605,7 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             this.assertHtml = assertHtml;
             this.trigger = trigger;
             this.scrollBy = scrollBy;
+            this.flush = flush;
         }
         async start() {
             await au.app({ host: host, component }).start();
