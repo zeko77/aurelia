@@ -3658,84 +3658,86 @@ const Ki = e => Yi.subscribe("fixture:created", (t => {
 function Qi(e, t, n = [], i = true, r = TestContext.create()) {
     const {container: a, platform: s, observerLocator: l} = r;
     a.register(...n);
-    const u = r.doc.body.appendChild(r.doc.createElement("div"));
+    const u = r.doc.body.appendChild(r.createElement("div"));
     const c = u.appendChild(r.createElement("app"));
     const f = new $(a);
     const h = "function" === typeof t ? t : null == t ? class {} : function e() {
         Object.setPrototypeOf(t, e.prototype);
         return t;
     };
-    const d = b.define({
+    const d = b.isType(h) ? b.getDefinition(h) : {};
+    const p = b.define({
+        ...d,
         name: "app",
         template: e
     }, h);
-    if (a.has(d, true)) throw new Error("Container of the context contains instance of the application root component. " + "Consider using a different class, or context as it will likely cause surprises in tests.");
-    const p = a.get(d);
-    let m;
+    if (a.has(p, true)) throw new Error("Container of the context contains instance of the application root component. " + "Consider using a different class, or context as it will likely cause surprises in tests.");
+    const m = a.get(p);
+    let g;
     if (i) {
         f.app({
             host: c,
-            component: p
+            component: m
         });
-        m = f.start();
+        g = f.start();
     }
-    let g = 0;
-    const v = e => {
+    let v = 0;
+    const y = e => {
         const t = c.querySelectorAll(e);
         if (t.length > 1) throw new Error(`There is more than 1 element with selector "${e}": ${t.length} found`);
         if (0 === t.length) throw new Error(`No element found for selector: "${e}"`);
         return t[0];
     };
-    const y = e => Array.from(c.querySelectorAll(e));
-    const x = e => {
+    const x = e => Array.from(c.querySelectorAll(e));
+    const w = e => {
         const t = c.querySelectorAll(e);
         if (t.length > 1) throw new Error(`There is more than 1 element with selector "${e}": ${t.length} found`);
         return 0 === t.length ? null : t[0];
     };
-    const w = (e, t) => {
+    const k = (e, t) => {
         if (2 === arguments.length) {
-            const n = x(e);
+            const n = w(e);
             if (null === n) throw new Error(`No element found for selector "${e}" to compare text content with "${t}"`);
             Ti.strictEqual(n.textContent, t);
         } else Ti.strictEqual(c.textContent, e);
     };
-    const k = (e, t) => {
+    const C = (e, t) => {
         if (2 === arguments.length) {
-            const n = x(e);
+            const n = w(e);
             if (null === n) throw new Error(`No element found for selector "${e}" to compare innerHTML with "${t}"`);
             Ti.strictEqual(n.innerHTML, t);
         } else Ti.strictEqual(c.innerHTML, e);
     };
-    const C = (e, t, n) => {
-        const i = x(e);
+    const S = (e, t, n) => {
+        const i = w(e);
         if (null === i) throw new Error(`No element found for selector "${e}" to fire event "${t}"`);
         i.dispatchEvent(new r.CustomEvent(t, n));
     };
     [ "click", "change", "input", "scroll" ].forEach((e => {
-        Object.defineProperty(C, e, {
+        Object.defineProperty(S, e, {
             configurable: true,
             writable: true,
             value: (t, n) => {
-                const i = x(t);
+                const i = w(t);
                 if (null === i) throw new Error(`No element found for selector "${t}" to fire event "${e}"`);
                 i.dispatchEvent(new r.CustomEvent(e, n));
             }
         });
     }));
-    const S = (e, t) => {
-        const n = x(e);
+    const O = (e, t) => {
+        const n = w(e);
         if (null === n) throw new Error(`No element found for selector "${e}" to scroll by "${JSON.stringify(t)}"`);
         n.scrollBy("number" === typeof t ? {
             top: t
         } : t);
         n.dispatchEvent(new Event("scroll"));
     };
-    const O = e => {
+    const E = e => {
         r.platform.domWriteQueue.flush(e);
     };
-    const E = new class Results {
+    const j = new class Results {
         constructor() {
-            this.startPromise = m;
+            this.startPromise = g;
             this.ctx = r;
             this.host = r.doc.firstElementChild;
             this.container = a;
@@ -3743,26 +3745,26 @@ function Qi(e, t, n = [], i = true, r = TestContext.create()) {
             this.testHost = u;
             this.appHost = c;
             this.au = f;
-            this.component = p;
+            this.component = m;
             this.observerLocator = l;
             this.logger = a.get(o);
-            this.getBy = v;
-            this.getAllBy = y;
-            this.queryBy = x;
-            this.assertText = w;
-            this.assertHtml = k;
-            this.trigger = C;
-            this.scrollBy = S;
-            this.flush = O;
+            this.getBy = y;
+            this.getAllBy = x;
+            this.queryBy = w;
+            this.assertText = k;
+            this.assertHtml = C;
+            this.trigger = S;
+            this.scrollBy = O;
+            this.flush = E;
         }
         async start() {
             await f.app({
                 host: c,
-                component: p
+                component: m
             }).start();
         }
         tearDown() {
-            if (2 === ++g) {
+            if (2 === ++v) {
                 console.log("(!) Fixture has already been torn down");
                 return;
             }
@@ -3774,15 +3776,15 @@ function Qi(e, t, n = [], i = true, r = TestContext.create()) {
             if (t instanceof Promise) return t.then(e); else return e();
         }
         get torn() {
-            return g > 0;
+            return v > 0;
         }
         get started() {
-            if (m instanceof Promise) return Promise.resolve(m).then((() => this));
+            if (g instanceof Promise) return Promise.resolve(g).then((() => this));
             return Promise.resolve(this);
         }
     };
-    Yi.publish("fixture:created", E);
-    return E;
+    Yi.publish("fixture:created", j);
+    return j;
 }
 
 class FixtureBuilder {

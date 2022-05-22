@@ -7485,7 +7485,7 @@ const onFixtureCreated = (callback) => {
 function createFixture(template, $class, registrations = [], autoStart = true, ctx = TestContext.create()) {
     const { container, platform, observerLocator } = ctx;
     container.register(...registrations);
-    const root = ctx.doc.body.appendChild(ctx.doc.createElement('div'));
+    const root = ctx.doc.body.appendChild(ctx.createElement('div'));
     const host = root.appendChild(ctx.createElement('app'));
     const au = new Aurelia(container);
     const $$class = typeof $class === 'function'
@@ -7497,7 +7497,12 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
                 Object.setPrototypeOf($class, $Ctor.prototype);
                 return $class;
             };
-    const App = CustomElement.define({ name: 'app', template }, $$class);
+    const existingDefs = (CustomElement.isType($$class) ? CustomElement.getDefinition($$class) : {});
+    const App = CustomElement.define({
+        ...existingDefs,
+        name: 'app',
+        template,
+    }, $$class);
     if (container.has(App, true)) {
         throw new Error('Container of the context contains instance of the application root component. ' +
             'Consider using a different class, or context as it will likely cause surprises in tests.');

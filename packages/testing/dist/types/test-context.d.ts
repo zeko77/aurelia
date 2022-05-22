@@ -81,7 +81,9 @@ export declare class TestContext {
     private constructor();
     static create(): TestContext;
     createElementFromMarkup(markup: string): HTMLElement;
-    createElement(name: string): HTMLElement;
+    createElement<K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K];
+    createElement<K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K];
+    createElement<E extends HTMLElement = HTMLElement>(selectors: string): E;
     createAttribute(name: string, value: string): Attr;
     type(host: HTMLElement, selector: string, value: string): void;
 }
