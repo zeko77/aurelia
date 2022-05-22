@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
-import { Constructable, EventAggregator, IContainer } from '@aurelia/kernel';
+import { Constructable, EventAggregator, IContainer, ILogger } from '@aurelia/kernel';
 import { IObserverLocator } from '@aurelia/runtime';
-import { CustomElement, Aurelia, IPlatform, type ICustomElementViewModel } from '@aurelia/runtime-html';
+import { CustomElement, Aurelia, IPlatform, type ICustomElementViewModel, CustomElementDefinition } from '@aurelia/runtime-html';
 import { assert } from './assert';
 import { TestContext } from './test-context';
 
@@ -26,7 +26,7 @@ export function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>
 ): IFixture<ICustomElementViewModel & K> {
   const { container, platform, observerLocator } = ctx;
   container.register(...registrations);
-  const root = ctx.doc.body.appendChild(ctx.doc.createElement('div'));
+  const root = ctx.doc.body.appendChild(ctx.createElement('div'));
   const host = root.appendChild(ctx.createElement('app'));
   const au = new Aurelia(container);
   const $$class: Constructable<K> = typeof $class === 'function'
@@ -38,7 +38,12 @@ export function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>
         return $class;
       } as unknown as Constructable<K>;
 
-  const App = CustomElement.define<Constructable<K>>({ name: 'app', template }, $$class);
+  const existingDefs = (CustomElement.isType($$class) ? CustomElement.getDefinition($$class) : {}) as CustomElementDefinition;
+  const App = CustomElement.define<Constructable<K>>({
+    ...existingDefs,
+    name: 'app',
+    template,
+  }, $$class);
 
   if (container.has(App, true)) {
     throw new Error(
@@ -124,6 +129,10 @@ export function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>
     el.dispatchEvent(new Event('scroll'));
   };
 
+  const flush = (time?: number) => {
+    ctx.platform.domWriteQueue.flush(time);
+  };
+
   const fixture = new class Results implements IFixture<K> {
     public startPromise = startPromise;
     public ctx = ctx;
@@ -135,6 +144,7 @@ export function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>
     public au = au;
     public component = component;
     public observerLocator = observerLocator;
+    public logger = container.get(ILogger);
 
     public async start() {
       await au.app({ host: host, component }).start();
@@ -177,6 +187,7 @@ export function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>
     public assertHtml = assertHtml;
     public trigger = trigger;
     public scrollBy = scrollBy;
+    public flush = flush;
   }();
 
   fixtureHooks.publish('fixture:created', fixture);
@@ -195,6 +206,7 @@ export interface IFixture<T> {
   readonly au: Aurelia;
   readonly component: ICustomElementViewModel & T;
   readonly observerLocator: IObserverLocator;
+  readonly logger: ILogger;
   readonly torn: boolean;
   start(): Promise<void>;
   tearDown(): void | Promise<void>;
@@ -247,6 +259,8 @@ export interface IFixture<T> {
    * A helper to scroll and trigger a scroll even on an element matching the given selector
    */
   scrollBy(selector: string, options: number | ScrollToOptions): void;
+
+  flush(): void;
 }
 
 export type ITrigger = ((selector: string, event: string, init?: CustomEventInit) => void) & {
@@ -317,7 +331,7 @@ function brokenProcessFastTemplate(html: TemplateStringsArray, ..._args: unknown
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-createFixture.html = <T = Record<string, any>>(html: string | TemplateStringsArray, ...values: TemplateValues<T>[]) => new FixtureBuilder<T>().html(html, ...values) ;
+createFixture.html = <T = Record<PropertyKey, any>>(html: string | TemplateStringsArray, ...values: TemplateValues<T>[]) => new FixtureBuilder<T>().html(html, ...values) ;
 createFixture.component = <T>(component: T) => new FixtureBuilder<T>().component(component);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-createFixture.deps = <T = Record<string, any>>(...deps: unknown[]) => new FixtureBuilder<T>().deps(...deps);
+createFixture.deps = <T = Record<PropertyKey, any>>(...deps: unknown[]) => new FixtureBuilder<T>().deps(...deps);
