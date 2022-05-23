@@ -6,8 +6,30 @@ export declare const onFixtureCreated: <T>(callback: (fixture: IFixture<T>) => u
 export declare function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>(template: string | Node, $class?: T, registrations?: unknown[], autoStart?: boolean, ctx?: TestContext): IFixture<ICustomElementViewModel & K>;
 export declare namespace createFixture {
     var html: <T = Record<PropertyKey, any>>(html: string | TemplateStringsArray, ...values: TemplateValues<T>[]) => CreateBuilder<T, "component" | "deps">;
-    var component: <T>(component: T) => CreateBuilder<T, "html" | "deps">;
-    var deps: <T = Record<PropertyKey, any>>(...deps: unknown[]) => CreateBuilder<T, "html" | "component">;
+    var component: <T>(component: T) => {
+        html: {
+            (html: string): CreateBuilder<T, "deps">;
+            (html: TemplateStringsArray, ...values: TemplateValues<T>[]): CreateBuilder<T, "deps">;
+        };
+        deps: (...args: unknown[]) => {
+            html: {
+                (html: string): CreateBuilder<T, never>;
+                (html: TemplateStringsArray, ...values: TemplateValues<T>[]): CreateBuilder<T, never>;
+            };
+        };
+    };
+    var deps: <T = Record<PropertyKey, any>>(...deps: unknown[]) => {
+        html: {
+            (html: string): CreateBuilder<T, "component">;
+            (html: TemplateStringsArray, ...values: TemplateValues<T>[]): CreateBuilder<T, "component">;
+        };
+        component: (comp: T) => {
+            html: {
+                (html: string): CreateBuilder<T, never>;
+                (html: TemplateStringsArray, ...values: TemplateValues<T>[]): CreateBuilder<T, never>;
+            };
+        };
+    };
 }
 export interface IFixture<T> {
     readonly startPromise: void | Promise<void>;
@@ -83,18 +105,14 @@ export interface IFixtureBuilderBase<T, E = {}> {
     deps(...args: unknown[]): this & E;
 }
 declare type BuilderMethodNames = 'html' | 'component' | 'deps';
-declare type CreateBuilder<T, Availables extends BuilderMethodNames = BuilderMethodNames> = {
+declare type CreateBuilder<T, Availables extends BuilderMethodNames> = {
     [key in Availables]: key extends 'html' ? {
-        (html: string): CreateBuilder<T, Exclude<Availables, 'html'>> & {
-            build(): IFixture<T>;
-        };
-        (html: TemplateStringsArray, ...values: TemplateValues<T>[]): CreateBuilder<T, Exclude<Availables, 'html'>> & {
-            build(): IFixture<T>;
-        };
+        (html: string): CreateBuilder<T, Exclude<Availables, 'html'>>;
+        (html: TemplateStringsArray, ...values: TemplateValues<T>[]): CreateBuilder<T, Exclude<Availables, 'html'>>;
     } : (...args: Parameters<IFixtureBuilderBase<T>[key]>) => CreateBuilder<T, Exclude<Availables, key>>;
-} & (never extends Availables ? {
+} & ('html' extends Availables ? {} : {
     build(): IFixture<T>;
-} : {});
+});
 declare type TaggedTemplateLambda<M> = (vm: M) => unknown;
 declare type TemplateValues<M> = string | number | TaggedTemplateLambda<M>;
 export {};

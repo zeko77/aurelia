@@ -3694,31 +3694,33 @@ function Ri(t, i, r = [], s = true, o = TestContext.create()) {
         if (0 === t.length) throw new Error(`No element found for selector: "${e}"`);
         return t[0];
     };
-    const $ = e => Array.from(f.querySelectorAll(e));
-    const y = e => {
+    function $(e) {
+        return Array.from(f.querySelectorAll(e));
+    }
+    function y(e) {
         const t = f.querySelectorAll(e);
         if (t.length > 1) throw new Error(`There is more than 1 element with selector "${e}": ${t.length} found`);
         return 0 === t.length ? null : t[0];
-    };
-    const w = (e, t) => {
+    }
+    function w(e, t) {
         if (2 === arguments.length) {
             const n = y(e);
             if (null === n) throw new Error(`No element found for selector "${e}" to compare text content with "${t}"`);
             di.strictEqual(n.textContent, t);
         } else di.strictEqual(f.textContent, e);
-    };
-    const k = (e, t) => {
+    }
+    function k(e, t) {
         if (2 === arguments.length) {
             const n = y(e);
             if (null === n) throw new Error(`No element found for selector "${e}" to compare innerHTML with "${t}"`);
             di.strictEqual(n.innerHTML, t);
         } else di.strictEqual(f.innerHTML, e);
-    };
-    const C = (e, t, n) => {
+    }
+    function C(e, t, n) {
         const i = y(e);
         if (null === i) throw new Error(`No element found for selector "${e}" to fire event "${t}"`);
         i.dispatchEvent(new o.CustomEvent(t, n));
-    };
+    }
     [ "click", "change", "input", "scroll" ].forEach((e => {
         Object.defineProperty(C, e, {
             configurable: true,
@@ -3815,7 +3817,9 @@ class FixtureBuilder {
 }
 
 function qi(e, ...t) {
-    return e.join("");
+    let n = e[0];
+    for (let i = 0; i < t.length; ++i) n += String(t[i]) + e[i + 1];
+    return n;
 }
 
 Ri.html = (e, ...t) => (new FixtureBuilder).html(e, ...t);

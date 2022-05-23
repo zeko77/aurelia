@@ -64,6 +64,7 @@ const isPromise = (v) => v instanceof Promise;
 const isFunction = (v) => typeof v === 'function';
 const isString = (v) => typeof v === 'string';
 const defineProp = Object.defineProperty;
+const rethrow = (err) => { throw err; };
 
 function bindable(configOrTarget, prop) {
     let config;
@@ -8854,7 +8855,7 @@ class Repeat {
             return this._activateAllViews(null, flags);
         });
         if (ret instanceof Promise) {
-            ret.catch(err => { throw err; });
+            ret.catch(rethrow);
         }
     }
     handleCollectionChange(indexMap, flags) {
@@ -8878,23 +8879,23 @@ class Repeat {
                 return this._activateAllViews(null, flags);
             });
             if (ret instanceof Promise) {
-                ret.catch(err => { throw err; });
+                ret.catch(rethrow);
             }
         }
         else {
             const oldLength = this.views.length;
-            runtime.applyMutationsToIndices(indexMap);
-            if (indexMap.deletedItems.length > 0) {
-                indexMap.deletedItems.sort(kernel.compareNumber);
-                const ret = kernel.onResolve(this._deactivateAndRemoveViewsByKey(indexMap, flags), () => {
-                    return this._createAndActivateAndSortViewsByKey(oldLength, indexMap, flags);
+            const $indexMap = runtime.applyMutationsToIndices(indexMap);
+            if ($indexMap.deletedItems.length > 0) {
+                $indexMap.deletedItems.sort(kernel.compareNumber);
+                const ret = kernel.onResolve(this._deactivateAndRemoveViewsByKey($indexMap, flags), () => {
+                    return this._createAndActivateAndSortViewsByKey(oldLength, $indexMap, flags);
                 });
                 if (ret instanceof Promise) {
-                    ret.catch(err => { throw err; });
+                    ret.catch(rethrow);
                 }
             }
             else {
-                this._createAndActivateAndSortViewsByKey(oldLength, indexMap, flags);
+                this._createAndActivateAndSortViewsByKey(oldLength, $indexMap, flags);
             }
         }
     }

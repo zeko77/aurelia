@@ -7524,17 +7524,17 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
         }
         return elements[0];
     };
-    const getAllBy = (selector) => {
+    function getAllBy(selector) {
         return Array.from(host.querySelectorAll(selector));
-    };
-    const queryBy = (selector) => {
+    }
+    function queryBy(selector) {
         const elements = host.querySelectorAll(selector);
         if (elements.length > 1) {
             throw new Error(`There is more than 1 element with selector "${selector}": ${elements.length} found`);
         }
         return elements.length === 0 ? null : elements[0];
-    };
-    const assertText = (selector, text) => {
+    }
+    function assertText(selector, text) {
         if (arguments.length === 2) {
             const el = queryBy(selector);
             if (el === null) {
@@ -7545,8 +7545,8 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
         else {
             assert.strictEqual(host.textContent, selector);
         }
-    };
-    const assertHtml = (selector, html) => {
+    }
+    function assertHtml(selector, html) {
         if (arguments.length === 2) {
             const el = queryBy(selector);
             if (el === null) {
@@ -7557,14 +7557,14 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
         else {
             assert.strictEqual(host.innerHTML, selector);
         }
-    };
-    const trigger = ((selector, event, init) => {
+    }
+    function trigger(selector, event, init) {
         const el = queryBy(selector);
         if (el === null) {
             throw new Error(`No element found for selector "${selector}" to fire event "${event}"`);
         }
         el.dispatchEvent(new ctx.CustomEvent(event, init));
-    });
+    }
     ['click', 'change', 'input', 'scroll'].forEach(event => {
         Object.defineProperty(trigger, event, { configurable: true, writable: true, value: (selector, init) => {
                 const el = queryBy(selector);
@@ -7661,7 +7661,11 @@ class FixtureBuilder {
     }
 }
 function brokenProcessFastTemplate(html, ..._args) {
-    return html.join('');
+    let result = html[0];
+    for (let i = 0; i < _args.length; ++i) {
+        result += String(_args[i]) + html[i + 1];
+    }
+    return result;
 }
 createFixture.html = (html, ...values) => new FixtureBuilder().html(html, ...values);
 createFixture.component = (component) => new FixtureBuilder().component(component);
