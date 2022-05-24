@@ -2192,7 +2192,7 @@ function templateController(nameOrDef) {
     };
 }
 class CustomAttributeDefinition {
-    constructor(Type, name, aliases, key, defaultBindingMode, isTemplateController, bindables, noMultiBindings, watches) {
+    constructor(Type, name, aliases, key, defaultBindingMode, isTemplateController, bindables, noMultiBindings, watches, dependencies) {
         this.Type = Type;
         this.name = name;
         this.aliases = aliases;
@@ -2202,6 +2202,7 @@ class CustomAttributeDefinition {
         this.bindables = bindables;
         this.noMultiBindings = noMultiBindings;
         this.watches = watches;
+        this.dependencies = dependencies;
     }
     get type() { return 2; }
     static create(nameOrDef, Type) {
@@ -2215,7 +2216,7 @@ class CustomAttributeDefinition {
             name = nameOrDef.name;
             def = nameOrDef;
         }
-        return new CustomAttributeDefinition(Type, firstDefined(getAttributeAnnotation(Type, 'name'), name), mergeArrays(getAttributeAnnotation(Type, 'aliases'), def.aliases, Type.aliases), CustomAttribute.keyFrom(name), firstDefined(getAttributeAnnotation(Type, 'defaultBindingMode'), def.defaultBindingMode, Type.defaultBindingMode, BindingMode.toView), firstDefined(getAttributeAnnotation(Type, 'isTemplateController'), def.isTemplateController, Type.isTemplateController, false), Bindable.from(Type, ...Bindable.getAll(Type), getAttributeAnnotation(Type, 'bindables'), Type.bindables, def.bindables), firstDefined(getAttributeAnnotation(Type, 'noMultiBindings'), def.noMultiBindings, Type.noMultiBindings, false), mergeArrays(Watch.getAnnotation(Type), Type.watches));
+        return new CustomAttributeDefinition(Type, firstDefined(getAttributeAnnotation(Type, 'name'), name), mergeArrays(getAttributeAnnotation(Type, 'aliases'), def.aliases, Type.aliases), CustomAttribute.keyFrom(name), firstDefined(getAttributeAnnotation(Type, 'defaultBindingMode'), def.defaultBindingMode, Type.defaultBindingMode, BindingMode.toView), firstDefined(getAttributeAnnotation(Type, 'isTemplateController'), def.isTemplateController, Type.isTemplateController, false), Bindable.from(Type, ...Bindable.getAll(Type), getAttributeAnnotation(Type, 'bindables'), Type.bindables, def.bindables), firstDefined(getAttributeAnnotation(Type, 'noMultiBindings'), def.noMultiBindings, Type.noMultiBindings, false), mergeArrays(Watch.getAnnotation(Type), Type.watches), mergeArrays(getAttributeAnnotation(Type, 'dependencies'), def.dependencies, Type.dependencies));
     }
     register(container) {
         const { Type, key, aliases } = this;
@@ -3470,6 +3471,9 @@ class Controller {
         definition = definition !== null && definition !== void 0 ? definition : CustomAttribute.getDefinition(viewModel.constructor);
         const controller = new Controller(ctn, 1, definition, null, viewModel, host, null);
         controllerLookup.set(viewModel, controller);
+        if (definition.dependencies.length > 0) {
+            ctn.register(...definition.dependencies);
+        }
         controller._hydrateCustomAttribute();
         return controller;
     }
@@ -3517,6 +3521,9 @@ class Controller {
         }
     }
     _hydrate(hydrationInst) {
+        if (this.lifecycleHooks.hydrating !== void 0) {
+            this.lifecycleHooks.hydrating.forEach(callHydratingHook, this);
+        }
         if (this.hooks.hasHydrating) {
             if (this.debug) {
                 this.logger.trace(`invoking hydrating() hook`);
@@ -3550,6 +3557,9 @@ class Controller {
         }
         this.viewModel.$controller = this;
         this.nodes = this._rendering.createNodes(compiledDef);
+        if (this.lifecycleHooks.hydrated !== void 0) {
+            this.lifecycleHooks.hydrated.forEach(callHydratedHook, this);
+        }
         if (this.hooks.hasHydrated) {
             if (this.debug) {
                 this.logger.trace(`invoking hydrated() hook`);
@@ -3578,6 +3588,9 @@ class Controller {
         createObservers(this, definition, this.flags, instance);
         instance.$controller = this;
         this.lifecycleHooks = LifecycleHooks.resolve(this.container);
+        if (this.lifecycleHooks.created !== void 0) {
+            this.lifecycleHooks.created.forEach(callCreatedHook, this);
+        }
         if (this.hooks.hasCreated) {
             if (this.debug) {
                 this.logger.trace(`invoking created() hook`);
@@ -4288,6 +4301,12 @@ function callDispose(disposable) {
 }
 function callCreatedHook(l) {
     l.instance.created(this.viewModel, this);
+}
+function callHydratingHook(l) {
+    l.instance.hydrating(this.viewModel, this);
+}
+function callHydratedHook(l) {
+    l.instance.hydrated(this.viewModel, this);
 }
 let _resolve;
 let _reject;

@@ -12,20 +12,20 @@
     "dev": "webpack serve"
   },
   "dependencies": {
-    "@aurelia/kernel": "2.0.1-dev.202205231059",
-    "@aurelia/metadata": "2.0.1-dev.202205231059",
-    "@aurelia/platform": "2.0.1-dev.202205231059",
-    "@aurelia/platform-browser": "2.0.1-dev.202205231059",
-    "@aurelia/runtime-html": "2.0.1-dev.202205231059",
-    "@aurelia/runtime": "2.0.1-dev.202205231059",
-    "@aurelia/ui-virtualization": "2.0.1-dev.202205231059"
+    "@aurelia/kernel": "2.1.0-dev.202205241346",
+    "@aurelia/metadata": "2.1.0-dev.202205241346",
+    "@aurelia/platform": "2.1.0-dev.202205241346",
+    "@aurelia/platform-browser": "2.1.0-dev.202205241346",
+    "@aurelia/runtime-html": "2.1.0-dev.202205241346",
+    "@aurelia/runtime": "2.1.0-dev.202205241346",
+    "@aurelia/ui-virtualization": "2.1.0-dev.202205241346"
   },
   "devDependencies": {
     "webpack-cli": "^4.9.2",
     "webpack": "^5.72.0",
     "webpack-bundle-analyzer": "^4.5.0",
     "html-webpack-plugin": "^5.5.0",
-    "@aurelia/webpack-loader": "2.0.1-dev.202205231059",
+    "@aurelia/webpack-loader": "2.1.0-dev.202205241346",
     "ts-loader": "^9.2.8",
     "@types/node": "^14.18.14",
     "typescript": "^4.6.3"

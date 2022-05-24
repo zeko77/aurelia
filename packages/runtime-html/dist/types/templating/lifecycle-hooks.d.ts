@@ -1,9 +1,9 @@
 import type { Constructable, IContainer, AnyFunction, FunctionPropNames } from '@aurelia/kernel';
-export declare type LifecycleHook<TViewModel, TKey extends keyof TViewModel, P extends TViewModel[TKey] = TViewModel[TKey]> = P extends AnyFunction ? (vm: TViewModel, ...args: Parameters<NonNullable<P>>) => ReturnType<NonNullable<P>> : never;
+export declare type LifecycleHook<TViewModel, TKey extends keyof TViewModel> = TViewModel[TKey] extends (AnyFunction | undefined) ? (vm: TViewModel, ...args: Parameters<NonNullable<TViewModel[TKey]>>) => ReturnType<NonNullable<TViewModel[TKey]>> : never;
 export declare type ILifecycleHooks<TViewModel = {}, TKey extends keyof TViewModel = keyof TViewModel> = {
     [K in TKey]-?: LifecycleHook<TViewModel, K>;
 };
-export declare const ILifecycleHooks: import("@aurelia/kernel").InterfaceSymbol<ILifecycleHooks<{}, never>>;
+export declare const ILifecycleHooks: import("@aurelia/kernel").InterfaceSymbol<ILifecycleHooks<object, never>>;
 export declare type LifecycleHooksLookup<TViewModel = {}> = {
     [K in FunctionPropNames<TViewModel>]?: readonly LifecycleHooksEntry<TViewModel, K>[];
 };

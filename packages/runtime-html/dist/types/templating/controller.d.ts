@@ -53,9 +53,7 @@ export declare class Controller<C extends IViewModel = IViewModel> implements IC
     shadowRoot: ShadowRoot | null;
     nodes: INodeSequence | null;
     location: IRenderLocation | null;
-    lifecycleHooks: LifecycleHooksLookup<{
-        created: ICompileHooks['created'];
-    }> | null;
+    lifecycleHooks: LifecycleHooksLookup<ICompileHooks> | null;
     state: State;
     get isActive(): boolean;
     get name(): string;
@@ -483,5 +481,10 @@ export interface IControllerElementHydrationInstruction {
      */
     readonly containerless?: boolean;
 }
+export declare type ControllerLifecyleHookLookup = LifecycleHooksLookup<{
+    hydrating: ICompileHooks['hydrating'];
+    hydrated: ICompileHooks['hydrated'];
+    created: ICompileHooks['created'];
+}>;
 export {};
 //# sourceMappingURL=controller.d.ts.map
