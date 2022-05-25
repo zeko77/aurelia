@@ -6,19 +6,19 @@ var kernel = require('@aurelia/kernel');
 var runtime = require('@aurelia/runtime');
 var runtimeHtml = require('@aurelia/runtime-html');
 
-const IReducer = kernel.DI.createInterface('IReducer');
+const IActionHandler = kernel.DI.createInterface('IActionHandler');
 const IStore = kernel.DI.createInterface('IStore');
 const IState = kernel.DI.createInterface('IState');
 
 const reducerSymbol = '__reducer__';
-const Reducer = Object.freeze({
+const ActionHandler = Object.freeze({
     define(reducer) {
-        function registry(state, actionType, ...params) {
-            return reducer(state, actionType, ...params);
+        function registry(state, action, ...params) {
+            return reducer(state, action, ...params);
         }
         registry[reducerSymbol] = true;
         registry.register = function (c) {
-            kernel.Registration.instance(IReducer, reducer).register(c);
+            kernel.Registration.instance(IActionHandler, reducer).register(c);
         };
         return registry;
     },
@@ -28,10 +28,10 @@ const Reducer = Object.freeze({
 class Store {
     constructor(initialState, reducers, logger) {
         this._subs = new Set();
-        this._publishing = 0;
+        this._dispatching = 0;
         this._dispatchQueues = [];
         this._state = initialState !== null && initialState !== void 0 ? initialState : new State();
-        this._reducers = reducers;
+        this._handlers = reducers;
         this._logger = logger;
     }
     static register(c) {
@@ -65,18 +65,18 @@ class Store {
             return new Proxy(this._state, new StateProxyHandler(this, this._logger));
         }
     }
-    dispatch(action, ...params) {
-        if (this._publishing > 0) {
-            this._dispatchQueues.push({ type: action, params });
+    dispatch(type, ...params) {
+        if (this._dispatching > 0) {
+            this._dispatchQueues.push({ type, params });
             return;
         }
-        this._publishing++;
+        this._dispatching++;
         let $$action;
-        const reduce = ($state, $action, params) => this._reducers.reduce(($state, r) => {
+        const reduce = ($state, $action, params) => this._handlers.reduce(($state, handler) => {
             if ($state instanceof Promise) {
-                return $state.then($ => r($, $action, ...params !== null && params !== void 0 ? params : []));
+                return $state.then($ => handler($, $action, ...params !== null && params !== void 0 ? params : []));
             }
-            return r($state, $action, ...params !== null && params !== void 0 ? params : []);
+            return handler($state, $action, ...params !== null && params !== void 0 ? params : []);
         }, $state);
         const afterDispatch = ($state) => {
             if (this._dispatchQueues.length > 0) {
@@ -90,25 +90,25 @@ class Store {
                 }
             }
         };
-        const newState = reduce(this._state, action, params);
+        const newState = reduce(this._state, type, params);
         if (newState instanceof Promise) {
             return newState.then($state => {
                 this._setState($state);
-                this._publishing--;
+                this._dispatching--;
                 return afterDispatch(this._state);
             }, ex => {
-                this._publishing--;
+                this._dispatching--;
                 throw ex;
             });
         }
         else {
             this._setState(newState);
-            this._publishing--;
+            this._dispatching--;
             return afterDispatch(this._state);
         }
     }
 }
-Store.inject = [kernel.optional(IState), kernel.all(IReducer), kernel.ILogger];
+Store.inject = [kernel.optional(IState), kernel.all(IActionHandler), kernel.ILogger];
 class State {
 }
 class StateProxyHandler {
@@ -151,6 +151,9 @@ function createStateBindingScope(state, scope) {
     return stateScope;
 }
 const defProto = (klass, prop, desc) => Reflect.defineProperty(klass.prototype, prop, desc);
+function isSubscribable$1(v) {
+    return v instanceof Object && 'subscribe' in v;
+}
 
 const { toView, oneTime } = runtime.BindingMode;
 exports.StateBinding = class StateBinding {
@@ -490,23 +493,143 @@ const standardRegistrations = [
     exports.DispatchAttributePattern,
     exports.DispatchBindingCommand,
     exports.DispatchBindingInstructionRenderer,
+    exports.StateBindingBehavior,
     Store,
 ];
 const createConfiguration = (initialState, reducers) => {
     return {
         register: (c) => {
-            c.register(...standardRegistrations, kernel.Registration.instance(IState, initialState), exports.StateBindingBehavior, ...reducers.map(Reducer.define));
+            c.register(kernel.Registration.instance(IState, initialState), ...standardRegistrations, ...reducers.map(ActionHandler.define));
         },
         init: (state, ...reducers) => createConfiguration(state, reducers),
     };
 };
 const StateDefaultConfiguration = createConfiguration({}, []);
 
-exports.Action = Reducer;
+let StateGetterBinding = class StateGetterBinding {
+    constructor(locator, store, getValue, target, prop) {
+        this.interceptor = this;
+        this.isBound = false;
+        this._value = void 0;
+        this._sub = void 0;
+        this._updateCount = 0;
+        this.locator = locator;
+        this._store = store;
+        this.$get = getValue;
+        this.target = target;
+        this.key = prop;
+    }
+    updateTarget(value) {
+        const target = this.target;
+        const prop = this.key;
+        const updateCount = this._updateCount++;
+        const isCurrentValue = () => updateCount === this._updateCount - 1;
+        this._unsub();
+        if (isSubscribable$1(value)) {
+            this._sub = value.subscribe($value => {
+                if (isCurrentValue()) {
+                    target[prop] = $value;
+                }
+            });
+            return;
+        }
+        if (value instanceof Promise) {
+            void value.then($value => {
+                if (isCurrentValue()) {
+                    target[prop] = $value;
+                }
+            }, () => { });
+            return;
+        }
+        target[prop] = value;
+    }
+    $bind(flags, scope) {
+        if (this.isBound) {
+            return;
+        }
+        const state = this._store.getState();
+        this.isBound = true;
+        this.$scope = createStateBindingScope(state, scope);
+        this._store.subscribe(this);
+        this.updateTarget(this._value = this.$get(state));
+    }
+    $unbind() {
+        if (!this.isBound) {
+            return;
+        }
+        this._unsub();
+        this._updateCount++;
+        this.isBound = false;
+        this.$scope = void 0;
+        this._store.unsubscribe(this);
+    }
+    handleStateChange(state) {
+        const $scope = this.$scope;
+        const overrideContext = $scope.overrideContext;
+        $scope.bindingContext = overrideContext.bindingContext = overrideContext.$state = state;
+        const value = this.$get(this._store.getState());
+        if (value === this._value) {
+            return;
+        }
+        this._value = value;
+        this.updateTarget(value);
+    }
+    _unsub() {
+        var _a, _b, _c, _d;
+        if (typeof this._sub === 'function') {
+            this._sub();
+        }
+        else if (this._sub !== void 0) {
+            (_b = (_a = this._sub).dispose) === null || _b === void 0 ? void 0 : _b.call(_a);
+            (_d = (_c = this._sub).unsubscribe) === null || _d === void 0 ? void 0 : _d.call(_c);
+        }
+        this._sub = void 0;
+    }
+};
+StateGetterBinding = __decorate([
+    runtime.connectable()
+], StateGetterBinding);
+
+function fromStore(getValue) {
+    return function (target, key, desc) {
+        if (typeof target === 'function') {
+            throw new Error(`Invalid usage. @state can only be used on a field`);
+        }
+        if (typeof (desc === null || desc === void 0 ? void 0 : desc.value) !== 'undefined') {
+            throw new Error(`Invalid usage. @state can only be used on a field`);
+        }
+        target = target.constructor;
+        let dependencies = runtimeHtml.CustomElement.getAnnotation(target, dependenciesKey);
+        if (dependencies == null) {
+            runtimeHtml.CustomElement.annotate(target, dependenciesKey, dependencies = []);
+        }
+        dependencies.push(new HydratingLifecycleHooks(getValue, key));
+    };
+}
+const dependenciesKey = 'dependencies';
+let HydratingLifecycleHooks = class HydratingLifecycleHooks {
+    constructor($get, key) {
+        this.$get = $get;
+        this.key = key;
+    }
+    register(c) {
+        kernel.Registration.instance(runtimeHtml.ILifecycleHooks, this).register(c);
+    }
+    hydrating(vm, controller) {
+        const container = controller.container;
+        controller.addBinding(new StateGetterBinding(container, container.get(IStore), this.$get, vm, this.key));
+    }
+};
+HydratingLifecycleHooks = __decorate([
+    runtimeHtml.lifecycleHooks()
+], HydratingLifecycleHooks);
+
+exports.ActionHandler = ActionHandler;
 exports.DispatchBindingInstruction = DispatchBindingInstruction;
-exports.IReducer = IReducer;
+exports.IActionHandler = IActionHandler;
 exports.IState = IState;
 exports.IStore = IStore;
 exports.StateBindingInstruction = StateBindingInstruction;
 exports.StateDefaultConfiguration = StateDefaultConfiguration;
+exports.fromStore = fromStore;
 //# sourceMappingURL=index.dev.cjs.map

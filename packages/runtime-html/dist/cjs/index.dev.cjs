@@ -2195,7 +2195,7 @@ function templateController(nameOrDef) {
     };
 }
 class CustomAttributeDefinition {
-    constructor(Type, name, aliases, key, defaultBindingMode, isTemplateController, bindables, noMultiBindings, watches, dependencies) {
+    constructor(Type, name, aliases, key, defaultBindingMode, isTemplateController, bindables, noMultiBindings, watches) {
         this.Type = Type;
         this.name = name;
         this.aliases = aliases;
@@ -2205,7 +2205,6 @@ class CustomAttributeDefinition {
         this.bindables = bindables;
         this.noMultiBindings = noMultiBindings;
         this.watches = watches;
-        this.dependencies = dependencies;
     }
     get type() { return 2; }
     static create(nameOrDef, Type) {
@@ -2219,7 +2218,7 @@ class CustomAttributeDefinition {
             name = nameOrDef.name;
             def = nameOrDef;
         }
-        return new CustomAttributeDefinition(Type, kernel.firstDefined(getAttributeAnnotation(Type, 'name'), name), kernel.mergeArrays(getAttributeAnnotation(Type, 'aliases'), def.aliases, Type.aliases), CustomAttribute.keyFrom(name), kernel.firstDefined(getAttributeAnnotation(Type, 'defaultBindingMode'), def.defaultBindingMode, Type.defaultBindingMode, runtime.BindingMode.toView), kernel.firstDefined(getAttributeAnnotation(Type, 'isTemplateController'), def.isTemplateController, Type.isTemplateController, false), Bindable.from(Type, ...Bindable.getAll(Type), getAttributeAnnotation(Type, 'bindables'), Type.bindables, def.bindables), kernel.firstDefined(getAttributeAnnotation(Type, 'noMultiBindings'), def.noMultiBindings, Type.noMultiBindings, false), kernel.mergeArrays(Watch.getAnnotation(Type), Type.watches), kernel.mergeArrays(getAttributeAnnotation(Type, 'dependencies'), def.dependencies, Type.dependencies));
+        return new CustomAttributeDefinition(Type, kernel.firstDefined(getAttributeAnnotation(Type, 'name'), name), kernel.mergeArrays(getAttributeAnnotation(Type, 'aliases'), def.aliases, Type.aliases), CustomAttribute.keyFrom(name), kernel.firstDefined(getAttributeAnnotation(Type, 'defaultBindingMode'), def.defaultBindingMode, Type.defaultBindingMode, runtime.BindingMode.toView), kernel.firstDefined(getAttributeAnnotation(Type, 'isTemplateController'), def.isTemplateController, Type.isTemplateController, false), Bindable.from(Type, ...Bindable.getAll(Type), getAttributeAnnotation(Type, 'bindables'), Type.bindables, def.bindables), kernel.firstDefined(getAttributeAnnotation(Type, 'noMultiBindings'), def.noMultiBindings, Type.noMultiBindings, false), kernel.mergeArrays(Watch.getAnnotation(Type), Type.watches));
     }
     register(container) {
         const { Type, key, aliases } = this;
@@ -2934,21 +2933,12 @@ class LifecycleHooksDefinition {
         }
         return new LifecycleHooksDefinition(Type, propertyNames);
     }
-    static fromCallback(lifecycle, callback) {
-        const Type = class {
-            constructor() {
-                this[lifecycle] = callback;
-            }
-        };
-        return new LifecycleHooksDefinition(Type, new Set([lifecycle]));
-    }
     register(container) {
         kernel.Registration.singleton(ILifecycleHooks, this.Type).register(container);
     }
 }
 const containerLookup = new WeakMap();
 const lhBaseName = getAnnotationKeyFor('lifecycle-hooks');
-const callbackHooksName = `${lhBaseName}:callback`;
 const LifecycleHooks = Object.freeze({
     name: lhBaseName,
     define(def, Type) {
@@ -2956,17 +2946,6 @@ const LifecycleHooks = Object.freeze({
         defineMetadata(lhBaseName, definition, Type);
         appendResourceKey(Type, lhBaseName);
         return definition.Type;
-    },
-    fromCallback(lifecycle, callback) {
-        return LifecycleHooksDefinition.fromCallback(lifecycle, callback);
-    },
-    add(Type, lifecycle, callback) {
-        var _a;
-        let existing = getOwnMetadata(Type, callbackHooksName);
-        if (existing === void 0) {
-            defineMetadata(callbackHooksName, existing = {}, Type);
-        }
-        ((_a = existing[lifecycle]) !== null && _a !== void 0 ? _a : (existing[lifecycle] = [])).push(callback);
     },
     resolve(ctx) {
         let lookup = containerLookup.get(ctx);
@@ -3474,9 +3453,6 @@ class Controller {
         definition = definition !== null && definition !== void 0 ? definition : CustomAttribute.getDefinition(viewModel.constructor);
         const controller = new Controller(ctn, 1, definition, null, viewModel, host, null);
         controllerLookup.set(viewModel, controller);
-        if (definition.dependencies.length > 0) {
-            ctn.register(...definition.dependencies);
-        }
         controller._hydrateCustomAttribute();
         return controller;
     }
@@ -3591,9 +3567,6 @@ class Controller {
         createObservers(this, definition, this.flags, instance);
         instance.$controller = this;
         this.lifecycleHooks = LifecycleHooks.resolve(this.container);
-        if (this.lifecycleHooks.created !== void 0) {
-            this.lifecycleHooks.created.forEach(callCreatedHook, this);
-        }
         if (this.hooks.hasCreated) {
             if (this.debug) {
                 this.logger.trace(`invoking created() hook`);

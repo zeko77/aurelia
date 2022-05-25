@@ -25,7 +25,6 @@ export declare class LifecycleHooksDefinition<T extends Constructable = Construc
      * @param def - Placeholder for future extensions. Currently always an empty object.
      */
     static create<T extends Constructable>(def: {}, Type: T): LifecycleHooksDefinition<T>;
-    static fromCallback(lifecycle: string, callback: AnyFunction): LifecycleHooksDefinition;
     register(container: IContainer): void;
 }
 export declare const LifecycleHooks: Readonly<{
@@ -34,8 +33,6 @@ export declare const LifecycleHooks: Readonly<{
      * @param def - Placeholder for future extensions. Currently always an empty object.
      */
     define<T extends Constructable<{}>>(def: {}, Type: T): T;
-    fromCallback<T_1>(lifecycle: string, callback: (vm: T_1, ...params: unknown[]) => unknown): LifecycleHooksDefinition;
-    add<T_2 extends Constructable<{}>>(Type: T_2, lifecycle: string, callback: AnyFunction): void;
     /**
      * @param ctx - The container where the resolution starts
      * @param Type - The constructor of the Custom element/ Custom attribute with lifecycle metadata

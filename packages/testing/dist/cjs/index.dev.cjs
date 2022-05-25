@@ -6,6 +6,7 @@ var kernel = require('@aurelia/kernel');
 var runtime = require('@aurelia/runtime');
 var runtimeHtml = require('@aurelia/runtime-html');
 var platformBrowser = require('@aurelia/platform-browser');
+var metadata = require('@aurelia/metadata');
 
 const { getPrototypeOf, getOwnPropertyDescriptor, getOwnPropertyDescriptors, getOwnPropertyNames, getOwnPropertySymbols, defineProperty, defineProperties, } = Object;
 const Object_keys = Object.keys;
@@ -7501,6 +7502,12 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
                 Object.setPrototypeOf($class, $Ctor.prototype);
                 return $class;
             };
+    const annotations = ['aliases', 'bindables', 'cache', 'capture', 'childrenObservers', 'containerless', 'dependencies', 'enhance'];
+    if ($class !== $class && $class != null) {
+        annotations.forEach(anno => {
+            metadata.Metadata.define(anno, runtimeHtml.CustomElement.getAnnotation($class, anno), $$class);
+        });
+    }
     const existingDefs = (runtimeHtml.CustomElement.isType($$class) ? runtimeHtml.CustomElement.getDefinition($$class) : {});
     const App = runtimeHtml.CustomElement.define({
         ...existingDefs,

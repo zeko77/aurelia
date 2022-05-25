@@ -2,6 +2,7 @@ import { noop, isArrayIndex, DI, Registration, emptyArray, kebabCase, EventAggre
 import { IObserverLocator, valueConverter, IDirtyChecker, INodeObserverLocator, Scope, OverrideContext } from '@aurelia/runtime';
 import { StandardConfiguration, IPlatform, ITemplateCompiler, CustomElement, CustomAttribute, Aurelia, bindable, customElement } from '@aurelia/runtime-html';
 import { BrowserPlatform } from '@aurelia/platform-browser';
+import { Metadata } from '@aurelia/metadata';
 
 const { getPrototypeOf, getOwnPropertyDescriptor, getOwnPropertyDescriptors, getOwnPropertyNames, getOwnPropertySymbols, defineProperty, defineProperties, } = Object;
 const Object_keys = Object.keys;
@@ -7497,6 +7498,12 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
                 Object.setPrototypeOf($class, $Ctor.prototype);
                 return $class;
             };
+    const annotations = ['aliases', 'bindables', 'cache', 'capture', 'childrenObservers', 'containerless', 'dependencies', 'enhance'];
+    if ($class !== $class && $class != null) {
+        annotations.forEach(anno => {
+            Metadata.define(anno, CustomElement.getAnnotation($class, anno), $$class);
+        });
+    }
     const existingDefs = (CustomElement.isType($$class) ? CustomElement.getDefinition($$class) : {});
     const App = CustomElement.define({
         ...existingDefs,
