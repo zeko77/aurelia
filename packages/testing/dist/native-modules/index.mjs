@@ -3668,7 +3668,7 @@ function Xi(e, t, n = [], i = true, r = TestContext.create()) {
         return t;
     };
     const d = [ "aliases", "bindables", "cache", "capture", "childrenObservers", "containerless", "dependencies", "enhance" ];
-    if (t !== t && null != t) d.forEach((e => {
+    if (h !== t && null != t) d.forEach((e => {
         k.define(e, b.getAnnotation(t, e), h);
     }));
     const p = b.isType(h) ? b.getDefinition(h) : {};

@@ -3674,7 +3674,7 @@ function qi(t, i, s = [], o = true, a = TestContext.create()) {
         return i;
     };
     const m = [ "aliases", "bindables", "cache", "capture", "childrenObservers", "containerless", "dependencies", "enhance" ];
-    if (i !== i && null != i) m.forEach((e => {
+    if (p !== i && null != i) m.forEach((e => {
         r.Metadata.define(e, n.CustomElement.getAnnotation(i, e), p);
     }));
     const g = n.CustomElement.isType(p) ? n.CustomElement.getDefinition(p) : {};
