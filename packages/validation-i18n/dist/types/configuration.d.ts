@@ -4,6 +4,6 @@ export declare type ValidationConfigurationProvider = (options: ValidationI18nCu
 export declare const ValidationI18nConfiguration: {
     optionsProvider: ValidationConfigurationProvider;
     register(container: IContainer): IContainer;
-    customize(cb?: ValidationConfigurationProvider | undefined): any;
+    customize(cb?: ValidationConfigurationProvider): any;
 };
 //# sourceMappingURL=configuration.d.ts.map

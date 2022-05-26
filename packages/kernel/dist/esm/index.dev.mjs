@@ -1107,7 +1107,7 @@ class Container {
             }
         }
         {
-            throw new Error(`AUR0008: Unable to resolve key: ${key}`);
+            throw new Error(`AUR0008: Unable to resolve key: ${String(key)}`);
         }
     }
     getAll(key, searchAncestors = false) {

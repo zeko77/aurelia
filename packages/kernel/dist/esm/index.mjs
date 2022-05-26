@@ -930,7 +930,7 @@ class Container {
                 e = e.parent;
             } else return n.resolve(e, this);
         }
-        throw new Error(`AUR0008:${t}`);
+        throw new Error(`AUR0008:${String(t)}`);
     }
     getAll(t, e = false) {
         At(t);

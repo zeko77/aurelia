@@ -107,24 +107,24 @@ function getContentType(path) {
     const i = path.lastIndexOf('.');
     if (i >= 0) {
         switch (path.slice(i)) {
-            case '.js': return "application/javascript; charset=utf-8" /* javascript */;
-            case '.css': return "text/css; charset=utf-8" /* css */;
-            case '.json': return "application/json; charset=utf-8" /* json */;
-            case '.html': return "text/html; charset=utf-8" /* html */;
+            case '.js': return "application/javascript; charset=utf-8" /* ContentType.javascript */;
+            case '.css': return "text/css; charset=utf-8" /* ContentType.css */;
+            case '.json': return "application/json; charset=utf-8" /* ContentType.json */;
+            case '.html': return "text/html; charset=utf-8" /* ContentType.html */;
         }
     }
-    return "text/plain; charset=utf-8" /* plain */;
+    return "text/plain; charset=utf-8" /* ContentType.plain */;
 }
 function getContentEncoding(path) {
     const i = path.lastIndexOf('.');
     if (i >= 0) {
         switch (path.slice(i)) {
-            case '.br': return "br" /* br */;
-            case '.gz': return "gzip" /* gzip */;
-            case '.lzw': return "compress" /* compress */;
+            case '.br': return "br" /* ContentEncoding.br */;
+            case '.gz': return "gzip" /* ContentEncoding.gzip */;
+            case '.lzw': return "compress" /* ContentEncoding.compress */;
         }
     }
-    return "identity" /* identity */;
+    return "identity" /* ContentEncoding.identity */;
 }
 const wildcardHeaderValue = {
     [constants.HTTP2_HEADER_ACCEPT_ENCODING]: '*',
@@ -252,7 +252,7 @@ let FileServer = class FileServer {
                 content = await readFile(path);
                 contentEncoding = getContentEncoding(path);
             }
-            response.writeHead(200 /* OK */, {
+            response.writeHead(200 /* HTTPStatusCode.OK */, {
                 'Content-Type': contentType,
                 'Content-Encoding': contentEncoding,
                 'Cache-Control': this.cacheControlDirective
@@ -263,12 +263,12 @@ let FileServer = class FileServer {
         }
         else {
             this.logger.debug(`File "${path}" could not be found`);
-            response.writeHead(404 /* NotFound */);
+            response.writeHead(404 /* HTTPStatusCode.NotFound */);
             await new Promise(function (resolve) {
                 response.end(resolve);
             });
         }
-        context.state = 3 /* end */;
+        context.state = 3 /* HttpContextState.end */;
     }
 };
 FileServer = __decorate([
@@ -312,10 +312,10 @@ let Http2FileServer = class Http2FileServer {
         }
         else {
             this.logger.debug(`File "${path}" could not be found`);
-            response.writeHead(404 /* NotFound */);
+            response.writeHead(404 /* HTTPStatusCode.NotFound */);
             response.end();
         }
-        context.state = 3 /* end */;
+        context.state = 3 /* HttpContextState.end */;
     }
     pushAll(stream, contentEncoding) {
         for (const path of this.filePushMap.keys()) {
@@ -400,7 +400,7 @@ class HttpContext {
         this.request = request;
         this.response = response;
         this.requestBuffer = requestBuffer;
-        this.state = 1 /* head */;
+        this.state = 1 /* HttpContextState.head */;
         this.parsedHeaders = Object.create(null);
         this.rewrittenUrl = null;
         this.container = container.createChild();
@@ -456,7 +456,7 @@ let HttpServer = class HttpServer {
         }
         catch (err) {
             this.logger.error(`handleRequest Error: ${err.message}\n${err.stack}`);
-            res.statusCode = 500 /* InternalServerError */;
+            res.statusCode = 500 /* HTTPStatusCode.InternalServerError */;
             res.end();
         }
     }
@@ -505,7 +505,7 @@ let Http2Server = class Http2Server {
         }
         catch (err) {
             this.logger.error(`handleRequest Error: ${err.message}\n${err.stack}`);
-            res.statusCode = 500 /* InternalServerError */;
+            res.statusCode = 500 /* HTTPStatusCode.InternalServerError */;
             res.end();
         }
     }
@@ -602,13 +602,13 @@ class HttpServerOptions {
             return logLevel;
         }
         switch (logLevel) {
-            case 'trace': return 0 /* trace */;
-            case 'debug': return 1 /* debug */;
-            case 'info': return 2 /* info */;
-            case 'warn': return 3 /* warn */;
-            case 'error': return 4 /* error */;
-            case 'fatal': return 5 /* fatal */;
-            case 'none': return 6 /* none */;
+            case 'trace': return 0 /* $LogLevel.trace */;
+            case 'debug': return 1 /* $LogLevel.debug */;
+            case 'info': return 2 /* $LogLevel.info */;
+            case 'warn': return 3 /* $LogLevel.warn */;
+            case 'error': return 4 /* $LogLevel.error */;
+            case 'fatal': return 5 /* $LogLevel.fatal */;
+            case 'none': return 6 /* $LogLevel.none */;
         }
     }
     applyOptionsFromCli(cwd, args, argPrefix = '') {
@@ -660,7 +660,7 @@ const HttpServerConfiguration = {
         opts.validate();
         return {
             register(container) {
-                container.register(Registration.instance(IHttpServerOptions, opts), Registration.singleton(IRequestHandler, PushStateHandler), Registration.singleton(IRequestHandler, FileServer), Registration.singleton(IHttp2FileServer, Http2FileServer), LoggerConfiguration.create({ sinks: [ConsoleSink], level: opts.level, colorOptions: 1 /* colors */ }), Registration.instance(IPlatform, new Platform(globalThis)));
+                container.register(Registration.instance(IHttpServerOptions, opts), Registration.singleton(IRequestHandler, PushStateHandler), Registration.singleton(IRequestHandler, FileServer), Registration.singleton(IHttp2FileServer, Http2FileServer), LoggerConfiguration.create({ sinks: [ConsoleSink], level: opts.level, colorOptions: 1 /* ColorOptions.colors */ }), Registration.instance(IPlatform, new Platform(globalThis)));
                 if (opts.useHttp2) {
                     container.register(Registration.singleton(IHttpServer, Http2Server));
                 }

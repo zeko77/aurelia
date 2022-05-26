@@ -362,7 +362,7 @@ function Ze(t, n, i) {
         };
         o = e;
     } else {
-        if (!(n in t)) throw new Error(`No method named '${n}' exists in object of type ${Reflect.getPrototypeOf(t).constructor.name}`);
+        if (!(n in t)) throw new Error(`No method named '${String(n)}' exists in object of type ${Reflect.getPrototypeOf(t).constructor.name}`);
         let e = t;
         let a = Reflect.getOwnPropertyDescriptor(e, n);
         while (void 0 === a) {
@@ -4191,7 +4191,7 @@ let tr = class SortValueConverter {
     toView(e, t, n = "asc") {
         if (Array.isArray(e)) {
             const i = "asc" === n ? 1 : -1;
-            if (t && t.length) e.sort(((e, n) => e[t] - n[t] * i)); else e.sort(((e, t) => e - t * i));
+            if (null === t || void 0 === t ? void 0 : t.length) e.sort(((e, n) => e[t] - n[t] * i)); else e.sort(((e, t) => e - t * i));
         }
         return e;
     }

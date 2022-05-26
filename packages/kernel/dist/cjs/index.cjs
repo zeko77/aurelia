@@ -936,7 +936,7 @@ class Container {
                 e = e.parent;
             } else return r.resolve(e, this);
         }
-        throw new Error(`AUR0008:${t}`);
+        throw new Error(`AUR0008:${String(t)}`);
     }
     getAll(t, e = false) {
         Ct(t);

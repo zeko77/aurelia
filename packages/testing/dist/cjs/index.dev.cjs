@@ -329,7 +329,7 @@ function createSpy(instanceOrInnerFn, key, callThroughOrInnerFn) {
     }
     else {
         if (!(key in instanceOrInnerFn)) {
-            throw new Error(`No method named '${key}' exists in object of type ${Reflect.getPrototypeOf(instanceOrInnerFn).constructor.name}`);
+            throw new Error(`No method named '${String(key)}' exists in object of type ${Reflect.getPrototypeOf(instanceOrInnerFn).constructor.name}`);
         }
         let descriptorOwner = instanceOrInnerFn;
         let descriptor = Reflect.getOwnPropertyDescriptor(descriptorOwner, key);
@@ -1015,7 +1015,7 @@ function stylizeWithColor(str, styleType) {
         return str;
     }
 }
-function stylizeNoColor(str, styleType) {
+function stylizeNoColor(str, _styleType) {
     return str;
 }
 class AssertionError extends Error {
@@ -8088,7 +8088,7 @@ exports.SortValueConverter = class SortValueConverter {
     toView(arr, prop, dir = 'asc') {
         if (Array.isArray(arr)) {
             const factor = dir === 'asc' ? 1 : -1;
-            if (prop && prop.length) {
+            if (prop === null || prop === void 0 ? void 0 : prop.length) {
                 arr.sort((a, b) => a[prop] - b[prop] * factor);
             }
             else {

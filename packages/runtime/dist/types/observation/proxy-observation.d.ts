@@ -8,6 +8,6 @@ export declare const ProxyObservable: Readonly<{
     getRaw: typeof getRaw;
     wrap: typeof wrap;
     unwrap: typeof unwrap;
-    rawKey: string;
+    rawKey: "__raw__";
 }>;
 //# sourceMappingURL=proxy-observation.d.ts.map

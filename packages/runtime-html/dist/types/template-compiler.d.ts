@@ -43,5 +43,5 @@ export declare const TemplateCompilerHooks: Readonly<{
  * An instance of this class will be created and appropriate compilation hooks will be invoked
  * at different phases of the default compiler.
  */
-export declare const templateCompilerHooks: (target?: Function | undefined) => any;
+export declare const templateCompilerHooks: (target?: Function) => any;
 //# sourceMappingURL=template-compiler.d.ts.map
