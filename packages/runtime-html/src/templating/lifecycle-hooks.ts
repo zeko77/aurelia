@@ -2,13 +2,13 @@ import { DI, Registration } from '@aurelia/kernel';
 import { appendResourceKey, defineMetadata, getAnnotationKeyFor, getOwnMetadata } from '../shared';
 import type { Constructable, IContainer, AnyFunction, FunctionPropNames } from '@aurelia/kernel';
 
-export type LifecycleHook<TViewModel, TKey extends keyof TViewModel, P extends TViewModel[TKey] = TViewModel[TKey]> =
-  P extends AnyFunction
-    ? (vm: TViewModel, ...args: Parameters<NonNullable<P>>) => ReturnType<NonNullable<P>>
+export type LifecycleHook<TViewModel, TKey extends keyof TViewModel> =
+  TViewModel[TKey] extends (AnyFunction | undefined)
+    ? (vm: TViewModel, ...args: Parameters<NonNullable<TViewModel[TKey]>>) => ReturnType<NonNullable<TViewModel[TKey]>>
     : never;
 
 export type ILifecycleHooks<TViewModel = {}, TKey extends keyof TViewModel = keyof TViewModel> = { [K in TKey]-?: LifecycleHook<TViewModel, K>; };
-export const ILifecycleHooks = DI.createInterface<ILifecycleHooks>('ILifecycleHooks');
+export const ILifecycleHooks = DI.createInterface<ILifecycleHooks<object>>('ILifecycleHooks');
 
 export type LifecycleHooksLookup<TViewModel = {}> = {
   [K in FunctionPropNames<TViewModel>]?: readonly LifecycleHooksEntry<TViewModel, K>[];
@@ -50,16 +50,6 @@ export class LifecycleHooksDefinition<T extends Constructable = Constructable> {
     return new LifecycleHooksDefinition(Type, propertyNames);
   }
 
-  public static fromCallback(lifecycle: string, callback: AnyFunction): LifecycleHooksDefinition {
-    const Type = class {
-      [key: string]: AnyFunction;
-      public constructor() {
-        this[lifecycle] = callback;
-      }
-    };
-    return new LifecycleHooksDefinition(Type, new Set([lifecycle]));
-  }
-
   public register(container: IContainer): void {
     Registration.singleton(ILifecycleHooks, this.Type).register(container);
   }
@@ -69,7 +59,6 @@ export class LifecycleHooksDefinition<T extends Constructable = Constructable> {
 const containerLookup = new WeakMap<IContainer, LifecycleHooksLookup<any>>();
 
 const lhBaseName = getAnnotationKeyFor('lifecycle-hooks');
-const callbackHooksName = `${lhBaseName}:callback`;
 
 export const LifecycleHooks = Object.freeze({
   name: lhBaseName,
@@ -81,16 +70,6 @@ export const LifecycleHooks = Object.freeze({
     defineMetadata(lhBaseName, definition, Type);
     appendResourceKey(Type, lhBaseName);
     return definition.Type;
-  },
-  fromCallback<T>(lifecycle: string, callback: (vm: T, ...params: unknown[]) => unknown): LifecycleHooksDefinition {
-    return LifecycleHooksDefinition.fromCallback(lifecycle, callback);
-  },
-  add<T extends Constructable>(Type: T, lifecycle: string, callback: AnyFunction): void {
-    let existing = getOwnMetadata(Type, callbackHooksName) as Record<string, AnyFunction[]>;
-    if (existing === void 0) {
-      defineMetadata(callbackHooksName, existing = {}, Type);
-    }
-    (existing[lifecycle] ??= []).push(callback);
   },
   /**
    * @param ctx - The container where the resolution starts

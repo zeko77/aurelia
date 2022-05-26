@@ -91,9 +91,7 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
   public shadowRoot: ShadowRoot | null = null;
   public nodes: INodeSequence | null = null;
   public location: IRenderLocation | null = null;
-  public lifecycleHooks: LifecycleHooksLookup<{
-    created: ICompileHooks['created'];
-  }> | null = null;
+  public lifecycleHooks: LifecycleHooksLookup<ICompileHooks> | null = null;
 
   public state: State = State.none;
   public get isActive(): boolean {
@@ -396,6 +394,9 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
 
   /** @internal */
   public _hydrate(hydrationInst: IControllerElementHydrationInstruction | null): void {
+    if (this.lifecycleHooks!.hydrating !== void 0) {
+      this.lifecycleHooks!.hydrating.forEach(callHydratingHook, this);
+    }
     if (this.hooks.hasHydrating) {
       if (__DEV__ && this.debug) { this.logger!.trace(`invoking hydrating() hook`); }
       (this.viewModel as BindingContext<C>).hydrating(this as ICustomElementController);
@@ -433,6 +434,10 @@ export class Controller<C extends IViewModel = IViewModel> implements IControlle
 
     (this.viewModel as Writable<C>).$controller = this;
     this.nodes = this._rendering.createNodes(compiledDef);
+
+    if (this.lifecycleHooks!.hydrated !== void 0) {
+      this.lifecycleHooks!.hydrated.forEach(callHydratedHook, this);
+    }
 
     if (this.hooks.hasHydrated) {
       if (__DEV__ && this.debug) { this.logger!.trace(`invoking hydrated() hook`); }
@@ -1418,6 +1423,9 @@ export interface IController<C extends IViewModel = IViewModel> extends IDisposa
   readonly isActive: boolean;
   readonly parent: IHydratedController | null;
   readonly isBound: boolean;
+  readonly bindings: readonly IBinding[] | null;
+
+  addBinding(binding: IBinding): void;
 
   /** @internal */head: IHydratedController | null;
   /** @internal */tail: IHydratedController | null;
@@ -1449,7 +1457,7 @@ export interface IComponentController<C extends IViewModel = IViewModel> extends
  * The base type for `ISyntheticView` and `ICustomElementController`.
  *
  * Both of those types can:
- * - Have `bindings` and `children` which are populated during hydration (hence, 'Hydratable').
+ * - Have `children` which are populated during hydration (hence, 'Hydratable').
  * - Have physical DOM nodes that can be mounted.
  */
 export interface IHydratableController<C extends IViewModel = IViewModel> extends IController<C> {
@@ -1457,10 +1465,8 @@ export interface IHydratableController<C extends IViewModel = IViewModel> extend
   readonly mountTarget: MountTarget;
   readonly definition: CustomElementDefinition | null;
 
-  readonly bindings: readonly IBinding[] | null;
   readonly children: readonly IHydratedController[] | null;
 
-  addBinding(binding: IBinding): void;
   addChild(controller: IController): void;
 }
 
@@ -1820,8 +1826,22 @@ function callDispose(disposable: IDisposable): void {
   disposable.dispose();
 }
 
-function callCreatedHook(this: Controller, l: LifecycleHooksEntry<{ created: ICompileHooks['created'] }>) {
-  l.instance.created(this.viewModel!, this as ICustomAttributeController | ICustomElementController);
+export type ControllerLifecyleHookLookup = LifecycleHooksLookup<{
+  hydrating: ICompileHooks['hydrating'];
+  hydrated: ICompileHooks['hydrated'];
+  created: ICompileHooks['created'];
+}>;
+
+function callCreatedHook(this: Controller, l: LifecycleHooksEntry<ICompileHooks, 'created'>) {
+  l.instance.created(this.viewModel!, this as IHydratedComponentController);
+}
+
+function callHydratingHook(this: Controller, l: LifecycleHooksEntry<ICompileHooks, 'hydrating'>) {
+  l.instance.hydrating(this.viewModel!, this as IContextualCustomElementController<ICompileHooks>);
+}
+
+function callHydratedHook(this: Controller, l: LifecycleHooksEntry<ICompileHooks, 'hydrated'>) {
+  l.instance.hydrated(this.viewModel!, this as ICompiledCustomElementController<ICompileHooks>);
 }
 
 // some reuseable variables to avoid creating nested blocks inside hot paths of controllers

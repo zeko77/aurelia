@@ -1,5 +1,5 @@
-/* eslint-disable no-console */
 import { Constructable, EventAggregator, IContainer, ILogger } from '@aurelia/kernel';
+import { Metadata } from '@aurelia/metadata';
 import { IObserverLocator } from '@aurelia/runtime';
 import { CustomElement, Aurelia, IPlatform, type ICustomElementViewModel, CustomElementDefinition } from '@aurelia/runtime-html';
 import { assert } from './assert';
@@ -38,6 +38,14 @@ export function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>
         return $class;
       } as unknown as Constructable<K>;
 
+  const annotations: (Exclude<keyof CustomElementDefinition, 'Type' | 'key' | 'type' | 'register'>)[] =
+    ['aliases', 'bindables', 'cache', 'capture', 'childrenObservers', 'containerless', 'dependencies', 'enhance'];
+  if ($$class !== $class as any && $class != null) {
+    annotations.forEach(anno => {
+      Metadata.define(anno, CustomElement.getAnnotation($class as unknown as Constructable<K>, anno), $$class);
+    });
+  }
+
   const existingDefs = (CustomElement.isType($$class) ? CustomElement.getDefinition($$class) : {}) as CustomElementDefinition;
   const App = CustomElement.define<Constructable<K>>({
     ...existingDefs,
@@ -71,17 +79,17 @@ export function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>
     }
     return elements[0];
   };
-  const getAllBy = (selector: string) => {
+  function getAllBy(selector: string) {
     return Array.from(host.querySelectorAll<HTMLElement>(selector));
-  };
-  const queryBy = (selector: string): HTMLElement | null => {
+  }
+  function queryBy(selector: string): HTMLElement | null {
     const elements = host.querySelectorAll<HTMLElement>(selector);
     if (elements.length > 1) {
       throw new Error(`There is more than 1 element with selector "${selector}": ${elements.length} found`);
     }
     return elements.length === 0 ? null : elements[0];
-  };
-  const assertText = (selector: string, text?: string): void => {
+  }
+  function assertText(selector: string, text?: string) {
     if (arguments.length === 2) {
       const el = queryBy(selector);
       if (el === null) {
@@ -91,8 +99,8 @@ export function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>
     } else {
       assert.strictEqual(host.textContent, selector);
     }
-  };
-  const assertHtml = (selector: string, html?: string) => {
+  }
+  function assertHtml(selector: string, html?: string) {
     if (arguments.length === 2) {
       const el = queryBy(selector);
       if (el === null) {
@@ -102,14 +110,14 @@ export function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>
     } else {
       assert.strictEqual(host.innerHTML, selector);
     }
-  };
-  const trigger = ((selector: string, event: string, init?: CustomEventInit): void => {
+  }
+  function trigger(selector: string, event: string, init?: CustomEventInit): void {
     const el = queryBy(selector);
     if (el === null) {
       throw new Error(`No element found for selector "${selector}" to fire event "${event}"`);
     }
     el.dispatchEvent(new ctx.CustomEvent(event, init));
-  }) as ITrigger;
+  }
   ['click', 'change', 'input', 'scroll'].forEach(event => {
     Object.defineProperty(trigger, event, { configurable: true, writable: true, value: (selector: string, init?: CustomEventInit): void => {
       const el = queryBy(selector);
@@ -185,7 +193,7 @@ export function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>
     public queryBy = queryBy;
     public assertText = assertText;
     public assertHtml = assertHtml;
-    public trigger = trigger;
+    public trigger = trigger as ITrigger;
     public scrollBy = scrollBy;
     public flush = flush;
   }();
@@ -278,15 +286,15 @@ export interface IFixtureBuilderBase<T, E = {}> {
 }
 
 type BuilderMethodNames = 'html' | 'component' | 'deps';
-type CreateBuilder<T, Availables extends BuilderMethodNames = BuilderMethodNames> = {
+type CreateBuilder<T, Availables extends BuilderMethodNames> = {
   [key in Availables]:
     key extends 'html'
       ? {
-        (html: string): CreateBuilder<T, Exclude<Availables, 'html'>> & { build(): IFixture<T> };
-        (html: TemplateStringsArray, ...values: TemplateValues<T>[]): CreateBuilder<T, Exclude<Availables, 'html'>> & { build(): IFixture<T> };
+        (html: string): CreateBuilder<T, Exclude<Availables, 'html'>>;
+        (html: TemplateStringsArray, ...values: TemplateValues<T>[]): CreateBuilder<T, Exclude<Availables, 'html'>>;
       }
-        : (...args: Parameters<IFixtureBuilderBase<T>[key]>) => CreateBuilder<T, Exclude<Availables, key>>
-} & (never extends Availables ? { build(): IFixture<T> } : {});
+      : (...args: Parameters<IFixtureBuilderBase<T>[key]>) => CreateBuilder<T, Exclude<Availables, key>>
+} & ('html' extends Availables ? {} : { build(): IFixture<T> });
 
 type TaggedTemplateLambda<M> = (vm: M) => unknown;
 type TemplateValues<M> = string | number | TaggedTemplateLambda<M>;
@@ -300,7 +308,7 @@ class FixtureBuilder<T> {
   public html(html: string | TemplateStringsArray, ...htmlArgs: TemplateValues<T>[]): CreateBuilder<T, Exclude<BuilderMethodNames, 'html'>> {
     this._html = html;
     this._htmlArgs = htmlArgs;
-    return this;
+    return this as unknown as CreateBuilder<T, Exclude<BuilderMethodNames, 'html'>>;
   }
 
   public component(comp: T): CreateBuilder<T, Exclude<BuilderMethodNames, 'component'>> {
@@ -317,7 +325,6 @@ class FixtureBuilder<T> {
     if (this._html === void 0) {
       throw new Error('Builder is not ready, missing template, call .html()/.html`` first');
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return createFixture<any>(
       typeof this._html === 'string' ? this._html : brokenProcessFastTemplate(this._html, ...this._htmlArgs ?? []),
       this._comp,
@@ -327,11 +334,48 @@ class FixtureBuilder<T> {
 }
 
 function brokenProcessFastTemplate(html: TemplateStringsArray, ..._args: unknown[]): string {
-  return html.join('');
+  let result = html[0];
+  for (let i = 0; i < _args.length; ++i) {
+    result += String(_args[i]) + html[i + 1];
+  }
+  return result;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 createFixture.html = <T = Record<PropertyKey, any>>(html: string | TemplateStringsArray, ...values: TemplateValues<T>[]) => new FixtureBuilder<T>().html(html, ...values) ;
 createFixture.component = <T>(component: T) => new FixtureBuilder<T>().component(component);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 createFixture.deps = <T = Record<PropertyKey, any>>(...deps: unknown[]) => new FixtureBuilder<T>().deps(...deps);
+
+/* eslint-disable */
+function testBuilderTypings() {
+  type IsType<A, B> = A extends B ? B extends A ? 1 : never : never;
+
+  // @ts-expect-error
+  const a1 = createFixture.component({}).build();
+  const A1: IsType<typeof a1, any> = 1;
+
+  // @ts-expect-error
+  const a2 = createFixture.component({}).deps().build();
+  const A2: IsType<typeof a2, any> = 1;
+
+  const a3 = createFixture.component({}).deps().html``.build();
+  const A3: IsType<typeof a3, IFixture<{}>> = 1;
+
+  const a4 = createFixture.html``.build();
+  const A4: IsType<typeof a4, IFixture<{}>> = 1;
+
+  // @ts-expect-error
+  const a5 = createFixture.html``.component().deps().build();
+  const A5: IsType<typeof a5, any> = 1;
+
+  // @ts-expect-error
+  const a6 = createFixture.deps().build();
+  const A6: IsType<typeof a6, any> = 1;
+
+  // @ts-expect-error
+  const a7 = createFixture.deps().component({}).build();
+  const A7: IsType<typeof a7, any> = 1;
+
+  const a8 = createFixture.deps().component({}).html``.build();
+  const A8: IsType<typeof a8, IFixture<{}>> = 1;
+}
+/* eslint-enable */
