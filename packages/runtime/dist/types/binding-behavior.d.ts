@@ -1,5 +1,5 @@
 import { ResourceType } from '@aurelia/kernel';
-import { Collection, IndexMap, LifecycleFlags } from './observation';
+import { BindingMode, Collection, IndexMap, LifecycleFlags } from './observation';
 import type { Constructable, IContainer, ResourceDefinition, IResourceKind, PartialResourceDefinition, IServiceLocator } from '@aurelia/kernel';
 import type { BindingObserverRecord, IConnectableBinding } from './binding/connectable';
 import type { BindingBehaviorExpression, ForOfStatement, IsBindingBehavior } from './binding/ast';
@@ -66,6 +66,7 @@ export declare class BindingInterceptor implements IInterceptableBinding {
     readonly isBound: boolean;
     readonly obs: BindingObserverRecord;
     readonly sourceExpression: IsBindingBehavior | ForOfStatement;
+    readonly mode: BindingMode;
     constructor(binding: IInterceptableBinding, expr: BindingBehaviorExpression);
     updateTarget(value: unknown, flags: LifecycleFlags): void;
     updateSource(value: unknown, flags: LifecycleFlags): void;

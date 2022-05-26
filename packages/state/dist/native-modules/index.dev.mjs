@@ -292,11 +292,27 @@ let StateBindingBehavior = class StateBindingBehavior extends BindingInterceptor
     constructor(store, binding, expr) {
         super(binding, expr);
         this._store = store;
+        this._isStateBinding = binding instanceof StateBinding;
     }
     $bind(flags, scope) {
         const binding = this.binding;
-        const $scope = binding instanceof StateBinding ? scope : createStateBindingScope(this._store.getState(), scope);
+        const $scope = this._isStateBinding ? scope : createStateBindingScope(this._store.getState(), scope);
+        if (!this._isStateBinding) {
+            this._store.subscribe(this);
+        }
         binding.$bind(flags, $scope);
+    }
+    $unbind(flags) {
+        if (!this._isStateBinding) {
+            this._store.unsubscribe(this);
+        }
+        this.binding.$unbind(flags);
+    }
+    handleStateChange(state) {
+        const $scope = this.$scope;
+        const overrideContext = $scope.overrideContext;
+        $scope.bindingContext = overrideContext.bindingContext = overrideContext.$state = state;
+        this.binding.handleChange(undefined, undefined, 0);
     }
 };
 StateBindingBehavior.inject = [IStore];
