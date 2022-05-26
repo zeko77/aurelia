@@ -53,9 +53,7 @@ export declare class Controller<C extends IViewModel = IViewModel> implements IC
     shadowRoot: ShadowRoot | null;
     nodes: INodeSequence | null;
     location: IRenderLocation | null;
-    lifecycleHooks: LifecycleHooksLookup<{
-        created: ICompileHooks['created'];
-    }> | null;
+    lifecycleHooks: LifecycleHooksLookup<ICompileHooks> | null;
     state: State;
     get isActive(): boolean;
     get name(): string;
@@ -218,6 +216,8 @@ export interface IController<C extends IViewModel = IViewModel> extends IDisposa
     readonly isActive: boolean;
     readonly parent: IHydratedController | null;
     readonly isBound: boolean;
+    readonly bindings: readonly IBinding[] | null;
+    addBinding(binding: IBinding): void;
     /**
      * Return `true` to stop traversal.
      */
@@ -240,16 +240,14 @@ export interface IComponentController<C extends IViewModel = IViewModel> extends
  * The base type for `ISyntheticView` and `ICustomElementController`.
  *
  * Both of those types can:
- * - Have `bindings` and `children` which are populated during hydration (hence, 'Hydratable').
+ * - Have `children` which are populated during hydration (hence, 'Hydratable').
  * - Have physical DOM nodes that can be mounted.
  */
 export interface IHydratableController<C extends IViewModel = IViewModel> extends IController<C> {
     readonly vmKind: ViewModelKind.customElement | ViewModelKind.synthetic;
     readonly mountTarget: MountTarget;
     readonly definition: CustomElementDefinition | null;
-    readonly bindings: readonly IBinding[] | null;
     readonly children: readonly IHydratedController[] | null;
-    addBinding(binding: IBinding): void;
     addChild(controller: IController): void;
 }
 export declare const enum State {
@@ -483,5 +481,10 @@ export interface IControllerElementHydrationInstruction {
      */
     readonly containerless?: boolean;
 }
+export declare type ControllerLifecyleHookLookup = LifecycleHooksLookup<{
+    hydrating: ICompileHooks['hydrating'];
+    hydrated: ICompileHooks['hydrated'];
+    created: ICompileHooks['created'];
+}>;
 export {};
 //# sourceMappingURL=controller.d.ts.map

@@ -19,22 +19,22 @@ export interface IResourceKind<TType extends ResourceType, TDef extends Resource
 }
 export declare const Protocol: {
     annotation: Readonly<{
-        name: string;
+        name: "au:annotation";
         appendTo: (target: Constructable, key: string) => void;
         set(target: Constructable, prop: string, value: unknown): void;
         get: (target: Constructable, prop: string) => unknown;
         getKeys(target: Constructable): readonly string[];
         isKey: (key: string) => boolean;
-        keyFor: (name: string, context?: string | undefined) => string;
+        keyFor: (name: string, context?: string) => string;
     }>;
     resource: Readonly<{
-        name: string;
+        name: "au:resource";
         appendTo(target: Constructable, key: string): void;
         has: (target: unknown) => target is Constructable<{}>;
         getAll(target: Constructable): readonly ResourceDefinition[];
         getKeys(target: Constructable): readonly string[];
         isKey: (key: string) => boolean;
-        keyFor(name: string, context?: string | undefined): string;
+        keyFor(name: string, context?: string): string;
     }>;
 };
 /**

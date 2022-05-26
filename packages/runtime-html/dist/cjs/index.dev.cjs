@@ -64,6 +64,7 @@ const isPromise = (v) => v instanceof Promise;
 const isFunction = (v) => typeof v === 'function';
 const isString = (v) => typeof v === 'string';
 const defineProp = Object.defineProperty;
+const rethrow = (err) => { throw err; };
 
 function bindable(configOrTarget, prop) {
     let config;
@@ -2932,21 +2933,12 @@ class LifecycleHooksDefinition {
         }
         return new LifecycleHooksDefinition(Type, propertyNames);
     }
-    static fromCallback(lifecycle, callback) {
-        const Type = class {
-            constructor() {
-                this[lifecycle] = callback;
-            }
-        };
-        return new LifecycleHooksDefinition(Type, new Set([lifecycle]));
-    }
     register(container) {
         kernel.Registration.singleton(ILifecycleHooks, this.Type).register(container);
     }
 }
 const containerLookup = new WeakMap();
 const lhBaseName = getAnnotationKeyFor('lifecycle-hooks');
-const callbackHooksName = `${lhBaseName}:callback`;
 const LifecycleHooks = Object.freeze({
     name: lhBaseName,
     define(def, Type) {
@@ -2954,17 +2946,6 @@ const LifecycleHooks = Object.freeze({
         defineMetadata(lhBaseName, definition, Type);
         appendResourceKey(Type, lhBaseName);
         return definition.Type;
-    },
-    fromCallback(lifecycle, callback) {
-        return LifecycleHooksDefinition.fromCallback(lifecycle, callback);
-    },
-    add(Type, lifecycle, callback) {
-        var _a;
-        let existing = getOwnMetadata(Type, callbackHooksName);
-        if (existing === void 0) {
-            defineMetadata(callbackHooksName, existing = {}, Type);
-        }
-        ((_a = existing[lifecycle]) !== null && _a !== void 0 ? _a : (existing[lifecycle] = [])).push(callback);
     },
     resolve(ctx) {
         let lookup = containerLookup.get(ctx);
@@ -3519,6 +3500,9 @@ class Controller {
         }
     }
     _hydrate(hydrationInst) {
+        if (this.lifecycleHooks.hydrating !== void 0) {
+            this.lifecycleHooks.hydrating.forEach(callHydratingHook, this);
+        }
         if (this.hooks.hasHydrating) {
             if (this.debug) {
                 this.logger.trace(`invoking hydrating() hook`);
@@ -3552,6 +3536,9 @@ class Controller {
         }
         this.viewModel.$controller = this;
         this.nodes = this._rendering.createNodes(compiledDef);
+        if (this.lifecycleHooks.hydrated !== void 0) {
+            this.lifecycleHooks.hydrated.forEach(callHydratedHook, this);
+        }
         if (this.hooks.hasHydrated) {
             if (this.debug) {
                 this.logger.trace(`invoking hydrated() hook`);
@@ -4290,6 +4277,12 @@ function callDispose(disposable) {
 }
 function callCreatedHook(l) {
     l.instance.created(this.viewModel, this);
+}
+function callHydratingHook(l) {
+    l.instance.hydrating(this.viewModel, this);
+}
+function callHydratedHook(l) {
+    l.instance.hydrated(this.viewModel, this);
 }
 let _resolve;
 let _reject;
@@ -8854,7 +8847,7 @@ class Repeat {
             return this._activateAllViews(null, flags);
         });
         if (ret instanceof Promise) {
-            ret.catch(err => { throw err; });
+            ret.catch(rethrow);
         }
     }
     handleCollectionChange(indexMap, flags) {
@@ -8878,23 +8871,23 @@ class Repeat {
                 return this._activateAllViews(null, flags);
             });
             if (ret instanceof Promise) {
-                ret.catch(err => { throw err; });
+                ret.catch(rethrow);
             }
         }
         else {
             const oldLength = this.views.length;
-            runtime.applyMutationsToIndices(indexMap);
-            if (indexMap.deletedItems.length > 0) {
-                indexMap.deletedItems.sort(kernel.compareNumber);
-                const ret = kernel.onResolve(this._deactivateAndRemoveViewsByKey(indexMap, flags), () => {
-                    return this._createAndActivateAndSortViewsByKey(oldLength, indexMap, flags);
+            const $indexMap = runtime.applyMutationsToIndices(indexMap);
+            if ($indexMap.deletedItems.length > 0) {
+                $indexMap.deletedItems.sort(kernel.compareNumber);
+                const ret = kernel.onResolve(this._deactivateAndRemoveViewsByKey($indexMap, flags), () => {
+                    return this._createAndActivateAndSortViewsByKey(oldLength, $indexMap, flags);
                 });
                 if (ret instanceof Promise) {
-                    ret.catch(err => { throw err; });
+                    ret.catch(rethrow);
                 }
             }
             else {
-                this._createAndActivateAndSortViewsByKey(oldLength, indexMap, flags);
+                this._createAndActivateAndSortViewsByKey(oldLength, $indexMap, flags);
             }
         }
     }

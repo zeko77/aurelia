@@ -1,4 +1,6 @@
 /// <reference types="node" />
+/// <reference types="node" />
+/// <reference types="node" />
 import { IncomingMessage, IncomingHttpHeaders } from 'http';
 import { Http2ServerRequest, IncomingHttpHeaders as IncomingHttp2Headers } from 'http2';
 export declare const enum HTTPStatusCode {

@@ -19,11 +19,11 @@ export declare class RuleProperty implements IRuleProperty {
 }
 export declare type RuleCondition<TObject extends IValidateable = IValidateable, TValue = any> = (value: TValue, object?: TObject) => boolean | Promise<boolean>;
 export declare const validationRulesRegistrar: Readonly<{
-    name: string;
-    defaultRuleSetName: string;
-    set(target: IValidateable, rules: IPropertyRule[], tag?: string | undefined): void;
-    get(target: IValidateable, tag?: string | undefined): PropertyRule[];
-    unset(target: IValidateable, tag?: string | undefined): void;
+    name: "validation-rules";
+    defaultRuleSetName: "__default";
+    set(target: IValidateable, rules: IPropertyRule[], tag?: string): void;
+    get(target: IValidateable, tag?: string): PropertyRule[];
+    unset(target: IValidateable, tag?: string): void;
     isValidationRulesSet(target: IValidateable): boolean;
 }>;
 export declare class PropertyRule<TObject extends IValidateable = IValidateable, TValue = unknown> implements IPropertyRule {

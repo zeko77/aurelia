@@ -2513,14 +2513,17 @@ function wt(t) {
 function bt(t) {
     let e = 0;
     let s = 0;
-    const r = t.length;
-    for (let i = 0; i < r; ++i) {
-        while (t.deletedItems[s] <= i - e) {
+    let r = 0;
+    const i = M(t);
+    const n = i.length;
+    for (;r < n; ++r) {
+        while (i.deletedItems[s] <= r - e) {
             ++s;
             --e;
         }
-        if (-2 === t[i]) ++e; else t[i] += e;
+        if (-2 === i[r]) ++e; else i[r] += e;
     }
+    return i;
 }
 
 function xt(t, e) {

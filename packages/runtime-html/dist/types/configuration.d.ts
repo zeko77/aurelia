@@ -134,7 +134,7 @@ export declare const StandardConfiguration: {
      * Apply this configuration to the provided container.
      */
     register(container: IContainer): IContainer;
-    customize(cb?: ConfigurationOptionsProvider | undefined): any;
+    customize(cb?: ConfigurationOptionsProvider): any;
 };
 export declare type ConfigurationOptionsProvider = (options: IRuntimeHtmlConfigurationOptions) => void;
 interface IRuntimeHtmlConfigurationOptions {

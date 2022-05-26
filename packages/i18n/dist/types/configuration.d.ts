@@ -4,6 +4,6 @@ export declare type I18NConfigOptionsProvider = (options: I18nConfigurationOptio
 export declare const I18nConfiguration: {
     optionsProvider: I18NConfigOptionsProvider;
     register(container: IContainer): IContainer;
-    customize(cb?: I18NConfigOptionsProvider | undefined): any;
+    customize(cb?: I18NConfigOptionsProvider): any;
 };
 //# sourceMappingURL=configuration.d.ts.map

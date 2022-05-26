@@ -39,8 +39,8 @@ export declare class ChildrenDefinition {
     readonly property: string;
     readonly options?: MutationObserverInit | undefined;
     readonly query?: ((controller: ICustomElementController) => ArrayLike<Node>) | undefined;
-    readonly filter?: ((node: Node, controller?: ICustomElementController<ICustomElementViewModel> | null | undefined, viewModel?: ICustomElementViewModel | undefined) => boolean) | undefined;
-    readonly map?: ((node: Node, controller?: ICustomElementController<ICustomElementViewModel> | null | undefined, viewModel?: ICustomElementViewModel | undefined) => unknown) | undefined;
+    readonly filter?: ((node: Node, controller?: ICustomElementController | null, viewModel?: ICustomElementViewModel) => boolean) | undefined;
+    readonly map?: ((node: Node, controller?: ICustomElementController | null, viewModel?: ICustomElementViewModel) => unknown) | undefined;
     private constructor();
     static create(prop: string, def?: PartialChildrenDefinition): ChildrenDefinition;
 }

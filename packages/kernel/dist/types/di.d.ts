@@ -97,7 +97,7 @@ export declare class ContainerConfiguration implements IContainerConfiguration {
     static from(config?: IContainerConfiguration): ContainerConfiguration;
 }
 export declare const DI: {
-    createContainer(config?: Partial<IContainerConfiguration> | undefined): IContainer;
+    createContainer(config?: Partial<IContainerConfiguration>): IContainer;
     getDesignParamtypes(Type: Constructable | Injectable): readonly Key[] | undefined;
     getAnnotationParamtypes(Type: Constructable | Injectable): readonly Key[] | undefined;
     getOrCreateAnnotationParamTypes: typeof getOrCreateAnnotationParamTypes;
@@ -144,7 +144,7 @@ export declare const DI: {
      * - @param friendlyName used to improve error messaging
      */
     createInterface<K extends Key>(configureOrName?: string | ((builder: ResolverBuilder<K>) => IResolver<K>) | undefined, configuror?: ((builder: ResolverBuilder<K>) => IResolver<K>) | undefined): InterfaceSymbol<K>;
-    inject(...dependencies: Key[]): (target: Injectable, key?: string | number | undefined, descriptor?: number | PropertyDescriptor | undefined) => void;
+    inject(...dependencies: Key[]): (target: Injectable, key?: string | number, descriptor?: PropertyDescriptor | number) => void;
     /**
      * Registers the `target` class as a transient dependency; each time the dependency is resolved
      * a new instance will be created.
@@ -187,7 +187,7 @@ declare function getDependencies(Type: Constructable | Injectable): Key[];
 declare function getOrCreateAnnotationParamTypes(Type: Constructable | Injectable): Key[];
 export declare const IContainer: InterfaceSymbol<IContainer>;
 export declare const IServiceLocator: InterfaceSymbol<IServiceLocator>;
-export declare const inject: (...dependencies: Key[]) => (target: Injectable, key?: string | number | undefined, descriptor?: number | PropertyDescriptor | undefined) => void;
+export declare const inject: (...dependencies: Key[]) => (target: Injectable, key?: string | number, descriptor?: PropertyDescriptor | number) => void;
 declare function transientDecorator<T extends Constructable>(target: T & Partial<RegisterSelf<T>>): T & RegisterSelf<T>;
 /**
  * Registers the decorated class as a transient dependency; each time the dependency is resolved
@@ -238,7 +238,7 @@ export declare function singleton<T extends Constructable>(options?: SingletonOp
  * ```
  */
 export declare function singleton<T extends Constructable>(target: T & Partial<RegisterSelf<T>>): T & RegisterSelf<T>;
-export declare const all: (key: any, searchAncestors?: boolean | undefined) => ReturnType<typeof DI.inject>;
+export declare const all: (key: any, searchAncestors?: boolean) => ReturnType<typeof DI.inject>;
 /**
  * Lazily inject a dependency depending on whether the [[`Key`]] is present at the time of function call.
  *

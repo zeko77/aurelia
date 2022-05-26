@@ -2486,19 +2486,22 @@ function getArrayObserver(array) {
 function applyMutationsToIndices(indexMap) {
     let offset = 0;
     let j = 0;
-    const len = indexMap.length;
-    for (let i = 0; i < len; ++i) {
-        while (indexMap.deletedItems[j] <= i - offset) {
+    let i = 0;
+    const $indexMap = cloneIndexMap(indexMap);
+    const len = $indexMap.length;
+    for (; i < len; ++i) {
+        while ($indexMap.deletedItems[j] <= i - offset) {
             ++j;
             --offset;
         }
-        if (indexMap[i] === -2) {
+        if ($indexMap[i] === -2) {
             ++offset;
         }
         else {
-            indexMap[i] += offset;
+            $indexMap[i] += offset;
         }
     }
+    return $indexMap;
 }
 function synchronizeIndices(items, indexMap) {
     const copy = items.slice();

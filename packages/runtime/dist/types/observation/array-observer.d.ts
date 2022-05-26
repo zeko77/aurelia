@@ -39,7 +39,7 @@ export declare function getArrayObserver(array: unknown[]): ArrayObserver;
  * e.g. turn `[-2, 0, 1]` into `[-2, 1, 2]`, allowing the values at the indices to be
  * used for sorting/reordering items if needed
  */
-export declare function applyMutationsToIndices(indexMap: IndexMap): void;
+export declare function applyMutationsToIndices(indexMap: IndexMap): IndexMap;
 /**
  * After `applyMutationsToIndices`, this function can be used to reorder items in a derived
  * array (e.g.  the items in the `views` in the repeater are derived from the `items` property)
