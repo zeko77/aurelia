@@ -85,6 +85,7 @@ export interface IFixture<T> {
      * Will throw if there' more than one elements with matching selector
      */
     assertHtml(selector: string, html: string): void;
+    hJsx(name: string, attrs: Record<string, string> | null, ...children: (Node | string | (Node | string)[])[]): HTMLElement;
     trigger: ITrigger;
     /**
      * A helper to scroll and trigger a scroll even on an element matching the given selector
