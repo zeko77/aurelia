@@ -2078,7 +2078,7 @@ function createAndAppendNodes(log, node, vi, append) {
             }
         case 4:
         case 2: {
-            const rd = RouteDefinition.resolve(vi.component.value, node.context.definition);
+            const rd = RouteDefinition.resolve(vi.component.value, node.context.definition, null);
             const params = (_c = vi.params) !== null && _c !== void 0 ? _c : kernel.emptyObject;
             const rr = new $RecognizedRoute(new routeRecognizer.RecognizedRoute(new routeRecognizer.Endpoint(new routeRecognizer.ConfigurableRoute(rd.path[0], rd.caseSensitive, rd), kernel.toArray(Object.values(params))), params), null);
             const childNode = createConfiguredNode(log, node, vi, append, rr);
@@ -2128,7 +2128,7 @@ function createNode(log, node, vi, append) {
         if (rr !== null)
             return createConfiguredNode(log, node, vi, append, rr);
         log.trace(`The fallback '${fallback}' is not recognized as a route; treating as custom element name.`);
-        return createFallbackNode(log, RouteDefinition.resolve(fallback, ctx.definition, ctx), node, vi, append);
+        return createFallbackNode(log, RouteDefinition.resolve(fallback, ctx.definition, null, ctx), node, vi, append);
     }
     rr.residue = null;
     vi.component.value = noResidue
@@ -2155,7 +2155,7 @@ function createConfiguredNode(log, node, vi, append, rr, route = rr.route.endpoi
             const ced = $handler.component;
             const vpa = ctx.resolveViewportAgent(new ViewportRequest(vpName, ced.name, rt.options.resolutionMode, append));
             const router = ctx.container.get(IRouter);
-            const childCtx = router.getRouteContext(vpa, ced, vpa.hostController.container, ctx.definition);
+            const childCtx = router.getRouteContext(vpa, ced, null, vpa.hostController.container, ctx.definition);
             log.trace('createConfiguredNode setting the context node');
             childCtx.node = RouteNode.create({
                 path: rr.route.endpoint.route.path,
@@ -2529,9 +2529,9 @@ exports.Router = class Router {
         this.logger.trace('isActive(instructions:%s,ctx:%s)', instructions, ctx);
         return this.routeTree.contains(instructions);
     }
-    getRouteContext(viewportAgent, component, container, parentDefinition) {
+    getRouteContext(viewportAgent, componentDefinition, componentInstance, container, parentDefinition) {
         const logger = container.get(kernel.ILogger).scopeTo('RouteContext');
-        const routeDefinition = RouteDefinition.resolve(component.Type, parentDefinition);
+        const routeDefinition = RouteDefinition.resolve(typeof (componentInstance === null || componentInstance === void 0 ? void 0 : componentInstance.getRouteConfig) === 'function' ? componentInstance : componentDefinition.Type, parentDefinition, null);
         let routeDefinitionLookup = this.vpaLookup.get(viewportAgent);
         if (routeDefinitionLookup === void 0) {
             this.vpaLookup.set(viewportAgent, routeDefinitionLookup = new WeakMap());
@@ -2540,7 +2540,7 @@ exports.Router = class Router {
         if (routeContext === void 0) {
             logger.trace(`creating new RouteContext for %s`, routeDefinition);
             const parent = container.has(IRouteContext, true) ? container.get(IRouteContext) : null;
-            routeDefinitionLookup.set(routeDefinition, routeContext = new RouteContext(viewportAgent, parent, component, routeDefinition, container));
+            routeDefinitionLookup.set(routeDefinition, routeContext = new RouteContext(viewportAgent, parent, componentDefinition, routeDefinition, container));
         }
         else {
             logger.trace(`returning existing RouteContext for %s`, routeDefinition);
@@ -3069,7 +3069,7 @@ class TypedNavigationInstruction {
 const noRoutes = kernel.emptyArray;
 function defaultReentryBehavior(current, next) {
     if (!shallowEquals(current.params, next.params)) {
-        return 'invoke-lifecycles';
+        return 'replace';
     }
     return 'none';
 }
@@ -3173,51 +3173,75 @@ class RouteDefinition {
         this.data = (_e = config.data) !== null && _e !== void 0 ? _e : {};
         this.fallback = (_g = (_f = config.fallback) !== null && _f !== void 0 ? _f : parentDefinition === null || parentDefinition === void 0 ? void 0 : parentDefinition.fallback) !== null && _g !== void 0 ? _g : null;
     }
-    static resolve(routeable, parentDefinition, context) {
-        if (isPartialRedirectRouteConfig(routeable)) {
+    static resolve(routeable, parentDefinition, routeNode, context) {
+        if (isPartialRedirectRouteConfig(routeable))
             return new RouteDefinition(RouteConfig.create(routeable, null), null, parentDefinition);
+        const instruction = this.createNavigationInstruction(routeable);
+        let ceDef;
+        switch (instruction.type) {
+            case 0: {
+                if (context === void 0)
+                    throw new Error(`When retrieving the RouteDefinition for a component name, a RouteContext (that can resolve it) must be provided`);
+                const component = context.container.find(runtimeHtml.CustomElement, instruction.value);
+                if (component === null)
+                    throw new Error(`Could not find a CustomElement named '${instruction.value}' in the current container scope of ${context}. This means the component is neither registered at Aurelia startup nor via the 'dependencies' decorator or static property.`);
+                ceDef = component;
+                break;
+            }
+            case 2:
+                ceDef = instruction.value;
+                break;
+            case 4:
+                ceDef = runtimeHtml.CustomElement.getDefinition(instruction.value.constructor);
+                break;
+            case 3:
+                if (context === void 0)
+                    throw new Error(`RouteContext must be provided when resolving an imported module`);
+                ceDef = context.resolveLazy(instruction.value);
+                break;
         }
-        return kernel.onResolve(this.resolveCustomElementDefinition(routeable, context), def => {
+        return kernel.onResolve(ceDef, def => {
+            var _a, _b, _c, _d;
             let routeDefinition = $RouteDefinition.get(def);
+            const hasRouteConfigHook = instruction.type === 4 && typeof routeable.getRouteConfig === 'function';
             if (routeDefinition === null) {
                 const type = def.Type;
-                const config = isPartialChildRouteConfig(routeable)
-                    ? Route.isConfigured(type)
-                        ? Route.getConfig(type).applyChildRouteConfig(routeable)
-                        : RouteConfig.create(routeable, type)
-                    : Route.getConfig(def.Type);
+                let config = null;
+                if (hasRouteConfigHook) {
+                    config = RouteConfig.create((_a = routeable.getRouteConfig(parentDefinition, routeNode)) !== null && _a !== void 0 ? _a : kernel.emptyObject, type);
+                }
+                else {
+                    config = isPartialChildRouteConfig(routeable)
+                        ? Route.isConfigured(type)
+                            ? Route.getConfig(type).applyChildRouteConfig(routeable)
+                            : RouteConfig.create(routeable, type)
+                        : Route.getConfig(def.Type);
+                }
                 routeDefinition = new RouteDefinition(config, def, parentDefinition);
                 $RouteDefinition.define(routeDefinition, def);
+            }
+            else if (routeDefinition.config.routes.length === 0 && hasRouteConfigHook) {
+                routeDefinition.applyChildRouteConfig((_d = (_c = (_b = routeable).getRouteConfig) === null || _c === void 0 ? void 0 : _c.call(_b, parentDefinition, routeNode)) !== null && _d !== void 0 ? _d : kernel.emptyObject);
             }
             return routeDefinition;
         });
     }
-    static resolveCustomElementDefinition(routeable, context) {
-        if (isPartialChildRouteConfig(routeable)) {
-            return this.resolveCustomElementDefinition(routeable.component, context);
-        }
-        const typedInstruction = TypedNavigationInstruction.create(routeable);
-        switch (typedInstruction.type) {
-            case 0: {
-                if (context === void 0) {
-                    throw new Error(`When retrieving the RouteDefinition for a component name, a RouteContext (that can resolve it) must be provided`);
-                }
-                const component = context.container.find(runtimeHtml.CustomElement, typedInstruction.value);
-                if (component === null) {
-                    throw new Error(`Could not find a CustomElement named '${typedInstruction.value}' in the current container scope of ${context}. This means the component is neither registered at Aurelia startup nor via the 'dependencies' decorator or static property.`);
-                }
-                return component;
-            }
-            case 2:
-                return typedInstruction.value;
-            case 4:
-                return runtimeHtml.CustomElement.getDefinition(typedInstruction.value.constructor);
-            case 3:
-                if (context === void 0) {
-                    throw new Error(`RouteContext must be provided when resolving an imported module`);
-                }
-                return context.resolveLazy(typedInstruction.value);
-        }
+    static createNavigationInstruction(routeable) {
+        return isPartialChildRouteConfig(routeable)
+            ? this.createNavigationInstruction(routeable.component)
+            : TypedNavigationInstruction.create(routeable);
+    }
+    applyChildRouteConfig(config) {
+        var _a, _b, _c, _d, _e, _f, _g;
+        this.config = config = this.config.applyChildRouteConfig(config);
+        this.hasExplicitPath = config.path !== null;
+        this.caseSensitive = (_a = config.caseSensitive) !== null && _a !== void 0 ? _a : this.caseSensitive;
+        this.path = ensureArrayOfStrings((_b = config.path) !== null && _b !== void 0 ? _b : this.path);
+        this.redirectTo = (_c = config.redirectTo) !== null && _c !== void 0 ? _c : null;
+        this.viewport = (_d = config.viewport) !== null && _d !== void 0 ? _d : defaultViewportName;
+        this.id = ensureString((_e = config.id) !== null && _e !== void 0 ? _e : this.path);
+        this.data = (_f = config.data) !== null && _f !== void 0 ? _f : {};
+        this.fallback = (_g = config.fallback) !== null && _g !== void 0 ? _g : this.fallback;
     }
     register(container) {
         var _a;
@@ -3276,7 +3300,7 @@ class ComponentAgent {
         let componentAgent = componentAgentLookup.get(componentInstance);
         if (componentAgent === void 0) {
             const container = ctx.container;
-            const definition = RouteDefinition.resolve(componentInstance.constructor, ctx.definition);
+            const definition = RouteDefinition.resolve(componentInstance.constructor, ctx.definition, null);
             const controller = runtimeHtml.Controller.$el(container, componentInstance, hostController.host, null);
             componentAgentLookup.set(componentInstance, componentAgent = new ComponentAgent(componentInstance, controller, definition, routeNode, ctx));
         }
@@ -3407,7 +3431,6 @@ const IRouteContext = kernel.DI.createInterface('IRouteContext');
 const RESIDUE = 'au$residue';
 class RouteContext {
     constructor(viewportAgent, parent, component, definition, parentContainer) {
-        var _a;
         this.parent = parent;
         this.component = component;
         this.definition = definition;
@@ -3419,6 +3442,7 @@ class RouteContext {
         this.prevNode = null;
         this._node = null;
         this._vpa = null;
+        this._childRoutesConfigured = false;
         this._vpa = viewportAgent;
         if (parent === null) {
             this.root = this;
@@ -3439,53 +3463,7 @@ class RouteContext {
         container.register(definition);
         container.register(...component.dependencies);
         this.recognizer = new routeRecognizer.RouteRecognizer();
-        const promises = [];
-        const allPromises = [];
-        for (const child of definition.config.routes) {
-            if (child instanceof Promise) {
-                const p = this.addRoute(child);
-                promises.push(p);
-                allPromises.push(p);
-            }
-            else {
-                const routeDef = RouteDefinition.resolve(child, definition, this);
-                if (routeDef instanceof Promise) {
-                    if (isPartialChildRouteConfig(child) && child.path != null) {
-                        for (const path of ensureArrayOfStrings(child.path)) {
-                            this.$addRoute(path, (_a = child.caseSensitive) !== null && _a !== void 0 ? _a : false, routeDef);
-                        }
-                        const idx = this.childRoutes.length;
-                        const p = routeDef.then(resolvedRouteDef => {
-                            return this.childRoutes[idx] = resolvedRouteDef;
-                        });
-                        this.childRoutes.push(p);
-                        allPromises.push(p.then(kernel.noop));
-                    }
-                    else {
-                        throw new Error(`Invalid route config. When the component property is a lazy import, the path must be specified.`);
-                    }
-                }
-                else {
-                    for (const path of routeDef.path) {
-                        this.$addRoute(path, routeDef.caseSensitive, routeDef);
-                    }
-                    this.childRoutes.push(routeDef);
-                }
-            }
-        }
-        if (promises.length > 0) {
-            this._resolved = Promise.all(promises).then(() => {
-                this._resolved = null;
-            });
-        }
-        if (allPromises.length > 0) {
-            this._allResolved = Promise.all(allPromises).then(() => {
-                this._allResolved = null;
-            });
-        }
-    }
-    get id() {
-        return this.container.id;
+        this.processDefinition(definition);
     }
     get isRoot() {
         return this.parent === null;
@@ -3530,6 +3508,63 @@ class RouteContext {
             this.logger.trace(`ViewportAgent changed from %s to %s`, prev, value);
         }
     }
+    processDefinition(definition) {
+        var _a, _b, _c;
+        const promises = [];
+        const allPromises = [];
+        const children = definition.config.routes;
+        const len = children.length;
+        if (len === 0) {
+            const getRouteConfig = (_b = (_a = definition.component) === null || _a === void 0 ? void 0 : _a.Type.prototype) === null || _b === void 0 ? void 0 : _b.getRouteConfig;
+            this._childRoutesConfigured = getRouteConfig == null ? true : typeof getRouteConfig !== 'function';
+            return;
+        }
+        let i = 0;
+        for (; i < len; i++) {
+            const child = children[i];
+            if (child instanceof Promise) {
+                const p = this.addRoute(child);
+                promises.push(p);
+                allPromises.push(p);
+            }
+            else {
+                const routeDef = RouteDefinition.resolve(child, definition, null, this);
+                if (routeDef instanceof Promise) {
+                    if (isPartialChildRouteConfig(child) && child.path != null) {
+                        for (const path of ensureArrayOfStrings(child.path)) {
+                            this.$addRoute(path, (_c = child.caseSensitive) !== null && _c !== void 0 ? _c : false, routeDef);
+                        }
+                        const idx = this.childRoutes.length;
+                        const p = routeDef.then(resolvedRouteDef => {
+                            return this.childRoutes[idx] = resolvedRouteDef;
+                        });
+                        this.childRoutes.push(p);
+                        allPromises.push(p.then(kernel.noop));
+                    }
+                    else {
+                        throw new Error(`Invalid route config. When the component property is a lazy import, the path must be specified.`);
+                    }
+                }
+                else {
+                    for (const path of routeDef.path) {
+                        this.$addRoute(path, routeDef.caseSensitive, routeDef);
+                    }
+                    this.childRoutes.push(routeDef);
+                }
+            }
+        }
+        this._childRoutesConfigured = true;
+        if (promises.length > 0) {
+            this._resolved = Promise.all(promises).then(() => {
+                this._resolved = null;
+            });
+        }
+        if (allPromises.length > 0) {
+            this._allResolved = Promise.all(allPromises).then(() => {
+                this._allResolved = null;
+            });
+        }
+    }
     static setRoot(container) {
         const logger = container.get(kernel.ILogger).scopeTo('RouteContext');
         if (!container.has(runtimeHtml.IAppRoot, true)) {
@@ -3543,7 +3578,7 @@ class RouteContext {
             logAndThrow(new Error(`The provided IAppRoot does not (yet) have a controller. A possible cause is calling this API manually before Aurelia.start() is called`), logger);
         }
         const router = container.get(IRouter);
-        const routeContext = router.getRouteContext(null, controller.definition, controller.container, null);
+        const routeContext = router.getRouteContext(null, controller.definition, controller.viewModel, controller.container, null);
         container.register(kernel.Registration.instance(IRouteContext, routeContext));
         routeContext.node = router.routeTree.root;
     }
@@ -3602,8 +3637,11 @@ class RouteContext {
     createComponentAgent(hostController, routeNode) {
         this.logger.trace(`createComponentAgent(routeNode:%s)`, routeNode);
         this.hostControllerProvider.prepare(hostController);
-        const routeDefinition = RouteDefinition.resolve(routeNode.component, this.definition);
-        const componentInstance = this.container.get(routeDefinition.component.key);
+        const componentInstance = this.container.get(routeNode.component.key);
+        if (!this._childRoutesConfigured) {
+            const routeDef = RouteDefinition.resolve(componentInstance, this.definition, routeNode);
+            this.processDefinition(routeDef);
+        }
         const componentAgent = ComponentAgent.for(componentInstance, hostController, routeNode, this);
         this.hostControllerProvider.dispose();
         return componentAgent;
@@ -3657,7 +3695,7 @@ class RouteContext {
     }
     addRoute(routeable) {
         this.logger.trace(`addRoute(routeable:'${routeable}')`);
-        return kernel.onResolve(RouteDefinition.resolve(routeable, this.definition, this), routeDef => {
+        return kernel.onResolve(RouteDefinition.resolve(routeable, this.definition, null, this), routeDef => {
             for (const path of routeDef.path) {
                 this.$addRoute(path, routeDef.caseSensitive, routeDef);
             }

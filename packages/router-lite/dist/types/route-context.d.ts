@@ -7,7 +7,6 @@ import { ComponentAgent } from './component-agent';
 import { RouteNode } from './route-tree';
 import { ResolutionMode } from './router';
 import { IViewport } from './resources/viewport';
-import { Routeable } from './route';
 export interface IRouteContext extends RouteContext {
 }
 export declare const IRouteContext: import("@aurelia/kernel").InterfaceSymbol<IRouteContext>;
@@ -26,7 +25,6 @@ export declare class RouteContext {
     readonly component: CustomElementDefinition;
     readonly definition: RouteDefinition;
     readonly parentContainer: IContainer;
-    get id(): number;
     private readonly childViewportAgents;
     readonly root: IRouteContext;
     get isRoot(): boolean;
@@ -61,7 +59,9 @@ export declare class RouteContext {
     private readonly logger;
     private readonly hostControllerProvider;
     private readonly recognizer;
+    private _childRoutesConfigured;
     constructor(viewportAgent: ViewportAgent | null, parent: IRouteContext | null, component: CustomElementDefinition, definition: RouteDefinition, parentContainer: IContainer);
+    private processDefinition;
     /**
      * Create a new `RouteContext` and register it in the provided container.
      *
@@ -85,8 +85,7 @@ export declare class RouteContext {
     registerViewport(viewport: IViewport): ViewportAgent;
     unregisterViewport(viewport: IViewport): void;
     recognize(path: string, searchAncestor?: boolean): $RecognizedRoute | null;
-    addRoute(routeable: Promise<IModule>): Promise<void>;
-    addRoute(routeable: Exclude<Routeable, Promise<IModule>>): void | Promise<void>;
+    private addRoute;
     private $addRoute;
     resolveLazy(promise: Promise<IModule>): Promise<CustomElementDefinition> | CustomElementDefinition;
     toString(): string;
