@@ -416,19 +416,20 @@ class RouterOptions {
         return t.options;
     }
     apply(t) {
-        var i, n, s, e, o, r, l, u;
+        var i, n, s, e, o, r, l, u, h;
         t = null !== t && void 0 !== t ? t : {};
         this.separators.apply(t.separators);
         this.indicators.apply(t.indicators);
         this.useUrlFragmentHash = null !== (i = t.useUrlFragmentHash) && void 0 !== i ? i : this.useUrlFragmentHash;
-        this.useHref = null !== (n = t.useHref) && void 0 !== n ? n : this.useHref;
-        this.statefulHistoryLength = null !== (s = t.statefulHistoryLength) && void 0 !== s ? s : this.statefulHistoryLength;
-        this.useDirectRouting = null !== (e = t.useDirectRouting) && void 0 !== e ? e : this.useDirectRouting;
-        this.useConfiguredRoutes = null !== (o = t.useConfiguredRoutes) && void 0 !== o ? o : this.useConfiguredRoutes;
-        this.additiveInstructionDefault = null !== (r = t.additiveInstructionDefault) && void 0 !== r ? r : this.additiveInstructionDefault;
+        this.basePath = null !== (n = t.basePath) && void 0 !== n ? n : this.basePath;
+        this.useHref = null !== (s = t.useHref) && void 0 !== s ? s : this.useHref;
+        this.statefulHistoryLength = null !== (e = t.statefulHistoryLength) && void 0 !== e ? e : this.statefulHistoryLength;
+        this.useDirectRouting = null !== (o = t.useDirectRouting) && void 0 !== o ? o : this.useDirectRouting;
+        this.useConfiguredRoutes = null !== (r = t.useConfiguredRoutes) && void 0 !== r ? r : this.useConfiguredRoutes;
+        this.additiveInstructionDefault = null !== (l = t.additiveInstructionDefault) && void 0 !== l ? l : this.additiveInstructionDefault;
         this.title.apply(t.title);
-        this.navigationSyncStates = null !== (l = t.navigationSyncStates) && void 0 !== l ? l : this.navigationSyncStates;
-        this.swapOrder = null !== (u = t.swapOrder) && void 0 !== u ? u : this.swapOrder;
+        this.navigationSyncStates = null !== (u = t.navigationSyncStates) && void 0 !== u ? u : this.navigationSyncStates;
+        this.swapOrder = null !== (h = t.swapOrder) && void 0 !== h ? h : this.swapOrder;
         if (Array.isArray(t.hooks)) if (void 0 !== this.routerConfiguration) t.hooks.forEach((t => this.routerConfiguration.addHook(t.hook, t.options))); else this.registrationHooks = t.hooks;
     }
     setRouterConfiguration(t) {
@@ -1780,7 +1781,7 @@ class Viewport extends Endpoint$1 {
         return this.transitionAction = "skip";
     }
     setConnectedCE(t, i) {
-        var n;
+        var n, s, e, o, r;
         i = null !== i && void 0 !== i ? i : {};
         if (this.connectedCE !== t) {
             this.previousViewportState = {
@@ -1791,8 +1792,13 @@ class Viewport extends Endpoint$1 {
             this.options.apply(i);
             if (null != this.connectionResolve) this.connectionResolve();
         }
-        if (null === this.getContent().componentInstance && null == (null === (n = this.getNextContent()) || void 0 === n ? void 0 : n.componentInstance) && this.options.default) {
-            const t = RoutingInstruction.parse(this.router, this.options.default);
+        const l = (null !== (s = null === (n = this.scope.parent) || void 0 === n ? void 0 : n.endpoint.getRoutes()) && void 0 !== s ? s : []).filter((t => "" === t.path)).length > 0;
+        if (null === this.getContent().componentInstance && null == (null === (e = this.getNextContent()) || void 0 === e ? void 0 : e.componentInstance) && (this.options.default || l)) {
+            const t = RoutingInstruction.parse(this.router, null !== (o = this.options.default) && void 0 !== o ? o : "");
+            if (0 === t.length && l) {
+                const i = null === (r = this.scope.parent) || void 0 === r ? void 0 : r.findInstructions([ RoutingInstruction.create("") ], false, this.router.configuration.options.useConfiguredRoutes);
+                if (null === i || void 0 === i ? void 0 : i.foundConfiguration) t.push(...i.instructions);
+            }
             for (const i of t) {
                 i.endpoint.set(this);
                 i.scope = this.owningScope;
@@ -2262,7 +2268,7 @@ class RoutingInstruction {
             if (null !== (o = null === t || void 0 === t ? void 0 : t.options.noLink) && void 0 !== o ? o : false) return "";
             if (!this.needsEndpointDescribed && (!(null !== (r = null === t || void 0 === t ? void 0 : t.options.forceDescription) && void 0 !== r ? r : false) || null != (null === (l = this.viewportScope) || void 0 === l ? void 0 : l.instance))) h = true;
             if ((null === t || void 0 === t ? void 0 : t.options.fallback) === this.component.name) a = true;
-            if (this.default && !this.hasNextScopeInstructions) a = true;
+            if ((null === t || void 0 === t ? void 0 : t.options.default) === this.component.name) a = true;
         }
         const c = this.nextScopeInstructions;
         let f = this.scopeModifier;
@@ -2867,8 +2873,6 @@ class RoutingScope {
                 v.push(...(await Promise.all(e)).flat());
             }
             if (i.useFullStateInstruction) n.appendedInstructions = n.appendedInstructions.filter((t => !t.default));
-            const E = n.appendedInstructions.filter((t => t.component.isPromise()));
-            if (E.length > 0) await Promise.all(E.map((t => t.component.resolve())));
             ({matchedInstructions: g, earlierMatchedInstructions: p, remainingInstructions: w} = n.dequeueAppendedInstructions(g, p, w));
             if (0 === g.length && 0 === w.length) {
                 const t = p.map((t => {
@@ -2880,6 +2884,8 @@ class RoutingScope {
                     ({matchedInstructions: g, earlierMatchedInstructions: p, remainingInstructions: w} = n.dequeueAppendedInstructions(g, p, w));
                 } else g = d.map((t => RoutingInstruction.createClear(h, t)));
             }
+            const E = g.filter((t => t.component.isFunction() || t.component.isPromise()));
+            if (E.length > 0) await Promise.all(E.map((t => t.component.resolve())));
         } while (g.length > 0 || w.length > 0);
         return v;
     }
@@ -3053,66 +3059,77 @@ class RoutingScope {
         return null;
     }
     findMatchingRouteInRoutes(t, i) {
-        var n;
+        var n, s, e;
         if (!Array.isArray(i)) return null;
         i = i.map((t => this.ensureProperRoute(t)));
-        const s = [];
+        const o = [];
         for (const t of i) {
             const i = Array.isArray(t.path) ? t.path : [ t.path ];
             for (const n of i) {
-                s.push({
+                o.push({
                     ...t,
                     path: n,
                     handler: t
                 });
-                if ("" !== n) s.push({
+                if ("" !== n) o.push({
                     ...t,
                     path: `${n}/*remainingPath`,
                     handler: t
                 });
             }
         }
-        const e = new FoundRoute;
+        const r = new FoundRoute;
         if (t.startsWith("/") || t.startsWith("+")) t = t.slice(1);
-        const o = new f;
-        o.add(s);
-        const r = o.recognize(t);
-        if (null !== r) {
-            e.match = r.endpoint.route.handler;
-            e.matching = t;
-            const s = {
-                ...r.params
-            };
-            if (void 0 !== s.remainingPath) {
-                e.remaining = s.remainingPath;
-                Reflect.deleteProperty(s, "remainingPath");
-                e.matching = e.matching.slice(0, e.matching.indexOf(e.remaining));
+        const l = i.find((i => i.id === t));
+        let u = {
+            params: {},
+            endpoint: {}
+        };
+        if (null != l) u.endpoint = {
+            route: {
+                handler: l
             }
-            e.params = s;
-            if (null !== e.match.redirectTo) {
-                let t = e.match.redirectTo;
-                if ((null !== (n = e.remaining) && void 0 !== n ? n : "").length > 0) t += `/${e.remaining}`;
+        }; else {
+            const i = new f;
+            i.add(o);
+            u = i.recognize(t);
+        }
+        if (null != u) {
+            r.match = u.endpoint.route.handler;
+            r.matching = t;
+            const o = {
+                ...u.params
+            };
+            if (null != o.remainingPath) {
+                r.remaining = o.remainingPath;
+                Reflect.deleteProperty(o, "remainingPath");
+                r.matching = r.matching.slice(0, r.matching.indexOf(r.remaining));
+            }
+            r.params = o;
+            if (null != (null === (n = r.match) || void 0 === n ? void 0 : n.redirectTo)) {
+                let t = null === (s = r.match) || void 0 === s ? void 0 : s.redirectTo;
+                if ((null !== (e = r.remaining) && void 0 !== e ? e : "").length > 0) t += `/${r.remaining}`;
                 return this.findMatchingRouteInRoutes(t, i);
             }
         }
-        if (e.foundConfiguration) {
-            e.instructions = RoutingInstruction.clone(e.match.instructions, false, true);
-            const t = e.instructions.slice();
+        if (r.foundConfiguration) {
+            r.instructions = RoutingInstruction.clone(r.match.instructions, false, true);
+            const t = r.instructions.slice();
             while (t.length > 0) {
                 const i = t.shift();
-                i.parameters.addParameters(e.params);
-                i.route = e;
+                i.parameters.addParameters(r.params);
+                i.route = r;
                 if (i.hasNextScopeInstructions) t.unshift(...i.nextScopeInstructions);
             }
-            if (e.instructions.length > 0) e.instructions[0].routeStart = true;
-            const i = RoutingInstruction.parse(this.router, e.remaining);
+            if (r.instructions.length > 0) r.instructions[0].routeStart = true;
+            const i = RoutingInstruction.parse(this.router, r.remaining);
             if (i.length > 0) {
-                let t = e.instructions[0];
+                let t = r.instructions[0];
                 while (t.hasNextScopeInstructions) t = t.nextScopeInstructions[0];
                 t.nextScopeInstructions = i;
             }
         }
-        return e;
+        return r;
     }
     ensureProperRoute(t) {
         if (void 0 === t.id) t.id = Array.isArray(t.path) ? t.path.join(",") : t.path;
@@ -3764,12 +3781,13 @@ class Router {
         };
         this.processNavigation = async t => {
             var i;
+            this.loadedFirst = true;
             const n = this.configuration.options;
             const s = NavigationCoordinator.create(this, t, {
                 syncStates: this.configuration.options.navigationSyncStates
             });
             this.coordinators.push(s);
-            s.appendedInstructions.push(...this.appendedInstructions);
+            s.appendedInstructions.push(...this.appendedInstructions.splice(0));
             this.ea.publish(RouterNavigationStartEvent.eventName, RouterNavigationStartEvent.create(t));
             let e = "string" === typeof t.instruction && !t.useFullStateInstruction ? await RoutingHook.invokeTransformFromUrl(t.instruction, s.navigation) : t.useFullStateInstruction ? t.fullStateInstruction : t.instruction;
             const o = n.basePath;

@@ -80,6 +80,7 @@ const getHmrCode = (className, moduleText = 'module') => {
 
       const previousControllers = hot.data.controllers;
       if(previousControllers == null || previousControllers.length === 0) {
+        // @ts-ignore
         hot.invalidate();
       }
 

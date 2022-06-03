@@ -295,11 +295,11 @@ export declare class Router {
      * The customElement metadata is lazily associated with a type via the RouteContext the first time `getOrCreate` is called.
      *
      * @param viewportAgent - The ViewportAgent hosting the component associated with this RouteContext. If the RouteContext for the component+viewport combination already exists, the ViewportAgent will be updated in case it changed.
-     * @param component - The custom element definition.
+     * @param componentDefinition - The custom element definition.
      * @param container - The `controller.container` of the component hosting the viewport that the route will be loaded into.
      *
      */
-    getRouteContext(viewportAgent: ViewportAgent | null, component: CustomElementDefinition, container: IContainer, parentDefinition: RouteDefinition | null): IRouteContext;
+    getRouteContext(viewportAgent: ViewportAgent | null, componentDefinition: CustomElementDefinition, componentInstance: IRouteViewModel | null, container: IContainer, parentDefinition: RouteDefinition | null): IRouteContext;
     createViewportInstructions(instructionOrInstructions: NavigationInstruction | readonly NavigationInstruction[], options?: INavigationOptions): ViewportInstructionTree;
     /**
      * Enqueue an instruction tree to be processed as soon as possible.

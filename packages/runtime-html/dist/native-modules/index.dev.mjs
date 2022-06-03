@@ -1,5 +1,5 @@
 import { BindingMode, subscriberCollection, withFlushQueue, connectable, registerAliases, ConnectableSwitcher, ProxyObservable, Scope, ICoercionConfiguration, IObserverLocator, IExpressionParser, AccessScopeExpression, DelegationStrategy, BindingBehaviorExpression, BindingBehaviorFactory, PrimitiveLiteralExpression, bindingBehavior, BindingInterceptor, ISignaler, PropertyAccessor, INodeObserverLocator, SetterObserver, IDirtyChecker, alias, applyMutationsToIndices, getCollectionObserver as getCollectionObserver$1, BindingContext, synchronizeIndices, valueConverter } from '../../../runtime/dist/native-modules/index.mjs';
-export { LifecycleFlags } from '../../../runtime/dist/native-modules/index.mjs';
+export { LifecycleFlags, bindingBehavior, valueConverter } from '../../../runtime/dist/native-modules/index.mjs';
 import { Protocol, getPrototypeChain, firstDefined, kebabCase, noop, DI, emptyArray, all, Registration, IPlatform as IPlatform$1, mergeArrays, fromDefinitionOrDefault, pascalCase, fromAnnotationOrTypeOrDefault, fromAnnotationOrDefinitionOrTypeOrDefault, IContainer, nextId, optional, InstanceProvider, ILogger, onResolve, resolveAll, camelCase, toArray, emptyObject, IServiceLocator, compareNumber, transient } from '../../../kernel/dist/native-modules/index.mjs';
 import { Metadata, isObject } from '../../../metadata/dist/native-modules/index.mjs';
 import { TaskAbortError } from '../../../platform/dist/native-modules/index.mjs';
@@ -6119,6 +6119,7 @@ class TemplateCompiler {
         const context = new CompilationContext(definition, container, emptyCompilationInstructions, null, null, void 0);
         const instructions = [];
         const elDef = context._findElement(el.nodeName.toLowerCase());
+        const isCustomElement = elDef !== null;
         const exprParser = context._exprParser;
         const ii = attrSyntaxs.length;
         let i = 0;
@@ -6182,7 +6183,7 @@ class TemplateCompiler {
             }
             if (bindingCommand === null) {
                 expr = exprParser.parse(attrValue, 1);
-                if (elDef !== null) {
+                if (isCustomElement) {
                     bindablesInfo = BindablesInfo.from(elDef, false);
                     bindable = bindablesInfo.attrs[attrTarget];
                     if (bindable !== void 0) {
@@ -6210,7 +6211,7 @@ class TemplateCompiler {
                 }
             }
             else {
-                if (elDef !== null) {
+                if (isCustomElement) {
                     bindablesInfo = BindablesInfo.from(elDef, false);
                     bindable = bindablesInfo.attrs[attrTarget];
                     if (bindable !== void 0) {
@@ -6418,10 +6419,12 @@ class TemplateCompiler {
     }
     _compileElement(el, context) {
         var _a, _b, _c, _d, _e, _f;
-        var _g, _h;
+        var _g, _h, _j, _k;
         const nextSibling = el.nextSibling;
         const elName = ((_a = el.getAttribute('as-element')) !== null && _a !== void 0 ? _a : el.nodeName).toLowerCase();
         const elDef = context._findElement(elName);
+        const isCustomElement = elDef !== null;
+        const isShadowDom = isCustomElement && elDef.shadowOptions != null;
         const shouldCapture = !!(elDef === null || elDef === void 0 ? void 0 : elDef.capture);
         const captures = shouldCapture ? [] : emptyArray;
         const exprParser = context._exprParser;
@@ -6459,9 +6462,12 @@ class TemplateCompiler {
         let processContentResult = true;
         let hasContainerless = false;
         if (elName === 'slot') {
+            if (context.root.def.shadowOptions == null) {
+                throw new Error(`AUR0717: detect a usage of "<slot>" element without specifying shadow DOM options in element: ${context.root.def.name}`);
+            }
             context.root.hasSlot = true;
         }
-        if (elDef !== null) {
+        if (isCustomElement) {
             processContentResult = (_b = elDef.processContent) === null || _b === void 0 ? void 0 : _b.call(elDef.Type, el, context.p);
             attrs = el.attributes;
             ii = attrs.length;
@@ -6550,7 +6556,7 @@ class TemplateCompiler {
                 continue;
             }
             if (bindingCommand === null) {
-                if (elDef !== null) {
+                if (isCustomElement) {
                     bindablesInfo = BindablesInfo.from(elDef, false);
                     bindable = bindablesInfo.attrs[realAttrTarget];
                     if (bindable !== void 0) {
@@ -6570,7 +6576,7 @@ class TemplateCompiler {
                 continue;
             }
             removeAttr();
-            if (elDef !== null) {
+            if (isCustomElement) {
                 bindablesInfo = BindablesInfo.from(elDef, false);
                 bindable = bindablesInfo.attrs[realAttrTarget];
                 if (bindable !== void 0) {
@@ -6592,10 +6598,10 @@ class TemplateCompiler {
         if (this._shouldReorderAttrs(el) && plainAttrInstructions != null && plainAttrInstructions.length > 1) {
             this._reorder(el, plainAttrInstructions);
         }
-        if (elDef !== null) {
+        if (isCustomElement) {
             elementInstruction = new HydrateElementInstruction(this.resolveResources ? elDef : elDef.name, void 0, (elBindableInstructions !== null && elBindableInstructions !== void 0 ? elBindableInstructions : emptyArray), null, hasContainerless, captures);
-            if (elName === 'au-slot') {
-                const slotName = el.getAttribute('name') || 'default';
+            if (elName === AU_SLOT) {
+                const slotName = el.getAttribute('name') || DEFAULT_SLOT_NAME;
                 const template = context.h('template');
                 const fallbackContentContext = context._createChild();
                 let node = el.firstChild;
@@ -6653,25 +6659,29 @@ class TemplateCompiler {
             let projectionCompilationContext;
             let j = 0, jj = 0;
             let child = el.firstChild;
+            let isEmptyTextNode = false;
             if (processContentResult !== false) {
                 while (child !== null) {
-                    if (child.nodeType === 1) {
-                        childEl = child;
-                        child = child.nextSibling;
-                        targetSlot = childEl.getAttribute('au-slot');
-                        if (targetSlot !== null) {
-                            if (elDef === null) {
-                                throw new Error(`AUR0706: Projection with [au-slot="${targetSlot}"] is attempted on a non custom element ${el.nodeName}.`);
+                    targetSlot = child.nodeType === 1 ? child.getAttribute(AU_SLOT) : null;
+                    if (targetSlot !== null) {
+                        child.removeAttribute(AU_SLOT);
+                    }
+                    if (isCustomElement) {
+                        childEl = child.nextSibling;
+                        if (!isShadowDom) {
+                            isEmptyTextNode = child.nodeType === 3 && child.textContent.trim() === '';
+                            if (!isEmptyTextNode) {
+                                ((_e = (_g = (slotTemplateRecord !== null && slotTemplateRecord !== void 0 ? slotTemplateRecord : (slotTemplateRecord = {})))[_h = targetSlot || DEFAULT_SLOT_NAME]) !== null && _e !== void 0 ? _e : (_g[_h] = [])).push(child);
                             }
-                            if (targetSlot === '') {
-                                targetSlot = 'default';
-                            }
-                            childEl.removeAttribute('au-slot');
-                            el.removeChild(childEl);
-                            ((_e = (_g = (slotTemplateRecord !== null && slotTemplateRecord !== void 0 ? slotTemplateRecord : (slotTemplateRecord = {})))[targetSlot]) !== null && _e !== void 0 ? _e : (_g[targetSlot] = [])).push(childEl);
+                            el.removeChild(child);
                         }
+                        child = childEl;
                     }
                     else {
+                        if (targetSlot !== null) {
+                            targetSlot = targetSlot || DEFAULT_SLOT_NAME;
+                            throw new Error(`AUR0706: Projection with [au-slot="${targetSlot}"] is attempted on a non custom element ${el.nodeName}.`);
+                        }
                         child = child.nextSibling;
                     }
                 }
@@ -6707,10 +6717,10 @@ class TemplateCompiler {
                 }
                 elementInstruction.projections = projections;
             }
-            if (hasContainerless || elDef !== null && elDef.containerless) {
+            if (isCustomElement && (hasContainerless || elDef.containerless)) {
                 this._replaceByMarker(el, context);
             }
-            shouldCompileContent = elDef === null || !elDef.containerless && !hasContainerless && processContentResult !== false;
+            shouldCompileContent = !isCustomElement || !elDef.containerless && !hasContainerless && processContentResult !== false;
             if (shouldCompileContent) {
                 if (el.nodeName === 'TEMPLATE') {
                     this._compileNode(el.content, childContext);
@@ -6758,26 +6768,30 @@ class TemplateCompiler {
             let slotTemplate;
             let template;
             let projectionCompilationContext;
+            let isEmptyTextNode = false;
             let j = 0, jj = 0;
             if (processContentResult !== false) {
                 while (child !== null) {
-                    if (child.nodeType === 1) {
-                        childEl = child;
-                        child = child.nextSibling;
-                        targetSlot = childEl.getAttribute('au-slot');
-                        if (targetSlot !== null) {
-                            if (elDef === null) {
-                                throw new Error(`AUR0706: Projection with [au-slot="${targetSlot}"] is attempted on a non custom element ${el.nodeName}.`);
+                    targetSlot = child.nodeType === 1 ? child.getAttribute(AU_SLOT) : null;
+                    if (targetSlot !== null) {
+                        child.removeAttribute(AU_SLOT);
+                    }
+                    if (isCustomElement) {
+                        childEl = child.nextSibling;
+                        if (!isShadowDom) {
+                            isEmptyTextNode = child.nodeType === 3 && child.textContent.trim() === '';
+                            if (!isEmptyTextNode) {
+                                ((_f = (_j = (slotTemplateRecord !== null && slotTemplateRecord !== void 0 ? slotTemplateRecord : (slotTemplateRecord = {})))[_k = targetSlot || DEFAULT_SLOT_NAME]) !== null && _f !== void 0 ? _f : (_j[_k] = [])).push(child);
                             }
-                            if (targetSlot === '') {
-                                targetSlot = 'default';
-                            }
-                            el.removeChild(childEl);
-                            childEl.removeAttribute('au-slot');
-                            ((_f = (_h = (slotTemplateRecord !== null && slotTemplateRecord !== void 0 ? slotTemplateRecord : (slotTemplateRecord = {})))[targetSlot]) !== null && _f !== void 0 ? _f : (_h[targetSlot] = [])).push(childEl);
+                            el.removeChild(child);
                         }
+                        child = childEl;
                     }
                     else {
+                        if (targetSlot !== null) {
+                            targetSlot = targetSlot || DEFAULT_SLOT_NAME;
+                            throw new Error(`AUR0706: Projection with [au-slot="${targetSlot}"] is attempted on a non custom element ${el.nodeName}.`);
+                        }
                         child = child.nextSibling;
                     }
                 }
@@ -6813,10 +6827,10 @@ class TemplateCompiler {
                 }
                 elementInstruction.projections = projections;
             }
-            if (hasContainerless || elDef !== null && elDef.containerless) {
+            if (isCustomElement && (hasContainerless || elDef.containerless)) {
                 this._replaceByMarker(el, context);
             }
-            shouldCompileContent = elDef === null || !elDef.containerless && !hasContainerless && processContentResult !== false;
+            shouldCompileContent = !isCustomElement || !elDef.containerless && !hasContainerless && processContentResult !== false;
             if (shouldCompileContent && el.childNodes.length > 0) {
                 child = el.firstChild;
                 while (child !== null) {
@@ -7242,6 +7256,8 @@ const templateCompilerHooks = (target) => {
     }
 };
 const _generateElementName = CustomElement.generateName;
+const DEFAULT_SLOT_NAME = 'default';
+const AU_SLOT = 'au-slot';
 
 class BindingModeBehavior {
     constructor(mode) {

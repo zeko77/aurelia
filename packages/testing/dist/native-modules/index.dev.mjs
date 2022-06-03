@@ -7406,7 +7406,7 @@ function isNodeOrTextOrComment(obj) {
 }
 const eventCmds = { delegate: 1, capture: 1, call: 1 };
 const hJsx = function (name, attrs, ...children) {
-    const doc = PLATFORM.document;
+    const doc = this || PLATFORM.document;
     const el = doc.createElement(name === 'let$' ? 'let' : name);
     if (attrs != null) {
         let value;
@@ -7470,6 +7470,7 @@ const hJsx = function (name, attrs, ...children) {
     }
     return el;
 };
+hJsx.Fragment = 'template';
 
 const fixtureHooks = new EventAggregator();
 const onFixtureCreated = (callback) => {
@@ -7605,6 +7606,7 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             this.component = component;
             this.observerLocator = observerLocator;
             this.logger = container.get(ILogger);
+            this.hJsx = hJsx.bind(ctx.doc);
             this.getBy = getBy;
             this.getAllBy = getAllBy;
             this.queryBy = queryBy;

@@ -6,7 +6,9 @@ import { IRouteContext } from './route-context';
 import { Params, NavigationInstruction } from './instructions';
 import { Transition } from './router';
 import { Batch } from './util';
+import { IRouteConfig } from './route';
 export interface IRouteViewModel extends ICustomElementViewModel {
+    getRouteConfig?(parentDefinition: RouteDefinition | null, routeNode: RouteNode | null): IRouteConfig;
     canLoad?(params: Params, next: RouteNode, current: RouteNode | null): boolean | NavigationInstruction | NavigationInstruction[] | Promise<boolean | NavigationInstruction | NavigationInstruction[]>;
     load?(params: Params, next: RouteNode, current: RouteNode | null): void | Promise<void>;
     canUnload?(next: RouteNode | null, current: RouteNode): boolean | Promise<boolean>;

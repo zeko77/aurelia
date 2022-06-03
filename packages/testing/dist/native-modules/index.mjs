@@ -3612,7 +3612,7 @@ const Gi = {
 };
 
 const Yi = function(e, t, ...n) {
-    const i = $t.document;
+    const i = this || $t.document;
     const r = i.createElement("let$" === e ? "let" : e);
     if (null != t) {
         let e;
@@ -3645,6 +3645,8 @@ const Yi = function(e, t, ...n) {
     }
     return r;
 };
+
+Yi.Fragment = "template";
 
 const Ki = new s;
 
@@ -3756,6 +3758,7 @@ function Xi(e, t, n = [], i = true, r = TestContext.create()) {
             this.component = g;
             this.observerLocator = l;
             this.logger = a.get(o);
+            this.hJsx = Yi.bind(r.doc);
             this.getBy = x;
             this.getAllBy = w;
             this.queryBy = C;
