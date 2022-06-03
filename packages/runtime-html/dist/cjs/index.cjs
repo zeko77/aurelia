@@ -9830,6 +9830,10 @@ WcCustomElementRegistry.inject = [ e.IContainer, z, Ie ];
 
 exports.LifecycleFlags = t.LifecycleFlags;
 
+exports.bindingBehavior = t.bindingBehavior;
+
+exports.valueConverter = t.valueConverter;
+
 exports.AdoptedStyleSheetsStyles = AdoptedStyleSheetsStyles;
 
 exports.AppRoot = AppRoot;

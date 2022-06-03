@@ -11167,6 +11167,8 @@ class WcCustomElementRegistry {
 WcCustomElementRegistry.inject = [kernel.IContainer, IPlatform, IRendering];
 
 exports.LifecycleFlags = runtime.LifecycleFlags;
+exports.bindingBehavior = runtime.bindingBehavior;
+exports.valueConverter = runtime.valueConverter;
 exports.AdoptedStyleSheetsStyles = AdoptedStyleSheetsStyles;
 exports.AppRoot = AppRoot;
 exports.AppTask = AppTask;
