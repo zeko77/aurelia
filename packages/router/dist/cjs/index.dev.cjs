@@ -443,19 +443,20 @@ class RouterOptions {
         return context.options;
     }
     apply(options) {
-        var _a, _b, _c, _d, _e, _f, _g, _h;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
         options = options !== null && options !== void 0 ? options : {};
         this.separators.apply(options.separators);
         this.indicators.apply(options.indicators);
         this.useUrlFragmentHash = (_a = options.useUrlFragmentHash) !== null && _a !== void 0 ? _a : this.useUrlFragmentHash;
-        this.useHref = (_b = options.useHref) !== null && _b !== void 0 ? _b : this.useHref;
-        this.statefulHistoryLength = (_c = options.statefulHistoryLength) !== null && _c !== void 0 ? _c : this.statefulHistoryLength;
-        this.useDirectRouting = (_d = options.useDirectRouting) !== null && _d !== void 0 ? _d : this.useDirectRouting;
-        this.useConfiguredRoutes = (_e = options.useConfiguredRoutes) !== null && _e !== void 0 ? _e : this.useConfiguredRoutes;
-        this.additiveInstructionDefault = (_f = options.additiveInstructionDefault) !== null && _f !== void 0 ? _f : this.additiveInstructionDefault;
+        this.basePath = (_b = options.basePath) !== null && _b !== void 0 ? _b : this.basePath;
+        this.useHref = (_c = options.useHref) !== null && _c !== void 0 ? _c : this.useHref;
+        this.statefulHistoryLength = (_d = options.statefulHistoryLength) !== null && _d !== void 0 ? _d : this.statefulHistoryLength;
+        this.useDirectRouting = (_e = options.useDirectRouting) !== null && _e !== void 0 ? _e : this.useDirectRouting;
+        this.useConfiguredRoutes = (_f = options.useConfiguredRoutes) !== null && _f !== void 0 ? _f : this.useConfiguredRoutes;
+        this.additiveInstructionDefault = (_g = options.additiveInstructionDefault) !== null && _g !== void 0 ? _g : this.additiveInstructionDefault;
         this.title.apply(options.title);
-        this.navigationSyncStates = (_g = options.navigationSyncStates) !== null && _g !== void 0 ? _g : this.navigationSyncStates;
-        this.swapOrder = (_h = options.swapOrder) !== null && _h !== void 0 ? _h : this.swapOrder;
+        this.navigationSyncStates = (_h = options.navigationSyncStates) !== null && _h !== void 0 ? _h : this.navigationSyncStates;
+        this.swapOrder = (_j = options.swapOrder) !== null && _j !== void 0 ? _j : this.swapOrder;
         if (Array.isArray(options.hooks)) {
             if (this.routerConfiguration !== void 0) {
                 options.hooks.forEach(hook => this.routerConfiguration.addHook(hook.hook, hook.options));
@@ -2170,7 +2171,7 @@ class Viewport extends Endpoint$1 {
         return this.transitionAction = 'skip';
     }
     setConnectedCE(connectedCE, options) {
-        var _a;
+        var _a, _b, _c, _d, _e;
         options = options !== null && options !== void 0 ? options : {};
         if (this.connectedCE !== connectedCE) {
             this.previousViewportState = { ...this };
@@ -2181,8 +2182,15 @@ class Viewport extends Endpoint$1 {
                 this.connectionResolve();
             }
         }
-        if (this.getContent().componentInstance === null && ((_a = this.getNextContent()) === null || _a === void 0 ? void 0 : _a.componentInstance) == null && this.options.default) {
-            const instructions = RoutingInstruction.parse(this.router, this.options.default);
+        const parentDefaultRoute = ((_b = (_a = this.scope.parent) === null || _a === void 0 ? void 0 : _a.endpoint.getRoutes()) !== null && _b !== void 0 ? _b : []).filter(route => route.path === '').length > 0;
+        if (this.getContent().componentInstance === null && ((_c = this.getNextContent()) === null || _c === void 0 ? void 0 : _c.componentInstance) == null && (this.options.default || parentDefaultRoute)) {
+            const instructions = RoutingInstruction.parse(this.router, (_d = this.options.default) !== null && _d !== void 0 ? _d : '');
+            if (instructions.length === 0 && parentDefaultRoute) {
+                const foundRoute = (_e = this.scope.parent) === null || _e === void 0 ? void 0 : _e.findInstructions([RoutingInstruction.create('')], false, this.router.configuration.options.useConfiguredRoutes);
+                if (foundRoute === null || foundRoute === void 0 ? void 0 : foundRoute.foundConfiguration) {
+                    instructions.push(...foundRoute.instructions);
+                }
+            }
             for (const instruction of instructions) {
                 instruction.endpoint.set(this);
                 instruction.scope = this.owningScope;
@@ -2837,7 +2845,7 @@ class RoutingInstruction {
             if ((viewport === null || viewport === void 0 ? void 0 : viewport.options.fallback) === this.component.name) {
                 excludeCurrentComponent = true;
             }
-            if (this.default && !this.hasNextScopeInstructions) {
+            if ((viewport === null || viewport === void 0 ? void 0 : viewport.options.default) === this.component.name) {
                 excludeCurrentComponent = true;
             }
         }
@@ -3654,10 +3662,6 @@ class RoutingScope {
             if (navigation.useFullStateInstruction) {
                 coordinator.appendedInstructions = coordinator.appendedInstructions.filter(instr => !instr.default);
             }
-            const unresolved = coordinator.appendedInstructions.filter(instr => instr.component.isPromise());
-            if (unresolved.length > 0) {
-                await Promise.all(unresolved.map(instr => instr.component.resolve()));
-            }
             ({ matchedInstructions, earlierMatchedInstructions, remainingInstructions } =
                 coordinator.dequeueAppendedInstructions(matchedInstructions, earlierMatchedInstructions, remainingInstructions));
             if (matchedInstructions.length === 0 && remainingInstructions.length === 0) {
@@ -3672,6 +3676,10 @@ class RoutingScope {
                 else {
                     matchedInstructions = clearEndpoints.map(endpoint => RoutingInstruction.createClear(router, endpoint));
                 }
+            }
+            const unresolved = matchedInstructions.filter(instr => instr.component.isFunction() || instr.component.isPromise());
+            if (unresolved.length > 0) {
+                await Promise.all(unresolved.map(instr => instr.component.resolve()));
             }
         } while (matchedInstructions.length > 0 || remainingInstructions.length > 0);
         return allChangedEndpoints;
@@ -3907,7 +3915,7 @@ class RoutingScope {
         return null;
     }
     findMatchingRouteInRoutes(path, routes) {
-        var _a;
+        var _a, _b, _c;
         if (!Array.isArray(routes)) {
             return null;
         }
@@ -3934,22 +3942,29 @@ class RoutingScope {
         if (path.startsWith('/') || path.startsWith('+')) {
             path = path.slice(1);
         }
-        const recognizer = new RouteRecognizer();
-        recognizer.add(cRoutes);
-        const result = recognizer.recognize(path);
-        if (result !== null) {
+        const idRoute = routes.find(route => route.id === path);
+        let result = { params: {}, endpoint: {} };
+        if (idRoute != null) {
+            result.endpoint = { route: { handler: idRoute } };
+        }
+        else {
+            const recognizer = new RouteRecognizer();
+            recognizer.add(cRoutes);
+            result = recognizer.recognize(path);
+        }
+        if (result != null) {
             found.match = result.endpoint.route.handler;
             found.matching = path;
             const $params = { ...result.params };
-            if ($params.remainingPath !== void 0) {
+            if ($params.remainingPath != null) {
                 found.remaining = $params.remainingPath;
                 Reflect.deleteProperty($params, 'remainingPath');
                 found.matching = found.matching.slice(0, found.matching.indexOf(found.remaining));
             }
             found.params = $params;
-            if (found.match.redirectTo !== null) {
-                let redirectedTo = found.match.redirectTo;
-                if (((_a = found.remaining) !== null && _a !== void 0 ? _a : '').length > 0) {
+            if (((_a = found.match) === null || _a === void 0 ? void 0 : _a.redirectTo) != null) {
+                let redirectedTo = (_b = found.match) === null || _b === void 0 ? void 0 : _b.redirectTo;
+                if (((_c = found.remaining) !== null && _c !== void 0 ? _c : '').length > 0) {
                     redirectedTo += `/${found.remaining}`;
                 }
                 return this.findMatchingRouteInRoutes(redirectedTo, routes);
@@ -4743,10 +4758,11 @@ class Router {
         };
         this.processNavigation = async (navigation) => {
             var _a;
+            this.loadedFirst = true;
             const options = this.configuration.options;
             const coordinator = NavigationCoordinator.create(this, navigation, { syncStates: this.configuration.options.navigationSyncStates });
             this.coordinators.push(coordinator);
-            coordinator.appendedInstructions.push(...this.appendedInstructions);
+            coordinator.appendedInstructions.push(...this.appendedInstructions.splice(0));
             this.ea.publish(RouterNavigationStartEvent.eventName, RouterNavigationStartEvent.create(navigation));
             let transformedInstruction = typeof navigation.instruction === 'string' && !navigation.useFullStateInstruction
                 ? await RoutingHook.invokeTransformFromUrl(navigation.instruction, coordinator.navigation)
