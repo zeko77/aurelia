@@ -1916,7 +1916,7 @@ function qe(t) {
 }
 
 class CustomAttributeDefinition {
-    constructor(t, e, i, s, n, r, o, l, h) {
+    constructor(t, e, i, s, n, r, o, l, h, a) {
         this.Type = t;
         this.name = e;
         this.aliases = i;
@@ -1926,6 +1926,7 @@ class CustomAttributeDefinition {
         this.bindables = o;
         this.noMultiBindings = l;
         this.watches = h;
+        this.dependencies = a;
     }
     get type() {
         return 2;
@@ -1942,7 +1943,7 @@ class CustomAttributeDefinition {
             s = e.name;
             n = e;
         }
-        return new CustomAttributeDefinition(i, D(Fe(i, "name"), s), F(Fe(i, "aliases"), n.aliases, i.aliases), Ve.keyFrom(s), D(Fe(i, "defaultBindingMode"), n.defaultBindingMode, i.defaultBindingMode, t.toView), D(Fe(i, "isTemplateController"), n.isTemplateController, i.isTemplateController, false), Dt.from(i, ...Dt.getAll(i), Fe(i, "bindables"), i.bindables, n.bindables), D(Fe(i, "noMultiBindings"), n.noMultiBindings, i.noMultiBindings, false), F(We.getAnnotation(i), i.watches));
+        return new CustomAttributeDefinition(i, D(Fe(i, "name"), s), F(Fe(i, "aliases"), n.aliases, i.aliases), Ve.keyFrom(s), D(Fe(i, "defaultBindingMode"), n.defaultBindingMode, i.defaultBindingMode, t.toView), D(Fe(i, "isTemplateController"), n.isTemplateController, i.isTemplateController, false), Dt.from(i, ...Dt.getAll(i), Fe(i, "bindables"), i.bindables, n.bindables), D(Fe(i, "noMultiBindings"), n.noMultiBindings, i.noMultiBindings, false), F(We.getAnnotation(i), i.watches), F(Fe(i, "dependencies"), n.dependencies, i.dependencies));
     }
     register(t) {
         const {Type: e, key: i, aliases: s} = this;
@@ -3018,6 +3019,7 @@ class Controller {
         if (_i.has(e)) return _i.get(e);
         s = null !== s && void 0 !== s ? s : Ve.getDefinition(e.constructor);
         const n = new Controller(t, 1, s, null, e, i, null);
+        if (s.dependencies.length > 0) t.register(...s.dependencies);
         _i.set(e, n);
         n.yt();
         return n;
@@ -3086,6 +3088,7 @@ class Controller {
         Vi(this, t, this.flags, e);
         e.$controller = this;
         this.lifecycleHooks = Ri.resolve(this.container);
+        if (void 0 !== this.lifecycleHooks.created) this.lifecycleHooks.created.forEach(ts, this);
         if (this.hooks.hasCreated) this.viewModel.created(this);
     }
     kt() {
@@ -4547,7 +4550,7 @@ let _s = class CustomAttributeRenderer {
             n = i.res;
         }
         const r = fn(this.p, n, t, e, i, void 0, void 0);
-        const o = Controller.$attr(t.container, r, e, n);
+        const o = Controller.$attr(r.ctn, r.vm, e, n);
         as(e, n.key, o);
         const l = this.r.renderers;
         const h = i.props;
@@ -4574,35 +4577,35 @@ let Fs = class TemplateControllerRenderer {
         return [ Li, Jt ];
     }
     render(t, e, i) {
-        var s;
-        let n = t.container;
-        let r;
+        var s, n;
+        let r = t.container;
+        let o;
         switch (typeof i.res) {
           case "string":
-            r = n.find(Ve, i.res);
-            if (null == r) throw new Error(`AUR0754:${i.res}@${t["name"]}`);
+            o = r.find(Ve, i.res);
+            if (null == o) throw new Error(`AUR0754:${i.res}@${t["name"]}`);
             break;
 
           default:
-            r = i.res;
+            o = i.res;
         }
-        const o = this.r.getViewFactory(i.def, n);
-        const l = ps(e);
-        const h = fn(this.p, r, t, e, i, o, l);
-        const a = Controller.$attr(t.container, h, e, r);
-        as(l, r.key, a);
-        null === (s = h.link) || void 0 === s ? void 0 : s.call(h, t, a, e, i);
-        const c = this.r.renderers;
-        const u = i.props;
-        const f = u.length;
-        let d = 0;
-        let m;
-        while (f > d) {
-            m = u[d];
-            c[m.type].render(t, a, m);
-            ++d;
+        const l = this.r.getViewFactory(i.def, r);
+        const h = ps(e);
+        const a = fn(this.p, o, t, e, i, l, h);
+        const c = Controller.$attr(a.ctn, a.vm, e, o);
+        as(h, o.key, c);
+        null === (n = (s = a.vm).link) || void 0 === n ? void 0 : n.call(s, t, c, e, i);
+        const u = this.r.renderers;
+        const f = i.props;
+        const d = f.length;
+        let m = 0;
+        let v;
+        while (d > m) {
+            v = f[m];
+            u[v.type].render(t, c, v);
+            ++m;
         }
-        t.addChild(a);
+        t.addChild(c);
     }
 };
 
@@ -5005,7 +5008,10 @@ function fn(t, e, i, s, n, r, o, l) {
     h.registerResolver(fs, null == o ? dn : new G(an, o));
     h.registerResolver(Ei, null == r ? mn : new ViewFactoryProvider(r));
     h.registerResolver(Ss, null == l ? vn : new G(cn, l));
-    return h.invoke(e.Type);
+    return {
+        vm: h.invoke(e.Type),
+        ctn: h
+    };
 }
 
 class RenderLocationProvider {

@@ -2192,7 +2192,7 @@ function templateController(nameOrDef) {
     };
 }
 class CustomAttributeDefinition {
-    constructor(Type, name, aliases, key, defaultBindingMode, isTemplateController, bindables, noMultiBindings, watches) {
+    constructor(Type, name, aliases, key, defaultBindingMode, isTemplateController, bindables, noMultiBindings, watches, dependencies) {
         this.Type = Type;
         this.name = name;
         this.aliases = aliases;
@@ -2202,6 +2202,7 @@ class CustomAttributeDefinition {
         this.bindables = bindables;
         this.noMultiBindings = noMultiBindings;
         this.watches = watches;
+        this.dependencies = dependencies;
     }
     get type() { return 2; }
     static create(nameOrDef, Type) {
@@ -2215,7 +2216,7 @@ class CustomAttributeDefinition {
             name = nameOrDef.name;
             def = nameOrDef;
         }
-        return new CustomAttributeDefinition(Type, firstDefined(getAttributeAnnotation(Type, 'name'), name), mergeArrays(getAttributeAnnotation(Type, 'aliases'), def.aliases, Type.aliases), CustomAttribute.keyFrom(name), firstDefined(getAttributeAnnotation(Type, 'defaultBindingMode'), def.defaultBindingMode, Type.defaultBindingMode, BindingMode.toView), firstDefined(getAttributeAnnotation(Type, 'isTemplateController'), def.isTemplateController, Type.isTemplateController, false), Bindable.from(Type, ...Bindable.getAll(Type), getAttributeAnnotation(Type, 'bindables'), Type.bindables, def.bindables), firstDefined(getAttributeAnnotation(Type, 'noMultiBindings'), def.noMultiBindings, Type.noMultiBindings, false), mergeArrays(Watch.getAnnotation(Type), Type.watches));
+        return new CustomAttributeDefinition(Type, firstDefined(getAttributeAnnotation(Type, 'name'), name), mergeArrays(getAttributeAnnotation(Type, 'aliases'), def.aliases, Type.aliases), CustomAttribute.keyFrom(name), firstDefined(getAttributeAnnotation(Type, 'defaultBindingMode'), def.defaultBindingMode, Type.defaultBindingMode, BindingMode.toView), firstDefined(getAttributeAnnotation(Type, 'isTemplateController'), def.isTemplateController, Type.isTemplateController, false), Bindable.from(Type, ...Bindable.getAll(Type), getAttributeAnnotation(Type, 'bindables'), Type.bindables, def.bindables), firstDefined(getAttributeAnnotation(Type, 'noMultiBindings'), def.noMultiBindings, Type.noMultiBindings, false), mergeArrays(Watch.getAnnotation(Type), Type.watches), mergeArrays(getAttributeAnnotation(Type, 'dependencies'), def.dependencies, Type.dependencies));
     }
     register(container) {
         const { Type, key, aliases } = this;
@@ -3449,6 +3450,9 @@ class Controller {
         }
         definition = definition !== null && definition !== void 0 ? definition : CustomAttribute.getDefinition(viewModel.constructor);
         const controller = new Controller(ctn, 1, definition, null, viewModel, host, null);
+        if (definition.dependencies.length > 0) {
+            ctn.register(...definition.dependencies);
+        }
         controllerLookup.set(viewModel, controller);
         controller._hydrateCustomAttribute();
         return controller;
@@ -3564,6 +3568,9 @@ class Controller {
         createObservers(this, definition, this.flags, instance);
         instance.$controller = this;
         this.lifecycleHooks = LifecycleHooks.resolve(this.container);
+        if (this.lifecycleHooks.created !== void 0) {
+            this.lifecycleHooks.created.forEach(callCreatedHook, this);
+        }
         if (this.hooks.hasCreated) {
             if (this.debug) {
                 this.logger.trace(`invoking created() hook`);
@@ -5156,8 +5163,8 @@ let CustomAttributeRenderer = class CustomAttributeRenderer {
             default:
                 def = instruction.res;
         }
-        const component = invokeAttribute(this._platform, def, renderingCtrl, target, instruction, void 0, void 0);
-        const childController = Controller.$attr(renderingCtrl.container, component, target, def);
+        const results = invokeAttribute(this._platform, def, renderingCtrl, target, instruction, void 0, void 0);
+        const childController = Controller.$attr(results.ctn, results.vm, target, def);
         setRef(target, def.key, childController);
         const renderers = this._rendering.renderers;
         const props = instruction.props;
@@ -5182,7 +5189,7 @@ let TemplateControllerRenderer = class TemplateControllerRenderer {
     }
     static get inject() { return [IRendering, IPlatform]; }
     render(renderingCtrl, target, instruction) {
-        var _a;
+        var _a, _b;
         let ctxContainer = renderingCtrl.container;
         let def;
         switch (typeof instruction.res) {
@@ -5197,10 +5204,10 @@ let TemplateControllerRenderer = class TemplateControllerRenderer {
         }
         const viewFactory = this._rendering.getViewFactory(instruction.def, ctxContainer);
         const renderLocation = convertToRenderLocation(target);
-        const component = invokeAttribute(this._platform, def, renderingCtrl, target, instruction, viewFactory, renderLocation);
-        const childController = Controller.$attr(renderingCtrl.container, component, target, def);
+        const results = invokeAttribute(this._platform, def, renderingCtrl, target, instruction, viewFactory, renderLocation);
+        const childController = Controller.$attr(results.ctn, results.vm, target, def);
         setRef(renderLocation, def.key, childController);
-        (_a = component.link) === null || _a === void 0 ? void 0 : _a.call(component, renderingCtrl, childController, target, instruction);
+        (_b = (_a = results.vm).link) === null || _b === void 0 ? void 0 : _b.call(_a, renderingCtrl, childController, target, instruction);
         const renderers = this._rendering.renderers;
         const props = instruction.props;
         const ii = props.length;
@@ -5645,7 +5652,7 @@ function invokeAttribute(p, definition, renderingCtrl, host, instruction, viewFa
     ctn.registerResolver(IAuSlotsInfo, auSlotsInfo == null
         ? noAuSlotProvider
         : new InstanceProvider(slotInfoProviderName, auSlotsInfo));
-    return ctn.invoke(definition.Type);
+    return { vm: ctn.invoke(definition.Type), ctn };
 }
 class RenderLocationProvider {
     constructor(_location) {
