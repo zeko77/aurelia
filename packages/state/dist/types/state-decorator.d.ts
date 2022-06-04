@@ -9,5 +9,5 @@
  * }
  * ```
  */
-export declare function fromStore<T, K = unknown>(getValue: (state: T) => K): PropertyDecorator;
+export declare function fromState<T, K = unknown>(getValue: (state: T) => K): PropertyDecorator;
 //# sourceMappingURL=state-decorator.d.ts.map

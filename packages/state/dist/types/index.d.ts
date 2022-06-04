@@ -6,5 +6,5 @@ export { StateBinding, } from './state-binding';
 export { StateDispatchBinding } from './state-dispatch-binding';
 export { StateAttributePattern, StateBindingCommand, StateBindingInstruction, StateBindingInstructionRenderer, DispatchAttributePattern, DispatchBindingCommand, DispatchBindingInstruction, DispatchBindingInstructionRenderer, } from './state-templating';
 export { StateBindingBehavior } from './state-binding-behavior';
-export { fromStore } from './state-decorator';
+export { fromState } from './state-decorator';
 //# sourceMappingURL=index.d.ts.map
