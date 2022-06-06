@@ -100,7 +100,8 @@
     "test:ci": "npm ci && npm run test",
     "test:watch": "cd packages/__tests__ && npm run test-chrome:watch",
     "test:debugger": "cd packages/__tests__ && npm run test-chrome:debugger",
-    "dev": "ts-node scripts/dev.ts"
+    "dev": "ts-node scripts/dev.ts",
+    "dev:tooling": "ts-node scripts/dev-tooling.ts"
   },
   "devDependencies": {
     "@commitlint/cli": "^16.2.3",
@@ -127,7 +128,7 @@
     "rollup-plugin-terser": "^7.0.2",
     "ts-node": "^10.7.0",
     "tsconfig-paths": "^3.14.1",
-    "typescript": "4.7.2"
+    "typescript": "4.7.3"
   },
   "commitlint": {
     "rules": {
@@ -204,6 +205,6 @@
   },
   "volta": {
     "node": "16.14.2",
-    "npm": "8.1.2"
+    "npm": "8.12.1"
   }
 }

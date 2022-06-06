@@ -1,5 +1,6 @@
 {
   "name": "@aurelia/__tests__cjs",
+  "version": "2.0.0-alpha.34",
   "private": true,
   "license": "MIT",
   "engines": {
@@ -20,31 +21,31 @@
     "test-node:ts-jest": "npm run ::mocha -- dist/cjs/__tests__/ts-jest/**/*.spec.js",
     "test-node:parcel-transformer": "npm run ::mocha -- dist/cjs/__tests__/parcel-transformer/**/*.spec.js",
     "build": "tsc --build",
-    "dev": "tsc --build -w --preserveWatchOutput",
+    "dev": "cross-env DEV_MODE=true node esbuild.dev.cjs",
     "rollup": "npm run build",
-    "build:packages-tooling": "npm run build"
+    "verify": "tsc --noEmit"
   },
   "dependencies": {
-    "@aurelia/aot": "2.1.0-dev.202206040020",
-    "@aurelia/babel-jest": "2.1.0-dev.202206040020",
-    "@aurelia/kernel": "2.1.0-dev.202206040020",
-    "@aurelia/metadata": "2.1.0-dev.202206040020",
-    "@aurelia/platform": "2.1.0-dev.202206040020",
-    "@aurelia/platform-browser": "2.1.0-dev.202206040020",
-    "@aurelia/plugin-conventions": "2.1.0-dev.202206040020",
-    "@aurelia/plugin-gulp": "2.1.0-dev.202206040020",
-    "@aurelia/runtime": "2.1.0-dev.202206040020",
-    "@aurelia/runtime-html": "2.1.0-dev.202206040020",
-    "@aurelia/testing": "2.1.0-dev.202206040020",
-    "@aurelia/ts-jest": "2.1.0-dev.202206040020",
-    "@aurelia/webpack-loader": "2.1.0-dev.202206040020",
-    "@aurelia/parcel-transformer": "2.1.0-dev.202206040020",
-    "@babel/core": "^7.17.9",
-    "@jest/transform": "^27.5.1",
-    "@jest/types": "^27.5.1",
+    "@aurelia/aot": "2.0.0-alpha.34",
+    "@aurelia/babel-jest": "2.0.0-alpha.34",
+    "@aurelia/kernel": "2.0.0-alpha.34",
+    "@aurelia/metadata": "2.0.0-alpha.34",
+    "@aurelia/platform": "2.0.0-alpha.34",
+    "@aurelia/platform-browser": "2.0.0-alpha.34",
+    "@aurelia/plugin-conventions": "2.0.0-alpha.34",
+    "@aurelia/plugin-gulp": "2.0.0-alpha.34",
+    "@aurelia/runtime": "2.0.0-alpha.34",
+    "@aurelia/runtime-html": "2.0.0-alpha.34",
+    "@aurelia/testing": "2.0.0-alpha.34",
+    "@aurelia/ts-jest": "2.0.0-alpha.34",
+    "@aurelia/webpack-loader": "2.0.0-alpha.34",
+    "@aurelia/parcel-transformer": "2.0.0-alpha.34",
+    "@babel/core": "^7.18.2",
+    "@jest/transform": "^28.1.0",
+    "@jest/types": "^28.1.0",
     "i18next": "^17.0.0",
     "jsdom": "^19.0.0",
-    "typescript": "4.7.2",
+    "typescript": "4.7.3",
     "vinyl": "^2.2.0"
   },
   "devDependencies": {
@@ -59,5 +60,8 @@
     "tsconfig-paths": "^3.9.0",
     "vinyl": "^2.2.0"
   },
-  "version": "2.1.0-dev.202206040020"
+  "volta": {
+    "node": "16.14.2",
+    "npm": "8.12.1"
+  }
 }

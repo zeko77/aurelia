@@ -16,7 +16,7 @@
     "test-node:runtime": "npm run ::mocha -- dist/esm/__tests__/2-runtime/*.spec.js",
     "test-node:runtime-html": "npm run ::mocha -- dist/esm/__tests__/3-runtime-html/**/*.spec.js",
     "test-node:router": "npm run ::mocha -- dist/esm/__tests__/router/*.spec.js",
-    "test-node:router-lite": "npm run ::mocha -- dist/esm/__tests__/router-lite/*.spec.js",
+    "test-node:router-lite": "npm run ::mocha -- dist/esm/__tests__/router-lite/**/*.spec.js",
     "test-node:i18n": "cross-env NODE_ICU_DATA=../../node_modules/full-icu mocha --ui bdd --reporter spec --colors --recursive --timeout 5000 --watch-extensions js dist/esm/__tests__/setup-node.js dist/esm/__tests__/i18n/**/*.spec.js",
     "test-node:store-v1": "npm run ::mocha --  dist/esm/__tests__/store-v1/*.spec.js",
     "test-node:validation": "npm run ::mocha -- dist/esm/__tests__/validation*/**/*.spec.js",
@@ -61,7 +61,7 @@
     "i18next": "^17.0.0",
     "jsdom": "^19.0.0",
     "rxjs": "^6.6.7",
-    "typescript": "4.7.2"
+    "typescript": "4.7.3"
   },
   "devDependencies": {
     "@types/jsdom": "^16.2.14",
@@ -88,5 +88,5 @@
     "ts-node": "^10.7.0",
     "tsconfig-paths": "^3.9.0"
   },
-  "version": "2.1.0-dev.202206040020"
+  "version": "2.0.0-alpha.34"
 }
