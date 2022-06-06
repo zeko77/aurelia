@@ -121,6 +121,7 @@ function X(t, i) {
             break;
 
           case "caseSensitive":
+          case "nav":
             if ("boolean" !== typeof e) Q("boolean", n, e);
             break;
 
@@ -3404,6 +3405,7 @@ class RouteContext {
         this.logger.trace(`addRoute(routeable:'${t}')`);
         return r(RouteDefinition.resolve(t, this.definition, null, this), (t => {
             for (const i of t.path) this.$addRoute(i, t.caseSensitive, t);
+            this.U.addRoute(t);
             this.childRoutes.push(t);
         }));
     }
@@ -3476,10 +3478,10 @@ e.createInterface("INavigationModel");
 class NavigationModel {
     constructor(t) {
         this.routes = t;
-        this.promise = void 0;
+        this.O = void 0;
     }
     resolve() {
-        return r(this.promise, g);
+        return r(this.O, g);
     }
     setIsActive(t, i) {
         for (const e of this.routes) e.setIsActive(t, i);
@@ -3487,14 +3489,15 @@ class NavigationModel {
     addRoute(t) {
         const i = this.routes;
         if (!(t instanceof Promise)) {
-            i.push(NavigationRoute.create(t));
+            if (t.config.nav) i.push(NavigationRoute.create(t));
             return;
         }
         const e = i.length;
         i.push(void 0);
-        const s = this.promise = r(this.promise, (() => r(t, (t => {
-            i[e] = NavigationRoute.create(t);
-            if (this.promise === s) this.promise = void 0;
+        let s;
+        s = this.O = r(this.O, (() => r(t, (t => {
+            if (t.config.nav) i[e] = NavigationRoute.create(t); else i.splice(e, 1);
+            if (this.O === s) this.O = void 0;
         }))));
     }
 }
@@ -3510,10 +3513,10 @@ class NavigationRoute {
         return new NavigationRoute(t.id, t.path, t.config.title, t.data);
     }
     get isActive() {
-        return this.O;
+        return this.j;
     }
     setIsActive(t, i) {
-        this.O = this.path.some((e => t.isActive(e, i)));
+        this.j = this.path.some((e => t.isActive(e, i)));
     }
 }
 
@@ -3732,9 +3735,9 @@ let hi = class HrefCustomAttribute {
         if (null == t) this.el.removeAttribute("href"); else this.el.setAttribute("href", t);
     }
     handleEvent(t) {
-        this.j(t);
+        this.B(t);
     }
-    j(t) {
+    B(t) {
         if (t.altKey || t.ctrlKey || t.shiftKey || t.metaKey || 0 !== t.button || this.isExternal || !this.isEnabled) return;
         const i = this.el.getAttribute("href");
         if (null !== i) {

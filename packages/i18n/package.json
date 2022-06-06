@@ -1,6 +1,6 @@
 {
   "name": "@aurelia/i18n",
-  "version": "2.1.0-dev.202206061138",
+  "version": "2.1.0-dev.202206061216",
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.mjs",
   "exports": {
@@ -44,11 +44,11 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurelia/kernel": "2.1.0-dev.202206061138",
-    "@aurelia/metadata": "2.1.0-dev.202206061138",
-    "@aurelia/platform": "2.1.0-dev.202206061138",
-    "@aurelia/runtime": "2.1.0-dev.202206061138",
-    "@aurelia/runtime-html": "2.1.0-dev.202206061138",
+    "@aurelia/kernel": "2.1.0-dev.202206061216",
+    "@aurelia/metadata": "2.1.0-dev.202206061216",
+    "@aurelia/platform": "2.1.0-dev.202206061216",
+    "@aurelia/runtime": "2.1.0-dev.202206061216",
+    "@aurelia/runtime-html": "2.1.0-dev.202206061216",
     "i18next": "^17.0.0"
   },
   "devDependencies": {

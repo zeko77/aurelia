@@ -133,6 +133,7 @@ function validateRouteConfig(config, parentPath) {
                 }
                 break;
             case 'caseSensitive':
+            case 'nav':
                 if (typeof value !== 'boolean') {
                     expectType('boolean', path, value);
                 }
@@ -3714,6 +3715,7 @@ class RouteContext {
             for (const path of routeDef.path) {
                 this.$addRoute(path, routeDef.caseSensitive, routeDef);
             }
+            this._navigationModel.addRoute(routeDef);
             this.childRoutes.push(routeDef);
         });
     }
@@ -3793,10 +3795,10 @@ kernel.DI.createInterface('INavigationModel');
 class NavigationModel {
     constructor(routes) {
         this.routes = routes;
-        this.promise = void 0;
+        this._promise = void 0;
     }
     resolve() {
-        return kernel.onResolve(this.promise, kernel.noop);
+        return kernel.onResolve(this._promise, kernel.noop);
     }
     setIsActive(router, context) {
         for (const route of this.routes) {
@@ -3806,15 +3808,23 @@ class NavigationModel {
     addRoute(routeDef) {
         const routes = this.routes;
         if (!(routeDef instanceof Promise)) {
-            routes.push(NavigationRoute.create(routeDef));
+            if (routeDef.config.nav) {
+                routes.push(NavigationRoute.create(routeDef));
+            }
             return;
         }
         const index = routes.length;
         routes.push((void 0));
-        const promise = this.promise = kernel.onResolve(this.promise, () => kernel.onResolve(routeDef, $routeDef => {
-            routes[index] = NavigationRoute.create($routeDef);
-            if (this.promise === promise) {
-                this.promise = void 0;
+        let promise = void 0;
+        promise = this._promise = kernel.onResolve(this._promise, () => kernel.onResolve(routeDef, $routeDef => {
+            if ($routeDef.config.nav) {
+                routes[index] = NavigationRoute.create($routeDef);
+            }
+            else {
+                routes.splice(index, 1);
+            }
+            if (this._promise === promise) {
+                this._promise = void 0;
             }
         }));
     }

@@ -127,6 +127,7 @@ function v(t, i) {
             break;
 
           case "caseSensitive":
+          case "nav":
             if ("boolean" !== typeof e) p("boolean", n, e);
             break;
 
@@ -3410,6 +3411,7 @@ class RouteContext {
         this.logger.trace(`addRoute(routeable:'${t}')`);
         return i.onResolve(RouteDefinition.resolve(t, this.definition, null, this), (t => {
             for (const i of t.path) this.$addRoute(i, t.caseSensitive, t);
+            this.U.addRoute(t);
             this.childRoutes.push(t);
         }));
     }
@@ -3482,10 +3484,10 @@ i.DI.createInterface("INavigationModel");
 class NavigationModel {
     constructor(t) {
         this.routes = t;
-        this.promise = void 0;
+        this.O = void 0;
     }
     resolve() {
-        return i.onResolve(this.promise, i.noop);
+        return i.onResolve(this.O, i.noop);
     }
     setIsActive(t, i) {
         for (const e of this.routes) e.setIsActive(t, i);
@@ -3493,14 +3495,15 @@ class NavigationModel {
     addRoute(t) {
         const e = this.routes;
         if (!(t instanceof Promise)) {
-            e.push(NavigationRoute.create(t));
+            if (t.config.nav) e.push(NavigationRoute.create(t));
             return;
         }
         const s = e.length;
         e.push(void 0);
-        const n = this.promise = i.onResolve(this.promise, (() => i.onResolve(t, (t => {
-            e[s] = NavigationRoute.create(t);
-            if (this.promise === n) this.promise = void 0;
+        let n;
+        n = this.O = i.onResolve(this.O, (() => i.onResolve(t, (t => {
+            if (t.config.nav) e[s] = NavigationRoute.create(t); else e.splice(s, 1);
+            if (this.O === n) this.O = void 0;
         }))));
     }
 }
@@ -3516,10 +3519,10 @@ class NavigationRoute {
         return new NavigationRoute(t.id, t.path, t.config.title, t.data);
     }
     get isActive() {
-        return this.O;
+        return this.j;
     }
     setIsActive(t, i) {
-        this.O = this.path.some((e => t.isActive(e, i)));
+        this.j = this.path.some((e => t.isActive(e, i)));
     }
 }
 
@@ -3738,9 +3741,9 @@ exports.HrefCustomAttribute = class HrefCustomAttribute {
         if (null == t) this.el.removeAttribute("href"); else this.el.setAttribute("href", t);
     }
     handleEvent(t) {
-        this.j(t);
+        this.B(t);
     }
-    j(t) {
+    B(t) {
         if (t.altKey || t.ctrlKey || t.shiftKey || t.metaKey || 0 !== t.button || this.isExternal || !this.isEnabled) return;
         const i = this.el.getAttribute("href");
         if (null !== i) {
