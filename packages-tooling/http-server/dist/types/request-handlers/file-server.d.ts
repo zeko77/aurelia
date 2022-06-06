@@ -1,6 +1,6 @@
 import { ILogger } from '@aurelia/kernel';
-import { IRequestHandler, IHttpServerOptions, IHttp2FileServer } from '../interfaces.js';
-import { IHttpContext } from '../http-context.js';
+import { IRequestHandler, IHttpServerOptions, IHttp2FileServer } from '../interfaces';
+import { IHttpContext } from '../http-context';
 export declare class FileServer implements IRequestHandler {
     private readonly opts;
     private readonly logger;

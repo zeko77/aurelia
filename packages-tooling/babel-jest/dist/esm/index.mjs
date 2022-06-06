@@ -1,6 +1,7 @@
 import { preprocess, preprocessOptions } from '@aurelia/plugin-conventions';
-import babelTransformer from 'babel-jest';
+import * as babelJest from 'babel-jest';
 
+const babelTransformer = babelJest.createTransformer();
 function _createTransformer(conventionsOptions = {}, _preprocess = preprocess, _babelProcess = babelTransformer.process.bind(babelTransformer)) {
     const au2Options = preprocessOptions(conventionsOptions);
     function getCacheKey(fileData, filePath, options) {

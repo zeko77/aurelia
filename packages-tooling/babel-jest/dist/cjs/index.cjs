@@ -3,16 +3,27 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 var pluginConventions = require('@aurelia/plugin-conventions');
-var babelTransformer = require('babel-jest');
+var babelJest = require('babel-jest');
 
-function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e["default"] : e; }
+function _interopNamespace(e) {
+    if (e && e.__esModule) return e;
+    var n = Object.create(null);
+    if (e) {
+        for (var k in e) {
+            n[k] = e[k];
+        }
+    }
+    n["default"] = e;
+    return Object.freeze(n);
+}
 
-var babelTransformer__default = /*#__PURE__*/_interopDefaultLegacy(babelTransformer);
+var babelJest__namespace = /*#__PURE__*/_interopNamespace(babelJest);
 
-function _createTransformer(conventionsOptions = {}, _preprocess = pluginConventions.preprocess, _babelProcess = babelTransformer__default.process.bind(babelTransformer__default)) {
+const babelTransformer = babelJest__namespace.createTransformer();
+function _createTransformer(conventionsOptions = {}, _preprocess = pluginConventions.preprocess, _babelProcess = babelTransformer.process.bind(babelTransformer)) {
     const au2Options = pluginConventions.preprocessOptions(conventionsOptions);
     function getCacheKey(fileData, filePath, options) {
-        const babelKey = babelTransformer__default.getCacheKey(fileData, filePath, options);
+        const babelKey = babelTransformer.getCacheKey(fileData, filePath, options);
         return `${babelKey}:${JSON.stringify(au2Options)}`;
     }
     function process(sourceText, sourcePath, transformOptions) {
@@ -23,7 +34,7 @@ function _createTransformer(conventionsOptions = {}, _preprocess = pluginConvent
         return _babelProcess(sourceText, sourcePath, transformOptions);
     }
     return {
-        canInstrument: babelTransformer__default.canInstrument,
+        canInstrument: babelTransformer.canInstrument,
         getCacheKey,
         process
     };

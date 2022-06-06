@@ -1,5 +1,5 @@
-import { ExecutionContext } from '../realm.js';
-import { I$Node } from '../ast/_shared.js';
+import { ExecutionContext } from '../realm';
+import { I$Node } from '../ast/_shared';
 export declare type $ListItem = {
     is(other: unknown): boolean;
 };

@@ -1,5 +1,5 @@
 import { LogLevel as $LogLevel } from '@aurelia/kernel';
-import { IHttpServerOptions, LogLevel } from './interfaces.js';
+import { IHttpServerOptions, LogLevel } from './interfaces';
 export declare class HttpServerOptions implements IHttpServerOptions {
     root: string;
     hostName: string;
