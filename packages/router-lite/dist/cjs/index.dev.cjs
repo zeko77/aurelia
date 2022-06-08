@@ -2441,6 +2441,7 @@ exports.Router = class Router {
         this.nextTr = null;
         this.locationChangeSubscription = null;
         this._hasTitleBuilder = false;
+        this._isNavigating = false;
         this.vpaLookup = new Map();
         this.logger = logger.root.scopeTo('Router');
     }
@@ -2495,6 +2496,9 @@ exports.Router = class Router {
     }
     set currentTr(value) {
         this._currentTr = value;
+    }
+    get isNavigating() {
+        return this._isNavigating;
     }
     resolveContext(context) {
         return RouteContext.resolve(this.ctx, context);
@@ -2651,6 +2655,7 @@ exports.Router = class Router {
             return;
         }
         this.logger.trace(`run(tr:%s) - processing route`, tr);
+        this._isNavigating = true;
         this.events.publish(new NavigationStartEvent(tr.id, tr.instructions, tr.trigger, tr.managedState));
         if (this.nextTr !== null) {
             this.logger.debug(`run(tr:%s) - aborting because a new transition was queued in response to the NavigationStartEvent`, tr);
@@ -2709,6 +2714,7 @@ exports.Router = class Router {
                 });
                 this.navigated = true;
                 this.instructions = tr.finalInstructions = tr.routeTree.finalizeInstructions();
+                this._isNavigating = false;
                 this.events.publish(new NavigationEndEvent(tr.id, tr.instructions, this.instructions));
                 this.lastSuccessfulNavigation = this.activeNavigation;
                 this.activeNavigation = null;
@@ -2761,6 +2767,7 @@ exports.Router = class Router {
         this.activeNavigation = null;
         this.instructions = tr.prevInstructions;
         this._routeTree = tr.previousRouteTree;
+        this._isNavigating = false;
         this.events.publish(new NavigationCancelEvent(tr.id, tr.instructions, `guardsResult is ${tr.guardsResult}`));
         if (tr.guardsResult === false) {
             tr.resolve(false);
