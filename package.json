@@ -1,7 +1,7 @@
 {
   "name": "@aurelia/monorepo",
   "private": true,
-  "version": "2.0.0-alpha.34",
+  "version": "2.0.0-alpha.35",
   "workspaces": [
     "packages/__tests__",
     "packages/__e2e__/router-configured-basic",
@@ -100,7 +100,8 @@
     "test:ci": "npm ci && npm run test",
     "test:watch": "cd packages/__tests__ && npm run test-chrome:watch",
     "test:debugger": "cd packages/__tests__ && npm run test-chrome:debugger",
-    "dev": "ts-node scripts/dev.ts"
+    "dev": "ts-node scripts/dev.ts",
+    "dev:tooling": "ts-node scripts/dev-tooling.ts"
   },
   "devDependencies": {
     "@commitlint/cli": "^16.2.3",
@@ -120,14 +121,14 @@
     "eslint-plugin-mocha": "^10.0.4",
     "fancy-log": "^1.3.3",
     "husky": "^4.3.8",
-    "lage": "^0.31.2",
+    "lage": "1.5.2",
     "rimraf": "^3.0.0",
     "rollup": "^2.70.2",
     "rollup-plugin-esbuild": "^4.9.1",
     "rollup-plugin-terser": "^7.0.2",
     "ts-node": "^10.7.0",
     "tsconfig-paths": "^3.14.1",
-    "typescript": "4.7.2"
+    "typescript": "4.7.3"
   },
   "commitlint": {
     "rules": {
@@ -204,6 +205,6 @@
   },
   "volta": {
     "node": "16.14.2",
-    "npm": "8.1.2"
+    "npm": "8.12.1"
   }
 }

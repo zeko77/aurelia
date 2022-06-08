@@ -10,12 +10,16 @@ import { assert, createFixture } from '@aurelia/testing';
 describe('3-runtime-html/lifecycle-hooks.created.spec.ts', function () {
 
   const hookSymbol = Symbol();
+  let tracker: LifeycyleTracker | null = null;
+
+  this.beforeEach(function () {
+    tracker = new LifeycyleTracker();
+  });
 
   @lifecycleHooks()
   class CreatedLoggingHook<T> {
     created(vm: T, controller: IController) {
       vm[hookSymbol] = controller[hookSymbol] = hookSymbol;
-      const tracker = controller.container.get(LifeycyleTracker);
       tracker.created++;
       tracker.controllers.push(controller);
     }
@@ -23,18 +27,18 @@ describe('3-runtime-html/lifecycle-hooks.created.spec.ts', function () {
 
   describe('custom elements', function () {
     it('invokes global created hooks', async function () {
-      const { component, container } = await createFixture
+      const { component } = await createFixture
         .html`\${message}`
         .deps(CreatedLoggingHook)
         .build().started;
 
       assert.strictEqual(component[hookSymbol], hookSymbol);
       assert.strictEqual(component.$controller[hookSymbol], hookSymbol);
-      assert.strictEqual(container.get(LifeycyleTracker).created, 1);
+      assert.strictEqual(tracker.created, 1);
     });
 
     it('invokes when registered both globally and locally', async function () {
-      const { component, container } = await createFixture
+      const { component } = await createFixture
         .component(CustomElement.define({ name: 'app', dependencies: [CreatedLoggingHook] }))
         .html`\${message}`
         .deps(CreatedLoggingHook)
@@ -42,8 +46,8 @@ describe('3-runtime-html/lifecycle-hooks.created.spec.ts', function () {
 
       assert.strictEqual(component[hookSymbol], hookSymbol);
       assert.strictEqual(component.$controller[hookSymbol], hookSymbol);
-      assert.strictEqual(container.get(LifeycyleTracker).created, 2);
-      assert.deepStrictEqual(container.get(LifeycyleTracker).controllers, [component.$controller, component.$controller]);
+      assert.strictEqual(tracker.created, 2);
+      assert.deepStrictEqual(tracker.controllers, [component.$controller, component.$controller]);
     });
 
     it('invokes before the view model lifecycle', async function () {
@@ -63,29 +67,69 @@ describe('3-runtime-html/lifecycle-hooks.created.spec.ts', function () {
     });
   });
 
-  it('does not invokes global created hooks', async function () {
+  describe('custom attributes', function () {
     const caHooksSymbol = Symbol();
     let current: Square | null = null;
+
+    this.beforeEach(function () {
+      current = null;
+    });
 
     @customAttribute('square')
     class Square {
       $controller: ICustomAttributeController;
       created() {
-        assert.notStrictEqual(this[hookSymbol], hookSymbol);
         this[caHooksSymbol] = true;
         current = this;
       }
     }
 
-    const baseTemplate = `<div square>`;
+    it('invokes global created hooks', async function () {
+      await createFixture
+        .html`<div square>`
+        .deps(Square, CreatedLoggingHook)
+        .build().started;
 
-    await createFixture
-      .html`${baseTemplate}`
-      .deps(Square, CreatedLoggingHook)
-      .build().started;
+      assert.instanceOf(current, Square);
+      assert.strictEqual(current[hookSymbol], hookSymbol);
+      assert.strictEqual(current?.[caHooksSymbol], true);
+    });
 
-    assert.instanceOf(current, Square);
-    assert.strictEqual(current?.[caHooksSymbol], true);
+    it('does not invokes created hooks on owning CE', async function () {
+      await createFixture
+        .html`<square>`
+        .deps(CustomElement.define({
+          name: 'square',
+          template: '<div square>',
+          dependencies: [Square]
+        }))
+        .build().started;
+
+      assert.instanceOf(current, Square);
+      assert.notStrictEqual(current[hookSymbol], hookSymbol);
+      assert.strictEqual(current?.[caHooksSymbol], true);
+    });
+
+    it('invokes own created hooks deps', async function () {
+      let attr: Attr;
+      @customAttribute({
+        name: 'attr',
+        dependencies: [CreatedLoggingHook]
+      })
+      class Attr {
+        created() {
+          attr = this;
+        }
+      }
+
+      await createFixture
+        .html`<div attr>`
+        .deps(Attr)
+        .build().started;
+
+      assert.instanceOf(attr, Attr);
+      assert.strictEqual(attr[hookSymbol], hookSymbol);
+    });
   });
 
   class LifeycyleTracker {
