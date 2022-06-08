@@ -1,10 +1,9 @@
 import { preprocess } from '@aurelia/plugin-conventions';
-import type { Config } from '@jest/types';
 import type { TransformOptions, TransformedSource } from '@jest/transform';
-declare function _createTransformer(conventionsOptions?: {}, _preprocess?: typeof preprocess, _tsProcess?: (fileContent: string, filePath: string, transformOptions: import("ts-jest").TransformOptionsTsJest) => TransformedSource): {
+declare function _createTransformer(conventionsOptions?: {}, _preprocess?: typeof preprocess, _tsProcess?: (sourceText: string, sourcePath: string, transformOptions: import("ts-jest").TransformOptionsTsJest) => TransformedSource): {
     canInstrument: boolean;
-    getCacheKey: (fileData: string, filePath: Config.Path, options: TransformOptions) => string;
-    process: (sourceText: string, sourcePath: Config.Path, transformOptions: TransformOptions) => TransformedSource | string;
+    getCacheKey: (fileData: string, filePath: string, options: TransformOptions) => string;
+    process: (sourceText: string, sourcePath: string, transformOptions: TransformOptions) => TransformedSource;
 };
 declare function createTransformer(conventionsOptions?: {}): {
     canInstrument: boolean;

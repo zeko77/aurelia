@@ -17798,7 +17798,7 @@ class ServiceHost {
                 throw new Error(`Absolute module resolution not yet implemented for single-file scenario.`);
             }
             const dir = referencingModule.$file.dir;
-            const ext = '.js';
+            const ext = '';
             const name = path.basename(specifier);
             const shortName = name.slice(0, -3);
             const path$1 = joinPath(dir, name);

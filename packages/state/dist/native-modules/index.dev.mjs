@@ -1,6 +1,6 @@
 import { DI, Registration, optional, all, ILogger, camelCase } from '../../../kernel/dist/native-modules/index.mjs';
 import { Scope, connectable, BindingMode, bindingBehavior, BindingInterceptor, IExpressionParser, IObserverLocator } from '../../../runtime/dist/native-modules/index.mjs';
-import { attributePattern, bindingCommand, renderer, AttrSyntax, IAttrMapper, IPlatform, applyBindingBehavior, lifecycleHooks, CustomElement, ILifecycleHooks } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { attributePattern, bindingCommand, renderer, AttrSyntax, IAttrMapper, IPlatform, applyBindingBehavior, lifecycleHooks, CustomElement, CustomAttribute, ILifecycleHooks } from '../../../runtime-html/dist/native-modules/index.mjs';
 
 const IActionHandler = DI.createInterface('IActionHandler');
 const IStore = DI.createInterface('IStore');
@@ -602,7 +602,7 @@ StateGetterBinding = __decorate([
     connectable()
 ], StateGetterBinding);
 
-function fromStore(getValue) {
+function fromState(getValue) {
     return function (target, key, desc) {
         if (typeof target === 'function') {
             throw new Error(`Invalid usage. @state can only be used on a field`);
@@ -616,6 +616,11 @@ function fromStore(getValue) {
             CustomElement.annotate(target, dependenciesKey, dependencies = []);
         }
         dependencies.push(new HydratingLifecycleHooks(getValue, key));
+        dependencies = CustomAttribute.getAnnotation(target, dependenciesKey);
+        if (dependencies == null) {
+            CustomElement.annotate(target, dependenciesKey, dependencies = []);
+        }
+        dependencies.push(new CreatedLifecycleHooks(getValue, key));
     };
 }
 const dependenciesKey = 'dependencies';
@@ -635,6 +640,22 @@ let HydratingLifecycleHooks = class HydratingLifecycleHooks {
 HydratingLifecycleHooks = __decorate([
     lifecycleHooks()
 ], HydratingLifecycleHooks);
+let CreatedLifecycleHooks = class CreatedLifecycleHooks {
+    constructor($get, key) {
+        this.$get = $get;
+        this.key = key;
+    }
+    register(c) {
+        Registration.instance(ILifecycleHooks, this).register(c);
+    }
+    created(vm, controller) {
+        const container = controller.container;
+        controller.addBinding(new StateGetterBinding(container, container.get(IStore), this.$get, vm, this.key));
+    }
+};
+CreatedLifecycleHooks = __decorate([
+    lifecycleHooks()
+], CreatedLifecycleHooks);
 
-export { ActionHandler, DispatchAttributePattern, DispatchBindingCommand, DispatchBindingInstruction, DispatchBindingInstructionRenderer, IActionHandler, IState, IStore, StateAttributePattern, StateBinding, StateBindingBehavior, StateBindingCommand, StateBindingInstruction, StateBindingInstructionRenderer, StateDefaultConfiguration, StateDispatchBinding, fromStore };
+export { ActionHandler, DispatchAttributePattern, DispatchBindingCommand, DispatchBindingInstruction, DispatchBindingInstructionRenderer, IActionHandler, IState, IStore, StateAttributePattern, StateBinding, StateBindingBehavior, StateBindingCommand, StateBindingInstruction, StateBindingInstructionRenderer, StateDefaultConfiguration, StateDispatchBinding, fromState };
 //# sourceMappingURL=index.dev.mjs.map

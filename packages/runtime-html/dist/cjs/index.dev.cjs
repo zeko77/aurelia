@@ -2195,7 +2195,7 @@ function templateController(nameOrDef) {
     };
 }
 class CustomAttributeDefinition {
-    constructor(Type, name, aliases, key, defaultBindingMode, isTemplateController, bindables, noMultiBindings, watches) {
+    constructor(Type, name, aliases, key, defaultBindingMode, isTemplateController, bindables, noMultiBindings, watches, dependencies) {
         this.Type = Type;
         this.name = name;
         this.aliases = aliases;
@@ -2205,6 +2205,7 @@ class CustomAttributeDefinition {
         this.bindables = bindables;
         this.noMultiBindings = noMultiBindings;
         this.watches = watches;
+        this.dependencies = dependencies;
     }
     get type() { return 2; }
     static create(nameOrDef, Type) {
@@ -2218,7 +2219,7 @@ class CustomAttributeDefinition {
             name = nameOrDef.name;
             def = nameOrDef;
         }
-        return new CustomAttributeDefinition(Type, kernel.firstDefined(getAttributeAnnotation(Type, 'name'), name), kernel.mergeArrays(getAttributeAnnotation(Type, 'aliases'), def.aliases, Type.aliases), CustomAttribute.keyFrom(name), kernel.firstDefined(getAttributeAnnotation(Type, 'defaultBindingMode'), def.defaultBindingMode, Type.defaultBindingMode, runtime.BindingMode.toView), kernel.firstDefined(getAttributeAnnotation(Type, 'isTemplateController'), def.isTemplateController, Type.isTemplateController, false), Bindable.from(Type, ...Bindable.getAll(Type), getAttributeAnnotation(Type, 'bindables'), Type.bindables, def.bindables), kernel.firstDefined(getAttributeAnnotation(Type, 'noMultiBindings'), def.noMultiBindings, Type.noMultiBindings, false), kernel.mergeArrays(Watch.getAnnotation(Type), Type.watches));
+        return new CustomAttributeDefinition(Type, kernel.firstDefined(getAttributeAnnotation(Type, 'name'), name), kernel.mergeArrays(getAttributeAnnotation(Type, 'aliases'), def.aliases, Type.aliases), CustomAttribute.keyFrom(name), kernel.firstDefined(getAttributeAnnotation(Type, 'defaultBindingMode'), def.defaultBindingMode, Type.defaultBindingMode, runtime.BindingMode.toView), kernel.firstDefined(getAttributeAnnotation(Type, 'isTemplateController'), def.isTemplateController, Type.isTemplateController, false), Bindable.from(Type, ...Bindable.getAll(Type), getAttributeAnnotation(Type, 'bindables'), Type.bindables, def.bindables), kernel.firstDefined(getAttributeAnnotation(Type, 'noMultiBindings'), def.noMultiBindings, Type.noMultiBindings, false), kernel.mergeArrays(Watch.getAnnotation(Type), Type.watches), kernel.mergeArrays(getAttributeAnnotation(Type, 'dependencies'), def.dependencies, Type.dependencies));
     }
     register(container) {
         const { Type, key, aliases } = this;
@@ -3452,6 +3453,9 @@ class Controller {
         }
         definition = definition !== null && definition !== void 0 ? definition : CustomAttribute.getDefinition(viewModel.constructor);
         const controller = new Controller(ctn, 1, definition, null, viewModel, host, null);
+        if (definition.dependencies.length > 0) {
+            ctn.register(...definition.dependencies);
+        }
         controllerLookup.set(viewModel, controller);
         controller._hydrateCustomAttribute();
         return controller;
@@ -3567,6 +3571,9 @@ class Controller {
         createObservers(this, definition, this.flags, instance);
         instance.$controller = this;
         this.lifecycleHooks = LifecycleHooks.resolve(this.container);
+        if (this.lifecycleHooks.created !== void 0) {
+            this.lifecycleHooks.created.forEach(callCreatedHook, this);
+        }
         if (this.hooks.hasCreated) {
             if (this.debug) {
                 this.logger.trace(`invoking created() hook`);
@@ -3624,20 +3631,27 @@ class Controller {
         this.$initiator = initiator;
         this.$flags = flags;
         this._enterActivating();
+        let ret;
+        if (this.vmKind !== 2 && this.lifecycleHooks.binding != null) {
+            if (this.debug) {
+                this.logger.trace(`lifecycleHooks.binding()`);
+            }
+            ret = kernel.resolveAll(...this.lifecycleHooks.binding.map(callBindingHook, this));
+        }
         if (this.hooks.hasBinding) {
             if (this.debug) {
                 this.logger.trace(`binding()`);
             }
-            const ret = this.viewModel.binding(this.$initiator, this.parent, this.$flags);
-            if (ret instanceof Promise) {
-                this._ensurePromise();
-                ret.then(() => {
-                    this.bind();
-                }).catch((err) => {
-                    this._reject(err);
-                });
-                return this.$promise;
-            }
+            ret = kernel.resolveAll(ret, this.viewModel.binding(this.$initiator, this.parent, this.$flags));
+        }
+        if (ret instanceof Promise) {
+            this._ensurePromise();
+            ret.then(() => {
+                this.bind();
+            }).catch((err) => {
+                this._reject(err);
+            });
+            return this.$promise;
         }
         this.bind();
         return this.$promise;
@@ -3663,21 +3677,27 @@ class Controller {
                 ++i;
             }
         }
+        if (this.vmKind !== 2 && this.lifecycleHooks.bound != null) {
+            if (this.debug) {
+                this.logger.trace(`lifecycleHooks.bound()`);
+            }
+            ret = kernel.resolveAll(...this.lifecycleHooks.bound.map(callBoundHook, this));
+        }
         if (this.hooks.hasBound) {
             if (this.debug) {
                 this.logger.trace(`bound()`);
             }
-            ret = this.viewModel.bound(this.$initiator, this.parent, this.$flags);
-            if (ret instanceof Promise) {
-                this._ensurePromise();
-                ret.then(() => {
-                    this.isBound = true;
-                    this._attach();
-                }).catch((err) => {
-                    this._reject(err);
-                });
-                return;
-            }
+            ret = kernel.resolveAll(ret, this.viewModel.bound(this.$initiator, this.parent, this.$flags));
+        }
+        if (ret instanceof Promise) {
+            this._ensurePromise();
+            ret.then(() => {
+                this.isBound = true;
+                this._attach();
+            }).catch((err) => {
+                this._reject(err);
+            });
+            return;
         }
         this.isBound = true;
         this._attach();
@@ -3731,23 +3751,30 @@ class Controller {
                 this.nodes.insertBefore(this.location);
                 break;
         }
+        let i = 0;
+        let ret = void 0;
+        if (this.vmKind !== 2 && this.lifecycleHooks.attaching != null) {
+            if (this.debug) {
+                this.logger.trace(`lifecycleHooks.attaching()`);
+            }
+            ret = kernel.resolveAll(...this.lifecycleHooks.attaching.map(callAttachingHook, this));
+        }
         if (this.hooks.hasAttaching) {
             if (this.debug) {
                 this.logger.trace(`attaching()`);
             }
-            const ret = this.viewModel.attaching(this.$initiator, this.parent, this.$flags);
-            if (ret instanceof Promise) {
-                this._ensurePromise();
-                this._enterActivating();
-                ret.then(() => {
-                    this._leaveActivating();
-                }).catch((err) => {
-                    this._reject(err);
-                });
-            }
+            ret = kernel.resolveAll(ret, this.viewModel.attaching(this.$initiator, this.parent, this.$flags));
+        }
+        if (ret instanceof Promise) {
+            this._ensurePromise();
+            this._enterActivating();
+            ret.then(() => {
+                this._leaveActivating();
+            }).catch((err) => {
+                this._reject(err);
+            });
         }
         if (this.children !== null) {
-            let i = 0;
             for (; i < this.children.length; ++i) {
                 void this.children[i].activate(this.$initiator, this, this.$flags, this.scope);
             }
@@ -3776,6 +3803,7 @@ class Controller {
             this._enterDetaching();
         }
         let i = 0;
+        let ret;
         if (this._childrenObs.length) {
             for (; i < this._childrenObs.length; ++i) {
                 this._childrenObs[i].stop();
@@ -3786,20 +3814,26 @@ class Controller {
                 void this.children[i].deactivate(initiator, this, flags);
             }
         }
+        if (this.vmKind !== 2 && this.lifecycleHooks.detaching != null) {
+            if (this.debug) {
+                this.logger.trace(`lifecycleHooks.detaching()`);
+            }
+            ret = kernel.resolveAll(...this.lifecycleHooks.detaching.map(callDetachingHook, this));
+        }
         if (this.hooks.hasDetaching) {
             if (this.debug) {
                 this.logger.trace(`detaching()`);
             }
-            const ret = this.viewModel.detaching(this.$initiator, this.parent, this.$flags);
-            if (ret instanceof Promise) {
-                this._ensurePromise();
-                initiator._enterDetaching();
-                ret.then(() => {
-                    initiator._leaveDetaching();
-                }).catch((err) => {
-                    initiator._reject(err);
-                });
-            }
+            ret = kernel.resolveAll(ret, this.viewModel.detaching(this.$initiator, this.parent, this.$flags));
+        }
+        if (ret instanceof Promise) {
+            this._ensurePromise();
+            initiator._enterDetaching();
+            ret.then(() => {
+                initiator._leaveDetaching();
+            }).catch((err) => {
+                initiator._reject(err);
+            });
         }
         if (initiator.head === null) {
             initiator.head = this;
@@ -3909,27 +3943,30 @@ class Controller {
     }
     _leaveActivating() {
         if (--this._activatingStack === 0) {
+            if (this.vmKind !== 2 && this.lifecycleHooks.attached != null) {
+                _retPromise = kernel.resolveAll(...this.lifecycleHooks.attached.map(callAttachedHook, this));
+            }
             if (this.hooks.hasAttached) {
                 if (this.debug) {
                     this.logger.trace(`attached()`);
                 }
-                _retPromise = this.viewModel.attached(this.$initiator, this.$flags);
-                if (_retPromise instanceof Promise) {
-                    this._ensurePromise();
-                    _retPromise.then(() => {
-                        this.state = 2;
-                        this._resolve();
-                        if (this.$initiator !== this) {
-                            this.parent._leaveActivating();
-                        }
-                    }).catch((err) => {
-                        this._reject(err);
-                    });
-                    _retPromise = void 0;
-                    return;
-                }
-                _retPromise = void 0;
+                _retPromise = kernel.resolveAll(_retPromise, this.viewModel.attached(this.$initiator, this.$flags));
             }
+            if (_retPromise instanceof Promise) {
+                this._ensurePromise();
+                _retPromise.then(() => {
+                    this.state = 2;
+                    this._resolve();
+                    if (this.$initiator !== this) {
+                        this.parent._leaveActivating();
+                    }
+                }).catch((err) => {
+                    this._reject(err);
+                });
+                _retPromise = void 0;
+                return;
+            }
+            _retPromise = void 0;
             this.state = 2;
             this._resolve();
         }
@@ -3948,6 +3985,7 @@ class Controller {
             this._enterUnbinding();
             this.removeNodes();
             let cur = this.$initiator.head;
+            let ret;
             while (cur !== null) {
                 if (cur !== this) {
                     if (cur.debug) {
@@ -3955,22 +3993,25 @@ class Controller {
                     }
                     cur.removeNodes();
                 }
+                if (cur.vmKind !== 2 && cur.lifecycleHooks.unbinding != null) {
+                    ret = kernel.resolveAll(...cur.lifecycleHooks.unbinding.map(callUnbindingHook, this));
+                }
                 if (cur.hooks.hasUnbinding) {
                     if (cur.debug) {
                         cur.logger.trace('unbinding()');
                     }
-                    _retPromise = cur.viewModel.unbinding(cur.$initiator, cur.parent, cur.$flags);
-                    if (_retPromise instanceof Promise) {
-                        this._ensurePromise();
-                        this._enterUnbinding();
-                        _retPromise.then(() => {
-                            this._leaveUnbinding();
-                        }).catch((err) => {
-                            this._reject(err);
-                        });
-                    }
-                    _retPromise = void 0;
+                    ret = kernel.resolveAll(ret, cur.viewModel.unbinding(cur.$initiator, cur.parent, cur.$flags));
                 }
+                if (ret instanceof Promise) {
+                    this._ensurePromise();
+                    this._enterUnbinding();
+                    ret.then(() => {
+                        this._leaveUnbinding();
+                    }).catch((err) => {
+                        this._reject(err);
+                    });
+                }
+                ret = void 0;
                 cur = cur.next;
             }
             this._leaveUnbinding();
@@ -4283,6 +4324,24 @@ function callHydratingHook(l) {
 }
 function callHydratedHook(l) {
     l.instance.hydrated(this.viewModel, this);
+}
+function callBindingHook(l) {
+    return l.instance.binding(this.viewModel, this['$initiator'], this.parent, this['$flags']);
+}
+function callBoundHook(l) {
+    return l.instance.bound(this.viewModel, this['$initiator'], this.parent, this['$flags']);
+}
+function callAttachingHook(l) {
+    return l.instance.attaching(this.viewModel, this['$initiator'], this.parent, this['$flags']);
+}
+function callAttachedHook(l) {
+    return l.instance.attached(this.viewModel, this['$initiator'], this['$flags']);
+}
+function callDetachingHook(l) {
+    return l.instance.detaching(this.viewModel, this['$initiator'], this.parent, this['$flags']);
+}
+function callUnbindingHook(l) {
+    return l.instance.unbinding(this.viewModel, this['$initiator'], this.parent, this['$flags']);
 }
 let _resolve;
 let _reject;
@@ -5159,8 +5218,8 @@ let CustomAttributeRenderer = class CustomAttributeRenderer {
             default:
                 def = instruction.res;
         }
-        const component = invokeAttribute(this._platform, def, renderingCtrl, target, instruction, void 0, void 0);
-        const childController = Controller.$attr(renderingCtrl.container, component, target, def);
+        const results = invokeAttribute(this._platform, def, renderingCtrl, target, instruction, void 0, void 0);
+        const childController = Controller.$attr(results.ctn, results.vm, target, def);
         setRef(target, def.key, childController);
         const renderers = this._rendering.renderers;
         const props = instruction.props;
@@ -5185,7 +5244,7 @@ let TemplateControllerRenderer = class TemplateControllerRenderer {
     }
     static get inject() { return [IRendering, IPlatform]; }
     render(renderingCtrl, target, instruction) {
-        var _a;
+        var _a, _b;
         let ctxContainer = renderingCtrl.container;
         let def;
         switch (typeof instruction.res) {
@@ -5200,10 +5259,10 @@ let TemplateControllerRenderer = class TemplateControllerRenderer {
         }
         const viewFactory = this._rendering.getViewFactory(instruction.def, ctxContainer);
         const renderLocation = convertToRenderLocation(target);
-        const component = invokeAttribute(this._platform, def, renderingCtrl, target, instruction, viewFactory, renderLocation);
-        const childController = Controller.$attr(renderingCtrl.container, component, target, def);
+        const results = invokeAttribute(this._platform, def, renderingCtrl, target, instruction, viewFactory, renderLocation);
+        const childController = Controller.$attr(results.ctn, results.vm, target, def);
         setRef(renderLocation, def.key, childController);
-        (_a = component.link) === null || _a === void 0 ? void 0 : _a.call(component, renderingCtrl, childController, target, instruction);
+        (_b = (_a = results.vm).link) === null || _b === void 0 ? void 0 : _b.call(_a, renderingCtrl, childController, target, instruction);
         const renderers = this._rendering.renderers;
         const props = instruction.props;
         const ii = props.length;
@@ -5648,7 +5707,7 @@ function invokeAttribute(p, definition, renderingCtrl, host, instruction, viewFa
     ctn.registerResolver(IAuSlotsInfo, auSlotsInfo == null
         ? noAuSlotProvider
         : new kernel.InstanceProvider(slotInfoProviderName, auSlotsInfo));
-    return ctn.invoke(definition.Type);
+    return { vm: ctn.invoke(definition.Type), ctn };
 }
 class RenderLocationProvider {
     constructor(_location) {

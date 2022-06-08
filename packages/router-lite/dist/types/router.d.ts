@@ -180,6 +180,8 @@ export declare class Router {
     private instructions;
     private nextTr;
     private locationChangeSubscription;
+    private _isNavigating;
+    get isNavigating(): boolean;
     constructor(container: IContainer, p: IPlatform, logger: ILogger, events: IRouterEvents, locationMgr: ILocationManager);
     /**
      * Get the closest RouteContext relative to the provided component, controller or node.

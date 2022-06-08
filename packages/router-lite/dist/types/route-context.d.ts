@@ -5,8 +5,9 @@ import { RouteDefinition } from './route-definition';
 import { ViewportAgent, ViewportRequest } from './viewport-agent';
 import { ComponentAgent } from './component-agent';
 import { RouteNode } from './route-tree';
-import { ResolutionMode } from './router';
+import { IRouter, ResolutionMode } from './router';
 import { IViewport } from './resources/viewport';
+import { Params } from './instructions';
 export interface IRouteContext extends RouteContext {
 }
 export declare const IRouteContext: import("@aurelia/kernel").InterfaceSymbol<IRouteContext>;
@@ -60,7 +61,9 @@ export declare class RouteContext {
     private readonly hostControllerProvider;
     private readonly recognizer;
     private _childRoutesConfigured;
-    constructor(viewportAgent: ViewportAgent | null, parent: IRouteContext | null, component: CustomElementDefinition, definition: RouteDefinition, parentContainer: IContainer);
+    private readonly _navigationModel;
+    get navigationModel(): INavigationModel;
+    constructor(viewportAgent: ViewportAgent | null, parent: IRouteContext | null, component: CustomElementDefinition, definition: RouteDefinition, parentContainer: IContainer, router: IRouter);
     private processDefinition;
     /**
      * Create a new `RouteContext` and register it in the provided container.
@@ -96,5 +99,23 @@ export declare class $RecognizedRoute {
     readonly residue: string | null;
     constructor(route: RecognizedRoute<RouteDefinition | Promise<RouteDefinition>>, residue: string | null);
     toString(): string;
+}
+export declare const INavigationModel: import("@aurelia/kernel").InterfaceSymbol<INavigationModel>;
+export interface INavigationModel {
+    /**
+     * Collection of routes.
+     */
+    readonly routes: readonly INavigationRoute[];
+    /**
+     * Wait for async route configurations.
+     */
+    resolve(): Promise<void> | void;
+}
+export interface INavigationRoute {
+    readonly id: string;
+    readonly path: string[];
+    readonly title: string | ((node: RouteNode) => string | null) | null;
+    readonly data: Params | null;
+    readonly isActive: boolean;
 }
 //# sourceMappingURL=route-context.d.ts.map

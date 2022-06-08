@@ -418,6 +418,7 @@ function stripMetaData(rawHtml) {
 }
 function traverse(tree, cb) {
     tree.childNodes.forEach((n) => {
+        var _a;
         const ne = n;
         if (ne.tagName === 'template' && ne.attrs.some(attr => attr.name === 'as-custom-element')) {
             return;
@@ -425,7 +426,7 @@ function traverse(tree, cb) {
         cb(ne);
         if (n.childNodes)
             traverse(n, cb);
-        if (n.content && n.content.childNodes)
+        if ((_a = n.content) === null || _a === void 0 ? void 0 : _a.childNodes)
             traverse(n.content, cb);
     });
 }

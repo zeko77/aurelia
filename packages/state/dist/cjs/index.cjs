@@ -242,16 +242,16 @@ exports.StateBindingBehavior = class StateBindingBehavior extends s.BindingInter
     constructor(t, s, i) {
         super(s, i);
         this.$ = t;
-        this._ = s instanceof exports.StateBinding;
+        this.C = s instanceof exports.StateBinding;
     }
     $bind(t, s) {
         const i = this.binding;
-        const e = this._ ? s : u(this.$.getState(), s);
-        if (!this._) this.$.subscribe(this);
+        const e = this.C ? s : u(this.$.getState(), s);
+        if (!this.C) this.$.subscribe(this);
         i.$bind(t, e);
     }
     $unbind(t) {
-        if (!this._) this.$.unsubscribe(this);
+        if (!this.C) this.$.unsubscribe(this);
         this.binding.$unbind(t);
     }
     handleStateChange(t) {
@@ -408,11 +408,11 @@ exports.StateBindingInstructionRenderer = class StateBindingInstructionRenderer 
     constructor(t, s, i, e) {
         this.ep = t;
         this.oL = s;
-        this.j = i;
+        this._ = i;
         this.p = e;
     }
     render(t, s, i) {
-        const e = new exports.StateBinding(t.container, this.p.domWriteQueue, this.j, this.oL, v(this.ep, i.from, 4), s, i.to);
+        const e = new exports.StateBinding(t.container, this.p.domWriteQueue, this._, this.oL, v(this.ep, i.from, 4), s, i.to);
         t.addBinding(e);
     }
 };
@@ -424,11 +424,11 @@ exports.StateBindingInstructionRenderer = c([ i.renderer("sb") ], exports.StateB
 exports.DispatchBindingInstructionRenderer = class DispatchBindingInstructionRenderer {
     constructor(t, s) {
         this.ep = t;
-        this.j = s;
+        this._ = s;
     }
     render(t, s, e) {
         const n = v(this.ep, e.expr, 8);
-        const h = new exports.StateDispatchBinding(t.container, this.j, n, s, e.from);
+        const h = new exports.StateDispatchBinding(t.container, this._, n, s, e.from);
         t.addBinding(38962 === n.$kind ? i.applyBindingBehavior(h, n, t.container) : h);
     }
 };
@@ -453,7 +453,7 @@ const g = (s, i) => ({
 
 const S = g({}, []);
 
-let m = class StateGetterBinding {
+let y = class StateGetterBinding {
     constructor(t, s, i, e, n) {
         this.interceptor = this;
         this.isBound = false;
@@ -521,9 +521,9 @@ let m = class StateGetterBinding {
     }
 };
 
-m = c([ s.connectable() ], m);
+y = c([ s.connectable() ], y);
 
-function y(t) {
+function m(t) {
     return function(s, e, n) {
         if ("function" === typeof s) throw new Error(`Invalid usage. @state can only be used on a field`);
         if ("undefined" !== typeof (null === n || void 0 === n ? void 0 : n.value)) throw new Error(`Invalid usage. @state can only be used on a field`);
@@ -531,6 +531,9 @@ function y(t) {
         let h = i.CustomElement.getAnnotation(s, w);
         if (null == h) i.CustomElement.annotate(s, w, h = []);
         h.push(new B(t, e));
+        h = i.CustomAttribute.getAnnotation(s, w);
+        if (null == h) i.CustomElement.annotate(s, w, h = []);
+        h.push(new I(t, e));
     };
 }
 
@@ -546,11 +549,27 @@ let B = class HydratingLifecycleHooks {
     }
     hydrating(t, s) {
         const i = s.container;
-        s.addBinding(new m(i, i.get(n), this.$get, t, this.key));
+        s.addBinding(new y(i, i.get(n), this.$get, t, this.key));
     }
 };
 
 B = c([ i.lifecycleHooks() ], B);
+
+let I = class CreatedLifecycleHooks {
+    constructor(t, s) {
+        this.$get = t;
+        this.key = s;
+    }
+    register(s) {
+        t.Registration.instance(i.ILifecycleHooks, this).register(s);
+    }
+    created(t, s) {
+        const i = s.container;
+        s.addBinding(new y(i, i.get(n), this.$get, t, this.key));
+    }
+};
+
+I = c([ i.lifecycleHooks() ], I);
 
 exports.ActionHandler = o;
 
@@ -566,5 +585,5 @@ exports.StateBindingInstruction = StateBindingInstruction;
 
 exports.StateDefaultConfiguration = S;
 
-exports.fromStore = y;
+exports.fromState = m;
 //# sourceMappingURL=index.cjs.map

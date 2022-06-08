@@ -1,6 +1,6 @@
 import { ILogger, IContainer } from '@aurelia/kernel';
-import { IFileSystem, IFile } from './interfaces.js';
-import { Package } from './package-types.js';
+import { IFileSystem, IFile } from './interfaces';
+import { Package } from './package-types';
 export declare class NPMPackageLoader {
     readonly container: IContainer;
     readonly logger: ILogger;

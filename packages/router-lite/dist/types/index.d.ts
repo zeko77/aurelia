@@ -4,7 +4,7 @@ export { type IRouteViewModel, ComponentAgent, } from './component-agent';
 export { type RouteableComponent, type NavigationInstruction, IViewportInstruction, type Params, } from './instructions';
 export { ILocationManager, IBaseHrefProvider, } from './location-manager';
 export { type Routeable, type IRouteConfig, type IChildRouteConfig, RouteConfig, Route, type RouteType, route, } from './route';
-export { IRouteContext, RouteContext, } from './route-context';
+export { IRouteContext, RouteContext, type INavigationModel, type INavigationRoute, } from './route-context';
 export { RouteDefinition, } from './route-definition';
 export { AST, RouteExpression, CompositeSegmentExpression, ScopedSegmentExpression, SegmentGroupExpression, SegmentExpression, ComponentExpression, ActionExpression, ViewportExpression, ParameterListExpression, ParameterExpression, ExpressionKind, } from './route-expression';
 export { RouteNode, RouteTree, } from './route-tree';

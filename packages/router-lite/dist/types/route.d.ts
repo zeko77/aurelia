@@ -66,6 +66,12 @@ export interface IRouteConfig {
      * Can be a route-id, route-path (route), or a custom element name; this is also the resolution/fallback order.
      */
     readonly fallback?: string | null;
+    /**
+     * When set to `false`, the routes won't be included in the navigation model.
+     *
+     * @default true
+     */
+    readonly nav?: boolean;
 }
 export interface IChildRouteConfig extends IRouteConfig {
     /**
@@ -90,7 +96,8 @@ export declare class RouteConfig implements IRouteConfig, IChildRouteConfig {
     readonly routes: readonly Routeable[];
     readonly fallback: string | null;
     readonly component: Routeable;
-    protected constructor(id: string | null, path: string | string[] | null, title: string | ((node: RouteNode) => string | null) | null, redirectTo: string | null, caseSensitive: boolean, transitionPlan: TransitionPlanOrFunc, viewport: string | null, data: Params, routes: readonly Routeable[], fallback: string | null, component: Routeable);
+    readonly nav: boolean;
+    protected constructor(id: string | null, path: string | string[] | null, title: string | ((node: RouteNode) => string | null) | null, redirectTo: string | null, caseSensitive: boolean, transitionPlan: TransitionPlanOrFunc, viewport: string | null, data: Params, routes: readonly Routeable[], fallback: string | null, component: Routeable, nav: boolean);
     static create(configOrPath: IRouteConfig | IChildRouteConfig | string | string[], Type: RouteType | null): RouteConfig;
     /**
      * Creates a new route config applying the child route config.

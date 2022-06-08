@@ -606,7 +606,7 @@ StateGetterBinding = __decorate([
     runtime.connectable()
 ], StateGetterBinding);
 
-function fromStore(getValue) {
+function fromState(getValue) {
     return function (target, key, desc) {
         if (typeof target === 'function') {
             throw new Error(`Invalid usage. @state can only be used on a field`);
@@ -620,6 +620,11 @@ function fromStore(getValue) {
             runtimeHtml.CustomElement.annotate(target, dependenciesKey, dependencies = []);
         }
         dependencies.push(new HydratingLifecycleHooks(getValue, key));
+        dependencies = runtimeHtml.CustomAttribute.getAnnotation(target, dependenciesKey);
+        if (dependencies == null) {
+            runtimeHtml.CustomElement.annotate(target, dependenciesKey, dependencies = []);
+        }
+        dependencies.push(new CreatedLifecycleHooks(getValue, key));
     };
 }
 const dependenciesKey = 'dependencies';
@@ -639,6 +644,22 @@ let HydratingLifecycleHooks = class HydratingLifecycleHooks {
 HydratingLifecycleHooks = __decorate([
     runtimeHtml.lifecycleHooks()
 ], HydratingLifecycleHooks);
+let CreatedLifecycleHooks = class CreatedLifecycleHooks {
+    constructor($get, key) {
+        this.$get = $get;
+        this.key = key;
+    }
+    register(c) {
+        kernel.Registration.instance(runtimeHtml.ILifecycleHooks, this).register(c);
+    }
+    created(vm, controller) {
+        const container = controller.container;
+        controller.addBinding(new StateGetterBinding(container, container.get(IStore), this.$get, vm, this.key));
+    }
+};
+CreatedLifecycleHooks = __decorate([
+    runtimeHtml.lifecycleHooks()
+], CreatedLifecycleHooks);
 
 exports.ActionHandler = ActionHandler;
 exports.DispatchBindingInstruction = DispatchBindingInstruction;
@@ -647,5 +668,5 @@ exports.IState = IState;
 exports.IStore = IStore;
 exports.StateBindingInstruction = StateBindingInstruction;
 exports.StateDefaultConfiguration = StateDefaultConfiguration;
-exports.fromStore = fromStore;
+exports.fromState = fromState;
 //# sourceMappingURL=index.dev.cjs.map
