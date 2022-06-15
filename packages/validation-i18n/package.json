@@ -1,6 +1,6 @@
 {
   "name": "@aurelia/validation-i18n",
-  "version": "2.0.1-dev.202206080510",
+  "version": "2.0.1-dev.202206150847",
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.mjs",
   "exports": {
@@ -45,15 +45,15 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurelia/i18n": "2.0.1-dev.202206080510",
-    "@aurelia/kernel": "2.0.1-dev.202206080510",
-    "@aurelia/metadata": "2.0.1-dev.202206080510",
-    "@aurelia/platform": "2.0.1-dev.202206080510",
-    "@aurelia/platform-browser": "2.0.1-dev.202206080510",
-    "@aurelia/runtime": "2.0.1-dev.202206080510",
-    "@aurelia/runtime-html": "2.0.1-dev.202206080510",
-    "@aurelia/validation": "2.0.1-dev.202206080510",
-    "@aurelia/validation-html": "2.0.1-dev.202206080510",
+    "@aurelia/i18n": "2.0.1-dev.202206150847",
+    "@aurelia/kernel": "2.0.1-dev.202206150847",
+    "@aurelia/metadata": "2.0.1-dev.202206150847",
+    "@aurelia/platform": "2.0.1-dev.202206150847",
+    "@aurelia/platform-browser": "2.0.1-dev.202206150847",
+    "@aurelia/runtime": "2.0.1-dev.202206150847",
+    "@aurelia/runtime-html": "2.0.1-dev.202206150847",
+    "@aurelia/validation": "2.0.1-dev.202206150847",
+    "@aurelia/validation-html": "2.0.1-dev.202206150847",
     "i18next": "^17.0.0"
   },
   "devDependencies": {
