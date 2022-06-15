@@ -23,6 +23,11 @@ export declare type HistoryStrategy = 'none' | 'replace' | 'push';
 export declare type SameUrlStrategy = 'ignore' | 'reload';
 export declare type ValueOrFunc<T extends string> = T | ((instructions: ViewportInstructionTree) => T);
 export interface IRouterOptions extends Partial<RouterOptions> {
+    /**
+     * Set a custom routing root by setting this path.
+     * When not set, path from the `document.baseURI` is used by default.
+     */
+    basePath?: string | null;
 }
 export declare class RouterOptions {
     readonly useUrlFragmentHash: boolean;

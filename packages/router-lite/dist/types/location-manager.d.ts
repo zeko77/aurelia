@@ -5,26 +5,7 @@ export interface IPopStateEvent extends PopStateEvent {
 }
 export interface IHashChangeEvent extends HashChangeEvent {
 }
-export declare const IBaseHrefProvider: import("@aurelia/kernel").InterfaceSymbol<IBaseHrefProvider>;
-export interface IBaseHrefProvider extends BrowserBaseHrefProvider {
-}
-export declare class BaseHref {
-    readonly path: string;
-    readonly rootedPath: string;
-    constructor(path: string, rootedPath: string);
-}
-/**
- * Default browser base href provider.
- *
- * Retrieves the base href based on the `<base>` element from `window.document.head`
- *
- * This is internal API for the moment. The shape of this API (as well as in which package it resides) is also likely temporary.
- */
-export declare class BrowserBaseHrefProvider {
-    private readonly window;
-    constructor(window: IWindow);
-    getBaseHref(): BaseHref | null;
-}
+export declare const IBaseHref: import("@aurelia/kernel").InterfaceSymbol<URL>;
 export declare const ILocationManager: import("@aurelia/kernel").InterfaceSymbol<ILocationManager>;
 export interface ILocationManager extends BrowserLocationManager {
 }
@@ -41,10 +22,9 @@ export declare class BrowserLocationManager {
     private readonly history;
     private readonly location;
     private readonly window;
-    private readonly baseHrefProvider;
     private readonly baseHref;
     private eventId;
-    constructor(logger: ILogger, events: IRouterEvents, history: IHistory, location: ILocation, window: IWindow, baseHrefProvider: IBaseHrefProvider);
+    constructor(logger: ILogger, events: IRouterEvents, history: IHistory, location: ILocation, window: IWindow, baseHref: URL);
     startListening(): void;
     stopListening(): void;
     private onPopState;
@@ -56,4 +36,8 @@ export declare class BrowserLocationManager {
     addBaseHref(path: string): string;
     removeBaseHref(path: string): string;
 }
+/**
+ * Strip trailing `/index.html` and trailing `/` from the path, if present.
+ */
+export declare function normalizePath(path: string): string;
 //# sourceMappingURL=location-manager.d.ts.map

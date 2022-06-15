@@ -403,53 +403,19 @@ class NavigationErrorEvent {
     }
 }
 
-const IBaseHrefProvider = kernel.DI.createInterface('IBaseHrefProvider', x => x.singleton(BrowserBaseHrefProvider));
-class BaseHref {
-    constructor(path, rootedPath) {
-        this.path = path;
-        this.rootedPath = rootedPath;
-    }
-}
-let BrowserBaseHrefProvider = class BrowserBaseHrefProvider {
-    constructor(window) {
-        this.window = window;
-    }
-    getBaseHref() {
-        var _a;
-        const base = this.window.document.head.querySelector('base');
-        if (base === null) {
-            return null;
-        }
-        const rootedPath = normalizePath(base.href);
-        const path = normalizePath((_a = base.getAttribute('href')) !== null && _a !== void 0 ? _a : '');
-        return new BaseHref(path, rootedPath);
-    }
-};
-BrowserBaseHrefProvider = __decorate([
-    __param(0, runtimeHtml.IWindow)
-], BrowserBaseHrefProvider);
+const IBaseHref = kernel.DI.createInterface('IBaseHref');
 const ILocationManager = kernel.DI.createInterface('ILocationManager', x => x.singleton(BrowserLocationManager));
 let BrowserLocationManager = class BrowserLocationManager {
-    constructor(logger, events, history, location, window, baseHrefProvider) {
-        var _a;
+    constructor(logger, events, history, location, window, baseHref) {
         this.logger = logger;
         this.events = events;
         this.history = history;
         this.location = location;
         this.window = window;
-        this.baseHrefProvider = baseHrefProvider;
+        this.baseHref = baseHref;
         this.eventId = 0;
-        this.logger = logger.root.scopeTo('LocationManager');
-        const baseHref = baseHrefProvider.getBaseHref();
-        if (baseHref === null) {
-            const origin = (_a = location.origin) !== null && _a !== void 0 ? _a : '';
-            const baseHref = this.baseHref = new BaseHref('', normalizePath(origin));
-            this.logger.warn(`no baseHref provided, defaulting to origin '${baseHref.rootedPath}' (normalized from '${origin}')`);
-        }
-        else {
-            this.baseHref = baseHref;
-            this.logger.debug(`baseHref set to path: '${baseHref.path}', rootedPath: '${baseHref.rootedPath}'`);
-        }
+        logger = this.logger = logger.root.scopeTo('LocationManager');
+        logger.debug(`baseHref set to path: ${baseHref.href}`);
     }
     startListening() {
         this.logger.trace(`startListening()`);
@@ -505,7 +471,7 @@ let BrowserLocationManager = class BrowserLocationManager {
     addBaseHref(path) {
         const initialPath = path;
         let fullPath;
-        let base = this.baseHref.rootedPath;
+        let base = this.baseHref.href;
         if (base.endsWith('/')) {
             base = base.slice(0, -1);
         }
@@ -523,8 +489,9 @@ let BrowserLocationManager = class BrowserLocationManager {
     }
     removeBaseHref(path) {
         const $path = path;
-        if (path.startsWith(this.baseHref.path)) {
-            path = path.slice(this.baseHref.path.length);
+        const basePath = this.baseHref.pathname;
+        if (path.startsWith(basePath)) {
+            path = path.slice(basePath.length);
         }
         path = normalizePath(path);
         this.logger.trace(`removeBaseHref(path:'${$path}') -> '${path}'`);
@@ -543,7 +510,7 @@ BrowserLocationManager = __decorate([
     __param(2, runtimeHtml.IHistory),
     __param(3, runtimeHtml.ILocation),
     __param(4, runtimeHtml.IWindow),
-    __param(5, IBaseHrefProvider)
+    __param(5, IBaseHref)
 ], BrowserLocationManager);
 function normalizePath(path) {
     let start;
@@ -4164,17 +4131,27 @@ const DefaultResources = [
     exports.HrefCustomAttribute,
 ];
 function configure(container, config) {
-    return container.register(runtimeHtml.AppTask.hydrated(kernel.IContainer, RouteContext.setRoot), runtimeHtml.AppTask.afterActivate(IRouter, router => {
-        if (metadata.isObject(config)) {
-            if (typeof config === 'function') {
-                return config(router);
-            }
-            else {
-                return router.start(config, true);
-            }
+    var _a;
+    let activation;
+    let basePath = null;
+    if (metadata.isObject(config)) {
+        if (typeof config === 'function') {
+            activation = router => config(router);
         }
-        return router.start({}, true);
-    }), runtimeHtml.AppTask.afterDeactivate(IRouter, router => {
+        else {
+            basePath = (_a = config.basePath) !== null && _a !== void 0 ? _a : null;
+            activation = router => router.start(config, true);
+        }
+    }
+    else {
+        activation = router => router.start({}, true);
+    }
+    return container.register(kernel.Registration.cachedCallback(IBaseHref, (handler, _, __) => {
+        const window = handler.get(runtimeHtml.IWindow);
+        const url = new URL(window.document.baseURI);
+        url.pathname = normalizePath(basePath !== null && basePath !== void 0 ? basePath : url.pathname);
+        return url;
+    }), runtimeHtml.AppTask.hydrated(kernel.IContainer, RouteContext.setRoot), runtimeHtml.AppTask.afterActivate(IRouter, activation), runtimeHtml.AppTask.afterDeactivate(IRouter, router => {
         router.stop();
     }), ...DefaultComponents, ...DefaultResources);
 }
@@ -4254,7 +4231,6 @@ exports.CompositeSegmentExpression = CompositeSegmentExpression;
 exports.DefaultComponents = DefaultComponents;
 exports.DefaultResources = DefaultResources;
 exports.HrefCustomAttributeRegistration = HrefCustomAttributeRegistration;
-exports.IBaseHrefProvider = IBaseHrefProvider;
 exports.ILocationManager = ILocationManager;
 exports.IRouteContext = IRouteContext;
 exports.IRouter = IRouter;

@@ -399,53 +399,19 @@ class NavigationErrorEvent {
     }
 }
 
-const IBaseHrefProvider = DI.createInterface('IBaseHrefProvider', x => x.singleton(BrowserBaseHrefProvider));
-class BaseHref {
-    constructor(path, rootedPath) {
-        this.path = path;
-        this.rootedPath = rootedPath;
-    }
-}
-let BrowserBaseHrefProvider = class BrowserBaseHrefProvider {
-    constructor(window) {
-        this.window = window;
-    }
-    getBaseHref() {
-        var _a;
-        const base = this.window.document.head.querySelector('base');
-        if (base === null) {
-            return null;
-        }
-        const rootedPath = normalizePath(base.href);
-        const path = normalizePath((_a = base.getAttribute('href')) !== null && _a !== void 0 ? _a : '');
-        return new BaseHref(path, rootedPath);
-    }
-};
-BrowserBaseHrefProvider = __decorate([
-    __param(0, IWindow)
-], BrowserBaseHrefProvider);
+const IBaseHref = DI.createInterface('IBaseHref');
 const ILocationManager = DI.createInterface('ILocationManager', x => x.singleton(BrowserLocationManager));
 let BrowserLocationManager = class BrowserLocationManager {
-    constructor(logger, events, history, location, window, baseHrefProvider) {
-        var _a;
+    constructor(logger, events, history, location, window, baseHref) {
         this.logger = logger;
         this.events = events;
         this.history = history;
         this.location = location;
         this.window = window;
-        this.baseHrefProvider = baseHrefProvider;
+        this.baseHref = baseHref;
         this.eventId = 0;
-        this.logger = logger.root.scopeTo('LocationManager');
-        const baseHref = baseHrefProvider.getBaseHref();
-        if (baseHref === null) {
-            const origin = (_a = location.origin) !== null && _a !== void 0 ? _a : '';
-            const baseHref = this.baseHref = new BaseHref('', normalizePath(origin));
-            this.logger.warn(`no baseHref provided, defaulting to origin '${baseHref.rootedPath}' (normalized from '${origin}')`);
-        }
-        else {
-            this.baseHref = baseHref;
-            this.logger.debug(`baseHref set to path: '${baseHref.path}', rootedPath: '${baseHref.rootedPath}'`);
-        }
+        logger = this.logger = logger.root.scopeTo('LocationManager');
+        logger.debug(`baseHref set to path: ${baseHref.href}`);
     }
     startListening() {
         this.logger.trace(`startListening()`);
@@ -501,7 +467,7 @@ let BrowserLocationManager = class BrowserLocationManager {
     addBaseHref(path) {
         const initialPath = path;
         let fullPath;
-        let base = this.baseHref.rootedPath;
+        let base = this.baseHref.href;
         if (base.endsWith('/')) {
             base = base.slice(0, -1);
         }
@@ -519,8 +485,9 @@ let BrowserLocationManager = class BrowserLocationManager {
     }
     removeBaseHref(path) {
         const $path = path;
-        if (path.startsWith(this.baseHref.path)) {
-            path = path.slice(this.baseHref.path.length);
+        const basePath = this.baseHref.pathname;
+        if (path.startsWith(basePath)) {
+            path = path.slice(basePath.length);
         }
         path = normalizePath(path);
         this.logger.trace(`removeBaseHref(path:'${$path}') -> '${path}'`);
@@ -539,7 +506,7 @@ BrowserLocationManager = __decorate([
     __param(2, IHistory),
     __param(3, ILocation),
     __param(4, IWindow),
-    __param(5, IBaseHrefProvider)
+    __param(5, IBaseHref)
 ], BrowserLocationManager);
 function normalizePath(path) {
     let start;
@@ -4160,17 +4127,27 @@ const DefaultResources = [
     HrefCustomAttribute,
 ];
 function configure(container, config) {
-    return container.register(AppTask.hydrated(IContainer, RouteContext.setRoot), AppTask.afterActivate(IRouter, router => {
-        if (isObject(config)) {
-            if (typeof config === 'function') {
-                return config(router);
-            }
-            else {
-                return router.start(config, true);
-            }
+    var _a;
+    let activation;
+    let basePath = null;
+    if (isObject(config)) {
+        if (typeof config === 'function') {
+            activation = router => config(router);
         }
-        return router.start({}, true);
-    }), AppTask.afterDeactivate(IRouter, router => {
+        else {
+            basePath = (_a = config.basePath) !== null && _a !== void 0 ? _a : null;
+            activation = router => router.start(config, true);
+        }
+    }
+    else {
+        activation = router => router.start({}, true);
+    }
+    return container.register(Registration.cachedCallback(IBaseHref, (handler, _, __) => {
+        const window = handler.get(IWindow);
+        const url = new URL(window.document.baseURI);
+        url.pathname = normalizePath(basePath !== null && basePath !== void 0 ? basePath : url.pathname);
+        return url;
+    }), AppTask.hydrated(IContainer, RouteContext.setRoot), AppTask.afterActivate(IRouter, activation), AppTask.afterDeactivate(IRouter, router => {
         router.stop();
     }), ...DefaultComponents, ...DefaultResources);
 }
@@ -4241,5 +4218,5 @@ class ScrollStateManager {
     }
 }
 
-export { AST, ActionExpression, AuNavId, ComponentAgent, ComponentExpression, CompositeSegmentExpression, DefaultComponents, DefaultResources, ExpressionKind, HrefCustomAttribute, HrefCustomAttributeRegistration, IBaseHrefProvider, ILocationManager, IRouteContext, IRouter, IRouterEvents, IStateManager, IViewportInstruction, LoadCustomAttribute, LoadCustomAttributeRegistration, LocationChangeEvent, Navigation, NavigationCancelEvent, NavigationEndEvent, NavigationErrorEvent, NavigationOptions, NavigationStartEvent, ParameterExpression, ParameterListExpression, Route, RouteConfig, RouteContext, RouteDefinition, RouteExpression, RouteNode, RouteTree, Router, RouterConfiguration, RouterOptions, RouterRegistration, ScopedSegmentExpression, SegmentExpression, SegmentGroupExpression, Transition, ViewportAgent, ViewportCustomElement, ViewportCustomElementRegistration, ViewportExpression, isManagedState, route, toManagedState };
+export { AST, ActionExpression, AuNavId, ComponentAgent, ComponentExpression, CompositeSegmentExpression, DefaultComponents, DefaultResources, ExpressionKind, HrefCustomAttribute, HrefCustomAttributeRegistration, ILocationManager, IRouteContext, IRouter, IRouterEvents, IStateManager, IViewportInstruction, LoadCustomAttribute, LoadCustomAttributeRegistration, LocationChangeEvent, Navigation, NavigationCancelEvent, NavigationEndEvent, NavigationErrorEvent, NavigationOptions, NavigationStartEvent, ParameterExpression, ParameterListExpression, Route, RouteConfig, RouteContext, RouteDefinition, RouteExpression, RouteNode, RouteTree, Router, RouterConfiguration, RouterOptions, RouterRegistration, ScopedSegmentExpression, SegmentExpression, SegmentGroupExpression, Transition, ViewportAgent, ViewportCustomElement, ViewportCustomElementRegistration, ViewportExpression, isManagedState, route, toManagedState };
 //# sourceMappingURL=index.dev.mjs.map
