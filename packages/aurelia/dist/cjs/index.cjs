@@ -200,6 +200,8 @@ exports.bindable = e.bindable;
 
 exports.bindingCommand = e.bindingCommand;
 
+exports.capture = e.capture;
+
 exports.children = e.children;
 
 exports.coercer = e.coercer;
@@ -219,6 +221,8 @@ exports.lifecycleHooks = e.lifecycleHooks;
 exports.renderer = e.renderer;
 
 exports.shadowCSS = e.shadowCSS;
+
+exports.strict = e.strict;
 
 exports.templateCompilerHooks = e.templateCompilerHooks;
 

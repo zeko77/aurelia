@@ -2055,8 +2055,11 @@ function createAndAppendNodes(log, node, vi, append) {
 function createNode(log, node, vi, append) {
     var _a, _b;
     const ctx = node.context;
-    let collapse = 0;
     const originalInstruction = vi.clone();
+    let rr = vi.recognizedRoute;
+    if (rr !== null)
+        return createConfiguredNode(log, node, vi, append, rr, originalInstruction);
+    let collapse = 0;
     let path = vi.component.value;
     let cur = vi;
     while (cur.children.length === 1) {
@@ -2069,7 +2072,7 @@ function createNode(log, node, vi, append) {
             break;
         }
     }
-    const rr = ctx.recognize(path);
+    rr = ctx.recognize(path);
     log.trace('createNode recognized route: %s', rr);
     const residue = (_a = rr === null || rr === void 0 ? void 0 : rr.residue) !== null && _a !== void 0 ? _a : null;
     log.trace('createNode residue:', residue);
@@ -2131,8 +2134,7 @@ function createConfiguredNode(log, node, vi, append, rr, originalVi, route = rr.
                 instruction: vi,
                 originalInstruction: originalVi,
                 params: {
-                    ...node.params,
-                    ...rr.route.params
+                    ...rr.route.params,
                 },
                 queryParams: rt.queryParams,
                 fragment: rt.fragment,
@@ -2491,7 +2493,14 @@ let Router = class Router {
         (_a = this.locationChangeSubscription) === null || _a === void 0 ? void 0 : _a.dispose();
     }
     load(instructionOrInstructions, options) {
-        const instructions = this.createViewportInstructions(instructionOrInstructions, options);
+        var _a;
+        let instructions = null;
+        const params = options === null || options === void 0 ? void 0 : options.params;
+        if (typeof instructionOrInstructions === 'string' && typeof params === 'object' && params !== null) {
+            const ctx = this.resolveContext((_a = options === null || options === void 0 ? void 0 : options.context) !== null && _a !== void 0 ? _a : null);
+            instructions = ctx.generateTree(instructionOrInstructions, params);
+        }
+        instructions !== null && instructions !== void 0 ? instructions : (instructions = this.createViewportInstructions(instructionOrInstructions, options));
         this.logger.trace('load(instructions:%s)', instructions);
         return this.enqueue(instructions, 'api', null, null);
     }
@@ -2772,28 +2781,29 @@ Router = __decorate([
 
 const IViewportInstruction = DI.createInterface('IViewportInstruction');
 class ViewportInstruction {
-    constructor(context, append, open, close, component, viewport, params, children) {
+    constructor(context, append, open, close, recognizedRoute, component, viewport, params, children) {
         this.context = context;
         this.append = append;
         this.open = open;
         this.close = close;
+        this.recognizedRoute = recognizedRoute;
         this.component = component;
         this.viewport = viewport;
         this.params = params;
         this.children = children;
     }
     static create(instruction, context) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
         if (instruction instanceof ViewportInstruction) {
             return instruction;
         }
         if (isPartialViewportInstruction(instruction)) {
             const component = TypedNavigationInstruction.create(instruction.component);
             const children = (_b = (_a = instruction.children) === null || _a === void 0 ? void 0 : _a.map(ViewportInstruction.create)) !== null && _b !== void 0 ? _b : [];
-            return new ViewportInstruction((_d = (_c = instruction.context) !== null && _c !== void 0 ? _c : context) !== null && _d !== void 0 ? _d : null, (_e = instruction.append) !== null && _e !== void 0 ? _e : false, (_f = instruction.open) !== null && _f !== void 0 ? _f : 0, (_g = instruction.close) !== null && _g !== void 0 ? _g : 0, component, (_h = instruction.viewport) !== null && _h !== void 0 ? _h : null, (_j = instruction.params) !== null && _j !== void 0 ? _j : null, children);
+            return new ViewportInstruction((_d = (_c = instruction.context) !== null && _c !== void 0 ? _c : context) !== null && _d !== void 0 ? _d : null, (_e = instruction.append) !== null && _e !== void 0 ? _e : false, (_f = instruction.open) !== null && _f !== void 0 ? _f : 0, (_g = instruction.close) !== null && _g !== void 0 ? _g : 0, (_h = instruction.recognizedRoute) !== null && _h !== void 0 ? _h : null, component, (_j = instruction.viewport) !== null && _j !== void 0 ? _j : null, (_k = instruction.params) !== null && _k !== void 0 ? _k : null, children);
         }
         const typedInstruction = TypedNavigationInstruction.create(instruction);
-        return new ViewportInstruction(context !== null && context !== void 0 ? context : null, false, 0, 0, typedInstruction, null, null, []);
+        return new ViewportInstruction(context !== null && context !== void 0 ? context : null, false, 0, 0, null, typedInstruction, null, null, []);
     }
     contains(other) {
         const thisChildren = this.children;
@@ -2830,7 +2840,7 @@ class ViewportInstruction {
         return true;
     }
     clone() {
-        return new ViewportInstruction(this.context, this.append, this.open, this.close, this.component.clone(), this.viewport, this.params === null ? null : { ...this.params }, [...this.children]);
+        return new ViewportInstruction(this.context, this.append, this.open, this.close, this.recognizedRoute, this.component.clone(), this.viewport, this.params === null ? null : { ...this.params }, [...this.children]);
     }
     toUrlComponent(recursive = true) {
         const component = this.component.toUrlComponent();
@@ -2905,7 +2915,9 @@ class ViewportInstructionTree {
             return new ViewportInstructionTree($options, instructionOrInstructions.isAbsolute, instructionOrInstructions.children.map(x => ViewportInstruction.create(x, $options.context)), instructionOrInstructions.queryParams, instructionOrInstructions.fragment);
         }
         if (instructionOrInstructions instanceof Array) {
-            return new ViewportInstructionTree($options, false, instructionOrInstructions.map(x => ViewportInstruction.create(x, $options.context)), emptyQuery, null);
+            return new ViewportInstructionTree($options, false, instructionOrInstructions.map(x => ViewportInstruction.create(x, $options.context)), $options.queryParams !== null
+                ? new URLSearchParams($options.queryParams)
+                : emptyQuery, null);
         }
         if (typeof instructionOrInstructions === 'string') {
             const expr = RouteExpression.parse(instructionOrInstructions, $options.useUrlFragmentHash);
@@ -3406,11 +3418,12 @@ class ComponentAgent {
 const IRouteContext = DI.createInterface('IRouteContext');
 const RESIDUE = 'au$residue';
 class RouteContext {
-    constructor(viewportAgent, parent, component, definition, parentContainer, router) {
+    constructor(viewportAgent, parent, component, definition, parentContainer, _router) {
         this.parent = parent;
         this.component = component;
         this.definition = definition;
         this.parentContainer = parentContainer;
+        this._router = _router;
         this.childViewportAgents = [];
         this.childRoutes = [];
         this._resolved = null;
@@ -3442,7 +3455,7 @@ class RouteContext {
         const navModel = this._navigationModel = new NavigationModel([]);
         container
             .get(IRouterEvents)
-            .subscribe('au:router:navigation-end', () => navModel.setIsActive(router, this));
+            .subscribe('au:router:navigation-end', () => navModel.setIsActive(_router, this));
         this.processDefinition(definition);
     }
     get isRoot() {
@@ -3727,6 +3740,58 @@ class RouteContext {
             return defaultExport;
         });
     }
+    _generatePathInternal(id, params) {
+        if (id == null)
+            return null;
+        const def = this.childRoutes.find(x => x.id === id);
+        if (def === void 0)
+            return null;
+        let path = def.path[0];
+        const consumed = Object.create(null);
+        const unconsumed = Object.create(null);
+        let hasUnconsumedParams = false;
+        if (typeof params === 'object' && params !== null) {
+            const keys = Object.keys(params);
+            for (const key of keys) {
+                const value = params[key];
+                const re = new RegExp(`[*:]${key}[?]?`);
+                const matches = re.exec(path);
+                if (matches === null) {
+                    unconsumed[key] = value;
+                    hasUnconsumedParams = true;
+                    continue;
+                }
+                if (value != null && String(value).length > 0) {
+                    path = path.replace(matches[0], value);
+                    consumed[key] = value;
+                }
+            }
+        }
+        return {
+            path: path.replace(/\/[*:][^/]+[?]/g, '').replace(/[*:][^/]+[?]\//g, ''),
+            def,
+            consumed,
+            unconsumed: hasUnconsumedParams ? unconsumed : null,
+        };
+    }
+    generateTree(id, params) {
+        const val = this._generatePathInternal(id, params);
+        if (val === null)
+            return null;
+        const { path, def, consumed, unconsumed } = val;
+        const route = new ConfigurableRoute(path, def.caseSensitive, def);
+        const endpoint = new Endpoint(route, Object.keys(consumed));
+        const rr = new RecognizedRoute(endpoint, consumed);
+        const instruction = {
+            recognizedRoute: new $RecognizedRoute(rr, null),
+            component: path,
+            context: this,
+        };
+        return this._router.createViewportInstructions([instruction], {
+            context: this,
+            queryParams: unconsumed
+        });
+    }
     toString() {
         const vpAgents = this.childViewportAgents;
         const viewports = vpAgents.map(String).join(',');
@@ -3954,32 +4019,9 @@ let LoadCustomAttribute = class LoadCustomAttribute {
     valueChanged() {
         const useHash = this.router.options.useUrlFragmentHash;
         if (this.route !== null && this.route !== void 0 && this.ctx.allResolved === null) {
-            const def = this.ctx.childRoutes.find(x => x.id === this.route);
-            if (def !== void 0) {
-                const parentPath = this.ctx.node.computeAbsolutePath();
-                let path = def.path[0];
-                if (typeof this.params === 'object' && this.params !== null) {
-                    const keys = Object.keys(this.params);
-                    for (const key of keys) {
-                        const value = this.params[key];
-                        if (value != null && String(value).length > 0) {
-                            path = path.replace(new RegExp(`[*:]${key}[?]?`), value);
-                        }
-                    }
-                }
-                path = path.replace(/\/[*:][^/]+[?]/g, '').replace(/[*:][^/]+[?]\//g, '');
-                if (parentPath) {
-                    if (path) {
-                        this.href = `${useHash ? '#' : ''}${[parentPath, path].join('/')}`;
-                    }
-                    else {
-                        this.href = `${useHash ? '#' : ''}${parentPath}`;
-                    }
-                }
-                else {
-                    this.href = `${useHash ? '#' : ''}${path}`;
-                }
-                this.instructions = this.router.createViewportInstructions(`${useHash ? '#' : ''}${path}`, { context: this.ctx });
+            const instructions = this.ctx.generateTree(this.route, this.params);
+            if (instructions !== null) {
+                this.href = (this.instructions = instructions).toUrl(useHash);
             }
             else {
                 if (typeof this.params === 'object' && this.params !== null) {
@@ -3988,7 +4030,7 @@ let LoadCustomAttribute = class LoadCustomAttribute {
                 else {
                     this.instructions = this.router.createViewportInstructions(this.route, { context: this.ctx });
                 }
-                this.href = this.instructions.toUrl(this.router.options.useUrlFragmentHash);
+                this.href = this.instructions.toUrl(useHash);
             }
         }
         else {

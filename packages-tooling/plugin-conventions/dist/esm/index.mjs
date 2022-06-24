@@ -353,6 +353,7 @@ function stripMetaData(rawHtml) {
     let shadowMode = null;
     let containerless = false;
     let hasSlot = false;
+    let capture = false;
     const bindables = {};
     const aliases = [];
     const toRemove = [];
@@ -380,6 +381,10 @@ function stripMetaData(rawHtml) {
             aliases.push(...aliasArray);
             toRemove.push(...ranges);
         });
+        stripCapture(node, (ranges) => {
+            capture = true;
+            toRemove.push(...ranges);
+        });
         if (node.tagName === 'slot') {
             hasSlot = true;
         }
@@ -391,7 +396,7 @@ function stripMetaData(rawHtml) {
         lastIdx = end;
     });
     html += rawHtml.slice(lastIdx);
-    return { html, deps, shadowMode, containerless, hasSlot, bindables, aliases };
+    return { html, deps, shadowMode, containerless, hasSlot, bindables, aliases, capture };
 }
 function traverse(tree, cb) {
     tree.childNodes.forEach((n) => {
@@ -493,6 +498,13 @@ function stripBindable(node, cb) {
         cb(bindables, ranges);
     });
 }
+function stripCapture(node, cb) {
+    return stripTag(node, 'capture', (attrs, ranges) => {
+        cb(ranges);
+    }) || stripAttribute(node, 'template', 'capture', (value, ranges) => {
+        cb(ranges);
+    });
+}
 function toBindingMode(mode) {
     if (mode) {
         const normalizedMode = kebabCase(mode);
@@ -510,7 +522,7 @@ function toBindingMode(mode) {
 function preprocessHtmlTemplate(unit, options, hasViewModel) {
     const name = resourceName(unit.path);
     const stripped = stripMetaData(unit.contents);
-    const { html, deps, containerless, hasSlot, bindables, aliases } = stripped;
+    const { html, deps, containerless, hasSlot, bindables, aliases, capture } = stripped;
     let { shadowMode } = stripped;
     if (unit.filePair) {
         const basename = path.basename(unit.filePair, path.extname(unit.filePair));
@@ -589,14 +601,28 @@ export const dependencies = [ ${viewDeps.join(', ')} ];
     if (containerless) {
         m.append(`export const containerless = true;\n`);
     }
+    if (capture) {
+        m.append(`export const capture = true;\n`);
+    }
     if (Object.keys(bindables).length > 0) {
         m.append(`export const bindables = ${JSON.stringify(bindables)};\n`);
     }
     if (aliases.length > 0) {
         m.append(`export const aliases = ${JSON.stringify(aliases)};\n`);
     }
+    const definitionProperties = [
+        'name',
+        'template',
+        'dependencies',
+        shadowMode !== null ? 'shadowOptions' : '',
+        containerless ? 'containerless' : '',
+        capture ? 'capture' : '',
+        Object.keys(bindables).length > 0 ? 'bindables' : '',
+        aliases.length > 0 ? 'aliases' : '',
+    ].filter(Boolean);
+    const definition = `{ ${definitionProperties.join(', ')} }`;
     if (hmrEnabled) {
-        m.append(`const _e = CustomElement.define({ name, template, dependencies${shadowMode !== null ? ', shadowOptions' : ''}${containerless ? ', containerless' : ''}${Object.keys(bindables).length > 0 ? ', bindables' : ''}${aliases.length > 0 ? ', aliases' : ''} });
+        m.append(`const _e = CustomElement.define(${definition});
       export function register(container) {
         container.register(_e);
       }`);
@@ -605,7 +631,7 @@ export const dependencies = [ ${viewDeps.join(', ')} ];
         m.append(`let _e;
 export function register(container) {
   if (!_e) {
-    _e = CustomElement.define({ name, template, dependencies${shadowMode !== null ? ', shadowOptions' : ''}${containerless ? ', containerless' : ''}${Object.keys(bindables).length > 0 ? ', bindables' : ''}${aliases.length > 0 ? ', aliases' : ''} });
+    _e = CustomElement.define(${definition});
   }
   container.register(_e);
 }

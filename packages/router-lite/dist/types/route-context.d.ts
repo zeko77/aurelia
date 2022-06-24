@@ -26,6 +26,7 @@ export declare class RouteContext {
     readonly component: CustomElementDefinition;
     readonly definition: RouteDefinition;
     readonly parentContainer: IContainer;
+    private readonly _router;
     private readonly childViewportAgents;
     readonly root: IRouteContext;
     get isRoot(): boolean;
@@ -63,7 +64,7 @@ export declare class RouteContext {
     private _childRoutesConfigured;
     private readonly _navigationModel;
     get navigationModel(): INavigationModel;
-    constructor(viewportAgent: ViewportAgent | null, parent: IRouteContext | null, component: CustomElementDefinition, definition: RouteDefinition, parentContainer: IContainer, router: IRouter);
+    constructor(viewportAgent: ViewportAgent | null, parent: IRouteContext | null, component: CustomElementDefinition, definition: RouteDefinition, parentContainer: IContainer, _router: IRouter);
     private processDefinition;
     /**
      * Create a new `RouteContext` and register it in the provided container.

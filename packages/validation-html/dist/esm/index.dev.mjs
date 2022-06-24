@@ -542,11 +542,15 @@ let ValidateBindingBehavior = class ValidateBindingBehavior extends BindingInter
     }
     handleValidationEvent(event) {
         var _a;
+        if (this.validatedOnce || !this.isChangeTrigger)
+            return;
         const triggerEvent = this.triggerEvent;
+        if (triggerEvent === null)
+            return;
         const propertyName = (_a = this.bindingInfo.propertyInfo) === null || _a === void 0 ? void 0 : _a.propertyName;
-        if (propertyName !== void 0 && triggerEvent !== null && this.isChangeTrigger) {
-            this.validatedOnce = event.addedResults.find((r) => r.result.propertyName === propertyName) !== void 0;
-        }
+        if (propertyName === void 0)
+            return;
+        this.validatedOnce = event.addedResults.find((r) => r.result.propertyName === propertyName) !== void 0;
     }
     processBindingExpressionArgs(flags) {
         const scope = this.scope;

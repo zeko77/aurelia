@@ -94,6 +94,9 @@ export declare class RouterOptions {
     clone(): RouterOptions;
     toString(): string;
 }
+export declare type LoadOptions = INavigationOptions & {
+    params?: Params;
+};
 export interface INavigationOptions extends Partial<NavigationOptions> {
 }
 export declare class NavigationOptions extends RouterOptions {
@@ -213,7 +216,7 @@ export declare class Router {
      * router.load('product-detail/37', { context: this });
      * ```
      */
-    load(path: string, options?: INavigationOptions): Promise<boolean>;
+    load(path: string, options?: LoadOptions): Promise<boolean>;
     /**
      * Loads the provided paths as siblings.
      *
@@ -223,7 +226,7 @@ export declare class Router {
      * router.load(['category/50/product/20', 'widget/30']);
      * ```
      */
-    load(paths: readonly string[], options?: INavigationOptions): Promise<boolean>;
+    load(paths: readonly string[], options?: LoadOptions): Promise<boolean>;
     /**
      * Loads the provided component type. Must be a custom element.
      *
@@ -234,7 +237,7 @@ export declare class Router {
      * router.load(CustomElement.define({ name: 'greeter', template: 'Hello!' }));
      * ```
      */
-    load(componentType: RouteType, options?: INavigationOptions): Promise<boolean>;
+    load(componentType: RouteType, options?: LoadOptions): Promise<boolean>;
     /**
      * Loads the provided component types. Must be custom elements.
      *
@@ -244,7 +247,7 @@ export declare class Router {
      * router.load([MemberList, OrganizationList]);
      * ```
      */
-    load(componentTypes: readonly RouteType[], options?: INavigationOptions): Promise<boolean>;
+    load(componentTypes: readonly RouteType[], options?: LoadOptions): Promise<boolean>;
     /**
      * Loads the provided component definition. May or may not be pre-compiled.
      *
@@ -254,7 +257,7 @@ export declare class Router {
      * router.load({ name: 'greeter', template: 'Hello!' });
      * ```
      */
-    load(componentDefinition: PartialCustomElementDefinition, options?: INavigationOptions): Promise<boolean>;
+    load(componentDefinition: PartialCustomElementDefinition, options?: LoadOptions): Promise<boolean>;
     /**
      * Loads the provided component instance.
      *
@@ -267,7 +270,7 @@ export declare class Router {
      * router.load(greeter);
      * ```
      */
-    load(componentInstance: IRouteViewModel, options?: INavigationOptions): Promise<boolean>;
+    load(componentInstance: IRouteViewModel, options?: LoadOptions): Promise<boolean>;
     /**
      * Loads the provided ViewportInstruction, with component specified in any of the ways as described
      * in the other method overloads, and optional additional properties.
@@ -292,8 +295,8 @@ export declare class Router {
      * })
      * ```
      */
-    load(viewportInstruction: IViewportInstruction, options?: INavigationOptions): boolean | Promise<boolean>;
-    load(instructionOrInstructions: NavigationInstruction | readonly NavigationInstruction[], options?: INavigationOptions): boolean | Promise<boolean>;
+    load(viewportInstruction: IViewportInstruction, options?: LoadOptions): boolean | Promise<boolean>;
+    load(instructionOrInstructions: NavigationInstruction | readonly NavigationInstruction[], options?: LoadOptions): boolean | Promise<boolean>;
     isActive(instructionOrInstructions: NavigationInstruction | readonly NavigationInstruction[], context: RouteContextLike): boolean;
     private readonly vpaLookup;
     /**

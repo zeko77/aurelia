@@ -1,6 +1,7 @@
 import { ICustomAttributeViewModel, IEventDelegator, IEventTarget, INode } from '@aurelia/runtime-html';
 import { IRouter } from '../router';
 import { IRouteContext } from '../route-context';
+import { Params } from '../instructions';
 import { IRouterEvents } from '../router-events';
 import { ILocationManager } from '../location-manager';
 export declare class LoadCustomAttribute implements ICustomAttributeViewModel {
@@ -12,7 +13,7 @@ export declare class LoadCustomAttribute implements ICustomAttributeViewModel {
     private readonly ctx;
     private readonly locationMgr;
     route: unknown;
-    params: unknown;
+    params?: Params;
     attribute: string;
     active: boolean;
     private href;

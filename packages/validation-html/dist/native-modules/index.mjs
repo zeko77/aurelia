@@ -449,9 +449,12 @@ let S = class ValidateBindingBehavior extends y {
     }
     handleValidationEvent(t) {
         var i;
+        if (this.validatedOnce || !this.isChangeTrigger) return;
         const s = this.triggerEvent;
+        if (null === s) return;
         const e = null === (i = this.bindingInfo.propertyInfo) || void 0 === i ? void 0 : i.propertyName;
-        if (void 0 !== e && null !== s && this.isChangeTrigger) this.validatedOnce = void 0 !== t.addedResults.find((t => t.result.propertyName === e));
+        if (void 0 === e) return;
+        this.validatedOnce = void 0 !== t.addedResults.find((t => t.result.propertyName === e));
     }
     processBindingExpressionArgs(t) {
         const i = this.scope;
