@@ -1,3 +1,6 @@
+export type { URLPatternInit } from './url-pattern-polyfill/url-pattern-parser.js';
+export { URLPattern, URLPatternInput, URLPatternResult } from './url-pattern-polyfill/url-pattern.js';
+
 export interface IConfigurableRoute<T> {
   readonly path: string;
   readonly caseSensitive?: boolean;
