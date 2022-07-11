@@ -72,13 +72,6 @@ function maybeStripPrefix(value: string, prefix: string): string {
   return value;
 }
 
-function maybeStripSuffix(value: string, suffix: string): string {
-  if (value.endsWith(suffix)) {
-    return value.substr(0, value.length - suffix.length);
-  }
-  return value;
-}
-
 export function treatAsIPv6Hostname(value: string | undefined): boolean {
   if (!value || value.length < 2) {
     return false;
@@ -200,7 +193,9 @@ export function canonicalizePort(port: string, protocol: string | undefined, isP
 }
 
 export function canonicalizeProtocol(protocol: string, isPattern: boolean) {
-  protocol = maybeStripSuffix(protocol, ':');
+  protocol = protocol.endsWith(':')
+    ? protocol.substring(0, protocol.length - 1)
+    : protocol;
 
   if (isPattern || protocol === '') {
     return protocol;

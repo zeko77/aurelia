@@ -20,8 +20,9 @@ describe('URLPattern', function () {
 
   /**
    * Note that the original data json is kept around to migrate new tests easily,
-   * just in case we need to support this polyfill for a longer time
+   * just in case we need to support this polyfill for a longer time.
    */
+
   function* getData(): Generator<URLPatternTestData> {
     yield new URLPatternTestData(
       [{ pathname: '/foo/bar' }],

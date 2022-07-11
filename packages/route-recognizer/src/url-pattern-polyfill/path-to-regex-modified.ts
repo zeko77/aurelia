@@ -367,11 +367,12 @@ export function tokensToFunction<P extends object = object>(
   const { encode = (x: string) => x, validate = true } = options;
 
   // Compile all the tokens into regexps.
-  const matches = tokens.map((token) => {
-    if (typeof token === "object") {
-      return new RegExp(`^(?:${token.pattern})$`, reFlags);
-    }
-  });
+  // const matches = tokens.map((token) => {
+  //   if (typeof token === "object") {
+  //     return new RegExp(`^(?:${token.pattern})$`, reFlags);
+  //   }
+  // });
+  const matches = (tokens as Key[]).map((token) =>  new RegExp(`^(?:${token.pattern})$`, reFlags));
 
   return (data: Record<string, any> | null | undefined) => {
     let path = "";
