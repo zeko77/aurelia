@@ -502,11 +502,11 @@ export function createAndAppendNodes(
       const params = vi.params ?? emptyObject;
       const rr = new $RecognizedRoute(
         new RecognizedRoute(
-          new Endpoint(
+          // new Endpoint(
             // TODO(sayan): probably need to do parameter matching and select the "most-matched" path instead of picking the first
             new ConfigurableRoute(rd.path[0], rd.caseSensitive, rd),
-            toArray(Object.values(params))
-          ),
+            // toArray(Object.values(params))
+          // ),
           params
         ),
         null);
@@ -596,7 +596,7 @@ function createConfiguredNode(
   append: boolean,
   rr: $RecognizedRoute,
   originalVi: ViewportInstruction<ITypedNavigationInstruction_ResolvedComponent> | null,
-  route: ConfigurableRoute<RouteDefinition | Promise<RouteDefinition>> = rr.route.endpoint.route,
+  route: ConfigurableRoute<RouteDefinition | Promise<RouteDefinition>> = rr.route.route,
 ): RouteNode | Promise<RouteNode> {
   const ctx = node.context;
   const rt = node.tree;
@@ -621,7 +621,7 @@ function createConfiguredNode(
 
       log.trace('createConfiguredNode setting the context node');
       childCtx.node = RouteNode.create({
-        path: rr.route.endpoint.route.path,
+        path: rr.route.route.path,
         finalPath: route.path,
         context: childCtx,
         instruction: vi,
@@ -728,7 +728,7 @@ function createConfiguredNode(
     const redirRR = ctx.recognize(newPath);
     if (redirRR === null) throw new Error(`'${newPath}' did not match any configured route or registered component name at '${ctx.friendlyPath}' - did you forget to add '${newPath}' to the routes list of the route decorator of '${ctx.component.name}'?`);
 
-    return createConfiguredNode(log, node, vi, append, rr, originalVi, redirRR.route.endpoint.route);
+    return createConfiguredNode(log, node, vi, append, rr, originalVi, redirRR.route.route);
   });
 }
 
@@ -757,10 +757,10 @@ function createFallbackNode(
   // we aren't migrating the parameters for missing route
   const rr = new $RecognizedRoute(
     new RecognizedRoute(
-      new Endpoint(
+      // new Endpoint(
         new ConfigurableRoute(rd.path[0], rd.caseSensitive, rd),
-        []
-      ),
+        // []
+      // ),
       emptyObject
     ),
     null);

@@ -45,7 +45,7 @@ export interface URLPatternResult {
 
 export interface URLPatternComponentResult {
   input: string;
-  groups: { [key: string]: string };
+  groups: Record<string, string>;
 }
 
 // Define the components in a URL.  The ordering of this constant list is

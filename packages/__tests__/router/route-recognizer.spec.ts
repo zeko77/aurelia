@@ -2798,10 +2798,10 @@ describe(RouteRecognizer.name, function () {
                 }
 
                 const params = { ...$params };
-                const paramNames = Object.keys(params);
+                // const paramNames = Object.keys(params);
                 const configurableRoute = new ConfigurableRoute(match, false, null);
-                const endpoint = new Endpoint(configurableRoute, paramNames);
-                const expected = new RecognizedRoute(endpoint, params);
+                // const endpoint = new Endpoint(configurableRoute, paramNames);
+                const expected = new RecognizedRoute(configurableRoute, params);
 
                 // Act
                 const actual1 = sut.recognize(path);

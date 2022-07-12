@@ -422,7 +422,7 @@ export class RouteContext {
       handler,
     });
     this.recognizer.add({
-      path: `${path}/*${RESIDUE}`,
+      path: `${path}/:${RESIDUE}*`,
       caseSensitive,
       handler,
     });
@@ -504,8 +504,9 @@ export class RouteContext {
     // TODO(Sayan): Investigate why we need params in so many places; probably it will be less hairy when the URL pattern is used.
     // we don't necessarily need to add the # to the path here.
     const route = new ConfigurableRoute(path, def.caseSensitive, def);
-    const endpoint = new Endpoint(route, Object.keys(consumed));
-    const rr = new RecognizedRoute(endpoint, consumed);
+    // const endpoint = new Endpoint(route, Object.keys(consumed));
+    // const rr = new RecognizedRoute(endpoint, consumed);
+    const rr = new RecognizedRoute(route, consumed);
     const instruction: Partial<IViewportInstruction> = {
       recognizedRoute: new $RecognizedRoute(rr, null),
       component: path,
@@ -556,7 +557,7 @@ export class $RecognizedRoute {
 
   public toString(): string {
     const route = this.route;
-    const cr = route.endpoint.route;
+    const cr = route.route;
     return `RR(route:(endpoint:(route:(path:${cr.path},handler:${cr.handler})),params:${JSON.stringify(route.params)}),residue:${this.residue})`;
   }
 }
