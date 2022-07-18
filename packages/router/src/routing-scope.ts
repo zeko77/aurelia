@@ -777,14 +777,15 @@ export class RoutingScope {
           ...route,
           path,
           handler: route,
+          residualParam: path !== '' ? 'remainingPath' : null,
         });
-        if (path !== '') {
-          cRoutes.push({
-            ...route,
-            path: `${path}/*remainingPath`,
-            handler: route,
-          });
-        }
+        // if (path !== '') {
+        //   cRoutes.push({
+        //     ...route,
+        //     path: `${path}/*remainingPath`,
+        //     handler: route,
+        //   });
+        // }
       }
     }
 

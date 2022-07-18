@@ -521,7 +521,8 @@ export class URLPattern {
         return null;
       }
 
-      const groups = Object.create(null);
+      // const groups = Object.create(null);
+      const groups: Record<string, string> = {};
       for (const [i, key] of this.keys[component].entries()) {
         if (typeof key.name === 'string' || typeof key.name === 'number') {
           groups[key.name] = match[i + 1];

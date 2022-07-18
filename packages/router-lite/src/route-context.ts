@@ -420,12 +420,13 @@ export class RouteContext {
       path,
       caseSensitive,
       handler,
+      residualParam: RESIDUE,
     });
-    this.recognizer.add({
-      path: `${path}/:${RESIDUE}*`,
-      caseSensitive,
-      handler,
-    });
+    // this.recognizer.add({
+    //   path: `${path}/:${RESIDUE}*`,
+    //   caseSensitive,
+    //   handler,
+    // });
   }
 
   public resolveLazy(promise: Promise<IModule>): Promise<CustomElementDefinition> | CustomElementDefinition {

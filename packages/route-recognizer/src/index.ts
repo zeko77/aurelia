@@ -7,6 +7,7 @@ export interface IConfigurableRoute<T> {
   readonly path: string;
   readonly caseSensitive?: boolean;
   readonly handler: T;
+  readonly residualParam?: string | null;
 }
 
 export class ConfigurableRoute<T> implements IConfigurableRoute<T> {
@@ -336,28 +337,45 @@ export class RecognizedRoute<T> {
 
 export class RouteRecognizer<T> {
   private readonly routes: ConfigurableRoute<T>[] = [];
+  private readonly residualRoutes: ConfigurableRoute<T>[] = [];
   // private readonly rootState: SeparatorState<T> = new State(null, null, '') as SeparatorState<T>;
   private readonly cache: Map<string, RecognizedRoute<T> | null> = new Map<string, RecognizedRoute<T> | null>();
 
   public add(routeOrRoutes: IConfigurableRoute<T> | readonly IConfigurableRoute<T>[]): void {
     if (routeOrRoutes instanceof Array) {
       for (const route of routeOrRoutes) {
-        this.$add(route);
+        this.$add(route, false);
+        const residualParam = route.residualParam;
+        if (residualParam != null && residualParam !== '') {
+          this.$add({
+            path: `${route.path}/:${residualParam}*`,
+            caseSensitive: route.caseSensitive,
+            handler: route.handler,
+          }, true);
+        }
       }
     } else {
-      this.$add(routeOrRoutes as IConfigurableRoute<T>);
+      this.$add(routeOrRoutes, false);
+      const residualParam = routeOrRoutes.residualParam;
+      if (residualParam != null && residualParam !== '') {
+        this.$add({
+          path: `${routeOrRoutes.path}/:${residualParam}*`,
+          caseSensitive: routeOrRoutes.caseSensitive,
+          handler: routeOrRoutes.handler,
+        }, true);
+      }
     }
 
     // Clear the cache whenever there are state changes, because the recognizeResults could be arbitrarily different as a result
     this.cache.clear();
   }
 
-  private $add(route: IConfigurableRoute<T>): void {
+  private $add(route: IConfigurableRoute<T>, isResidualRoute: boolean): void {
     const path = normalizePath(route.path);
     // const pattern = new URLPattern({ pathname: path, caseSensitivePath: route.caseSensitive === true });
     // this.routes.push(pattern);
     const $route = new ConfigurableRoute(path, route.caseSensitive === true, route.handler);
-    this.routes.push($route);
+    (isResidualRoute ? this.residualRoutes : this.routes).push($route);
 
     // // Normalize leading, trailing and double slashes by ignoring empty segments
     // const parts = path === '' ? [''] : path.split('/').filter(isNotEmpty);
@@ -410,6 +428,11 @@ export class RouteRecognizer<T> {
       if (result === null) continue;
       return new RecognizedRoute(route, result);
     }
+    for (const route of this.residualRoutes) {
+      const result = route._recognize(path);
+      if (result === null) continue;
+      return new RecognizedRoute(route, result);
+    }
     return null;
 
     // if (!path.startsWith('/')) {
@@ -450,7 +473,7 @@ function normalizePath(path: string) {
   if(path.startsWith('/')) {
     path = path.slice(1);
   }
-  if (path.length > 1 && path.endsWith('/')) {
+  if (/* path.length > 1 && */ path.endsWith('/')) {
     path = path.slice(0, -1);
   }
   return path;
