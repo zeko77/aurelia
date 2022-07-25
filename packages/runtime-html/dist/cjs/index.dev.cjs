@@ -2331,10 +2331,18 @@ function useShadowDOM(targetOrOptions) {
 function containerless(target) {
     if (target === void 0) {
         return function ($target) {
-            annotateElementMetadata($target, 'containerless', true);
+            markContainerless($target);
         };
     }
-    annotateElementMetadata(target, 'containerless', true);
+    markContainerless(target);
+}
+function markContainerless(target) {
+    const def = getOwnMetadata(ceBaseName, target);
+    if (def === void 0) {
+        annotateElementMetadata(target, 'containerless', true);
+        return;
+    }
+    def.containerless = true;
 }
 function strict(target) {
     if (target === void 0) {

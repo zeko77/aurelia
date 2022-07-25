@@ -7,11 +7,11 @@
     "build": "rimraf dist && webpack"
   },
   "dependencies": {
-    "@aurelia/runtime-html": "2.1.0-dev.202206240533",
-    "@aurelia/validation": "2.1.0-dev.202206240533",
-    "@aurelia/validation-html": "2.1.0-dev.202206240533",
+    "@aurelia/runtime-html": "2.1.0-dev.202207250348",
+    "@aurelia/validation": "2.1.0-dev.202207250348",
+    "@aurelia/validation-html": "2.1.0-dev.202207250348",
     "@benchmarking-apps/test-result": "1.0.0",
-    "aurelia": "2.1.0-dev.202206240533",
+    "aurelia": "2.1.0-dev.202207250348",
     "d3": "^7.4.4"
   },
   "devDependencies": {
