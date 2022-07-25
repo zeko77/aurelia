@@ -177,5 +177,13 @@ declare type DecoratorFactoryMethod<TClass> = (target: Constructable<TClass>, pr
 declare type ProcessContentHook = (node: INode, platform: IPlatform) => boolean | void;
 export declare function processContent(hook: ProcessContentHook): CustomElementDecorator;
 export declare function processContent<TClass>(): DecoratorFactoryMethod<TClass>;
+/**
+ * Decorator: Indicates that the custom element should capture all attributes and bindings that are not template controllers or bindables
+ */
+export declare function capture(target: Constructable): void;
+/**
+ * Decorator: Indicates that the custom element should be rendered with the strict binding option. undefined/null -> 0 or '' based on type
+ */
+export declare function capture(): (target: Constructable) => void;
 export {};
 //# sourceMappingURL=custom-element.d.ts.map

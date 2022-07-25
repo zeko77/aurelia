@@ -2082,7 +2082,7 @@ function formatRaw(ctx, value, recurseTimes, typedArray) {
     try {
         output = formatter(ctx, value, recurseTimes, keys, braces);
         let $key;
-        const isNotNode = !(value instanceof exports.PLATFORM.Node);
+        const isNotNode = (exports.PLATFORM === null || exports.PLATFORM === void 0 ? void 0 : exports.PLATFORM.Node) != null && !(value instanceof exports.PLATFORM.Node);
         for (i = 0; i < keys.length; i++) {
             $key = keys[i];
             if ((isNotNode || $key === 'textContent' || $key === 'outerHTML')

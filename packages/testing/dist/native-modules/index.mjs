@@ -1685,7 +1685,7 @@ function Mn(e, t, n, i) {
     try {
         d = l(e, t, n, r, u);
         let i;
-        const a = !(t instanceof $t.Node);
+        const a = null != (null === $t || void 0 === $t ? void 0 : $t.Node) && !(t instanceof $t.Node);
         for (f = 0; f < r.length; f++) {
             i = r[f];
             if ((a || "textContent" === i || "outerHTML" === i) && "$$calls" !== i) d.push(Rn(e, t, n, r[f], h));

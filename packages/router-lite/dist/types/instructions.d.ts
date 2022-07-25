@@ -2,7 +2,7 @@ import { IModule } from '@aurelia/kernel';
 import { ICustomElementViewModel, ICustomElementController, PartialCustomElementDefinition, CustomElementDefinition } from '@aurelia/runtime-html';
 import { IRouteViewModel } from './component-agent';
 import { RouteType } from './route';
-import { IRouteContext } from './route-context';
+import { $RecognizedRoute, IRouteContext } from './route-context';
 import { INavigationOptions, NavigationOptions } from './router';
 export declare type RouteContextLike = IRouteContext | ICustomElementViewModel | ICustomElementController | HTMLElement;
 /**
@@ -53,12 +53,14 @@ export interface IViewportInstruction {
      * The child routes to load underneath the context of this instruction's component.
      */
     readonly children?: readonly NavigationInstruction[];
+    readonly recognizedRoute: $RecognizedRoute | null;
 }
 export declare class ViewportInstruction<TComponent extends ITypedNavigationInstruction_T = ITypedNavigationInstruction_Component> implements IViewportInstruction {
     readonly context: RouteContextLike | null;
     append: boolean;
     open: number;
     close: number;
+    readonly recognizedRoute: $RecognizedRoute | null;
     readonly component: TComponent;
     readonly viewport: string | null;
     readonly params: Params | null;

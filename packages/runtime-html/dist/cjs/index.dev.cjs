@@ -2331,10 +2331,26 @@ function useShadowDOM(targetOrOptions) {
 function containerless(target) {
     if (target === void 0) {
         return function ($target) {
-            annotateElementMetadata($target, 'containerless', true);
+            markContainerless($target);
         };
     }
-    annotateElementMetadata(target, 'containerless', true);
+    markContainerless(target);
+}
+function markContainerless(target) {
+    const def = getOwnMetadata(ceBaseName, target);
+    if (def === void 0) {
+        annotateElementMetadata(target, 'containerless', true);
+        return;
+    }
+    def.containerless = true;
+}
+function strict(target) {
+    if (target === void 0) {
+        return function ($target) {
+            annotateElementMetadata($target, 'isStrictBinding', true);
+        };
+    }
+    annotateElementMetadata(target, 'isStrictBinding', true);
 }
 const definitionLookup = new WeakMap();
 class CustomElementDefinition {
@@ -2562,6 +2578,14 @@ function ensureHook(target, hook) {
         throw new Error(`AUR0766: Invalid @processContent hook. Expected the hook to be a function (when defined in a class, it needs to be a static function) but got a ${typeof hook}.`);
     }
     return hook;
+}
+function capture(target) {
+    if (target === void 0) {
+        return function ($target) {
+            annotateElementMetadata($target, 'capture', true);
+        };
+    }
+    annotateElementMetadata(target, 'capture', true);
 }
 
 class ClassAttributeAccessor {
@@ -8329,8 +8353,6 @@ class NodeObserverLocator {
     getObserver(el, key, requestor) {
         var _a, _b;
         switch (key) {
-            case 'role':
-                return attrAccessor;
             case 'class':
                 return new ClassAttributeAccessor(el);
             case 'css':
@@ -11445,6 +11467,7 @@ exports.applyBindingBehavior = applyBindingBehavior;
 exports.attributePattern = attributePattern;
 exports.bindable = bindable;
 exports.bindingCommand = bindingCommand;
+exports.capture = capture;
 exports.children = children;
 exports.coercer = coercer;
 exports.containerless = containerless;
@@ -11465,6 +11488,7 @@ exports.renderer = renderer;
 exports.setEffectiveParentNode = setEffectiveParentNode;
 exports.setRef = setRef;
 exports.shadowCSS = shadowCSS;
+exports.strict = strict;
 exports.templateCompilerHooks = templateCompilerHooks;
 exports.templateController = templateController;
 exports.useShadowDOM = useShadowDOM;

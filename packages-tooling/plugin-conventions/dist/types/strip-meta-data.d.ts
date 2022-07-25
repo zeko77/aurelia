@@ -7,6 +7,7 @@ interface IStrippedHtml {
     hasSlot: boolean;
     bindables: Record<string, PartialBindableDefinition>;
     aliases: string[];
+    capture: boolean;
 }
 export declare function stripMetaData(rawHtml: string): IStrippedHtml;
 export {};

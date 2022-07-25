@@ -46,7 +46,7 @@ export { Portal, type PortalTarget, type PortalLifecycleCallback, } from './reso
 export { AuSlot, } from './resources/custom-elements/au-slot';
 export { IProjections, AuSlotsInfo, IAuSlotsInfo, } from './resources/slot-injectables';
 export { DefinitionType, } from './resources/resources-shared';
-export { containerless, customElement, CustomElement, type CustomElementDecorator, type CustomElementKind, type CustomElementType, CustomElementDefinition, type PartialCustomElementDefinition, useShadowDOM, processContent, } from './resources/custom-element';
+export { capture, containerless, customElement, CustomElement, type CustomElementDecorator, type CustomElementKind, type CustomElementType, CustomElementDefinition, type PartialCustomElementDefinition, strict, useShadowDOM, processContent, } from './resources/custom-element';
 export { type Subject, AuRender, } from './resources/custom-elements/au-render';
 export { AuCompose, type IDynamicComponentActivate, } from './resources/custom-elements/au-compose';
 export { ISanitizer, SanitizeValueConverter, } from './resources/value-converters/sanitize';
