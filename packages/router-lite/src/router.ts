@@ -41,7 +41,13 @@ function valueOrFuncToValue<T extends string>(instructions: ViewportInstructionT
   return valueOrFunc;
 }
 
-export interface IRouterOptions extends Partial<RouterOptions> { }
+export interface IRouterOptions extends Partial<RouterOptions> {
+  /**
+   * Set a custom routing root by setting this path.
+   * When not set, path from the `document.baseURI` is used by default.
+   */
+  basePath?: string | null;
+}
 export class RouterOptions {
   public static get DEFAULT(): RouterOptions { return RouterOptions.create({}); }
 
@@ -125,6 +131,7 @@ export class RouterOptions {
   }
 }
 
+export type LoadOptions = INavigationOptions & { params?: Params };
 export interface INavigationOptions extends Partial<NavigationOptions> { }
 export class NavigationOptions extends RouterOptions {
   public static get DEFAULT(): NavigationOptions { return NavigationOptions.create({}); }
@@ -455,7 +462,7 @@ export class Router {
    * router.load('product-detail/37', { context: this });
    * ```
    */
-  public load(path: string, options?: INavigationOptions): Promise<boolean>;
+  public load(path: string, options?: LoadOptions): Promise<boolean>;
   /**
    * Loads the provided paths as siblings.
    *
@@ -465,7 +472,7 @@ export class Router {
    * router.load(['category/50/product/20', 'widget/30']);
    * ```
    */
-  public load(paths: readonly string[], options?: INavigationOptions): Promise<boolean>;
+  public load(paths: readonly string[], options?: LoadOptions): Promise<boolean>;
   /**
    * Loads the provided component type. Must be a custom element.
    *
@@ -476,7 +483,7 @@ export class Router {
    * router.load(CustomElement.define({ name: 'greeter', template: 'Hello!' }));
    * ```
    */
-  public load(componentType: RouteType, options?: INavigationOptions): Promise<boolean>;
+  public load(componentType: RouteType, options?: LoadOptions): Promise<boolean>;
   /**
    * Loads the provided component types. Must be custom elements.
    *
@@ -486,7 +493,7 @@ export class Router {
    * router.load([MemberList, OrganizationList]);
    * ```
    */
-  public load(componentTypes: readonly RouteType[], options?: INavigationOptions): Promise<boolean>;
+  public load(componentTypes: readonly RouteType[], options?: LoadOptions): Promise<boolean>;
   /**
    * Loads the provided component definition. May or may not be pre-compiled.
    *
@@ -496,7 +503,7 @@ export class Router {
    * router.load({ name: 'greeter', template: 'Hello!' });
    * ```
    */
-  public load(componentDefinition: PartialCustomElementDefinition, options?: INavigationOptions): Promise<boolean>;
+  public load(componentDefinition: PartialCustomElementDefinition, options?: LoadOptions): Promise<boolean>;
   /**
    * Loads the provided component instance.
    *
@@ -509,7 +516,7 @@ export class Router {
    * router.load(greeter);
    * ```
    */
-  public load(componentInstance: IRouteViewModel, options?: INavigationOptions): Promise<boolean>;
+  public load(componentInstance: IRouteViewModel, options?: LoadOptions): Promise<boolean>;
   /**
    * Loads the provided ViewportInstruction, with component specified in any of the ways as described
    * in the other method overloads, and optional additional properties.
@@ -534,10 +541,16 @@ export class Router {
    * })
    * ```
    */
-  public load(viewportInstruction: IViewportInstruction, options?: INavigationOptions): boolean | Promise<boolean>;
-  public load(instructionOrInstructions: NavigationInstruction | readonly NavigationInstruction[], options?: INavigationOptions): boolean | Promise<boolean>;
-  public load(instructionOrInstructions: NavigationInstruction | readonly NavigationInstruction[], options?: INavigationOptions): boolean | Promise<boolean> {
-    const instructions = this.createViewportInstructions(instructionOrInstructions, options);
+  public load(viewportInstruction: IViewportInstruction, options?: LoadOptions): boolean | Promise<boolean>;
+  public load(instructionOrInstructions: NavigationInstruction | readonly NavigationInstruction[], options?: LoadOptions): boolean | Promise<boolean>;
+  public load(instructionOrInstructions: NavigationInstruction | readonly NavigationInstruction[], options?: LoadOptions): boolean | Promise<boolean> {
+    let instructions: ViewportInstructionTree | null = null;
+    const params = options?.params;
+    if(typeof instructionOrInstructions === 'string' && typeof params === 'object' && params !== null) {
+      const ctx = this.resolveContext(options?.context ?? null);
+      instructions = ctx.generateTree(instructionOrInstructions, params);
+    }
+    instructions ??= this.createViewportInstructions(instructionOrInstructions, options);
 
     this.logger.trace('load(instructions:%s)', instructions);
 

@@ -325,21 +325,22 @@ export function register(container) {
     assert.equal(result.code, expected);
   });
 
-  it('turn off shadowDOM mode for one word element', function () {
+  it('does not turn off shadowDOM mode for one word element, leave it to runtime', function () {
     const html = '<import from="./hello-world.html"><use-shadow-dom><template><import from="foo"><require from="./foo-bar.scss"></require></template>';
     const expected = `import { CustomElement } from '@aurelia/runtime-html';
-console.warn("WARN: ShadowDOM is disabled for ${path.join('lo', 'foo.html').replace('\\', process.platform === 'win32' ? '\\\\' : '\\')}. ShadowDOM requires element name to contain at least one dash (-), you have to refactor <foo> to something like <lorem-foo>.");
+import { shadowCSS } from '@aurelia/runtime-html';
 import * as d0 from "./hello-world.html";
 import * as d1 from "foo";
-import "./foo-bar.scss";
+import d2 from "text!./foo-bar.scss";
 export const name = "foo";
 export const template = "<template></template>";
 export default template;
-export const dependencies = [ d0, d1 ];
+export const dependencies = [ d0, d1, shadowCSS(d2) ];
+export const shadowOptions = { mode: 'open' };
 let _e;
 export function register(container) {
   if (!_e) {
-    _e = CustomElement.define({ name, template, dependencies });
+    _e = CustomElement.define({ name, template, dependencies, shadowOptions });
   }
   container.register(_e);
 }
@@ -659,6 +660,48 @@ export function register(container) {
         stringModuleWrap: (id: string) => `text!${id}`
       })
     );
+    assert.equal(result.code, expected);
+  });
+
+  it('emits capture with <capture> element', function () {
+    const html = '<capture><template></template>';
+    const expected = `import { CustomElement } from '@aurelia/runtime-html';
+import "./foo-bar.css";
+export const name = "foo-bar";
+export const template = "<template></template>";
+export default template;
+export const dependencies = [  ];
+export const capture = true;
+let _e;
+export function register(container) {
+  if (!_e) {
+    _e = CustomElement.define({ name, template, dependencies, capture });
+  }
+  container.register(_e);
+}
+`;
+    const result = preprocessHtmlTemplate({ path: path.join('lo', 'foo-bar.html'), contents: html, filePair: 'foo-bar.css' }, preprocessOptions({ hmr: false }));
+    assert.equal(result.code, expected);
+  });
+
+  it('emits capture [capture] attribute on <template>', function () {
+    const html = '<template capture></template>';
+    const expected = `import { CustomElement } from '@aurelia/runtime-html';
+import "./foo-bar.css";
+export const name = "foo-bar";
+export const template = "<template ></template>";
+export default template;
+export const dependencies = [  ];
+export const capture = true;
+let _e;
+export function register(container) {
+  if (!_e) {
+    _e = CustomElement.define({ name, template, dependencies, capture });
+  }
+  container.register(_e);
+}
+`;
+    const result = preprocessHtmlTemplate({ path: path.join('lo', 'foo-bar.html'), contents: html, filePair: 'foo-bar.css' }, preprocessOptions({ hmr: false }));
     assert.equal(result.code, expected);
   });
 

@@ -16,7 +16,7 @@ import { resourceName } from './resource-name';
 export function preprocessHtmlTemplate(unit: IFileUnit, options: IPreprocessOptions, hasViewModel?: boolean): ModifyCodeResult {
   const name = resourceName(unit.path);
   const stripped = stripMetaData(unit.contents);
-  const { html, deps, containerless, hasSlot, bindables, aliases } = stripped;
+  const { html, deps, containerless, hasSlot, bindables, aliases, capture } = stripped;
   let { shadowMode } = stripped;
 
   if (unit.filePair) {
@@ -37,14 +37,6 @@ export function preprocessHtmlTemplate(unit: IFileUnit, options: IPreprocessOpti
   const cssDeps: string[] = [];
   const statements: string[] = [];
   let registrationImported = false;
-
-  // Turn off ShadowDOM for invalid element
-  if (!name.includes('-') && shadowMode !== null) {
-    shadowMode = null;
-    const error = `WARN: ShadowDOM is disabled for ${unit.path}. ShadowDOM requires element name to contain at least one dash (-), you have to refactor <${name}> to something like <lorem-${name}>.`;
-    console.warn(error);
-    statements.push(`console.warn(${JSON.stringify(error)});\n`);
-  }
 
   if (shadowMode === null && hasSlot) {
     throw new Error(`<slot> cannot be used in ${unit.path}. <slot> is only available when using ShadowDOM. Please turn on ShadowDOM, or use <au-slot> in non-ShadowDOM mode. https://docs.aurelia.io/app-basics/components-revisited#au-slot`);
@@ -116,6 +108,10 @@ export const dependencies = [ ${viewDeps.join(', ')} ];
     m.append(`export const containerless = true;\n`);
   }
 
+  if (capture) {
+    m.append(`export const capture = true;\n`);
+  }
+
   if (Object.keys(bindables).length > 0) {
     m.append(`export const bindables = ${JSON.stringify(bindables)};\n`);
   }
@@ -124,8 +120,20 @@ export const dependencies = [ ${viewDeps.join(', ')} ];
     m.append(`export const aliases = ${JSON.stringify(aliases)};\n`);
   }
 
+  const definitionProperties = [
+    'name',
+    'template',
+    'dependencies',
+    shadowMode !== null ? 'shadowOptions' : '',
+    containerless ? 'containerless' : '',
+    capture ? 'capture' : '',
+    Object.keys(bindables).length > 0 ? 'bindables' : '',
+    aliases.length > 0 ? 'aliases' : '',
+  ].filter(Boolean);
+  const definition = `{ ${definitionProperties.join(', ')} }`;
+
   if (hmrEnabled) {
-    m.append(`const _e = CustomElement.define({ name, template, dependencies${shadowMode !== null ? ', shadowOptions' : ''}${containerless ? ', containerless' : ''}${Object.keys(bindables).length > 0 ? ', bindables' : ''}${aliases.length > 0 ? ', aliases' : ''} });
+    m.append(`const _e = CustomElement.define(${definition});
       export function register(container) {
         container.register(_e);
       }`);
@@ -133,7 +141,7 @@ export const dependencies = [ ${viewDeps.join(', ')} ];
     m.append(`let _e;
 export function register(container) {
   if (!_e) {
-    _e = CustomElement.define({ name, template, dependencies${shadowMode !== null ? ', shadowOptions' : ''}${containerless ? ', containerless' : ''}${Object.keys(bindables).length > 0 ? ', bindables' : ''}${aliases.length > 0 ? ', aliases' : ''} });
+    _e = CustomElement.define(${definition});
   }
   container.register(_e);
 }
