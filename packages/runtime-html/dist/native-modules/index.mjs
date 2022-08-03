@@ -2270,10 +2270,11 @@ function ue(t, i) {
 }
 
 function fe(t) {
-    if (void 0 === t) return function(t) {
-        oe(t, "capture", true);
+    return function(i) {
+        const e = At(t) ? t : true;
+        oe(i, "capture", e);
+        if (he.isType(i)) he.getDefinition(i).capture = e;
     };
-    oe(t, "capture", true);
 }
 
 class ClassAttributeAccessor {
@@ -5808,151 +5809,154 @@ class TemplateCompiler {
         const m = i.hi(d);
         const v = null !== m;
         const g = v && null != m.shadowOptions;
-        const p = !!(null === m || void 0 === m ? void 0 : m.capture);
-        const w = p ? [] : L;
-        const b = i.ep;
-        const x = this.debug ? $ : () => {
-            t.removeAttribute(S);
+        const p = null === m || void 0 === m ? void 0 : m.capture;
+        const w = null != p && "boolean" !== typeof p;
+        const b = p ? [] : L;
+        const x = i.ep;
+        const y = this.debug ? $ : () => {
+            t.removeAttribute(E);
+            --R;
             --A;
-            --C;
         };
-        let y = t.attributes;
-        let k;
-        let C = y.length;
-        let A = 0;
-        let R;
+        let k = t.attributes;
+        let C;
+        let A = k.length;
+        let R = 0;
         let S;
         let E;
         let B;
         let I;
         let T;
-        let D = null;
-        let P = false;
-        let O;
+        let D;
+        let P = null;
+        let O = false;
         let q;
         let U;
         let _;
         let F;
         let V;
         let M;
-        let j = null;
-        let N;
+        let j;
+        let N = null;
         let W;
         let H;
         let z;
-        let G = true;
-        let X = false;
+        let G;
+        let X = true;
+        let K = false;
+        let Y = false;
         if ("slot" === d) {
             if (null == i.root.def.shadowOptions) throw new Error(`AUR0717:${i.root.def.name}`);
             i.root.hasSlot = true;
         }
         if (v) {
-            G = null === (s = m.processContent) || void 0 === s ? void 0 : s.call(m.Type, t, i.p);
-            y = t.attributes;
-            C = y.length;
+            X = null === (s = m.processContent) || void 0 === s ? void 0 : s.call(m.Type, t, i.p);
+            k = t.attributes;
+            A = k.length;
         }
         if (i.root.def.enhance && t.classList.contains("au")) throw new Error(`AUR0705`);
-        for (;C > A; ++A) {
-            R = y[A];
-            S = R.name;
-            E = R.value;
-            switch (S) {
+        for (;A > R; ++R) {
+            S = k[R];
+            E = S.name;
+            B = S.value;
+            switch (E) {
               case "as-element":
               case "containerless":
-                x();
-                if (!X) X = "containerless" === S;
+                y();
+                if (!K) K = "containerless" === E;
                 continue;
             }
-            B = i.di.parse(S, E);
-            j = i.ai(B);
-            H = B.target;
-            z = B.rawValue;
-            if (p) {
-                if (null != j && 1 & j.type) {
-                    x();
-                    w.push(B);
+            I = i.di.parse(E, B);
+            N = i.ai(I);
+            z = I.target;
+            G = I.rawValue;
+            if (p && (!w || w && p(z))) {
+                if (null != N && 1 & N.type) {
+                    y();
+                    b.push(I);
                     continue;
                 }
-                if ("au-slot" !== H) {
-                    N = BindablesInfo.from(m, false);
-                    if (null == N.attrs[H] && !(null === (n = i.ui(H)) || void 0 === n ? void 0 : n.isTemplateController)) {
-                        x();
-                        w.push(B);
+                Y = "au-slot" !== z && "slot" !== z;
+                if (Y) {
+                    W = BindablesInfo.from(m, false);
+                    if (null == W.attrs[z] && !(null === (n = i.ui(z)) || void 0 === n ? void 0 : n.isTemplateController)) {
+                        y();
+                        b.push(I);
                         continue;
                     }
                 }
             }
-            if (null !== j && 1 & j.type) {
+            if (null !== N && 1 & N.type) {
                 Qn.node = t;
-                Qn.attr = B;
+                Qn.attr = I;
                 Qn.bindable = null;
                 Qn.def = null;
-                (null !== I && void 0 !== I ? I : I = []).push(j.build(Qn));
-                x();
+                (null !== T && void 0 !== T ? T : T = []).push(N.build(Qn));
+                y();
                 continue;
             }
-            D = i.ui(H);
-            if (null !== D) {
-                N = BindablesInfo.from(D, true);
-                P = false === D.noMultiBindings && null === j && Kn(z);
-                if (P) U = this.fi(t, z, D, i); else {
-                    W = N.primary;
-                    if (null === j) {
-                        V = b.parse(z, 1);
-                        U = [ null === V ? new SetPropertyInstruction(z, W.property) : new InterpolationInstruction(V, W.property) ];
+            P = i.ui(z);
+            if (null !== P) {
+                W = BindablesInfo.from(P, true);
+                O = false === P.noMultiBindings && null === N && Kn(G);
+                if (O) _ = this.fi(t, G, P, i); else {
+                    H = W.primary;
+                    if (null === N) {
+                        M = x.parse(G, 1);
+                        _ = [ null === M ? new SetPropertyInstruction(G, H.property) : new InterpolationInstruction(M, H.property) ];
                     } else {
                         Qn.node = t;
-                        Qn.attr = B;
-                        Qn.bindable = W;
-                        Qn.def = D;
-                        U = [ j.build(Qn) ];
+                        Qn.attr = I;
+                        Qn.bindable = H;
+                        Qn.def = P;
+                        _ = [ N.build(Qn) ];
                     }
                 }
-                x();
-                if (D.isTemplateController) (null !== _ && void 0 !== _ ? _ : _ = []).push(new HydrateTemplateController(Jn, this.resolveResources ? D : D.name, void 0, U)); else (null !== q && void 0 !== q ? q : q = []).push(new HydrateAttributeInstruction(this.resolveResources ? D : D.name, null != D.aliases && D.aliases.includes(H) ? H : void 0, U));
+                y();
+                if (P.isTemplateController) (null !== F && void 0 !== F ? F : F = []).push(new HydrateTemplateController(Jn, this.resolveResources ? P : P.name, void 0, _)); else (null !== U && void 0 !== U ? U : U = []).push(new HydrateAttributeInstruction(this.resolveResources ? P : P.name, null != P.aliases && P.aliases.includes(z) ? z : void 0, _));
                 continue;
             }
-            if (null === j) {
+            if (null === N) {
                 if (v) {
-                    N = BindablesInfo.from(m, false);
-                    O = N.attrs[H];
-                    if (void 0 !== O) {
-                        V = b.parse(z, 1);
-                        (null !== T && void 0 !== T ? T : T = []).push(null == V ? new SetPropertyInstruction(z, O.property) : new InterpolationInstruction(V, O.property));
-                        x();
+                    W = BindablesInfo.from(m, false);
+                    q = W.attrs[z];
+                    if (void 0 !== q) {
+                        M = x.parse(G, 1);
+                        (null !== D && void 0 !== D ? D : D = []).push(null == M ? new SetPropertyInstruction(G, q.property) : new InterpolationInstruction(M, q.property));
+                        y();
                         continue;
                     }
                 }
-                V = b.parse(z, 1);
-                if (null != V) {
-                    x();
-                    (null !== I && void 0 !== I ? I : I = []).push(new InterpolationInstruction(V, null !== (r = i.m.map(t, H)) && void 0 !== r ? r : Z(H)));
+                M = x.parse(G, 1);
+                if (null != M) {
+                    y();
+                    (null !== T && void 0 !== T ? T : T = []).push(new InterpolationInstruction(M, null !== (r = i.m.map(t, z)) && void 0 !== r ? r : Z(z)));
                 }
                 continue;
             }
-            x();
+            y();
             if (v) {
-                N = BindablesInfo.from(m, false);
-                O = N.attrs[H];
-                if (void 0 !== O) {
+                W = BindablesInfo.from(m, false);
+                q = W.attrs[z];
+                if (void 0 !== q) {
                     Qn.node = t;
-                    Qn.attr = B;
-                    Qn.bindable = O;
+                    Qn.attr = I;
+                    Qn.bindable = q;
                     Qn.def = m;
-                    (null !== T && void 0 !== T ? T : T = []).push(j.build(Qn));
+                    (null !== D && void 0 !== D ? D : D = []).push(N.build(Qn));
                     continue;
                 }
             }
             Qn.node = t;
-            Qn.attr = B;
+            Qn.attr = I;
             Qn.bindable = null;
             Qn.def = null;
-            (null !== I && void 0 !== I ? I : I = []).push(j.build(Qn));
+            (null !== T && void 0 !== T ? T : T = []).push(N.build(Qn));
         }
         Yn();
-        if (this.wi(t) && null != I && I.length > 1) this.bi(t, I);
+        if (this.wi(t) && null != T && T.length > 1) this.bi(t, T);
         if (v) {
-            M = new HydrateElementInstruction(this.resolveResources ? m : m.name, void 0, null !== T && void 0 !== T ? T : L, null, X, w);
+            j = new HydrateElementInstruction(this.resolveResources ? m : m.name, void 0, null !== D && void 0 !== D ? D : L, null, K, b);
             if (d === vr) {
                 const e = t.getAttribute("name") || mr;
                 const s = i.h("template");
@@ -5963,7 +5967,7 @@ class TemplateCompiler {
                     r = t.firstChild;
                 }
                 this.oi(s.content, n);
-                M.auSlot = {
+                j.auSlot = {
                     name: e,
                     fallback: CustomElementDefinition.create({
                         name: dr(),
@@ -5975,15 +5979,15 @@ class TemplateCompiler {
                 t = this.yi(t, i);
             }
         }
-        if (null != I || null != M || null != q) {
-            k = L.concat(null !== M && void 0 !== M ? M : L, null !== q && void 0 !== q ? q : L, null !== I && void 0 !== I ? I : L);
+        if (null != T || null != j || null != U) {
+            C = L.concat(null !== j && void 0 !== j ? j : L, null !== U && void 0 !== U ? U : L, null !== T && void 0 !== T ? T : L);
             this.pi(t);
         }
-        let K;
-        if (null != _) {
-            C = _.length - 1;
-            A = C;
-            F = _[A];
+        let J;
+        if (null != F) {
+            A = F.length - 1;
+            R = A;
+            V = F[R];
             let e;
             this.yi(t, i);
             if ("TEMPLATE" === t.nodeName) e = t; else {
@@ -5991,7 +5995,7 @@ class TemplateCompiler {
                 e.content.appendChild(t);
             }
             const s = e;
-            const n = i.xi(null == k ? [] : [ k ]);
+            const n = i.xi(null == C ? [] : [ C ]);
             let r;
             let l;
             let a;
@@ -6001,25 +6005,25 @@ class TemplateCompiler {
             let w;
             let b;
             let x = 0, y = 0;
-            let R = t.firstChild;
+            let k = t.firstChild;
             let S = false;
-            if (false !== G) while (null !== R) {
-                l = 1 === R.nodeType ? R.getAttribute(vr) : null;
-                if (null !== l) R.removeAttribute(vr);
+            if (false !== X) while (null !== k) {
+                l = 1 === k.nodeType ? k.getAttribute(vr) : null;
+                if (null !== l) k.removeAttribute(vr);
                 if (v) {
-                    r = R.nextSibling;
+                    r = k.nextSibling;
                     if (!g) {
-                        S = 3 === R.nodeType && "" === R.textContent.trim();
-                        if (!S) (null !== (o = (h = null !== u && void 0 !== u ? u : u = {})[c = l || mr]) && void 0 !== o ? o : h[c] = []).push(R);
-                        t.removeChild(R);
+                        S = 3 === k.nodeType && "" === k.textContent.trim();
+                        if (!S) (null !== (o = (h = null !== u && void 0 !== u ? u : u = {})[c = l || mr]) && void 0 !== o ? o : h[c] = []).push(k);
+                        t.removeChild(k);
                     }
-                    R = r;
+                    k = r;
                 } else {
                     if (null !== l) {
                         l = l || mr;
                         throw new Error(`AUR0706:${d}[${l}]`);
                     }
-                    R = R.nextSibling;
+                    k = k.nextSibling;
                 }
             }
             if (null != u) {
@@ -6041,38 +6045,38 @@ class TemplateCompiler {
                         isStrictBinding: i.root.def.isStrictBinding
                     });
                 }
-                M.projections = a;
+                j.projections = a;
             }
-            if (v && (X || m.containerless)) this.yi(t, i);
-            K = !v || !m.containerless && !X && false !== G;
-            if (K) if ("TEMPLATE" === t.nodeName) this.oi(t.content, n); else {
-                R = t.firstChild;
-                while (null !== R) R = this.oi(R, n);
+            if (v && (K || m.containerless)) this.yi(t, i);
+            J = !v || !m.containerless && !K && false !== X;
+            if (J) if ("TEMPLATE" === t.nodeName) this.oi(t.content, n); else {
+                k = t.firstChild;
+                while (null !== k) k = this.oi(k, n);
             }
-            F.def = CustomElementDefinition.create({
+            V.def = CustomElementDefinition.create({
                 name: dr(),
                 template: s,
                 instructions: n.rows,
                 needsCompile: false,
                 isStrictBinding: i.root.def.isStrictBinding
             });
-            while (A-- > 0) {
-                F = _[A];
+            while (R-- > 0) {
+                V = F[R];
                 e = i.h("template");
                 w = i.h("au-m");
                 w.classList.add("au");
                 e.content.appendChild(w);
-                F.def = CustomElementDefinition.create({
+                V.def = CustomElementDefinition.create({
                     name: dr(),
                     template: e,
                     needsCompile: false,
-                    instructions: [ [ _[A + 1] ] ],
+                    instructions: [ [ F[R + 1] ] ],
                     isStrictBinding: i.root.def.isStrictBinding
                 });
             }
-            i.rows.push([ F ]);
+            i.rows.push([ V ]);
         } else {
-            if (null != k) i.rows.push(k);
+            if (null != C) i.rows.push(C);
             let e = t.firstChild;
             let s;
             let n;
@@ -6084,7 +6088,7 @@ class TemplateCompiler {
             let p;
             let w = false;
             let b = 0, x = 0;
-            if (false !== G) while (null !== e) {
+            if (false !== X) while (null !== e) {
                 n = 1 === e.nodeType ? e.getAttribute(vr) : null;
                 if (null !== n) e.removeAttribute(vr);
                 if (v) {
@@ -6122,11 +6126,11 @@ class TemplateCompiler {
                         isStrictBinding: i.root.def.isStrictBinding
                     });
                 }
-                M.projections = r;
+                j.projections = r;
             }
-            if (v && (X || m.containerless)) this.yi(t, i);
-            K = !v || !m.containerless && !X && false !== G;
-            if (K && t.childNodes.length > 0) {
+            if (v && (K || m.containerless)) this.yi(t, i);
+            J = !v || !m.containerless && !K && false !== X;
+            if (J && t.childNodes.length > 0) {
                 e = t.firstChild;
                 while (null !== e) e = this.oi(e, i);
             }

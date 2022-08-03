@@ -14,7 +14,7 @@ declare module '@aurelia/kernel' {
 }
 export declare type PartialCustomElementDefinition = PartialResourceDefinition<{
     readonly cache?: '*' | number;
-    readonly capture?: boolean;
+    readonly capture?: boolean | ((attr: string) => boolean);
     readonly template?: null | string | Node;
     readonly instructions?: readonly (readonly IInstruction[])[];
     readonly dependencies?: readonly Key[];
@@ -142,7 +142,7 @@ export declare class CustomElementDefinition<C extends Constructable = Construct
     readonly aliases: string[];
     readonly key: string;
     readonly cache: '*' | number;
-    readonly capture: boolean;
+    readonly capture: boolean | ((attr: string) => boolean);
     readonly template: null | string | Node;
     readonly instructions: readonly (readonly IInstruction[])[];
     readonly dependencies: readonly Key[];
@@ -180,7 +180,7 @@ export declare function processContent<TClass>(): DecoratorFactoryMethod<TClass>
 /**
  * Decorator: Indicates that the custom element should capture all attributes and bindings that are not template controllers or bindables
  */
-export declare function capture(target: Constructable): void;
+export declare function capture(filter: (attr: string) => boolean): ((target: Constructable) => void);
 /**
  * Decorator: Indicates that the custom element should be rendered with the strict binding option. undefined/null -> 0 or '' based on type
  */
