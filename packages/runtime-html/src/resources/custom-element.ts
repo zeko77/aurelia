@@ -45,7 +45,7 @@ declare module '@aurelia/kernel' {
 
 export type PartialCustomElementDefinition = PartialResourceDefinition<{
   readonly cache?: '*' | number;
-  readonly capture?: boolean;
+  readonly capture?: boolean | ((attr: string) => boolean);
   readonly template?: null | string | Node;
   readonly instructions?: readonly (readonly IInstruction[])[];
   readonly dependencies?: readonly Key[];
@@ -226,7 +226,7 @@ export class CustomElementDefinition<C extends Constructable = Constructable> im
     public readonly aliases: string[],
     public readonly key: string,
     public readonly cache: '*' | number,
-    public readonly capture: boolean,
+    public readonly capture: boolean | ((attr: string) => boolean),
     public readonly template: null | string | Node,
     public readonly instructions: readonly (readonly IInstruction[])[],
     public readonly dependencies: readonly Key[],
@@ -648,17 +648,19 @@ function ensureHook<TClass>(target: Constructable<TClass>, hook: string | Proces
 /**
  * Decorator: Indicates that the custom element should capture all attributes and bindings that are not template controllers or bindables
  */
-export function capture(target: Constructable): void;
+export function capture(filter: (attr: string) => boolean): ((target: Constructable) => void);
 /**
  * Decorator: Indicates that the custom element should be rendered with the strict binding option. undefined/null -> 0 or '' based on type
  */
-export function capture(): (target: Constructable) => void;
-export function capture(target?: Constructable): void | ((target: Constructable) => void) {
-  if (target === void 0) {
-    return function ($target: Constructable) {
-      annotateElementMetadata($target, 'capture', true);
-    };
-  }
+export function capture(): (target: Constructable) => void ;
+export function capture(targetOrFilter?: (attr: string) => boolean): ((target: Constructable) => void) {
+  return function ($target: Constructable) {
+    const value = isFunction(targetOrFilter) ? targetOrFilter : true;
+    annotateElementMetadata($target, 'capture', value);
 
-  annotateElementMetadata(target, 'capture', true);
+    // also do this to make order of the decorator irrelevant
+    if (CustomElement.isType($target)) {
+      (CustomElement.getDefinition($target) as Writable<CustomElementDefinition>).capture = value;
+    }
+  };
 }

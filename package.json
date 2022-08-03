@@ -1,7 +1,7 @@
 {
   "name": "@aurelia/monorepo",
   "private": true,
-  "version": "2.0.0-alpha.36",
+  "version": "2.0.0-alpha.37",
   "workspaces": [
     "packages/__tests__",
     "packages/__e2e__/router-configured-basic",
@@ -39,6 +39,7 @@
     "examples/doc-example",
     "examples/fractals-tree",
     "examples/navigation-skeleton",
+    "examples/hmr-webpack-e2e",
     "examples/rainbow-spiral",
     "examples/realworld",
     "examples/realworld-advanced",
