@@ -35,6 +35,7 @@ const hmrRuntimeModules = ['CustomElement', 'LifecycleFlags', 'IHydrationContext
 const hmrMetadataModules = ['Metadata'];
 const getHmrCode = (className, moduleText = 'module') => {
     const code = `
+    // @ts-ignore
     const controllers = [];
 
     // @ts-ignore
@@ -68,6 +69,7 @@ const getHmrCode = (className, moduleText = 'module') => {
     }
 
     hot.dispose(function (data) {
+      // @ts-ignore
       data.controllers = controllers;
       data.aurelia = aurelia;
     });

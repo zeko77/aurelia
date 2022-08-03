@@ -2579,13 +2579,14 @@ function ensureHook(target, hook) {
     }
     return hook;
 }
-function capture(target) {
-    if (target === void 0) {
-        return function ($target) {
-            annotateElementMetadata($target, 'capture', true);
-        };
-    }
-    annotateElementMetadata(target, 'capture', true);
+function capture(targetOrFilter) {
+    return function ($target) {
+        const value = isFunction(targetOrFilter) ? targetOrFilter : true;
+        annotateElementMetadata($target, 'capture', value);
+        if (CustomElement.isType($target)) {
+            CustomElement.getDefinition($target).capture = value;
+        }
+    };
 }
 
 class ClassAttributeAccessor {
@@ -6511,8 +6512,9 @@ class TemplateCompiler {
         const elDef = context._findElement(elName);
         const isCustomElement = elDef !== null;
         const isShadowDom = isCustomElement && elDef.shadowOptions != null;
-        const shouldCapture = !!(elDef === null || elDef === void 0 ? void 0 : elDef.capture);
-        const captures = shouldCapture ? [] : kernel.emptyArray;
+        const capture = elDef === null || elDef === void 0 ? void 0 : elDef.capture;
+        const hasCaptureFilter = capture != null && typeof capture !== 'boolean';
+        const captures = capture ? [] : kernel.emptyArray;
         const exprParser = context._exprParser;
         const removeAttr = this.debug
             ? kernel.noop
@@ -6547,6 +6549,7 @@ class TemplateCompiler {
         let realAttrValue;
         let processContentResult = true;
         let hasContainerless = false;
+        let canCapture = false;
         if (elName === 'slot') {
             if (context.root.def.shadowOptions == null) {
                 throw new Error(`AUR0717: detect a usage of "<slot>" element without specifying shadow DOM options in element: ${context.root.def.name}`);
@@ -6581,13 +6584,14 @@ class TemplateCompiler {
             bindingCommand = context._createCommand(attrSyntax);
             realAttrTarget = attrSyntax.target;
             realAttrValue = attrSyntax.rawValue;
-            if (shouldCapture) {
+            if (capture && (!hasCaptureFilter || hasCaptureFilter && capture(realAttrTarget))) {
                 if (bindingCommand != null && bindingCommand.type & 1) {
                     removeAttr();
                     captures.push(attrSyntax);
                     continue;
                 }
-                if (realAttrTarget !== 'au-slot') {
+                canCapture = realAttrTarget !== 'au-slot' && realAttrTarget !== 'slot';
+                if (canCapture) {
                     bindablesInfo = BindablesInfo.from(elDef, false);
                     if (bindablesInfo.attrs[realAttrTarget] == null && !((_c = context._findAttr(realAttrTarget)) === null || _c === void 0 ? void 0 : _c.isTemplateController)) {
                         removeAttr();

@@ -1,5 +1,5 @@
 import { isObject, Metadata } from '../../../metadata/dist/native-modules/index.mjs';
-import { DI, IEventAggregator, ILogger, bound, onResolve, resolveAll, toArray, emptyObject, IContainer, isArrayIndex, Protocol, emptyArray, IModuleLoader, InstanceProvider, noop, Registration } from '../../../kernel/dist/native-modules/index.mjs';
+import { DI, IEventAggregator, ILogger, bound, onResolve, resolveAll, emptyObject, IContainer, isArrayIndex, Protocol, emptyArray, IModuleLoader, InstanceProvider, noop, Registration } from '../../../kernel/dist/native-modules/index.mjs';
 import { isCustomElementViewModel, IHistory, ILocation, IWindow, Controller, IPlatform, CustomElement, CustomElementDefinition, IController, IAppRoot, isCustomElementController, bindable, customElement, customAttribute, IEventTarget, INode, IEventDelegator, getRef, CustomAttribute, AppTask } from '../../../runtime-html/dist/native-modules/index.mjs';
 import { RecognizedRoute, Endpoint, ConfigurableRoute, RouteRecognizer } from '../../../route-recognizer/dist/native-modules/index.mjs';
 import { BindingMode } from '../../../runtime/dist/native-modules/index.mjs';
@@ -206,6 +206,17 @@ function validateRedirectRouteConfig(config, parentPath) {
         const path = [parentPath, key].join('.');
         switch (key) {
             case 'path':
+                if (value instanceof Array) {
+                    for (let i = 0; i < value.length; ++i) {
+                        if (typeof value[i] !== 'string') {
+                            expectType('string', `${path}[${i}]`, value[i]);
+                        }
+                    }
+                }
+                else if (typeof value !== 'string') {
+                    expectType('string or Array of strings', path, value);
+                }
+                break;
             case 'redirectTo':
                 if (typeof value !== 'string') {
                     expectType('string', path, value);
@@ -2046,7 +2057,7 @@ function createAndAppendNodes(log, node, vi, append) {
         case 2: {
             const rd = RouteDefinition.resolve(vi.component.value, node.context.definition, null);
             const params = (_c = vi.params) !== null && _c !== void 0 ? _c : emptyObject;
-            const rr = new $RecognizedRoute(new RecognizedRoute(new Endpoint(new ConfigurableRoute(rd.path[0], rd.caseSensitive, rd), toArray(Object.values(params))), params), null);
+            const rr = new $RecognizedRoute(new RecognizedRoute(new Endpoint(new ConfigurableRoute(rd.path[0], rd.caseSensitive, rd), Object.keys(params)), params), null);
             const childNode = createConfiguredNode(log, node, vi, append, rr, null);
             return appendNode(log, node, childNode);
         }

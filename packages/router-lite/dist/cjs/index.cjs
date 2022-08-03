@@ -200,6 +200,11 @@ function g(t, i) {
         const n = [ i, s ].join(".");
         switch (s) {
           case "path":
+            if (e instanceof Array) {
+                for (let t = 0; t < e.length; ++t) if ("string" !== typeof e[t]) p("string", `${n}[${t}]`, e[t]);
+            } else if ("string" !== typeof e) p("string or Array of strings", n, e);
+            break;
+
           case "redirectTo":
             if ("string" !== typeof e) p("string", n, e);
             break;
@@ -571,7 +576,7 @@ exports.ExpressionKind = void 0;
 
 const N = new Map;
 
-const T = new Map;
+const A = new Map;
 
 class RouteExpression {
     constructor(t, i, e, s, n, o) {
@@ -586,7 +591,7 @@ class RouteExpression {
         return 0;
     }
     static parse(t, i) {
-        const e = i ? N : T;
+        const e = i ? N : A;
         let s = e.get(t);
         if (void 0 === s) e.set(t, s = RouteExpression.$parse(t, i));
         return s;
@@ -955,7 +960,7 @@ class ParameterExpression {
     }
 }
 
-const A = Object.freeze({
+const T = Object.freeze({
     RouteExpression: RouteExpression,
     CompositeSegmentExpression: CompositeSegmentExpression,
     ScopedSegmentExpression: ScopedSegmentExpression,
@@ -1937,7 +1942,7 @@ function H(t, e, n, o) {
         {
             const r = RouteDefinition.resolve(n.component.value, e.context.definition, null);
             const h = null !== (a = n.params) && void 0 !== a ? a : i.emptyObject;
-            const l = new $RecognizedRoute(new s.RecognizedRoute(new s.Endpoint(new s.ConfigurableRoute(r.path[0], r.caseSensitive, r), i.toArray(Object.values(h))), h), null);
+            const l = new $RecognizedRoute(new s.RecognizedRoute(new s.Endpoint(new s.ConfigurableRoute(r.path[0], r.caseSensitive, r), Object.keys(h)), h), null);
             const u = G(t, e, n, o, l, null);
             return _(t, e, u);
         }
@@ -2876,7 +2881,7 @@ class RouteConfig {
         this.nav = c;
     }
     static create(t, i) {
-        var e, s, n, o, r, h, a, l, u, c, d, f, g, w, m, x, $, E, y, R, b, S, k, C, I, N, T, A, V, P;
+        var e, s, n, o, r, h, a, l, u, c, d, f, g, w, m, x, $, E, y, R, b, S, k, C, I, N, A, T, V, P;
         if ("string" === typeof t || t instanceof Array) {
             const d = t;
             const f = null !== (e = null === i || void 0 === i ? void 0 : i.redirectTo) && void 0 !== e ? e : null;
@@ -2903,7 +2908,7 @@ class RouteConfig {
                 ...e.data
             };
             const c = [ ...null !== (I = e.routes) && void 0 !== I ? I : ot, ...null !== (N = null === i || void 0 === i ? void 0 : i.routes) && void 0 !== N ? N : ot ];
-            return new RouteConfig(h, s, n, o, r, a, l, u, c, null !== (A = null !== (T = e.fallback) && void 0 !== T ? T : null === i || void 0 === i ? void 0 : i.fallback) && void 0 !== A ? A : null, null !== (V = e.component) && void 0 !== V ? V : null, null !== (P = e.nav) && void 0 !== P ? P : true);
+            return new RouteConfig(h, s, n, o, r, a, l, u, c, null !== (T = null !== (A = e.fallback) && void 0 !== A ? A : null === i || void 0 === i ? void 0 : i.fallback) && void 0 !== T ? T : null, null !== (V = e.component) && void 0 !== V ? V : null, null !== (P = e.nav) && void 0 !== P ? P : true);
         } else p("string, function/class or object", "", t);
     }
     applyChildRouteConfig(t) {
@@ -3055,7 +3060,7 @@ class ComponentAgent {
         this.C = "canLoad" in t;
         this.I = "load" in t;
         this.N = "canUnload" in t;
-        this.T = "unload" in t;
+        this.A = "unload" in t;
     }
     static for(t, i, s, n) {
         let o = ct.get(t);
@@ -3134,7 +3139,7 @@ class ComponentAgent {
         }), (() => {
             e.pop();
         }));
-        if (this.T) t.run((() => {
+        if (this.A) t.run((() => {
             e.push();
             return this.instance.unload(i, this.routeNode);
         }), (() => {
@@ -3174,7 +3179,7 @@ class RouteContext {
         this.component = o;
         this.definition = r;
         this.parentContainer = h;
-        this.A = a;
+        this.T = a;
         this.childViewportAgents = [];
         this.childRoutes = [];
         this.V = null;
@@ -3472,7 +3477,7 @@ class RouteContext {
             component: n,
             context: this
         };
-        return this.A.createViewportInstructions([ c ], {
+        return this.T.createViewportInstructions([ c ], {
             context: this,
             queryParams: h
         });
@@ -3883,7 +3888,7 @@ class ScrollStateManager {
     }
 }
 
-exports.AST = A;
+exports.AST = T;
 
 exports.ActionExpression = ActionExpression;
 

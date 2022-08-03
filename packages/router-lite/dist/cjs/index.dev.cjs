@@ -210,6 +210,17 @@ function validateRedirectRouteConfig(config, parentPath) {
         const path = [parentPath, key].join('.');
         switch (key) {
             case 'path':
+                if (value instanceof Array) {
+                    for (let i = 0; i < value.length; ++i) {
+                        if (typeof value[i] !== 'string') {
+                            expectType('string', `${path}[${i}]`, value[i]);
+                        }
+                    }
+                }
+                else if (typeof value !== 'string') {
+                    expectType('string or Array of strings', path, value);
+                }
+                break;
             case 'redirectTo':
                 if (typeof value !== 'string') {
                     expectType('string', path, value);
@@ -2050,7 +2061,7 @@ function createAndAppendNodes(log, node, vi, append) {
         case 2: {
             const rd = RouteDefinition.resolve(vi.component.value, node.context.definition, null);
             const params = (_c = vi.params) !== null && _c !== void 0 ? _c : kernel.emptyObject;
-            const rr = new $RecognizedRoute(new routeRecognizer.RecognizedRoute(new routeRecognizer.Endpoint(new routeRecognizer.ConfigurableRoute(rd.path[0], rd.caseSensitive, rd), kernel.toArray(Object.values(params))), params), null);
+            const rr = new $RecognizedRoute(new routeRecognizer.RecognizedRoute(new routeRecognizer.Endpoint(new routeRecognizer.ConfigurableRoute(rd.path[0], rd.caseSensitive, rd), Object.keys(params)), params), null);
             const childNode = createConfiguredNode(log, node, vi, append, rr, null);
             return appendNode(log, node, childNode);
         }
