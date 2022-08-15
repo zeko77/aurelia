@@ -105,7 +105,11 @@ const getHmrCode = (className, moduleText = 'module') => {
         controller.definition = newDefinition;
         Object.assign(controller.viewModel, values);
         controller.hooks = new controller.hooks.constructor(controller.viewModel);
-        controller._hydrateCustomElement(hydrationInst, hydrationContext);
+        if (controller._hydrateCustomElement) {
+          controller._hydrateCustomElement(hydrationInst, hydrationContext);
+        } else {
+          controller.hE(hydrationInst, hydrationContext);
+        }
         h.parentNode.replaceChild(controller.host, h);
         controller.hostController = null;
         controller.deactivate(controller, controller.parent ?? null, LifecycleFlags.none);
