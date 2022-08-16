@@ -1,5 +1,5 @@
 import { Constructable, IContainer } from '@aurelia/kernel';
-import { CustomElementDefinition } from '@aurelia/runtime-html';
+import { CustomElementDefinition, IHydratedController } from '@aurelia/runtime-html';
 import { IRouteableComponent, RouteableComponentType } from '../interfaces';
 export interface IInstructionComponent extends InstructionComponent {
 }
@@ -59,7 +59,7 @@ export declare class InstructionComponent {
     isPromise(): boolean;
     isFunction(): boolean;
     toType(container: IContainer): RouteableComponentType | null;
-    toInstance(container: IContainer): IRouteableComponent | null;
+    toInstance(parentContainer: IContainer, parentController: IHydratedController, parentElement: HTMLElement): IRouteableComponent | null;
     same(other: InstructionComponent, compareType?: boolean): boolean;
     private getNewName;
 }

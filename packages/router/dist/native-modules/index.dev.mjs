@@ -815,21 +815,24 @@ class InstructionComponent {
         }
         return null;
     }
-    toInstance(container) {
+    toInstance(parentContainer, parentController, parentElement) {
         if (this.instance !== null) {
             return this.instance;
         }
-        if (container !== void 0 && container !== null) {
-            const instance = this.isType()
-                ? container.get(this.type)
-                : container.get(CustomElement.keyFrom(this.name));
-            if (this.isType() &&
-                !(instance instanceof this.type)) {
-                console.warn('Failed to instantiate', this.type, instance);
-            }
-            return instance !== null && instance !== void 0 ? instance : null;
+        if (parentContainer == null) {
+            return null;
         }
-        return null;
+        const container = parentContainer.createChild();
+        const instance = this.isType()
+            ? container.get(this.type)
+            : container.get(CustomElement.keyFrom(this.name));
+        if (instance == null) {
+            console.warn('Failed to create instance when trying to resolve component', this.name, this.type, '=>', instance);
+            throw new Error(`Failed to create instance when trying to resolve component '${this.name}'!`);
+        }
+        const controller = Controller.$el(container, instance, parentElement, null);
+        controller.parent = parentController;
+        return instance;
     }
     same(other, compareType = false) {
         return compareType ? this.type === other.type : this.name === other.name;
@@ -1718,6 +1721,10 @@ class ViewportContent extends EndpointContent {
             ? this.instruction.component.instance.reloadBehavior
             : "default";
     }
+    get controller() {
+        var _a;
+        return (_a = this.instruction.component.instance) === null || _a === void 0 ? void 0 : _a.$controller;
+    }
     equalComponent(other) {
         return this.instruction.sameComponent(this.router, other.instruction);
     }
@@ -1738,14 +1745,14 @@ class ViewportContent extends EndpointContent {
         }
         if (!this.fromCache && !this.fromHistory) {
             try {
-                this.instruction.component.set(this.toComponentInstance(connectedCE.container));
+                this.instruction.component.set(this.toComponentInstance(connectedCE.container, connectedCE.controller, connectedCE.element));
             }
             catch (e) {
                 if ((fallback !== null && fallback !== void 0 ? fallback : '') !== '') {
                     this.instruction.parameters.set([this.instruction.component.name]);
                     this.instruction.component.set(fallback);
                     try {
-                        this.instruction.component.set(this.toComponentInstance(connectedCE.container));
+                        this.instruction.component.set(this.toComponentInstance(connectedCE.container, connectedCE.controller, connectedCE.element));
                     }
                     catch (ee) {
                         throw new Error(`'${this.instruction.component.name}' did not match any configured route or registered component name - did you forget to add the component '${this.instruction.component.name}' to the dependencies or to register it as a global dependency?`);
@@ -1757,13 +1764,6 @@ class ViewportContent extends EndpointContent {
             }
         }
         this.contentStates.set('created', void 0);
-        if (this.contentStates.has('loaded') || !this.instruction.component.instance) {
-            return;
-        }
-        if (!this.fromCache || !this.fromHistory) {
-            const controller = this.contentController(connectedCE);
-            controller.parent = connectedCE.controller;
-        }
     }
     canLoad() {
         var _a, _b, _c;
@@ -1912,12 +1912,12 @@ class ViewportContent extends EndpointContent {
     }
     activateComponent(step, initiator, parent, flags, connectedCE, boundCallback, attachPromise) {
         return Runner.run(step, () => this.contentStates.await('loaded'), () => this.waitForParent(parent), () => {
+            var _a;
             if (this.contentStates.has('activating') || this.contentStates.has('activated')) {
                 return;
             }
             this.contentStates.set('activating', void 0);
-            const contentController = this.contentController(connectedCE);
-            return contentController.activate(initiator !== null && initiator !== void 0 ? initiator : contentController, parent, flags, void 0);
+            return (_a = this.controller) === null || _a === void 0 ? void 0 : _a.activate(initiator !== null && initiator !== void 0 ? initiator : this.controller, parent, flags, void 0);
         }, () => {
             this.contentStates.set('activated', void 0);
         });
@@ -1927,6 +1927,7 @@ class ViewportContent extends EndpointContent {
             return;
         }
         return Runner.run(step, () => {
+            var _a;
             if (stateful && connectedCE.element !== null) {
                 const elements = Array.from(connectedCE.element.getElementsByTagName('*'));
                 for (const el of elements) {
@@ -1937,18 +1938,17 @@ class ViewportContent extends EndpointContent {
             }
             this.contentStates.delete('activated');
             this.contentStates.delete('activating');
-            const contentController = this.contentController(connectedCE);
-            return contentController.deactivate(initiator !== null && initiator !== void 0 ? initiator : contentController, parent, flags);
+            return (_a = this.controller) === null || _a === void 0 ? void 0 : _a.deactivate(initiator !== null && initiator !== void 0 ? initiator : this.controller, parent, flags);
         });
     }
     disposeComponent(connectedCE, cache, stateful = false) {
+        var _a;
         if (!this.contentStates.has('created') || this.instruction.component.instance == null) {
             return;
         }
         if (!stateful) {
             this.contentStates.delete('created');
-            const contentController = this.contentController(connectedCE);
-            return contentController.dispose();
+            return (_a = this.controller) === null || _a === void 0 ? void 0 : _a.dispose();
         }
         else {
             cache.push(this);
@@ -1966,11 +1966,11 @@ class ViewportContent extends EndpointContent {
         }
         return this.instruction.component.toType(container);
     }
-    toComponentInstance(container) {
+    toComponentInstance(parentContainer, parentController, parentElement) {
         if (this.instruction.component.none) {
             return null;
         }
-        return this.instruction.component.toInstance(container);
+        return this.instruction.component.toInstance(parentContainer, parentController, parentElement);
     }
     waitForParent(parent) {
         if (parent === null) {
