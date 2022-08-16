@@ -8,8 +8,8 @@ export { IRouteContext, RouteContext, type INavigationModel, type INavigationRou
 export { RouteDefinition, } from './route-definition';
 export { AST, RouteExpression, CompositeSegmentExpression, ScopedSegmentExpression, SegmentGroupExpression, SegmentExpression, ComponentExpression, ActionExpression, ViewportExpression, ParameterListExpression, ParameterExpression, ExpressionKind, } from './route-expression';
 export { RouteNode, RouteTree, } from './route-tree';
-export { AuNavId, type ManagedState, isManagedState, toManagedState, IRouter, Router, type IRouterOptions, type INavigationOptions, RouterOptions, NavigationOptions, Transition, Navigation, type ResolutionMode, type HistoryStrategy, type SameUrlStrategy, type LoadOptions, } from './router';
-export { IRouterEvents, type RouterEvent, LocationChangeEvent, NavigationStartEvent, NavigationEndEvent, NavigationCancelEvent, NavigationErrorEvent, } from './router-events';
+export { isManagedState, toManagedState, IRouter, Router, type IRouterOptions, type INavigationOptions, RouterOptions, NavigationOptions, Transition, type ResolutionMode, type HistoryStrategy, type SameUrlStrategy, } from './router';
+export { AuNavId, type ManagedState, IRouterEvents, type RouterEvent, LocationChangeEvent, NavigationStartEvent, NavigationEndEvent, NavigationCancelEvent, NavigationErrorEvent, } from './router-events';
 export { IStateManager, } from './state-manager';
 export { ViewportAgent, } from './viewport-agent';
 //# sourceMappingURL=index.d.ts.map

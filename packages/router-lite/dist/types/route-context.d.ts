@@ -1,17 +1,22 @@
 import { IContainer, IModule } from '@aurelia/kernel';
-import { CustomElementDefinition, ICustomElementController } from '@aurelia/runtime-html';
 import { RecognizedRoute } from '@aurelia/route-recognizer';
-import { RouteDefinition } from './route-definition';
-import { ViewportAgent, ViewportRequest } from './viewport-agent';
+import { CustomElementDefinition, ICustomElementController } from '@aurelia/runtime-html';
 import { ComponentAgent } from './component-agent';
+import { NavigationInstruction, Params, ViewportInstruction } from './instructions';
+import { IViewport } from './resources/viewport';
+import { RouteDefinition } from './route-definition';
 import { RouteNode } from './route-tree';
 import { IRouter, ResolutionMode } from './router';
-import { IViewport } from './resources/viewport';
-import { Params } from './instructions';
+import { ViewportAgent, ViewportRequest } from './viewport-agent';
 export interface IRouteContext extends RouteContext {
 }
 export declare const IRouteContext: import("@aurelia/kernel").InterfaceSymbol<IRouteContext>;
 export declare const RESIDUE: "au$residue";
+declare type PathGenerationResult = {
+    vi: ViewportInstruction;
+    query: Params | null;
+};
+export declare function isEagerInstruction(val: NavigationInstruction | EagerInstruction): val is EagerInstruction;
 /**
  * Holds the information of a component in the context of a specific container.
  *
@@ -55,7 +60,6 @@ export declare class RouteContext {
      * The root RouteContext has no ViewportAgent and will throw when attempting to access this property.
      */
     get vpa(): ViewportAgent;
-    set vpa(value: ViewportAgent);
     readonly container: IContainer;
     private readonly moduleLoader;
     private readonly logger;
@@ -92,6 +96,11 @@ export declare class RouteContext {
     private addRoute;
     private $addRoute;
     resolveLazy(promise: Promise<IModule>): Promise<CustomElementDefinition> | CustomElementDefinition;
+    generateViewportInstruction(instruction: {
+        component: string;
+        params: Params;
+    }): PathGenerationResult | null;
+    generateViewportInstruction(instruction: NavigationInstruction | EagerInstruction): PathGenerationResult | null;
     toString(): string;
     private printTree;
 }
@@ -116,7 +125,8 @@ export interface INavigationRoute {
     readonly id: string;
     readonly path: string[];
     readonly title: string | ((node: RouteNode) => string | null) | null;
-    readonly data: Params | null;
+    readonly data: Record<string, unknown>;
     readonly isActive: boolean;
 }
+export {};
 //# sourceMappingURL=route-context.d.ts.map

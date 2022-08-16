@@ -1,6 +1,12 @@
 import { IEventAggregator, IDisposable, ILogger } from '@aurelia/kernel';
-import { ManagedState } from './router';
 import { ViewportInstructionTree } from './instructions';
+export declare type RoutingTrigger = 'popstate' | 'hashchange' | 'api';
+export declare const AuNavId: "au-nav-id";
+export declare type AuNavId = typeof AuNavId;
+export declare type ManagedState = {
+    [k: string]: unknown;
+    [AuNavId]: number;
+};
 export declare const IRouterEvents: import("@aurelia/kernel").InterfaceSymbol<IRouterEvents>;
 export interface IRouterEvents extends RouterEvents {
 }
@@ -25,10 +31,10 @@ export declare class LocationChangeEvent {
 export declare class NavigationStartEvent {
     readonly id: number;
     readonly instructions: ViewportInstructionTree;
-    readonly trigger: 'popstate' | 'hashchange' | 'api';
+    readonly trigger: RoutingTrigger;
     readonly managedState: ManagedState | null;
     get name(): 'au:router:navigation-start';
-    constructor(id: number, instructions: ViewportInstructionTree, trigger: 'popstate' | 'hashchange' | 'api', managedState: ManagedState | null);
+    constructor(id: number, instructions: ViewportInstructionTree, trigger: RoutingTrigger, managedState: ManagedState | null);
     toString(): string;
 }
 export declare class NavigationEndEvent {

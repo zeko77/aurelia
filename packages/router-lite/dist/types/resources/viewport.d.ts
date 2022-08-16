@@ -21,8 +21,8 @@ export declare class ViewportCustomElement implements ICustomElementViewModel, I
     private controller;
     constructor(logger: ILogger, ctx: IRouteContext);
     hydrated(controller: ICompiledCustomElementController): void;
-    attaching(initiator: IHydratedController, parent: IHydratedController, flags: LifecycleFlags): void | Promise<void>;
-    detaching(initiator: IHydratedController, parent: IHydratedController, flags: LifecycleFlags): void | Promise<void>;
+    attaching(initiator: IHydratedController, _parent: IHydratedController, flags: LifecycleFlags): void | Promise<void>;
+    detaching(initiator: IHydratedController, _parent: IHydratedController, flags: LifecycleFlags): void | Promise<void>;
     dispose(): void;
     toString(): string;
 }

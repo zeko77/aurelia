@@ -1,5 +1,5 @@
 import { Constructable, ResourceType } from '@aurelia/kernel';
-import { RouteableComponent, Params } from './instructions';
+import { RouteableComponent } from './instructions';
 import { RouteNode } from './route-tree';
 /**
  * Either a `RouteableComponent` or a name/config that can be resolved to a one:
@@ -56,7 +56,7 @@ export interface IRouteConfig {
     /**
      * Any custom data that should be accessible to matched components or hooks.
      */
-    readonly data?: Params;
+    readonly data?: Record<string, unknown>;
     /**
      * The child routes that can be navigated to from this route. See `Routeable` for more information.
      */
@@ -92,12 +92,12 @@ export declare class RouteConfig implements IRouteConfig, IChildRouteConfig {
     readonly caseSensitive: boolean;
     readonly transitionPlan: TransitionPlanOrFunc;
     readonly viewport: string | null;
-    readonly data: Params;
+    readonly data: Record<string, unknown>;
     readonly routes: readonly Routeable[];
     readonly fallback: string | null;
     readonly component: Routeable;
     readonly nav: boolean;
-    protected constructor(id: string | null, path: string | string[] | null, title: string | ((node: RouteNode) => string | null) | null, redirectTo: string | null, caseSensitive: boolean, transitionPlan: TransitionPlanOrFunc, viewport: string | null, data: Params, routes: readonly Routeable[], fallback: string | null, component: Routeable, nav: boolean);
+    protected constructor(id: string | null, path: string | string[] | null, title: string | ((node: RouteNode) => string | null) | null, redirectTo: string | null, caseSensitive: boolean, transitionPlan: TransitionPlanOrFunc, viewport: string | null, data: Record<string, unknown>, routes: readonly Routeable[], fallback: string | null, component: Routeable, nav: boolean);
     static create(configOrPath: IRouteConfig | IChildRouteConfig | string | string[], Type: RouteType | null): RouteConfig;
     /**
      * Creates a new route config applying the child route config.

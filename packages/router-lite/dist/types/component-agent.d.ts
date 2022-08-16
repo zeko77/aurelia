@@ -14,6 +14,11 @@ export interface IRouteViewModel extends ICustomElementViewModel {
     canUnload?(next: RouteNode | null, current: RouteNode): boolean | Promise<boolean>;
     unload?(next: RouteNode | null, current: RouteNode): void | Promise<void>;
 }
+/**
+ * A component agent handles an instance of a routed view-model (a component).
+ * It deals with invoking the hooks (`canLoad`, `load`, `canUnload`, `unload`),
+ * and activating, deactivating, and disposing the component (via the associated controller).
+ */
 export declare class ComponentAgent<T extends IRouteViewModel = IRouteViewModel> {
     readonly instance: T;
     readonly controller: ICustomElementController<T>;

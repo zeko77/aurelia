@@ -12,11 +12,10 @@ export interface IRouteNode {
     params?: Params;
     queryParams?: Readonly<URLSearchParams>;
     fragment?: string | null;
-    data?: Params;
+    data?: Record<string, unknown>;
     viewport?: string | null;
     title?: string | ((node: RouteNode) => string | null) | null;
     component: CustomElementDefinition;
-    append: boolean;
     children?: RouteNode[];
     residue?: ViewportInstruction[];
 }
@@ -42,7 +41,7 @@ export declare class RouteNode implements IRouteNode {
     params: Params;
     queryParams: Readonly<URLSearchParams>;
     fragment: string | null;
-    data: Params;
+    data: Record<string, unknown>;
     /**
      * The viewport is always `null` for the root `RouteNode`.
      *
@@ -53,7 +52,6 @@ export declare class RouteNode implements IRouteNode {
     viewport: string | null;
     title: string | ((node: RouteNode) => string | null) | null;
     component: CustomElementDefinition;
-    append: boolean;
     readonly children: RouteNode[];
     /**
      * Not-yet-resolved viewport instructions.
@@ -88,19 +86,8 @@ export declare class RouteTree {
     finalizeInstructions(): ViewportInstructionTree;
     toString(): string;
 }
-/**
- * Returns a stateful `RouteTree` based on the provided context and transition.
- *
- * This expression will always start from the root context and build a new complete tree, up until (and including)
- * the context that was passed-in.
- *
- * If there are any additional child navigations to be resolved lazily, those will be added to the leaf
- * `RouteNode`s `residue` property which is then resolved by the router after the leaf node is loaded.
- *
- * This means that a `RouteTree` can (and often will) be built incrementally during the loading process.
- */
-export declare function updateRouteTree(rt: RouteTree, vit: ViewportInstructionTree, ctx: IRouteContext): Promise<void> | void;
+export declare function updateNode(log: ILogger, vit: ViewportInstructionTree, ctx: IRouteContext, node: RouteNode): Promise<void> | void;
 export declare function processResidue(node: RouteNode): Promise<void> | void;
 export declare function getDynamicChildren(node: RouteNode): Promise<readonly RouteNode[]> | readonly RouteNode[];
-export declare function createAndAppendNodes(log: ILogger, node: RouteNode, vi: ViewportInstruction, append: boolean): void | Promise<void>;
+export declare function createAndAppendNodes(log: ILogger, node: RouteNode, vi: ViewportInstruction): void | Promise<void>;
 //# sourceMappingURL=route-tree.d.ts.map

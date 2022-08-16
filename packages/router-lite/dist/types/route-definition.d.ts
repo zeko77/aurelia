@@ -1,6 +1,5 @@
 import { IContainer, IModule } from '@aurelia/kernel';
 import { CustomElementDefinition } from '@aurelia/runtime-html';
-import { Params } from './instructions';
 import { RouteConfig, IChildRouteConfig, type Routeable } from './route';
 import { IRouteContext } from './route-context';
 import { RouteNode } from './route-tree';
@@ -14,7 +13,7 @@ export declare class RouteDefinition {
     readonly redirectTo: string | null;
     readonly viewport: string;
     readonly id: string;
-    readonly data: Params;
+    readonly data: Record<string, unknown>;
     readonly fallback: string | null;
     constructor(config: RouteConfig, component: CustomElementDefinition | null, parentDefinition: RouteDefinition | null);
     static resolve(routeable: Promise<IModule>, parentDefinition: RouteDefinition | null, routeNode: RouteNode | null, context: IRouteContext): RouteDefinition | Promise<RouteDefinition>;
@@ -24,7 +23,6 @@ export declare class RouteDefinition {
     static resolve(routeable: Routeable, parentDefinition: RouteDefinition | null, routeNode: RouteNode | null, context: IRouteContext): RouteDefinition | Promise<RouteDefinition>;
     private static createNavigationInstruction;
     register(container: IContainer): void;
-    toUrlComponent(): string;
     toString(): string;
 }
 export declare const $RouteDefinition: {
