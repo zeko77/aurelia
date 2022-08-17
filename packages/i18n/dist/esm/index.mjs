@@ -1,8 +1,8 @@
 import { DI as t, IEventAggregator as n, toArray as i, camelCase as s, Registration as e } from "@aurelia/kernel";
 
-import { CustomElement as r, attributePattern as o, bindingCommand as a, renderer as h, AttrSyntax as l, IAttrMapper as c, IPlatform as u, AppTask as f, AttributePattern as d, BindingCommand as m } from "@aurelia/runtime-html";
+import { CustomElement as r, attributePattern as o, bindingCommand as a, renderer as h, AttrSyntax as l, IAttrMapper as c, IPlatform as u, AppTask as d, AttributePattern as f, BindingCommand as m } from "@aurelia/runtime-html";
 
-import { ValueConverterExpression as g, bindingBehavior as p, ISignaler as b, valueConverter as v, connectable as T, CustomExpression as B, Interpolation as w, BindingMode as y, IExpressionParser as C, IObserverLocator as I } from "@aurelia/runtime";
+import { ValueConverterExpression as g, bindingBehavior as p, ISignaler as v, valueConverter as b, connectable as T, CustomExpression as B, Interpolation as w, BindingMode as y, IExpressionParser as C, IObserverLocator as I } from "@aurelia/runtime";
 
 import x from "i18next";
 
@@ -195,7 +195,7 @@ let V = class I18nService {
     }
 };
 
-V = P([ M(0, N), M(1, E), M(2, n), M(3, b) ], V);
+V = P([ M(0, N), M(1, E), M(2, n), M(3, v) ], V);
 
 let _ = class DateFormatValueConverter {
     constructor(t) {
@@ -214,7 +214,7 @@ let _ = class DateFormatValueConverter {
     }
 };
 
-_ = P([ v("df"), M(0, O) ], _);
+_ = P([ b("df"), M(0, O) ], _);
 
 let D = class NumberFormatBindingBehavior {
     bind(t, n, i) {
@@ -235,7 +235,7 @@ let F = class NumberFormatValueConverter {
     }
 };
 
-F = P([ v("nf"), M(0, O) ], F);
+F = P([ b("nf"), M(0, O) ], F);
 
 let j = class RelativeTimeBindingBehavior {
     bind(t, n, i) {
@@ -256,7 +256,7 @@ let K = class RelativeTimeValueConverter {
     }
 };
 
-K = P([ v("rt"), M(0, O) ], K);
+K = P([ b("rt"), M(0, O) ], K);
 
 let S = class TranslationBindingBehavior {
     bind(t, n, i) {
@@ -370,7 +370,7 @@ class TranslationBinding {
             const o = this.A(n.attributes);
             for (const n of o) if (this.L(n)) s[n] = i; else {
                 const s = r.for(this.target, H);
-                const o = s && s.viewModel ? this.oL.getAccessor(s.viewModel, n) : this.oL.getAccessor(this.target, n);
+                const o = (null === s || void 0 === s ? void 0 : s.viewModel) ? this.oL.getAccessor(s.viewModel, n) : this.oL.getAccessor(this.target, n);
                 const a = 0 === (2 & t) && (4 & o.type) > 0;
                 if (a) e.push(new AccessorUpdateTask(o, i, t, this.target, n)); else o.setValue(i, t, this.target, n);
                 this.B.add(o);
@@ -460,6 +460,7 @@ class ParameterBinding {
         this.locator = t.locator;
     }
     handleChange(t, n, i) {
+        if (!this.isBound) return;
         this.obs.version++;
         this.value = this.expr.evaluate(i, this.scope, this.locator, this);
         this.obs.clear();
@@ -684,7 +685,7 @@ let it = class TranslationValueConverter {
     }
 };
 
-it = P([ v("t"), M(0, O) ], it);
+it = P([ b("t"), M(0, O) ], it);
 
 const st = [ it, S ];
 
@@ -712,16 +713,16 @@ function et(t) {
             a.push(n);
         }
     }
-    const h = [ d.define(s, TranslationAttributePattern), m.define({
+    const h = [ f.define(s, TranslationAttributePattern), m.define({
         name: "t",
         aliases: o
-    }, TranslationBindingCommand), Z, d.define(r, TranslationBindAttributePattern), m.define({
+    }, TranslationBindingCommand), Z, f.define(r, TranslationBindAttributePattern), m.define({
         name: "t.bind",
         aliases: a
     }, TranslationBindBindingCommand), nt, q, J, Q ];
     return {
         register(n) {
-            return n.register(e.callback(E, (() => t.initOptions)), f.beforeActivate(O, (t => t.initPromise)), e.singleton(N, I18nextWrapper), e.singleton(O, V), ...h, ...st);
+            return n.register(e.callback(E, (() => t.initOptions)), d.beforeActivate(O, (t => t.initPromise)), e.singleton(N, I18nextWrapper), e.singleton(O, V), ...h, ...st);
         }
     };
 }

@@ -382,7 +382,7 @@ class TranslationBinding {
             const o = this.A(n.attributes);
             for (const n of o) if (this.L(n)) e[n] = i; else {
                 const e = s.CustomElement.for(this.target, g);
-                const o = e && e.viewModel ? this.oL.getAccessor(e.viewModel, n) : this.oL.getAccessor(this.target, n);
+                const o = (null === e || void 0 === e ? void 0 : e.viewModel) ? this.oL.getAccessor(e.viewModel, n) : this.oL.getAccessor(this.target, n);
                 const a = 0 === (2 & t) && (4 & o.type) > 0;
                 if (a) r.push(new AccessorUpdateTask(o, i, t, this.target, n)); else o.setValue(i, t, this.target, n);
                 this.B.add(o);
@@ -472,6 +472,7 @@ class ParameterBinding {
         this.locator = t.locator;
     }
     handleChange(t, s, n) {
+        if (!this.isBound) return;
         this.obs.version++;
         this.value = this.expr.evaluate(n, this.scope, this.locator, this);
         this.obs.clear();

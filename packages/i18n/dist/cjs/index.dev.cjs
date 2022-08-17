@@ -424,7 +424,7 @@ class TranslationBinding {
                 }
                 else {
                     const controller = runtimeHtml.CustomElement.for(this.target, forOpts);
-                    const accessor = controller && controller.viewModel
+                    const accessor = (controller === null || controller === void 0 ? void 0 : controller.viewModel)
                         ? this.oL.getAccessor(controller.viewModel, attribute)
                         : this.oL.getAccessor(this.target, attribute);
                     const shouldQueueUpdate = (flags & 2) === 0 && (accessor.type & 4) > 0;
@@ -473,7 +473,7 @@ class TranslationBinding {
     _isContentAttribute(attribute) {
         return this._contentAttributes.includes(attribute);
     }
-    _updateContent(content, flags) {
+    _updateContent(content, _flags) {
         const children = kernel.toArray(this.target.childNodes);
         const fallBackContents = [];
         const marker = 'au-i18n';
@@ -544,6 +544,9 @@ class ParameterBinding {
         this.locator = owner.locator;
     }
     handleChange(newValue, _previousValue, flags) {
+        if (!this.isBound) {
+            return;
+        }
         this.obs.version++;
         this.value = this.expr.evaluate(flags, this.scope, this.locator, this);
         this.obs.clear();
