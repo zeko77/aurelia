@@ -128,7 +128,11 @@ const getHmrCode = (className, moduleText = 'module') => {
         controller.definition = newDefinition;
         Object.assign(controller.viewModel, values);
         controller.hooks = new controller.hooks.constructor(controller.viewModel);
-        controller._hydrateCustomElement(hydrationInst, hydrationContext);
+        if (controller._hydrateCustomElement) {
+          controller._hydrateCustomElement(hydrationInst, hydrationContext);
+        } else {
+          controller.hE(hydrationInst, hydrationContext);
+        }
         h.parentNode.replaceChild(controller.host, h);
         controller.hostController = null;
         controller.deactivate(controller, controller.parent ?? null, LifecycleFlags.none);
@@ -695,7 +699,7 @@ function preprocess(unit, options, _fileExists = fileExists) {
     const basename = path__namespace.basename(unit.path, ext);
     const allOptions = preprocessOptions(options);
     const base = unit.base || '';
-    if (options.enableConventions && allOptions.templateExtensions.includes(ext)) {
+    if (allOptions.enableConventions && allOptions.templateExtensions.includes(ext)) {
         const possibleFilePair = allOptions.cssExtensions.map(e => path__namespace.join(base, unit.path.slice(0, -ext.length) + e));
         const filePair = possibleFilePair.find(_fileExists);
         if (filePair) {

@@ -1,7 +1,7 @@
 import { IContainer, ILogger } from '@aurelia/kernel';
 import { CustomElementDefinition, IPlatform, PartialCustomElementDefinition } from '@aurelia/runtime-html';
 import { IRouteContext } from './route-context';
-import { IRouterEvents } from './router-events';
+import { IRouterEvents, ManagedState, RoutingTrigger } from './router-events';
 import { ILocationManager } from './location-manager';
 import { RouteType } from './route';
 import { IRouteViewModel } from './component-agent';
@@ -10,12 +10,6 @@ import { IViewportInstruction, NavigationInstruction, RouteContextLike, Viewport
 import { UnwrapPromise } from './util';
 import { RouteDefinition } from './route-definition';
 import { ViewportAgent } from './viewport-agent';
-export declare const AuNavId: "au-nav-id";
-export declare type AuNavId = typeof AuNavId;
-export declare type ManagedState = {
-    [k: string]: unknown;
-    [AuNavId]: number;
-};
 export declare function isManagedState(state: {} | null): state is ManagedState;
 export declare function toManagedState(state: {} | null, navId: number): ManagedState;
 export declare type ResolutionMode = 'static' | 'dynamic';
@@ -94,15 +88,11 @@ export declare class RouterOptions {
     clone(): RouterOptions;
     toString(): string;
 }
-export declare type LoadOptions = INavigationOptions & {
-    params?: Params;
-};
 export interface INavigationOptions extends Partial<NavigationOptions> {
 }
 export declare class NavigationOptions extends RouterOptions {
     readonly title: string | ((node: RouteNode) => string | null) | null;
     readonly titleSeparator: string;
-    readonly append: boolean;
     /**
      * Specify a context to use for relative navigation.
      *
@@ -131,24 +121,13 @@ export declare class NavigationOptions extends RouterOptions {
     clone(): NavigationOptions;
     toString(): string;
 }
-export declare class Navigation {
-    readonly id: number;
-    readonly instructions: ViewportInstructionTree;
-    readonly trigger: 'popstate' | 'hashchange' | 'api';
-    readonly options: NavigationOptions;
-    readonly prevNavigation: Navigation | null;
-    finalInstructions: ViewportInstructionTree | undefined;
-    private constructor();
-    static create(input: Navigation): Navigation;
-    toString(): string;
-}
 export declare class Transition {
     readonly id: number;
     readonly prevInstructions: ViewportInstructionTree;
     readonly instructions: ViewportInstructionTree;
     finalInstructions: ViewportInstructionTree;
     readonly instructionsChanged: boolean;
-    readonly trigger: 'popstate' | 'hashchange' | 'api';
+    readonly trigger: RoutingTrigger;
     readonly options: NavigationOptions;
     readonly managedState: ManagedState | null;
     readonly previousRouteTree: RouteTree;
@@ -159,7 +138,7 @@ export declare class Transition {
     guardsResult: boolean | ViewportInstructionTree;
     error: unknown;
     private constructor();
-    static create(input: Omit<Transition, 'abortIfNeeded' | 'run' | 'handleError'>): Transition;
+    static create(input: Omit<Transition, 'run' | 'handleError'>): Transition;
     run<T>(cb: () => T, next: (value: UnwrapPromise<T>) => void): void;
     handleError(err: unknown): void;
     toString(): string;
@@ -183,8 +162,6 @@ export declare class Router {
     options: RouterOptions;
     private navigated;
     private navigationId;
-    private lastSuccessfulNavigation;
-    private activeNavigation;
     private instructions;
     private nextTr;
     private locationChangeSubscription;
@@ -216,7 +193,7 @@ export declare class Router {
      * router.load('product-detail/37', { context: this });
      * ```
      */
-    load(path: string, options?: LoadOptions): Promise<boolean>;
+    load(path: string, options?: INavigationOptions): Promise<boolean>;
     /**
      * Loads the provided paths as siblings.
      *
@@ -226,7 +203,7 @@ export declare class Router {
      * router.load(['category/50/product/20', 'widget/30']);
      * ```
      */
-    load(paths: readonly string[], options?: LoadOptions): Promise<boolean>;
+    load(paths: readonly string[], options?: INavigationOptions): Promise<boolean>;
     /**
      * Loads the provided component type. Must be a custom element.
      *
@@ -237,7 +214,7 @@ export declare class Router {
      * router.load(CustomElement.define({ name: 'greeter', template: 'Hello!' }));
      * ```
      */
-    load(componentType: RouteType, options?: LoadOptions): Promise<boolean>;
+    load(componentType: RouteType, options?: INavigationOptions): Promise<boolean>;
     /**
      * Loads the provided component types. Must be custom elements.
      *
@@ -247,7 +224,7 @@ export declare class Router {
      * router.load([MemberList, OrganizationList]);
      * ```
      */
-    load(componentTypes: readonly RouteType[], options?: LoadOptions): Promise<boolean>;
+    load(componentTypes: readonly RouteType[], options?: INavigationOptions): Promise<boolean>;
     /**
      * Loads the provided component definition. May or may not be pre-compiled.
      *
@@ -257,7 +234,7 @@ export declare class Router {
      * router.load({ name: 'greeter', template: 'Hello!' });
      * ```
      */
-    load(componentDefinition: PartialCustomElementDefinition, options?: LoadOptions): Promise<boolean>;
+    load(componentDefinition: PartialCustomElementDefinition, options?: INavigationOptions): Promise<boolean>;
     /**
      * Loads the provided component instance.
      *
@@ -270,7 +247,7 @@ export declare class Router {
      * router.load(greeter);
      * ```
      */
-    load(componentInstance: IRouteViewModel, options?: LoadOptions): Promise<boolean>;
+    load(componentInstance: IRouteViewModel, options?: INavigationOptions): Promise<boolean>;
     /**
      * Loads the provided ViewportInstruction, with component specified in any of the ways as described
      * in the other method overloads, and optional additional properties.
@@ -295,8 +272,8 @@ export declare class Router {
      * })
      * ```
      */
-    load(viewportInstruction: IViewportInstruction, options?: LoadOptions): boolean | Promise<boolean>;
-    load(instructionOrInstructions: NavigationInstruction | readonly NavigationInstruction[], options?: LoadOptions): boolean | Promise<boolean>;
+    load(viewportInstruction: IViewportInstruction, options?: INavigationOptions): boolean | Promise<boolean>;
+    load(instructionOrInstructions: NavigationInstruction | readonly NavigationInstruction[], options?: INavigationOptions): boolean | Promise<boolean>;
     isActive(instructionOrInstructions: NavigationInstruction | readonly NavigationInstruction[], context: RouteContextLike): boolean;
     private readonly vpaLookup;
     /**
@@ -319,7 +296,7 @@ export declare class Router {
      * @param instructions - The instruction tree that determines the transition
      * @param trigger - `'popstate'` or `'hashchange'` if initiated by a browser event, or `'api'` for manually initiated transitions via the `load` api.
      * @param state - The state to restore, if any.
-     * @param failedTr - If this is a redirect / fallback from a failed transition, the previous transition is passed forward to ensure the orinal promise resolves with the latest result.
+     * @param failedTr - If this is a redirect / fallback from a failed transition, the previous transition is passed forward to ensure the original promise resolves with the latest result.
      */
     private enqueue;
     private run;

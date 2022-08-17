@@ -72,11 +72,10 @@ export declare type CompositeSegmentExpressionOrLower = RouteExpression | Compos
 export declare class CompositeSegmentExpression {
     readonly raw: string;
     readonly siblings: readonly ScopedSegmentExpressionOrHigher[];
-    readonly append: boolean;
     get kind(): ExpressionKind.CompositeSegment;
-    constructor(raw: string, siblings: readonly ScopedSegmentExpressionOrHigher[], append: boolean);
+    constructor(raw: string, siblings: readonly ScopedSegmentExpressionOrHigher[]);
     static parse(state: ParserState): CompositeSegmentExpressionOrHigher;
-    toInstructions(append: boolean, open: number, close: number): ViewportInstruction[];
+    toInstructions(open: number, close: number): ViewportInstruction[];
     toString(): string;
 }
 export declare type ScopedSegmentExpressionOrHigher = SegmentGroupExpressionOrHigher | ScopedSegmentExpression;
@@ -101,7 +100,7 @@ export declare class ScopedSegmentExpression {
     get kind(): ExpressionKind.ScopedSegment;
     constructor(raw: string, left: SegmentGroupExpressionOrHigher, right: ScopedSegmentExpressionOrHigher);
     static parse(state: ParserState): ScopedSegmentExpressionOrHigher;
-    toInstructions(append: boolean, open: number, close: number): ViewportInstruction[];
+    toInstructions(open: number, close: number): ViewportInstruction[];
     toString(): string;
 }
 export declare type SegmentGroupExpressionOrHigher = SegmentExpression | SegmentGroupExpression;
@@ -141,7 +140,7 @@ export declare class SegmentGroupExpression {
     get kind(): ExpressionKind.SegmentGroup;
     constructor(raw: string, expression: CompositeSegmentExpressionOrHigher);
     static parse(state: ParserState): SegmentGroupExpressionOrHigher;
-    toInstructions(append: boolean, open: number, close: number): ViewportInstruction[];
+    toInstructions(open: number, close: number): ViewportInstruction[];
     toString(): string;
 }
 /**
@@ -157,7 +156,7 @@ export declare class SegmentExpression {
     static get EMPTY(): SegmentExpression;
     constructor(raw: string, component: ComponentExpression, action: ActionExpression, viewport: ViewportExpression, scoped: boolean);
     static parse(state: ParserState): SegmentExpression;
-    toInstructions(append: boolean, open: number, close: number): ViewportInstruction[];
+    toInstructions(open: number, close: number): ViewportInstruction[];
     toString(): string;
 }
 export declare class ComponentExpression {

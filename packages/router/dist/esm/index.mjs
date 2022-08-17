@@ -724,14 +724,18 @@ class InstructionComponent {
         }
         return null;
     }
-    toInstance(t) {
+    toInstance(t, i, n) {
         if (null !== this.instance) return this.instance;
-        if (void 0 !== t && null !== t) {
-            const i = this.isType() ? t.get(this.type) : t.get(o.keyFrom(this.name));
-            if (this.isType() && !(i instanceof this.type)) console.warn("Failed to instantiate", this.type, i);
-            return null !== i && void 0 !== i ? i : null;
+        if (null == t) return null;
+        const s = t.createChild();
+        const e = this.isType() ? s.get(this.type) : s.get(o.keyFrom(this.name));
+        if (null == e) {
+            console.warn("Failed to create instance when trying to resolve component", this.name, this.type, "=>", e);
+            throw new Error(`Failed to create instance when trying to resolve component '${this.name}'!`);
         }
-        return null;
+        const r = l.$el(s, e, n, null);
+        r.parent = i;
+        return e;
     }
     same(t, i = false) {
         return i ? this.type === t.type : this.name === t.name;
@@ -1434,6 +1438,10 @@ class ViewportContent extends EndpointContent {
         if (this.instruction.route instanceof FoundRoute && null !== (null === (t = this.instruction.route.match) || void 0 === t ? void 0 : t.reloadBehavior)) return null === (i = this.instruction.route.match) || void 0 === i ? void 0 : i.reloadBehavior;
         return null !== this.instruction.component.instance && "reloadBehavior" in this.instruction.component.instance && void 0 !== this.instruction.component.instance.reloadBehavior ? this.instruction.component.instance.reloadBehavior : "default";
     }
+    get controller() {
+        var t;
+        return null === (t = this.instruction.component.instance) || void 0 === t ? void 0 : t.$controller;
+    }
     equalComponent(t) {
         return this.instruction.sameComponent(this.router, t.instruction);
     }
@@ -1450,24 +1458,19 @@ class ViewportContent extends EndpointContent {
     createComponent(t, i) {
         if (this.contentStates.has("created")) return;
         if (!this.fromCache && !this.fromHistory) try {
-            this.instruction.component.set(this.toComponentInstance(t.container));
+            this.instruction.component.set(this.toComponentInstance(t.container, t.controller, t.element));
         } catch (n) {
             if ("" !== (null !== i && void 0 !== i ? i : "")) {
                 this.instruction.parameters.set([ this.instruction.component.name ]);
                 this.instruction.component.set(i);
                 try {
-                    this.instruction.component.set(this.toComponentInstance(t.container));
+                    this.instruction.component.set(this.toComponentInstance(t.container, t.controller, t.element));
                 } catch (t) {
                     throw new Error(`'${this.instruction.component.name}' did not match any configured route or registered component name - did you forget to add the component '${this.instruction.component.name}' to the dependencies or to register it as a global dependency?`);
                 }
             } else throw new Error(`'${this.instruction.component.name}' did not match any configured route or registered component name - did you forget to add the component '${this.instruction.component.name}' to the dependencies or to register it as a global dependency?`);
         }
         this.contentStates.set("created", void 0);
-        if (this.contentStates.has("loaded") || !this.instruction.component.instance) return;
-        if (!this.fromCache || !this.fromHistory) {
-            const i = this.contentController(t);
-            i.parent = t.controller;
-        }
     }
     canLoad() {
         var t, i, n;
@@ -1578,10 +1581,10 @@ class ViewportContent extends EndpointContent {
     }
     activateComponent(t, i, n, s, e, o, r) {
         return Runner.run(t, (() => this.contentStates.await("loaded")), (() => this.waitForParent(n)), (() => {
+            var t;
             if (this.contentStates.has("activating") || this.contentStates.has("activated")) return;
             this.contentStates.set("activating", void 0);
-            const t = this.contentController(e);
-            return t.activate(null !== i && void 0 !== i ? i : t, n, s, void 0);
+            return null === (t = this.controller) || void 0 === t ? void 0 : t.activate(null !== i && void 0 !== i ? i : this.controller, n, s, void 0);
         }), (() => {
             this.contentStates.set("activated", void 0);
         }));
@@ -1589,22 +1592,22 @@ class ViewportContent extends EndpointContent {
     deactivateComponent(t, i, n, s, e, o = false) {
         if (!this.contentStates.has("activated") && !this.contentStates.has("activating")) return;
         return Runner.run(t, (() => {
+            var t;
             if (o && null !== e.element) {
                 const t = Array.from(e.element.getElementsByTagName("*"));
                 for (const i of t) if (i.scrollTop > 0 || i.scrollLeft) i.setAttribute("au-element-scroll", `${i.scrollTop},${i.scrollLeft}`);
             }
             this.contentStates.delete("activated");
             this.contentStates.delete("activating");
-            const t = this.contentController(e);
-            return t.deactivate(null !== i && void 0 !== i ? i : t, n, s);
+            return null === (t = this.controller) || void 0 === t ? void 0 : t.deactivate(null !== i && void 0 !== i ? i : this.controller, n, s);
         }));
     }
     disposeComponent(t, i, n = false) {
+        var s;
         if (!this.contentStates.has("created") || null == this.instruction.component.instance) return;
         if (!n) {
             this.contentStates.delete("created");
-            const i = this.contentController(t);
-            return i.dispose();
+            return null === (s = this.controller) || void 0 === s ? void 0 : s.dispose();
         } else i.push(this);
     }
     freeContent(t, i, n, s, e = false) {
@@ -1617,9 +1620,9 @@ class ViewportContent extends EndpointContent {
         if (this.instruction.component.none) return null;
         return this.instruction.component.toType(t);
     }
-    toComponentInstance(t) {
+    toComponentInstance(t, i, n) {
         if (this.instruction.component.none) return null;
-        return this.instruction.component.toInstance(t);
+        return this.instruction.component.toInstance(t, i, n);
     }
     waitForParent(t) {
         if (null === t) return;

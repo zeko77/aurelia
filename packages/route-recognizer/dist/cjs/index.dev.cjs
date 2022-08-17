@@ -2,6 +2,13 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+class Parameter {
+    constructor(name, isOptional, isStar) {
+        this.name = name;
+        this.isOptional = isOptional;
+        this.isStar = isStar;
+    }
+}
 class ConfigurableRoute {
     constructor(path, caseSensitive, handler) {
         this.path = path;
@@ -10,9 +17,9 @@ class ConfigurableRoute {
     }
 }
 class Endpoint {
-    constructor(route, paramNames) {
+    constructor(route, params) {
         this.route = route;
-        this.paramNames = paramNames;
+        this.params = params;
     }
 }
 class RecognizedRoute {
@@ -106,8 +113,8 @@ class Candidate {
     getParams() {
         const { states, chars, endpoint } = this;
         const params = {};
-        for (const name of endpoint.paramNames) {
-            params[name] = void 0;
+        for (const param of endpoint.params) {
+            params[param.name] = void 0;
         }
         for (let i = 0, ii = states.length; i < ii; ++i) {
             const state = states[i];
@@ -226,6 +233,7 @@ class RouteRecognizer {
     constructor() {
         this.rootState = new State(null, null, '');
         this.cache = new Map();
+        this.endpointLookup = new Map();
     }
     add(routeOrRoutes) {
         if (routeOrRoutes instanceof Array) {
@@ -240,9 +248,12 @@ class RouteRecognizer {
     }
     $add(route) {
         const path = route.path;
-        const $route = new ConfigurableRoute(route.path, route.caseSensitive === true, route.handler);
+        const lookup = this.endpointLookup;
+        if (lookup.has(path))
+            throw new Error(`Cannot add duplicate path '${path}'.`);
+        const $route = new ConfigurableRoute(path, route.caseSensitive === true, route.handler);
         const parts = path === '' ? [''] : path.split('/').filter(isNotEmpty);
-        const paramNames = [];
+        const params = [];
         let state = this.rootState;
         for (const part of parts) {
             state = state.append(null, '/');
@@ -250,13 +261,13 @@ class RouteRecognizer {
                 case ':': {
                     const isOptional = part.endsWith('?');
                     const name = isOptional ? part.slice(1, -1) : part.slice(1);
-                    paramNames.push(name);
+                    params.push(new Parameter(name, isOptional, false));
                     state = new DynamicSegment(name, isOptional).appendTo(state);
                     break;
                 }
                 case '*': {
                     const name = part.slice(1);
-                    paramNames.push(name);
+                    params.push(new Parameter(name, true, true));
                     state = new StarSegment(name).appendTo(state);
                     break;
                 }
@@ -266,8 +277,9 @@ class RouteRecognizer {
                 }
             }
         }
-        const endpoint = new Endpoint($route, paramNames);
+        const endpoint = new Endpoint($route, params);
         state.setEndpoint(endpoint);
+        lookup.set(path, endpoint);
     }
     recognize(path) {
         let result = this.cache.get(path);
@@ -299,6 +311,10 @@ class RouteRecognizer {
         const { endpoint } = candidate;
         const params = candidate.getParams();
         return new RecognizedRoute(endpoint, params);
+    }
+    getEndpoint(path) {
+        var _a;
+        return (_a = this.endpointLookup.get(path)) !== null && _a !== void 0 ? _a : null;
     }
 }
 class State {
@@ -447,6 +463,7 @@ class StarSegment {
 
 exports.ConfigurableRoute = ConfigurableRoute;
 exports.Endpoint = Endpoint;
+exports.Parameter = Parameter;
 exports.RecognizedRoute = RecognizedRoute;
 exports.RouteRecognizer = RouteRecognizer;
 //# sourceMappingURL=index.dev.cjs.map
