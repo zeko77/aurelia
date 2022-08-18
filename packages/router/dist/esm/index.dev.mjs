@@ -3170,7 +3170,7 @@ let Navigator = class Navigator {
     toStoreableNavigation(navigation) {
         const storeable = navigation instanceof Navigation ? navigation.toStoredNavigation() : navigation;
         storeable.instruction = RoutingInstruction.stringify(this.container, storeable.instruction);
-        storeable.fullStateInstruction = RoutingInstruction.stringify(this.container, storeable.fullStateInstruction);
+        storeable.fullStateInstruction = RoutingInstruction.stringify(this.container, storeable.fullStateInstruction, false, true);
         if (typeof storeable.scope !== 'string') {
             storeable.scope = null;
         }
@@ -3194,7 +3194,7 @@ let Navigator = class Navigator {
         let instructions = [];
         if (typeof navigation.fullStateInstruction !== 'string') {
             instructions.push(...navigation.fullStateInstruction);
-            navigation.fullStateInstruction = RoutingInstruction.stringify(this.container, navigation.fullStateInstruction);
+            navigation.fullStateInstruction = RoutingInstruction.stringify(this.container, navigation.fullStateInstruction, false, true);
         }
         if (typeof navigation.instruction !== 'string') {
             instructions.push(...navigation.instruction);
@@ -3524,17 +3524,19 @@ class RoutingScope {
         }
         return scopes;
     }
-    async processInstructions(instructions, navigation, coordinator, configuredRoutePath = '') {
+    async processInstructions(instructions, earlierMatchedInstructions, navigation, coordinator, configuredRoutePath = '') {
         var _a, _b, _c, _d;
         const router = this.router;
         const options = router.configuration.options;
-        const nonRouteInstructions = instructions.filter(instruction => instruction.route == null);
+        const nonRouteInstructions = instructions.filter(instruction => !(instruction.route instanceof Route));
         if (nonRouteInstructions.length > 0) {
             const foundRoute = this.findInstructions(nonRouteInstructions, options.useDirectRouting, options.useConfiguredRoutes);
-            if (nonRouteInstructions.some(instr => !instr.component.none) && !foundRoute.foundConfiguration && !foundRoute.foundInstructions) {
-                router.unknownRoute(RoutingInstruction.stringify(router, nonRouteInstructions));
+            if (nonRouteInstructions.some(instr => !instr.component.none || instr.route != null)
+                && !foundRoute.foundConfiguration
+                && !foundRoute.foundInstructions) {
+                this.unknownRoute(nonRouteInstructions);
             }
-            instructions = [...instructions.filter(instruction => instruction.route != null), ...foundRoute.instructions];
+            instructions = [...instructions.filter(instruction => instruction.route instanceof Route), ...foundRoute.instructions];
             if (instructions.some(instr => instr.scope !== this)) {
                 console.warn('Not the current scope for instruction(s)!', this, instructions);
             }
@@ -3556,7 +3558,6 @@ class RoutingScope {
             addInstruction.scope = addInstruction.scope.owningScope;
         }
         const allChangedEndpoints = [];
-        let earlierMatchedInstructions = [];
         let { matchedInstructions, remainingInstructions } = this.matchEndpoints(instructions, earlierMatchedInstructions);
         let guard = 100;
         do {
@@ -3605,7 +3606,7 @@ class RoutingScope {
                         }
                     }
                     if (action === 'skip' && !matchedInstruction.hasNextScopeInstructions) {
-                        allChangedEndpoints.push(...(await endpoint.scope.processInstructions([], navigation, coordinator, configuredRoutePath)));
+                        allChangedEndpoints.push(...(await endpoint.scope.processInstructions([], earlierMatchedInstructions, navigation, coordinator, configuredRoutePath)));
                     }
                 }
             }
@@ -3651,14 +3652,11 @@ class RoutingScope {
                         continue;
                     }
                     const nextScope = (_d = (_c = instruction.endpoint.instance) === null || _c === void 0 ? void 0 : _c.scope) !== null && _d !== void 0 ? _d : instruction.endpoint.scope;
-                    nextProcesses.push(nextScope.processInstructions(instruction.nextScopeInstructions, navigation, coordinator, configuredRoutePath));
+                    nextProcesses.push(nextScope.processInstructions(instruction.nextScopeInstructions, earlierMatchedInstructions, navigation, coordinator, configuredRoutePath));
                 }
                 allChangedEndpoints.push(...(await Promise.all(nextProcesses)).flat());
             }
-            if (navigation.useFullStateInstruction) {
-                coordinator.appendedInstructions = coordinator.appendedInstructions.filter(instr => !instr.default);
-            }
-            ({ matchedInstructions, earlierMatchedInstructions, remainingInstructions } =
+            ({ matchedInstructions, remainingInstructions } =
                 coordinator.dequeueAppendedInstructions(matchedInstructions, earlierMatchedInstructions, remainingInstructions));
             if (matchedInstructions.length === 0 && remainingInstructions.length === 0) {
                 const pendingEndpoints = earlierMatchedInstructions
@@ -3666,7 +3664,7 @@ class RoutingScope {
                     .filter(promise => promise != null);
                 if (pendingEndpoints.length > 0) {
                     await Promise.any(pendingEndpoints);
-                    ({ matchedInstructions, earlierMatchedInstructions, remainingInstructions } =
+                    ({ matchedInstructions, remainingInstructions } =
                         coordinator.dequeueAppendedInstructions(matchedInstructions, earlierMatchedInstructions, remainingInstructions));
                 }
                 else {
@@ -3680,18 +3678,25 @@ class RoutingScope {
         } while (matchedInstructions.length > 0 || remainingInstructions.length > 0);
         return allChangedEndpoints;
     }
-    unknownRoute(route) {
-        if (typeof route !== 'string' || route.length === 0) {
-            return;
+    unknownRoute(instructions) {
+        const options = this.router.configuration.options;
+        const route = RoutingInstruction.stringify(this.router, instructions);
+        if (instructions[0].route != null) {
+            if (!options.useConfiguredRoutes) {
+                throw new Error("Can not match '" + route + "' since the router is configured to not use configured routes.");
+            }
+            else {
+                throw new Error("No matching configured route found for '" + route + "'.");
+            }
         }
-        if (this.router.configuration.options.useConfiguredRoutes && this.router.configuration.options.useDirectRouting) {
-            throw new Error("No matching configured route or component found for '" + route + "'");
+        else if (options.useConfiguredRoutes && options.useDirectRouting) {
+            throw new Error("No matching configured route or component found for '" + route + "'.");
         }
-        else if (this.router.configuration.options.useConfiguredRoutes) {
-            throw new Error("No matching configured route found for '" + route + "'");
+        else if (options.useConfiguredRoutes) {
+            throw new Error("No matching configured route found for '" + route + "'.");
         }
         else {
-            throw new Error("No matching route/component found for '" + route + "'");
+            throw new Error("No matching route/component found for '" + route + "'.");
         }
     }
     ensureClearStateInstruction(instructions) {
@@ -4475,7 +4480,6 @@ class NavigationCoordinator {
     dequeueAppendedInstructions(matchedInstructions, earlierMatchedInstructions, remainingInstructions) {
         let appendedInstructions = [...this.appendedInstructions];
         matchedInstructions = [...matchedInstructions];
-        earlierMatchedInstructions = [...earlierMatchedInstructions];
         remainingInstructions = [...remainingInstructions];
         const nonDefaultInstructions = appendedInstructions.filter(instr => !instr.default);
         const defaultInstructions = appendedInstructions.filter(instr => instr.default);
@@ -4507,7 +4511,7 @@ class NavigationCoordinator {
                 remainingInstructions.push(appendedInstruction);
             }
         }
-        return { matchedInstructions, earlierMatchedInstructions, remainingInstructions };
+        return { matchedInstructions, remainingInstructions };
     }
     checkSyncState(state) {
         var _a;
@@ -4778,7 +4782,7 @@ class Router {
                     : RoutingInstruction.parse(this, transformedInstruction);
             }
             (_a = navigation.scope) !== null && _a !== void 0 ? _a : (navigation.scope = this.rootScope.scope);
-            const allChangedEndpoints = await navigation.scope.processInstructions(transformedInstruction, navigation, coordinator);
+            const allChangedEndpoints = await navigation.scope.processInstructions(transformedInstruction, [], navigation, coordinator);
             return Runner.run(null, () => {
                 coordinator.finalEndpoint();
                 return coordinator.waitForSyncState('completed');
@@ -5030,20 +5034,6 @@ class Router {
             }
         }
         coordinator === null || coordinator === void 0 ? void 0 : coordinator.enqueueAppendedInstructions(instructions);
-    }
-    unknownRoute(route) {
-        if (typeof route !== 'string' || route.length === 0) {
-            return;
-        }
-        if (this.configuration.options.useConfiguredRoutes && this.configuration.options.useDirectRouting) {
-            throw new Error("No matching configured route or component found for '" + route + "'");
-        }
-        else if (this.configuration.options.useConfiguredRoutes) {
-            throw new Error("No matching configured route found for '" + route + "'");
-        }
-        else {
-            throw new Error("No matching route/component found for '" + route + "'");
-        }
     }
     async updateNavigation(navigation) {
         var _a, _b, _c, _d, _e, _f, _g;

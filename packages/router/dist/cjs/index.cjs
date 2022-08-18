@@ -2516,7 +2516,7 @@ exports.Navigator = class Navigator {
     toStoreableNavigation(t) {
         const i = t instanceof Navigation ? t.toStoredNavigation() : t;
         i.instruction = RoutingInstruction.stringify(this.container, i.instruction);
-        i.fullStateInstruction = RoutingInstruction.stringify(this.container, i.fullStateInstruction);
+        i.fullStateInstruction = RoutingInstruction.stringify(this.container, i.fullStateInstruction, false, true);
         if ("string" !== typeof i.scope) i.scope = null;
         return i;
     }
@@ -2530,7 +2530,7 @@ exports.Navigator = class Navigator {
         let s = [];
         if ("string" !== typeof t.fullStateInstruction) {
             s.push(...t.fullStateInstruction);
-            t.fullStateInstruction = RoutingInstruction.stringify(this.container, t.fullStateInstruction);
+            t.fullStateInstruction = RoutingInstruction.stringify(this.container, t.fullStateInstruction, false, true);
         }
         if ("string" !== typeof t.instruction) {
             s.push(...t.instruction);
@@ -2780,66 +2780,65 @@ class RoutingScope {
         }
         return i;
     }
-    async processInstructions(t, i, n, s = "") {
-        var e, o, r, l;
-        const h = this.router;
-        const a = h.configuration.options;
-        const c = t.filter((t => null == t.route));
-        if (c.length > 0) {
-            const i = this.findInstructions(c, a.useDirectRouting, a.useConfiguredRoutes);
-            if (c.some((t => !t.component.none)) && !i.foundConfiguration && !i.foundInstructions) h.unknownRoute(RoutingInstruction.stringify(h, c));
-            t = [ ...t.filter((t => null != t.route)), ...i.instructions ];
+    async processInstructions(t, i, n, s, e = "") {
+        var o, r, l, h;
+        const a = this.router;
+        const c = a.configuration.options;
+        const f = t.filter((t => !(t.route instanceof Route)));
+        if (f.length > 0) {
+            const i = this.findInstructions(f, c.useDirectRouting, c.useConfiguredRoutes);
+            if (f.some((t => !t.component.none || null != t.route)) && !i.foundConfiguration && !i.foundInstructions) this.unknownRoute(f);
+            t = [ ...t.filter((t => t.route instanceof Route)), ...i.instructions ];
             if (t.some((t => t.scope !== this))) console.warn("Not the current scope for instruction(s)!", this, t);
-            if (i.foundConfiguration) s = (null !== s && void 0 !== s ? s : "") + i.matching;
+            if (i.foundConfiguration) e = (null !== e && void 0 !== e ? e : "") + i.matching;
         }
-        const f = t.filter((t => t.component.isFunction() || t.component.isPromise()));
-        if (f.length > 0) await Promise.all(f.map((t => t.component.resolve())));
-        if (!a.additiveInstructionDefault) t = this.ensureClearStateInstruction(t);
-        let d = [];
-        ({clearEndpoints: d, instructions: t} = this.getClearAllEndpoints(t));
-        for (const i of t.filter((t => t.isAddAll(h)))) {
+        const d = t.filter((t => t.component.isFunction() || t.component.isPromise()));
+        if (d.length > 0) await Promise.all(d.map((t => t.component.resolve())));
+        if (!c.additiveInstructionDefault) t = this.ensureClearStateInstruction(t);
+        let v = [];
+        ({clearEndpoints: v, instructions: t} = this.getClearAllEndpoints(t));
+        for (const i of t.filter((t => t.isAddAll(a)))) {
             i.endpoint.set(i.scope.endpoint.name);
             i.scope = i.scope.owningScope;
         }
-        const v = [];
-        let p = [];
-        let {matchedInstructions: g, remainingInstructions: w} = this.matchEndpoints(t, p);
+        const p = [];
+        let {matchedInstructions: g, remainingInstructions: w} = this.matchEndpoints(t, i);
         let m = 100;
         do {
-            if (!m--) h.unresolvedInstructionsError(i, w);
-            const a = [];
-            const c = g.map((t => t.endpoint.instance));
-            g.push(...d.filter((t => !c.includes(t))).map((t => RoutingInstruction.createClear(h, t))));
-            const f = await RoutingHook.invokeBeforeNavigation(g, i);
-            if (false === f) {
-                h.cancelNavigation(i, n);
+            if (!m--) a.unresolvedInstructionsError(n, w);
+            const c = [];
+            const f = g.map((t => t.endpoint.instance));
+            g.push(...v.filter((t => !f.includes(t))).map((t => RoutingInstruction.createClear(a, t))));
+            const d = await RoutingHook.invokeBeforeNavigation(g, n);
+            if (false === d) {
+                a.cancelNavigation(n, s);
                 return [];
-            } else if (true !== f && f !== g) {
+            } else if (true !== d && d !== g) {
                 const t = RoutingInstruction.flat(g);
                 w = w.filter((i => !t.includes(i)));
-                g = f;
+                g = d;
             }
             for (const t of g) {
-                const r = t.endpoint.instance;
-                if (null !== r) {
-                    const l = r.setNextContent(t, i);
-                    if ("skip" !== l) {
-                        a.push(r);
-                        n.addEndpoint(r);
+                const l = t.endpoint.instance;
+                if (null !== l) {
+                    const h = l.setNextContent(t, n);
+                    if ("skip" !== h) {
+                        c.push(l);
+                        s.addEndpoint(l);
                     }
-                    const c = [ r ];
-                    if ("swap" === l) c.push(...r.getContent().connectedScope.allScopes(true).map((t => t.endpoint)));
-                    u(d, (t => c.includes(t)));
-                    u(g, (i => i !== t && i.isClear(h) && c.includes(i.endpoint.instance)));
-                    if (!t.isClear(h) && (null === (o = null === (e = t.scope) || void 0 === e ? void 0 : e.parent) || void 0 === o ? void 0 : o.isViewportScope)) {
-                        u(d, (i => i === t.scope.parent.endpoint));
-                        u(g, (i => i !== t && i.isClear(h) && i.endpoint.instance === t.scope.parent.endpoint));
+                    const f = [ l ];
+                    if ("swap" === h) f.push(...l.getContent().connectedScope.allScopes(true).map((t => t.endpoint)));
+                    u(v, (t => f.includes(t)));
+                    u(g, (i => i !== t && i.isClear(a) && f.includes(i.endpoint.instance)));
+                    if (!t.isClear(a) && (null === (r = null === (o = t.scope) || void 0 === o ? void 0 : o.parent) || void 0 === r ? void 0 : r.isViewportScope)) {
+                        u(v, (i => i === t.scope.parent.endpoint));
+                        u(g, (i => i !== t && i.isClear(a) && i.endpoint.instance === t.scope.parent.endpoint));
                     }
-                    if ("skip" !== l && t.hasNextScopeInstructions) for (const i of t.nextScopeInstructions) {
-                        i.scope = r.scope;
+                    if ("skip" !== h && t.hasNextScopeInstructions) for (const i of t.nextScopeInstructions) {
+                        i.scope = l.scope;
                         i.endpoint.instance = null;
                     }
-                    if ("skip" === l && !t.hasNextScopeInstructions) v.push(...await r.scope.processInstructions([], i, n, s));
+                    if ("skip" === h && !t.hasNextScopeInstructions) p.push(...await l.scope.processInstructions([], i, n, s, e));
                 }
             }
             const R = g.filter((t => {
@@ -2848,53 +2847,53 @@ class RoutingScope {
             }));
             const I = R.filter((t => t.hasNextScopeInstructions));
             if (0 === R.length || 0 === I.length) {
-                if (!h.isRestrictedNavigation) n.finalEndpoint();
-                n.run();
-                if (n.hasAllEndpoints) {
-                    const t = n.waitForSyncState("guardedUnload");
+                if (!a.isRestrictedNavigation) s.finalEndpoint();
+                s.run();
+                if (s.hasAllEndpoints) {
+                    const t = s.waitForSyncState("guardedUnload");
                     if (t instanceof Promise) await t;
                 }
             }
-            if (n.cancelled) {
-                h.cancelNavigation(i, n);
+            if (s.cancelled) {
+                a.cancelNavigation(n, s);
                 return [];
             }
-            for (const t of a) if (v.every((i => i !== t))) v.push(t);
-            p.push(...g.splice(0));
-            if (w.length > 0) ({matchedInstructions: g, remainingInstructions: w} = this.matchEndpoints(w, p));
-            if (!h.isRestrictedNavigation && (g.length > 0 || w.length > 0) && n.running) {
-                const t = n.waitForSyncState("swapped");
+            for (const t of c) if (p.every((i => i !== t))) p.push(t);
+            i.push(...g.splice(0));
+            if (w.length > 0) ({matchedInstructions: g, remainingInstructions: w} = this.matchEndpoints(w, i));
+            if (!a.isRestrictedNavigation && (g.length > 0 || w.length > 0) && s.running) {
+                const t = s.waitForSyncState("swapped");
                 if (t instanceof Promise) await t;
             }
             if (0 === g.length && 0 === w.length) {
-                const e = [];
-                for (const o of t) {
-                    if (!o.hasNextScopeInstructions) continue;
-                    const t = null !== (l = null === (r = o.endpoint.instance) || void 0 === r ? void 0 : r.scope) && void 0 !== l ? l : o.endpoint.scope;
-                    e.push(t.processInstructions(o.nextScopeInstructions, i, n, s));
+                const o = [];
+                for (const r of t) {
+                    if (!r.hasNextScopeInstructions) continue;
+                    const t = null !== (h = null === (l = r.endpoint.instance) || void 0 === l ? void 0 : l.scope) && void 0 !== h ? h : r.endpoint.scope;
+                    o.push(t.processInstructions(r.nextScopeInstructions, i, n, s, e));
                 }
-                v.push(...(await Promise.all(e)).flat());
+                p.push(...(await Promise.all(o)).flat());
             }
-            if (i.useFullStateInstruction) n.appendedInstructions = n.appendedInstructions.filter((t => !t.default));
-            ({matchedInstructions: g, earlierMatchedInstructions: p, remainingInstructions: w} = n.dequeueAppendedInstructions(g, p, w));
+            ({matchedInstructions: g, remainingInstructions: w} = s.dequeueAppendedInstructions(g, i, w));
             if (0 === g.length && 0 === w.length) {
-                const t = p.map((t => {
+                const t = i.map((t => {
                     var i, n;
                     return null === (n = (null === (i = t.endpoint.instance) || void 0 === i ? void 0 : i.connectedCE).pendingPromise) || void 0 === n ? void 0 : n.promise;
                 })).filter((t => null != t));
                 if (t.length > 0) {
                     await Promise.any(t);
-                    ({matchedInstructions: g, earlierMatchedInstructions: p, remainingInstructions: w} = n.dequeueAppendedInstructions(g, p, w));
-                } else g = d.map((t => RoutingInstruction.createClear(h, t)));
+                    ({matchedInstructions: g, remainingInstructions: w} = s.dequeueAppendedInstructions(g, i, w));
+                } else g = v.map((t => RoutingInstruction.createClear(a, t)));
             }
             const E = g.filter((t => t.component.isFunction() || t.component.isPromise()));
             if (E.length > 0) await Promise.all(E.map((t => t.component.resolve())));
         } while (g.length > 0 || w.length > 0);
-        return v;
+        return p;
     }
     unknownRoute(t) {
-        if ("string" !== typeof t || 0 === t.length) return;
-        if (this.router.configuration.options.useConfiguredRoutes && this.router.configuration.options.useDirectRouting) throw new Error("No matching configured route or component found for '" + t + "'"); else if (this.router.configuration.options.useConfiguredRoutes) throw new Error("No matching configured route found for '" + t + "'"); else throw new Error("No matching route/component found for '" + t + "'");
+        const i = this.router.configuration.options;
+        const n = RoutingInstruction.stringify(this.router, t);
+        if (null != t[0].route) if (!i.useConfiguredRoutes) throw new Error("Can not match '" + n + "' since the router is configured to not use configured routes."); else throw new Error("No matching configured route found for '" + n + "'."); else if (i.useConfiguredRoutes && i.useDirectRouting) throw new Error("No matching configured route or component found for '" + n + "'."); else if (i.useConfiguredRoutes) throw new Error("No matching configured route found for '" + n + "'."); else throw new Error("No matching route/component found for '" + n + "'.");
     }
     ensureClearStateInstruction(t) {
         const i = this.router;
@@ -3567,7 +3566,6 @@ class NavigationCoordinator {
     dequeueAppendedInstructions(t, i, n) {
         let s = [ ...this.appendedInstructions ];
         t = [ ...t ];
-        i = [ ...i ];
         n = [ ...n ];
         const e = s.filter((t => !t.default));
         const o = s.filter((t => t.default));
@@ -3585,7 +3583,6 @@ class NavigationCoordinator {
         }
         return {
             matchedInstructions: t,
-            earlierMatchedInstructions: i,
             remainingInstructions: n
         };
     }
@@ -3798,7 +3795,7 @@ class Router {
             if ("/" === e) e = "";
             if ("string" === typeof e) e = "" === e ? [ new RoutingInstruction("") ] : RoutingInstruction.parse(this, e);
             null !== (i = t.scope) && void 0 !== i ? i : t.scope = this.rootScope.scope;
-            const r = await t.scope.processInstructions(e, t, s);
+            const r = await t.scope.processInstructions(e, [], t, s);
             return Runner.run(null, (() => {
                 s.finalEndpoint();
                 return s.waitForSyncState("completed");
@@ -4005,10 +4002,6 @@ class Router {
         }
         if (null === n) if (!this.loadedFirst) this.appendedInstructions.push(...t); else throw Error("Failed to append routing instructions to coordinator");
         null === n || void 0 === n ? void 0 : n.enqueueAppendedInstructions(t);
-    }
-    unknownRoute(t) {
-        if ("string" !== typeof t || 0 === t.length) return;
-        if (this.configuration.options.useConfiguredRoutes && this.configuration.options.useDirectRouting) throw new Error("No matching configured route or component found for '" + t + "'"); else if (this.configuration.options.useConfiguredRoutes) throw new Error("No matching configured route found for '" + t + "'"); else throw new Error("No matching route/component found for '" + t + "'");
     }
     async updateNavigation(t) {
         var i, n, s, e, o, r, l;

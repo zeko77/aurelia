@@ -108,11 +108,11 @@ export declare class RoutingScope {
     get ownedScopes(): RoutingScope[];
     get routingInstruction(): RoutingInstruction | null;
     getOwnedScopes(includeDisabled?: boolean): RoutingScope[];
-    processInstructions(instructions: RoutingInstruction[], navigation: Navigation, coordinator: NavigationCoordinator, configuredRoutePath?: string): Promise<Endpoint[]>;
+    processInstructions(instructions: RoutingInstruction[], earlierMatchedInstructions: RoutingInstruction[], navigation: Navigation, coordinator: NavigationCoordinator, configuredRoutePath?: string): Promise<Endpoint[]>;
     /**
      * Deal with/throw an unknown route error.
      *
-     * @param route - The failing route
+     * @param instructions - The failing instructions
      */
     private unknownRoute;
     /**
