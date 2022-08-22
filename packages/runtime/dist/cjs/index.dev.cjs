@@ -717,7 +717,7 @@ class BindingBehaviorExpression {
         if (!(behavior instanceof BindingBehaviorFactory)) {
             if (b[this.behaviorKey] === void 0) {
                 b[this.behaviorKey] = behavior;
-                behavior.bind.call(behavior, f, s, b, ...this.args.map(a => a.evaluate(f, s, b.locator, null)));
+                behavior.bind(f, s, b, ...this.args.map(a => a.evaluate(f, s, b.locator, null)));
             }
             else {
                 throw new Error(`AUR0102: BindingBehavior named '${this.name}' already applied.`);
@@ -2816,7 +2816,7 @@ function noopHandleChange() {
     throw new Error(`AUR2011: method "handleChange" not implemented`);
 }
 function noopHandleCollectionChange() {
-    throw new Error(`AUR2012: method "handleCollectionChange" not implemented`);
+    throw new Error(`AUR2011: method "handleCollectionChange" not implemented`);
 }
 class BindingObserverRecord {
     constructor(b) {

@@ -1,4 +1,4 @@
-import { preprocess, preprocessOptions } from '@aurelia/plugin-conventions';
+import { preprocessOptions, preprocess } from '@aurelia/plugin-conventions';
 import * as babelJest from 'babel-jest';
 
 const babelTransformer = babelJest.createTransformer();

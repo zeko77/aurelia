@@ -1,5 +1,5 @@
 import { DI, IEventAggregator, toArray, camelCase, Registration } from '../../../kernel/dist/native-modules/index.mjs';
-import { CustomElement, attributePattern, bindingCommand, renderer, AttrSyntax, IAttrMapper, IPlatform, AppTask, AttributePattern, BindingCommand } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { CustomElement, attributePattern, bindingCommand, renderer, AttrSyntax, IAttrMapper, IPlatform, AttributePattern, BindingCommand, AppTask } from '../../../runtime-html/dist/native-modules/index.mjs';
 import { ValueConverterExpression, bindingBehavior, ISignaler, valueConverter, connectable, CustomExpression, Interpolation, BindingMode, IExpressionParser, IObserverLocator } from '../../../runtime/dist/native-modules/index.mjs';
 import i18next from 'i18next';
 

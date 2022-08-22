@@ -1,4 +1,4 @@
-import { noop, isArrayIndex, DI, Registration, emptyArray, kebabCase, EventAggregator, ILogger } from '../../../kernel/dist/native-modules/index.mjs';
+import { noop, isArrayIndex, DI, Registration, kebabCase, emptyArray, EventAggregator, ILogger } from '../../../kernel/dist/native-modules/index.mjs';
 import { IObserverLocator, valueConverter, IDirtyChecker, INodeObserverLocator, Scope, OverrideContext } from '../../../runtime/dist/native-modules/index.mjs';
 import { StandardConfiguration, IPlatform, ITemplateCompiler, CustomElement, CustomAttribute, Aurelia, bindable, customElement } from '../../../runtime-html/dist/native-modules/index.mjs';
 import { BrowserPlatform } from '../../../platform-browser/dist/native-modules/index.mjs';

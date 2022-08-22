@@ -2262,7 +2262,7 @@ const CustomAttribute = Object.freeze({
 });
 
 function watch(expressionOrPropertyAccessFn, changeHandlerOrCallback) {
-    if (!expressionOrPropertyAccessFn) {
+    if (expressionOrPropertyAccessFn == null) {
         throw new Error(`AUR0772: Invalid watch config. Expected an expression or a fn`);
     }
     return function decorator(target, key, descriptor) {
@@ -3669,7 +3669,7 @@ class Controller {
             }
             ret = kernel.resolveAll(ret, this.viewModel.binding(this.$initiator, this.parent, this.$flags));
         }
-        if (ret instanceof Promise) {
+        if (isPromise(ret)) {
             this._ensurePromise();
             ret.then(() => {
                 this.bind();
@@ -3714,7 +3714,7 @@ class Controller {
             }
             ret = kernel.resolveAll(ret, this.viewModel.bound(this.$initiator, this.parent, this.$flags));
         }
-        if (ret instanceof Promise) {
+        if (isPromise(ret)) {
             this._ensurePromise();
             ret.then(() => {
                 this.isBound = true;
@@ -3790,7 +3790,7 @@ class Controller {
             }
             ret = kernel.resolveAll(ret, this.viewModel.attaching(this.$initiator, this.parent, this.$flags));
         }
-        if (ret instanceof Promise) {
+        if (isPromise(ret)) {
             this._ensurePromise();
             this._enterActivating();
             ret.then(() => {
@@ -3851,7 +3851,7 @@ class Controller {
             }
             ret = kernel.resolveAll(ret, this.viewModel.detaching(this.$initiator, this.parent, this.$flags));
         }
-        if (ret instanceof Promise) {
+        if (isPromise(ret)) {
             this._ensurePromise();
             initiator._enterDetaching();
             ret.then(() => {
@@ -3977,7 +3977,7 @@ class Controller {
                 }
                 _retPromise = kernel.resolveAll(_retPromise, this.viewModel.attached(this.$initiator, this.$flags));
             }
-            if (_retPromise instanceof Promise) {
+            if (isPromise(_retPromise)) {
                 this._ensurePromise();
                 _retPromise.then(() => {
                     this.state = 2;
@@ -4027,7 +4027,7 @@ class Controller {
                     }
                     ret = kernel.resolveAll(ret, cur.viewModel.unbinding(cur.$initiator, cur.parent, cur.$flags));
                 }
-                if (ret instanceof Promise) {
+                if (isPromise(ret)) {
                     this._ensurePromise();
                     this._enterUnbinding();
                     ret.then(() => {
@@ -4725,17 +4725,17 @@ class ListenerOptions {
     }
 }
 class Listener {
-    constructor(platform, targetEvent, sourceExpression, target, eventDelegator, locator, _options) {
+    constructor(platform, targetEvent, sourceExpression, target, eventDelegator, locator, options) {
         this.platform = platform;
         this.targetEvent = targetEvent;
         this.sourceExpression = sourceExpression;
         this.target = target;
         this.eventDelegator = eventDelegator;
         this.locator = locator;
-        this._options = _options;
         this.interceptor = this;
         this.isBound = false;
         this.handler = null;
+        this._options = options;
     }
     callSource(event) {
         const overrideContext = this.$scope.overrideContext;
@@ -8582,7 +8582,7 @@ class Portal {
         const ret = kernel.onResolve(this._deactivating(null, newTarget, $controller.flags), () => {
             return this._activating(null, newTarget, $controller.flags);
         });
-        if (ret instanceof Promise) {
+        if (isPromise(ret)) {
             ret.catch(err => { throw err; });
         }
     }
@@ -8933,7 +8933,9 @@ class Repeat {
         return this._activateAllViews(initiator, flags);
     }
     detaching(initiator, parent, flags) {
+        var _a;
         this._checkCollectionObserver(flags);
+        (_a = this._observer) === null || _a === void 0 ? void 0 : _a.unsubscribe(this);
         return this._deactivateAllViews(initiator, flags);
     }
     itemsChanged(flags) {
@@ -8947,7 +8949,7 @@ class Repeat {
         const ret = kernel.onResolve(this._deactivateAllViews(null, flags), () => {
             return this._activateAllViews(null, flags);
         });
-        if (ret instanceof Promise) {
+        if (isPromise(ret)) {
             ret.catch(rethrow);
         }
     }
@@ -8971,7 +8973,7 @@ class Repeat {
             const ret = kernel.onResolve(this._deactivateAllViews(null, flags), () => {
                 return this._activateAllViews(null, flags);
             });
-            if (ret instanceof Promise) {
+            if (isPromise(ret)) {
                 ret.catch(rethrow);
             }
         }
@@ -8983,7 +8985,7 @@ class Repeat {
                 const ret = kernel.onResolve(this._deactivateAndRemoveViewsByKey($indexMap, flags), () => {
                     return this._createAndActivateAndSortViewsByKey(oldLength, $indexMap, flags);
                 });
-                if (ret instanceof Promise) {
+                if (isPromise(ret)) {
                     ret.catch(rethrow);
                 }
             }
@@ -9054,7 +9056,7 @@ class Repeat {
             }
             setContextualProperties(viewScope.overrideContext, i, newLen);
             ret = view.activate(initiator !== null && initiator !== void 0 ? initiator : view, $controller, flags, viewScope);
-            if (ret instanceof Promise) {
+            if (isPromise(ret)) {
                 (promises !== null && promises !== void 0 ? promises : (promises = [])).push(ret);
             }
         });
@@ -9075,14 +9077,14 @@ class Repeat {
             view = views[i];
             view.release();
             ret = view.deactivate(initiator !== null && initiator !== void 0 ? initiator : view, $controller, flags);
-            if (ret instanceof Promise) {
+            if (isPromise(ret)) {
                 (promises !== null && promises !== void 0 ? promises : (promises = [])).push(ret);
             }
         }
         if (promises !== void 0) {
-            return promises.length === 1
+            return (promises.length === 1
                 ? promises[0]
-                : Promise.all(promises);
+                : Promise.all(promises));
         }
     }
     _deactivateAndRemoveViewsByKey(indexMap, flags) {
@@ -9097,7 +9099,7 @@ class Repeat {
             view = views[deleted[i]];
             view.release();
             ret = view.deactivate(view, $controller, flags);
-            if (ret instanceof Promise) {
+            if (isPromise(ret)) {
                 (promises !== null && promises !== void 0 ? promises : (promises = [])).push(ret);
             }
         }
@@ -9153,7 +9155,7 @@ class Repeat {
                 setContextualProperties(viewScope.overrideContext, i, newLen);
                 view.setLocation(location);
                 ret = view.activate(view, $controller, flags, viewScope);
-                if (ret instanceof Promise) {
+                if (isPromise(ret)) {
                     (promises !== null && promises !== void 0 ? promises : (promises = [])).push(ret);
                 }
             }
@@ -9620,7 +9622,7 @@ exports.PromiseTemplateController = class PromiseTemplateController {
     swap(initiator, flags) {
         var _a, _b;
         const value = this.value;
-        if (!(value instanceof Promise)) {
+        if (!isPromise(value)) {
             this.logger.warn(`The value '${String(value)}' is not a promise. No change will be done.`);
             return;
         }
@@ -10031,7 +10033,7 @@ class AuRender {
         const ret = kernel.onResolve(this._deactivate(this.view, null, flags), () => {
             return this.compose(void 0, newValue, null, flags);
         });
-        if (ret instanceof Promise) {
+        if (isPromise(ret)) {
             ret.catch(err => { throw err; });
         }
     }
@@ -10059,7 +10061,7 @@ class AuRender {
         return void 0;
     }
     _provideViewFor(comp, _flags) {
-        if (!comp) {
+        if (comp == null) {
             return void 0;
         }
         const ctxContainer = this._hdrContext.controller.container;
@@ -10719,7 +10721,7 @@ class Aurelia {
         if (root == null) {
             throw new Error(`AUR0770: There is no composition root`);
         }
-        if (this._startPromise instanceof Promise) {
+        if (isPromise(this._startPromise)) {
             return this._startPromise;
         }
         return this._startPromise = kernel.onResolve(this.stop(), () => {
@@ -10735,7 +10737,7 @@ class Aurelia {
         });
     }
     stop(dispose = false) {
-        if (this._stopPromise instanceof Promise) {
+        if (isPromise(this._stopPromise)) {
             return this._stopPromise;
         }
         if (this._isRunning === true) {
@@ -11060,7 +11062,7 @@ class DialogSettings {
                 ? kernel.onResolve(template(), loadedTpl => { loaded.template = loadedTpl; })
                 : void 0
         ]);
-        return maybePromise instanceof Promise
+        return isPromise(maybePromise)
             ? maybePromise.then(() => loaded)
             : loaded;
     }

@@ -1,6 +1,6 @@
 import { Protocol as t, IEventAggregator as i, IContainer as n, DI as s, Registration as e } from "@aurelia/kernel";
 
-import { CustomElement as o, isCustomElementViewModel as r, Controller as l, IWindow as u, IHistory as h, ILocation as a, IPlatform as c, IAppRoot as f, CustomAttribute as d, bindable as v, customElement as p, INode as g, IInstruction as w, IController as m, customAttribute as R, AppTask as I } from "@aurelia/runtime-html";
+import { CustomElement as o, isCustomElementViewModel as r, Controller as l, IPlatform as u, IWindow as h, IHistory as a, ILocation as c, IAppRoot as f, CustomAttribute as d, customElement as v, bindable as p, INode as g, IInstruction as w, IController as m, customAttribute as R, AppTask as I } from "@aurelia/runtime-html";
 
 import { Metadata as E } from "@aurelia/metadata";
 
@@ -3397,7 +3397,7 @@ let H = class BrowserViewerStore {
     }
 };
 
-H = k([ $(0, c), $(1, u), $(2, h), $(3, a), $(4, i) ], H);
+H = k([ $(0, u), $(1, h), $(2, a), $(3, c), $(4, i) ], H);
 
 class NavigatorViewerState {
     constructor(t, i, n, s) {
@@ -4189,7 +4189,7 @@ let q = class LinkHandler {
     }
 };
 
-q = k([ $(0, u), $(1, L) ], q);
+q = k([ $(0, h), $(1, L) ], q);
 
 var Q;
 
@@ -4349,25 +4349,25 @@ let Z = class ViewportCustomElement {
     }
 };
 
-k([ v ], Z.prototype, "name", void 0);
+k([ p ], Z.prototype, "name", void 0);
 
-k([ v ], Z.prototype, "usedBy", void 0);
+k([ p ], Z.prototype, "usedBy", void 0);
 
-k([ v ], Z.prototype, "default", void 0);
+k([ p ], Z.prototype, "default", void 0);
 
-k([ v ], Z.prototype, "fallback", void 0);
+k([ p ], Z.prototype, "fallback", void 0);
 
-k([ v ], Z.prototype, "noScope", void 0);
+k([ p ], Z.prototype, "noScope", void 0);
 
-k([ v ], Z.prototype, "noLink", void 0);
+k([ p ], Z.prototype, "noLink", void 0);
 
-k([ v ], Z.prototype, "noTitle", void 0);
+k([ p ], Z.prototype, "noTitle", void 0);
 
-k([ v ], Z.prototype, "noHistory", void 0);
+k([ p ], Z.prototype, "noHistory", void 0);
 
-k([ v ], Z.prototype, "stateful", void 0);
+k([ p ], Z.prototype, "stateful", void 0);
 
-Z = k([ p({
+Z = k([ v({
     name: "au-viewport",
     injectable: K
 }), $(0, L), $(1, g), $(2, n), $(3, i), $(4, K), $(5, w) ], Z);
@@ -4425,15 +4425,15 @@ let Y = class ViewportScopeCustomElement {
     }
 };
 
-k([ v ], Y.prototype, "name", void 0);
+k([ p ], Y.prototype, "name", void 0);
 
-k([ v ], Y.prototype, "catches", void 0);
+k([ p ], Y.prototype, "catches", void 0);
 
-k([ v ], Y.prototype, "collection", void 0);
+k([ p ], Y.prototype, "collection", void 0);
 
-k([ v ], Y.prototype, "source", void 0);
+k([ p ], Y.prototype, "source", void 0);
 
-Y = k([ p({
+Y = k([ v({
     name: "au-viewport-scope",
     template: "<template></template>",
     containerless: false,
@@ -4484,7 +4484,7 @@ let tt = class LoadCustomAttribute {
     }
 };
 
-k([ v({
+k([ p({
     mode: b.toView
 }) ], tt.prototype, "value", void 0);
 
@@ -4539,7 +4539,7 @@ let it = class HrefCustomAttribute {
     }
 };
 
-k([ v({
+k([ p({
     mode: b.toView
 }) ], it.prototype, "value", void 0);
 
@@ -4550,7 +4550,7 @@ it = k([ R({
 
 let nt = class ConsideredActiveCustomAttribute {};
 
-k([ v({
+k([ p({
     mode: b.toView
 }) ], nt.prototype, "value", void 0);
 

@@ -2,7 +2,7 @@ import { isObject as t, Metadata as i } from "@aurelia/metadata";
 
 import { DI as e, IEventAggregator as n, ILogger as s, bound as o, onResolve as r, resolveAll as a, emptyObject as h, IContainer as c, isArrayIndex as u, Protocol as l, emptyArray as d, IModuleLoader as f, InstanceProvider as p, noop as v, Registration as g } from "@aurelia/kernel";
 
-import { isCustomElementViewModel as w, IHistory as m, ILocation as $, IWindow as x, Controller as E, IPlatform as y, CustomElement as R, CustomElementDefinition as b, IController as S, IAppRoot as k, isCustomElementController as C, bindable as I, customElement as N, customAttribute as A, IEventTarget as T, INode as V, IEventDelegator as P, getRef as U, CustomAttribute as L, AppTask as O } from "@aurelia/runtime-html";
+import { isCustomElementViewModel as w, IHistory as m, ILocation as $, IWindow as x, Controller as E, IPlatform as y, CustomElement as R, CustomElementDefinition as b, IController as S, IAppRoot as k, isCustomElementController as C, customElement as I, bindable as N, customAttribute as A, IEventTarget as T, INode as V, IEventDelegator as P, getRef as U, CustomAttribute as L, AppTask as O } from "@aurelia/runtime-html";
 
 import { RecognizedRoute as j, Endpoint as D, ConfigurableRoute as M, RouteRecognizer as B } from "@aurelia/route-recognizer";
 
@@ -3626,17 +3626,17 @@ let ni = class ViewportCustomElement {
     }
 };
 
-nt([ I ], ni.prototype, "name", void 0);
+nt([ N ], ni.prototype, "name", void 0);
 
-nt([ I ], ni.prototype, "usedBy", void 0);
+nt([ N ], ni.prototype, "usedBy", void 0);
 
-nt([ I ], ni.prototype, "default", void 0);
+nt([ N ], ni.prototype, "default", void 0);
 
-nt([ I ], ni.prototype, "fallback", void 0);
+nt([ N ], ni.prototype, "fallback", void 0);
 
-nt([ I ], ni.prototype, "stateful", void 0);
+nt([ N ], ni.prototype, "stateful", void 0);
 
-ni = nt([ N({
+ni = nt([ I({
     name: "au-viewport"
 }), st(0, s), st(1, Zt) ], ni);
 
@@ -3711,22 +3711,22 @@ let oi = class LoadCustomAttribute {
     }
 };
 
-nt([ I({
+nt([ N({
     mode: z.toView,
     primary: true,
     callback: "valueChanged"
 }) ], oi.prototype, "route", void 0);
 
-nt([ I({
+nt([ N({
     mode: z.toView,
     callback: "valueChanged"
 }) ], oi.prototype, "params", void 0);
 
-nt([ I({
+nt([ N({
     mode: z.toView
 }) ], oi.prototype, "attribute", void 0);
 
-nt([ I({
+nt([ N({
     mode: z.fromView
 }) ], oi.prototype, "active", void 0);
 
@@ -3784,7 +3784,7 @@ let ri = class HrefCustomAttribute {
     }
 };
 
-nt([ I({
+nt([ N({
     mode: z.toView
 }) ], ri.prototype, "value", void 0);
 

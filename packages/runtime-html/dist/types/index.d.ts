@@ -1,4 +1,3 @@
-/// <reference path="../../../global.d.ts" />
 export { LifecycleFlags, valueConverter, bindingBehavior, } from '@aurelia/runtime';
 export { bindable, Bindable, BindableDefinition, type PartialBindableDefinition, coercer, } from './bindable';
 export { BindableObserver, } from './observation/bindable-observer';

@@ -1,5 +1,5 @@
 import { DI, IEventAggregator, toArray, camelCase, Registration } from '@aurelia/kernel';
-import { CustomElement, attributePattern, bindingCommand, renderer, AttrSyntax, IAttrMapper, IPlatform, AppTask, AttributePattern, BindingCommand } from '@aurelia/runtime-html';
+import { CustomElement, attributePattern, bindingCommand, renderer, AttrSyntax, IAttrMapper, IPlatform, AttributePattern, BindingCommand, AppTask } from '@aurelia/runtime-html';
 import { ValueConverterExpression, bindingBehavior, ISignaler, valueConverter, connectable, CustomExpression, Interpolation, BindingMode, IExpressionParser, IObserverLocator } from '@aurelia/runtime';
 import i18next from 'i18next';
 

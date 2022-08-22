@@ -1,5 +1,5 @@
 import { Protocol, IEventAggregator, IContainer, DI, Registration } from '../../../kernel/dist/native-modules/index.mjs';
-import { CustomElement, isCustomElementViewModel, Controller, IWindow, IHistory, ILocation, IPlatform, IAppRoot, CustomAttribute, bindable, customElement, INode, IInstruction, IController, customAttribute, AppTask } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { CustomElement, isCustomElementViewModel, Controller, IPlatform, IWindow, IHistory, ILocation, IAppRoot, CustomAttribute, customElement, bindable, INode, IInstruction, IController, customAttribute, AppTask } from '../../../runtime-html/dist/native-modules/index.mjs';
 import { Metadata } from '../../../metadata/dist/native-modules/index.mjs';
 import { RouteRecognizer as RouteRecognizer$1, ConfigurableRoute as ConfigurableRoute$1, RecognizedRoute as RecognizedRoute$1, Endpoint as Endpoint$2 } from '../../../route-recognizer/dist/native-modules/index.mjs';
 import { BindingMode } from '../../../runtime/dist/native-modules/index.mjs';

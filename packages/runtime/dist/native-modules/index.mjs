@@ -685,7 +685,7 @@ class BindingBehaviorExpression {
         if (null == r) throw new Error(`AUR0101:${this.name}`);
         if (!(r instanceof BindingBehaviorFactory)) if (void 0 === s[this.behaviorKey]) {
             s[this.behaviorKey] = r;
-            r.bind.call(r, t, e, s, ...this.args.map((r => r.evaluate(t, e, s.locator, null))));
+            r.bind(t, e, s, ...this.args.map((r => r.evaluate(t, e, s.locator, null))));
         } else throw new Error(`AUR0102:${this.name}`);
     }
     unbind(t, e, s) {
@@ -2835,7 +2835,7 @@ function ve() {
 }
 
 function pe() {
-    throw new Error(`AUR2012:handleCollectionChange`);
+    throw new Error(`AUR2011:handleCollectionChange`);
 }
 
 class BindingObserverRecord {

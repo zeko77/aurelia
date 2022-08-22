@@ -1,6 +1,6 @@
 import { DI as t, IEventAggregator as n, toArray as i, camelCase as s, Registration as e } from "@aurelia/kernel";
 
-import { CustomElement as r, attributePattern as o, bindingCommand as a, renderer as h, AttrSyntax as l, IAttrMapper as c, IPlatform as u, AppTask as d, AttributePattern as f, BindingCommand as m } from "@aurelia/runtime-html";
+import { CustomElement as r, attributePattern as o, bindingCommand as a, renderer as h, AttrSyntax as l, IAttrMapper as c, IPlatform as u, AttributePattern as d, BindingCommand as f, AppTask as m } from "@aurelia/runtime-html";
 
 import { ValueConverterExpression as g, bindingBehavior as p, ISignaler as v, valueConverter as b, connectable as T, CustomExpression as B, Interpolation as w, BindingMode as y, IExpressionParser as C, IObserverLocator as I } from "@aurelia/runtime";
 
@@ -713,16 +713,16 @@ function et(t) {
             a.push(n);
         }
     }
-    const h = [ f.define(s, TranslationAttributePattern), m.define({
+    const h = [ d.define(s, TranslationAttributePattern), f.define({
         name: "t",
         aliases: o
-    }, TranslationBindingCommand), Z, f.define(r, TranslationBindAttributePattern), m.define({
+    }, TranslationBindingCommand), Z, d.define(r, TranslationBindAttributePattern), f.define({
         name: "t.bind",
         aliases: a
     }, TranslationBindBindingCommand), nt, q, J, Q ];
     return {
         register(n) {
-            return n.register(e.callback(E, (() => t.initOptions)), d.beforeActivate(O, (t => t.initPromise)), e.singleton(N, I18nextWrapper), e.singleton(O, V), ...h, ...st);
+            return n.register(e.callback(E, (() => t.initOptions)), m.beforeActivate(O, (t => t.initPromise)), e.singleton(N, I18nextWrapper), e.singleton(O, V), ...h, ...st);
         }
     };
 }

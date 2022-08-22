@@ -1,4 +1,4 @@
-import { noop as e, isArrayIndex as t, DI as n, Registration as i, emptyArray as r, kebabCase as a, EventAggregator as s, ILogger as o } from "../../../kernel/dist/native-modules/index.mjs";
+import { noop as e, isArrayIndex as t, DI as n, Registration as i, kebabCase as r, emptyArray as a, EventAggregator as s, ILogger as o } from "../../../kernel/dist/native-modules/index.mjs";
 
 import { IObserverLocator as l, valueConverter as u, IDirtyChecker as c, INodeObserverLocator as f, Scope as h, OverrideContext as d } from "../../../runtime/dist/native-modules/index.mjs";
 
@@ -3587,18 +3587,18 @@ function* Ji(e) {
 
 function Wi(e, t = null, ...n) {
     const i = $t.document;
-    const a = i.createElement(e);
+    const r = i.createElement(e);
     for (const e in t) if ("class" === e || "className" === e || "cls" === e) {
         let n = t[e];
-        n = void 0 === n || null === n ? r : Array.isArray(n) ? n : `${n}`.split(" ");
-        a.classList.add(...n.filter(Boolean));
-    } else if (e in a || "data" === e || e.startsWith("_")) a[e.replace(/^_/, "")] = t[e]; else a.setAttribute(e, t[e]);
-    const s = "TEMPLATE" === a.tagName ? a.content : a;
+        n = void 0 === n || null === n ? a : Array.isArray(n) ? n : `${n}`.split(" ");
+        r.classList.add(...n.filter(Boolean));
+    } else if (e in r || "data" === e || e.startsWith("_")) r[e.replace(/^_/, "")] = t[e]; else r.setAttribute(e, t[e]);
+    const s = "TEMPLATE" === r.tagName ? r.content : r;
     for (const e of n) {
         if (null === e || void 0 === e) continue;
         s.appendChild(_i(e) ? e : i.createTextNode(`${e}`));
     }
-    return a;
+    return r;
 }
 
 function _i(e) {
@@ -3613,37 +3613,37 @@ const Gi = {
 
 const Yi = function(e, t, ...n) {
     const i = this || $t.document;
-    const r = i.createElement("let$" === e ? "let" : e);
+    const a = i.createElement("let$" === e ? "let" : e);
     if (null != t) {
         let e;
         for (const n in t) {
             e = t[n];
             if ("class" === n || "className" === n || "cls" === n) {
                 e = null == e ? [] : Array.isArray(e) ? e : `${e}`.split(" ");
-                r.classList.add(...e);
-            } else if (n in r || "data" === n || n.startsWith("_")) r[n] = e; else if ("asElement" === n) r.setAttribute("as-element", e); else if (n.startsWith("o") && "n" === n[1] && !n.endsWith("$")) {
-                const t = a(n.slice(2));
+                a.classList.add(...e);
+            } else if (n in a || "data" === n || n.startsWith("_")) a[n] = e; else if ("asElement" === n) a.setAttribute("as-element", e); else if (n.startsWith("o") && "n" === n[1] && !n.endsWith("$")) {
+                const t = r(n.slice(2));
                 const i = t.split("-");
                 if (i.length > 1) {
                     const t = i[i.length - 1];
                     const n = Gi[t] ? t : "trigger";
-                    r.setAttribute(`${i.slice(0, -1).join("-")}.${n}`, e);
-                } else r.setAttribute(`${i[0]}.trigger`, e);
+                    a.setAttribute(`${i.slice(0, -1).join("-")}.${n}`, e);
+                } else a.setAttribute(`${i[0]}.trigger`, e);
             } else {
                 const t = n.split("$");
-                if (1 === t.length) r.setAttribute(a(n), e); else {
+                if (1 === t.length) a.setAttribute(r(n), e); else {
                     if ("" === t[t.length - 1]) t[t.length - 1] = "bind";
-                    r.setAttribute(t.map(a).join("."), e);
+                    a.setAttribute(t.map(r).join("."), e);
                 }
             }
         }
     }
-    const s = null != r.content ? r.content : r;
+    const s = null != a.content ? a.content : a;
     for (const e of n) {
         if (null == e) continue;
         if (Array.isArray(e)) for (const t of e) s.appendChild(t instanceof $t.Node ? t : i.createTextNode(`${t}`)); else s.appendChild(e instanceof $t.Node ? e : i.createTextNode(`${e}`));
     }
-    return r;
+    return a;
 };
 
 Yi.Fragment = "template";
@@ -4135,15 +4135,15 @@ class SpySubscriber {
         this.q = 0;
     }
     get changes() {
-        if (void 0 === this.A) return r;
+        if (void 0 === this.A) return a;
         return this.A;
     }
     get proxyChanges() {
-        if (void 0 === this.R) return r;
+        if (void 0 === this.R) return a;
         return this.R;
     }
     get collectionChanges() {
-        if (void 0 === this.M) return r;
+        if (void 0 === this.M) return a;
         return this.M;
     }
     get hasChanges() {
@@ -4412,32 +4412,32 @@ function br(e, t) {
     const n = e.prototype;
     const i = O(n);
     for (const e in i) {
-        const a = i[e];
-        if ("constructor" !== e && "function" === typeof a.value && true === a.configurable && true === a.writable) {
-            const i = a.value;
-            const r = function(...n) {
+        const r = i[e];
+        if ("constructor" !== e && "function" === typeof r.value && true === r.configurable && true === r.writable) {
+            const i = r.value;
+            const a = function(...n) {
                 t.addCall(this, e, ...n);
                 return F(i, this, n);
             };
-            Reflect.defineProperty(r, "original", {
+            Reflect.defineProperty(a, "original", {
                 value: i,
                 writable: true,
                 configurable: true,
                 enumerable: false
             });
             Reflect.defineProperty(n, e, {
-                value: r,
-                writable: a.writable,
-                configurable: a.configurable,
-                enumerable: a.enumerable
+                value: a,
+                writable: r.writable,
+                configurable: r.configurable,
+                enumerable: r.enumerable
             });
         } else {
-            const {get: i, set: s} = a;
+            const {get: i, set: s} = r;
             let o, l;
             if (i) {
                 o = function() {
-                    t.addCall(this, `get ${e}`, r);
-                    return F(i, this, r);
+                    t.addCall(this, `get ${e}`, a);
+                    return F(i, this, a);
                 };
                 Reflect.defineProperty(o, "original", {
                     value: i
@@ -4445,7 +4445,7 @@ function br(e, t) {
             }
             if (s) {
                 l = function(n) {
-                    t.addCall(this, `get ${e}`, r);
+                    t.addCall(this, `get ${e}`, a);
                     F(s, this, [ n ]);
                 };
                 Reflect.defineProperty(l, "original", {
@@ -4453,7 +4453,7 @@ function br(e, t) {
                 });
             }
             if (i || s) Reflect.defineProperty(n, e, {
-                ...a,
+                ...r,
                 get: o,
                 set: l
             });
