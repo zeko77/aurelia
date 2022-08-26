@@ -1,9 +1,10 @@
 import { IContainer, IModule } from '@aurelia/kernel';
 import { RecognizedRoute } from '@aurelia/route-recognizer';
-import { CustomElementDefinition, ICustomElementController } from '@aurelia/runtime-html';
-import { ComponentAgent } from './component-agent';
+import { CustomElementDefinition, ICustomElementController, PartialCustomElementDefinition } from '@aurelia/runtime-html';
+import { ComponentAgent, IRouteViewModel } from './component-agent';
 import { NavigationInstruction, Params, ViewportInstruction } from './instructions';
 import { IViewport } from './resources/viewport';
+import { IChildRouteConfig, RouteType } from './route';
 import { RouteDefinition } from './route-definition';
 import { RouteNode } from './route-tree';
 import { IRouter, ResolutionMode } from './router';
@@ -15,6 +16,10 @@ export declare const RESIDUE: "au$residue";
 declare type PathGenerationResult = {
     vi: ViewportInstruction;
     query: Params | null;
+};
+export declare type EagerInstruction = {
+    component: string | RouteDefinition | PartialCustomElementDefinition | IRouteViewModel | IChildRouteConfig | RouteType;
+    params: Params;
 };
 export declare function isEagerInstruction(val: NavigationInstruction | EagerInstruction): val is EagerInstruction;
 /**

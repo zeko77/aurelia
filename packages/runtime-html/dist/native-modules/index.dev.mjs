@@ -3536,17 +3536,20 @@ class Controller {
             this.viewModel.hydrating(this);
         }
         const compiledDef = this._compiledDef = this._rendering.compile(this.definition, this.container, hydrationInst);
-        const { shadowOptions, isStrictBinding, hasSlots } = compiledDef;
-        const location = this.location;
+        const { shadowOptions, isStrictBinding, hasSlots, containerless } = compiledDef;
+        let location = this.location;
         this.isStrictBinding = isStrictBinding;
         if ((this.hostController = CustomElement.for(this.host, optionalCeFind)) !== null) {
             this.host = this.container.root.get(IPlatform).document.createElement(this.definition.name);
+            if (containerless && location == null) {
+                location = this.location = convertToRenderLocation(this.host);
+            }
         }
         setRef(this.host, CustomElement.name, this);
         setRef(this.host, this.definition.key, this);
         if (shadowOptions !== null || hasSlots) {
             if (location != null) {
-                throw new Error(`AUR0501: You cannot combine the containerless custom element option with Shadow DOM.`);
+                throw new Error(`AUR0501: Cannot combine the containerless custom element option with Shadow DOM.`);
             }
             setRef(this.shadowRoot = this.host.attachShadow(shadowOptions !== null && shadowOptions !== void 0 ? shadowOptions : defaultShadowOptions), CustomElement.name, this);
             setRef(this.shadowRoot, this.definition.key, this);

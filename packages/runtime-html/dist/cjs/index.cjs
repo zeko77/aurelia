@@ -3083,20 +3083,23 @@ class Controller {
         if (void 0 !== this.lifecycleHooks.hydrating) this.lifecycleHooks.hydrating.forEach(Ze, this);
         if (this.hooks.hasHydrating) this.viewModel.hydrating(this);
         const e = this.Ct = this.r.compile(this.definition, this.container, t);
-        const {shadowOptions: i, isStrictBinding: s, hasSlots: n} = e;
-        const r = this.location;
+        const {shadowOptions: i, isStrictBinding: s, hasSlots: n, containerless: r} = e;
+        let o = this.location;
         this.isStrictBinding = s;
-        if (null !== (this.hostController = ie.for(this.host, Oe))) this.host = this.container.root.get(z).document.createElement(this.definition.name);
+        if (null !== (this.hostController = ie.for(this.host, Oe))) {
+            this.host = this.container.root.get(z).document.createElement(this.definition.name);
+            if (r && null == o) o = this.location = gi(this.host);
+        }
         ui(this.host, ie.name, this);
         ui(this.host, this.definition.key, this);
         if (null !== i || n) {
-            if (null != r) throw new Error(`AUR0501`);
+            if (null != o) throw new Error(`AUR0501`);
             ui(this.shadowRoot = this.host.attachShadow(null !== i && void 0 !== i ? i : We), ie.name, this);
             ui(this.shadowRoot, this.definition.key, this);
             this.mountTarget = 2;
-        } else if (null != r) {
-            ui(r, ie.name, this);
-            ui(r, this.definition.key, this);
+        } else if (null != o) {
+            ui(o, ie.name, this);
+            ui(o, this.definition.key, this);
             this.mountTarget = 3;
         } else this.mountTarget = 1;
         this.viewModel.$controller = this;
