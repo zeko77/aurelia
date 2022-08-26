@@ -46,7 +46,7 @@ export declare class ViewportAgent {
     activate(initiator: IHydratedController | null, tr: Transition, b: Batch): void;
     swap(tr: Transition, b: Batch): void;
     private processDynamicChildren;
-    scheduleUpdate(options: NavigationOptions, next: RouteNode): void | Promise<void>;
+    scheduleUpdate(options: NavigationOptions, next: RouteNode): void;
     cancelUpdate(): void;
     endTransition(): void;
     toString(): string;

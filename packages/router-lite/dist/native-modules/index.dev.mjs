@@ -1947,32 +1947,26 @@ function updateNode(log, vit, ctx, node) {
     log.trace(`updateNode(ctx:%s,node:%s)`, ctx, node);
     node.queryParams = vit.queryParams;
     node.fragment = vit.fragment;
-    let maybePromise;
     if (!node.context.isRoot) {
-        maybePromise = node.context.vpa.scheduleUpdate(node.tree.options, node);
+        node.context.vpa.scheduleUpdate(node.tree.options, node);
     }
-    else {
-        maybePromise = void 0;
+    if (node.context === ctx) {
+        node.clearChildren();
+        return onResolve(resolveAll(...vit.children.map(vi => {
+            return createAndAppendNodes(log, node, vi);
+        })), () => {
+            return resolveAll(...ctx.getAvailableViewportAgents('dynamic').map(vpa => {
+                const defaultInstruction = ViewportInstruction.create({
+                    component: vpa.viewport.default,
+                    viewport: vpa.viewport.name,
+                });
+                return createAndAppendNodes(log, node, defaultInstruction);
+            }));
+        });
     }
-    return onResolve(maybePromise, () => {
-        if (node.context === ctx) {
-            node.clearChildren();
-            return onResolve(resolveAll(...vit.children.map(vi => {
-                return createAndAppendNodes(log, node, vi);
-            })), () => {
-                return resolveAll(...ctx.getAvailableViewportAgents('dynamic').map(vpa => {
-                    const defaultInstruction = ViewportInstruction.create({
-                        component: vpa.viewport.default,
-                        viewport: vpa.viewport.name,
-                    });
-                    return createAndAppendNodes(log, node, defaultInstruction);
-                }));
-            });
-        }
-        return resolveAll(...node.children.map(child => {
-            return updateNode(log, vit, ctx, child);
-        }));
-    });
+    return resolveAll(...node.children.map(child => {
+        return updateNode(log, vit, ctx, child);
+    }));
 }
 function processResidue(node) {
     const ctx = node.context;
@@ -2019,8 +2013,8 @@ function createAndAppendNodes(log, node, vi) {
         case 0:
             switch (vi.component.value) {
                 case '..':
-                    node.clearChildren();
                     node = (_b = (_a = node.context.parent) === null || _a === void 0 ? void 0 : _a.node) !== null && _b !== void 0 ? _b : node;
+                    node.clearChildren();
                 case '.':
                     return resolveAll(...vi.children.map(childVI => {
                         return createAndAppendNodes(log, node, childVI);
@@ -4034,7 +4028,7 @@ let LoadCustomAttribute = class LoadCustomAttribute {
                 return;
             }
             e.preventDefault();
-            void this.router.load(this.instructions, { context: this.ctx });
+            void this.router.load(this.instructions, { context: this.context });
         };
         this.isEnabled = !el.hasAttribute('external') && !el.hasAttribute('data-external');
     }
@@ -4045,12 +4039,14 @@ let LoadCustomAttribute = class LoadCustomAttribute {
         this.valueChanged();
         this.navigationEndListener = this.events.subscribe('au:router:navigation-end', _e => {
             this.valueChanged();
-            this.active = this.instructions !== null && this.router.isActive(this.instructions, this.ctx);
+            this.active = this.instructions !== null && this.router.isActive(this.instructions, this.context);
         });
     }
     attaching() {
-        if (this.ctx.allResolved !== null) {
-            return this.ctx.allResolved.then(() => {
+        const ctx = this.context;
+        const promise = ctx.allResolved;
+        if (promise !== null) {
+            return promise.then(() => {
                 this.valueChanged();
             });
         }
@@ -4065,11 +4061,18 @@ let LoadCustomAttribute = class LoadCustomAttribute {
         const router = this.router;
         const useHash = router.options.useUrlFragmentHash;
         const component = this.route;
-        if (component != null && this.ctx.allResolved === null) {
+        let ctx = this.context;
+        if (ctx === void 0) {
+            ctx = this.context = this.ctx;
+        }
+        else if (ctx === null) {
+            ctx = this.context = this.ctx.root;
+        }
+        if (component != null && ctx.allResolved === null) {
             const params = this.params;
             const instructions = this.instructions = router.createViewportInstructions(typeof params === 'object' && params !== null
                 ? { component, params }
-                : component, { context: this.ctx });
+                : component, { context: ctx });
             this.href = instructions.toUrl(useHash);
         }
         else {
@@ -4103,6 +4106,9 @@ __decorate([
 __decorate([
     bindable({ mode: BindingMode.fromView })
 ], LoadCustomAttribute.prototype, "active", void 0);
+__decorate([
+    bindable({ mode: BindingMode.toView, callback: 'valueChanged' })
+], LoadCustomAttribute.prototype, "context", void 0);
 LoadCustomAttribute = __decorate([
     customAttribute('load'),
     __param(0, IEventTarget),

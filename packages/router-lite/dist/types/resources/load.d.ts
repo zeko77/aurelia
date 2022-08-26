@@ -16,6 +16,10 @@ export declare class LoadCustomAttribute implements ICustomAttributeViewModel {
     params?: Params;
     attribute: string;
     active: boolean;
+    /**
+     * When not bound, it defaults to the injected instance of the router context.
+     */
+    context?: IRouteContext;
     private href;
     private instructions;
     private eventListener;

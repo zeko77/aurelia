@@ -68,6 +68,7 @@ const getHmrCode = (className, moduleText = 'module') => {
       }
     }
 
+    // @ts-ignore
     hot.dispose(function (data) {
       // @ts-ignore
       data.controllers = controllers;

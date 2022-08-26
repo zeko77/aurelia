@@ -8922,7 +8922,7 @@ class Repeat {
                 break;
             }
         }
-        this._checkCollectionObserver(flags);
+        this._refreshCollectionObserver(flags);
         const dec = forOf.declaration;
         if (!(this._hasDestructuredLocal = dec.$kind === 90137 || dec.$kind === 106521)) {
             this.local = dec.evaluate(flags, this.$controller.scope, binding.locator, null);
@@ -8933,9 +8933,7 @@ class Repeat {
         return this._activateAllViews(initiator, flags);
     }
     detaching(initiator, parent, flags) {
-        var _a;
-        this._checkCollectionObserver(flags);
-        (_a = this._observer) === null || _a === void 0 ? void 0 : _a.unsubscribe(this);
+        this._refreshCollectionObserver(flags);
         return this._deactivateAllViews(initiator, flags);
     }
     itemsChanged(flags) {
@@ -8944,7 +8942,7 @@ class Repeat {
             return;
         }
         flags |= $controller.flags;
-        this._checkCollectionObserver(flags);
+        this._refreshCollectionObserver(flags);
         this._normalizeToArray(flags);
         const ret = kernel.onResolve(this._deactivateAllViews(null, flags), () => {
             return this._activateAllViews(null, flags);
@@ -8994,29 +8992,27 @@ class Repeat {
             }
         }
     }
-    _checkCollectionObserver(flags) {
+    _refreshCollectionObserver(flags) {
         var _a;
         const scope = this.$controller.scope;
         let innerItems = this._innerItems;
         let observingInnerItems = this._observingInnerItems;
+        let newObserver;
         if (observingInnerItems) {
             innerItems = this._innerItems = (_a = this._innerItemsExpression.evaluate(flags, scope, this._forOfBinding.locator, null)) !== null && _a !== void 0 ? _a : null;
             observingInnerItems = this._observingInnerItems = !Object.is(this.items, innerItems);
         }
         const oldObserver = this._observer;
-        if ((flags & 4)) {
-            if (oldObserver !== void 0) {
-                oldObserver.unsubscribe(this);
+        if (this.$controller.isActive) {
+            newObserver = this._observer = runtime.getCollectionObserver(observingInnerItems ? innerItems : this.items);
+            if (oldObserver !== newObserver) {
+                oldObserver === null || oldObserver === void 0 ? void 0 : oldObserver.unsubscribe(this);
+                newObserver === null || newObserver === void 0 ? void 0 : newObserver.subscribe(this);
             }
         }
-        else if (this.$controller.isActive) {
-            const newObserver = this._observer = runtime.getCollectionObserver(observingInnerItems ? innerItems : this.items);
-            if (oldObserver !== newObserver && oldObserver) {
-                oldObserver.unsubscribe(this);
-            }
-            if (newObserver) {
-                newObserver.subscribe(this);
-            }
+        else {
+            oldObserver === null || oldObserver === void 0 ? void 0 : oldObserver.unsubscribe(this);
+            this._observer = undefined;
         }
     }
     _normalizeToArray(flags) {

@@ -7878,9 +7878,7 @@ class Repeat {
         return this.bi(t, i);
     }
     detaching(t, e, i) {
-        var s;
         this.gi(i);
-        null === (s = this.ui) || void 0 === s ? void 0 : s.unsubscribe(this);
         return this.yi(t, i);
     }
     itemsChanged(t) {
@@ -7922,17 +7920,21 @@ class Repeat {
         const s = this.$controller.scope;
         let n = this.Ai;
         let r = this.fi;
+        let o;
         if (r) {
             n = this.Ai = null !== (i = this.pi.evaluate(e, s, this.xi.locator, null)) && void 0 !== i ? i : null;
             r = this.fi = !Object.is(this.items, n);
         }
-        const o = this.ui;
-        if (4 & e) {
-            if (void 0 !== o) o.unsubscribe(this);
-        } else if (this.$controller.isActive) {
-            const e = this.ui = t.getCollectionObserver(r ? n : this.items);
-            if (o !== e && o) o.unsubscribe(this);
-            if (e) e.subscribe(this);
+        const l = this.ui;
+        if (this.$controller.isActive) {
+            o = this.ui = t.getCollectionObserver(r ? n : this.items);
+            if (l !== o) {
+                null === l || void 0 === l ? void 0 : l.unsubscribe(this);
+                null === o || void 0 === o ? void 0 : o.subscribe(this);
+            }
+        } else {
+            null === l || void 0 === l ? void 0 : l.unsubscribe(this);
+            this.ui = void 0;
         }
     }
     wi(t) {
