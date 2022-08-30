@@ -235,8 +235,9 @@ class InstructionParser {
         let r = true;
         let l;
         let u;
-        const h = [ t.add, t.clear ];
-        for (const e of h) if (i === e) {
+        const h = i;
+        const a = [ t.add, t.clear ];
+        for (const e of a) if (i === e) {
             s = i;
             i = "";
             n.shift();
@@ -244,7 +245,7 @@ class InstructionParser {
             l = t.viewport;
             break;
         }
-        if (void 0 === s) for (const e of h) if (i.startsWith(`${e}${t.viewport}`)) {
+        if (void 0 === s) for (const e of a) if (i.startsWith(`${e}${t.viewport}`)) {
             s = e;
             i = i.slice(`${e}${t.viewport}`.length);
             n.shift();
@@ -275,9 +276,10 @@ class InstructionParser {
         if (l === t.noScope) r = false;
         if (l === t.groupEnd || l === t.scope || l === t.sibling) i = `${l}${i}`;
         if ("" === (null !== s && void 0 !== s ? s : "")) throw new Error(`Instruction parser error: No component specified in instruction part "${i}".`);
-        const a = RoutingInstruction.create(s, o, e, r);
+        const c = RoutingInstruction.create(s, o, e, r);
+        c.unparsed = h;
         return {
-            instruction: a,
+            instruction: c,
             remaining: i
         };
     }
@@ -392,7 +394,7 @@ class Indicators {
 }
 
 class RouterOptions {
-    constructor(t = Separators.create(), i = Indicators.create(), n = true, s = null, e = true, o = 0, r = true, l = true, u = true, h = TitleOptions.create(), a = [ "guardedUnload", "swapped", "completed" ], c = "attach-next-detach-current") {
+    constructor(t = Separators.create(), i = Indicators.create(), n = true, s = null, e = true, o = 0, r = true, l = true, u = true, h = TitleOptions.create(), a = [ "guardedUnload", "swapped", "completed" ], c = "attach-next-detach-current", f = "", d = "process-children") {
         this.separators = t;
         this.indicators = i;
         this.useUrlFragmentHash = n;
@@ -405,10 +407,12 @@ class RouterOptions {
         this.title = h;
         this.navigationSyncStates = a;
         this.swapOrder = c;
+        this.fallback = f;
+        this.fallbackAction = d;
         this.registrationHooks = [];
     }
     static create(t = {}) {
-        return new RouterOptions(Separators.create(t.separators), Indicators.create(t.indicators), t.useUrlFragmentHash, t.basePath, t.useHref, t.statefulHistoryLength, t.useDirectRouting, t.useConfiguredRoutes, t.additiveInstructionDefault, TitleOptions.create(t.title), t.navigationSyncStates, t.swapOrder);
+        return new RouterOptions(Separators.create(t.separators), Indicators.create(t.indicators), t.useUrlFragmentHash, t.basePath, t.useHref, t.statefulHistoryLength, t.useDirectRouting, t.useConfiguredRoutes, t.additiveInstructionDefault, TitleOptions.create(t.title), t.navigationSyncStates, t.swapOrder, t.fallback, t.fallbackAction);
     }
     static for(t) {
         if (t instanceof RouterConfiguration) return t.options;
@@ -416,7 +420,7 @@ class RouterOptions {
         return t.options;
     }
     apply(t) {
-        var i, n, s, e, o, r, l, u, h;
+        var i, n, s, e, o, r, l, u, h, a, c;
         t = null !== t && void 0 !== t ? t : {};
         this.separators.apply(t.separators);
         this.indicators.apply(t.indicators);
@@ -430,6 +434,8 @@ class RouterOptions {
         this.title.apply(t.title);
         this.navigationSyncStates = null !== (u = t.navigationSyncStates) && void 0 !== u ? u : this.navigationSyncStates;
         this.swapOrder = null !== (h = t.swapOrder) && void 0 !== h ? h : this.swapOrder;
+        this.fallback = null !== (a = t.fallback) && void 0 !== a ? a : this.fallback;
+        this.fallbackAction = null !== (c = t.fallbackAction) && void 0 !== c ? c : this.fallbackAction;
         if (Array.isArray(t.hooks)) if (void 0 !== this.routerConfiguration) t.hooks.forEach((t => this.routerConfiguration.addHook(t.hook, t.options))); else this.registrationHooks = t.hooks;
     }
     setRouterConfiguration(t) {
@@ -1461,13 +1467,17 @@ class ViewportContent extends EndpointContent {
     contentController(t) {
         return i.Controller.$el(t.container.createChild(), this.instruction.component.instance, t.element, null);
     }
-    createComponent(t, i) {
+    createComponent(t, i, n) {
+        var s;
         if (this.contentStates.has("created")) return;
         if (!this.fromCache && !this.fromHistory) try {
             this.instruction.component.set(this.toComponentInstance(t.container, t.controller, t.element));
-        } catch (n) {
+        } catch (e) {
             if ("" !== (null !== i && void 0 !== i ? i : "")) {
-                this.instruction.parameters.set([ this.instruction.component.name ]);
+                if ("process-children" === n) this.instruction.parameters.set([ this.instruction.component.name ]); else {
+                    this.instruction.parameters.set([ null !== (s = this.instruction.unparsed) && void 0 !== s ? s : this.instruction.component.name ]);
+                    this.instruction.nextScopeInstructions = null;
+                }
                 this.instruction.component.set(i);
                 try {
                     this.instruction.component.set(this.toComponentInstance(t.container, t.controller, t.element));
@@ -1644,15 +1654,16 @@ class ViewportContent extends EndpointContent {
 }
 
 class ViewportOptions {
-    constructor(t = true, i = [], n = "", s = "", e = false, o = false, r = false, l = false, u = false) {
+    constructor(t = true, i = [], n = "", s = "", e = "", o = false, r = false, l = false, u = false, h = false) {
         this.scope = t;
         this.usedBy = i;
         this.fallback = s;
-        this.noLink = e;
-        this.noTitle = o;
-        this.stateful = r;
-        this.forceDescription = l;
-        this.noHistory = u;
+        this.fallbackAction = e;
+        this.noLink = o;
+        this.noTitle = r;
+        this.stateful = l;
+        this.forceDescription = u;
+        this.noHistory = h;
         this.default = void 0;
         this.default = n;
     }
@@ -1662,16 +1673,17 @@ class ViewportOptions {
         return i;
     }
     apply(t) {
-        var i, n, s, e, o, r, l, u, h;
+        var i, n, s, e, o, r, l, u, h, a;
         this.scope = null !== (i = t.scope) && void 0 !== i ? i : this.scope;
         this.usedBy = null !== (n = "string" === typeof t.usedBy ? t.usedBy.split(",").filter((t => t.length > 0)) : t.usedBy) && void 0 !== n ? n : this.usedBy;
         this.default = null !== (s = t.default) && void 0 !== s ? s : this.default;
         this.fallback = null !== (e = t.fallback) && void 0 !== e ? e : this.fallback;
-        this.noLink = null !== (o = t.noLink) && void 0 !== o ? o : this.noLink;
-        this.noTitle = null !== (r = t.noTitle) && void 0 !== r ? r : this.noTitle;
-        this.stateful = null !== (l = t.stateful) && void 0 !== l ? l : this.stateful;
-        this.forceDescription = null !== (u = t.forceDescription) && void 0 !== u ? u : this.forceDescription;
-        this.noHistory = null !== (h = t.noHistory) && void 0 !== h ? h : this.noHistory;
+        this.fallbackAction = null !== (o = t.fallbackAction) && void 0 !== o ? o : this.fallbackAction;
+        this.noLink = null !== (r = t.noLink) && void 0 !== r ? r : this.noLink;
+        this.noTitle = null !== (l = t.noTitle) && void 0 !== l ? l : this.noTitle;
+        this.stateful = null !== (u = t.stateful) && void 0 !== u ? u : this.stateful;
+        this.forceDescription = null !== (h = t.forceDescription) && void 0 !== h ? h : this.forceDescription;
+        this.noHistory = null !== (a = t.noHistory) && void 0 !== a ? a : this.noHistory;
     }
 }
 
@@ -1841,7 +1853,10 @@ class Viewport extends Endpoint$1 {
         const l = [ i => {
             if (this.isActiveNavigation(t)) return this.canUnload(i);
         }, i => {
-            if (this.isActiveNavigation(t)) if (!i.previousValue) t.cancel(); else if (this.router.isRestrictedNavigation) this.getNextContent().createComponent(this.connectedCE, this.options.fallback);
+            if (this.isActiveNavigation(t)) if (!i.previousValue) t.cancel(); else if (this.router.isRestrictedNavigation) {
+                const t = this.router.configuration.options;
+                this.getNextContent().createComponent(this.connectedCE, this.options.fallback || t.fallback, this.options.fallbackAction || t.fallbackAction);
+            }
             t.addEndpointState(this, "guardedUnload");
         }, () => t.waitForSyncState("guardedUnload", this), () => null !== r ? t.waitForEndpointState(r, "guardedLoad") : void 0, i => {
             if (this.isActiveNavigation(t)) return this.canLoad(i);
@@ -1921,7 +1936,8 @@ class Viewport extends Endpoint$1 {
     canLoad(t) {
         if (this.clear) return true;
         return Runner.run(t, (() => this.waitForConnected()), (() => {
-            this.getNextContent().createComponent(this.connectedCE, this.options.fallback);
+            const t = this.router.configuration.options;
+            this.getNextContent().createComponent(this.connectedCE, this.options.fallback || t.fallback, this.options.fallbackAction || t.fallbackAction);
             return this.getNextContent().canLoad();
         }));
     }
@@ -2151,6 +2167,7 @@ class RoutingInstruction {
         this.routeStart = false;
         this.default = false;
         this.topInstruction = false;
+        this.unparsed = null;
         this.component = InstructionComponent.create(t);
         this.endpoint = InstructionEndpoint.create(i);
         this.parameters = InstructionParameters.create(n);
@@ -4270,6 +4287,7 @@ exports.ViewportCustomElement = class ViewportCustomElement {
         this.usedBy = "";
         this.default = "";
         this.fallback = "";
+        this.fallbackAction = "";
         this.noScope = false;
         this.noLink = false;
         this.noTitle = false;
@@ -4329,6 +4347,7 @@ exports.ViewportCustomElement = class ViewportCustomElement {
         s.usedBy = E("used-by", this.usedBy, t, i);
         s.default = E("default", this.default, t, i);
         s.fallback = E("fallback", this.fallback, t, i);
+        s.fallbackAction = E("fallback-action", this.fallbackAction, t, i);
         s.noLink = E("no-link", this.noLink, t, i, true);
         s.noTitle = E("no-title", this.noTitle, t, i, true);
         s.noHistory = E("no-history", this.noHistory, t, i, true);
@@ -4362,6 +4381,8 @@ o([ i.bindable ], exports.ViewportCustomElement.prototype, "usedBy", void 0);
 o([ i.bindable ], exports.ViewportCustomElement.prototype, "default", void 0);
 
 o([ i.bindable ], exports.ViewportCustomElement.prototype, "fallback", void 0);
+
+o([ i.bindable ], exports.ViewportCustomElement.prototype, "fallbackAction", void 0);
 
 o([ i.bindable ], exports.ViewportCustomElement.prototype, "noScope", void 0);
 
