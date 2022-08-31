@@ -738,6 +738,7 @@ const ValidationHtmlConfiguration = createConfiguration(kernel.noop);
 
 const resultIdAttribute = 'validation-result-id';
 const resultContainerAttribute = 'validation-result-container';
+const IValidationResultPresenterService = kernel.DI.createInterface('IValidationResultPresenterService', (x) => x.transient(exports.ValidationResultPresenterService));
 exports.ValidationResultPresenterService = class ValidationResultPresenterService {
     constructor(platform) {
         this.platform = platform;
@@ -818,6 +819,7 @@ exports.BindingInfo = BindingInfo;
 exports.ControllerValidateResult = ControllerValidateResult;
 exports.IDefaultTrigger = IDefaultTrigger;
 exports.IValidationController = IValidationController;
+exports.IValidationResultPresenterService = IValidationResultPresenterService;
 exports.ValidationControllerFactory = ValidationControllerFactory;
 exports.ValidationEvent = ValidationEvent;
 exports.ValidationHtmlConfiguration = ValidationHtmlConfiguration;

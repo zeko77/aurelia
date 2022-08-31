@@ -616,6 +616,8 @@ const p = "validation-result-id";
 
 const g = "validation-result-container";
 
+const w = t.DI.createInterface("IValidationResultPresenterService", (t => t.transient(exports.ValidationResultPresenterService)));
+
 exports.ValidationResultPresenterService = class ValidationResultPresenterService {
     constructor(t) {
         this.platform = t;
@@ -680,6 +682,8 @@ exports.ControllerValidateResult = ControllerValidateResult;
 exports.IDefaultTrigger = c;
 
 exports.IValidationController = l;
+
+exports.IValidationResultPresenterService = w;
 
 exports.ValidationControllerFactory = ValidationControllerFactory;
 
