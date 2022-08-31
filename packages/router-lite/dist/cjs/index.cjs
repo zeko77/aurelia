@@ -3060,40 +3060,70 @@ class ComponentAgent {
     canUnload(t, e, i) {
         this.R.trace(`canUnload(next:%s) - invoking ${this.canUnloadHooks.length} hooks`, e);
         i.push();
-        for (const s of this.canUnloadHooks) t.run((() => {
+        let s = Promise.resolve();
+        for (const n of this.canUnloadHooks) {
             i.push();
-            return s.canUnload(this.instance, e, this.routeNode);
-        }), (e => {
-            if (true === t.guardsResult && true !== e) t.guardsResult = false;
-            i.pop();
-        }));
-        if (this.N) t.run((() => {
+            s = s.then((() => new Promise((s => {
+                if (true !== t.guardsResult) {
+                    i.pop();
+                    s();
+                    return;
+                }
+                t.run((() => n.canUnload(this.instance, e, this.routeNode)), (e => {
+                    if (true === t.guardsResult && true !== e) t.guardsResult = false;
+                    i.pop();
+                    s();
+                }));
+            }))));
+        }
+        if (this.N) {
             i.push();
-            return this.instance.canUnload(e, this.routeNode);
-        }), (e => {
-            if (true === t.guardsResult && true !== e) t.guardsResult = false;
-            i.pop();
-        }));
+            s = s.then((() => {
+                if (true !== t.guardsResult) {
+                    i.pop();
+                    return;
+                }
+                t.run((() => this.instance.canUnload(e, this.routeNode)), (e => {
+                    if (true === t.guardsResult && true !== e) t.guardsResult = false;
+                    i.pop();
+                }));
+            }));
+        }
         i.pop();
     }
     canLoad(t, e, i) {
         this.R.trace(`canLoad(next:%s) - invoking ${this.canLoadHooks.length} hooks`, e);
         const s = this.ctx.root;
         i.push();
-        for (const n of this.canLoadHooks) t.run((() => {
+        let n = Promise.resolve();
+        for (const o of this.canLoadHooks) {
             i.push();
-            return n.canLoad(this.instance, e.params, e, this.routeNode);
-        }), (e => {
-            if (true === t.guardsResult && true !== e) t.guardsResult = false === e ? false : ViewportInstructionTree.create(e, void 0, s);
-            i.pop();
-        }));
-        if (this.C) t.run((() => {
+            n = n.then((() => new Promise((n => {
+                if (true !== t.guardsResult) {
+                    i.pop();
+                    n();
+                    return;
+                }
+                t.run((() => o.canLoad(this.instance, e.params, e, this.routeNode)), (e => {
+                    if (true === t.guardsResult && true !== e) t.guardsResult = false === e ? false : ViewportInstructionTree.create(e, void 0, s);
+                    i.pop();
+                    n();
+                }));
+            }))));
+        }
+        if (this.C) {
             i.push();
-            return this.instance.canLoad(e.params, e, this.routeNode);
-        }), (e => {
-            if (true === t.guardsResult && true !== e) t.guardsResult = false === e ? false : ViewportInstructionTree.create(e, void 0, s);
-            i.pop();
-        }));
+            n = n.then((() => {
+                if (true !== t.guardsResult) {
+                    i.pop();
+                    return;
+                }
+                t.run((() => this.instance.canLoad(e.params, e, this.routeNode)), (e => {
+                    if (true === t.guardsResult && true !== e) t.guardsResult = false === e ? false : ViewportInstructionTree.create(e, void 0, s);
+                    i.pop();
+                }));
+            }));
+        }
         i.pop();
     }
     unload(t, e, i) {

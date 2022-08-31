@@ -44,7 +44,7 @@ export declare const enum ExpressionKind {
     DestructuringAssignmentLeaf = 139289
 }
 export declare type UnaryOperator = 'void' | 'typeof' | '!' | '-' | '+';
-export declare type BinaryOperator = '&&' | '||' | '==' | '===' | '!=' | '!==' | 'instanceof' | 'in' | '+' | '-' | '*' | '/' | '%' | '<' | '>' | '<=' | '>=';
+export declare type BinaryOperator = '??' | '&&' | '||' | '==' | '===' | '!=' | '!==' | 'instanceof' | 'in' | '+' | '-' | '*' | '/' | '%' | '<' | '>' | '<=' | '>=';
 export declare type IsPrimary = AccessThisExpression | AccessScopeExpression | ArrayLiteralExpression | ObjectLiteralExpression | PrimitiveLiteralExpression | TemplateExpression;
 export declare type IsLiteral = ArrayLiteralExpression | ObjectLiteralExpression | PrimitiveLiteralExpression | TemplateExpression;
 export declare type IsLeftHandSide = IsPrimary | CallFunctionExpression | CallMemberExpression | CallScopeExpression | AccessMemberExpression | AccessKeyedExpression | TaggedTemplateExpression;
@@ -212,10 +212,11 @@ export declare class AccessScopeExpression {
 export declare class AccessMemberExpression {
     readonly object: IsLeftHandSide;
     readonly name: string;
+    readonly optional: boolean;
     get $kind(): ExpressionKind.AccessMember;
     get hasBind(): false;
     get hasUnbind(): false;
-    constructor(object: IsLeftHandSide, name: string);
+    constructor(object: IsLeftHandSide, name: string, optional?: boolean);
     evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
     assign(f: LF, s: Scope, l: IServiceLocator, val: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
@@ -224,10 +225,11 @@ export declare class AccessMemberExpression {
 export declare class AccessKeyedExpression {
     readonly object: IsLeftHandSide;
     readonly key: IsAssign;
+    readonly optional: boolean;
     get $kind(): ExpressionKind.AccessKeyed;
     get hasBind(): false;
     get hasUnbind(): false;
-    constructor(object: IsLeftHandSide, key: IsAssign);
+    constructor(object: IsLeftHandSide, key: IsAssign, optional?: boolean);
     evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
     assign(f: LF, s: Scope, l: IServiceLocator, val: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
@@ -237,10 +239,11 @@ export declare class CallScopeExpression {
     readonly name: string;
     readonly args: readonly IsAssign[];
     readonly ancestor: number;
+    readonly optional: boolean;
     get $kind(): ExpressionKind.CallScope;
     get hasBind(): false;
     get hasUnbind(): false;
-    constructor(name: string, args: readonly IsAssign[], ancestor?: number);
+    constructor(name: string, args: readonly IsAssign[], ancestor?: number, optional?: boolean);
     evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
     assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
@@ -250,10 +253,12 @@ export declare class CallMemberExpression {
     readonly object: IsLeftHandSide;
     readonly name: string;
     readonly args: readonly IsAssign[];
+    readonly optionalMember: boolean;
+    readonly optionalCall: boolean;
     get $kind(): ExpressionKind.CallMember;
     get hasBind(): false;
     get hasUnbind(): false;
-    constructor(object: IsLeftHandSide, name: string, args: readonly IsAssign[]);
+    constructor(object: IsLeftHandSide, name: string, args: readonly IsAssign[], optionalMember?: boolean, optionalCall?: boolean);
     evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
     assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
@@ -262,10 +267,11 @@ export declare class CallMemberExpression {
 export declare class CallFunctionExpression {
     readonly func: IsLeftHandSide;
     readonly args: readonly IsAssign[];
+    readonly optional: boolean;
     get $kind(): ExpressionKind.CallFunction;
     get hasBind(): false;
     get hasUnbind(): false;
-    constructor(func: IsLeftHandSide, args: readonly IsAssign[]);
+    constructor(func: IsLeftHandSide, args: readonly IsAssign[], optional?: boolean);
     evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
     assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;

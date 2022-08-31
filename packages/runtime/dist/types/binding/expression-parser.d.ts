@@ -110,28 +110,21 @@ export declare const enum Char {
     LowerY = 121,
     LowerZ = 122
 }
-export declare const enum Access {
-    Reset = 0,
-    Ancestor = 511,
-    This = 512,
-    Scope = 1024,
-    Member = 2048,
-    Keyed = 4096
-}
 export declare const enum Precedence {
     Variadic = 61,
     Assign = 62,
     Conditional = 63,
-    LogicalOR = 64,
-    LogicalAND = 128,
-    Equality = 192,
-    Relational = 256,
-    Additive = 320,
-    Multiplicative = 384,
-    Binary = 448,
-    LeftHandSide = 449,
-    Primary = 450,
-    Unary = 451
+    NullishCoalescing = 64,
+    LogicalOR = 128,
+    LogicalAND = 192,
+    Equality = 256,
+    Relational = 320,
+    Additive = 384,
+    Multiplicative = 448,
+    Binary = 449,
+    LeftHandSide = 450,
+    Primary = 451,
+    Unary = 452
 }
 export declare const enum ExpressionType {
     None = 0,
@@ -148,5 +141,5 @@ export declare class ParserState {
     constructor(ip: string);
 }
 export declare function parseExpression<TType extends ExpressionType = ExpressionType.IsProperty>(input: string, expressionType?: TType): TType extends ExpressionType.Interpolation ? Interpolation : TType extends ExpressionType.IsIterator ? ForOfStatement : IsBindingBehavior;
-export declare function parse<TPrec extends Precedence, TType extends ExpressionType>(state: ParserState, access: Access, minPrecedence: TPrec, expressionType: TType): TPrec extends Precedence.Unary ? IsUnary : TPrec extends Precedence.Binary ? IsBinary : TPrec extends Precedence.LeftHandSide ? IsLeftHandSide : TPrec extends Precedence.Assign ? IsAssign : TPrec extends Precedence.Conditional ? IsConditional : TPrec extends Precedence.Primary ? IsPrimary : TPrec extends Precedence.Multiplicative ? IsBinary : TPrec extends Precedence.Additive ? IsBinary : TPrec extends Precedence.Relational ? IsBinary : TPrec extends Precedence.Equality ? IsBinary : TPrec extends Precedence.LogicalAND ? IsBinary : TPrec extends Precedence.LogicalOR ? IsBinary : TPrec extends Precedence.Variadic ? TType extends ExpressionType.Interpolation ? Interpolation : TType extends ExpressionType.IsIterator ? ForOfStatement : never : never;
+export declare function parse<TPrec extends Precedence, TType extends ExpressionType>(state: ParserState, minPrecedence: TPrec, expressionType: TType): TPrec extends Precedence.Unary ? IsUnary : TPrec extends Precedence.Binary ? IsBinary : TPrec extends Precedence.LeftHandSide ? IsLeftHandSide : TPrec extends Precedence.Assign ? IsAssign : TPrec extends Precedence.Conditional ? IsConditional : TPrec extends Precedence.Primary ? IsPrimary : TPrec extends Precedence.Multiplicative ? IsBinary : TPrec extends Precedence.Additive ? IsBinary : TPrec extends Precedence.Relational ? IsBinary : TPrec extends Precedence.Equality ? IsBinary : TPrec extends Precedence.LogicalAND ? IsBinary : TPrec extends Precedence.LogicalOR ? IsBinary : TPrec extends Precedence.Variadic ? TType extends ExpressionType.Interpolation ? Interpolation : TType extends ExpressionType.IsIterator ? ForOfStatement : never : never;
 //# sourceMappingURL=expression-parser.d.ts.map

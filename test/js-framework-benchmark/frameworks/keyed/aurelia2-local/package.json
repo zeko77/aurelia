@@ -8,12 +8,12 @@
   },
   "version": "1.0.0",
   "dependencies": {
-    "@aurelia/kernel": "2.1.0-dev.202208302241",
-    "@aurelia/metadata": "2.1.0-dev.202208302241",
-    "@aurelia/platform": "2.1.0-dev.202208302241",
-    "@aurelia/platform-browser": "2.1.0-dev.202208302241",
-    "@aurelia/runtime-html": "2.1.0-dev.202208302241",
-    "@aurelia/runtime": "2.1.0-dev.202208302241"
+    "@aurelia/kernel": "2.1.0-dev.202208310712",
+    "@aurelia/metadata": "2.1.0-dev.202208310712",
+    "@aurelia/platform": "2.1.0-dev.202208310712",
+    "@aurelia/platform-browser": "2.1.0-dev.202208310712",
+    "@aurelia/runtime-html": "2.1.0-dev.202208310712",
+    "@aurelia/runtime": "2.1.0-dev.202208310712"
   },
   "devDependencies": {
     "@types/node": "^14.18.14",
