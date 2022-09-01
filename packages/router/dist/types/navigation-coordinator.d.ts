@@ -217,7 +217,6 @@ export declare class NavigationCoordinator {
      */
     dequeueAppendedInstructions(matchedInstructions: RoutingInstruction[], earlierMatchedInstructions: RoutingInstruction[], remainingInstructions: RoutingInstruction[]): {
         matchedInstructions: RoutingInstruction[];
-        earlierMatchedInstructions: RoutingInstruction[];
         remainingInstructions: RoutingInstruction[];
     };
     /**

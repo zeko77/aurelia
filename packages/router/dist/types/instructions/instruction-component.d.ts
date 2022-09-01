@@ -1,6 +1,7 @@
 import { Constructable, IContainer } from '@aurelia/kernel';
 import { CustomElementDefinition, IHydratedController } from '@aurelia/runtime-html';
 import { IRouteableComponent, RouteableComponentType } from '../interfaces';
+import { RoutingInstruction } from './routing-instruction';
 export interface IInstructionComponent extends InstructionComponent {
 }
 /**
@@ -11,7 +12,7 @@ export interface IInstructionComponent extends InstructionComponent {
  * components are resolved "non-early" to support dynamic, local resolutions.
  */
 export declare type ComponentAppellation = string | RouteableComponentType | IRouteableComponent | CustomElementDefinition | Constructable;
-export declare type ComponentAppellationFunction = () => ComponentAppellation | Promise<ComponentAppellation>;
+export declare type ComponentAppellationFunction = (instruction?: RoutingInstruction) => ComponentAppellation | Promise<ComponentAppellation>;
 export declare class InstructionComponent {
     /**
      * The name of the component.
@@ -51,15 +52,15 @@ export declare class InstructionComponent {
     static getType(component: ComponentAppellation): RouteableComponentType | null;
     static getInstance(component: ComponentAppellation): IRouteableComponent | null;
     set(component: ComponentAppellation | Promise<ComponentAppellation> | undefined | null): void;
-    resolve(): void | Promise<ComponentAppellation>;
+    resolve(instruction: RoutingInstruction): void | Promise<ComponentAppellation>;
     get none(): boolean;
     isName(): boolean;
     isType(): boolean;
     isInstance(): boolean;
     isPromise(): boolean;
     isFunction(): boolean;
-    toType(container: IContainer): RouteableComponentType | null;
-    toInstance(parentContainer: IContainer, parentController: IHydratedController, parentElement: HTMLElement): IRouteableComponent | null;
+    toType(container: IContainer, instruction: RoutingInstruction): RouteableComponentType | null;
+    toInstance(parentContainer: IContainer, parentController: IHydratedController, parentElement: HTMLElement, instruction: RoutingInstruction): IRouteableComponent | null;
     same(other: InstructionComponent, compareType?: boolean): boolean;
     private getNewName;
 }

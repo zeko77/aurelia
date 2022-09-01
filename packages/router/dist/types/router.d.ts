@@ -288,12 +288,6 @@ export declare class Router implements IRouter {
      */
     appendInstructions(instructions: RoutingInstruction[], scope?: RoutingScope | null): void;
     /**
-     * Deal with/throw an unknown route error.
-     *
-     * @param route - The failing route
-     */
-    unknownRoute(route: string): void;
-    /**
      * Update the navigation with full state, url, query string and title. The
      * appropriate hooks are called. The `activeComponents` are also set.
      *

@@ -290,9 +290,9 @@ function A(t, i) {
     }
 }
 
-const k = `\n<slot></slot>\n<slot name='secondary'>\n  <span repeat.for="error of errors">\n    \${error.result.message}\n  </span>\n</slot>\n`;
+const I = `\n<slot></slot>\n<slot name='secondary'>\n  <span repeat.for="error of errors">\n    \${error.result.message}\n  </span>\n</slot>\n`;
 
-const I = {
+const k = {
     name: "validation-container",
     shadowOptions: {
         mode: "open"
@@ -300,7 +300,7 @@ const I = {
     hasSlots: true
 };
 
-let D = class ValidationContainerCustomElement {
+let P = class ValidationContainerCustomElement {
     constructor(t, i) {
         this.host = t;
         this.scopedController = i;
@@ -331,13 +331,13 @@ let D = class ValidationContainerCustomElement {
     }
 };
 
-E([ f ], D.prototype, "controller", void 0);
+E([ f ], P.prototype, "controller", void 0);
 
-E([ f ], D.prototype, "errors", void 0);
+E([ f ], P.prototype, "errors", void 0);
 
-D = E([ R(0, v), R(1, s(B)) ], D);
+P = E([ R(0, v), R(1, s(B)) ], P);
 
-let M = class ValidationErrorsCustomAttribute {
+let D = class ValidationErrorsCustomAttribute {
     constructor(t, i) {
         this.host = t;
         this.scopedController = i;
@@ -370,16 +370,16 @@ let M = class ValidationErrorsCustomAttribute {
     }
 };
 
-E([ f ], M.prototype, "controller", void 0);
+E([ f ], D.prototype, "controller", void 0);
 
 E([ f({
     primary: true,
     mode: b.twoWay
-}) ], M.prototype, "errors", void 0);
+}) ], D.prototype, "errors", void 0);
 
-M = E([ g("validation-errors"), R(0, v), R(1, s(B)) ], M);
+D = E([ g("validation-errors"), R(0, v), R(1, s(B)) ], D);
 
-var O;
+var M;
 
 (function(t) {
     t["manual"] = "manual";
@@ -388,9 +388,9 @@ var O;
     t["change"] = "change";
     t["changeOrBlur"] = "changeOrBlur";
     t["changeOrFocusout"] = "changeOrFocusout";
-})(O || (O = {}));
+})(M || (M = {}));
 
-const P = t.createInterface("IDefaultTrigger");
+const O = t.createInterface("IDefaultTrigger");
 
 let S = class ValidateBindingBehavior extends y {
     constructor(t, i) {
@@ -408,7 +408,7 @@ let S = class ValidateBindingBehavior extends y {
         this.task = null;
         const s = this.locator;
         this.platform = s.get(d);
-        this.defaultTrigger = s.get(P);
+        this.defaultTrigger = s.get(O);
         if (s.has(B, true)) this.scopedController = s.get(B);
         this.setPropertyBinding();
     }
@@ -503,7 +503,7 @@ let S = class ValidateBindingBehavior extends y {
             this.validatedOnce = false;
             this.isDirty = false;
             this.trigger = o;
-            this.isChangeTrigger = o === O.change || o === O.changeOrBlur || o === O.changeOrFocusout;
+            this.isChangeTrigger = o === M.change || o === M.changeOrBlur || o === M.changeOrFocusout;
             t = this.setTriggerEvent(this.trigger);
             if (null !== t) this.target.addEventListener(t, this);
         }
@@ -516,7 +516,7 @@ let S = class ValidateBindingBehavior extends y {
         }
     }
     ensureTrigger(t) {
-        if (void 0 === t || null === t) t = this.defaultTrigger; else if (!Object.values(O).includes(t)) throw new Error(`${t} is not a supported validation trigger`);
+        if (void 0 === t || null === t) t = this.defaultTrigger; else if (!Object.values(M).includes(t)) throw new Error(`${t} is not a supported validation trigger`);
         return t;
     }
     ensureController(t) {
@@ -543,13 +543,13 @@ let S = class ValidateBindingBehavior extends y {
     setTriggerEvent(t) {
         let i = null;
         switch (t) {
-          case O.blur:
-          case O.changeOrBlur:
+          case M.blur:
+          case M.changeOrBlur:
             i = "blur";
             break;
 
-          case O.focusout:
-          case O.changeOrFocusout:
+          case M.focusout:
+          case M.changeOrFocusout:
             i = "focusout";
             break;
         }
@@ -574,9 +574,9 @@ function x() {
     return {
         ...c(),
         ValidationControllerFactoryType: ValidationControllerFactory,
-        DefaultTrigger: O.focusout,
+        DefaultTrigger: M.focusout,
         UseSubscriberCustomAttribute: true,
-        SubscriberCustomElementTemplate: k
+        SubscriberCustomElementTemplate: I
     };
 }
 
@@ -589,13 +589,13 @@ function F(t) {
             i.registerFactory(B, new s.ValidationControllerFactoryType);
             i.register(u.customize((t => {
                 for (const i of Object.keys(t)) if (i in s) t[i] = s[i];
-            })), e.instance(P, s.DefaultTrigger), S);
-            if (s.UseSubscriberCustomAttribute) i.register(M);
+            })), e.instance(O, s.DefaultTrigger), S);
+            if (s.UseSubscriberCustomAttribute) i.register(D);
             const n = s.SubscriberCustomElementTemplate;
             if (n) i.register(p.define({
-                ...I,
+                ...k,
                 template: n
-            }, D));
+            }, P));
             return i;
         },
         customize(i) {
@@ -610,7 +610,9 @@ const N = "validation-result-id";
 
 const z = "validation-result-container";
 
-let W = class ValidationResultPresenterService {
+const W = t.createInterface("IValidationResultPresenterService", (t => t.transient(q)));
+
+let q = class ValidationResultPresenterService {
     constructor(t) {
         this.platform = t;
     }
@@ -665,7 +667,7 @@ let W = class ValidationResultPresenterService {
     }
 };
 
-W = E([ R(0, d) ], W);
+q = E([ R(0, d) ], q);
 
-export { BindingInfo, ControllerValidateResult, P as IDefaultTrigger, B as IValidationController, S as ValidateBindingBehavior, T as ValidateEventKind, D as ValidationContainerCustomElement, j as ValidationController, ValidationControllerFactory, M as ValidationErrorsCustomAttribute, ValidationEvent, U as ValidationHtmlConfiguration, W as ValidationResultPresenterService, ValidationResultTarget, O as ValidationTrigger, I as defaultContainerDefinition, k as defaultContainerTemplate, x as getDefaultValidationHtmlConfiguration, $ as getPropertyInfo };
+export { BindingInfo, ControllerValidateResult, O as IDefaultTrigger, B as IValidationController, W as IValidationResultPresenterService, S as ValidateBindingBehavior, T as ValidateEventKind, P as ValidationContainerCustomElement, j as ValidationController, ValidationControllerFactory, D as ValidationErrorsCustomAttribute, ValidationEvent, U as ValidationHtmlConfiguration, q as ValidationResultPresenterService, ValidationResultTarget, M as ValidationTrigger, k as defaultContainerDefinition, I as defaultContainerTemplate, x as getDefaultValidationHtmlConfiguration, $ as getPropertyInfo };
 

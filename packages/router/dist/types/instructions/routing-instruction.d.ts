@@ -70,6 +70,11 @@ export declare class RoutingInstruction {
      * hierarchy. Used when syncing swap of all (top) instructions.
      */
     topInstruction: boolean;
+    /**
+     * The string, if any, that was used to parse the instruction. Includes anything
+     * in the string after the actual part for the instruction itself.
+     */
+    unparsed: string | null;
     constructor(component?: ComponentAppellation | Promise<ComponentAppellation>, endpoint?: EndpointHandle, parameters?: ComponentParameters);
     /**
      * Create a new routing instruction.
@@ -184,9 +189,17 @@ export declare class RoutingInstruction {
      */
     isClearAll(context: IRouterConfiguration | IRouter): boolean;
     /**
-     * Whether the routing instruction next scope/"children" instructions.
+     * Whether the routing instruction has next scope/"children" instructions.
      */
     get hasNextScopeInstructions(): boolean;
+    /**
+     * Whether the routing instruction is unresolved.
+     */
+    get isUnresolved(): boolean;
+    /**
+     * Resolve the routing instruction.
+     */
+    resolve(): void | Promise<ComponentAppellation>;
     /**
      * Get the instruction parameters with type specification applied.
      */

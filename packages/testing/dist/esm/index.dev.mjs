@@ -1,4 +1,4 @@
-import { noop, isArrayIndex, DI, Registration, emptyArray, kebabCase, EventAggregator, ILogger } from '@aurelia/kernel';
+import { noop, isArrayIndex, DI, Registration, kebabCase, emptyArray, EventAggregator, ILogger } from '@aurelia/kernel';
 import { IObserverLocator, valueConverter, IDirtyChecker, INodeObserverLocator, Scope, OverrideContext } from '@aurelia/runtime';
 import { StandardConfiguration, IPlatform, ITemplateCompiler, CustomElement, CustomAttribute, Aurelia, bindable, customElement } from '@aurelia/runtime-html';
 import { BrowserPlatform } from '@aurelia/platform-browser';

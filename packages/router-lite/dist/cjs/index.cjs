@@ -1845,21 +1845,18 @@ function z(t, i, s, n) {
     t.trace(`updateNode(ctx:%s,node:%s)`, s, n);
     n.queryParams = i.queryParams;
     n.fragment = i.fragment;
-    let o;
-    if (!n.context.isRoot) o = n.context.vpa.scheduleUpdate(n.tree.options, n); else o = void 0;
-    return e.onResolve(o, (() => {
-        if (n.context === s) {
-            n.clearChildren();
-            return e.onResolve(e.resolveAll(...i.children.map((e => W(t, n, e)))), (() => e.resolveAll(...s.getAvailableViewportAgents("dynamic").map((e => {
-                const i = ViewportInstruction.create({
-                    component: e.viewport.default,
-                    viewport: e.viewport.name
-                });
-                return W(t, n, i);
-            })))));
-        }
-        return e.resolveAll(...n.children.map((e => z(t, i, s, e))));
-    }));
+    if (!n.context.isRoot) n.context.vpa.scheduleUpdate(n.tree.options, n);
+    if (n.context === s) {
+        n.clearChildren();
+        return e.onResolve(e.resolveAll(...i.children.map((e => W(t, n, e)))), (() => e.resolveAll(...s.getAvailableViewportAgents("dynamic").map((e => {
+            const i = ViewportInstruction.create({
+                component: e.viewport.default,
+                viewport: e.viewport.name
+            });
+            return W(t, n, i);
+        })))));
+    }
+    return e.resolveAll(...n.children.map((e => z(t, i, s, e))));
 }
 
 function F(t) {
@@ -1900,8 +1897,8 @@ function W(t, i, s) {
       case 0:
         switch (s.component.value) {
           case "..":
-            i.clearChildren();
             i = null !== (o = null === (n = i.context.parent) || void 0 === n ? void 0 : n.node) && void 0 !== o ? o : i;
+            i.clearChildren();
 
           case ".":
             return e.resolveAll(...s.children.map((e => W(t, i, e))));
@@ -3063,40 +3060,70 @@ class ComponentAgent {
     canUnload(t, e, i) {
         this.R.trace(`canUnload(next:%s) - invoking ${this.canUnloadHooks.length} hooks`, e);
         i.push();
-        for (const s of this.canUnloadHooks) t.run((() => {
+        let s = Promise.resolve();
+        for (const n of this.canUnloadHooks) {
             i.push();
-            return s.canUnload(this.instance, e, this.routeNode);
-        }), (e => {
-            if (true === t.guardsResult && true !== e) t.guardsResult = false;
-            i.pop();
-        }));
-        if (this.N) t.run((() => {
+            s = s.then((() => new Promise((s => {
+                if (true !== t.guardsResult) {
+                    i.pop();
+                    s();
+                    return;
+                }
+                t.run((() => n.canUnload(this.instance, e, this.routeNode)), (e => {
+                    if (true === t.guardsResult && true !== e) t.guardsResult = false;
+                    i.pop();
+                    s();
+                }));
+            }))));
+        }
+        if (this.N) {
             i.push();
-            return this.instance.canUnload(e, this.routeNode);
-        }), (e => {
-            if (true === t.guardsResult && true !== e) t.guardsResult = false;
-            i.pop();
-        }));
+            s = s.then((() => {
+                if (true !== t.guardsResult) {
+                    i.pop();
+                    return;
+                }
+                t.run((() => this.instance.canUnload(e, this.routeNode)), (e => {
+                    if (true === t.guardsResult && true !== e) t.guardsResult = false;
+                    i.pop();
+                }));
+            }));
+        }
         i.pop();
     }
     canLoad(t, e, i) {
         this.R.trace(`canLoad(next:%s) - invoking ${this.canLoadHooks.length} hooks`, e);
         const s = this.ctx.root;
         i.push();
-        for (const n of this.canLoadHooks) t.run((() => {
+        let n = Promise.resolve();
+        for (const o of this.canLoadHooks) {
             i.push();
-            return n.canLoad(this.instance, e.params, e, this.routeNode);
-        }), (e => {
-            if (true === t.guardsResult && true !== e) t.guardsResult = false === e ? false : ViewportInstructionTree.create(e, void 0, s);
-            i.pop();
-        }));
-        if (this.C) t.run((() => {
+            n = n.then((() => new Promise((n => {
+                if (true !== t.guardsResult) {
+                    i.pop();
+                    n();
+                    return;
+                }
+                t.run((() => o.canLoad(this.instance, e.params, e, this.routeNode)), (e => {
+                    if (true === t.guardsResult && true !== e) t.guardsResult = false === e ? false : ViewportInstructionTree.create(e, void 0, s);
+                    i.pop();
+                    n();
+                }));
+            }))));
+        }
+        if (this.C) {
             i.push();
-            return this.instance.canLoad(e.params, e, this.routeNode);
-        }), (e => {
-            if (true === t.guardsResult && true !== e) t.guardsResult = false === e ? false : ViewportInstructionTree.create(e, void 0, s);
-            i.pop();
-        }));
+            n = n.then((() => {
+                if (true !== t.guardsResult) {
+                    i.pop();
+                    return;
+                }
+                t.run((() => this.instance.canLoad(e.params, e, this.routeNode)), (e => {
+                    if (true === t.guardsResult && true !== e) t.guardsResult = false === e ? false : ViewportInstructionTree.create(e, void 0, s);
+                    i.pop();
+                }));
+            }));
+        }
         i.pop();
     }
     unload(t, e, i) {
@@ -3668,7 +3695,7 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
             if (t.altKey || t.ctrlKey || t.shiftKey || t.metaKey || 0 !== t.button) return;
             t.preventDefault();
             void this.router.load(this.instructions, {
-                context: this.ctx
+                context: this.context
             });
         };
         this.isEnabled = !e.hasAttribute("external") && !e.hasAttribute("data-external");
@@ -3678,11 +3705,13 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
         this.valueChanged();
         this.navigationEndListener = this.events.subscribe("au:router:navigation-end", (t => {
             this.valueChanged();
-            this.active = null !== this.instructions && this.router.isActive(this.instructions, this.ctx);
+            this.active = null !== this.instructions && this.router.isActive(this.instructions, this.context);
         }));
     }
     attaching() {
-        if (null !== this.ctx.allResolved) return this.ctx.allResolved.then((() => {
+        const t = this.context;
+        const e = t.allResolved;
+        if (null !== e) return e.then((() => {
             this.valueChanged();
         }));
     }
@@ -3694,23 +3723,25 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
         const t = this.router;
         const e = t.options.useUrlFragmentHash;
         const s = this.route;
-        if (null != s && null === this.ctx.allResolved) {
+        let n = this.context;
+        if (void 0 === n) n = this.context = this.ctx; else if (null === n) n = this.context = this.ctx.root;
+        if (null != s && null === n.allResolved) {
             const i = this.params;
-            const n = this.instructions = t.createViewportInstructions("object" === typeof i && null !== i ? {
+            const o = this.instructions = t.createViewportInstructions("object" === typeof i && null !== i ? {
                 component: s,
                 params: i
             } : s, {
-                context: this.ctx
+                context: n
             });
-            this.href = n.toUrl(e);
+            this.href = o.toUrl(e);
         } else {
             this.instructions = null;
             this.href = null;
         }
-        const n = i.CustomElement.for(this.el, {
+        const o = i.CustomElement.for(this.el, {
             optional: true
         });
-        if (null !== n) n.viewModel[this.attribute] = this.instructions; else if (null === this.href) this.el.removeAttribute(this.attribute); else {
+        if (null !== o) o.viewModel[this.attribute] = this.instructions; else if (null === this.href) this.el.removeAttribute(this.attribute); else {
             const t = e ? this.href : this.locationMgr.addBaseHref(this.href);
             this.el.setAttribute(this.attribute, t);
         }
@@ -3735,6 +3766,11 @@ $([ i.bindable({
 $([ i.bindable({
     mode: n.BindingMode.fromView
 }) ], exports.LoadCustomAttribute.prototype, "active", void 0);
+
+$([ i.bindable({
+    mode: n.BindingMode.toView,
+    callback: "valueChanged"
+}) ], exports.LoadCustomAttribute.prototype, "context", void 0);
 
 exports.LoadCustomAttribute = $([ i.customAttribute("load"), E(0, i.IEventTarget), E(1, i.INode), E(2, tt), E(3, R), E(4, i.IEventDelegator), E(5, lt), E(6, k) ], exports.LoadCustomAttribute);
 

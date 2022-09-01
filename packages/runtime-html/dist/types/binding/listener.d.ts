@@ -1,9 +1,15 @@
-import { LifecycleFlags } from '@aurelia/runtime';
+import { DelegationStrategy, LifecycleFlags } from '@aurelia/runtime';
 import type { IIndexable, IServiceLocator } from '@aurelia/kernel';
 import type { IsBindingBehavior, Scope } from '@aurelia/runtime';
 import type { IEventDelegator } from '../observation/event-delegator';
 import type { IPlatform } from '../platform';
 import type { IAstBasedBinding } from './interfaces-bindings';
+export declare class ListenerOptions {
+    readonly prevent: boolean;
+    readonly strategy: DelegationStrategy;
+    readonly expAsHandler: boolean;
+    constructor(prevent: boolean, strategy: DelegationStrategy, expAsHandler: boolean);
+}
 export interface Listener extends IAstBasedBinding {
 }
 /**
@@ -16,12 +22,11 @@ export declare class Listener implements IAstBasedBinding {
     target: Node;
     eventDelegator: IEventDelegator;
     locator: IServiceLocator;
-    private readonly _options;
     interceptor: this;
     isBound: boolean;
     $scope: Scope;
     private handler;
-    constructor(platform: IPlatform, targetEvent: string, sourceExpression: IsBindingBehavior, target: Node, eventDelegator: IEventDelegator, locator: IServiceLocator, _options: ListenerOptions);
+    constructor(platform: IPlatform, targetEvent: string, sourceExpression: IsBindingBehavior, target: Node, eventDelegator: IEventDelegator, locator: IServiceLocator, options: ListenerOptions);
     callSource(event: Event): ReturnType<IsBindingBehavior['evaluate']>;
     handleEvent(event: Event): void;
     $bind(flags: LifecycleFlags, scope: Scope): void;

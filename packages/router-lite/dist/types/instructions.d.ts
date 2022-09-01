@@ -3,6 +3,7 @@ import { ICustomElementViewModel, ICustomElementController, PartialCustomElement
 import { IRouteViewModel } from './component-agent';
 import { RouteType } from './route';
 import { $RecognizedRoute, IRouteContext } from './route-context';
+import { INavigationOptions, NavigationOptions } from './router';
 export declare type RouteContextLike = IRouteContext | ICustomElementViewModel | ICustomElementController | HTMLElement;
 /**
  * Either a `RouteableComponent`, a string (name) that can be resolved to one or a ViewportInstruction:
@@ -62,6 +63,22 @@ export interface IViewportInstruction {
      */
     readonly recognizedRoute: $RecognizedRoute | null;
 }
+export declare class ViewportInstruction<TComponent extends ITypedNavigationInstruction_T = ITypedNavigationInstruction_Component> implements IViewportInstruction {
+    open: number;
+    close: number;
+    readonly recognizedRoute: $RecognizedRoute | null;
+    readonly component: TComponent;
+    readonly viewport: string | null;
+    readonly params: Params | null;
+    readonly children: ViewportInstruction[];
+    private constructor();
+    static create(instruction: NavigationInstruction): ViewportInstruction;
+    contains(other: ViewportInstruction): boolean;
+    equals(other: ViewportInstruction): boolean;
+    clone(): this;
+    toUrlComponent(recursive?: boolean): string;
+    toString(): string;
+}
 export interface IRedirectInstruction {
     readonly path: string;
     readonly redirectTo: string;
@@ -73,6 +90,19 @@ export declare class RedirectInstruction implements IRedirectInstruction {
     static create(instruction: IRedirectInstruction): RedirectInstruction;
     equals(other: RedirectInstruction): boolean;
     toUrlComponent(): string;
+    toString(): string;
+}
+export declare class ViewportInstructionTree {
+    readonly options: NavigationOptions;
+    readonly isAbsolute: boolean;
+    readonly children: ViewportInstruction[];
+    readonly queryParams: Readonly<URLSearchParams>;
+    readonly fragment: string | null;
+    constructor(options: NavigationOptions, isAbsolute: boolean, children: ViewportInstruction[], queryParams: Readonly<URLSearchParams>, fragment: string | null);
+    static create(instructionOrInstructions: NavigationInstruction | NavigationInstruction[], options?: INavigationOptions, rootCtx?: IRouteContext | null): ViewportInstructionTree;
+    equals(other: ViewportInstructionTree): boolean;
+    toUrl(useUrlFragmentHash?: boolean): string;
+    toPath(): string;
     toString(): string;
 }
 export declare const enum NavigationInstructionType {

@@ -1,4 +1,3 @@
-/// <reference path="../../../global.d.ts" />
 export { type ICollectionStrategy, ICollectionStrategyLocator, type ICollectionStrategySubscriber, IDomRenderer, type IScrollerInfo, IScrollerObsererLocator, type IScrollerObserver, type IScrollerSubscriber, type IVirtualRepeatDom, type IVirtualRepeater, } from './interfaces';
 export { DefaultVirtualRepeatConfiguration, } from './configuration';
 export { VirtualRepeat } from './virtual-repeat';

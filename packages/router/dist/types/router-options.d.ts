@@ -3,7 +3,7 @@ import { INavigatorOptions } from './navigator';
 import { NavigationState } from './navigation-coordinator';
 import { RoutingInstruction } from './instructions/routing-instruction';
 import { IRoutingHookDefinition } from './routing-hook';
-import { IRouter, IRouterConfiguration, RouterConfiguration } from './index';
+import { IRouter, IRouterConfiguration, RouterConfiguration, ComponentAppellation } from './index';
 import { Navigation } from './navigation';
 /**
  * How contents are swapped in a viewport when transitioning. Default: `attach-next-detach-current`
@@ -248,6 +248,7 @@ export declare class Indicators {
     static for(context: IRouterConfiguration | IRouter | IContainer): Indicators;
     apply(input?: IIndicators): void;
 }
+export declare type FallbackAction = 'abort' | 'process-children';
 export interface IRouterOptions extends Omit<Partial<RouterOptions>, 'separators' | 'indicators' | 'title'> {
     /**
      * The router's title configuration
@@ -329,6 +330,18 @@ export declare class RouterOptions implements INavigatorOptions {
      */
     swapOrder: SwapOrder;
     /**
+     * The component to be loaded if a specified can't be loaded.
+     * The unloadable component is passed as a parameter to the fallback.
+     */
+    fallback: ComponentAppellation;
+    /**
+     * Whether the fallback action is to load the fallback component in
+     * place of the unloadable component and continue with any child
+     * instructions or if the fallback is to be called and the processing
+     * of the children to be aborted.
+     */
+    fallbackAction: FallbackAction;
+    /**
      * The router configuration these options belong to.
      */
     routerConfiguration: RouterConfiguration;
@@ -399,7 +412,19 @@ export declare class RouterOptions implements INavigatorOptions {
     /**
      * How contents are swapped in a viewport when transitioning. Default: `attach-next-detach-current`
      */
-    swapOrder?: SwapOrder);
+    swapOrder?: SwapOrder, 
+    /**
+     * The component to be loaded if a specified can't be loaded.
+     * The unloadable component is passed as a parameter to the fallback.
+     */
+    fallback?: ComponentAppellation, 
+    /**
+     * Whether the fallback action is to load the fallback component in
+     * place of the unloadable component and continue with any child
+     * instructions or if the fallback is to be called and the processing
+     * of the children to be aborted.
+     */
+    fallbackAction?: FallbackAction);
     static create(input?: IRouterOptions): RouterOptions;
     static for(context: IRouterConfiguration | IRouter | IContainer): RouterOptions;
     /**

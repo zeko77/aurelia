@@ -1,5 +1,5 @@
 import { DI, IEventAggregator, toArray, camelCase, Registration } from '@aurelia/kernel';
-import { CustomElement, attributePattern, bindingCommand, renderer, AttrSyntax, IAttrMapper, IPlatform, AppTask, AttributePattern, BindingCommand } from '@aurelia/runtime-html';
+import { CustomElement, attributePattern, bindingCommand, renderer, AttrSyntax, IAttrMapper, IPlatform, AttributePattern, BindingCommand, AppTask } from '@aurelia/runtime-html';
 import { ValueConverterExpression, bindingBehavior, ISignaler, valueConverter, connectable, CustomExpression, Interpolation, BindingMode, IExpressionParser, IObserverLocator } from '@aurelia/runtime';
 import i18next from 'i18next';
 
@@ -416,7 +416,7 @@ class TranslationBinding {
                 }
                 else {
                     const controller = CustomElement.for(this.target, forOpts);
-                    const accessor = controller && controller.viewModel
+                    const accessor = (controller === null || controller === void 0 ? void 0 : controller.viewModel)
                         ? this.oL.getAccessor(controller.viewModel, attribute)
                         : this.oL.getAccessor(this.target, attribute);
                     const shouldQueueUpdate = (flags & 2) === 0 && (accessor.type & 4) > 0;
@@ -465,7 +465,7 @@ class TranslationBinding {
     _isContentAttribute(attribute) {
         return this._contentAttributes.includes(attribute);
     }
-    _updateContent(content, flags) {
+    _updateContent(content, _flags) {
         const children = toArray(this.target.childNodes);
         const fallBackContents = [];
         const marker = 'au-i18n';
@@ -536,6 +536,9 @@ class ParameterBinding {
         this.locator = owner.locator;
     }
     handleChange(newValue, _previousValue, flags) {
+        if (!this.isBound) {
+            return;
+        }
         this.obs.version++;
         this.value = this.expr.evaluate(flags, this.scope, this.locator, this);
         this.obs.clear();

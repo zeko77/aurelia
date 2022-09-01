@@ -734,6 +734,7 @@ const ValidationHtmlConfiguration = createConfiguration(noop);
 
 const resultIdAttribute = 'validation-result-id';
 const resultContainerAttribute = 'validation-result-container';
+const IValidationResultPresenterService = DI.createInterface('IValidationResultPresenterService', (x) => x.transient(ValidationResultPresenterService));
 let ValidationResultPresenterService = class ValidationResultPresenterService {
     constructor(platform) {
         this.platform = platform;
@@ -810,5 +811,5 @@ ValidationResultPresenterService = __decorate([
     __param(0, IPlatform)
 ], ValidationResultPresenterService);
 
-export { BindingInfo, ControllerValidateResult, IDefaultTrigger, IValidationController, ValidateBindingBehavior, ValidateEventKind, ValidationContainerCustomElement, ValidationController, ValidationControllerFactory, ValidationErrorsCustomAttribute, ValidationEvent, ValidationHtmlConfiguration, ValidationResultPresenterService, ValidationResultTarget, ValidationTrigger, defaultContainerDefinition, defaultContainerTemplate, getDefaultValidationHtmlConfiguration, getPropertyInfo };
+export { BindingInfo, ControllerValidateResult, IDefaultTrigger, IValidationController, IValidationResultPresenterService, ValidateBindingBehavior, ValidateEventKind, ValidationContainerCustomElement, ValidationController, ValidationControllerFactory, ValidationErrorsCustomAttribute, ValidationEvent, ValidationHtmlConfiguration, ValidationResultPresenterService, ValidationResultTarget, ValidationTrigger, defaultContainerDefinition, defaultContainerTemplate, getDefaultValidationHtmlConfiguration, getPropertyInfo };
 //# sourceMappingURL=index.dev.mjs.map

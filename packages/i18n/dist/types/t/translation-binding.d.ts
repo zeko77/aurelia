@@ -40,13 +40,6 @@ export declare class TranslationBinding implements IObserverLocatorBasedConnecta
     handleChange(newValue: string | i18next.TOptions, _previousValue: string | i18next.TOptions, flags: LifecycleFlags): void;
     handleLocaleChange(): void;
     useParameter(expr: IsExpression): void;
-    private _updateTranslations;
-    private _preprocessAttributes;
-    private _isContentAttribute;
-    private _updateContent;
-    private _prepareTemplate;
-    private _addContentToTemplate;
-    private _ensureKeyExpression;
 }
 export {};
 //# sourceMappingURL=translation-binding.d.ts.map

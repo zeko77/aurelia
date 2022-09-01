@@ -420,11 +420,11 @@ class Unparser {
     }
     visitAccessMember(expr) {
         expr.object.accept(this);
-        this.text += `.${expr.name}`;
+        this.text += `${expr.optional ? '?' : ''}.${expr.name}`;
     }
     visitAccessKeyed(expr) {
         expr.object.accept(this);
-        this.text += '[';
+        this.text += `${expr.optional ? '?.' : ''}[`;
         expr.key.accept(this);
         this.text += ']';
     }
@@ -484,13 +484,14 @@ class Unparser {
     visitCallFunction(expr) {
         this.text += '(';
         expr.func.accept(this);
+        this.text += expr.optional ? '?.' : '';
         this.writeArgs(expr.args);
         this.text += ')';
     }
     visitCallMember(expr) {
         this.text += '(';
         expr.object.accept(this);
-        this.text += `.${expr.name}`;
+        this.text += `${expr.optionalMember ? '?.' : ''}.${expr.name}${expr.optionalCall ? '?.' : ''}`;
         this.writeArgs(expr.args);
         this.text += ')';
     }
@@ -500,7 +501,7 @@ class Unparser {
         while (i--) {
             this.text += '$parent.';
         }
-        this.text += expr.name;
+        this.text += `${expr.name}${expr.optional ? '?.' : ''}`;
         this.writeArgs(expr.args);
         this.text += ')';
     }
@@ -713,7 +714,7 @@ class BindingBehaviorExpression {
         if (!(behavior instanceof BindingBehaviorFactory)) {
             if (b[this.behaviorKey] === void 0) {
                 b[this.behaviorKey] = behavior;
-                behavior.bind.call(behavior, f, s, b, ...this.args.map(a => a.evaluate(f, s, b.locator, null)));
+                behavior.bind(f, s, b, ...this.args.map(a => a.evaluate(f, s, b.locator, null)));
             }
             else {
                 throw new Error(`AUR0102: BindingBehavior named '${this.name}' already applied.`);
@@ -917,9 +918,10 @@ class AccessScopeExpression {
     }
 }
 class AccessMemberExpression {
-    constructor(object, name) {
+    constructor(object, name, optional = false) {
         this.object = object;
         this.name = name;
+        this.optional = optional;
     }
     get $kind() { return 9323; }
     get hasBind() { return false; }
@@ -963,9 +965,10 @@ class AccessMemberExpression {
     }
 }
 class AccessKeyedExpression {
-    constructor(object, key) {
+    constructor(object, key, optional = false) {
         this.object = object;
         this.key = key;
+        this.optional = optional;
     }
     get $kind() { return 9324; }
     get hasBind() { return false; }
@@ -994,10 +997,11 @@ class AccessKeyedExpression {
     }
 }
 class CallScopeExpression {
-    constructor(name, args, ancestor = 0) {
+    constructor(name, args, ancestor = 0, optional = false) {
         this.name = name;
         this.args = args;
         this.ancestor = ancestor;
+        this.optional = optional;
     }
     get $kind() { return 1448; }
     get hasBind() { return false; }
@@ -1022,10 +1026,12 @@ class CallScopeExpression {
     }
 }
 class CallMemberExpression {
-    constructor(object, name, args) {
+    constructor(object, name, args, optionalMember = false, optionalCall = false) {
         this.object = object;
         this.name = name;
         this.args = args;
+        this.optionalMember = optionalMember;
+        this.optionalCall = optionalCall;
     }
     get $kind() { return 1161; }
     get hasBind() { return false; }
@@ -1050,9 +1056,10 @@ class CallMemberExpression {
     }
 }
 class CallFunctionExpression {
-    constructor(func, args) {
+    constructor(func, args, optional = false) {
         this.func = func;
         this.args = args;
+        this.optional = optional;
     }
     get $kind() { return 1162; }
     get hasBind() { return false; }
@@ -1087,11 +1094,14 @@ class BinaryExpression {
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
+        var _a;
         switch (this.operation) {
             case '&&':
                 return this.left.evaluate(f, s, l, c) && this.right.evaluate(f, s, l, c);
             case '||':
                 return this.left.evaluate(f, s, l, c) || this.right.evaluate(f, s, l, c);
+            case '??':
+                return (_a = this.left.evaluate(f, s, l, c)) !== null && _a !== void 0 ? _a : this.right.evaluate(f, s, l, c);
             case '==':
                 return this.left.evaluate(f, s, l, c) == this.right.evaluate(f, s, l, c);
             case '===':
@@ -2812,7 +2822,7 @@ function noopHandleChange() {
     throw new Error(`AUR2011: method "handleChange" not implemented`);
 }
 function noopHandleCollectionChange() {
-    throw new Error(`AUR2012: method "handleCollectionChange" not implemented`);
+    throw new Error(`AUR2011: method "handleCollectionChange" not implemented`);
 }
 class BindingObserverRecord {
     constructor(b) {
@@ -2930,7 +2940,7 @@ class ExpressionParser {
         $state.length = expression.length;
         $state.index = 0;
         $state._currentChar = expression.charCodeAt(0);
-        return parse($state, 0, 61, expressionType === void 0 ? 8 : expressionType);
+        return parse($state, 61, expressionType === void 0 ? 8 : expressionType);
     }
 }
 var Char;
@@ -3049,92 +3059,87 @@ function unescapeCode(code) {
         default: return code;
     }
 }
-var Access;
-(function (Access) {
-    Access[Access["Reset"] = 0] = "Reset";
-    Access[Access["Ancestor"] = 511] = "Ancestor";
-    Access[Access["This"] = 512] = "This";
-    Access[Access["Scope"] = 1024] = "Scope";
-    Access[Access["Member"] = 2048] = "Member";
-    Access[Access["Keyed"] = 4096] = "Keyed";
-})(Access || (Access = {}));
 var Precedence;
 (function (Precedence) {
     Precedence[Precedence["Variadic"] = 61] = "Variadic";
     Precedence[Precedence["Assign"] = 62] = "Assign";
     Precedence[Precedence["Conditional"] = 63] = "Conditional";
-    Precedence[Precedence["LogicalOR"] = 64] = "LogicalOR";
-    Precedence[Precedence["LogicalAND"] = 128] = "LogicalAND";
-    Precedence[Precedence["Equality"] = 192] = "Equality";
-    Precedence[Precedence["Relational"] = 256] = "Relational";
-    Precedence[Precedence["Additive"] = 320] = "Additive";
-    Precedence[Precedence["Multiplicative"] = 384] = "Multiplicative";
-    Precedence[Precedence["Binary"] = 448] = "Binary";
-    Precedence[Precedence["LeftHandSide"] = 449] = "LeftHandSide";
-    Precedence[Precedence["Primary"] = 450] = "Primary";
-    Precedence[Precedence["Unary"] = 451] = "Unary";
+    Precedence[Precedence["NullishCoalescing"] = 64] = "NullishCoalescing";
+    Precedence[Precedence["LogicalOR"] = 128] = "LogicalOR";
+    Precedence[Precedence["LogicalAND"] = 192] = "LogicalAND";
+    Precedence[Precedence["Equality"] = 256] = "Equality";
+    Precedence[Precedence["Relational"] = 320] = "Relational";
+    Precedence[Precedence["Additive"] = 384] = "Additive";
+    Precedence[Precedence["Multiplicative"] = 448] = "Multiplicative";
+    Precedence[Precedence["Binary"] = 449] = "Binary";
+    Precedence[Precedence["LeftHandSide"] = 450] = "LeftHandSide";
+    Precedence[Precedence["Primary"] = 451] = "Primary";
+    Precedence[Precedence["Unary"] = 452] = "Unary";
 })(Precedence || (Precedence = {}));
 var Token;
 (function (Token) {
-    Token[Token["EOF"] = 1572864] = "EOF";
-    Token[Token["ExpressionTerminal"] = 1048576] = "ExpressionTerminal";
-    Token[Token["AccessScopeTerminal"] = 524288] = "AccessScopeTerminal";
-    Token[Token["ClosingToken"] = 262144] = "ClosingToken";
-    Token[Token["OpeningToken"] = 131072] = "OpeningToken";
-    Token[Token["BinaryOp"] = 65536] = "BinaryOp";
-    Token[Token["UnaryOp"] = 32768] = "UnaryOp";
-    Token[Token["LeftHandSide"] = 16384] = "LeftHandSide";
-    Token[Token["StringOrNumericLiteral"] = 12288] = "StringOrNumericLiteral";
-    Token[Token["NumericLiteral"] = 8192] = "NumericLiteral";
-    Token[Token["StringLiteral"] = 4096] = "StringLiteral";
-    Token[Token["IdentifierName"] = 3072] = "IdentifierName";
-    Token[Token["Keyword"] = 2048] = "Keyword";
-    Token[Token["Identifier"] = 1024] = "Identifier";
-    Token[Token["Contextual"] = 512] = "Contextual";
-    Token[Token["Precedence"] = 448] = "Precedence";
+    Token[Token["EOF"] = 6291456] = "EOF";
+    Token[Token["ExpressionTerminal"] = 4194304] = "ExpressionTerminal";
+    Token[Token["AccessScopeTerminal"] = 2097152] = "AccessScopeTerminal";
+    Token[Token["ClosingToken"] = 1048576] = "ClosingToken";
+    Token[Token["OpeningToken"] = 524288] = "OpeningToken";
+    Token[Token["BinaryOp"] = 262144] = "BinaryOp";
+    Token[Token["UnaryOp"] = 131072] = "UnaryOp";
+    Token[Token["LeftHandSide"] = 65536] = "LeftHandSide";
+    Token[Token["StringOrNumericLiteral"] = 49152] = "StringOrNumericLiteral";
+    Token[Token["NumericLiteral"] = 32768] = "NumericLiteral";
+    Token[Token["StringLiteral"] = 16384] = "StringLiteral";
+    Token[Token["IdentifierName"] = 12288] = "IdentifierName";
+    Token[Token["Keyword"] = 8192] = "Keyword";
+    Token[Token["Identifier"] = 4096] = "Identifier";
+    Token[Token["Contextual"] = 2048] = "Contextual";
+    Token[Token["OptionalSuffix"] = 13312] = "OptionalSuffix";
+    Token[Token["Precedence"] = 960] = "Precedence";
     Token[Token["Type"] = 63] = "Type";
-    Token[Token["FalseKeyword"] = 2048] = "FalseKeyword";
-    Token[Token["TrueKeyword"] = 2049] = "TrueKeyword";
-    Token[Token["NullKeyword"] = 2050] = "NullKeyword";
-    Token[Token["UndefinedKeyword"] = 2051] = "UndefinedKeyword";
-    Token[Token["ThisScope"] = 3076] = "ThisScope";
-    Token[Token["ParentScope"] = 3078] = "ParentScope";
-    Token[Token["OpenParen"] = 671751] = "OpenParen";
-    Token[Token["OpenBrace"] = 131080] = "OpenBrace";
-    Token[Token["Dot"] = 16393] = "Dot";
-    Token[Token["CloseBrace"] = 1835018] = "CloseBrace";
-    Token[Token["CloseParen"] = 1835019] = "CloseParen";
-    Token[Token["Comma"] = 1572876] = "Comma";
-    Token[Token["OpenBracket"] = 671757] = "OpenBracket";
-    Token[Token["CloseBracket"] = 1835022] = "CloseBracket";
-    Token[Token["Colon"] = 1572879] = "Colon";
-    Token[Token["Question"] = 1572880] = "Question";
-    Token[Token["Ampersand"] = 1572883] = "Ampersand";
-    Token[Token["Bar"] = 1572884] = "Bar";
-    Token[Token["BarBar"] = 1638549] = "BarBar";
-    Token[Token["AmpersandAmpersand"] = 1638614] = "AmpersandAmpersand";
-    Token[Token["EqualsEquals"] = 1638679] = "EqualsEquals";
-    Token[Token["ExclamationEquals"] = 1638680] = "ExclamationEquals";
-    Token[Token["EqualsEqualsEquals"] = 1638681] = "EqualsEqualsEquals";
-    Token[Token["ExclamationEqualsEquals"] = 1638682] = "ExclamationEqualsEquals";
-    Token[Token["LessThan"] = 1638747] = "LessThan";
-    Token[Token["GreaterThan"] = 1638748] = "GreaterThan";
-    Token[Token["LessThanEquals"] = 1638749] = "LessThanEquals";
-    Token[Token["GreaterThanEquals"] = 1638750] = "GreaterThanEquals";
-    Token[Token["InKeyword"] = 1640799] = "InKeyword";
-    Token[Token["InstanceOfKeyword"] = 1640800] = "InstanceOfKeyword";
-    Token[Token["Plus"] = 623009] = "Plus";
-    Token[Token["Minus"] = 623010] = "Minus";
-    Token[Token["TypeofKeyword"] = 34851] = "TypeofKeyword";
-    Token[Token["VoidKeyword"] = 34852] = "VoidKeyword";
-    Token[Token["Asterisk"] = 1638885] = "Asterisk";
-    Token[Token["Percent"] = 1638886] = "Percent";
-    Token[Token["Slash"] = 1638887] = "Slash";
-    Token[Token["Equals"] = 1048616] = "Equals";
-    Token[Token["Exclamation"] = 32809] = "Exclamation";
-    Token[Token["TemplateTail"] = 540714] = "TemplateTail";
-    Token[Token["TemplateContinuation"] = 540715] = "TemplateContinuation";
-    Token[Token["OfKeyword"] = 1051180] = "OfKeyword";
+    Token[Token["FalseKeyword"] = 8192] = "FalseKeyword";
+    Token[Token["TrueKeyword"] = 8193] = "TrueKeyword";
+    Token[Token["NullKeyword"] = 8194] = "NullKeyword";
+    Token[Token["UndefinedKeyword"] = 8195] = "UndefinedKeyword";
+    Token[Token["ThisScope"] = 12292] = "ThisScope";
+    Token[Token["ParentScope"] = 12294] = "ParentScope";
+    Token[Token["OpenParen"] = 2688007] = "OpenParen";
+    Token[Token["OpenBrace"] = 524296] = "OpenBrace";
+    Token[Token["Dot"] = 65545] = "Dot";
+    Token[Token["QuestionDot"] = 2162698] = "QuestionDot";
+    Token[Token["CloseBrace"] = 7340043] = "CloseBrace";
+    Token[Token["CloseParen"] = 7340044] = "CloseParen";
+    Token[Token["Comma"] = 6291469] = "Comma";
+    Token[Token["OpenBracket"] = 2688014] = "OpenBracket";
+    Token[Token["CloseBracket"] = 7340047] = "CloseBracket";
+    Token[Token["Colon"] = 6291472] = "Colon";
+    Token[Token["Question"] = 6291475] = "Question";
+    Token[Token["Ampersand"] = 6291476] = "Ampersand";
+    Token[Token["Bar"] = 6291477] = "Bar";
+    Token[Token["QuestionQuestion"] = 6553750] = "QuestionQuestion";
+    Token[Token["BarBar"] = 6553815] = "BarBar";
+    Token[Token["AmpersandAmpersand"] = 6553880] = "AmpersandAmpersand";
+    Token[Token["EqualsEquals"] = 6553945] = "EqualsEquals";
+    Token[Token["ExclamationEquals"] = 6553946] = "ExclamationEquals";
+    Token[Token["EqualsEqualsEquals"] = 6553947] = "EqualsEqualsEquals";
+    Token[Token["ExclamationEqualsEquals"] = 6553948] = "ExclamationEqualsEquals";
+    Token[Token["LessThan"] = 6554013] = "LessThan";
+    Token[Token["GreaterThan"] = 6554014] = "GreaterThan";
+    Token[Token["LessThanEquals"] = 6554015] = "LessThanEquals";
+    Token[Token["GreaterThanEquals"] = 6554016] = "GreaterThanEquals";
+    Token[Token["InKeyword"] = 6562209] = "InKeyword";
+    Token[Token["InstanceOfKeyword"] = 6562210] = "InstanceOfKeyword";
+    Token[Token["Plus"] = 2490851] = "Plus";
+    Token[Token["Minus"] = 2490852] = "Minus";
+    Token[Token["TypeofKeyword"] = 139301] = "TypeofKeyword";
+    Token[Token["VoidKeyword"] = 139302] = "VoidKeyword";
+    Token[Token["Asterisk"] = 6554151] = "Asterisk";
+    Token[Token["Percent"] = 6554152] = "Percent";
+    Token[Token["Slash"] = 6554153] = "Slash";
+    Token[Token["Equals"] = 4194346] = "Equals";
+    Token[Token["Exclamation"] = 131115] = "Exclamation";
+    Token[Token["TemplateTail"] = 2163756] = "TemplateTail";
+    Token[Token["TemplateContinuation"] = 2163757] = "TemplateContinuation";
+    Token[Token["OfKeyword"] = 4204590] = "OfKeyword";
 })(Token || (Token = {}));
 const $false = PrimitiveLiteralExpression.$false;
 const $true = PrimitiveLiteralExpression.$true;
@@ -3156,10 +3161,10 @@ class ParserState {
         this.ip = ip;
         this.index = 0;
         this._startIndex = 0;
-        this._lastIndex = 0;
-        this._currentToken = 1572864;
+        this._currentToken = 6291456;
         this._tokenValue = '';
         this._assignable = true;
+        this._optional = false;
         this.length = ip.length;
         this._currentChar = ip.charCodeAt(0);
     }
@@ -3173,9 +3178,9 @@ function parseExpression(input, expressionType) {
     $state.length = input.length;
     $state.index = 0;
     $state._currentChar = input.charCodeAt(0);
-    return parse($state, 0, 61, expressionType === void 0 ? 8 : expressionType);
+    return parse($state, 61, expressionType === void 0 ? 8 : expressionType);
 }
-function parse(state, access, minPrecedence, expressionType) {
+function parse(state, minPrecedence, expressionType) {
     if (expressionType === 16) {
         return new CustomExpression(state.ip);
     }
@@ -3184,99 +3189,103 @@ function parse(state, access, minPrecedence, expressionType) {
             return parseInterpolation(state);
         }
         nextToken(state);
-        if (state._currentToken & 1048576) {
+        if (state._currentToken & 4194304) {
             throw new Error(`AUR0151: Invalid start of expression: '${state.ip}'`);
         }
     }
-    state._assignable = 448 > minPrecedence;
+    state._assignable = 449 > minPrecedence;
+    state._optional = false;
+    let optionalThisTail = false;
     let result = void 0;
-    if (state._currentToken & 32768) {
+    let ancestor = 0;
+    if (state._currentToken & 131072) {
         const op = TokenValues[state._currentToken & 63];
         nextToken(state);
-        result = new UnaryExpression(op, parse(state, access, 449, expressionType));
+        result = new UnaryExpression(op, parse(state, 450, expressionType));
         state._assignable = false;
     }
     else {
         primary: switch (state._currentToken) {
-            case 3078:
+            case 12294:
                 state._assignable = false;
                 do {
                     nextToken(state);
-                    access++;
-                    if (consumeOpt(state, 16393)) {
-                        if (state._currentToken === 16393) {
+                    ++ancestor;
+                    if (consumeOpt(state, 65545)) {
+                        if (state._currentToken === 65545) {
                             throw new Error(`AUR0152: Double dot and spread operators are not supported: '${state.ip}'`);
                         }
-                        else if (state._currentToken === 1572864) {
+                        else if (state._currentToken === 6291456) {
                             throw new Error(`AUR0153: Expected identifier: '${state.ip}'`);
                         }
                     }
-                    else if (state._currentToken & 524288) {
-                        const ancestor = access & 511;
+                    else if (state._currentToken === 2162698) {
+                        state._optional = true;
+                        nextToken(state);
+                        if ((state._currentToken & 12288) === 0) {
+                            result = ancestor === 0 ? $this : ancestor === 1 ? $parent : new AccessThisExpression(ancestor);
+                            optionalThisTail = true;
+                            break primary;
+                        }
+                    }
+                    else if (state._currentToken & 2097152) {
                         result = ancestor === 0 ? $this : ancestor === 1 ? $parent : new AccessThisExpression(ancestor);
-                        access = 512;
                         break primary;
                     }
                     else {
                         throw new Error(`AUR0154: Invalid member expression: '${state.ip}'`);
                     }
-                } while (state._currentToken === 3078);
-            case 1024:
+                } while (state._currentToken === 12294);
+            case 4096:
                 if (expressionType & 2) {
                     result = new BindingIdentifier(state._tokenValue);
                 }
                 else {
-                    result = new AccessScopeExpression(state._tokenValue, access & 511);
-                    access = 1024;
+                    result = new AccessScopeExpression(state._tokenValue, ancestor);
                 }
-                state._assignable = true;
+                state._assignable = !state._optional;
                 nextToken(state);
                 break;
-            case 3076:
+            case 12292:
                 state._assignable = false;
                 nextToken(state);
                 result = $this;
-                access = 512;
                 break;
-            case 671751:
+            case 2688007: {
                 nextToken(state);
-                result = parse(state, 0, 62, expressionType);
-                consume(state, 1835019);
-                access = 0;
+                const _optional = state._optional;
+                result = parse(state, 62, expressionType);
+                state._optional = _optional;
+                consume(state, 7340044);
                 break;
-            case 671757:
-                result = state.ip.search(/\s+of\s+/) > state.index ? parseArrayDestructuring(state) : parseArrayLiteralExpression(state, access, expressionType);
-                access = 0;
+            }
+            case 2688014:
+                result = state.ip.search(/\s+of\s+/) > state.index ? parseArrayDestructuring(state) : parseArrayLiteralExpression(state, expressionType);
                 break;
-            case 131080:
+            case 524296:
                 result = parseObjectLiteralExpression(state, expressionType);
-                access = 0;
                 break;
-            case 540714:
+            case 2163756:
                 result = new TemplateExpression([state._tokenValue]);
                 state._assignable = false;
                 nextToken(state);
-                access = 0;
                 break;
-            case 540715:
-                result = parseTemplate(state, access, expressionType, result, false);
-                access = 0;
+            case 2163757:
+                result = parseTemplate(state, expressionType, result, false);
                 break;
-            case 4096:
-            case 8192:
+            case 16384:
+            case 32768:
                 result = new PrimitiveLiteralExpression(state._tokenValue);
                 state._assignable = false;
                 nextToken(state);
-                access = 0;
                 break;
-            case 2050:
-            case 2051:
-            case 2049:
-            case 2048:
+            case 8194:
+            case 8195:
+            case 8193:
+            case 8192:
                 result = TokenValues[state._currentToken & 63];
                 state._assignable = false;
                 nextToken(state);
-                access = 0;
                 break;
             default:
                 if (state.index >= state.length) {
@@ -3289,140 +3298,155 @@ function parse(state, access, minPrecedence, expressionType) {
         if (expressionType & 2) {
             return parseForOfStatement(state, result);
         }
-        if (449 < minPrecedence) {
+        if (450 < minPrecedence) {
             return result;
         }
-        let name = state._tokenValue;
-        while ((state._currentToken & 16384) > 0) {
-            const args = [];
-            let strings;
+        if (result.$kind === 1793) {
             switch (state._currentToken) {
-                case 16393:
-                    state._assignable = true;
-                    nextToken(state);
-                    if ((state._currentToken & 3072) === 0) {
-                        throw new Error(`AUR0153: Expected identifier: '${state.ip}'`);
-                    }
-                    name = state._tokenValue;
-                    nextToken(state);
-                    access = ((access & (512 | 1024)) << 1) | (access & 2048) | ((access & 4096) >> 1);
-                    if (state._currentToken === 671751) {
-                        if (access === 0) {
-                            access = 2048;
-                        }
-                        continue;
-                    }
-                    if (access & 1024) {
-                        result = new AccessScopeExpression(name, result.ancestor);
-                    }
-                    else {
-                        result = new AccessMemberExpression(result, name);
-                    }
-                    continue;
-                case 671757:
-                    state._assignable = true;
-                    nextToken(state);
-                    access = 4096;
-                    result = new AccessKeyedExpression(result, parse(state, 0, 62, expressionType));
-                    consume(state, 1835022);
-                    break;
-                case 671751:
+                case 2162698:
+                    state._optional = true;
                     state._assignable = false;
                     nextToken(state);
-                    while (state._currentToken !== 1835019) {
-                        args.push(parse(state, 0, 62, expressionType));
-                        if (!consumeOpt(state, 1572876)) {
-                            break;
-                        }
+                    ensureOptionalSuffix(state);
+                    if (state._currentToken & 12288) {
+                        result = new AccessScopeExpression(state._tokenValue, result.ancestor);
+                        nextToken(state);
                     }
-                    consume(state, 1835019);
-                    if (access & 1024) {
-                        result = new CallScopeExpression(name, args, result.ancestor);
+                    else if (state._currentToken === 2688007) {
+                        result = new CallFunctionExpression(result, parseArguments(state), true);
                     }
-                    else if (access & 2048) {
-                        result = new CallMemberExpression(result, name, args);
+                    else if (state._currentToken === 2688014) {
+                        result = parseKeyedExpression(state, result, true);
                     }
                     else {
-                        result = new CallFunctionExpression(result, args);
+                        throw invalidTaggedTemplateOnOptionalChain(state);
                     }
-                    access = 0;
                     break;
-                case 540714:
-                    state._assignable = false;
-                    strings = [state._tokenValue];
-                    result = new TaggedTemplateExpression(strings, strings, result);
+                case 65545:
+                    state._assignable = !state._optional;
+                    nextToken(state);
+                    ensureIdName(state);
+                    result = new AccessScopeExpression(state._tokenValue, result.ancestor);
                     nextToken(state);
                     break;
-                case 540715:
-                    result = parseTemplate(state, access, expressionType, result, true);
+                case 2688007:
+                    result = new CallFunctionExpression(result, parseArguments(state), optionalThisTail);
+                    break;
+                case 2688014:
+                    result = parseKeyedExpression(state, result, optionalThisTail);
+                    break;
+                case 2163756:
+                    result = createTemplateTail(state, result);
+                    break;
+                case 2163757:
+                    result = parseTemplate(state, expressionType, result, true);
+                    break;
+            }
+        }
+        while ((state._currentToken & 65536) > 0) {
+            switch (state._currentToken) {
+                case 2162698:
+                    result = parseOptionalChainLHS(state, result);
+                    break;
+                case 65545:
+                    nextToken(state);
+                    ensureIdName(state);
+                    result = parseMemberExpressionLHS(state, result, false);
+                    break;
+                case 2688007:
+                    if (result.$kind === 10082) {
+                        result = new CallScopeExpression(result.name, parseArguments(state), result.ancestor, false);
+                    }
+                    else if (result.$kind === 9323) {
+                        result = new CallMemberExpression(result.object, result.name, parseArguments(state), result.optional, false);
+                    }
+                    else {
+                        result = new CallFunctionExpression(result, parseArguments(state), false);
+                    }
+                    break;
+                case 2688014:
+                    result = parseKeyedExpression(state, result, false);
+                    break;
+                case 2163756:
+                    if (state._optional) {
+                        throw invalidTaggedTemplateOnOptionalChain(state);
+                    }
+                    result = createTemplateTail(state, result);
+                    break;
+                case 2163757:
+                    if (state._optional) {
+                        throw invalidTaggedTemplateOnOptionalChain(state);
+                    }
+                    result = parseTemplate(state, expressionType, result, true);
+                    break;
             }
         }
     }
-    if (448 < minPrecedence) {
+    if (449 < minPrecedence) {
         return result;
     }
-    while ((state._currentToken & 65536) > 0) {
+    while ((state._currentToken & 262144) > 0) {
         const opToken = state._currentToken;
-        if ((opToken & 448) <= minPrecedence) {
+        if ((opToken & 960) <= minPrecedence) {
             break;
         }
         nextToken(state);
-        result = new BinaryExpression(TokenValues[opToken & 63], result, parse(state, access, opToken & 448, expressionType));
+        result = new BinaryExpression(TokenValues[opToken & 63], result, parse(state, opToken & 960, expressionType));
         state._assignable = false;
     }
     if (63 < minPrecedence) {
         return result;
     }
-    if (consumeOpt(state, 1572880)) {
-        const yes = parse(state, access, 62, expressionType);
-        consume(state, 1572879);
-        result = new ConditionalExpression(result, yes, parse(state, access, 62, expressionType));
+    if (consumeOpt(state, 6291475)) {
+        const yes = parse(state, 62, expressionType);
+        consume(state, 6291472);
+        result = new ConditionalExpression(result, yes, parse(state, 62, expressionType));
         state._assignable = false;
     }
     if (62 < minPrecedence) {
         return result;
     }
-    if (consumeOpt(state, 1048616)) {
+    if (consumeOpt(state, 4194346)) {
         if (!state._assignable) {
             throw new Error(`AUR0158: Left hand side of expression is not assignable: '${state.ip}'`);
         }
-        result = new AssignExpression(result, parse(state, access, 62, expressionType));
+        result = new AssignExpression(result, parse(state, 62, expressionType));
     }
     if (61 < minPrecedence) {
         return result;
     }
-    while (consumeOpt(state, 1572884)) {
-        if (state._currentToken === 1572864) {
+    while (consumeOpt(state, 6291477)) {
+        if (state._currentToken === 6291456) {
             throw new Error(`AUR0159: Expected identifier to come after ValueConverter operator: '${state.ip}'`);
         }
         const name = state._tokenValue;
         nextToken(state);
         const args = new Array();
-        while (consumeOpt(state, 1572879)) {
-            args.push(parse(state, access, 62, expressionType));
+        while (consumeOpt(state, 6291472)) {
+            args.push(parse(state, 62, expressionType));
         }
         result = new ValueConverterExpression(result, name, args);
     }
-    while (consumeOpt(state, 1572883)) {
-        if (state._currentToken === 1572864) {
+    while (consumeOpt(state, 6291476)) {
+        if (state._currentToken === 6291456) {
             throw new Error(`AUR0160: Expected identifier to come after BindingBehavior operator: '${state.ip}'`);
         }
         const name = state._tokenValue;
         nextToken(state);
         const args = new Array();
-        while (consumeOpt(state, 1572879)) {
-            args.push(parse(state, access, 62, expressionType));
+        while (consumeOpt(state, 6291472)) {
+            args.push(parse(state, 62, expressionType));
         }
         result = new BindingBehaviorExpression(result, name, args);
     }
-    if (state._currentToken !== 1572864) {
+    if (state._currentToken !== 6291456) {
         if (expressionType & 1) {
             return result;
         }
         if (state._tokenRaw === 'of') {
             throw new Error(`AUR0161: Unexpected keyword "of": '${state.ip}'`);
         }
-        throw new Error(`AUR0162: Unconsumed token: '${state.ip}'`);
+        throw new Error(`AUR0162: Unconsumed token: '${state._tokenRaw}' at position ${state.index} of '${state.ip}'`);
     }
     return result;
 }
@@ -3435,14 +3459,14 @@ function parseArrayDestructuring(state) {
     while ($continue) {
         nextToken(state);
         switch (state._currentToken) {
-            case 1835022:
+            case 7340047:
                 $continue = false;
                 addItem();
                 break;
-            case 1572876:
+            case 6291469:
                 addItem();
                 break;
-            case 1024:
+            case 4096:
                 target = state._tokenRaw;
                 break;
             default:
@@ -3451,7 +3475,7 @@ function parseArrayDestructuring(state) {
                 }
         }
     }
-    consume(state, 1835022);
+    consume(state, 7340047);
     return dae;
     function addItem() {
         if (target !== '') {
@@ -3463,20 +3487,105 @@ function parseArrayDestructuring(state) {
         }
     }
 }
-function parseArrayLiteralExpression(state, access, expressionType) {
+function parseArguments(state) {
+    const _optional = state._optional;
+    nextToken(state);
+    const args = [];
+    while (state._currentToken !== 7340044) {
+        args.push(parse(state, 62, 0));
+        if (!consumeOpt(state, 6291469)) {
+            break;
+        }
+    }
+    consume(state, 7340044);
+    state._assignable = false;
+    state._optional = _optional;
+    return args;
+}
+function parseKeyedExpression(state, result, optional) {
+    const _optional = state._optional;
+    nextToken(state);
+    result = new AccessKeyedExpression(result, parse(state, 62, 0), optional);
+    consume(state, 7340047);
+    state._assignable = !_optional;
+    state._optional = _optional;
+    return result;
+}
+function parseOptionalChainLHS(state, lhs) {
+    state._optional = true;
+    state._assignable = false;
+    nextToken(state);
+    ensureOptionalSuffix(state);
+    if (state._currentToken & 12288) {
+        return parseMemberExpressionLHS(state, lhs, true);
+    }
+    if (state._currentToken === 2688007) {
+        if (lhs.$kind === 10082) {
+            return new CallScopeExpression(lhs.name, parseArguments(state), lhs.ancestor, true);
+        }
+        else if (lhs.$kind === 9323) {
+            return new CallMemberExpression(lhs.object, lhs.name, parseArguments(state), lhs.optional, true);
+        }
+        else {
+            return new CallFunctionExpression(lhs, parseArguments(state), true);
+        }
+    }
+    if (state._currentToken === 2688014) {
+        return parseKeyedExpression(state, lhs, true);
+    }
+    throw invalidTaggedTemplateOnOptionalChain(state);
+}
+function parseMemberExpressionLHS(state, lhs, optional) {
+    const rhs = state._tokenValue;
+    switch (state._currentToken) {
+        case 2162698:
+            state._optional = true;
+            state._assignable = false;
+            save(state);
+            nextToken(state);
+            ensureOptionalSuffix(state);
+            if (state._currentToken === 2688007) {
+                return new CallMemberExpression(lhs, rhs, parseArguments(state), optional, true);
+            }
+            restore(state);
+            return new AccessMemberExpression(lhs, rhs, optional);
+        case 2688007:
+            state._assignable = false;
+            return new CallMemberExpression(lhs, rhs, parseArguments(state), optional, false);
+        default:
+            state._assignable = !state._optional;
+            nextToken(state);
+            return new AccessMemberExpression(lhs, rhs, optional);
+    }
+}
+function ensureOptionalSuffix(state) {
+    if ((state._currentToken & 13312) === 0) {
+        throw new Error(`AUR0171: Unexpected '${state._tokenRaw}' at position ${state.index - 1} for optional chain in ${state.ip}`);
+    }
+}
+function ensureIdName(state) {
+    if ((state._currentToken & 12288) === 0) {
+        throw new Error(`AUR0153: Expected identifier: '${state.ip}'`);
+    }
+}
+function invalidTaggedTemplateOnOptionalChain(state) {
+    return new Error(`AUR0172: Invalid tagged template on optional chain in ${state.ip}`);
+}
+function parseArrayLiteralExpression(state, expressionType) {
+    const _optional = state._optional;
     nextToken(state);
     const elements = new Array();
-    while (state._currentToken !== 1835022) {
-        if (consumeOpt(state, 1572876)) {
+    while (state._currentToken !== 7340047) {
+        if (consumeOpt(state, 6291469)) {
             elements.push($undefined);
-            if (state._currentToken === 1835022) {
+            if (state._currentToken === 7340047) {
                 break;
             }
         }
         else {
-            elements.push(parse(state, access, 62, expressionType & ~2));
-            if (consumeOpt(state, 1572876)) {
-                if (state._currentToken === 1835022) {
+            elements.push(parse(state, 62, expressionType & ~2));
+            if (consumeOpt(state, 6291469)) {
+                if (state._currentToken === 7340047) {
                     break;
                 }
             }
@@ -3485,7 +3594,8 @@ function parseArrayLiteralExpression(state, access, expressionType) {
             }
         }
     }
-    consume(state, 1835022);
+    state._optional = _optional;
+    consume(state, 7340047);
     if (expressionType & 2) {
         return new ArrayBindingPattern(elements);
     }
@@ -3498,46 +3608,48 @@ function parseForOfStatement(state, result) {
     if ((result.$kind & 65536) === 0) {
         throw new Error(`AUR0163: Invalid BindingIdentifier at left hand side of "of": '${state.ip}'`);
     }
-    if (state._currentToken !== 1051180) {
+    if (state._currentToken !== 4204590) {
         throw new Error(`AUR0163: Invalid BindingIdentifier at left hand side of "of": '${state.ip}'`);
     }
     nextToken(state);
     const declaration = result;
-    const statement = parse(state, 0, 61, 0);
+    const statement = parse(state, 61, 0);
     return new ForOfStatement(declaration, statement);
 }
 function parseObjectLiteralExpression(state, expressionType) {
+    const _optional = state._optional;
     const keys = new Array();
     const values = new Array();
     nextToken(state);
-    while (state._currentToken !== 1835018) {
+    while (state._currentToken !== 7340043) {
         keys.push(state._tokenValue);
-        if (state._currentToken & 12288) {
+        if (state._currentToken & 49152) {
             nextToken(state);
-            consume(state, 1572879);
-            values.push(parse(state, 0, 62, expressionType & ~2));
+            consume(state, 6291472);
+            values.push(parse(state, 62, expressionType & ~2));
         }
-        else if (state._currentToken & 3072) {
+        else if (state._currentToken & 12288) {
             const { _currentChar: currentChar, _currentToken: currentToken, index: index } = state;
             nextToken(state);
-            if (consumeOpt(state, 1572879)) {
-                values.push(parse(state, 0, 62, expressionType & ~2));
+            if (consumeOpt(state, 6291472)) {
+                values.push(parse(state, 62, expressionType & ~2));
             }
             else {
                 state._currentChar = currentChar;
                 state._currentToken = currentToken;
                 state.index = index;
-                values.push(parse(state, 0, 450, expressionType & ~2));
+                values.push(parse(state, 451, expressionType & ~2));
             }
         }
         else {
             throw new Error(`AUR0164: Invalid or unsupported property definition in object literal: '${state.ip}'`);
         }
-        if (state._currentToken !== 1835018) {
-            consume(state, 1572876);
+        if (state._currentToken !== 7340043) {
+            consume(state, 6291469);
         }
     }
-    consume(state, 1835018);
+    state._optional = _optional;
+    consume(state, 7340043);
     if (expressionType & 2) {
         return new ObjectBindingPattern(keys, values);
     }
@@ -3560,7 +3672,7 @@ function parseInterpolation(state) {
                     state.index += 2;
                     state._currentChar = state.ip.charCodeAt(state.index);
                     nextToken(state);
-                    const expression = parse(state, 0, 61, 1);
+                    const expression = parse(state, 61, 1);
                     expressions.push(expression);
                     continue;
                 }
@@ -3582,17 +3694,19 @@ function parseInterpolation(state) {
     }
     return null;
 }
-function parseTemplate(state, access, expressionType, result, tagged) {
+function parseTemplate(state, expressionType, result, tagged) {
+    const _optional = state._optional;
     const cooked = [state._tokenValue];
-    consume(state, 540715);
-    const expressions = [parse(state, access, 62, expressionType)];
-    while ((state._currentToken = scanTemplateTail(state)) !== 540714) {
+    consume(state, 2163757);
+    const expressions = [parse(state, 62, expressionType)];
+    while ((state._currentToken = scanTemplateTail(state)) !== 2163756) {
         cooked.push(state._tokenValue);
-        consume(state, 540715);
-        expressions.push(parse(state, access, 62, expressionType));
+        consume(state, 2163757);
+        expressions.push(parse(state, 62, expressionType));
     }
     cooked.push(state._tokenValue);
     state._assignable = false;
+    state._optional = _optional;
     if (tagged) {
         nextToken(state);
         return new TaggedTemplateExpression(cooked, cooked, result, expressions);
@@ -3602,6 +3716,12 @@ function parseTemplate(state, access, expressionType, result, tagged) {
         return new TemplateExpression(cooked, expressions);
     }
 }
+function createTemplateTail(state, result) {
+    state._assignable = false;
+    const strings = [state._tokenValue];
+    nextToken(state);
+    return new TaggedTemplateExpression(strings, strings, result);
+}
 function nextToken(state) {
     while (state.index < state.length) {
         state._startIndex = state.index;
@@ -3609,8 +3729,36 @@ function nextToken(state) {
             return;
         }
     }
-    state._currentToken = 1572864;
+    state._currentToken = 6291456;
 }
+const { save, restore } = (function () {
+    let index = 0;
+    let _startIndex = 0;
+    let _currentToken = 6291456;
+    let _currentChar = 0;
+    let _tokenValue = '';
+    let _assignable = true;
+    let _optional = false;
+    function save(state) {
+        index = state.index;
+        _startIndex = state._startIndex;
+        _currentToken = state._currentToken;
+        _currentChar = state._currentChar;
+        _tokenValue = state._tokenValue;
+        _assignable = state._assignable;
+        _optional = state._optional;
+    }
+    function restore(state) {
+        state.index = index;
+        state._startIndex = _startIndex;
+        state._currentToken = _currentToken;
+        state._currentChar = _currentChar;
+        state._tokenValue = _tokenValue;
+        state._assignable = _assignable;
+        state._optional = _optional;
+    }
+    return { save, restore };
+})();
 function nextChar(state) {
     return state._currentChar = state.ip.charCodeAt(++state.index);
 }
@@ -3618,7 +3766,7 @@ function scanIdentifier(state) {
     while (IdParts[nextChar(state)])
         ;
     const token = KeywordLookup[state._tokenValue = state._tokenRaw];
-    return token === undefined ? 1024 : token;
+    return token === undefined ? 4096 : token;
 }
 function scanNumber(state, isFloat) {
     let char = state._currentChar;
@@ -3628,12 +3776,12 @@ function scanNumber(state, isFloat) {
         } while (char <= 57 && char >= 48);
         if (char !== 46) {
             state._tokenValue = parseInt(state._tokenRaw, 10);
-            return 8192;
+            return 32768;
         }
         char = nextChar(state);
         if (state.index >= state.length) {
             state._tokenValue = parseInt(state._tokenRaw.slice(0, -1), 10);
-            return 8192;
+            return 32768;
         }
     }
     if (char <= 57 && char >= 48) {
@@ -3645,7 +3793,7 @@ function scanNumber(state, isFloat) {
         state._currentChar = state.ip.charCodeAt(--state.index);
     }
     state._tokenValue = parseFloat(state._tokenRaw);
-    return 8192;
+    return 32768;
 }
 function scanString(state) {
     const quote = state._currentChar;
@@ -3674,7 +3822,7 @@ function scanString(state) {
     buffer.push(last);
     const unescapedStr = buffer.join('');
     state._tokenValue = unescapedStr;
-    return 4096;
+    return 16384;
 }
 function scanTemplate(state) {
     let tail = true;
@@ -3703,9 +3851,9 @@ function scanTemplate(state) {
     nextChar(state);
     state._tokenValue = result;
     if (tail) {
-        return 540714;
+        return 2163756;
     }
-    return 540715;
+    return 2163757;
 }
 function scanTemplateTail(state) {
     if (state.index >= state.length) {
@@ -3731,24 +3879,24 @@ function consume(state, token) {
 }
 const TokenValues = [
     $false, $true, $null, $undefined, '$this', null, '$parent',
-    '(', '{', '.', '}', ')', ',', '[', ']', ':', '?', '\'', '"',
-    '&', '|', '||', '&&', '==', '!=', '===', '!==', '<', '>',
+    '(', '{', '.', '?.', '}', ')', ',', '[', ']', ':', '?', '\'', '"',
+    '&', '|', '??', '||', '&&', '==', '!=', '===', '!==', '<', '>',
     '<=', '>=', 'in', 'instanceof', '+', '-', 'typeof', 'void', '*', '%', '/', '=', '!',
-    540714, 540715,
+    2163756, 2163757,
     'of'
 ];
 const KeywordLookup = createLookup();
-KeywordLookup.true = 2049;
-KeywordLookup.null = 2050;
-KeywordLookup.false = 2048;
-KeywordLookup.undefined = 2051;
-KeywordLookup.$this = 3076;
-KeywordLookup.$parent = 3078;
-KeywordLookup.in = 1640799;
-KeywordLookup.instanceof = 1640800;
-KeywordLookup.typeof = 34851;
-KeywordLookup.void = 34852;
-KeywordLookup.of = 1051180;
+KeywordLookup.true = 8193;
+KeywordLookup.null = 8194;
+KeywordLookup.false = 8192;
+KeywordLookup.undefined = 8195;
+KeywordLookup.$this = 12292;
+KeywordLookup.$parent = 12294;
+KeywordLookup.in = 6562209;
+KeywordLookup.instanceof = 6562210;
+KeywordLookup.typeof = 139301;
+KeywordLookup.void = 139302;
+KeywordLookup.of = 4204590;
 const codes = {
     AsciiIdPart: [0x24, 0, 0x30, 0x3A, 0x41, 0x5B, 0x5F, 0, 0x61, 0x7B],
     IdStart: [0x24, 0, 0x41, 0x5B, 0x5F, 0, 0x61, 0x7B, 0xAA, 0, 0xBA, 0, 0xC0, 0xD7, 0xD8, 0xF7, 0xF8, 0x2B9, 0x2E0, 0x2E5, 0x1D00, 0x1D26, 0x1D2C, 0x1D5D, 0x1D62, 0x1D66, 0x1D6B, 0x1D78, 0x1D79, 0x1DBF, 0x1E00, 0x1F00, 0x2071, 0, 0x207F, 0, 0x2090, 0x209D, 0x212A, 0x212C, 0x2132, 0, 0x214E, 0, 0x2160, 0x2189, 0x2C60, 0x2C80, 0xA722, 0xA788, 0xA78B, 0xA7AF, 0xA7B0, 0xA7B8, 0xA7F7, 0xA800, 0xAB30, 0xAB5B, 0xAB5C, 0xAB65, 0xFB00, 0xFB07, 0xFF21, 0xFF3B, 0xFF41, 0xFF5B],
@@ -3803,72 +3951,88 @@ CharScanners[96] = s => {
 };
 CharScanners[33] = s => {
     if (nextChar(s) !== 61) {
-        return 32809;
+        return 131115;
     }
     if (nextChar(s) !== 61) {
-        return 1638680;
+        return 6553946;
     }
     nextChar(s);
-    return 1638682;
+    return 6553948;
 };
 CharScanners[61] = s => {
     if (nextChar(s) !== 61) {
-        return 1048616;
+        return 4194346;
     }
     if (nextChar(s) !== 61) {
-        return 1638679;
+        return 6553945;
     }
     nextChar(s);
-    return 1638681;
+    return 6553947;
 };
 CharScanners[38] = s => {
     if (nextChar(s) !== 38) {
-        return 1572883;
+        return 6291476;
     }
     nextChar(s);
-    return 1638614;
+    return 6553880;
 };
 CharScanners[124] = s => {
     if (nextChar(s) !== 124) {
-        return 1572884;
+        return 6291477;
     }
     nextChar(s);
-    return 1638549;
+    return 6553815;
+};
+CharScanners[63] = s => {
+    if (nextChar(s) === 46) {
+        const peek = s.ip.charCodeAt(s.index + 1);
+        if (peek <= 48 || peek >= 57) {
+            nextChar(s);
+            return 2162698;
+        }
+        return 6291475;
+    }
+    if (s._currentChar !== 63) {
+        return 6291475;
+    }
+    if (nextChar(s) === 61) {
+        throw new Error('Operator ??= is not supported.');
+    }
+    return 6553750;
 };
 CharScanners[46] = s => {
     if (nextChar(s) <= 57 && s._currentChar >= 48) {
         return scanNumber(s, true);
     }
-    return 16393;
+    return 65545;
 };
 CharScanners[60] = s => {
     if (nextChar(s) !== 61) {
-        return 1638747;
+        return 6554013;
     }
     nextChar(s);
-    return 1638749;
+    return 6554015;
 };
 CharScanners[62] = s => {
     if (nextChar(s) !== 61) {
-        return 1638748;
+        return 6554014;
     }
     nextChar(s);
-    return 1638750;
+    return 6554016;
 };
-CharScanners[37] = returnToken(1638886);
-CharScanners[40] = returnToken(671751);
-CharScanners[41] = returnToken(1835019);
-CharScanners[42] = returnToken(1638885);
-CharScanners[43] = returnToken(623009);
-CharScanners[44] = returnToken(1572876);
-CharScanners[45] = returnToken(623010);
-CharScanners[47] = returnToken(1638887);
-CharScanners[58] = returnToken(1572879);
-CharScanners[63] = returnToken(1572880);
-CharScanners[91] = returnToken(671757);
-CharScanners[93] = returnToken(1835022);
-CharScanners[123] = returnToken(131080);
-CharScanners[125] = returnToken(1835018);
+CharScanners[37] = returnToken(6554152);
+CharScanners[40] = returnToken(2688007);
+CharScanners[41] = returnToken(7340044);
+CharScanners[42] = returnToken(6554151);
+CharScanners[43] = returnToken(2490851);
+CharScanners[44] = returnToken(6291469);
+CharScanners[45] = returnToken(2490852);
+CharScanners[47] = returnToken(6554153);
+CharScanners[58] = returnToken(6291472);
+CharScanners[91] = returnToken(2688014);
+CharScanners[93] = returnToken(7340047);
+CharScanners[123] = returnToken(524296);
+CharScanners[125] = returnToken(7340043);
 
 let _connectable = null;
 const connectables = [];
@@ -4961,5 +5125,5 @@ function getNotifier(obj, key, callbackKey, initialValue, set) {
     return notifier;
 }
 
-export { Access, AccessKeyedExpression, AccessMemberExpression, AccessScopeExpression, AccessThisExpression, AccessorType, ArrayBindingPattern, ArrayIndexObserver, ArrayLiteralExpression, ArrayObserver, AssignExpression, BinaryExpression, BindingBehavior, BindingBehaviorDefinition, BindingBehaviorExpression, BindingBehaviorFactory, BindingBehaviorStrategy, BindingContext, BindingIdentifier, BindingInterceptor, BindingMediator, BindingMode, BindingObserverRecord, CallFunctionExpression, CallMemberExpression, CallScopeExpression, Char, CollectionKind, CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, ConditionalExpression, ConnectableSwitcher, CustomExpression, DelegationStrategy, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, DirtyCheckProperty, DirtyCheckSettings, ExpressionKind, ExpressionType, FlushQueue, ForOfStatement, HtmlLiteralExpression, ICoercionConfiguration, IDirtyChecker, IExpressionParser, INodeObserverLocator, IObservation, IObserverLocator, ISignaler, Interpolation, LifecycleFlags, MapObserver, ObjectBindingPattern, ObjectLiteralExpression, Observation, ObserverLocator, OverrideContext, ParserState, Precedence, PrimitiveLiteralExpression, PrimitiveObserver, PropertyAccessor, ProxyObservable, Scope, SetObserver, SetterObserver, SubscriberRecord, TaggedTemplateExpression, TemplateExpression, UnaryExpression, ValueConverter, ValueConverterDefinition, ValueConverterExpression, alias, applyMutationsToIndices, bindingBehavior, cloneIndexMap, connectable, copyIndexMap, createIndexMap, disableArrayObservation, disableMapObservation, disableSetObservation, enableArrayObservation, enableMapObservation, enableSetObservation, getCollectionObserver, isIndexMap, observable, parse, parseExpression, registerAliases, subscriberCollection, synchronizeIndices, valueConverter, withFlushQueue };
+export { AccessKeyedExpression, AccessMemberExpression, AccessScopeExpression, AccessThisExpression, AccessorType, ArrayBindingPattern, ArrayIndexObserver, ArrayLiteralExpression, ArrayObserver, AssignExpression, BinaryExpression, BindingBehavior, BindingBehaviorDefinition, BindingBehaviorExpression, BindingBehaviorFactory, BindingBehaviorStrategy, BindingContext, BindingIdentifier, BindingInterceptor, BindingMediator, BindingMode, BindingObserverRecord, CallFunctionExpression, CallMemberExpression, CallScopeExpression, Char, CollectionKind, CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, ConditionalExpression, ConnectableSwitcher, CustomExpression, DelegationStrategy, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, DirtyCheckProperty, DirtyCheckSettings, ExpressionKind, ExpressionType, FlushQueue, ForOfStatement, HtmlLiteralExpression, ICoercionConfiguration, IDirtyChecker, IExpressionParser, INodeObserverLocator, IObservation, IObserverLocator, ISignaler, Interpolation, LifecycleFlags, MapObserver, ObjectBindingPattern, ObjectLiteralExpression, Observation, ObserverLocator, OverrideContext, ParserState, Precedence, PrimitiveLiteralExpression, PrimitiveObserver, PropertyAccessor, ProxyObservable, Scope, SetObserver, SetterObserver, SubscriberRecord, TaggedTemplateExpression, TemplateExpression, UnaryExpression, ValueConverter, ValueConverterDefinition, ValueConverterExpression, alias, applyMutationsToIndices, bindingBehavior, cloneIndexMap, connectable, copyIndexMap, createIndexMap, disableArrayObservation, disableMapObservation, disableSetObservation, enableArrayObservation, enableMapObservation, enableSetObservation, getCollectionObserver, isIndexMap, observable, parse, parseExpression, registerAliases, subscriberCollection, synchronizeIndices, valueConverter, withFlushQueue };
 //# sourceMappingURL=index.dev.mjs.map

@@ -1,5 +1,5 @@
 import { Transform } from 'stream';
-import { preprocess, preprocessOptions } from '@aurelia/plugin-conventions';
+import { preprocessOptions, preprocess } from '@aurelia/plugin-conventions';
 
 function index (options = {}) {
     return plugin({

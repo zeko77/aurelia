@@ -2,7 +2,7 @@ import { readFile as readFile$1, access, constants as constants$1, exists as exi
 import { IncomingMessage, ServerResponse, createServer } from 'http';
 import { constants, Http2ServerRequest, Http2ServerResponse, createSecureServer } from 'http2';
 import { resolve, join, extname, relative } from 'path';
-import { DI, ILogger, bound, IContainer, all, Registration, LoggerConfiguration, ConsoleSink, IPlatform } from '@aurelia/kernel';
+import { DI, ILogger, all, bound, IContainer, Registration, LoggerConfiguration, ConsoleSink, IPlatform } from '@aurelia/kernel';
 import { Platform } from '@aurelia/platform';
 import * as https from 'https';
 import * as $url from 'url';

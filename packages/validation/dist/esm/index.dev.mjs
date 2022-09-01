@@ -1,7 +1,7 @@
-import { DI, Protocol, toArray, ILogger, IServiceLocator, Registration, noop } from '@aurelia/kernel';
+import { DI, Protocol, toArray, IServiceLocator, ILogger, Registration, noop } from '@aurelia/kernel';
 import { Metadata } from '@aurelia/metadata';
 import * as AST from '@aurelia/runtime';
-import { IExpressionParser, Scope, PrimitiveLiteralExpression } from '@aurelia/runtime';
+import { Scope, PrimitiveLiteralExpression, IExpressionParser } from '@aurelia/runtime';
 
 const IValidationExpressionHydrator = DI.createInterface('IValidationExpressionHydrator');
 

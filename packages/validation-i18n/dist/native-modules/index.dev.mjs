@@ -1,8 +1,8 @@
 import { I18N } from '../../../i18n/dist/native-modules/index.mjs';
-import { DI, IEventAggregator, ILogger, IServiceLocator, Registration, noop } from '../../../kernel/dist/native-modules/index.mjs';
+import { DI, IServiceLocator, IEventAggregator, ILogger, Registration, noop } from '../../../kernel/dist/native-modules/index.mjs';
 import { IExpressionParser } from '../../../runtime/dist/native-modules/index.mjs';
 import { IPlatform } from '../../../runtime-html/dist/native-modules/index.mjs';
-import { IValidator, ValidationMessageProvider } from '../../../validation/dist/native-modules/index.mjs';
+import { ValidationMessageProvider, IValidator } from '../../../validation/dist/native-modules/index.mjs';
 import { ValidationController, ValidationControllerFactory, getDefaultValidationHtmlConfiguration, ValidationHtmlConfiguration } from '../../../validation-html/dist/native-modules/index.mjs';
 
 /******************************************************************************

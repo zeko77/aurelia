@@ -1,4 +1,3 @@
-/// <reference path="../../../global.d.ts" />
 export { StateDefaultConfiguration } from './configuration';
 export { ActionHandler, } from './action-handler';
 export { IState, IStore, type IStoreSubscriber, IActionHandler, type IRegistrableReducer, type IAction, } from './interfaces';

@@ -5,6 +5,7 @@ import { IRouter, NavigationFlags } from '../index';
 import { Viewport } from '../endpoints/viewport';
 import { Step } from '../utilities/runner';
 import { OpenPromise } from '../utilities/open-promise';
+import { FallbackAction } from '../router-options';
 export declare const ParentViewport: import("@aurelia/runtime-html/dist/types/resources/custom-element").InjectableToken<import("@aurelia/kernel").Key>;
 export declare class ViewportCustomElement implements ICustomElementViewModel {
     private readonly router;
@@ -33,6 +34,13 @@ export declare class ViewportCustomElement implements ICustomElementViewModel {
      * component. The component is passed as a parameter to the fallback.
      */
     fallback: string;
+    /**
+     * Whether the fallback action is to load the fallback component in
+     * place of the unloadable component and continue with any child
+     * instructions or if the fallback is to be called and the processing
+     * of the children to be aborted.
+     */
+    fallbackAction: FallbackAction | '';
     /**
      * Indicates that the viewport has no scope.
      */

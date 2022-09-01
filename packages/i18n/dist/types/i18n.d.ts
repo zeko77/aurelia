@@ -105,6 +105,5 @@ export declare class I18nService implements I18N {
     rt(input: Date, options?: Intl.RelativeTimeFormatOptions, locales?: string | string[]): string;
     subscribeLocaleChange(subscriber: ILocalChangeSubscriber): void;
     private now;
-    private _initializeI18next;
 }
 //# sourceMappingURL=i18n.d.ts.map

@@ -253,6 +253,7 @@ class InstructionParser {
         let scope = true;
         let token;
         let pos;
+        const unparsed = instruction;
         const specials = [seps.add, seps.clear];
         for (const special of specials) {
             if (instruction === special) {
@@ -306,6 +307,7 @@ class InstructionParser {
             throw new Error(`Instruction parser error: No component specified in instruction part "${instruction}".`);
         }
         const routingInstruction = RoutingInstruction.create(component, viewport, parametersString, scope);
+        routingInstruction.unparsed = unparsed;
         return { instruction: routingInstruction, remaining: instruction };
     }
     static findNextToken(instruction, tokens) {
@@ -412,7 +414,7 @@ class Indicators {
     }
 }
 class RouterOptions {
-    constructor(separators = Separators.create(), indicators = Indicators.create(), useUrlFragmentHash = true, basePath = null, useHref = true, statefulHistoryLength = 0, useDirectRouting = true, useConfiguredRoutes = true, additiveInstructionDefault = true, title = TitleOptions.create(), navigationSyncStates = ['guardedUnload', 'swapped', 'completed'], swapOrder = 'attach-next-detach-current') {
+    constructor(separators = Separators.create(), indicators = Indicators.create(), useUrlFragmentHash = true, basePath = null, useHref = true, statefulHistoryLength = 0, useDirectRouting = true, useConfiguredRoutes = true, additiveInstructionDefault = true, title = TitleOptions.create(), navigationSyncStates = ['guardedUnload', 'swapped', 'completed'], swapOrder = 'attach-next-detach-current', fallback = '', fallbackAction = 'abort') {
         this.separators = separators;
         this.indicators = indicators;
         this.useUrlFragmentHash = useUrlFragmentHash;
@@ -425,10 +427,12 @@ class RouterOptions {
         this.title = title;
         this.navigationSyncStates = navigationSyncStates;
         this.swapOrder = swapOrder;
+        this.fallback = fallback;
+        this.fallbackAction = fallbackAction;
         this.registrationHooks = [];
     }
     static create(input = {}) {
-        return new RouterOptions(Separators.create(input.separators), Indicators.create(input.indicators), input.useUrlFragmentHash, input.basePath, input.useHref, input.statefulHistoryLength, input.useDirectRouting, input.useConfiguredRoutes, input.additiveInstructionDefault, TitleOptions.create(input.title), input.navigationSyncStates, input.swapOrder);
+        return new RouterOptions(Separators.create(input.separators), Indicators.create(input.indicators), input.useUrlFragmentHash, input.basePath, input.useHref, input.statefulHistoryLength, input.useDirectRouting, input.useConfiguredRoutes, input.additiveInstructionDefault, TitleOptions.create(input.title), input.navigationSyncStates, input.swapOrder, input.fallback, input.fallbackAction);
     }
     static for(context) {
         if (context instanceof RouterConfiguration) {
@@ -443,7 +447,7 @@ class RouterOptions {
         return context.options;
     }
     apply(options) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
         options = options !== null && options !== void 0 ? options : {};
         this.separators.apply(options.separators);
         this.indicators.apply(options.indicators);
@@ -457,6 +461,8 @@ class RouterOptions {
         this.title.apply(options.title);
         this.navigationSyncStates = (_h = options.navigationSyncStates) !== null && _h !== void 0 ? _h : this.navigationSyncStates;
         this.swapOrder = (_j = options.swapOrder) !== null && _j !== void 0 ? _j : this.swapOrder;
+        this.fallback = (_k = options.fallback) !== null && _k !== void 0 ? _k : this.fallback;
+        this.fallbackAction = (_l = options.fallbackAction) !== null && _l !== void 0 ? _l : this.fallbackAction;
         if (Array.isArray(options.hooks)) {
             if (this.routerConfiguration !== void 0) {
                 options.hooks.forEach(hook => this.routerConfiguration.addHook(hook.hook, hook.options));
@@ -753,9 +759,9 @@ class InstructionComponent {
         this.promise = promise;
         this.func = func;
     }
-    resolve() {
+    resolve(instruction) {
         if (this.func !== null) {
-            this.set(this.func());
+            this.set(this.func(instruction));
         }
         if (!(this.promise instanceof Promise)) {
             return;
@@ -781,7 +787,7 @@ class InstructionComponent {
         });
     }
     get none() {
-        return !this.isName() && !this.isType() && !this.isInstance();
+        return !this.isName() && !this.isType() && !this.isInstance() && !this.isFunction() && !this.isPromise();
     }
     isName() {
         return !!this.name && !this.isType() && !this.isInstance();
@@ -798,7 +804,8 @@ class InstructionComponent {
     isFunction() {
         return this.func !== null;
     }
-    toType(container) {
+    toType(container, instruction) {
+        void this.resolve(instruction);
         if (this.type !== null) {
             return this.type;
         }
@@ -819,7 +826,8 @@ class InstructionComponent {
         }
         return null;
     }
-    toInstance(parentContainer, parentController, parentElement) {
+    toInstance(parentContainer, parentController, parentElement, instruction) {
+        void this.resolve(instruction);
         if (this.instance !== null) {
             return this.instance;
         }
@@ -1743,7 +1751,8 @@ class ViewportContent extends EndpointContent {
     contentController(connectedCE) {
         return runtimeHtml.Controller.$el(connectedCE.container.createChild(), this.instruction.component.instance, connectedCE.element, null);
     }
-    createComponent(connectedCE, fallback) {
+    createComponent(connectedCE, fallback, fallbackAction) {
+        var _a;
         if (this.contentStates.has('created')) {
             return;
         }
@@ -1752,8 +1761,17 @@ class ViewportContent extends EndpointContent {
                 this.instruction.component.set(this.toComponentInstance(connectedCE.container, connectedCE.controller, connectedCE.element));
             }
             catch (e) {
+                {
+                    console.warn(`'${this.instruction.component.name}' did not match any configured route or registered component name - did you forget to add the component '${this.instruction.component.name}' to the dependencies or to register it as a global dependency?`);
+                }
                 if ((fallback !== null && fallback !== void 0 ? fallback : '') !== '') {
-                    this.instruction.parameters.set([this.instruction.component.name]);
+                    if (fallbackAction === 'process-children') {
+                        this.instruction.parameters.set([this.instruction.component.name]);
+                    }
+                    else {
+                        this.instruction.parameters.set([(_a = this.instruction.unparsed) !== null && _a !== void 0 ? _a : this.instruction.component.name]);
+                        this.instruction.nextScopeInstructions = null;
+                    }
                     this.instruction.component.set(fallback);
                     try {
                         this.instruction.component.set(this.toComponentInstance(connectedCE.container, connectedCE.controller, connectedCE.element));
@@ -1968,13 +1986,13 @@ class ViewportContent extends EndpointContent {
         if (this.instruction.component.none) {
             return null;
         }
-        return this.instruction.component.toType(container);
+        return this.instruction.component.toType(container, this.instruction);
     }
     toComponentInstance(parentContainer, parentController, parentElement) {
         if (this.instruction.component.none) {
             return null;
         }
-        return this.instruction.component.toInstance(parentContainer, parentController, parentElement);
+        return this.instruction.component.toInstance(parentContainer, parentController, parentElement, this.instruction);
     }
     waitForParent(parent) {
         if (parent === null) {
@@ -1994,10 +2012,11 @@ class ViewportContent extends EndpointContent {
 }
 
 class ViewportOptions {
-    constructor(scope = true, usedBy = [], _default = '', fallback = '', noLink = false, noTitle = false, stateful = false, forceDescription = false, noHistory = false) {
+    constructor(scope = true, usedBy = [], _default = '', fallback = '', fallbackAction = '', noLink = false, noTitle = false, stateful = false, forceDescription = false, noHistory = false) {
         this.scope = scope;
         this.usedBy = usedBy;
         this.fallback = fallback;
+        this.fallbackAction = fallbackAction;
         this.noLink = noLink;
         this.noTitle = noTitle;
         this.stateful = stateful;
@@ -2014,18 +2033,19 @@ class ViewportOptions {
         return created;
     }
     apply(options) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
         this.scope = (_a = options.scope) !== null && _a !== void 0 ? _a : this.scope;
         this.usedBy = (_b = (typeof options.usedBy === 'string'
             ? options.usedBy.split(',').filter(str => str.length > 0)
             : options.usedBy)) !== null && _b !== void 0 ? _b : this.usedBy;
         this.default = (_c = options.default) !== null && _c !== void 0 ? _c : this.default;
         this.fallback = (_d = options.fallback) !== null && _d !== void 0 ? _d : this.fallback;
-        this.noLink = (_e = options.noLink) !== null && _e !== void 0 ? _e : this.noLink;
-        this.noTitle = (_f = options.noTitle) !== null && _f !== void 0 ? _f : this.noTitle;
-        this.stateful = (_g = options.stateful) !== null && _g !== void 0 ? _g : this.stateful;
-        this.forceDescription = (_h = options.forceDescription) !== null && _h !== void 0 ? _h : this.forceDescription;
-        this.noHistory = (_j = options.noHistory) !== null && _j !== void 0 ? _j : this.noHistory;
+        this.fallbackAction = (_e = options.fallbackAction) !== null && _e !== void 0 ? _e : this.fallbackAction;
+        this.noLink = (_f = options.noLink) !== null && _f !== void 0 ? _f : this.noLink;
+        this.noTitle = (_g = options.noTitle) !== null && _g !== void 0 ? _g : this.noTitle;
+        this.stateful = (_h = options.stateful) !== null && _h !== void 0 ? _h : this.stateful;
+        this.forceDescription = (_j = options.forceDescription) !== null && _j !== void 0 ? _j : this.forceDescription;
+        this.noHistory = (_k = options.noHistory) !== null && _k !== void 0 ? _k : this.noHistory;
     }
 }
 
@@ -2246,7 +2266,8 @@ class Viewport extends Endpoint$1 {
                     }
                     else {
                         if (this.router.isRestrictedNavigation) {
-                            this.getNextContent().createComponent(this.connectedCE, this.options.fallback);
+                            const routerOptions = this.router.configuration.options;
+                            this.getNextContent().createComponent(this.connectedCE, this.options.fallback || routerOptions.fallback, this.options.fallbackAction || routerOptions.fallbackAction);
                         }
                     }
                 }
@@ -2358,7 +2379,8 @@ class Viewport extends Endpoint$1 {
             return true;
         }
         return Runner.run(step, () => this.waitForConnected(), () => {
-            this.getNextContent().createComponent(this.connectedCE, this.options.fallback);
+            const routerOptions = this.router.configuration.options;
+            this.getNextContent().createComponent(this.connectedCE, this.options.fallback || routerOptions.fallback, this.options.fallbackAction || routerOptions.fallbackAction);
             return this.getNextContent().canLoad();
         });
     }
@@ -2667,6 +2689,7 @@ class RoutingInstruction {
         this.routeStart = false;
         this.default = false;
         this.topInstruction = false;
+        this.unparsed = null;
         this.component = InstructionComponent.create(component);
         this.endpoint = InstructionEndpoint.create(endpoint);
         this.parameters = InstructionParameters.create(parameters);
@@ -2807,6 +2830,12 @@ class RoutingInstruction {
     get hasNextScopeInstructions() {
         var _a, _b;
         return ((_b = (_a = this.nextScopeInstructions) === null || _a === void 0 ? void 0 : _a.length) !== null && _b !== void 0 ? _b : 0) > 0;
+    }
+    get isUnresolved() {
+        return this.component.isFunction() && this.component.isPromise();
+    }
+    resolve() {
+        return this.component.resolve(this);
     }
     typeParameters(context) {
         var _a, _b;
@@ -3174,7 +3203,7 @@ exports.Navigator = class Navigator {
     toStoreableNavigation(navigation) {
         const storeable = navigation instanceof Navigation ? navigation.toStoredNavigation() : navigation;
         storeable.instruction = RoutingInstruction.stringify(this.container, storeable.instruction);
-        storeable.fullStateInstruction = RoutingInstruction.stringify(this.container, storeable.fullStateInstruction);
+        storeable.fullStateInstruction = RoutingInstruction.stringify(this.container, storeable.fullStateInstruction, false, true);
         if (typeof storeable.scope !== 'string') {
             storeable.scope = null;
         }
@@ -3198,7 +3227,7 @@ exports.Navigator = class Navigator {
         let instructions = [];
         if (typeof navigation.fullStateInstruction !== 'string') {
             instructions.push(...navigation.fullStateInstruction);
-            navigation.fullStateInstruction = RoutingInstruction.stringify(this.container, navigation.fullStateInstruction);
+            navigation.fullStateInstruction = RoutingInstruction.stringify(this.container, navigation.fullStateInstruction, false, true);
         }
         if (typeof navigation.instruction !== 'string') {
             instructions.push(...navigation.instruction);
@@ -3528,17 +3557,19 @@ class RoutingScope {
         }
         return scopes;
     }
-    async processInstructions(instructions, navigation, coordinator, configuredRoutePath = '') {
+    async processInstructions(instructions, earlierMatchedInstructions, navigation, coordinator, configuredRoutePath = '') {
         var _a, _b, _c, _d;
         const router = this.router;
         const options = router.configuration.options;
-        const nonRouteInstructions = instructions.filter(instruction => instruction.route == null);
+        const nonRouteInstructions = instructions.filter(instruction => !(instruction.route instanceof Route));
         if (nonRouteInstructions.length > 0) {
             const foundRoute = this.findInstructions(nonRouteInstructions, options.useDirectRouting, options.useConfiguredRoutes);
-            if (nonRouteInstructions.some(instr => !instr.component.none) && !foundRoute.foundConfiguration && !foundRoute.foundInstructions) {
-                router.unknownRoute(RoutingInstruction.stringify(router, nonRouteInstructions));
+            if (nonRouteInstructions.some(instr => !instr.component.none || instr.route != null)
+                && !foundRoute.foundConfiguration
+                && !foundRoute.foundInstructions) {
+                this.unknownRoute(nonRouteInstructions);
             }
-            instructions = [...instructions.filter(instruction => instruction.route != null), ...foundRoute.instructions];
+            instructions = [...instructions.filter(instruction => instruction.route instanceof Route), ...foundRoute.instructions];
             if (instructions.some(instr => instr.scope !== this)) {
                 console.warn('Not the current scope for instruction(s)!', this, instructions);
             }
@@ -3546,9 +3577,12 @@ class RoutingScope {
                 configuredRoutePath = (configuredRoutePath !== null && configuredRoutePath !== void 0 ? configuredRoutePath : '') + foundRoute.matching;
             }
         }
-        const unresolved = instructions.filter(instr => instr.component.isFunction() || instr.component.isPromise());
-        if (unresolved.length > 0) {
-            await Promise.all(unresolved.map(instr => instr.component.resolve()));
+        const resolvePromises = instructions
+            .filter(instr => instr.isUnresolved)
+            .map(instr => instr.resolve())
+            .filter(result => result instanceof Promise);
+        if (resolvePromises.length > 0) {
+            await Promise.all(resolvePromises);
         }
         if (!options.additiveInstructionDefault) {
             instructions = this.ensureClearStateInstruction(instructions);
@@ -3560,7 +3594,6 @@ class RoutingScope {
             addInstruction.scope = addInstruction.scope.owningScope;
         }
         const allChangedEndpoints = [];
-        let earlierMatchedInstructions = [];
         let { matchedInstructions, remainingInstructions } = this.matchEndpoints(instructions, earlierMatchedInstructions);
         let guard = 100;
         do {
@@ -3609,7 +3642,7 @@ class RoutingScope {
                         }
                     }
                     if (action === 'skip' && !matchedInstruction.hasNextScopeInstructions) {
-                        allChangedEndpoints.push(...(await endpoint.scope.processInstructions([], navigation, coordinator, configuredRoutePath)));
+                        allChangedEndpoints.push(...(await endpoint.scope.processInstructions([], earlierMatchedInstructions, navigation, coordinator, configuredRoutePath)));
                     }
                 }
             }
@@ -3655,14 +3688,11 @@ class RoutingScope {
                         continue;
                     }
                     const nextScope = (_d = (_c = instruction.endpoint.instance) === null || _c === void 0 ? void 0 : _c.scope) !== null && _d !== void 0 ? _d : instruction.endpoint.scope;
-                    nextProcesses.push(nextScope.processInstructions(instruction.nextScopeInstructions, navigation, coordinator, configuredRoutePath));
+                    nextProcesses.push(nextScope.processInstructions(instruction.nextScopeInstructions, earlierMatchedInstructions, navigation, coordinator, configuredRoutePath));
                 }
                 allChangedEndpoints.push(...(await Promise.all(nextProcesses)).flat());
             }
-            if (navigation.useFullStateInstruction) {
-                coordinator.appendedInstructions = coordinator.appendedInstructions.filter(instr => !instr.default);
-            }
-            ({ matchedInstructions, earlierMatchedInstructions, remainingInstructions } =
+            ({ matchedInstructions, remainingInstructions } =
                 coordinator.dequeueAppendedInstructions(matchedInstructions, earlierMatchedInstructions, remainingInstructions));
             if (matchedInstructions.length === 0 && remainingInstructions.length === 0) {
                 const pendingEndpoints = earlierMatchedInstructions
@@ -3670,32 +3700,42 @@ class RoutingScope {
                     .filter(promise => promise != null);
                 if (pendingEndpoints.length > 0) {
                     await Promise.any(pendingEndpoints);
-                    ({ matchedInstructions, earlierMatchedInstructions, remainingInstructions } =
+                    ({ matchedInstructions, remainingInstructions } =
                         coordinator.dequeueAppendedInstructions(matchedInstructions, earlierMatchedInstructions, remainingInstructions));
                 }
                 else {
                     matchedInstructions = clearEndpoints.map(endpoint => RoutingInstruction.createClear(router, endpoint));
                 }
             }
-            const unresolved = matchedInstructions.filter(instr => instr.component.isFunction() || instr.component.isPromise());
-            if (unresolved.length > 0) {
-                await Promise.all(unresolved.map(instr => instr.component.resolve()));
+            const resolvePromises = instructions
+                .filter(instr => instr.isUnresolved)
+                .map(instr => instr.resolve())
+                .filter(result => result instanceof Promise);
+            if (resolvePromises.length > 0) {
+                await Promise.all(resolvePromises);
             }
         } while (matchedInstructions.length > 0 || remainingInstructions.length > 0);
         return allChangedEndpoints;
     }
-    unknownRoute(route) {
-        if (typeof route !== 'string' || route.length === 0) {
-            return;
+    unknownRoute(instructions) {
+        const options = this.router.configuration.options;
+        const route = RoutingInstruction.stringify(this.router, instructions);
+        if (instructions[0].route != null) {
+            if (!options.useConfiguredRoutes) {
+                throw new Error("Can not match '" + route + "' since the router is configured to not use configured routes.");
+            }
+            else {
+                throw new Error("No matching configured route found for '" + route + "'.");
+            }
         }
-        if (this.router.configuration.options.useConfiguredRoutes && this.router.configuration.options.useDirectRouting) {
-            throw new Error("No matching configured route or component found for '" + route + "'");
+        else if (options.useConfiguredRoutes && options.useDirectRouting) {
+            throw new Error("No matching configured route or component found for '" + route + "'.");
         }
-        else if (this.router.configuration.options.useConfiguredRoutes) {
-            throw new Error("No matching configured route found for '" + route + "'");
+        else if (options.useConfiguredRoutes) {
+            throw new Error("No matching configured route found for '" + route + "'.");
         }
         else {
-            throw new Error("No matching route/component found for '" + route + "'");
+            throw new Error("No matching route/component found for '" + route + "'.");
         }
     }
     ensureClearStateInstruction(instructions) {
@@ -4479,7 +4519,6 @@ class NavigationCoordinator {
     dequeueAppendedInstructions(matchedInstructions, earlierMatchedInstructions, remainingInstructions) {
         let appendedInstructions = [...this.appendedInstructions];
         matchedInstructions = [...matchedInstructions];
-        earlierMatchedInstructions = [...earlierMatchedInstructions];
         remainingInstructions = [...remainingInstructions];
         const nonDefaultInstructions = appendedInstructions.filter(instr => !instr.default);
         const defaultInstructions = appendedInstructions.filter(instr => instr.default);
@@ -4511,7 +4550,7 @@ class NavigationCoordinator {
                 remainingInstructions.push(appendedInstruction);
             }
         }
-        return { matchedInstructions, earlierMatchedInstructions, remainingInstructions };
+        return { matchedInstructions, remainingInstructions };
     }
     checkSyncState(state) {
         var _a;
@@ -4782,7 +4821,7 @@ class Router {
                     : RoutingInstruction.parse(this, transformedInstruction);
             }
             (_a = navigation.scope) !== null && _a !== void 0 ? _a : (navigation.scope = this.rootScope.scope);
-            const allChangedEndpoints = await navigation.scope.processInstructions(transformedInstruction, navigation, coordinator);
+            const allChangedEndpoints = await navigation.scope.processInstructions(transformedInstruction, [], navigation, coordinator);
             return Runner.run(null, () => {
                 coordinator.finalEndpoint();
                 return coordinator.waitForSyncState('completed');
@@ -5034,20 +5073,6 @@ class Router {
             }
         }
         coordinator === null || coordinator === void 0 ? void 0 : coordinator.enqueueAppendedInstructions(instructions);
-    }
-    unknownRoute(route) {
-        if (typeof route !== 'string' || route.length === 0) {
-            return;
-        }
-        if (this.configuration.options.useConfiguredRoutes && this.configuration.options.useDirectRouting) {
-            throw new Error("No matching configured route or component found for '" + route + "'");
-        }
-        else if (this.configuration.options.useConfiguredRoutes) {
-            throw new Error("No matching configured route found for '" + route + "'");
-        }
-        else {
-            throw new Error("No matching route/component found for '" + route + "'");
-        }
     }
     async updateNavigation(navigation) {
         var _a, _b, _c, _d, _e, _f, _g;
@@ -5331,6 +5356,7 @@ exports.ViewportCustomElement = class ViewportCustomElement {
         this.usedBy = '';
         this.default = '';
         this.fallback = '';
+        this.fallbackAction = '';
         this.noScope = false;
         this.noLink = false;
         this.noTitle = false;
@@ -5400,6 +5426,7 @@ exports.ViewportCustomElement = class ViewportCustomElement {
         options.usedBy = getValueOrAttribute('used-by', this.usedBy, isBound, element);
         options.default = getValueOrAttribute('default', this.default, isBound, element);
         options.fallback = getValueOrAttribute('fallback', this.fallback, isBound, element);
+        options.fallbackAction = getValueOrAttribute('fallback-action', this.fallbackAction, isBound, element);
         options.noLink = getValueOrAttribute('no-link', this.noLink, isBound, element, true);
         options.noTitle = getValueOrAttribute('no-title', this.noTitle, isBound, element, true);
         options.noHistory = getValueOrAttribute('no-history', this.noHistory, isBound, element, true);
@@ -5450,6 +5477,9 @@ __decorate([
 __decorate([
     runtimeHtml.bindable
 ], exports.ViewportCustomElement.prototype, "fallback", void 0);
+__decorate([
+    runtimeHtml.bindable
+], exports.ViewportCustomElement.prototype, "fallbackAction", void 0);
 __decorate([
     runtimeHtml.bindable
 ], exports.ViewportCustomElement.prototype, "noScope", void 0);

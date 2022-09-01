@@ -1,4 +1,3 @@
-/// <reference path="../../../global.d.ts" />
 export { IPlatform, } from './platform';
 export { all, factory, type IFactoryResolver, type IResolvedFactory, DI, IContainer, type IFactory, inject, type IRegistration, type IRegistry, type IResolver, IServiceLocator, type Key, lazy, type ILazyResolver, type IResolvedLazy, optional, ignore, type RegisterSelf, Registration, type ResolveCallback, singleton, transient, type Injectable, type InterfaceSymbol, InstanceProvider, type Resolved, type Transformer, newInstanceForScope, newInstanceOf, ContainerConfiguration, DefaultResolver, type IContainerConfiguration, } from './di';
 export { type Class, type Constructable, type ConstructableClass, type IDisposable, type IIndexable, type Overwrite, type Primitive, type Writable, } from './interfaces';

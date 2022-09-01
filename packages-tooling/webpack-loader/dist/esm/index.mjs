@@ -1,4 +1,4 @@
-import { preprocess, preprocessOptions } from '@aurelia/plugin-conventions';
+import { preprocessOptions, preprocess } from '@aurelia/plugin-conventions';
 import { getOptions } from 'loader-utils';
 
 function index (contents, sourceMap) {
