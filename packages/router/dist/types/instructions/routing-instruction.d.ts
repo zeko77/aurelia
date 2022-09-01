@@ -189,9 +189,17 @@ export declare class RoutingInstruction {
      */
     isClearAll(context: IRouterConfiguration | IRouter): boolean;
     /**
-     * Whether the routing instruction next scope/"children" instructions.
+     * Whether the routing instruction has next scope/"children" instructions.
      */
     get hasNextScopeInstructions(): boolean;
+    /**
+     * Whether the routing instruction is unresolved.
+     */
+    get isUnresolved(): boolean;
+    /**
+     * Resolve the routing instruction.
+     */
+    resolve(): void | Promise<ComponentAppellation>;
     /**
      * Get the instruction parameters with type specification applied.
      */

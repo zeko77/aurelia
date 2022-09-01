@@ -394,7 +394,7 @@ class Indicators {
 }
 
 class RouterOptions {
-    constructor(t = Separators.create(), i = Indicators.create(), n = true, s = null, e = true, o = 0, r = true, l = true, u = true, h = TitleOptions.create(), a = [ "guardedUnload", "swapped", "completed" ], c = "attach-next-detach-current", f = "", d = "process-children") {
+    constructor(t = Separators.create(), i = Indicators.create(), n = true, s = null, e = true, o = 0, r = true, l = true, u = true, h = TitleOptions.create(), a = [ "guardedUnload", "swapped", "completed" ], c = "attach-next-detach-current", f = "", d = "abort") {
         this.separators = t;
         this.indicators = i;
         this.useUrlFragmentHash = n;
@@ -685,8 +685,8 @@ class InstructionComponent {
         this.promise = e;
         this.func = o;
     }
-    resolve() {
-        if (null !== this.func) this.set(this.func());
+    resolve(t) {
+        if (null !== this.func) this.set(this.func(t));
         if (!(this.promise instanceof Promise)) return;
         return this.promise.then((t => {
             if (InstructionComponent.isAppelation(t)) {
@@ -705,7 +705,7 @@ class InstructionComponent {
         }));
     }
     get none() {
-        return !this.isName() && !this.isType() && !this.isInstance();
+        return !this.isName() && !this.isType() && !this.isInstance() && !this.isFunction() && !this.isPromise();
     }
     isName() {
         return !!this.name && !this.isType() && !this.isInstance();
@@ -722,7 +722,8 @@ class InstructionComponent {
     isFunction() {
         return null !== this.func;
     }
-    toType(t) {
+    toType(t, n) {
+        void this.resolve(n);
         if (null !== this.type) return this.type;
         if (null !== this.name && "string" === typeof this.name) {
             if (null === t) throw new Error(`No container available when trying to resolve component '${this.name}'!`);
@@ -736,18 +737,19 @@ class InstructionComponent {
         }
         return null;
     }
-    toInstance(t, n, s) {
+    toInstance(t, n, s, e) {
+        void this.resolve(e);
         if (null !== this.instance) return this.instance;
         if (null == t) return null;
-        const e = t.createChild();
-        const o = this.isType() ? e.get(this.type) : e.get(i.CustomElement.keyFrom(this.name));
-        if (null == o) {
-            console.warn("Failed to create instance when trying to resolve component", this.name, this.type, "=>", o);
+        const o = t.createChild();
+        const r = this.isType() ? o.get(this.type) : o.get(i.CustomElement.keyFrom(this.name));
+        if (null == r) {
+            console.warn("Failed to create instance when trying to resolve component", this.name, this.type, "=>", r);
             throw new Error(`Failed to create instance when trying to resolve component '${this.name}'!`);
         }
-        const r = i.Controller.$el(e, o, s, null);
-        r.parent = n;
-        return o;
+        const l = i.Controller.$el(o, r, s, null);
+        l.parent = n;
+        return r;
     }
     same(t, i = false) {
         return i ? this.type === t.type : this.name === t.name;
@@ -1634,11 +1636,11 @@ class ViewportContent extends EndpointContent {
     }
     toComponentType(t) {
         if (this.instruction.component.none) return null;
-        return this.instruction.component.toType(t);
+        return this.instruction.component.toType(t, this.instruction);
     }
     toComponentInstance(t, i, n) {
         if (this.instruction.component.none) return null;
-        return this.instruction.component.toInstance(t, i, n);
+        return this.instruction.component.toInstance(t, i, n, this.instruction);
     }
     waitForParent(t) {
         if (null === t) return;
@@ -2263,6 +2265,12 @@ class RoutingInstruction {
         var t, i;
         return (null !== (i = null === (t = this.nextScopeInstructions) || void 0 === t ? void 0 : t.length) && void 0 !== i ? i : 0) > 0;
     }
+    get isUnresolved() {
+        return this.component.isFunction() && this.component.isPromise();
+    }
+    resolve() {
+        return this.component.resolve(this);
+    }
     typeParameters(t) {
         var i, n;
         return this.parameters.toSpecifiedParameters(t, null !== (n = null === (i = this.component.type) || void 0 === i ? void 0 : i.parameters) && void 0 !== n ? n : []);
@@ -2809,8 +2817,8 @@ class RoutingScope {
             if (t.some((t => t.scope !== this))) console.warn("Not the current scope for instruction(s)!", this, t);
             if (i.foundConfiguration) e = (null !== e && void 0 !== e ? e : "") + i.matching;
         }
-        const d = t.filter((t => t.component.isFunction() || t.component.isPromise()));
-        if (d.length > 0) await Promise.all(d.map((t => t.component.resolve())));
+        const d = t.filter((t => t.isUnresolved)).map((t => t.resolve())).filter((t => t instanceof Promise));
+        if (d.length > 0) await Promise.all(d);
         if (!c.additiveInstructionDefault) t = this.ensureClearStateInstruction(t);
         let v = [];
         ({clearEndpoints: v, instructions: t} = this.getClearAllEndpoints(t));
@@ -2902,8 +2910,8 @@ class RoutingScope {
                     ({matchedInstructions: g, remainingInstructions: w} = s.dequeueAppendedInstructions(g, i, w));
                 } else g = v.map((t => RoutingInstruction.createClear(a, t)));
             }
-            const E = g.filter((t => t.component.isFunction() || t.component.isPromise()));
-            if (E.length > 0) await Promise.all(E.map((t => t.component.resolve())));
+            const E = t.filter((t => t.isUnresolved)).map((t => t.resolve())).filter((t => t instanceof Promise));
+            if (E.length > 0) await Promise.all(E);
         } while (g.length > 0 || w.length > 0);
         return p;
     }

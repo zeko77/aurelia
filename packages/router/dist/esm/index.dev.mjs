@@ -410,7 +410,7 @@ class Indicators {
     }
 }
 class RouterOptions {
-    constructor(separators = Separators.create(), indicators = Indicators.create(), useUrlFragmentHash = true, basePath = null, useHref = true, statefulHistoryLength = 0, useDirectRouting = true, useConfiguredRoutes = true, additiveInstructionDefault = true, title = TitleOptions.create(), navigationSyncStates = ['guardedUnload', 'swapped', 'completed'], swapOrder = 'attach-next-detach-current', fallback = '', fallbackAction = 'process-children') {
+    constructor(separators = Separators.create(), indicators = Indicators.create(), useUrlFragmentHash = true, basePath = null, useHref = true, statefulHistoryLength = 0, useDirectRouting = true, useConfiguredRoutes = true, additiveInstructionDefault = true, title = TitleOptions.create(), navigationSyncStates = ['guardedUnload', 'swapped', 'completed'], swapOrder = 'attach-next-detach-current', fallback = '', fallbackAction = 'abort') {
         this.separators = separators;
         this.indicators = indicators;
         this.useUrlFragmentHash = useUrlFragmentHash;
@@ -755,9 +755,9 @@ class InstructionComponent {
         this.promise = promise;
         this.func = func;
     }
-    resolve() {
+    resolve(instruction) {
         if (this.func !== null) {
-            this.set(this.func());
+            this.set(this.func(instruction));
         }
         if (!(this.promise instanceof Promise)) {
             return;
@@ -783,7 +783,7 @@ class InstructionComponent {
         });
     }
     get none() {
-        return !this.isName() && !this.isType() && !this.isInstance();
+        return !this.isName() && !this.isType() && !this.isInstance() && !this.isFunction() && !this.isPromise();
     }
     isName() {
         return !!this.name && !this.isType() && !this.isInstance();
@@ -800,7 +800,8 @@ class InstructionComponent {
     isFunction() {
         return this.func !== null;
     }
-    toType(container) {
+    toType(container, instruction) {
+        void this.resolve(instruction);
         if (this.type !== null) {
             return this.type;
         }
@@ -821,7 +822,8 @@ class InstructionComponent {
         }
         return null;
     }
-    toInstance(parentContainer, parentController, parentElement) {
+    toInstance(parentContainer, parentController, parentElement, instruction) {
+        void this.resolve(instruction);
         if (this.instance !== null) {
             return this.instance;
         }
@@ -1980,13 +1982,13 @@ class ViewportContent extends EndpointContent {
         if (this.instruction.component.none) {
             return null;
         }
-        return this.instruction.component.toType(container);
+        return this.instruction.component.toType(container, this.instruction);
     }
     toComponentInstance(parentContainer, parentController, parentElement) {
         if (this.instruction.component.none) {
             return null;
         }
-        return this.instruction.component.toInstance(parentContainer, parentController, parentElement);
+        return this.instruction.component.toInstance(parentContainer, parentController, parentElement, this.instruction);
     }
     waitForParent(parent) {
         if (parent === null) {
@@ -2825,6 +2827,12 @@ class RoutingInstruction {
         var _a, _b;
         return ((_b = (_a = this.nextScopeInstructions) === null || _a === void 0 ? void 0 : _a.length) !== null && _b !== void 0 ? _b : 0) > 0;
     }
+    get isUnresolved() {
+        return this.component.isFunction() && this.component.isPromise();
+    }
+    resolve() {
+        return this.component.resolve(this);
+    }
     typeParameters(context) {
         var _a, _b;
         return this.parameters.toSpecifiedParameters(context, (_b = (_a = this.component.type) === null || _a === void 0 ? void 0 : _a.parameters) !== null && _b !== void 0 ? _b : []);
@@ -3565,9 +3573,12 @@ class RoutingScope {
                 configuredRoutePath = (configuredRoutePath !== null && configuredRoutePath !== void 0 ? configuredRoutePath : '') + foundRoute.matching;
             }
         }
-        const unresolved = instructions.filter(instr => instr.component.isFunction() || instr.component.isPromise());
-        if (unresolved.length > 0) {
-            await Promise.all(unresolved.map(instr => instr.component.resolve()));
+        const resolvePromises = instructions
+            .filter(instr => instr.isUnresolved)
+            .map(instr => instr.resolve())
+            .filter(result => result instanceof Promise);
+        if (resolvePromises.length > 0) {
+            await Promise.all(resolvePromises);
         }
         if (!options.additiveInstructionDefault) {
             instructions = this.ensureClearStateInstruction(instructions);
@@ -3692,9 +3703,12 @@ class RoutingScope {
                     matchedInstructions = clearEndpoints.map(endpoint => RoutingInstruction.createClear(router, endpoint));
                 }
             }
-            const unresolved = matchedInstructions.filter(instr => instr.component.isFunction() || instr.component.isPromise());
-            if (unresolved.length > 0) {
-                await Promise.all(unresolved.map(instr => instr.component.resolve()));
+            const resolvePromises = instructions
+                .filter(instr => instr.isUnresolved)
+                .map(instr => instr.resolve())
+                .filter(result => result instanceof Promise);
+            if (resolvePromises.length > 0) {
+                await Promise.all(resolvePromises);
             }
         } while (matchedInstructions.length > 0 || remainingInstructions.length > 0);
         return allChangedEndpoints;

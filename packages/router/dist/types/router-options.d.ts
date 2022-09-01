@@ -3,7 +3,7 @@ import { INavigatorOptions } from './navigator';
 import { NavigationState } from './navigation-coordinator';
 import { RoutingInstruction } from './instructions/routing-instruction';
 import { IRoutingHookDefinition } from './routing-hook';
-import { IRouter, IRouterConfiguration, RouterConfiguration } from './index';
+import { IRouter, IRouterConfiguration, RouterConfiguration, ComponentAppellation } from './index';
 import { Navigation } from './navigation';
 /**
  * How contents are swapped in a viewport when transitioning. Default: `attach-next-detach-current`
@@ -333,7 +333,7 @@ export declare class RouterOptions implements INavigatorOptions {
      * The component to be loaded if a specified can't be loaded.
      * The unloadable component is passed as a parameter to the fallback.
      */
-    fallback: string;
+    fallback: ComponentAppellation;
     /**
      * Whether the fallback action is to load the fallback component in
      * place of the unloadable component and continue with any child
@@ -417,7 +417,7 @@ export declare class RouterOptions implements INavigatorOptions {
      * The component to be loaded if a specified can't be loaded.
      * The unloadable component is passed as a parameter to the fallback.
      */
-    fallback?: string, 
+    fallback?: ComponentAppellation, 
     /**
      * Whether the fallback action is to load the fallback component in
      * place of the unloadable component and continue with any child
