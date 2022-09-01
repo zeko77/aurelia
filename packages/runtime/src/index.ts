@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../../global.d.ts" />
 export {
   alias,
   registerAliases,
@@ -69,7 +67,6 @@ export {
   ExpressionType,
   parseExpression,
   Char,
-  Access,
   Precedence,
   parse,
   ParserState,
