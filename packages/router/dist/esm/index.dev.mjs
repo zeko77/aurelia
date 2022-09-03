@@ -2828,7 +2828,7 @@ class RoutingInstruction {
         return ((_b = (_a = this.nextScopeInstructions) === null || _a === void 0 ? void 0 : _a.length) !== null && _b !== void 0 ? _b : 0) > 0;
     }
     get isUnresolved() {
-        return this.component.isFunction() && this.component.isPromise();
+        return this.component.isFunction() || this.component.isPromise();
     }
     resolve() {
         return this.component.resolve(this);

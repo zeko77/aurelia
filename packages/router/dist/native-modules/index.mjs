@@ -2260,7 +2260,7 @@ class RoutingInstruction {
         return (null !== (i = null === (t = this.nextScopeInstructions) || void 0 === t ? void 0 : t.length) && void 0 !== i ? i : 0) > 0;
     }
     get isUnresolved() {
-        return this.component.isFunction() && this.component.isPromise();
+        return this.component.isFunction() || this.component.isPromise();
     }
     resolve() {
         return this.component.resolve(this);
