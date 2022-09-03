@@ -5756,7 +5756,7 @@ class RouterConfiguration {
         _this.options = RouterConfiguration.options;
         _this.options.setRouterConfiguration(_this);
         RouterConfiguration.options = RouterOptions.create();
-        return container.register(...DefaultComponents, ...DefaultResources, runtimeHtml.AppTask.beforeActivate(IRouter, RouterConfiguration.configurationCall), runtimeHtml.AppTask.afterActivate(IRouter, (router) => router.initialLoad()), runtimeHtml.AppTask.afterDeactivate(IRouter, (router) => router.stop()));
+        return container.register(...DefaultComponents, ...DefaultResources, runtimeHtml.AppTask.activating(IRouter, RouterConfiguration.configurationCall), runtimeHtml.AppTask.activated(IRouter, (router) => router.initialLoad()), runtimeHtml.AppTask.deactivated(IRouter, (router) => router.stop()));
     }
     static customize(config) {
         if (config === undefined) {

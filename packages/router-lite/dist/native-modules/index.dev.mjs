@@ -4272,7 +4272,7 @@ function configure(container, config) {
         const url = new URL(window.document.baseURI);
         url.pathname = normalizePath(basePath !== null && basePath !== void 0 ? basePath : url.pathname);
         return url;
-    }), AppTask.hydrated(IContainer, RouteContext.setRoot), AppTask.afterActivate(IRouter, activation), AppTask.afterDeactivate(IRouter, router => {
+    }), AppTask.hydrated(IContainer, RouteContext.setRoot), AppTask.activated(IRouter, activation), AppTask.deactivated(IRouter, router => {
         router.stop();
     }), ...DefaultComponents, ...DefaultResources);
 }

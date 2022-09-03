@@ -3861,7 +3861,7 @@ function di(i, e) {
         const s = new URL(n.document.baseURI);
         s.pathname = lt(null !== o && void 0 !== o ? o : s.pathname);
         return s;
-    })), O.hydrated(c, RouteContext.setRoot), O.afterActivate(Dt, s), O.afterDeactivate(Dt, (t => {
+    })), O.hydrated(c, RouteContext.setRoot), O.activated(Dt, s), O.deactivated(Dt, (t => {
         t.stop();
     })), ...hi, ...fi);
 }

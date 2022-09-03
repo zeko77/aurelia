@@ -994,7 +994,7 @@ class CallScopeExpression {
     evaluate(t, e, s, r) {
         const i = this.args.map((i => i.evaluate(t, e, s, r)));
         const n = BindingContext.get(e, this.name, this.ancestor, t);
-        const o = k(t, n, this.name);
+        const o = $(t, n, this.name);
         if (o) return o.apply(n, i);
         return;
     }
@@ -1029,7 +1029,7 @@ class CallMemberExpression {
     evaluate(t, e, s, r) {
         const i = this.object.evaluate(t, e, s, (32 & t) > 0 ? null : r);
         const n = this.args.map((i => i.evaluate(t, e, s, r)));
-        const o = k(t, i, this.name);
+        const o = $(t, i, this.name);
         if (o) return o.apply(i, n);
         return;
     }
@@ -1553,7 +1553,7 @@ class ForOfStatement {
     iterate(t, e, s) {
         switch (C.call(e)) {
           case "[object Array]":
-            return $(e, s);
+            return k(e, s);
 
           case "[object Map]":
             return B(e, s);
@@ -1735,14 +1735,14 @@ class DestructuringAssignmentRestExpression {
     }
 }
 
-function k(t, e, s) {
+function $(t, e, s) {
     const r = null == e ? null : e[s];
     if (i(r)) return r;
     if (!(8 & t) && null == r) return null;
     throw new Error(`AUR0111:${s}`);
 }
 
-function $(t, e) {
+function k(t, e) {
     for (let s = 0, r = t.length; s < r; ++s) e(t, s, t[s]);
 }
 
@@ -1750,20 +1750,20 @@ function B(t, e) {
     const s = Array(t.size);
     let r = -1;
     for (const e of t.entries()) s[++r] = e;
-    $(s, e);
+    k(s, e);
 }
 
 function L(t, e) {
     const s = Array(t.size);
     let r = -1;
     for (const e of t.keys()) s[++r] = e;
-    $(s, e);
+    k(s, e);
 }
 
 function R(t, e) {
     const s = Array(t);
     for (let e = 0; e < t; ++e) s[e] = e;
-    $(s, e);
+    k(s, e);
 }
 
 const P = t.DI.createInterface("ICoercionConfiguration");
@@ -2003,14 +2003,14 @@ function q(t) {
     return this.subs.remove(t);
 }
 
-function _(t) {
-    return null == t ? H : H(t);
+function H(t) {
+    return null == t ? Q : Q(t);
 }
 
-function H(t) {
+function Q(t) {
     const e = t.prototype;
     r(e, "queue", {
-        get: Q
+        get: _
     });
 }
 
@@ -2040,7 +2040,7 @@ class FlushQueue {
 
 FlushQueue.instance = new FlushQueue;
 
-function Q() {
+function _() {
     return FlushQueue.instance;
 }
 
@@ -2118,7 +2118,7 @@ function W(t) {
     const e = t.prototype;
     u(e, "subscribe", G, true);
     u(e, "unsubscribe", Z, true);
-    _(t);
+    H(t);
     F(t);
 }
 
@@ -2620,7 +2620,7 @@ const Ct = {
     }
 };
 
-const kt = {
+const $t = {
     writable: true,
     enumerable: false,
     configurable: true
@@ -2633,18 +2633,18 @@ for (const t of Ot) r(Ct[t], "observing", {
     enumerable: false
 });
 
-let $t = false;
+let kt = false;
 
 function Bt() {
     for (const t of Ot) if (true !== At[t].observing) r(At, t, {
-        ...kt,
+        ...$t,
         value: Ct[t]
     });
 }
 
 function Lt() {
     for (const t of Ot) if (true === At[t].observing) r(At, t, {
-        ...kt,
+        ...$t,
         value: St[t]
     });
 }
@@ -2652,8 +2652,8 @@ function Lt() {
 class SetObserver {
     constructor(t) {
         this.type = 34;
-        if (!$t) {
-            $t = true;
+        if (!kt) {
+            kt = true;
             Bt();
         }
         this.collection = t;
@@ -2789,7 +2789,7 @@ function qt() {
     });
 }
 
-function _t() {
+function Ht() {
     for (const t of Ft) if (true === Tt[t].observing) r(Tt, t, {
         ...Nt,
         value: Dt[t]
@@ -2822,13 +2822,13 @@ class MapObserver {
 
 F(MapObserver);
 
-function Ht(t) {
+function Qt(t) {
     let e = Pt.get(t);
     if (void 0 === e) e = new MapObserver(t);
     return e;
 }
 
-function Qt(t, e) {
+function _t(t, e) {
     const s = this.oL.getObserver(t, e);
     this.obs.add(s);
 }
@@ -2839,7 +2839,7 @@ function zt() {
 
 function Wt(t) {
     let e;
-    if (t instanceof Array) e = wt(t); else if (t instanceof Set) e = Rt(t); else if (t instanceof Map) e = Ht(t); else throw new Error(`AUR0210`);
+    if (t instanceof Array) e = wt(t); else if (t instanceof Set) e = Rt(t); else if (t instanceof Map) e = Qt(t); else throw new Error(`AUR0210`);
     this.obs.add(e);
 }
 
@@ -2899,7 +2899,7 @@ function Yt(t, e) {
 
 function te(t) {
     const e = t.prototype;
-    u(e, "observe", Qt, true);
+    u(e, "observe", _t, true);
     u(e, "observeCollection", Wt, true);
     u(e, "subscribeTo", Gt, true);
     r(e, "obs", {
@@ -2970,11 +2970,11 @@ class ExpressionParser {
         }
     }
     $parse(t, e) {
-        le.ip = t;
-        le.length = t.length;
-        le.index = 0;
-        le.O = t.charCodeAt(0);
-        return de(le, 61, void 0 === e ? 8 : e);
+        fe = t;
+        pe = t.length;
+        de = 0;
+        be = t.charCodeAt(0);
+        return me(61, void 0 === e ? 8 : e);
     }
 }
 
@@ -3116,7 +3116,7 @@ function re(t) {
     }
 }
 
-exports.Precedence = void 0;
+var ie;
 
 (function(t) {
     t[t["Variadic"] = 61] = "Variadic";
@@ -3133,9 +3133,9 @@ exports.Precedence = void 0;
     t[t["LeftHandSide"] = 514] = "LeftHandSide";
     t[t["Primary"] = 515] = "Primary";
     t[t["Unary"] = 516] = "Unary";
-})(exports.Precedence || (exports.Precedence = {}));
+})(ie || (ie = {}));
 
-var ie;
+var ne;
 
 (function(t) {
     t[t["EOF"] = 6291456] = "EOF";
@@ -3200,19 +3200,19 @@ var ie;
     t[t["TemplateTail"] = 2163756] = "TemplateTail";
     t[t["TemplateContinuation"] = 2163757] = "TemplateContinuation";
     t[t["OfKeyword"] = 4204590] = "OfKeyword";
-})(ie || (ie = {}));
+})(ne || (ne = {}));
 
-const ne = PrimitiveLiteralExpression.$false;
+const oe = PrimitiveLiteralExpression.$false;
 
-const oe = PrimitiveLiteralExpression.$true;
+const ue = PrimitiveLiteralExpression.$true;
 
-const ue = PrimitiveLiteralExpression.$null;
+const ce = PrimitiveLiteralExpression.$null;
 
-const ce = PrimitiveLiteralExpression.$undefined;
+const he = PrimitiveLiteralExpression.$undefined;
 
-const he = AccessThisExpression.$this;
+const ae = AccessThisExpression.$this;
 
-const ae = AccessThisExpression.$parent;
+const le = AccessThisExpression.$parent;
 
 exports.ExpressionType = void 0;
 
@@ -3225,487 +3225,492 @@ exports.ExpressionType = void 0;
     t[t["IsCustom"] = 16] = "IsCustom";
 })(exports.ExpressionType || (exports.ExpressionType = {}));
 
-class ParserState {
-    constructor(t) {
-        this.ip = t;
-        this.index = 0;
-        this.C = 0;
-        this.$ = 6291456;
-        this.B = "";
-        this.L = true;
-        this.R = false;
-        this.length = t.length;
-        this.O = t.charCodeAt(0);
-    }
-    get P() {
-        return this.ip.slice(this.C, this.index);
-    }
+let fe = "";
+
+let de = 0;
+
+let pe = 0;
+
+let ve = 0;
+
+let ge = 6291456;
+
+let we = "";
+
+let be;
+
+let xe = true;
+
+let Ee = false;
+
+function Ae() {
+    return fe.slice(ve, de);
 }
 
-const le = new ParserState("");
-
-function fe(t, e) {
-    le.ip = t;
-    le.length = t.length;
-    le.index = 0;
-    le.O = t.charCodeAt(0);
-    return de(le, 61, void 0 === e ? 8 : e);
+function ye(t, e) {
+    fe = t;
+    pe = t.length;
+    de = 0;
+    be = t.charCodeAt(0);
+    return me(61, void 0 === e ? 8 : e);
 }
 
-function de(t, e, s) {
-    if (16 === s) return new CustomExpression(t.ip);
-    if (0 === t.index) {
-        if (1 & s) return Se(t);
-        ke(t);
-        if (4194304 & t.$) throw new Error(`AUR0151:${t.ip}`);
+function me(t, e) {
+    if (16 === e) return new CustomExpression(fe);
+    if (0 === de) {
+        if (1 & e) return je();
+        De();
+        if (4194304 & ge) throw new Error(`AUR0151:${fe}`);
     }
-    t.L = 513 > e;
-    t.R = false;
-    let r = false;
-    let i;
-    let n = 0;
-    if (131072 & t.$) {
-        const e = Fe[63 & t.$];
-        ke(t);
-        i = new UnaryExpression(e, de(t, 514, s));
-        t.L = false;
+    xe = 513 > t;
+    Ee = false;
+    let s = false;
+    let r;
+    let i = 0;
+    if (131072 & ge) {
+        const t = Ge[63 & ge];
+        De();
+        r = new UnaryExpression(t, me(514, e));
+        xe = false;
     } else {
-        t: switch (t.$) {
+        t: switch (ge) {
           case 12294:
-            t.L = false;
+            xe = false;
             do {
-                ke(t);
-                ++n;
-                if (Me(t, 65545)) {
-                    if (65545 === t.$) throw new Error(`AUR0152:${t.ip}`); else if (6291456 === t.$) throw new Error(`AUR0153:${t.ip}`);
-                } else if (2162698 === t.$) {
-                    t.R = true;
-                    ke(t);
-                    if (0 === (12288 & t.$)) {
-                        i = 0 === n ? he : 1 === n ? ae : new AccessThisExpression(n);
-                        r = true;
+                De();
+                ++i;
+                if (ze(65545)) {
+                    if (65545 === ge) throw new Error(`AUR0152:${fe}`); else if (6291456 === ge) throw new Error(`AUR0153:${fe}`);
+                } else if (2162698 === ge) {
+                    Ee = true;
+                    De();
+                    if (0 === (12288 & ge)) {
+                        r = 0 === i ? ae : 1 === i ? le : new AccessThisExpression(i);
+                        s = true;
                         break t;
                     }
-                } else if (2097152 & t.$) {
-                    i = 0 === n ? he : 1 === n ? ae : new AccessThisExpression(n);
+                } else if (2097152 & ge) {
+                    r = 0 === i ? ae : 1 === i ? le : new AccessThisExpression(i);
                     break t;
-                } else throw new Error(`AUR0154:${t.ip}`);
-            } while (12294 === t.$);
+                } else throw new Error(`AUR0154:${fe}`);
+            } while (12294 === ge);
 
           case 4096:
-            if (2 & s) i = new BindingIdentifier(t.B); else i = new AccessScopeExpression(t.B, n);
-            t.L = !t.R;
-            ke(t);
+            if (2 & e) r = new BindingIdentifier(we); else r = new AccessScopeExpression(we, i);
+            xe = !Ee;
+            De();
             break;
 
           case 12292:
-            t.L = false;
-            ke(t);
-            i = he;
+            xe = false;
+            De();
+            r = ae;
             break;
 
           case 2688007:
             {
-                ke(t);
-                const e = t.R;
-                i = de(t, 62, s);
-                t.R = e;
-                De(t, 7340044);
+                De();
+                const t = Ee;
+                r = me(62, e);
+                Ee = t;
+                We(7340044);
                 break;
             }
 
           case 2688014:
-            i = t.ip.search(/\s+of\s+/) > t.index ? pe(t) : ye(t, s);
+            r = fe.search(/\s+of\s+/) > de ? Ue() : Re(e);
             break;
 
           case 524296:
-            i = Ue(t, s);
+            r = Te(e);
             break;
 
           case 2163756:
-            i = new TemplateExpression([ t.B ]);
-            t.L = false;
-            ke(t);
+            r = new TemplateExpression([ we ]);
+            xe = false;
+            De();
             break;
 
           case 2163757:
-            i = Oe(t, s, i, false);
+            r = Ie(e, r, false);
             break;
 
           case 16384:
           case 32768:
-            i = new PrimitiveLiteralExpression(t.B);
-            t.L = false;
-            ke(t);
+            r = new PrimitiveLiteralExpression(we);
+            xe = false;
+            De();
             break;
 
           case 8194:
           case 8195:
           case 8193:
           case 8192:
-            i = Fe[63 & t.$];
-            t.L = false;
-            ke(t);
+            r = Ge[63 & ge];
+            xe = false;
+            De();
             break;
 
           default:
-            if (t.index >= t.length) throw new Error(`AUR0155:${t.ip}`); else throw new Error(`AUR0156:${t.ip}`);
+            if (de >= pe) throw new Error(`AUR0155:${fe}`); else throw new Error(`AUR0156:${fe}`);
         }
-        if (2 & s) return me(t, i);
-        if (514 < e) return i;
-        if (1793 === i.$kind) switch (t.$) {
+        if (2 & e) return Pe(r);
+        if (514 < t) return r;
+        if (1793 === r.$kind) switch (ge) {
           case 2162698:
-            t.R = true;
-            t.L = false;
-            ke(t);
-            xe(t);
-            if (12288 & t.$) {
-                i = new AccessScopeExpression(t.B, i.ancestor);
-                ke(t);
-            } else if (2688007 === t.$) i = new CallFunctionExpression(i, ve(t), true); else if (2688014 === t.$) i = ge(t, i, true); else throw Ae(t);
+            Ee = true;
+            xe = false;
+            De();
+            ke();
+            if (12288 & ge) {
+                r = new AccessScopeExpression(we, r.ancestor);
+                De();
+            } else if (2688007 === ge) r = new CallFunctionExpression(r, Se(), true); else if (2688014 === ge) r = Oe(r, true); else throw Le();
             break;
 
           case 65545:
-            t.L = !t.R;
-            ke(t);
-            Ee(t);
-            i = new AccessScopeExpression(t.B, i.ancestor);
-            ke(t);
+            xe = !Ee;
+            De();
+            Be();
+            r = new AccessScopeExpression(we, r.ancestor);
+            De();
             break;
 
           case 2688007:
-            i = new CallFunctionExpression(i, ve(t), r);
+            r = new CallFunctionExpression(r, Se(), s);
             break;
 
           case 2688014:
-            i = ge(t, i, r);
+            r = Oe(r, s);
             break;
 
           case 2163756:
-            i = Ce(t, i);
+            r = Me(r);
             break;
 
           case 2163757:
-            i = Oe(t, s, i, true);
+            r = Ie(e, r, true);
             break;
         }
-        while ((65536 & t.$) > 0) switch (t.$) {
+        while ((65536 & ge) > 0) switch (ge) {
           case 2162698:
-            i = we(t, i);
+            r = Ce(r);
             break;
 
           case 65545:
-            ke(t);
-            Ee(t);
-            i = be(t, i, false);
+            De();
+            Be();
+            r = $e(r, false);
             break;
 
           case 2688007:
-            if (10082 === i.$kind) i = new CallScopeExpression(i.name, ve(t), i.ancestor, false); else if (9323 === i.$kind) i = new CallMemberExpression(i.object, i.name, ve(t), i.optional, false); else i = new CallFunctionExpression(i, ve(t), false);
+            if (10082 === r.$kind) r = new CallScopeExpression(r.name, Se(), r.ancestor, false); else if (9323 === r.$kind) r = new CallMemberExpression(r.object, r.name, Se(), r.optional, false); else r = new CallFunctionExpression(r, Se(), false);
             break;
 
           case 2688014:
-            i = ge(t, i, false);
+            r = Oe(r, false);
             break;
 
           case 2163756:
-            if (t.R) throw Ae(t);
-            i = Ce(t, i);
+            if (Ee) throw Le();
+            r = Me(r);
             break;
 
           case 2163757:
-            if (t.R) throw Ae(t);
-            i = Oe(t, s, i, true);
+            if (Ee) throw Le();
+            r = Ie(e, r, true);
             break;
         }
     }
-    if (513 < e) return i;
-    while ((262144 & t.$) > 0) {
-        const r = t.$;
-        if ((960 & r) <= e) break;
-        ke(t);
-        i = new BinaryExpression(Fe[63 & r], i, de(t, 960 & r, s));
-        t.L = false;
+    if (513 < t) return r;
+    while ((262144 & ge) > 0) {
+        const s = ge;
+        if ((960 & s) <= t) break;
+        De();
+        r = new BinaryExpression(Ge[63 & s], r, me(960 & s, e));
+        xe = false;
     }
-    if (63 < e) return i;
-    if (Me(t, 6291475)) {
-        const e = de(t, 62, s);
-        De(t, 6291472);
-        i = new ConditionalExpression(i, e, de(t, 62, s));
-        t.L = false;
+    if (63 < t) return r;
+    if (ze(6291475)) {
+        const t = me(62, e);
+        We(6291472);
+        r = new ConditionalExpression(r, t, me(62, e));
+        xe = false;
     }
-    if (62 < e) return i;
-    if (Me(t, 4194346)) {
-        if (!t.L) throw new Error(`AUR0158:${t.ip}`);
-        i = new AssignExpression(i, de(t, 62, s));
+    if (62 < t) return r;
+    if (ze(4194346)) {
+        if (!xe) throw new Error(`AUR0158:${fe}`);
+        r = new AssignExpression(r, me(62, e));
     }
-    if (61 < e) return i;
-    while (Me(t, 6291477)) {
-        if (6291456 === t.$) throw new Error(`AUR0159:${t.ip}`);
-        const e = t.B;
-        ke(t);
-        const r = new Array;
-        while (Me(t, 6291472)) r.push(de(t, 62, s));
-        i = new ValueConverterExpression(i, e, r);
+    if (61 < t) return r;
+    while (ze(6291477)) {
+        if (6291456 === ge) throw new Error(`AUR0159:${fe}`);
+        const t = we;
+        De();
+        const s = new Array;
+        while (ze(6291472)) s.push(me(62, e));
+        r = new ValueConverterExpression(r, t, s);
     }
-    while (Me(t, 6291476)) {
-        if (6291456 === t.$) throw new Error(`AUR0160:${t.ip}`);
-        const e = t.B;
-        ke(t);
-        const r = new Array;
-        while (Me(t, 6291472)) r.push(de(t, 62, s));
-        i = new BindingBehaviorExpression(i, e, r);
+    while (ze(6291476)) {
+        if (6291456 === ge) throw new Error(`AUR0160:${fe}`);
+        const t = we;
+        De();
+        const s = new Array;
+        while (ze(6291472)) s.push(me(62, e));
+        r = new BindingBehaviorExpression(r, t, s);
     }
-    if (6291456 !== t.$) {
-        if (1 & s) return i;
-        if ("of" === t.P) throw new Error(`AUR0161:${t.ip}`);
-        throw new Error(`AUR0162:${t.ip}`);
+    if (6291456 !== ge) {
+        if (1 & e) return r;
+        if ("of" === Ae()) throw new Error(`AUR0161:${fe}`);
+        throw new Error(`AUR0162:${fe}`);
     }
-    return i;
+    return r;
 }
 
-function pe(t) {
-    const e = [];
-    const s = new DestructuringAssignmentExpression(90137, e, void 0, void 0);
-    let r = "";
-    let i = true;
-    let n = 0;
-    while (i) {
-        ke(t);
-        switch (t.$) {
+function Ue() {
+    const t = [];
+    const e = new DestructuringAssignmentExpression(90137, t, void 0, void 0);
+    let s = "";
+    let r = true;
+    let i = 0;
+    while (r) {
+        De();
+        switch (ge) {
           case 7340047:
-            i = false;
-            o();
+            r = false;
+            n();
             break;
 
           case 6291469:
-            o();
+            n();
             break;
 
           case 4096:
-            r = t.P;
+            s = Ae();
             break;
 
           default:
-            throw new Error(`AUR0170:${t.ip}`);
+            throw new Error(`AUR0170:${fe}`);
         }
     }
-    De(t, 7340047);
-    return s;
-    function o() {
-        if ("" !== r) {
-            e.push(new DestructuringAssignmentSingleExpression(new AccessMemberExpression(he, r), new AccessKeyedExpression(he, new PrimitiveLiteralExpression(n++)), void 0));
-            r = "";
-        } else n++;
+    We(7340047);
+    return e;
+    function n() {
+        if ("" !== s) {
+            t.push(new DestructuringAssignmentSingleExpression(new AccessMemberExpression(ae, s), new AccessKeyedExpression(ae, new PrimitiveLiteralExpression(i++)), void 0));
+            s = "";
+        } else i++;
     }
 }
 
-function ve(t) {
-    const e = t.R;
-    ke(t);
-    const s = [];
-    while (7340044 !== t.$) {
-        s.push(de(t, 62, 0));
-        if (!Me(t, 6291469)) break;
+function Se() {
+    const t = Ee;
+    De();
+    const e = [];
+    while (7340044 !== ge) {
+        e.push(me(62, 0));
+        if (!ze(6291469)) break;
     }
-    De(t, 7340044);
-    t.L = false;
-    t.R = e;
-    return s;
-}
-
-function ge(t, e, s) {
-    const r = t.R;
-    ke(t);
-    e = new AccessKeyedExpression(e, de(t, 62, 0), s);
-    De(t, 7340047);
-    t.L = !r;
-    t.R = r;
+    We(7340044);
+    xe = false;
+    Ee = t;
     return e;
 }
 
-function we(t, e) {
-    t.R = true;
-    t.L = false;
-    ke(t);
-    xe(t);
-    if (12288 & t.$) return be(t, e, true);
-    if (2688007 === t.$) if (10082 === e.$kind) return new CallScopeExpression(e.name, ve(t), e.ancestor, true); else if (9323 === e.$kind) return new CallMemberExpression(e.object, e.name, ve(t), e.optional, true); else return new CallFunctionExpression(e, ve(t), true);
-    if (2688014 === t.$) return ge(t, e, true);
-    throw Ae(t);
+function Oe(t, e) {
+    const s = Ee;
+    De();
+    t = new AccessKeyedExpression(t, me(62, 0), e);
+    We(7340047);
+    xe = !s;
+    Ee = s;
+    return t;
 }
 
-function be(t, e, s) {
-    const r = t.B;
-    switch (t.$) {
+function Ce(t) {
+    Ee = true;
+    xe = false;
+    De();
+    ke();
+    if (12288 & ge) return $e(t, true);
+    if (2688007 === ge) if (10082 === t.$kind) return new CallScopeExpression(t.name, Se(), t.ancestor, true); else if (9323 === t.$kind) return new CallMemberExpression(t.object, t.name, Se(), t.optional, true); else return new CallFunctionExpression(t, Se(), true);
+    if (2688014 === ge) return Oe(t, true);
+    throw Le();
+}
+
+function $e(t, e) {
+    const s = we;
+    switch (ge) {
       case 2162698:
-        t.R = true;
-        t.L = false;
-        $e(t);
-        ke(t);
-        xe(t);
-        if (2688007 === t.$) return new CallMemberExpression(e, r, ve(t), s, true);
-        Be(t);
-        return new AccessMemberExpression(e, r, s);
+        Ee = true;
+        xe = false;
+        Fe();
+        De();
+        ke();
+        if (2688007 === ge) return new CallMemberExpression(t, s, Se(), e, true);
+        Ve();
+        return new AccessMemberExpression(t, s, e);
 
       case 2688007:
-        t.L = false;
-        return new CallMemberExpression(e, r, ve(t), s, false);
+        xe = false;
+        return new CallMemberExpression(t, s, Se(), e, false);
 
       default:
-        t.L = !t.R;
-        ke(t);
-        return new AccessMemberExpression(e, r, s);
+        xe = !Ee;
+        De();
+        return new AccessMemberExpression(t, s, e);
     }
 }
 
-function xe(t) {
-    if (0 === (13312 & t.$)) throw new Error(`AUR0171:${t.ip}`);
+function ke() {
+    if (0 === (13312 & ge)) throw new Error(`AUR0171:${fe}`);
 }
 
-function Ee(t) {
-    if (0 === (12288 & t.$)) throw new Error(`AUR0153:${t.ip}`);
+function Be() {
+    if (0 === (12288 & ge)) throw new Error(`AUR0153:${fe}`);
 }
 
-function Ae(t) {
-    return new Error(`AUR0172:${t.ip}`);
+function Le() {
+    return new Error(`AUR0172:${fe}`);
 }
 
-function ye(t, e) {
-    const s = t.R;
-    ke(t);
-    const r = new Array;
-    while (7340047 !== t.$) if (Me(t, 6291469)) {
-        r.push(ce);
-        if (7340047 === t.$) break;
+function Re(t) {
+    const e = Ee;
+    De();
+    const s = new Array;
+    while (7340047 !== ge) if (ze(6291469)) {
+        s.push(he);
+        if (7340047 === ge) break;
     } else {
-        r.push(de(t, 62, ~2 & e));
-        if (Me(t, 6291469)) {
-            if (7340047 === t.$) break;
+        s.push(me(62, ~2 & t));
+        if (ze(6291469)) {
+            if (7340047 === ge) break;
         } else break;
     }
-    t.R = s;
-    De(t, 7340047);
-    if (2 & e) return new ArrayBindingPattern(r); else {
-        t.L = false;
-        return new ArrayLiteralExpression(r);
+    Ee = e;
+    We(7340047);
+    if (2 & t) return new ArrayBindingPattern(s); else {
+        xe = false;
+        return new ArrayLiteralExpression(s);
     }
 }
 
-function me(t, e) {
-    if (0 === (65536 & e.$kind)) throw new Error(`AUR0163:${t.ip}`);
-    if (4204590 !== t.$) throw new Error(`AUR0163:${t.ip}`);
-    ke(t);
-    const s = e;
-    const r = de(t, 61, 0);
-    return new ForOfStatement(s, r);
+function Pe(t) {
+    if (0 === (65536 & t.$kind)) throw new Error(`AUR0163:${fe}`);
+    if (4204590 !== ge) throw new Error(`AUR0163:${fe}`);
+    De();
+    const e = t;
+    const s = me(61, 0);
+    return new ForOfStatement(e, s);
 }
 
-function Ue(t, e) {
-    const s = t.R;
+function Te(t) {
+    const e = Ee;
+    const s = new Array;
     const r = new Array;
-    const i = new Array;
-    ke(t);
-    while (7340043 !== t.$) {
-        r.push(t.B);
-        if (49152 & t.$) {
-            ke(t);
-            De(t, 6291472);
-            i.push(de(t, 62, ~2 & e));
-        } else if (12288 & t.$) {
-            const {O: s, $: r, index: n} = t;
-            ke(t);
-            if (Me(t, 6291472)) i.push(de(t, 62, ~2 & e)); else {
-                t.O = s;
-                t.$ = r;
-                t.index = n;
-                i.push(de(t, 515, ~2 & e));
+    De();
+    while (7340043 !== ge) {
+        s.push(we);
+        if (49152 & ge) {
+            De();
+            We(6291472);
+            r.push(me(62, ~2 & t));
+        } else if (12288 & ge) {
+            const e = be;
+            const s = ge;
+            const i = de;
+            De();
+            if (ze(6291472)) r.push(me(62, ~2 & t)); else {
+                be = e;
+                ge = s;
+                de = i;
+                r.push(me(515, ~2 & t));
             }
-        } else throw new Error(`AUR0164:${t.ip}`);
-        if (7340043 !== t.$) De(t, 6291469);
+        } else throw new Error(`AUR0164:${fe}`);
+        if (7340043 !== ge) We(6291469);
     }
-    t.R = s;
-    De(t, 7340043);
-    if (2 & e) return new ObjectBindingPattern(r, i); else {
-        t.L = false;
-        return new ObjectLiteralExpression(r, i);
+    Ee = e;
+    We(7340043);
+    if (2 & t) return new ObjectBindingPattern(s, r); else {
+        xe = false;
+        return new ObjectLiteralExpression(s, r);
     }
 }
 
-function Se(t) {
+function je() {
+    const t = [];
     const e = [];
-    const s = [];
-    const r = t.length;
-    let i = "";
-    while (t.index < r) {
-        switch (t.O) {
+    const s = pe;
+    let r = "";
+    while (de < s) {
+        switch (be) {
           case 36:
-            if (123 === t.ip.charCodeAt(t.index + 1)) {
-                e.push(i);
-                i = "";
-                t.index += 2;
-                t.O = t.ip.charCodeAt(t.index);
-                ke(t);
-                const r = de(t, 61, 1);
-                s.push(r);
+            if (123 === fe.charCodeAt(de + 1)) {
+                t.push(r);
+                r = "";
+                de += 2;
+                be = fe.charCodeAt(de);
+                De();
+                const s = me(61, 1);
+                e.push(s);
                 continue;
-            } else i += "$";
+            } else r += "$";
             break;
 
           case 92:
-            i += String.fromCharCode(re(Le(t)));
+            r += String.fromCharCode(re(Ne()));
             break;
 
           default:
-            i += String.fromCharCode(t.O);
+            r += String.fromCharCode(be);
         }
-        Le(t);
+        Ne();
     }
-    if (s.length) {
-        e.push(i);
-        return new Interpolation(e, s);
+    if (e.length) {
+        t.push(r);
+        return new Interpolation(t, e);
     }
     return null;
 }
 
-function Oe(t, e, s, r) {
-    const i = t.R;
-    const n = [ t.B ];
-    De(t, 2163757);
-    const o = [ de(t, 62, e) ];
-    while (2163756 !== (t.$ = Ie(t))) {
-        n.push(t.B);
-        De(t, 2163757);
-        o.push(de(t, 62, e));
+function Ie(t, e, s) {
+    const r = Ee;
+    const i = [ we ];
+    We(2163757);
+    const n = [ me(62, t) ];
+    while (2163756 !== (ge = _e())) {
+        i.push(we);
+        We(2163757);
+        n.push(me(62, t));
     }
-    n.push(t.B);
-    t.L = false;
-    t.R = i;
-    if (r) {
-        ke(t);
-        return new TaggedTemplateExpression(n, n, s, o);
+    i.push(we);
+    xe = false;
+    Ee = r;
+    if (s) {
+        De();
+        return new TaggedTemplateExpression(i, i, e, n);
     } else {
-        ke(t);
-        return new TemplateExpression(n, o);
+        De();
+        return new TemplateExpression(i, n);
     }
 }
 
-function Ce(t, e) {
-    t.L = false;
-    const s = [ t.B ];
-    ke(t);
-    return new TaggedTemplateExpression(s, s, e);
+function Me(t) {
+    xe = false;
+    const e = [ we ];
+    De();
+    return new TaggedTemplateExpression(e, e, t);
 }
 
-function ke(t) {
-    while (t.index < t.length) {
-        t.C = t.index;
-        if (null != (t.$ = ze[t.O](t))) return;
+function De() {
+    while (de < pe) {
+        ve = de;
+        if (null != (ge = rs[be]())) return;
     }
-    t.$ = 6291456;
+    ge = 6291456;
 }
 
-const {save: $e, restore: Be} = function() {
+const {save: Fe, restore: Ve} = function() {
     let t = 0;
     let e = 0;
     let s = 6291456;
@@ -3713,23 +3718,23 @@ const {save: $e, restore: Be} = function() {
     let i = "";
     let n = true;
     let o = false;
-    function u(u) {
-        t = u.index;
-        e = u.C;
-        s = u.$;
-        r = u.O;
-        i = u.B;
-        n = u.L;
-        o = u.R;
+    function u() {
+        t = de;
+        e = ve;
+        s = ge;
+        r = be;
+        i = we;
+        n = xe;
+        o = Ee;
     }
-    function c(u) {
-        u.index = t;
-        u.C = e;
-        u.$ = s;
-        u.O = r;
-        u.B = i;
-        u.L = n;
-        u.R = o;
+    function c() {
+        de = t;
+        ve = e;
+        ge = s;
+        be = r;
+        we = i;
+        xe = n;
+        Ee = o;
     }
     return {
         save: u,
@@ -3737,130 +3742,120 @@ const {save: $e, restore: Be} = function() {
     };
 }();
 
-function Le(t) {
-    return t.O = t.ip.charCodeAt(++t.index);
+function Ne() {
+    return be = fe.charCodeAt(++de);
 }
 
-function Re(t) {
-    while (Qe[Le(t)]) ;
-    const e = Ve[t.B = t.P];
-    return void 0 === e ? 4096 : e;
+function Ke() {
+    while (ss[Ne()]) ;
+    const t = Ze[we = Ae()];
+    return void 0 === t ? 4096 : t;
 }
 
-function Pe(t, e) {
-    let s = t.O;
-    if (false === e) {
+function qe(t) {
+    let e = be;
+    if (false === t) {
         do {
-            s = Le(t);
-        } while (s <= 57 && s >= 48);
-        if (46 !== s) {
-            t.B = parseInt(t.P, 10);
+            e = Ne();
+        } while (e <= 57 && e >= 48);
+        if (46 !== e) {
+            we = parseInt(Ae(), 10);
             return 32768;
         }
-        s = Le(t);
-        if (t.index >= t.length) {
-            t.B = parseInt(t.P.slice(0, -1), 10);
+        e = Ne();
+        if (de >= pe) {
+            we = parseInt(Ae().slice(0, -1), 10);
             return 32768;
         }
     }
-    if (s <= 57 && s >= 48) do {
-        s = Le(t);
-    } while (s <= 57 && s >= 48); else t.O = t.ip.charCodeAt(--t.index);
-    t.B = parseFloat(t.P);
+    if (e <= 57 && e >= 48) do {
+        e = Ne();
+    } while (e <= 57 && e >= 48); else be = fe.charCodeAt(--de);
+    we = parseFloat(Ae());
     return 32768;
 }
 
-function Te(t) {
-    const e = t.O;
-    Le(t);
-    let s = 0;
-    const r = new Array;
-    let i = t.index;
-    while (t.O !== e) if (92 === t.O) {
-        r.push(t.ip.slice(i, t.index));
-        Le(t);
-        s = re(t.O);
-        Le(t);
-        r.push(String.fromCharCode(s));
-        i = t.index;
-    } else if (t.index >= t.length) throw new Error(`AUR0165:${t.ip}`); else Le(t);
-    const n = t.ip.slice(i, t.index);
-    Le(t);
-    r.push(n);
-    const o = r.join("");
-    t.B = o;
+function He() {
+    const t = be;
+    Ne();
+    let e = 0;
+    const s = new Array;
+    let r = de;
+    while (be !== t) if (92 === be) {
+        s.push(fe.slice(r, de));
+        Ne();
+        e = re(be);
+        Ne();
+        s.push(String.fromCharCode(e));
+        r = de;
+    } else if (de >= pe) throw new Error(`AUR0165:${fe}`); else Ne();
+    const i = fe.slice(r, de);
+    Ne();
+    s.push(i);
+    const n = s.join("");
+    we = n;
     return 16384;
 }
 
-function je(t) {
-    let e = true;
-    let s = "";
-    while (96 !== Le(t)) if (36 === t.O) if (t.index + 1 < t.length && 123 === t.ip.charCodeAt(t.index + 1)) {
-        t.index++;
-        e = false;
+function Qe() {
+    let t = true;
+    let e = "";
+    while (96 !== Ne()) if (36 === be) if (de + 1 < pe && 123 === fe.charCodeAt(de + 1)) {
+        de++;
+        t = false;
         break;
-    } else s += "$"; else if (92 === t.O) s += String.fromCharCode(re(Le(t))); else {
-        if (t.index >= t.length) throw new Error(`AUR0166:${t.ip}`);
-        s += String.fromCharCode(t.O);
+    } else e += "$"; else if (92 === be) e += String.fromCharCode(re(Ne())); else {
+        if (de >= pe) throw new Error(`AUR0166:${fe}`);
+        e += String.fromCharCode(be);
     }
-    Le(t);
-    t.B = s;
-    if (e) return 2163756;
+    Ne();
+    we = e;
+    if (t) return 2163756;
     return 2163757;
 }
 
-function Ie(t) {
-    if (t.index >= t.length) throw new Error(`AUR0166:${t.ip}`);
-    t.index--;
-    return je(t);
+function _e() {
+    if (de >= pe) throw new Error(`AUR0166:${fe}`);
+    de--;
+    return Qe();
 }
 
-function Me(t, e) {
-    if (t.$ === e) {
-        ke(t);
+function ze(t) {
+    if (ge === t) {
+        De();
         return true;
     }
     return false;
 }
 
-function De(t, e) {
-    if (t.$ === e) ke(t); else throw new Error(`AUR0167:${t.ip}<${e}`);
+function We(t) {
+    if (ge === t) De(); else throw new Error(`AUR0167:${fe}<${t}`);
 }
 
-const Fe = [ ne, oe, ue, ce, "$this", null, "$parent", "(", "{", ".", "?.", "}", ")", ",", "[", "]", ":", "?", "'", '"', "&", "|", "??", "||", "&&", "==", "!=", "===", "!==", "<", ">", "<=", ">=", "in", "instanceof", "+", "-", "typeof", "void", "*", "%", "/", "=", "!", 2163756, 2163757, "of" ];
+const Ge = [ oe, ue, ce, he, "$this", null, "$parent", "(", "{", ".", "?.", "}", ")", ",", "[", "]", ":", "?", "'", '"', "&", "|", "??", "||", "&&", "==", "!=", "===", "!==", "<", ">", "<=", ">=", "in", "instanceof", "+", "-", "typeof", "void", "*", "%", "/", "=", "!", 2163756, 2163757, "of" ];
 
-const Ve = c();
+const Ze = Object.assign(Object.create(null), {
+    true: 8193,
+    null: 8194,
+    false: 8192,
+    undefined: 8195,
+    $this: 12292,
+    $parent: 12294,
+    in: 6562209,
+    instanceof: 6562210,
+    typeof: 139301,
+    void: 139302,
+    of: 4204590
+});
 
-Ve.true = 8193;
-
-Ve.null = 8194;
-
-Ve.false = 8192;
-
-Ve.undefined = 8195;
-
-Ve.$this = 12292;
-
-Ve.$parent = 12294;
-
-Ve.in = 6562209;
-
-Ve.instanceof = 6562210;
-
-Ve.typeof = 139301;
-
-Ve.void = 139302;
-
-Ve.of = 4204590;
-
-const Ne = {
+const Je = {
     AsciiIdPart: [ 36, 0, 48, 58, 65, 91, 95, 0, 97, 123 ],
     IdStart: [ 36, 0, 65, 91, 95, 0, 97, 123, 170, 0, 186, 0, 192, 215, 216, 247, 248, 697, 736, 741, 7424, 7462, 7468, 7517, 7522, 7526, 7531, 7544, 7545, 7615, 7680, 7936, 8305, 0, 8319, 0, 8336, 8349, 8490, 8492, 8498, 0, 8526, 0, 8544, 8585, 11360, 11392, 42786, 42888, 42891, 42927, 42928, 42936, 42999, 43008, 43824, 43867, 43868, 43877, 64256, 64263, 65313, 65339, 65345, 65371 ],
     Digit: [ 48, 58 ],
     Skip: [ 0, 33, 127, 161 ]
 };
 
-function Ke(t, e, s, r) {
+function Xe(t, e, s, r) {
     const i = s.length;
     for (let n = 0; n < i; n += 2) {
         const i = s[n];
@@ -3871,190 +3866,190 @@ function Ke(t, e, s, r) {
     }
 }
 
-function qe(t) {
-    return e => {
-        Le(e);
+function Ye(t) {
+    return () => {
+        Ne();
         return t;
     };
 }
 
-const _e = t => {
-    throw new Error(`AUR0168:${t.ip}`);
+const ts = () => {
+    throw new Error(`AUR0168:${fe}`);
 };
 
-_e.notMapped = true;
+ts.notMapped = true;
 
-const He = new Set;
+const es = new Set;
 
-Ke(null, He, Ne.AsciiIdPart, true);
+Xe(null, es, Je.AsciiIdPart, true);
 
-const Qe = new Uint8Array(65535);
+const ss = new Uint8Array(65535);
 
-Ke(Qe, null, Ne.IdStart, 1);
+Xe(ss, null, Je.IdStart, 1);
 
-Ke(Qe, null, Ne.Digit, 1);
+Xe(ss, null, Je.Digit, 1);
 
-const ze = new Array(65535);
+const rs = new Array(65535);
 
-ze.fill(_e, 0, 65535);
+rs.fill(ts, 0, 65535);
 
-Ke(ze, null, Ne.Skip, (t => {
-    Le(t);
+Xe(rs, null, Je.Skip, (() => {
+    Ne();
     return null;
 }));
 
-Ke(ze, null, Ne.IdStart, Re);
+Xe(rs, null, Je.IdStart, Ke);
 
-Ke(ze, null, Ne.Digit, (t => Pe(t, false)));
+Xe(rs, null, Je.Digit, (() => qe(false)));
 
-ze[34] = ze[39] = t => Te(t);
+rs[34] = rs[39] = () => He();
 
-ze[96] = t => je(t);
+rs[96] = () => Qe();
 
-ze[33] = t => {
-    if (61 !== Le(t)) return 131115;
-    if (61 !== Le(t)) return 6553946;
-    Le(t);
+rs[33] = () => {
+    if (61 !== Ne()) return 131115;
+    if (61 !== Ne()) return 6553946;
+    Ne();
     return 6553948;
 };
 
-ze[61] = t => {
-    if (61 !== Le(t)) return 4194346;
-    if (61 !== Le(t)) return 6553945;
-    Le(t);
+rs[61] = () => {
+    if (61 !== Ne()) return 4194346;
+    if (61 !== Ne()) return 6553945;
+    Ne();
     return 6553947;
 };
 
-ze[38] = t => {
-    if (38 !== Le(t)) return 6291476;
-    Le(t);
+rs[38] = () => {
+    if (38 !== Ne()) return 6291476;
+    Ne();
     return 6553880;
 };
 
-ze[124] = t => {
-    if (124 !== Le(t)) return 6291477;
-    Le(t);
+rs[124] = () => {
+    if (124 !== Ne()) return 6291477;
+    Ne();
     return 6553815;
 };
 
-ze[63] = t => {
-    if (46 === Le(t)) {
-        const e = t.ip.charCodeAt(t.index + 1);
-        if (e <= 48 || e >= 57) {
-            Le(t);
+rs[63] = () => {
+    if (46 === Ne()) {
+        const t = fe.charCodeAt(de + 1);
+        if (t <= 48 || t >= 57) {
+            Ne();
             return 2162698;
         }
         return 6291475;
     }
-    if (63 !== t.O) return 6291475;
-    if (61 === Le(t)) throw new Error("Operator ??= is not supported.");
+    if (63 !== be) return 6291475;
+    if (61 === Ne()) throw new Error("Operator ??= is not supported.");
     return 6553750;
 };
 
-ze[46] = t => {
-    if (Le(t) <= 57 && t.O >= 48) return Pe(t, true);
+rs[46] = () => {
+    if (Ne() <= 57 && be >= 48) return qe(true);
     return 65545;
 };
 
-ze[60] = t => {
-    if (61 !== Le(t)) return 6554013;
-    Le(t);
+rs[60] = () => {
+    if (61 !== Ne()) return 6554013;
+    Ne();
     return 6554015;
 };
 
-ze[62] = t => {
-    if (61 !== Le(t)) return 6554014;
-    Le(t);
+rs[62] = () => {
+    if (61 !== Ne()) return 6554014;
+    Ne();
     return 6554016;
 };
 
-ze[37] = qe(6554152);
+rs[37] = Ye(6554152);
 
-ze[40] = qe(2688007);
+rs[40] = Ye(2688007);
 
-ze[41] = qe(7340044);
+rs[41] = Ye(7340044);
 
-ze[42] = qe(6554151);
+rs[42] = Ye(6554151);
 
-ze[43] = qe(2490851);
+rs[43] = Ye(2490851);
 
-ze[44] = qe(6291469);
+rs[44] = Ye(6291469);
 
-ze[45] = qe(2490852);
+rs[45] = Ye(2490852);
 
-ze[47] = qe(6554153);
+rs[47] = Ye(6554153);
 
-ze[58] = qe(6291472);
+rs[58] = Ye(6291472);
 
-ze[91] = qe(2688014);
+rs[91] = Ye(2688014);
 
-ze[93] = qe(7340047);
+rs[93] = Ye(7340047);
 
-ze[123] = qe(524296);
+rs[123] = Ye(524296);
 
-ze[125] = qe(7340043);
+rs[125] = Ye(7340043);
 
-let We = null;
+let is = null;
 
-const Ge = [];
+const ns = [];
 
-let Ze = false;
+let os = false;
 
-function Je() {
-    Ze = false;
+function us() {
+    os = false;
 }
 
-function Xe() {
-    Ze = true;
+function cs() {
+    os = true;
 }
 
-function Ye() {
-    return We;
+function hs() {
+    return is;
 }
 
-function ts(t) {
+function as(t) {
     if (null == t) throw new Error(`AUR0206`);
-    if (null == We) {
-        We = t;
-        Ge[0] = We;
-        Ze = true;
+    if (null == is) {
+        is = t;
+        ns[0] = is;
+        os = true;
         return;
     }
-    if (We === t) throw new Error(`AUR0207`);
-    Ge.push(t);
-    We = t;
-    Ze = true;
+    if (is === t) throw new Error(`AUR0207`);
+    ns.push(t);
+    is = t;
+    os = true;
 }
 
-function es(t) {
+function ls(t) {
     if (null == t) throw new Error(`AUR0208`);
-    if (We !== t) throw new Error(`AUR0209`);
-    Ge.pop();
-    We = Ge.length > 0 ? Ge[Ge.length - 1] : null;
-    Ze = null != We;
+    if (is !== t) throw new Error(`AUR0209`);
+    ns.pop();
+    is = ns.length > 0 ? ns[ns.length - 1] : null;
+    os = null != is;
 }
 
-const ss = Object.freeze({
+const fs = Object.freeze({
     get current() {
-        return We;
+        return is;
     },
     get connecting() {
-        return Ze;
+        return os;
     },
-    enter: ts,
-    exit: es,
-    pause: Je,
-    resume: Xe
+    enter: as,
+    exit: ls,
+    pause: us,
+    resume: cs
 });
 
-const rs = Reflect.get;
+const ds = Reflect.get;
 
-const is = Object.prototype.toString;
+const ps = Object.prototype.toString;
 
-const ns = new WeakMap;
+const vs = new WeakMap;
 
-function os(t) {
-    switch (is.call(t)) {
+function gs(t) {
+    switch (ps.call(t)) {
       case "[object Object]":
       case "[object Array]":
       case "[object Map]":
@@ -4066,388 +4061,388 @@ function os(t) {
     }
 }
 
-const us = "__raw__";
+const ws = "__raw__";
 
-function cs(t) {
-    return os(t) ? hs(t) : t;
+function bs(t) {
+    return gs(t) ? xs(t) : t;
 }
 
-function hs(t) {
+function xs(t) {
     var e;
-    return null !== (e = ns.get(t)) && void 0 !== e ? e : ds(t);
+    return null !== (e = vs.get(t)) && void 0 !== e ? e : ms(t);
 }
 
-function as(t) {
+function Es(t) {
     var e;
-    return null !== (e = t[us]) && void 0 !== e ? e : t;
+    return null !== (e = t[ws]) && void 0 !== e ? e : t;
 }
 
-function ls(t) {
-    return os(t) && t[us] || t;
+function As(t) {
+    return gs(t) && t[ws] || t;
 }
 
-function fs(t) {
+function ys(t) {
     return "constructor" === t || "__proto__" === t || "$observers" === t || t === Symbol.toPrimitive || t === Symbol.toStringTag;
 }
 
-function ds(t) {
-    const e = t instanceof Array ? vs : t instanceof Map || t instanceof Set ? Ds : ps;
+function ms(t) {
+    const e = t instanceof Array ? Ss : t instanceof Map || t instanceof Set ? Ws : Us;
     const s = new Proxy(t, e);
-    ns.set(t, s);
+    vs.set(t, s);
     return s;
 }
 
-const ps = {
+const Us = {
     get(t, e, s) {
-        if (e === us) return t;
-        const r = Ye();
-        if (!Ze || fs(e) || null == r) return rs(t, e, s);
+        if (e === ws) return t;
+        const r = hs();
+        if (!os || ys(e) || null == r) return ds(t, e, s);
         r.observe(t, e);
-        return cs(rs(t, e, s));
+        return bs(ds(t, e, s));
     }
 };
 
-const vs = {
+const Ss = {
     get(t, e, s) {
-        if (e === us) return t;
-        const r = Ye();
-        if (!Ze || fs(e) || null == r) return rs(t, e, s);
+        if (e === ws) return t;
+        const r = hs();
+        if (!os || ys(e) || null == r) return ds(t, e, s);
         switch (e) {
           case "length":
             r.observe(t, "length");
             return t.length;
 
           case "map":
-            return gs;
-
-          case "includes":
-            return xs;
-
-          case "indexOf":
-            return Es;
-
-          case "lastIndexOf":
-            return As;
-
-          case "every":
-            return ws;
-
-          case "filter":
-            return bs;
-
-          case "find":
-            return ms;
-
-          case "findIndex":
-            return ys;
-
-          case "flat":
-            return Us;
-
-          case "flatMap":
-            return Ss;
-
-          case "join":
             return Os;
 
-          case "push":
+          case "includes":
             return ks;
 
-          case "pop":
-            return Cs;
-
-          case "reduce":
-            return Is;
-
-          case "reduceRight":
-            return Ms;
-
-          case "reverse":
-            return Rs;
-
-          case "shift":
-            return $s;
-
-          case "unshift":
+          case "indexOf":
             return Bs;
 
-          case "slice":
-            return js;
-
-          case "splice":
+          case "lastIndexOf":
             return Ls;
 
-          case "some":
+          case "every":
+            return Cs;
+
+          case "filter":
+            return $s;
+
+          case "find":
             return Ps;
 
-          case "sort":
+          case "findIndex":
+            return Rs;
+
+          case "flat":
             return Ts;
 
-          case "keys":
+          case "flatMap":
+            return js;
+
+          case "join":
+            return Is;
+
+          case "push":
+            return Ds;
+
+          case "pop":
+            return Ms;
+
+          case "reduce":
+            return _s;
+
+          case "reduceRight":
+            return zs;
+
+          case "reverse":
+            return Ks;
+
+          case "shift":
+            return Fs;
+
+          case "unshift":
+            return Vs;
+
+          case "slice":
             return Qs;
+
+          case "splice":
+            return Ns;
+
+          case "some":
+            return qs;
+
+          case "sort":
+            return Hs;
+
+          case "keys":
+            return sr;
 
           case "values":
           case Symbol.iterator:
-            return zs;
+            return rr;
 
           case "entries":
-            return Ws;
+            return ir;
         }
         r.observe(t, e);
-        return cs(rs(t, e, s));
+        return bs(ds(t, e, s));
     },
     ownKeys(t) {
         var e;
-        null === (e = Ye()) || void 0 === e ? void 0 : e.observe(t, "length");
+        null === (e = hs()) || void 0 === e ? void 0 : e.observe(t, "length");
         return Reflect.ownKeys(t);
     }
 };
 
-function gs(t, e) {
+function Os(t, e) {
     var s;
-    const r = as(this);
-    const i = r.map(((s, r) => ls(t.call(e, cs(s), r, this))));
-    null === (s = Ye()) || void 0 === s ? void 0 : s.observeCollection(r);
-    return cs(i);
+    const r = Es(this);
+    const i = r.map(((s, r) => As(t.call(e, bs(s), r, this))));
+    null === (s = hs()) || void 0 === s ? void 0 : s.observeCollection(r);
+    return bs(i);
 }
 
-function ws(t, e) {
+function Cs(t, e) {
     var s;
-    const r = as(this);
-    const i = r.every(((s, r) => t.call(e, cs(s), r, this)));
-    null === (s = Ye()) || void 0 === s ? void 0 : s.observeCollection(r);
+    const r = Es(this);
+    const i = r.every(((s, r) => t.call(e, bs(s), r, this)));
+    null === (s = hs()) || void 0 === s ? void 0 : s.observeCollection(r);
     return i;
 }
 
-function bs(t, e) {
+function $s(t, e) {
     var s;
-    const r = as(this);
-    const i = r.filter(((s, r) => ls(t.call(e, cs(s), r, this))));
-    null === (s = Ye()) || void 0 === s ? void 0 : s.observeCollection(r);
-    return cs(i);
+    const r = Es(this);
+    const i = r.filter(((s, r) => As(t.call(e, bs(s), r, this))));
+    null === (s = hs()) || void 0 === s ? void 0 : s.observeCollection(r);
+    return bs(i);
 }
 
-function xs(t) {
+function ks(t) {
     var e;
-    const s = as(this);
-    const r = s.includes(ls(t));
-    null === (e = Ye()) || void 0 === e ? void 0 : e.observeCollection(s);
+    const s = Es(this);
+    const r = s.includes(As(t));
+    null === (e = hs()) || void 0 === e ? void 0 : e.observeCollection(s);
     return r;
 }
 
-function Es(t) {
+function Bs(t) {
     var e;
-    const s = as(this);
-    const r = s.indexOf(ls(t));
-    null === (e = Ye()) || void 0 === e ? void 0 : e.observeCollection(s);
+    const s = Es(this);
+    const r = s.indexOf(As(t));
+    null === (e = hs()) || void 0 === e ? void 0 : e.observeCollection(s);
     return r;
 }
 
-function As(t) {
+function Ls(t) {
     var e;
-    const s = as(this);
-    const r = s.lastIndexOf(ls(t));
-    null === (e = Ye()) || void 0 === e ? void 0 : e.observeCollection(s);
+    const s = Es(this);
+    const r = s.lastIndexOf(As(t));
+    null === (e = hs()) || void 0 === e ? void 0 : e.observeCollection(s);
     return r;
 }
 
-function ys(t, e) {
+function Rs(t, e) {
     var s;
-    const r = as(this);
-    const i = r.findIndex(((s, r) => ls(t.call(e, cs(s), r, this))));
-    null === (s = Ye()) || void 0 === s ? void 0 : s.observeCollection(r);
+    const r = Es(this);
+    const i = r.findIndex(((s, r) => As(t.call(e, bs(s), r, this))));
+    null === (s = hs()) || void 0 === s ? void 0 : s.observeCollection(r);
     return i;
-}
-
-function ms(t, e) {
-    var s;
-    const r = as(this);
-    const i = r.find(((e, s) => t(cs(e), s, this)), e);
-    null === (s = Ye()) || void 0 === s ? void 0 : s.observeCollection(r);
-    return cs(i);
-}
-
-function Us() {
-    var t;
-    const e = as(this);
-    null === (t = Ye()) || void 0 === t ? void 0 : t.observeCollection(e);
-    return cs(e.flat());
-}
-
-function Ss(t, e) {
-    var s;
-    const r = as(this);
-    null === (s = Ye()) || void 0 === s ? void 0 : s.observeCollection(r);
-    return hs(r.flatMap(((s, r) => cs(t.call(e, cs(s), r, this)))));
-}
-
-function Os(t) {
-    var e;
-    const s = as(this);
-    null === (e = Ye()) || void 0 === e ? void 0 : e.observeCollection(s);
-    return s.join(t);
-}
-
-function Cs() {
-    return cs(as(this).pop());
-}
-
-function ks(...t) {
-    return as(this).push(...t);
-}
-
-function $s() {
-    return cs(as(this).shift());
-}
-
-function Bs(...t) {
-    return as(this).unshift(...t);
-}
-
-function Ls(...t) {
-    return cs(as(this).splice(...t));
-}
-
-function Rs(...t) {
-    var e;
-    const s = as(this);
-    const r = s.reverse();
-    null === (e = Ye()) || void 0 === e ? void 0 : e.observeCollection(s);
-    return cs(r);
 }
 
 function Ps(t, e) {
     var s;
-    const r = as(this);
-    const i = r.some(((s, r) => ls(t.call(e, cs(s), r, this))));
-    null === (s = Ye()) || void 0 === s ? void 0 : s.observeCollection(r);
-    return i;
+    const r = Es(this);
+    const i = r.find(((e, s) => t(bs(e), s, this)), e);
+    null === (s = hs()) || void 0 === s ? void 0 : s.observeCollection(r);
+    return bs(i);
 }
 
-function Ts(t) {
-    var e;
-    const s = as(this);
-    const r = s.sort(t);
-    null === (e = Ye()) || void 0 === e ? void 0 : e.observeCollection(s);
-    return cs(r);
+function Ts() {
+    var t;
+    const e = Es(this);
+    null === (t = hs()) || void 0 === t ? void 0 : t.observeCollection(e);
+    return bs(e.flat());
 }
 
 function js(t, e) {
     var s;
-    const r = as(this);
-    null === (s = Ye()) || void 0 === s ? void 0 : s.observeCollection(r);
-    return hs(r.slice(t, e));
+    const r = Es(this);
+    null === (s = hs()) || void 0 === s ? void 0 : s.observeCollection(r);
+    return xs(r.flatMap(((s, r) => bs(t.call(e, bs(s), r, this)))));
 }
 
-function Is(t, e) {
+function Is(t) {
+    var e;
+    const s = Es(this);
+    null === (e = hs()) || void 0 === e ? void 0 : e.observeCollection(s);
+    return s.join(t);
+}
+
+function Ms() {
+    return bs(Es(this).pop());
+}
+
+function Ds(...t) {
+    return Es(this).push(...t);
+}
+
+function Fs() {
+    return bs(Es(this).shift());
+}
+
+function Vs(...t) {
+    return Es(this).unshift(...t);
+}
+
+function Ns(...t) {
+    return bs(Es(this).splice(...t));
+}
+
+function Ks(...t) {
+    var e;
+    const s = Es(this);
+    const r = s.reverse();
+    null === (e = hs()) || void 0 === e ? void 0 : e.observeCollection(s);
+    return bs(r);
+}
+
+function qs(t, e) {
     var s;
-    const r = as(this);
-    const i = r.reduce(((e, s, r) => t(e, cs(s), r, this)), e);
-    null === (s = Ye()) || void 0 === s ? void 0 : s.observeCollection(r);
-    return cs(i);
+    const r = Es(this);
+    const i = r.some(((s, r) => As(t.call(e, bs(s), r, this))));
+    null === (s = hs()) || void 0 === s ? void 0 : s.observeCollection(r);
+    return i;
 }
 
-function Ms(t, e) {
+function Hs(t) {
+    var e;
+    const s = Es(this);
+    const r = s.sort(t);
+    null === (e = hs()) || void 0 === e ? void 0 : e.observeCollection(s);
+    return bs(r);
+}
+
+function Qs(t, e) {
     var s;
-    const r = as(this);
-    const i = r.reduceRight(((e, s, r) => t(e, cs(s), r, this)), e);
-    null === (s = Ye()) || void 0 === s ? void 0 : s.observeCollection(r);
-    return cs(i);
+    const r = Es(this);
+    null === (s = hs()) || void 0 === s ? void 0 : s.observeCollection(r);
+    return xs(r.slice(t, e));
 }
 
-const Ds = {
+function _s(t, e) {
+    var s;
+    const r = Es(this);
+    const i = r.reduce(((e, s, r) => t(e, bs(s), r, this)), e);
+    null === (s = hs()) || void 0 === s ? void 0 : s.observeCollection(r);
+    return bs(i);
+}
+
+function zs(t, e) {
+    var s;
+    const r = Es(this);
+    const i = r.reduceRight(((e, s, r) => t(e, bs(s), r, this)), e);
+    null === (s = hs()) || void 0 === s ? void 0 : s.observeCollection(r);
+    return bs(i);
+}
+
+const Ws = {
     get(t, e, s) {
-        if (e === us) return t;
-        const r = Ye();
-        if (!Ze || fs(e) || null == r) return rs(t, e, s);
+        if (e === ws) return t;
+        const r = hs();
+        if (!os || ys(e) || null == r) return ds(t, e, s);
         switch (e) {
           case "size":
             r.observe(t, "size");
             return t.size;
 
           case "clear":
-            return _s;
+            return tr;
 
           case "delete":
-            return Hs;
+            return er;
 
           case "forEach":
-            return Fs;
+            return Gs;
 
           case "add":
-            if (t instanceof Set) return qs;
+            if (t instanceof Set) return Ys;
             break;
 
           case "get":
-            if (t instanceof Map) return Ns;
+            if (t instanceof Map) return Js;
             break;
 
           case "set":
-            if (t instanceof Map) return Ks;
+            if (t instanceof Map) return Xs;
             break;
 
           case "has":
-            return Vs;
+            return Zs;
 
           case "keys":
-            return Qs;
+            return sr;
 
           case "values":
-            return zs;
+            return rr;
 
           case "entries":
-            return Ws;
+            return ir;
 
           case Symbol.iterator:
-            return t instanceof Map ? Ws : zs;
+            return t instanceof Map ? ir : rr;
         }
-        return cs(rs(t, e, s));
+        return bs(ds(t, e, s));
     }
 };
 
-function Fs(t, e) {
+function Gs(t, e) {
     var s;
-    const r = as(this);
-    null === (s = Ye()) || void 0 === s ? void 0 : s.observeCollection(r);
+    const r = Es(this);
+    null === (s = hs()) || void 0 === s ? void 0 : s.observeCollection(r);
     return r.forEach(((s, r) => {
-        t.call(e, cs(s), cs(r), this);
+        t.call(e, bs(s), bs(r), this);
     }));
 }
 
-function Vs(t) {
+function Zs(t) {
     var e;
-    const s = as(this);
-    null === (e = Ye()) || void 0 === e ? void 0 : e.observeCollection(s);
-    return s.has(ls(t));
+    const s = Es(this);
+    null === (e = hs()) || void 0 === e ? void 0 : e.observeCollection(s);
+    return s.has(As(t));
 }
 
-function Ns(t) {
+function Js(t) {
     var e;
-    const s = as(this);
-    null === (e = Ye()) || void 0 === e ? void 0 : e.observeCollection(s);
-    return cs(s.get(ls(t)));
+    const s = Es(this);
+    null === (e = hs()) || void 0 === e ? void 0 : e.observeCollection(s);
+    return bs(s.get(As(t)));
 }
 
-function Ks(t, e) {
-    return cs(as(this).set(ls(t), ls(e)));
+function Xs(t, e) {
+    return bs(Es(this).set(As(t), As(e)));
 }
 
-function qs(t) {
-    return cs(as(this).add(ls(t)));
+function Ys(t) {
+    return bs(Es(this).add(As(t)));
 }
 
-function _s() {
-    return cs(as(this).clear());
+function tr() {
+    return bs(Es(this).clear());
 }
 
-function Hs(t) {
-    return cs(as(this).delete(ls(t)));
+function er(t) {
+    return bs(Es(this).delete(As(t)));
 }
 
-function Qs() {
+function sr() {
     var t;
-    const e = as(this);
-    null === (t = Ye()) || void 0 === t ? void 0 : t.observeCollection(e);
+    const e = Es(this);
+    null === (t = hs()) || void 0 === t ? void 0 : t.observeCollection(e);
     const s = e.keys();
     return {
         next() {
@@ -4458,7 +4453,7 @@ function Qs() {
                 value: void 0,
                 done: r
             } : {
-                value: cs(e),
+                value: bs(e),
                 done: r
             };
         },
@@ -4468,10 +4463,10 @@ function Qs() {
     };
 }
 
-function zs() {
+function rr() {
     var t;
-    const e = as(this);
-    null === (t = Ye()) || void 0 === t ? void 0 : t.observeCollection(e);
+    const e = Es(this);
+    null === (t = hs()) || void 0 === t ? void 0 : t.observeCollection(e);
     const s = e.values();
     return {
         next() {
@@ -4482,7 +4477,7 @@ function zs() {
                 value: void 0,
                 done: r
             } : {
-                value: cs(e),
+                value: bs(e),
                 done: r
             };
         },
@@ -4492,10 +4487,10 @@ function zs() {
     };
 }
 
-function Ws() {
+function ir() {
     var t;
-    const e = as(this);
-    null === (t = Ye()) || void 0 === t ? void 0 : t.observeCollection(e);
+    const e = Es(this);
+    null === (t = hs()) || void 0 === t ? void 0 : t.observeCollection(e);
     const s = e.entries();
     return {
         next() {
@@ -4506,7 +4501,7 @@ function Ws() {
                 value: void 0,
                 done: r
             } : {
-                value: [ cs(e[0]), cs(e[1]) ],
+                value: [ bs(e[0]), bs(e[1]) ],
                 done: r
             };
         },
@@ -4516,12 +4511,12 @@ function Ws() {
     };
 }
 
-const Gs = Object.freeze({
-    getProxy: hs,
-    getRaw: as,
-    wrap: cs,
-    unwrap: ls,
-    rawKey: us
+const nr = Object.freeze({
+    getProxy: xs,
+    getRaw: Es,
+    wrap: bs,
+    unwrap: As,
+    rawKey: ws
 });
 
 class ComputedObserver {
@@ -4593,9 +4588,9 @@ class ComputedObserver {
         }
     }
     flush() {
-        Zs = this.ov;
+        or = this.ov;
         this.ov = this.v;
-        this.subs.notify(this.v, Zs, 0);
+        this.subs.notify(this.v, or, 0);
     }
     run() {
         if (this.ir) return;
@@ -4611,12 +4606,12 @@ class ComputedObserver {
         this.ir = true;
         this.obs.version++;
         try {
-            ts(this);
-            return this.v = ls(this.get.call(this.up ? cs(this.o) : this.o, this));
+            as(this);
+            return this.v = As(this.get.call(this.up ? bs(this.o) : this.o, this));
         } finally {
             this.obs.clear();
             this.ir = false;
-            es(this);
+            ls(this);
         }
     }
 }
@@ -4625,13 +4620,13 @@ ee(ComputedObserver);
 
 F(ComputedObserver);
 
-_(ComputedObserver);
+H(ComputedObserver);
 
-let Zs;
+let or;
 
-const Js = t.DI.createInterface("IDirtyChecker", (t => t.singleton(DirtyChecker)));
+const ur = t.DI.createInterface("IDirtyChecker", (t => t.singleton(DirtyChecker)));
 
-const Xs = {
+const cr = {
     timeoutsPerCheck: 25,
     disabled: false,
     throw: false,
@@ -4642,7 +4637,7 @@ const Xs = {
     }
 };
 
-const Ys = {
+const hr = {
     persistent: true
 };
 
@@ -4650,12 +4645,12 @@ class DirtyChecker {
     constructor(t) {
         this.p = t;
         this.tracked = [];
-        this.T = null;
-        this.j = 0;
+        this.O = null;
+        this.C = 0;
         this.check = () => {
-            if (Xs.disabled) return;
-            if (++this.j < Xs.timeoutsPerCheck) return;
-            this.j = 0;
+            if (cr.disabled) return;
+            if (++this.C < cr.timeoutsPerCheck) return;
+            this.C = 0;
             const t = this.tracked;
             const e = t.length;
             let s;
@@ -4667,25 +4662,25 @@ class DirtyChecker {
         };
     }
     createProperty(t, e) {
-        if (Xs.throw) throw new Error(`AUR0222:${e}`);
+        if (cr.throw) throw new Error(`AUR0222:${e}`);
         return new DirtyCheckProperty(this, t, e);
     }
     addProperty(t) {
         this.tracked.push(t);
-        if (1 === this.tracked.length) this.T = this.p.taskQueue.queueTask(this.check, Ys);
+        if (1 === this.tracked.length) this.O = this.p.taskQueue.queueTask(this.check, hr);
     }
     removeProperty(t) {
         this.tracked.splice(this.tracked.indexOf(t), 1);
         if (0 === this.tracked.length) {
-            this.T.cancel();
-            this.T = null;
+            this.O.cancel();
+            this.O = null;
         }
     }
 }
 
 DirtyChecker.inject = [ t.IPlatform ];
 
-_(DirtyChecker);
+H(DirtyChecker);
 
 class DirtyCheckProperty {
     constructor(t, e, s) {
@@ -4693,7 +4688,7 @@ class DirtyCheckProperty {
         this.key = s;
         this.type = 0;
         this.ov = void 0;
-        this.I = t;
+        this.$ = t;
     }
     getValue() {
         return this.obj[this.key];
@@ -4713,11 +4708,11 @@ class DirtyCheckProperty {
     subscribe(t) {
         if (this.subs.add(t) && 1 === this.subs.count) {
             this.ov = this.obj[this.key];
-            this.I.addProperty(this);
+            this.$.addProperty(this);
         }
     }
     unsubscribe(t) {
-        if (this.subs.remove(t) && 0 === this.subs.count) this.I.removeProperty(this);
+        if (this.subs.remove(t) && 0 === this.subs.count) this.$.removeProperty(this);
     }
 }
 
@@ -4752,7 +4747,7 @@ class PropertyAccessor {
     }
 }
 
-let tr;
+let ar;
 
 class SetterObserver {
     constructor(t, e) {
@@ -4781,9 +4776,9 @@ class SetterObserver {
         this.subs.add(t);
     }
     flush() {
-        tr = this.ov;
+        ar = this.ov;
         this.ov = this.v;
-        this.subs.notify(this.v, tr, this.f);
+        this.subs.notify(this.v, ar, this.f);
     }
     start() {
         if (false === this.iO) {
@@ -4842,9 +4837,9 @@ class SetterNotifier {
         }
     }
     flush() {
-        tr = this.ov;
+        ar = this.ov;
         this.ov = this.v;
-        this.subs.notify(this.v, tr, this.f);
+        this.subs.notify(this.v, ar, this.f);
     }
 }
 
@@ -4852,15 +4847,15 @@ F(SetterObserver);
 
 F(SetterNotifier);
 
-_(SetterObserver);
+H(SetterObserver);
 
-_(SetterNotifier);
+H(SetterNotifier);
 
-const er = new PropertyAccessor;
+const lr = new PropertyAccessor;
 
-const sr = t.DI.createInterface("IObserverLocator", (t => t.singleton(ObserverLocator)));
+const fr = t.DI.createInterface("IObserverLocator", (t => t.singleton(ObserverLocator)));
 
-const rr = t.DI.createInterface("INodeObserverLocator", (e => e.cachedCallback((e => {
+const dr = t.DI.createInterface("INodeObserverLocator", (e => e.cachedCallback((e => {
     e.getAll(t.ILogger).forEach((t => {
         t.error("Using default INodeObserverLocator implementation. Will not be able to observe nodes (HTML etc...).");
     }));
@@ -4872,38 +4867,38 @@ class DefaultNodeObserverLocator {
         return false;
     }
     getObserver() {
-        return er;
+        return lr;
     }
     getAccessor() {
-        return er;
+        return lr;
     }
 }
 
 class ObserverLocator {
     constructor(t, e) {
-        this.I = t;
-        this.M = e;
-        this.F = [];
+        this.$ = t;
+        this.B = e;
+        this.L = [];
     }
     addAdapter(t) {
-        this.F.push(t);
+        this.L.push(t);
     }
     getObserver(t, e) {
         var s, r;
-        return null !== (r = null === (s = t.$observers) || void 0 === s ? void 0 : s[e]) && void 0 !== r ? r : this.V(t, e, this.createObserver(t, e));
+        return null !== (r = null === (s = t.$observers) || void 0 === s ? void 0 : s[e]) && void 0 !== r ? r : this.R(t, e, this.createObserver(t, e));
     }
     getAccessor(t, e) {
         var s;
         const r = null === (s = t.$observers) || void 0 === s ? void 0 : s[e];
         if (void 0 !== r) return r;
-        if (this.M.handles(t, e, this)) return this.M.getAccessor(t, e, this);
-        return er;
+        if (this.B.handles(t, e, this)) return this.B.getAccessor(t, e, this);
+        return lr;
     }
     getArrayObserver(t) {
         return wt(t);
     }
     getMapObserver(t) {
-        return Ht(t);
+        return Qt(t);
     }
     getSetObserver(t) {
         return Rt(t);
@@ -4911,43 +4906,43 @@ class ObserverLocator {
     createObserver(e, r) {
         var i, n, o, u;
         if (!(e instanceof Object)) return new PrimitiveObserver(e, r);
-        if (this.M.handles(e, r, this)) return this.M.getObserver(e, r, this);
+        if (this.B.handles(e, r, this)) return this.B.getObserver(e, r, this);
         switch (r) {
           case "length":
             if (e instanceof Array) return wt(e).getLengthObserver();
             break;
 
           case "size":
-            if (e instanceof Map) return Ht(e).getLengthObserver(); else if (e instanceof Set) return Rt(e).getLengthObserver();
+            if (e instanceof Map) return Qt(e).getLengthObserver(); else if (e instanceof Set) return Rt(e).getLengthObserver();
             break;
 
           default:
             if (e instanceof Array && t.isArrayIndex(r)) return wt(e).getIndexObserver(Number(r));
             break;
         }
-        let c = or(e, r);
+        let c = gr(e, r);
         if (void 0 === c) {
-            let t = nr(e);
+            let t = vr(e);
             while (null !== t) {
-                c = or(t, r);
-                if (void 0 === c) t = nr(t); else break;
+                c = gr(t, r);
+                if (void 0 === c) t = vr(t); else break;
             }
         }
         if (void 0 !== c && !s.call(c, "value")) {
-            let t = this.N(e, r, c);
+            let t = this.P(e, r, c);
             if (null == t) t = null === (u = null !== (n = null === (i = c.get) || void 0 === i ? void 0 : i.getObserver) && void 0 !== n ? n : null === (o = c.set) || void 0 === o ? void 0 : o.getObserver) || void 0 === u ? void 0 : u(e, this);
-            return null == t ? c.configurable ? ComputedObserver.create(e, r, c, this, true) : this.I.createProperty(e, r) : t;
+            return null == t ? c.configurable ? ComputedObserver.create(e, r, c, this, true) : this.$.createProperty(e, r) : t;
         }
         return new SetterObserver(e, r);
     }
-    N(t, e, s) {
-        if (this.F.length > 0) for (const r of this.F) {
+    P(t, e, s) {
+        if (this.L.length > 0) for (const r of this.L) {
             const i = r.getObserver(t, e, s, this);
             if (null != i) return i;
         }
         return null;
     }
-    V(t, e, s) {
+    R(t, e, s) {
         if (true === s.doNotCache) return s;
         if (void 0 === t.$observers) {
             r(t, "$observers", {
@@ -4961,26 +4956,26 @@ class ObserverLocator {
     }
 }
 
-ObserverLocator.inject = [ Js, rr ];
+ObserverLocator.inject = [ ur, dr ];
 
-function ir(t) {
+function pr(t) {
     let e;
-    if (t instanceof Array) e = wt(t); else if (t instanceof Map) e = Ht(t); else if (t instanceof Set) e = Rt(t);
+    if (t instanceof Array) e = wt(t); else if (t instanceof Map) e = Qt(t); else if (t instanceof Set) e = Rt(t);
     return e;
 }
 
-const nr = Object.getPrototypeOf;
+const vr = Object.getPrototypeOf;
 
-const or = Object.getOwnPropertyDescriptor;
+const gr = Object.getOwnPropertyDescriptor;
 
-const ur = t.DI.createInterface("IObservation", (t => t.singleton(Observation)));
+const wr = t.DI.createInterface("IObservation", (t => t.singleton(Observation)));
 
 class Observation {
     constructor(t) {
         this.oL = t;
     }
     static get inject() {
-        return [ sr ];
+        return [ fr ];
     }
     run(t) {
         const e = new Effect(this.oL, t);
@@ -5016,12 +5011,12 @@ class Effect {
         this.queued = false;
         ++this.obs.version;
         try {
-            ts(this);
+            as(this);
             this.fn(this);
         } finally {
             this.obs.clear();
             this.running = false;
-            es(this);
+            ls(this);
         }
         if (this.queued) {
             if (this.runCount > this.maxRunCount) {
@@ -5039,16 +5034,16 @@ class Effect {
 
 ee(Effect);
 
-function cr(t) {
+function br(t) {
     if (void 0 === t.$observers) r(t, "$observers", {
         value: {}
     });
     return t.$observers;
 }
 
-const hr = {};
+const xr = {};
 
-function ar(t, e, s) {
+function Er(t, e, s) {
     if (null == e) return (e, s, r) => i(e, s, r, t);
     return i(t, e, s);
     function i(t, e, s, i) {
@@ -5060,7 +5055,7 @@ function ar(t, e, s) {
         if (o) e = i.name;
         if (null == e || "" === e) throw new Error(`AUR0224`);
         const u = i.callback || `${String(e)}Changed`;
-        let c = hr;
+        let c = xr;
         if (s) {
             delete s.value;
             delete s.writable;
@@ -5073,25 +5068,25 @@ function ar(t, e, s) {
         const h = i.set;
         s.get = function t() {
             var s;
-            const r = lr(this, e, u, c, h);
-            null === (s = Ye()) || void 0 === s ? void 0 : s.subscribeTo(r);
+            const r = Ar(this, e, u, c, h);
+            null === (s = hs()) || void 0 === s ? void 0 : s.subscribeTo(r);
             return r.getValue();
         };
         s.set = function t(s) {
-            lr(this, e, u, c, h).setValue(s, 0);
+            Ar(this, e, u, c, h).setValue(s, 0);
         };
         s.get.getObserver = function t(s) {
-            return lr(s, e, u, c, h);
+            return Ar(s, e, u, c, h);
         };
         if (o) r(t.prototype, e, s); else return s;
     }
 }
 
-function lr(t, e, s, r, i) {
-    const n = cr(t);
+function Ar(t, e, s, r, i) {
+    const n = br(t);
     let o = n[e];
     if (null == o) {
-        o = new SetterNotifier(t, s, i, r === hr ? void 0 : r);
+        o = new SetterNotifier(t, s, i, r === xr ? void 0 : r);
         n[e] = o;
     }
     return o;
@@ -5149,7 +5144,7 @@ exports.ComputedObserver = ComputedObserver;
 
 exports.ConditionalExpression = ConditionalExpression;
 
-exports.ConnectableSwitcher = ss;
+exports.ConnectableSwitcher = fs;
 
 exports.CustomExpression = CustomExpression;
 
@@ -5161,7 +5156,7 @@ exports.DestructuringAssignmentSingleExpression = DestructuringAssignmentSingleE
 
 exports.DirtyCheckProperty = DirtyCheckProperty;
 
-exports.DirtyCheckSettings = Xs;
+exports.DirtyCheckSettings = cr;
 
 exports.FlushQueue = FlushQueue;
 
@@ -5171,15 +5166,15 @@ exports.HtmlLiteralExpression = HtmlLiteralExpression;
 
 exports.ICoercionConfiguration = P;
 
-exports.IDirtyChecker = Js;
+exports.IDirtyChecker = ur;
 
 exports.IExpressionParser = se;
 
-exports.INodeObserverLocator = rr;
+exports.INodeObserverLocator = dr;
 
-exports.IObservation = ur;
+exports.IObservation = wr;
 
-exports.IObserverLocator = sr;
+exports.IObserverLocator = fr;
 
 exports.ISignaler = w;
 
@@ -5197,15 +5192,13 @@ exports.ObserverLocator = ObserverLocator;
 
 exports.OverrideContext = OverrideContext;
 
-exports.ParserState = ParserState;
-
 exports.PrimitiveLiteralExpression = PrimitiveLiteralExpression;
 
 exports.PrimitiveObserver = PrimitiveObserver;
 
 exports.PropertyAccessor = PropertyAccessor;
 
-exports.ProxyObservable = Gs;
+exports.ProxyObservable = nr;
 
 exports.Scope = Scope;
 
@@ -5243,7 +5236,7 @@ exports.createIndexMap = I;
 
 exports.disableArrayObservation = gt;
 
-exports.disableMapObservation = _t;
+exports.disableMapObservation = Ht;
 
 exports.disableSetObservation = Lt;
 
@@ -5253,15 +5246,13 @@ exports.enableMapObservation = qt;
 
 exports.enableSetObservation = Bt;
 
-exports.getCollectionObserver = ir;
+exports.getCollectionObserver = pr;
 
 exports.isIndexMap = D;
 
-exports.observable = ar;
+exports.observable = Er;
 
-exports.parse = de;
-
-exports.parseExpression = fe;
+exports.parseExpression = ye;
 
 exports.registerAliases = g;
 
@@ -5271,5 +5262,5 @@ exports.synchronizeIndices = xt;
 
 exports.valueConverter = m;
 
-exports.withFlushQueue = _;
+exports.withFlushQueue = H;
 //# sourceMappingURL=index.cjs.map

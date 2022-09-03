@@ -5752,7 +5752,7 @@ class RouterConfiguration {
         _this.options = RouterConfiguration.options;
         _this.options.setRouterConfiguration(_this);
         RouterConfiguration.options = RouterOptions.create();
-        return container.register(...DefaultComponents, ...DefaultResources, AppTask.beforeActivate(IRouter, RouterConfiguration.configurationCall), AppTask.afterActivate(IRouter, (router) => router.initialLoad()), AppTask.afterDeactivate(IRouter, (router) => router.stop()));
+        return container.register(...DefaultComponents, ...DefaultResources, AppTask.activating(IRouter, RouterConfiguration.configurationCall), AppTask.activated(IRouter, (router) => router.initialLoad()), AppTask.deactivated(IRouter, (router) => router.stop()));
     }
     static customize(config) {
         if (config === undefined) {

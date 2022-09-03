@@ -734,7 +734,7 @@ function y(n) {
     }, TranslationBindBindingCommand), exports.TranslationBindBindingRenderer, exports.TranslationParametersAttributePattern, exports.TranslationParametersBindingCommand, exports.TranslationParametersBindingRenderer ];
     return {
         register(i) {
-            return i.register(t.Registration.callback(c, (() => n.initOptions)), s.AppTask.beforeActivate(d, (t => t.initPromise)), t.Registration.singleton(u, I18nextWrapper), t.Registration.singleton(d, exports.I18nService), ...l, ...w);
+            return i.register(t.Registration.callback(c, (() => n.initOptions)), s.AppTask.activating(d, (t => t.initPromise)), t.Registration.singleton(u, I18nextWrapper), t.Registration.singleton(d, exports.I18nService), ...l, ...w);
         }
     };
 }

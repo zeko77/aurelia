@@ -811,7 +811,7 @@ function coreComponents(options) {
     ];
     return {
         register(container) {
-            return container.register(kernel.Registration.callback(I18nInitOptions, () => options.initOptions), runtimeHtml.AppTask.beforeActivate(I18N, i18n => i18n.initPromise), kernel.Registration.singleton(I18nWrapper, I18nextWrapper), kernel.Registration.singleton(I18N, exports.I18nService), ...renderers, ...translation);
+            return container.register(kernel.Registration.callback(I18nInitOptions, () => options.initOptions), runtimeHtml.AppTask.activating(I18N, i18n => i18n.initPromise), kernel.Registration.singleton(I18nWrapper, I18nextWrapper), kernel.Registration.singleton(I18N, exports.I18nService), ...renderers, ...translation);
         }
     };
 }

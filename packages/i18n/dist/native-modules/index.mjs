@@ -722,7 +722,7 @@ function et(t) {
     }, TranslationBindBindingCommand), nt, q, J, Q ];
     return {
         register(n) {
-            return n.register(e.callback(E, (() => t.initOptions)), m.beforeActivate(O, (t => t.initPromise)), e.singleton(N, I18nextWrapper), e.singleton(O, V), ...h, ...st);
+            return n.register(e.callback(E, (() => t.initOptions)), m.activating(O, (t => t.initPromise)), e.singleton(N, I18nextWrapper), e.singleton(O, V), ...h, ...st);
         }
     };
 }

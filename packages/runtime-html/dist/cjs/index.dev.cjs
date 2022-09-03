@@ -333,6 +333,27 @@ runtime.subscriberCollection(BindableObserver);
 runtime.withFlushQueue(BindableObserver);
 let oV$4 = void 0;
 
+const allResources = function (key) {
+    function Resolver(target, property, descriptor) {
+        kernel.DI.inject(Resolver)(target, property, descriptor);
+    }
+    Resolver.$isResolver = true;
+    Resolver.resolve = function (handler, requestor) {
+        if (requestor.root === requestor) {
+            return requestor.getAll(key, false);
+        }
+        return requestor.has(key, false)
+            ? requestor.getAll(key, false).concat(requestor.root.getAll(key, false))
+            : requestor.root.getAll(key, false);
+    };
+    return Resolver;
+};
+const singletonRegistration = kernel.Registration.singleton;
+const aliasRegistration = kernel.Registration.aliasTo;
+const instanceRegistration = kernel.Registration.instance;
+const callbackRegistration = kernel.Registration.callback;
+const transientRegistration = kernel.Registration.transient;
+
 class CharSpec {
     constructor(chars, repeat, isSymbol, isInverted) {
         this.chars = chars;
@@ -729,7 +750,7 @@ class AttributePatternResourceDefinition {
         this.name = (void 0);
     }
     register(container) {
-        kernel.Registration.singleton(IAttributePattern, this.Type).register(container);
+        singletonRegistration(IAttributePattern, this.Type).register(container);
     }
 }
 const apBaseName = getResourceKeyFor('attribute-pattern');
@@ -1033,7 +1054,7 @@ class SVGAnalyzer {
         }
     }
     static register(container) {
-        return kernel.Registration.singleton(ISVGAnalyzer, this).register(container);
+        return singletonRegistration(ISVGAnalyzer, this).register(container);
     }
     isStandardSvgAttribute(node, attributeName) {
         var _a;
@@ -1985,24 +2006,24 @@ class $AppTask {
         this.cb = cb;
     }
     register(container) {
-        return this.c = container.register(kernel.Registration.instance(IAppTask, this));
+        return this.c = container.register(instanceRegistration(IAppTask, this));
     }
     run() {
         const key = this.k;
         const cb = this.cb;
-        return key === null
+        return (key === null
             ? cb()
-            : cb(this.c.get(key));
+            : cb(this.c.get(key)));
     }
 }
 const AppTask = Object.freeze({
-    beforeCreate: createAppTaskSlotHook('beforeCreate'),
+    creating: createAppTaskSlotHook('creating'),
     hydrating: createAppTaskSlotHook('hydrating'),
     hydrated: createAppTaskSlotHook('hydrated'),
-    beforeActivate: createAppTaskSlotHook('beforeActivate'),
-    afterActivate: createAppTaskSlotHook('afterActivate'),
-    beforeDeactivate: createAppTaskSlotHook('beforeDeactivate'),
-    afterDeactivate: createAppTaskSlotHook('afterDeactivate'),
+    activating: createAppTaskSlotHook('activating'),
+    activated: createAppTaskSlotHook('activated'),
+    deactivating: createAppTaskSlotHook('deactivating'),
+    deactivated: createAppTaskSlotHook('deactivated'),
 });
 function createAppTaskSlotHook(slotName) {
     function appTaskFactory(keyOrCallback, callback) {
@@ -2173,7 +2194,7 @@ function filterChildren(controller, query, filter, map) {
     let i = 0;
     for (; i < ii; ++i) {
         node = nodes[i];
-        $controller = CustomElement.for(node, forOpts);
+        $controller = findElementControllerFor(node, forOpts);
         viewModel = (_a = $controller === null || $controller === void 0 ? void 0 : $controller.viewModel) !== null && _a !== void 0 ? _a : null;
         if (filter(node, $controller, viewModel)) {
             children.push(map(node, $controller, viewModel));
@@ -2184,12 +2205,12 @@ function filterChildren(controller, query, filter, map) {
 
 function customAttribute(nameOrDef) {
     return function (target) {
-        return CustomAttribute.define(nameOrDef, target);
+        return defineAttribute(nameOrDef, target);
     };
 }
 function templateController(nameOrDef) {
     return function (target) {
-        return CustomAttribute.define(isString(nameOrDef)
+        return defineAttribute(isString(nameOrDef)
             ? { isTemplateController: true, name: nameOrDef }
             : { isTemplateController: true, ...nameOrDef }, target);
     };
@@ -2219,42 +2240,46 @@ class CustomAttributeDefinition {
             name = nameOrDef.name;
             def = nameOrDef;
         }
-        return new CustomAttributeDefinition(Type, kernel.firstDefined(getAttributeAnnotation(Type, 'name'), name), kernel.mergeArrays(getAttributeAnnotation(Type, 'aliases'), def.aliases, Type.aliases), CustomAttribute.keyFrom(name), kernel.firstDefined(getAttributeAnnotation(Type, 'defaultBindingMode'), def.defaultBindingMode, Type.defaultBindingMode, runtime.BindingMode.toView), kernel.firstDefined(getAttributeAnnotation(Type, 'isTemplateController'), def.isTemplateController, Type.isTemplateController, false), Bindable.from(Type, ...Bindable.getAll(Type), getAttributeAnnotation(Type, 'bindables'), Type.bindables, def.bindables), kernel.firstDefined(getAttributeAnnotation(Type, 'noMultiBindings'), def.noMultiBindings, Type.noMultiBindings, false), kernel.mergeArrays(Watch.getAnnotation(Type), Type.watches), kernel.mergeArrays(getAttributeAnnotation(Type, 'dependencies'), def.dependencies, Type.dependencies));
+        return new CustomAttributeDefinition(Type, kernel.firstDefined(getAttributeAnnotation(Type, 'name'), name), kernel.mergeArrays(getAttributeAnnotation(Type, 'aliases'), def.aliases, Type.aliases), getAttributeKeyFrom(name), kernel.firstDefined(getAttributeAnnotation(Type, 'defaultBindingMode'), def.defaultBindingMode, Type.defaultBindingMode, runtime.BindingMode.toView), kernel.firstDefined(getAttributeAnnotation(Type, 'isTemplateController'), def.isTemplateController, Type.isTemplateController, false), Bindable.from(Type, ...Bindable.getAll(Type), getAttributeAnnotation(Type, 'bindables'), Type.bindables, def.bindables), kernel.firstDefined(getAttributeAnnotation(Type, 'noMultiBindings'), def.noMultiBindings, Type.noMultiBindings, false), kernel.mergeArrays(Watch.getAnnotation(Type), Type.watches), kernel.mergeArrays(getAttributeAnnotation(Type, 'dependencies'), def.dependencies, Type.dependencies));
     }
     register(container) {
         const { Type, key, aliases } = this;
-        kernel.Registration.transient(key, Type).register(container);
-        kernel.Registration.aliasTo(key, Type).register(container);
+        transientRegistration(key, Type).register(container);
+        aliasRegistration(key, Type).register(container);
         runtime.registerAliases(aliases, CustomAttribute, key, container);
     }
 }
 const caBaseName = getResourceKeyFor('custom-attribute');
 const getAttributeKeyFrom = (name) => `${caBaseName}:${name}`;
 const getAttributeAnnotation = (Type, prop) => getOwnMetadata(getAnnotationKeyFor(prop), Type);
+const isAttributeType = (value) => {
+    return isFunction(value) && hasOwnMetadata(caBaseName, value);
+};
+const findAttributeControllerFor = (node, name) => {
+    var _a;
+    return ((_a = getRef(node, getAttributeKeyFrom(name))) !== null && _a !== void 0 ? _a : void 0);
+};
+const defineAttribute = (nameOrDef, Type) => {
+    const definition = CustomAttributeDefinition.create(nameOrDef, Type);
+    defineMetadata(caBaseName, definition, definition.Type);
+    defineMetadata(caBaseName, definition, definition);
+    appendResourceKey(Type, caBaseName);
+    return definition.Type;
+};
+const getAttributeDefinition = (Type) => {
+    const def = getOwnMetadata(caBaseName, Type);
+    if (def === void 0) {
+        throw new Error(`No definition found for type ${Type.name}`);
+    }
+    return def;
+};
 const CustomAttribute = Object.freeze({
     name: caBaseName,
     keyFrom: getAttributeKeyFrom,
-    isType(value) {
-        return isFunction(value) && hasOwnMetadata(caBaseName, value);
-    },
-    for(node, name) {
-        var _a;
-        return ((_a = getRef(node, getAttributeKeyFrom(name))) !== null && _a !== void 0 ? _a : void 0);
-    },
-    define(nameOrDef, Type) {
-        const definition = CustomAttributeDefinition.create(nameOrDef, Type);
-        defineMetadata(caBaseName, definition, definition.Type);
-        defineMetadata(caBaseName, definition, definition);
-        appendResourceKey(Type, caBaseName);
-        return definition.Type;
-    },
-    getDefinition(Type) {
-        const def = getOwnMetadata(caBaseName, Type);
-        if (def === void 0) {
-            throw new Error(`No definition found for type ${Type.name}`);
-        }
-        return def;
-    },
+    isType: isAttributeType,
+    for: findAttributeControllerFor,
+    define: defineAttribute,
+    getDefinition: getAttributeDefinition,
     annotate(Type, prop, value) {
         defineMetadata(getAnnotationKeyFor(prop), value, Type);
     },
@@ -2279,11 +2304,11 @@ function watch(expressionOrPropertyAccessFn, changeHandlerOrCallback) {
             throw new Error(`AUR0774: decorated target ${String(key)} is not a class method.`);
         }
         Watch.add(Type, watchDef);
-        if (CustomAttribute.isType(Type)) {
-            CustomAttribute.getDefinition(Type).watches.push(watchDef);
+        if (isAttributeType(Type)) {
+            getAttributeDefinition(Type).watches.push(watchDef);
         }
-        if (CustomElement.isType(Type)) {
-            CustomElement.getDefinition(Type).watches.push(watchDef);
+        if (isElementType(Type)) {
+            getElementDefinition(Type).watches.push(watchDef);
         }
     };
 }
@@ -2312,7 +2337,7 @@ const Watch = Object.freeze({
 
 function customElement(nameOrDef) {
     return function (target) {
-        return CustomElement.define(nameOrDef, target);
+        return defineElement(nameOrDef, target);
     };
 }
 function useShadowDOM(targetOrOptions) {
@@ -2337,7 +2362,7 @@ function containerless(target) {
     markContainerless(target);
 }
 function markContainerless(target) {
-    const def = getOwnMetadata(ceBaseName, target);
+    const def = getOwnMetadata(elementBaseName, target);
     if (def === void 0) {
         annotateElementMetadata(target, 'containerless', true);
         return;
@@ -2389,15 +2414,15 @@ class CustomElementDefinition {
                 Type = def.Type;
             }
             else {
-                Type = CustomElement.generateType(kernel.pascalCase(name));
+                Type = generateElementType(kernel.pascalCase(name));
             }
-            return new CustomElementDefinition(Type, name, kernel.mergeArrays(def.aliases), kernel.fromDefinitionOrDefault('key', def, () => CustomElement.keyFrom(name)), kernel.fromDefinitionOrDefault('cache', def, returnZero), kernel.fromDefinitionOrDefault('capture', def, returnFalse), kernel.fromDefinitionOrDefault('template', def, returnNull), kernel.mergeArrays(def.instructions), kernel.mergeArrays(def.dependencies), kernel.fromDefinitionOrDefault('injectable', def, returnNull), kernel.fromDefinitionOrDefault('needsCompile', def, returnTrue), kernel.mergeArrays(def.surrogates), Bindable.from(Type, def.bindables), Children.from(def.childrenObservers), kernel.fromDefinitionOrDefault('containerless', def, returnFalse), kernel.fromDefinitionOrDefault('isStrictBinding', def, returnFalse), kernel.fromDefinitionOrDefault('shadowOptions', def, returnNull), kernel.fromDefinitionOrDefault('hasSlots', def, returnFalse), kernel.fromDefinitionOrDefault('enhance', def, returnFalse), kernel.fromDefinitionOrDefault('watches', def, returnEmptyArray), kernel.fromAnnotationOrTypeOrDefault('processContent', Type, returnNull));
+            return new CustomElementDefinition(Type, name, kernel.mergeArrays(def.aliases), kernel.fromDefinitionOrDefault('key', def, () => getElementKeyFrom(name)), kernel.fromDefinitionOrDefault('cache', def, returnZero), kernel.fromDefinitionOrDefault('capture', def, returnFalse), kernel.fromDefinitionOrDefault('template', def, returnNull), kernel.mergeArrays(def.instructions), kernel.mergeArrays(def.dependencies), kernel.fromDefinitionOrDefault('injectable', def, returnNull), kernel.fromDefinitionOrDefault('needsCompile', def, returnTrue), kernel.mergeArrays(def.surrogates), Bindable.from(Type, def.bindables), Children.from(def.childrenObservers), kernel.fromDefinitionOrDefault('containerless', def, returnFalse), kernel.fromDefinitionOrDefault('isStrictBinding', def, returnFalse), kernel.fromDefinitionOrDefault('shadowOptions', def, returnNull), kernel.fromDefinitionOrDefault('hasSlots', def, returnFalse), kernel.fromDefinitionOrDefault('enhance', def, returnFalse), kernel.fromDefinitionOrDefault('watches', def, returnEmptyArray), kernel.fromAnnotationOrTypeOrDefault('processContent', Type, returnNull));
         }
         if (isString(nameOrDef)) {
-            return new CustomElementDefinition(Type, nameOrDef, kernel.mergeArrays(getElementAnnotation(Type, 'aliases'), Type.aliases), CustomElement.keyFrom(nameOrDef), kernel.fromAnnotationOrTypeOrDefault('cache', Type, returnZero), kernel.fromAnnotationOrTypeOrDefault('capture', Type, returnFalse), kernel.fromAnnotationOrTypeOrDefault('template', Type, returnNull), kernel.mergeArrays(getElementAnnotation(Type, 'instructions'), Type.instructions), kernel.mergeArrays(getElementAnnotation(Type, 'dependencies'), Type.dependencies), kernel.fromAnnotationOrTypeOrDefault('injectable', Type, returnNull), kernel.fromAnnotationOrTypeOrDefault('needsCompile', Type, returnTrue), kernel.mergeArrays(getElementAnnotation(Type, 'surrogates'), Type.surrogates), Bindable.from(Type, ...Bindable.getAll(Type), getElementAnnotation(Type, 'bindables'), Type.bindables), Children.from(...Children.getAll(Type), getElementAnnotation(Type, 'childrenObservers'), Type.childrenObservers), kernel.fromAnnotationOrTypeOrDefault('containerless', Type, returnFalse), kernel.fromAnnotationOrTypeOrDefault('isStrictBinding', Type, returnFalse), kernel.fromAnnotationOrTypeOrDefault('shadowOptions', Type, returnNull), kernel.fromAnnotationOrTypeOrDefault('hasSlots', Type, returnFalse), kernel.fromAnnotationOrTypeOrDefault('enhance', Type, returnFalse), kernel.mergeArrays(Watch.getAnnotation(Type), Type.watches), kernel.fromAnnotationOrTypeOrDefault('processContent', Type, returnNull));
+            return new CustomElementDefinition(Type, nameOrDef, kernel.mergeArrays(getElementAnnotation(Type, 'aliases'), Type.aliases), getElementKeyFrom(nameOrDef), kernel.fromAnnotationOrTypeOrDefault('cache', Type, returnZero), kernel.fromAnnotationOrTypeOrDefault('capture', Type, returnFalse), kernel.fromAnnotationOrTypeOrDefault('template', Type, returnNull), kernel.mergeArrays(getElementAnnotation(Type, 'instructions'), Type.instructions), kernel.mergeArrays(getElementAnnotation(Type, 'dependencies'), Type.dependencies), kernel.fromAnnotationOrTypeOrDefault('injectable', Type, returnNull), kernel.fromAnnotationOrTypeOrDefault('needsCompile', Type, returnTrue), kernel.mergeArrays(getElementAnnotation(Type, 'surrogates'), Type.surrogates), Bindable.from(Type, ...Bindable.getAll(Type), getElementAnnotation(Type, 'bindables'), Type.bindables), Children.from(...Children.getAll(Type), getElementAnnotation(Type, 'childrenObservers'), Type.childrenObservers), kernel.fromAnnotationOrTypeOrDefault('containerless', Type, returnFalse), kernel.fromAnnotationOrTypeOrDefault('isStrictBinding', Type, returnFalse), kernel.fromAnnotationOrTypeOrDefault('shadowOptions', Type, returnNull), kernel.fromAnnotationOrTypeOrDefault('hasSlots', Type, returnFalse), kernel.fromAnnotationOrTypeOrDefault('enhance', Type, returnFalse), kernel.mergeArrays(Watch.getAnnotation(Type), Type.watches), kernel.fromAnnotationOrTypeOrDefault('processContent', Type, returnNull));
         }
         const name = kernel.fromDefinitionOrDefault('name', nameOrDef, generateElementName);
-        return new CustomElementDefinition(Type, name, kernel.mergeArrays(getElementAnnotation(Type, 'aliases'), nameOrDef.aliases, Type.aliases), CustomElement.keyFrom(name), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('cache', nameOrDef, Type, returnZero), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('capture', nameOrDef, Type, returnFalse), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('template', nameOrDef, Type, returnNull), kernel.mergeArrays(getElementAnnotation(Type, 'instructions'), nameOrDef.instructions, Type.instructions), kernel.mergeArrays(getElementAnnotation(Type, 'dependencies'), nameOrDef.dependencies, Type.dependencies), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('injectable', nameOrDef, Type, returnNull), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('needsCompile', nameOrDef, Type, returnTrue), kernel.mergeArrays(getElementAnnotation(Type, 'surrogates'), nameOrDef.surrogates, Type.surrogates), Bindable.from(Type, ...Bindable.getAll(Type), getElementAnnotation(Type, 'bindables'), Type.bindables, nameOrDef.bindables), Children.from(...Children.getAll(Type), getElementAnnotation(Type, 'childrenObservers'), Type.childrenObservers, nameOrDef.childrenObservers), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('containerless', nameOrDef, Type, returnFalse), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('isStrictBinding', nameOrDef, Type, returnFalse), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('shadowOptions', nameOrDef, Type, returnNull), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('hasSlots', nameOrDef, Type, returnFalse), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('enhance', nameOrDef, Type, returnFalse), kernel.mergeArrays(nameOrDef.watches, Watch.getAnnotation(Type), Type.watches), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('processContent', nameOrDef, Type, returnNull));
+        return new CustomElementDefinition(Type, name, kernel.mergeArrays(getElementAnnotation(Type, 'aliases'), nameOrDef.aliases, Type.aliases), getElementKeyFrom(name), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('cache', nameOrDef, Type, returnZero), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('capture', nameOrDef, Type, returnFalse), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('template', nameOrDef, Type, returnNull), kernel.mergeArrays(getElementAnnotation(Type, 'instructions'), nameOrDef.instructions, Type.instructions), kernel.mergeArrays(getElementAnnotation(Type, 'dependencies'), nameOrDef.dependencies, Type.dependencies), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('injectable', nameOrDef, Type, returnNull), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('needsCompile', nameOrDef, Type, returnTrue), kernel.mergeArrays(getElementAnnotation(Type, 'surrogates'), nameOrDef.surrogates, Type.surrogates), Bindable.from(Type, ...Bindable.getAll(Type), getElementAnnotation(Type, 'bindables'), Type.bindables, nameOrDef.bindables), Children.from(...Children.getAll(Type), getElementAnnotation(Type, 'childrenObservers'), Type.childrenObservers, nameOrDef.childrenObservers), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('containerless', nameOrDef, Type, returnFalse), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('isStrictBinding', nameOrDef, Type, returnFalse), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('shadowOptions', nameOrDef, Type, returnNull), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('hasSlots', nameOrDef, Type, returnFalse), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('enhance', nameOrDef, Type, returnFalse), kernel.mergeArrays(nameOrDef.watches, Watch.getAnnotation(Type), Type.watches), kernel.fromAnnotationOrDefinitionOrTypeOrDefault('processContent', nameOrDef, Type, returnNull));
     }
     static getOrCreate(partialDefinition) {
         if (partialDefinition instanceof CustomElementDefinition) {
@@ -2408,14 +2433,14 @@ class CustomElementDefinition {
         }
         const definition = CustomElementDefinition.create(partialDefinition);
         definitionLookup.set(partialDefinition, definition);
-        defineMetadata(ceBaseName, definition, definition.Type);
+        defineMetadata(elementBaseName, definition, definition.Type);
         return definition;
     }
     register(container) {
         const { Type, key, aliases } = this;
         if (!container.has(key, false)) {
-            kernel.Registration.transient(key, Type).register(container);
-            kernel.Registration.aliasTo(key, Type).register(container);
+            transientRegistration(key, Type).register(container);
+            aliasRegistration(key, Type).register(container);
             runtime.registerAliases(aliases, CustomElement, key, container);
         }
     }
@@ -2430,8 +2455,8 @@ const returnNull = () => null;
 const returnFalse = () => false;
 const returnTrue = () => true;
 const returnEmptyArray = () => kernel.emptyArray;
-const ceBaseName = getResourceKeyFor('custom-element');
-const getElementKeyFrom = (name) => `${ceBaseName}:${name}`;
+const elementBaseName = getResourceKeyFor('custom-element');
+const getElementKeyFrom = (name) => `${elementBaseName}:${name}`;
 const generateElementName = (() => {
     let id = 0;
     return () => `unnamed-${++id}`;
@@ -2439,118 +2464,124 @@ const generateElementName = (() => {
 const annotateElementMetadata = (Type, prop, value) => {
     defineMetadata(getAnnotationKeyFor(prop), value, Type);
 };
-const getElementAnnotation = (Type, prop) => getOwnMetadata(getAnnotationKeyFor(prop), Type);
-const CustomElement = Object.freeze({
-    name: ceBaseName,
-    keyFrom: getElementKeyFrom,
-    isType(value) {
-        return isFunction(value) && hasOwnMetadata(ceBaseName, value);
-    },
-    for(node, opts = defaultForOpts) {
-        if (opts.name === void 0 && opts.searchParents !== true) {
-            const controller = getRef(node, ceBaseName);
-            if (controller === null) {
-                if (opts.optional === true) {
-                    return null;
-                }
-                throw new Error(`AUR0762: The provided node is not a custom element or containerless host.`);
+const defineElement = (nameOrDef, Type) => {
+    const definition = CustomElementDefinition.create(nameOrDef, Type);
+    defineMetadata(elementBaseName, definition, definition.Type);
+    defineMetadata(elementBaseName, definition, definition);
+    appendResourceKey(definition.Type, elementBaseName);
+    return definition.Type;
+};
+const isElementType = (value) => {
+    return isFunction(value) && hasOwnMetadata(elementBaseName, value);
+};
+const findElementControllerFor = (node, opts = defaultForOpts) => {
+    if (opts.name === void 0 && opts.searchParents !== true) {
+        const controller = getRef(node, elementBaseName);
+        if (controller === null) {
+            if (opts.optional === true) {
+                return null;
             }
-            return controller;
+            throw new Error(`AUR0762: The provided node is not a custom element or containerless host.`);
         }
-        if (opts.name !== void 0) {
-            if (opts.searchParents !== true) {
-                const controller = getRef(node, ceBaseName);
-                if (controller === null) {
-                    throw new Error(`AUR0763: The provided node is not a custom element or containerless host.`);
-                }
+        return controller;
+    }
+    if (opts.name !== void 0) {
+        if (opts.searchParents !== true) {
+            const controller = getRef(node, elementBaseName);
+            if (controller === null) {
+                throw new Error(`AUR0763: The provided node is not a custom element or containerless host.`);
+            }
+            if (controller.is(opts.name)) {
+                return controller;
+            }
+            return (void 0);
+        }
+        let cur = node;
+        let foundAController = false;
+        while (cur !== null) {
+            const controller = getRef(cur, elementBaseName);
+            if (controller !== null) {
+                foundAController = true;
                 if (controller.is(opts.name)) {
                     return controller;
                 }
-                return (void 0);
-            }
-            let cur = node;
-            let foundAController = false;
-            while (cur !== null) {
-                const controller = getRef(cur, ceBaseName);
-                if (controller !== null) {
-                    foundAController = true;
-                    if (controller.is(opts.name)) {
-                        return controller;
-                    }
-                }
-                cur = getEffectiveParentNode(cur);
-            }
-            if (foundAController) {
-                return (void 0);
-            }
-            throw new Error(`AUR0764: The provided node does does not appear to be part of an Aurelia app DOM tree, or it was added to the DOM in a way that Aurelia cannot properly resolve its position in the component tree.`);
-        }
-        let cur = node;
-        while (cur !== null) {
-            const controller = getRef(cur, ceBaseName);
-            if (controller !== null) {
-                return controller;
             }
             cur = getEffectiveParentNode(cur);
         }
-        throw new Error(`AUR0765: The provided node does does not appear to be part of an Aurelia app DOM tree, or it was added to the DOM in a way that Aurelia cannot properly resolve its position in the component tree.`);
-    },
-    define(nameOrDef, Type) {
-        const definition = CustomElementDefinition.create(nameOrDef, Type);
-        defineMetadata(ceBaseName, definition, definition.Type);
-        defineMetadata(ceBaseName, definition, definition);
-        appendResourceKey(definition.Type, ceBaseName);
-        return definition.Type;
-    },
-    getDefinition(Type) {
-        const def = getOwnMetadata(ceBaseName, Type);
-        if (def === void 0) {
-            throw new Error(`AUR0760: No definition found for type ${Type.name}`);
+        if (foundAController) {
+            return (void 0);
         }
-        return def;
-    },
+        throw new Error(`AUR0764: The provided node does does not appear to be part of an Aurelia app DOM tree, or it was added to the DOM in a way that Aurelia cannot properly resolve its position in the component tree.`);
+    }
+    let cur = node;
+    while (cur !== null) {
+        const controller = getRef(cur, elementBaseName);
+        if (controller !== null) {
+            return controller;
+        }
+        cur = getEffectiveParentNode(cur);
+    }
+    throw new Error(`AUR0765: The provided node does does not appear to be part of an Aurelia app DOM tree, or it was added to the DOM in a way that Aurelia cannot properly resolve its position in the component tree.`);
+};
+const getElementAnnotation = (Type, prop) => getOwnMetadata(getAnnotationKeyFor(prop), Type);
+const getElementDefinition = (Type) => {
+    const def = getOwnMetadata(elementBaseName, Type);
+    if (def === void 0) {
+        throw new Error(`AUR0760: No definition found for type ${Type.name}`);
+    }
+    return def;
+};
+const createElementInjectable = () => {
+    const $injectable = function (target, property, index) {
+        const annotationParamtypes = kernel.DI.getOrCreateAnnotationParamTypes(target);
+        annotationParamtypes[index] = $injectable;
+        return target;
+    };
+    $injectable.register = function (_container) {
+        return {
+            resolve(container, requestor) {
+                if (requestor.has($injectable, true)) {
+                    return requestor.get($injectable);
+                }
+                else {
+                    return null;
+                }
+            },
+        };
+    };
+    return $injectable;
+};
+const generateElementType = (function () {
+    const nameDescriptor = {
+        value: '',
+        writable: false,
+        enumerable: false,
+        configurable: true,
+    };
+    const defaultProto = {};
+    return function (name, proto = defaultProto) {
+        const Type = class {
+        };
+        nameDescriptor.value = name;
+        Reflect.defineProperty(Type, 'name', nameDescriptor);
+        if (proto !== defaultProto) {
+            Object.assign(Type.prototype, proto);
+        }
+        return Type;
+    };
+})();
+const CustomElement = Object.freeze({
+    name: elementBaseName,
+    keyFrom: getElementKeyFrom,
+    isType: isElementType,
+    for: findElementControllerFor,
+    define: defineElement,
+    getDefinition: getElementDefinition,
     annotate: annotateElementMetadata,
     getAnnotation: getElementAnnotation,
     generateName: generateElementName,
-    createInjectable() {
-        const $injectable = function (target, property, index) {
-            const annotationParamtypes = kernel.DI.getOrCreateAnnotationParamTypes(target);
-            annotationParamtypes[index] = $injectable;
-            return target;
-        };
-        $injectable.register = function (_container) {
-            return {
-                resolve(container, requestor) {
-                    if (requestor.has($injectable, true)) {
-                        return requestor.get($injectable);
-                    }
-                    else {
-                        return null;
-                    }
-                },
-            };
-        };
-        return $injectable;
-    },
-    generateType: (function () {
-        const nameDescriptor = {
-            value: '',
-            writable: false,
-            enumerable: false,
-            configurable: true,
-        };
-        const defaultProto = {};
-        return function (name, proto = defaultProto) {
-            const Type = class {
-            };
-            nameDescriptor.value = name;
-            Reflect.defineProperty(Type, 'name', nameDescriptor);
-            if (proto !== defaultProto) {
-                Object.assign(Type.prototype, proto);
-            }
-            return Type;
-        };
-    })(),
+    createInjectable: createElementInjectable,
+    generateType: generateElementType,
 });
 const pcHookMetadataProperty = getAnnotationKeyFor('processContent');
 function processContent(hook) {
@@ -2560,7 +2591,7 @@ function processContent(hook) {
         }
         : function (target) {
             hook = ensureHook(target, hook);
-            const def = getOwnMetadata(ceBaseName, target);
+            const def = getOwnMetadata(elementBaseName, target);
             if (def !== void 0) {
                 def.processContent = hook;
             }
@@ -2583,8 +2614,8 @@ function capture(targetOrFilter) {
     return function ($target) {
         const value = isFunction(targetOrFilter) ? targetOrFilter : true;
         annotateElementMetadata($target, 'capture', value);
-        if (CustomElement.isType($target)) {
-            CustomElement.getDefinition($target).capture = value;
+        if (isElementType($target)) {
+            getElementDefinition($target).capture = value;
         }
     };
 }
@@ -2702,7 +2733,7 @@ class CSSModulesProcessorRegistry {
     register(container) {
         var _a;
         const classLookup = Object.assign({}, ...this.modules);
-        const ClassCustomAttribute = CustomAttribute.define({
+        const ClassCustomAttribute = defineAttribute({
             name: 'class',
             bindables: ['value'],
             noMultiBindings: true,
@@ -2742,7 +2773,7 @@ class ShadowDOMRegistry {
     register(container) {
         const sharedStyles = container.get(IShadowDOMGlobalStyles);
         const factory = container.get(IShadowDOMStyleFactory);
-        container.register(kernel.Registration.instance(IShadowDOMStyles, factory.createStyles(this.css, sharedStyles)));
+        container.register(instanceRegistration(IShadowDOMStyles, factory.createStyles(this.css, sharedStyles)));
     }
 }
 class AdoptedStyleSheetsStylesFactory {
@@ -2819,10 +2850,10 @@ class StyleElementStyles {
 }
 const StyleConfiguration = {
     shadowDOM(config) {
-        return AppTask.beforeCreate(kernel.IContainer, container => {
+        return AppTask.creating(kernel.IContainer, container => {
             if (config.sharedStyles != null) {
                 const factory = container.get(IShadowDOMStyleFactory);
-                container.register(kernel.Registration.instance(IShadowDOMGlobalStyles, factory.createStyles(config.sharedStyles, null)));
+                container.register(instanceRegistration(IShadowDOMGlobalStyles, factory.createStyles(config.sharedStyles, null)));
             }
         });
     }
@@ -2960,7 +2991,7 @@ class LifecycleHooksDefinition {
         return new LifecycleHooksDefinition(Type, propertyNames);
     }
     register(container) {
-        kernel.Registration.singleton(ILifecycleHooks, this.Type).register(container);
+        singletonRegistration(ILifecycleHooks, this.Type).register(container);
     }
 }
 const containerLookup = new WeakMap();
@@ -3138,7 +3169,7 @@ class ViewLocator {
         }
         if (BoundComponent === void 0) {
             const UnboundComponent = this._getOrCreateUnboundComponent(object, availableViews, resolvedViewName);
-            BoundComponent = CustomElement.define(CustomElement.getDefinition(UnboundComponent), class extends UnboundComponent {
+            BoundComponent = defineElement(getElementDefinition(UnboundComponent), class extends UnboundComponent {
                 constructor() {
                     super(object);
                 }
@@ -3158,7 +3189,7 @@ class ViewLocator {
             UnboundComponent = lookup[resolvedViewName];
         }
         if (UnboundComponent === void 0) {
-            UnboundComponent = CustomElement.define(this._getView(availableViews, resolvedViewName), class {
+            UnboundComponent = defineElement(this._getView(availableViews, resolvedViewName), class {
                 constructor(viewModel) {
                     this.viewModel = viewModel;
                 }
@@ -3459,7 +3490,7 @@ class Controller {
         if (controllerLookup.has(viewModel)) {
             return controllerLookup.get(viewModel);
         }
-        definition = definition !== null && definition !== void 0 ? definition : CustomElement.getDefinition(viewModel.constructor);
+        definition = definition !== null && definition !== void 0 ? definition : getElementDefinition(viewModel.constructor);
         const controller = new Controller(ctn, 0, definition, null, viewModel, host, location);
         const hydrationContext = ctn.get(kernel.optional(IHydrationContext));
         if (definition.dependencies.length > 0) {
@@ -3476,7 +3507,7 @@ class Controller {
         if (controllerLookup.has(viewModel)) {
             return controllerLookup.get(viewModel);
         }
-        definition = definition !== null && definition !== void 0 ? definition : CustomAttribute.getDefinition(viewModel.constructor);
+        definition = definition !== null && definition !== void 0 ? definition : getAttributeDefinition(viewModel.constructor);
         const controller = new Controller(ctn, 1, definition, null, viewModel, host, null);
         if (definition.dependencies.length > 0) {
             ctn.register(...definition.dependencies);
@@ -3542,24 +3573,24 @@ class Controller {
         const { shadowOptions, isStrictBinding, hasSlots, containerless } = compiledDef;
         let location = this.location;
         this.isStrictBinding = isStrictBinding;
-        if ((this.hostController = CustomElement.for(this.host, optionalCeFind)) !== null) {
+        if ((this.hostController = findElementControllerFor(this.host, optionalCeFind)) !== null) {
             this.host = this.container.root.get(IPlatform).document.createElement(this.definition.name);
             if (containerless && location == null) {
                 location = this.location = convertToRenderLocation(this.host);
             }
         }
-        setRef(this.host, CustomElement.name, this);
+        setRef(this.host, elementBaseName, this);
         setRef(this.host, this.definition.key, this);
         if (shadowOptions !== null || hasSlots) {
             if (location != null) {
                 throw new Error(`AUR0501: Cannot combine the containerless custom element option with Shadow DOM.`);
             }
-            setRef(this.shadowRoot = this.host.attachShadow(shadowOptions !== null && shadowOptions !== void 0 ? shadowOptions : defaultShadowOptions), CustomElement.name, this);
+            setRef(this.shadowRoot = this.host.attachShadow(shadowOptions !== null && shadowOptions !== void 0 ? shadowOptions : defaultShadowOptions), elementBaseName, this);
             setRef(this.shadowRoot, this.definition.key, this);
             this.mountTarget = 2;
         }
         else if (location != null) {
-            setRef(location, CustomElement.name, this);
+            setRef(location, elementBaseName, this);
             setRef(location, this.definition.key, this);
             this.mountTarget = 3;
         }
@@ -4088,10 +4119,10 @@ class Controller {
     is(name) {
         switch (this.vmKind) {
             case 1: {
-                return CustomAttribute.getDefinition(this.viewModel.constructor).name === name;
+                return getAttributeDefinition(this.viewModel.constructor).name === name;
             }
             case 0: {
-                return CustomElement.getDefinition(this.viewModel.constructor).name === name;
+                return getElementDefinition(this.viewModel.constructor).name === name;
             }
             case 2:
                 return this.viewFactory.name === name;
@@ -4103,7 +4134,7 @@ class Controller {
     }
     setHost(host) {
         if (this.vmKind === 0) {
-            setRef(host, CustomElement.name, this);
+            setRef(host, elementBaseName, this);
             setRef(host, this.definition.key, this);
         }
         this.host = host;
@@ -4112,7 +4143,7 @@ class Controller {
     }
     setShadowRoot(shadowRoot) {
         if (this.vmKind === 0) {
-            setRef(shadowRoot, CustomElement.name, this);
+            setRef(shadowRoot, elementBaseName, this);
             setRef(shadowRoot, this.definition.key, this);
         }
         this.shadowRoot = shadowRoot;
@@ -4121,7 +4152,7 @@ class Controller {
     }
     setLocation(location) {
         if (this.vmKind === 0) {
-            setRef(location, CustomElement.name, this);
+            setRef(location, elementBaseName, this);
             setRef(location, this.definition.key, this);
         }
         this.location = location;
@@ -4272,7 +4303,7 @@ function isCustomElementController(value) {
     return value instanceof Controller && value.vmKind === 0;
 }
 function isCustomElementViewModel(value) {
-    return metadata.isObject(value) && CustomElement.isType(value.constructor);
+    return metadata.isObject(value) && isElementType(value.constructor);
 }
 class HooksDefinition {
     constructor(target) {
@@ -4423,11 +4454,11 @@ class AppRoot {
         this.work = container.get(IWorkTracker);
         rootProvider.prepare(this);
         container.registerResolver(platform.HTMLElement, container.registerResolver(platform.Element, container.registerResolver(INode, new kernel.InstanceProvider('ElementResolver', config.host))));
-        this._hydratePromise = kernel.onResolve(this._runAppTasks('beforeCreate'), () => {
+        this._hydratePromise = kernel.onResolve(this._runAppTasks('creating'), () => {
             const component = config.component;
             const childCtn = container.createChild();
             let instance;
-            if (CustomElement.isType(component)) {
+            if (isElementType(component)) {
                 instance = this.container.get(component);
             }
             else {
@@ -4447,17 +4478,17 @@ class AppRoot {
     }
     activate() {
         return kernel.onResolve(this._hydratePromise, () => {
-            return kernel.onResolve(this._runAppTasks('beforeActivate'), () => {
+            return kernel.onResolve(this._runAppTasks('activating'), () => {
                 return kernel.onResolve(this.controller.activate(this.controller, null, 2, void 0), () => {
-                    return this._runAppTasks('afterActivate');
+                    return this._runAppTasks('activated');
                 });
             });
         });
     }
     deactivate() {
-        return kernel.onResolve(this._runAppTasks('beforeDeactivate'), () => {
+        return kernel.onResolve(this._runAppTasks('deactivating'), () => {
             return kernel.onResolve(this.controller.deactivate(this.controller, null, 0), () => {
-                return this._runAppTasks('afterDeactivate');
+                return this._runAppTasks('deactivated');
             });
         });
     }
@@ -4531,7 +4562,7 @@ function getEffectiveParentNode(node) {
         next = next.nextSibling;
     }
     if (node.parentNode === null && node.nodeType === 11) {
-        const controller = CustomElement.for(node);
+        const controller = findElementControllerFor(node);
         if (controller === void 0) {
             return null;
         }
@@ -5120,7 +5151,7 @@ const IRenderer = kernel.DI.createInterface('IRenderer');
 function renderer(targetType) {
     return function decorator(target) {
         target.register = function (container) {
-            kernel.Registration.singleton(IRenderer, this).register(container);
+            singletonRegistration(IRenderer, this).register(container);
         };
         defineProp(target.prototype, 'target', {
             configurable: true,
@@ -5147,17 +5178,17 @@ function getRefTarget(refHost, refTargetName) {
     }
     switch (refTargetName) {
         case 'controller':
-            return CustomElement.for(refHost);
+            return findElementControllerFor(refHost);
         case 'view':
             throw new Error(`AUR0750: Not supported API`);
         case 'view-model':
-            return CustomElement.for(refHost).viewModel;
+            return findElementControllerFor(refHost).viewModel;
         default: {
-            const caController = CustomAttribute.for(refHost, refTargetName);
+            const caController = findAttributeControllerFor(refHost, refTargetName);
             if (caController !== void 0) {
                 return caController.viewModel;
             }
-            const ceController = CustomElement.for(refHost, { name: refTargetName });
+            const ceController = findElementControllerFor(refHost, { name: refTargetName });
             if (ceController === void 0) {
                 throw new Error(`AUR0751: Attempted to reference "${refTargetName}", but it was not found amongst the target's API.`);
             }
@@ -5610,7 +5641,7 @@ let SpreadRenderer = class SpreadRenderer {
                         renderSpreadInstruction(ancestor + 1);
                         break;
                     case "hp":
-                        renderers[inst.instructions.type].render(spreadBinding, CustomElement.for(target), inst.instructions);
+                        renderers[inst.instructions.type].render(spreadBinding, findElementControllerFor(target), inst.instructions);
                         break;
                     default:
                         renderers[inst.type].render(spreadBinding, target, inst);
@@ -5784,8 +5815,8 @@ class BindingCommandDefinition {
     }
     register(container) {
         const { Type, key, aliases } = this;
-        kernel.Registration.singleton(key, Type).register(container);
-        kernel.Registration.aliasTo(key, Type).register(container);
+        singletonRegistration(key, Type).register(container);
+        aliasRegistration(key, Type).register(container);
         runtime.registerAliases(aliases, BindingCommand, key, container);
     }
 }
@@ -6137,29 +6168,13 @@ class TemplateElementFactory {
 }
 TemplateElementFactory.inject = [IPlatform];
 
-const allResources = function (key) {
-    function Resolver(target, property, descriptor) {
-        kernel.DI.inject(Resolver)(target, property, descriptor);
-    }
-    Resolver.$isResolver = true;
-    Resolver.resolve = function (handler, requestor) {
-        if (requestor.root === requestor) {
-            return requestor.getAll(key, false);
-        }
-        return requestor.has(key, false)
-            ? requestor.getAll(key, false).concat(requestor.root.getAll(key, false))
-            : requestor.root.getAll(key, false);
-    };
-    return Resolver;
-};
-
 class TemplateCompiler {
     constructor() {
         this.debug = false;
         this.resolveResources = true;
     }
     static register(container) {
-        return kernel.Registration.singleton(ITemplateCompiler, this).register(container);
+        return singletonRegistration(ITemplateCompiler, this).register(container);
     }
     compile(partialDefinition, container, compilationInstruction) {
         var _a, _b, _c, _d;
@@ -6193,7 +6208,7 @@ class TemplateCompiler {
         this._compileNode(content, context);
         return CustomElementDefinition.create({
             ...partialDefinition,
-            name: partialDefinition.name || _generateElementName(),
+            name: partialDefinition.name || generateElementName(),
             dependencies: ((_c = partialDefinition.dependencies) !== null && _c !== void 0 ? _c : kernel.emptyArray).concat((_d = context.deps) !== null && _d !== void 0 ? _d : kernel.emptyArray),
             instructions: context.rows,
             surrogates: isTemplateElement
@@ -6711,7 +6726,7 @@ class TemplateCompiler {
                 elementInstruction.auSlot = {
                     name: slotName,
                     fallback: CustomElementDefinition.create({
-                        name: _generateElementName(),
+                        name: generateElementName(),
                         template,
                         instructions: fallbackContentContext.rows,
                         needsCompile: false,
@@ -6801,7 +6816,7 @@ class TemplateCompiler {
                     projectionCompilationContext = context._createChild();
                     this._compileNode(template.content, projectionCompilationContext);
                     projections[targetSlot] = CustomElementDefinition.create({
-                        name: _generateElementName(),
+                        name: generateElementName(),
                         template,
                         instructions: projectionCompilationContext.rows,
                         needsCompile: false,
@@ -6826,7 +6841,7 @@ class TemplateCompiler {
                 }
             }
             tcInstruction.def = CustomElementDefinition.create({
-                name: _generateElementName(),
+                name: generateElementName(),
                 template: mostInnerTemplate,
                 instructions: childContext.rows,
                 needsCompile: false,
@@ -6839,7 +6854,7 @@ class TemplateCompiler {
                 marker.classList.add('au');
                 template.content.appendChild(marker);
                 tcInstruction.def = CustomElementDefinition.create({
-                    name: _generateElementName(),
+                    name: generateElementName(),
                     template,
                     needsCompile: false,
                     instructions: [[tcInstructions[i + 1]]],
@@ -6911,7 +6926,7 @@ class TemplateCompiler {
                     projectionCompilationContext = context._createChild();
                     this._compileNode(template.content, projectionCompilationContext);
                     projections[targetSlot] = CustomElementDefinition.create({
-                        name: _generateElementName(),
+                        name: generateElementName(),
                         template,
                         instructions: projectionCompilationContext.rows,
                         needsCompile: false,
@@ -7076,13 +7091,13 @@ class TemplateCompiler {
                 content.removeChild(bindableEl);
             }
             localElTypes.push(LocalTemplateType);
-            context._addDep(CustomElement.define({ name, template: localTemplate }, LocalTemplateType));
+            context._addDep(defineElement({ name, template: localTemplate }, LocalTemplateType));
             root.removeChild(localTemplate);
         }
         let i = 0;
         const ii = localElTypes.length;
         for (; ii > i; ++i) {
-            CustomElement.getDefinition(localElTypes[i]).dependencies.push(...(_a = context.def.dependencies) !== null && _a !== void 0 ? _a : kernel.emptyArray, ...(_b = context.deps) !== null && _b !== void 0 ? _b : kernel.emptyArray);
+            getElementDefinition(localElTypes[i]).dependencies.push(...(_a = context.def.dependencies) !== null && _a !== void 0 ? _a : kernel.emptyArray, ...(_b = context.deps) !== null && _b !== void 0 ? _b : kernel.emptyArray);
         }
     }
     _shouldReorderAttrs(el) {
@@ -7339,7 +7354,7 @@ class TemplateCompilerHooksDefinition {
     }
     get name() { return ''; }
     register(c) {
-        c.register(kernel.Registration.singleton(ITemplateCompilerHooks, this.Type));
+        c.register(singletonRegistration(ITemplateCompilerHooks, this.Type));
     }
 }
 const templateCompilerHooks = (target) => {
@@ -7348,7 +7363,6 @@ const templateCompilerHooks = (target) => {
         return TemplateCompilerHooks.define(t);
     }
 };
-const _generateElementName = CustomElement.generateName;
 const DEFAULT_SLOT_NAME = 'default';
 const AU_SLOT = 'au-slot';
 
@@ -8258,8 +8272,8 @@ class NodeObserverLocator {
         });
     }
     static register(container) {
-        kernel.Registration.aliasTo(runtime.INodeObserverLocator, NodeObserverLocator).register(container);
-        kernel.Registration.singleton(runtime.INodeObserverLocator, NodeObserverLocator).register(container);
+        aliasRegistration(runtime.INodeObserverLocator, NodeObserverLocator).register(container);
+        singletonRegistration(runtime.INodeObserverLocator, NodeObserverLocator).register(container);
     }
     handles(obj, _key) {
         return obj instanceof this.platform.Node;
@@ -9869,7 +9883,7 @@ function createElement(p, tagOrType, props, children) {
     if (isString(tagOrType)) {
         return createElementForTag(p, tagOrType, props, children);
     }
-    if (CustomElement.isType(tagOrType)) {
+    if (isElementType(tagOrType)) {
         return createElementForType(p, tagOrType, props, children);
     }
     throw new Error(`Invalid Tag or Type.`);
@@ -9884,7 +9898,7 @@ class RenderPlan {
     get definition() {
         if (this._lazyDef === void 0) {
             this._lazyDef = CustomElementDefinition.create({
-                name: CustomElement.generateName(),
+                name: generateElementName(),
                 template: this.node,
                 needsCompile: isString(this.node),
                 instructions: this.instructions,
@@ -9934,7 +9948,7 @@ function createElementForTag(p, tagName, props, children) {
     return new RenderPlan(element, allInstructions, dependencies);
 }
 function createElementForType(p, Type, props, children) {
-    const definition = CustomElement.getDefinition(Type);
+    const definition = getElementDefinition(Type);
     const instructions = [];
     const allInstructions = [instructions];
     const dependencies = [];
@@ -10632,7 +10646,7 @@ function createConfiguration(optionsProvider) {
                 }
             };
             optionsProvider(runtimeConfigurationOptions);
-            return container.register(kernel.Registration.instance(runtime.ICoercionConfiguration, runtimeConfigurationOptions.coercingOptions), ...DefaultComponents, ...DefaultResources, ...DefaultBindingSyntax, ...DefaultBindingLanguage, ...DefaultRenderers);
+            return container.register(instanceRegistration(runtime.ICoercionConfiguration, runtimeConfigurationOptions.coercingOptions), ...DefaultComponents, ...DefaultResources, ...DefaultBindingSyntax, ...DefaultBindingLanguage, ...DefaultRenderers);
         },
         customize(cb) {
             return createConfiguration(cb !== null && cb !== void 0 ? cb : optionsProvider);
@@ -10693,7 +10707,7 @@ class Aurelia {
         }
         ctn.registerResolver(IEventTarget, new kernel.InstanceProvider('IEventTarget', host));
         parentController = parentController !== null && parentController !== void 0 ? parentController : null;
-        const view = Controller.$el(ctn, bc, host, null, CustomElementDefinition.create({ name: CustomElement.generateName(), template: host, enhance: true }));
+        const view = Controller.$el(ctn, bc, host, null, CustomElementDefinition.create({ name: generateElementName(), template: host, enhance: true }));
         return kernel.onResolve(view.activate(view, parentController, 2), () => view);
     }
     async waitForIdle() {
@@ -10709,7 +10723,7 @@ class Aurelia {
                 throw new Error(`AUR0769: Failed to initialize the platform object. The host element's ownerDocument does not have a defaultView`);
             }
             p = new platformBrowser.BrowserPlatform(host.ownerDocument.defaultView);
-            this.container.register(kernel.Registration.instance(IPlatform, p));
+            this.container.register(instanceRegistration(IPlatform, p));
         }
         else {
             p = this.container.get(IPlatform);
@@ -10827,9 +10841,9 @@ class DialogController {
         const contentHost = dom.contentHost;
         this.settings = settings;
         if (rootEventTarget == null || !rootEventTarget.contains(dialogTargetHost)) {
-            container.register(kernel.Registration.instance(IEventTarget, dialogTargetHost));
+            container.register(instanceRegistration(IEventTarget, dialogTargetHost));
         }
-        container.register(kernel.Registration.instance(INode, contentHost), kernel.Registration.instance(IDialogDom, dom));
+        container.register(instanceRegistration(INode, contentHost), instanceRegistration(IDialogDom, dom));
         return new Promise(r => {
             var _a, _b;
             const cmp = Object.assign(this.cmp = this.getOrCreateVm(container, settings, contentHost), { $dialog: this });
@@ -10971,7 +10985,7 @@ class DialogService {
     }
     static get inject() { return [kernel.IContainer, IPlatform, IDialogGlobalSettings]; }
     static register(container) {
-        container.register(kernel.Registration.singleton(IDialogService, this), AppTask.beforeDeactivate(IDialogService, dialogService => kernel.onResolve(dialogService.closeAll(), (openDialogController) => {
+        container.register(singletonRegistration(IDialogService, this), AppTask.deactivating(IDialogService, dialogService => kernel.onResolve(dialogService.closeAll(), (openDialogController) => {
             if (openDialogController.length > 0) {
                 throw new Error(`AUR0901: There are still ${openDialogController.length} open dialog(s).`);
             }
@@ -10984,8 +10998,8 @@ class DialogService {
             const container = (_a = $settings.container) !== null && _a !== void 0 ? _a : this._ctn.createChild();
             resolve(kernel.onResolve($settings.load(), loadedSettings => {
                 const dialogController = container.invoke(DialogController);
-                container.register(kernel.Registration.instance(IDialogController, dialogController));
-                container.register(kernel.Registration.callback(DialogController, () => {
+                container.register(instanceRegistration(IDialogController, dialogController));
+                container.register(callbackRegistration(DialogController, () => {
                     throw new Error(`AUR0902: Invalid injection of DialogController. Use IDialogController instead.`);
                 }));
                 return kernel.onResolve(dialogController.activate(loadedSettings), openResult => {
@@ -11105,7 +11119,7 @@ class DefaultDialogGlobalSettings {
         this.rejectOnCancel = false;
     }
     static register(container) {
-        kernel.Registration.singleton(IDialogGlobalSettings, this).register(container);
+        singletonRegistration(IDialogGlobalSettings, this).register(container);
     }
 }
 const baseWrapperCss = 'position:absolute;width:100%;height:100%;top:0;left:0;';
@@ -11117,7 +11131,7 @@ class DefaultDialogDomRenderer {
         this.hostCss = 'position:relative;margin:auto;';
     }
     static register(container) {
-        kernel.Registration.singleton(IDialogDomRenderer, this).register(container);
+        singletonRegistration(IDialogDomRenderer, this).register(container);
     }
     render(dialogHost) {
         const doc = this.p.document;
@@ -11147,7 +11161,7 @@ class DefaultDialogDom {
 function createDialogConfiguration(settingsProvider, registrations) {
     return {
         settingsProvider: settingsProvider,
-        register: (ctn) => ctn.register(...registrations, AppTask.beforeCreate(() => settingsProvider(ctn.get(IDialogGlobalSettings)))),
+        register: (ctn) => ctn.register(...registrations, AppTask.creating(() => settingsProvider(ctn.get(IDialogGlobalSettings)))),
         customize(cb, regs) {
             return createDialogConfiguration(cb, regs !== null && regs !== void 0 ? regs : registrations);
         },
@@ -11160,7 +11174,7 @@ const DialogConfiguration = createDialogConfiguration(() => {
             'or use the DialogDefaultConfiguration export.');
 }, [class NoopDialogGlobalSettings {
         static register(container) {
-            container.register(kernel.Registration.singleton(IDialogGlobalSettings, this));
+            container.register(singletonRegistration(IDialogGlobalSettings, this));
         }
     }]);
 const DialogDefaultConfiguration = createDialogConfiguration(kernel.noop, [
@@ -11333,6 +11347,7 @@ exports.FragmentNodeSequence = FragmentNodeSequence;
 exports.FromViewBindingBehavior = FromViewBindingBehavior;
 exports.FromViewBindingBehaviorRegistration = FromViewBindingBehaviorRegistration;
 exports.FromViewBindingCommandRegistration = FromViewBindingCommandRegistration;
+exports.HooksDefinition = HooksDefinition;
 exports.HydrateAttributeInstruction = HydrateAttributeInstruction;
 exports.HydrateElementInstruction = HydrateElementInstruction;
 exports.HydrateLetElementInstruction = HydrateLetElementInstruction;

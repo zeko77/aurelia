@@ -3867,7 +3867,7 @@ function St(s, n) {
         const o = new URL(n.document.baseURI);
         o.pathname = I(null !== a && void 0 !== a ? a : o.pathname);
         return o;
-    })), i.AppTask.hydrated(e.IContainer, RouteContext.setRoot), i.AppTask.afterActivate(tt, r), i.AppTask.afterDeactivate(tt, (t => {
+    })), i.AppTask.hydrated(e.IContainer, RouteContext.setRoot), i.AppTask.activated(tt, r), i.AppTask.deactivated(tt, (t => {
         t.stop();
     })), ...$t, ...bt);
 }

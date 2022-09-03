@@ -4276,7 +4276,7 @@ function configure(container, config) {
         const url = new URL(window.document.baseURI);
         url.pathname = normalizePath(basePath !== null && basePath !== void 0 ? basePath : url.pathname);
         return url;
-    }), runtimeHtml.AppTask.hydrated(kernel.IContainer, RouteContext.setRoot), runtimeHtml.AppTask.afterActivate(IRouter, activation), runtimeHtml.AppTask.afterDeactivate(IRouter, router => {
+    }), runtimeHtml.AppTask.hydrated(kernel.IContainer, RouteContext.setRoot), runtimeHtml.AppTask.activated(IRouter, activation), runtimeHtml.AppTask.deactivated(IRouter, router => {
         router.stop();
     }), ...DefaultComponents, ...DefaultResources);
 }
