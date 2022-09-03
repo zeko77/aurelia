@@ -3568,8 +3568,10 @@ class NavigationModel {
     resolve() {
         return e.onResolve(this.M, e.noop);
     }
-    setIsActive(t, e) {
-        for (const i of this.routes) i.setIsActive(t, e);
+    setIsActive(t, i) {
+        void e.onResolve(this.M, (() => {
+            for (const e of this.routes) e.setIsActive(t, i);
+        }));
     }
     addRoute(t) {
         const i = this.routes;

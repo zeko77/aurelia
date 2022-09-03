@@ -3563,7 +3563,9 @@ class NavigationModel {
         return r(this.M, v);
     }
     setIsActive(t, i) {
-        for (const e of this.routes) e.setIsActive(t, i);
+        void r(this.M, (() => {
+            for (const e of this.routes) e.setIsActive(t, i);
+        }));
     }
     addRoute(t) {
         const i = this.routes;

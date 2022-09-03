@@ -3909,9 +3909,11 @@ class NavigationModel {
         return kernel.onResolve(this._promise, kernel.noop);
     }
     setIsActive(router, context) {
-        for (const route of this.routes) {
-            route.setIsActive(router, context);
-        }
+        void kernel.onResolve(this._promise, () => {
+            for (const route of this.routes) {
+                route.setIsActive(router, context);
+            }
+        });
     }
     addRoute(routeDef) {
         const routes = this.routes;
