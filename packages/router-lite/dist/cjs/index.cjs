@@ -3415,18 +3415,23 @@ class RouteContext {
         });
     }
     resolveLazy(t) {
-        return this.moduleLoader.load(t, (e => {
-            let i;
-            let s;
-            for (const t of e.items) if (t.isConstructable) {
+        return this.moduleLoader.load(t, (i => {
+            const s = i.raw;
+            if ("function" === typeof s) {
+                const t = e.Protocol.resource.getAll(s).find(wt);
+                if (void 0 !== t) return t;
+            }
+            let n;
+            let o;
+            for (const t of i.items) if (t.isConstructable) {
                 const e = t.definitions.find(wt);
-                if (void 0 !== e) if ("default" === t.key) i = e; else if (void 0 === s) s = e;
+                if (void 0 !== e) if ("default" === t.key) n = e; else if (void 0 === o) o = e;
             }
-            if (void 0 === i) {
-                if (void 0 === s) throw new Error(`${t} does not appear to be a component or CustomElement recognizable by Aurelia`);
-                return s;
+            if (void 0 === n) {
+                if (void 0 === o) throw new Error(`${t} does not appear to be a component or CustomElement recognizable by Aurelia`);
+                return o;
             }
-            return i;
+            return n;
         }));
     }
     generateViewportInstruction(t) {

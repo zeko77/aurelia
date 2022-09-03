@@ -3730,6 +3730,12 @@ class RouteContext {
     }
     resolveLazy(promise) {
         return this.moduleLoader.load(promise, m => {
+            const raw = m.raw;
+            if (typeof raw === 'function') {
+                const def = kernel.Protocol.resource.getAll(raw).find(isCustomElementDefinition);
+                if (def !== void 0)
+                    return def;
+            }
             let defaultExport = void 0;
             let firstNonDefaultExport = void 0;
             for (const item of m.items) {
