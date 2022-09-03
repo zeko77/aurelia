@@ -3116,17 +3116,17 @@ var xe;
     t[t["Variadic"] = 61] = "Variadic";
     t[t["Assign"] = 62] = "Assign";
     t[t["Conditional"] = 63] = "Conditional";
-    t[t["NullishCoalescing"] = 64] = "NullishCoalescing";
-    t[t["LogicalOR"] = 128] = "LogicalOR";
-    t[t["LogicalAND"] = 192] = "LogicalAND";
-    t[t["Equality"] = 256] = "Equality";
-    t[t["Relational"] = 320] = "Relational";
-    t[t["Additive"] = 384] = "Additive";
-    t[t["Multiplicative"] = 448] = "Multiplicative";
-    t[t["Binary"] = 449] = "Binary";
-    t[t["LeftHandSide"] = 450] = "LeftHandSide";
-    t[t["Primary"] = 451] = "Primary";
-    t[t["Unary"] = 452] = "Unary";
+    t[t["NullishCoalescing"] = 128] = "NullishCoalescing";
+    t[t["LogicalOR"] = 192] = "LogicalOR";
+    t[t["LogicalAND"] = 256] = "LogicalAND";
+    t[t["Equality"] = 320] = "Equality";
+    t[t["Relational"] = 384] = "Relational";
+    t[t["Additive"] = 448] = "Additive";
+    t[t["Multiplicative"] = 512] = "Multiplicative";
+    t[t["Binary"] = 513] = "Binary";
+    t[t["LeftHandSide"] = 514] = "LeftHandSide";
+    t[t["Primary"] = 515] = "Primary";
+    t[t["Unary"] = 516] = "Unary";
 })(xe || (xe = {}));
 
 var Ue;
@@ -3253,7 +3253,7 @@ function Te(t, e, s) {
         Ge(t);
         if (4194304 & t.$) throw new Error(`AUR0151:${t.ip}`);
     }
-    t.L = 449 > e;
+    t.L = 513 > e;
     t.R = false;
     let r = false;
     let i;
@@ -3261,7 +3261,7 @@ function Te(t, e, s) {
     if (131072 & t.$) {
         const e = os[63 & t.$];
         Ge(t);
-        i = new UnaryExpression(e, Te(t, 450, s));
+        i = new UnaryExpression(e, Te(t, 514, s));
         t.L = false;
     } else {
         t: switch (t.$) {
@@ -3346,7 +3346,7 @@ function Te(t, e, s) {
             if (t.index >= t.length) throw new Error(`AUR0155:${t.ip}`); else throw new Error(`AUR0156:${t.ip}`);
         }
         if (2 & s) return He(t, i);
-        if (450 < e) return i;
+        if (514 < e) return i;
         if (1793 === i.$kind) switch (t.$) {
           case 2162698:
             t.R = true;
@@ -3413,7 +3413,7 @@ function Te(t, e, s) {
             break;
         }
     }
-    if (449 < e) return i;
+    if (513 < e) return i;
     while ((262144 & t.$) > 0) {
         const r = t.$;
         if ((960 & r) <= e) break;
@@ -3613,7 +3613,7 @@ function Qe(t, e) {
                 t.O = s;
                 t.$ = r;
                 t.index = n;
-                i.push(Te(t, 451, ~2 & e));
+                i.push(Te(t, 515, ~2 & e));
             }
         } else throw new Error(`AUR0164:${t.ip}`);
         if (7340043 !== t.$) ns(t, 6291469);

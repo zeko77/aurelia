@@ -3068,17 +3068,17 @@ exports.Precedence = void 0;
     Precedence[Precedence["Variadic"] = 61] = "Variadic";
     Precedence[Precedence["Assign"] = 62] = "Assign";
     Precedence[Precedence["Conditional"] = 63] = "Conditional";
-    Precedence[Precedence["NullishCoalescing"] = 64] = "NullishCoalescing";
-    Precedence[Precedence["LogicalOR"] = 128] = "LogicalOR";
-    Precedence[Precedence["LogicalAND"] = 192] = "LogicalAND";
-    Precedence[Precedence["Equality"] = 256] = "Equality";
-    Precedence[Precedence["Relational"] = 320] = "Relational";
-    Precedence[Precedence["Additive"] = 384] = "Additive";
-    Precedence[Precedence["Multiplicative"] = 448] = "Multiplicative";
-    Precedence[Precedence["Binary"] = 449] = "Binary";
-    Precedence[Precedence["LeftHandSide"] = 450] = "LeftHandSide";
-    Precedence[Precedence["Primary"] = 451] = "Primary";
-    Precedence[Precedence["Unary"] = 452] = "Unary";
+    Precedence[Precedence["NullishCoalescing"] = 128] = "NullishCoalescing";
+    Precedence[Precedence["LogicalOR"] = 192] = "LogicalOR";
+    Precedence[Precedence["LogicalAND"] = 256] = "LogicalAND";
+    Precedence[Precedence["Equality"] = 320] = "Equality";
+    Precedence[Precedence["Relational"] = 384] = "Relational";
+    Precedence[Precedence["Additive"] = 448] = "Additive";
+    Precedence[Precedence["Multiplicative"] = 512] = "Multiplicative";
+    Precedence[Precedence["Binary"] = 513] = "Binary";
+    Precedence[Precedence["LeftHandSide"] = 514] = "LeftHandSide";
+    Precedence[Precedence["Primary"] = 515] = "Primary";
+    Precedence[Precedence["Unary"] = 516] = "Unary";
 })(exports.Precedence || (exports.Precedence = {}));
 var Token;
 (function (Token) {
@@ -3197,7 +3197,7 @@ function parse(state, minPrecedence, expressionType) {
             throw new Error(`AUR0151: Invalid start of expression: '${state.ip}'`);
         }
     }
-    state._assignable = 449 > minPrecedence;
+    state._assignable = 513 > minPrecedence;
     state._optional = false;
     let optionalThisTail = false;
     let result = void 0;
@@ -3205,7 +3205,7 @@ function parse(state, minPrecedence, expressionType) {
     if (state._currentToken & 131072) {
         const op = TokenValues[state._currentToken & 63];
         nextToken(state);
-        result = new UnaryExpression(op, parse(state, 450, expressionType));
+        result = new UnaryExpression(op, parse(state, 514, expressionType));
         state._assignable = false;
     }
     else {
@@ -3302,7 +3302,7 @@ function parse(state, minPrecedence, expressionType) {
         if (expressionType & 2) {
             return parseForOfStatement(state, result);
         }
-        if (450 < minPrecedence) {
+        if (514 < minPrecedence) {
             return result;
         }
         if (result.$kind === 1793) {
@@ -3386,7 +3386,7 @@ function parse(state, minPrecedence, expressionType) {
             }
         }
     }
-    if (449 < minPrecedence) {
+    if (513 < minPrecedence) {
         return result;
     }
     while ((state._currentToken & 262144) > 0) {
@@ -3642,7 +3642,7 @@ function parseObjectLiteralExpression(state, expressionType) {
                 state._currentChar = currentChar;
                 state._currentToken = currentToken;
                 state.index = index;
-                values.push(parse(state, 451, expressionType & ~2));
+                values.push(parse(state, 515, expressionType & ~2));
             }
         }
         else {

@@ -114,17 +114,17 @@ export declare const enum Precedence {
     Variadic = 61,
     Assign = 62,
     Conditional = 63,
-    NullishCoalescing = 64,
-    LogicalOR = 128,
-    LogicalAND = 192,
-    Equality = 256,
-    Relational = 320,
-    Additive = 384,
-    Multiplicative = 448,
-    Binary = 449,
-    LeftHandSide = 450,
-    Primary = 451,
-    Unary = 452
+    NullishCoalescing = 128,
+    LogicalOR = 192,
+    LogicalAND = 256,
+    Equality = 320,
+    Relational = 384,
+    Additive = 448,
+    Multiplicative = 512,
+    Binary = 513,
+    LeftHandSide = 514,
+    Primary = 515,
+    Unary = 516
 }
 export declare const enum ExpressionType {
     None = 0,
