@@ -51,9 +51,10 @@ const observe = {
       const indexMap = o.indexMap;
       let i = 0;
       // deepscan-disable-next-line
-      for (const _ of this.keys()) {
+      for (const key of this.keys()) {
         if (indexMap[i] > -1) {
-          indexMap.deletedItems.push(indexMap[i]);
+          indexMap.deletedIndices.push(indexMap[i]);
+          indexMap.deletedItems.push(key);
         }
         i++;
       }
@@ -78,7 +79,8 @@ const observe = {
     for (const entry of this.keys()) {
       if (entry === value) {
         if (indexMap[i] > -1) {
-          indexMap.deletedItems.push(indexMap[i]);
+          indexMap.deletedIndices.push(indexMap[i]);
+          indexMap.deletedItems.push(entry);
         }
         indexMap.splice(i, 1);
         const deleteResult = $delete.call(this, value);

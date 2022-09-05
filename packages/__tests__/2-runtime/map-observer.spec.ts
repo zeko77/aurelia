@@ -84,7 +84,7 @@
 //       sut.subscribeBatched(s);
 //       map.set(1, 1);
 //       const indexMap: IndexMap = sut.indexMap.slice();
-//       indexMap.deletedItems = sut.indexMap.deletedItems;
+//       indexMap.deletedIndices = sut.indexMap.deletedIndices;
 //       sut.flush(LF.none);
 //       assert.deepStrictEqual(
 //         s.handleBatchedChange.calls,
@@ -292,7 +292,7 @@
 
 //   let i = 0;
 //   const toDelete = [];
-//   for (const deleted of indexMap.deletedItems) {
+//   for (const deleted of indexMap.deletedIndices) {
 //     i = 0;
 //     for (const entry of oldMap.keys()) {
 //       if (i === deleted) {

@@ -35,7 +35,7 @@ export class SynchronizingCollectionSubscriber implements ICollectionSubscriber 
     const newArr = this.newArr;
     const oldArr = this.oldArr;
 
-    const deleted = indexMap.deletedItems.sort((a, b) => a - b);
+    const deleted = indexMap.deletedIndices.sort((a, b) => a - b);
     const deletedLen = deleted.length;
     let j = 0;
     for (let i = 0; i < deletedLen; ++i) {
