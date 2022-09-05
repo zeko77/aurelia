@@ -614,7 +614,7 @@ exports.ValidationMessageProvider = class ValidationMessageProvider {
     }
     parseMessage(message) {
         const parsed = this.parser.parse(message, 1);
-        if ((parsed === null || parsed === void 0 ? void 0 : parsed.$kind) === 24) {
+        if ((parsed === null || parsed === void 0 ? void 0 : parsed.$kind) === 25) {
             for (const expr of parsed.expressions) {
                 const name = expr.name;
                 if (contextualProperties.has(name)) {
@@ -673,6 +673,7 @@ var ASTExpressionTypes;
     ASTExpressionTypes["DestructuringAssignment"] = "DestructuringAssignment";
     ASTExpressionTypes["DestructuringSingleAssignment"] = "DestructuringSingleAssignment";
     ASTExpressionTypes["DestructuringRestAssignment"] = "DestructuringRestAssignment";
+    ASTExpressionTypes["ArrowFunction"] = "ArrowFunction";
 })(ASTExpressionTypes || (ASTExpressionTypes = {}));
 class Deserializer {
     static deserialize(serializedExpr) {
@@ -783,6 +784,9 @@ class Deserializer {
             case ASTExpressionTypes.DestructuringRestAssignment: {
                 return new AST__namespace.DestructuringAssignmentRestExpression(this.hydrate(raw.target), this.hydrate(raw.indexOrProperties));
             }
+            case ASTExpressionTypes.ArrowFunction: {
+                return new AST__namespace.ArrowFunction(this.hydrate(raw.parameters), this.hydrate(raw.body), this.hydrate(raw.rest));
+            }
             default:
                 if (Array.isArray(raw)) {
                     if (typeof raw[0] === 'object') {
@@ -892,6 +896,9 @@ class Serializer {
     }
     visitDestructuringAssignmentRestExpression(expr) {
         return `{"$TYPE":"${ASTExpressionTypes.DestructuringRestAssignment}","target":${expr.target.accept(this)},"indexOrProperties":${Array.isArray(expr.indexOrProperties) ? serializePrimitives(expr.indexOrProperties) : serializePrimitive(expr.indexOrProperties)}}`;
+    }
+    visitArrowFunction(expr) {
+        return `{"$TYPE":"${ASTExpressionTypes.ArrowFunction}","parameters":${this.serializeExpressions(expr.args)},"body":${expr.body.accept(this)},"rest":${serializePrimitive(expr.rest)}}`;
     }
     serializeExpressions(args) {
         let text = '[';

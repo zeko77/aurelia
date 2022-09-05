@@ -401,17 +401,18 @@ exports.ExpressionKind = void 0;
     ExpressionKind[ExpressionKind["Binary"] = 46] = "Binary";
     ExpressionKind[ExpressionKind["Conditional"] = 63] = "Conditional";
     ExpressionKind[ExpressionKind["Assign"] = 8208] = "Assign";
-    ExpressionKind[ExpressionKind["ValueConverter"] = 36913] = "ValueConverter";
-    ExpressionKind[ExpressionKind["BindingBehavior"] = 38962] = "BindingBehavior";
-    ExpressionKind[ExpressionKind["HtmlLiteral"] = 51] = "HtmlLiteral";
-    ExpressionKind[ExpressionKind["ArrayBindingPattern"] = 65556] = "ArrayBindingPattern";
-    ExpressionKind[ExpressionKind["ObjectBindingPattern"] = 65557] = "ObjectBindingPattern";
-    ExpressionKind[ExpressionKind["BindingIdentifier"] = 65558] = "BindingIdentifier";
-    ExpressionKind[ExpressionKind["ForOfStatement"] = 6199] = "ForOfStatement";
-    ExpressionKind[ExpressionKind["Interpolation"] = 24] = "Interpolation";
-    ExpressionKind[ExpressionKind["ArrayDestructuring"] = 90137] = "ArrayDestructuring";
-    ExpressionKind[ExpressionKind["ObjectDestructuring"] = 106521] = "ObjectDestructuring";
-    ExpressionKind[ExpressionKind["DestructuringAssignmentLeaf"] = 139289] = "DestructuringAssignmentLeaf";
+    ExpressionKind[ExpressionKind["ArrowFunction"] = 17] = "ArrowFunction";
+    ExpressionKind[ExpressionKind["ValueConverter"] = 36914] = "ValueConverter";
+    ExpressionKind[ExpressionKind["BindingBehavior"] = 38963] = "BindingBehavior";
+    ExpressionKind[ExpressionKind["HtmlLiteral"] = 52] = "HtmlLiteral";
+    ExpressionKind[ExpressionKind["ArrayBindingPattern"] = 65557] = "ArrayBindingPattern";
+    ExpressionKind[ExpressionKind["ObjectBindingPattern"] = 65558] = "ObjectBindingPattern";
+    ExpressionKind[ExpressionKind["BindingIdentifier"] = 65559] = "BindingIdentifier";
+    ExpressionKind[ExpressionKind["ForOfStatement"] = 6200] = "ForOfStatement";
+    ExpressionKind[ExpressionKind["Interpolation"] = 25] = "Interpolation";
+    ExpressionKind[ExpressionKind["ArrayDestructuring"] = 90138] = "ArrayDestructuring";
+    ExpressionKind[ExpressionKind["ObjectDestructuring"] = 106523] = "ObjectDestructuring";
+    ExpressionKind[ExpressionKind["DestructuringAssignmentLeaf"] = 139292] = "DestructuringAssignmentLeaf";
 })(exports.ExpressionKind || (exports.ExpressionKind = {}));
 class Unparser {
     constructor() {
@@ -460,6 +461,27 @@ class Unparser {
             elements[i].accept(this);
         }
         this.text += ']';
+    }
+    visitArrowFunction(expr) {
+        const args = expr.args;
+        const ii = args.length;
+        let i = 0;
+        let text = '(';
+        let name;
+        for (; i < ii; ++i) {
+            name = args[i].name;
+            if (i > 0) {
+                text += ', ';
+            }
+            if (i < ii - 1) {
+                text += name;
+            }
+            else {
+                text += expr.rest ? `...${name}` : name;
+            }
+        }
+        this.text += `${text}) => `;
+        expr.body.accept(this);
     }
     visitObjectLiteral(expr) {
         const keys = expr.keys;
@@ -632,7 +654,7 @@ class Unparser {
     }
     visitDestructuringAssignmentExpression(expr) {
         const $kind = expr.$kind;
-        const isObjDes = $kind === 106521;
+        const isObjDes = $kind === 106523;
         this.text += isObjDes ? '{' : '[';
         const list = expr.list;
         const len = list.length;
@@ -641,11 +663,11 @@ class Unparser {
         for (i = 0; i < len; i++) {
             item = list[i];
             switch (item.$kind) {
-                case 139289:
+                case 139292:
                     item.accept(this);
                     break;
-                case 90137:
-                case 106521: {
+                case 90138:
+                case 106523: {
                     const source = item.source;
                     if (source) {
                         source.accept(this);
@@ -698,7 +720,7 @@ class BindingBehaviorExpression {
         this.args = args;
         this.behaviorKey = BindingBehavior.keyFrom(name);
     }
-    get $kind() { return 38962; }
+    get $kind() { return 38963; }
     get hasBind() { return true; }
     get hasUnbind() { return true; }
     evaluate(f, s, l, c) {
@@ -752,7 +774,7 @@ class ValueConverterExpression {
         this.args = args;
         this.converterKey = ValueConverter.keyFrom(name);
     }
-    get $kind() { return 36913; }
+    get $kind() { return 36914; }
     get hasBind() { return false; }
     get hasUnbind() { return true; }
     evaluate(f, s, l, c) {
@@ -1237,7 +1259,7 @@ class HtmlLiteralExpression {
     constructor(parts) {
         this.parts = parts;
     }
-    get $kind() { return 51; }
+    get $kind() { return 52; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
@@ -1367,7 +1389,7 @@ class ArrayBindingPattern {
     constructor(elements) {
         this.elements = elements;
     }
-    get $kind() { return 65556; }
+    get $kind() { return 65557; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(_f, _s, _l, _c) {
@@ -1388,7 +1410,7 @@ class ObjectBindingPattern {
         this.keys = keys;
         this.values = values;
     }
-    get $kind() { return 65557; }
+    get $kind() { return 65558; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(_f, _s, _l, _c) {
@@ -1408,7 +1430,7 @@ class BindingIdentifier {
     constructor(name) {
         this.name = name;
     }
-    get $kind() { return 65558; }
+    get $kind() { return 65559; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(_f, _s, _l, _c) {
@@ -1427,7 +1449,7 @@ class ForOfStatement {
         this.declaration = declaration;
         this.iterable = iterable;
     }
-    get $kind() { return 6199; }
+    get $kind() { return 6200; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
@@ -1482,7 +1504,7 @@ class Interpolation {
         this.isMulti = expressions.length > 1;
         this.firstExpression = expressions[0];
     }
-    get $kind() { return 24; }
+    get $kind() { return 25; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
@@ -1529,11 +1551,11 @@ class DestructuringAssignmentExpression {
         for (i = 0; i < len; i++) {
             item = list[i];
             switch (item.$kind) {
-                case 139289:
+                case 139292:
                     item.assign(f, s, l, value);
                     break;
-                case 90137:
-                case 106521: {
+                case 90138:
+                case 106523: {
                     if (typeof value !== 'object' || value === null) {
                         {
                             throw new Error(`AUR0112: Cannot use non-object value for destructuring assignment.`);
@@ -1562,7 +1584,7 @@ class DestructuringAssignmentSingleExpression {
         this.source = source;
         this.initializer = initializer;
     }
-    get $kind() { return 139289; }
+    get $kind() { return 139292; }
     evaluate(_f, _s, _l, _c) {
         return void 0;
     }
@@ -1594,7 +1616,7 @@ class DestructuringAssignmentRestExpression {
         this.target = target;
         this.indexOrProperties = indexOrProperties;
     }
-    get $kind() { return 139289; }
+    get $kind() { return 139292; }
     evaluate(_f, _s, _l, _c) {
         return void 0;
     }
@@ -1631,6 +1653,44 @@ class DestructuringAssignmentRestExpression {
     }
     accept(_visitor) {
         return _visitor.visitDestructuringAssignmentRestExpression(this);
+    }
+    toString() {
+        return Unparser.unparse(this);
+    }
+}
+class ArrowFunction {
+    constructor(args, body, rest = false) {
+        this.args = args;
+        this.body = body;
+        this.rest = rest;
+    }
+    get $kind() { return 17; }
+    get hasBind() { return false; }
+    get hasUnbind() { return false; }
+    evaluate(f, s, l, c) {
+        const func = (...args) => {
+            const params = this.args;
+            const rest = this.rest;
+            const lastIdx = params.length - 1;
+            const context = params.reduce((map, param, i) => {
+                if (rest && i === lastIdx) {
+                    map[param.name] = args.slice(i);
+                }
+                else {
+                    map[param.name] = args[i];
+                }
+                return map;
+            }, {});
+            const functionScope = Scope.fromParent(s, context);
+            return this.body.evaluate(f, functionScope, l, c);
+        };
+        return func;
+    }
+    assign(f, s, l, value) {
+        return void 0;
+    }
+    accept(visitor) {
+        return visitor.visitArrowFunction(this);
     }
     toString() {
         return Unparser.unparse(this);
@@ -2929,7 +2989,7 @@ class ExpressionParser {
                     if ((expressionType & (4 | 8)) > 0) {
                         return PrimitiveLiteralExpression.$empty;
                     }
-                    throw new Error(`AUR0169: Invalid expression. Empty expression is only valid in event bindings (trigger, delegate, capture etc...)`);
+                    throw invalidEmptyExpression();
                 }
                 found = this._expressionLookup[expression];
                 if (found === void 0) {
@@ -2941,9 +3001,15 @@ class ExpressionParser {
     }
     $parse(expression, expressionType) {
         $input = expression;
-        $length = expression.length;
         $index = 0;
+        $length = expression.length;
+        $scopeDepth = 0;
+        $startIndex = 0;
+        $currentToken = 6291456;
+        $tokenValue = '';
         $currentChar = expression.charCodeAt(0);
+        $assignable = true;
+        $optional = false;
         return parse(61, expressionType === void 0 ? 8 : expressionType);
     }
 }
@@ -3109,41 +3175,44 @@ var Token;
     Token[Token["OpenParen"] = 2688007] = "OpenParen";
     Token[Token["OpenBrace"] = 524296] = "OpenBrace";
     Token[Token["Dot"] = 65545] = "Dot";
-    Token[Token["QuestionDot"] = 2162698] = "QuestionDot";
-    Token[Token["CloseBrace"] = 7340043] = "CloseBrace";
-    Token[Token["CloseParen"] = 7340044] = "CloseParen";
-    Token[Token["Comma"] = 6291469] = "Comma";
-    Token[Token["OpenBracket"] = 2688014] = "OpenBracket";
-    Token[Token["CloseBracket"] = 7340047] = "CloseBracket";
-    Token[Token["Colon"] = 6291472] = "Colon";
-    Token[Token["Question"] = 6291475] = "Question";
-    Token[Token["Ampersand"] = 6291476] = "Ampersand";
-    Token[Token["Bar"] = 6291477] = "Bar";
-    Token[Token["QuestionQuestion"] = 6553750] = "QuestionQuestion";
-    Token[Token["BarBar"] = 6553815] = "BarBar";
-    Token[Token["AmpersandAmpersand"] = 6553880] = "AmpersandAmpersand";
-    Token[Token["EqualsEquals"] = 6553945] = "EqualsEquals";
-    Token[Token["ExclamationEquals"] = 6553946] = "ExclamationEquals";
-    Token[Token["EqualsEqualsEquals"] = 6553947] = "EqualsEqualsEquals";
-    Token[Token["ExclamationEqualsEquals"] = 6553948] = "ExclamationEqualsEquals";
-    Token[Token["LessThan"] = 6554013] = "LessThan";
-    Token[Token["GreaterThan"] = 6554014] = "GreaterThan";
-    Token[Token["LessThanEquals"] = 6554015] = "LessThanEquals";
-    Token[Token["GreaterThanEquals"] = 6554016] = "GreaterThanEquals";
-    Token[Token["InKeyword"] = 6562209] = "InKeyword";
-    Token[Token["InstanceOfKeyword"] = 6562210] = "InstanceOfKeyword";
-    Token[Token["Plus"] = 2490851] = "Plus";
-    Token[Token["Minus"] = 2490852] = "Minus";
-    Token[Token["TypeofKeyword"] = 139301] = "TypeofKeyword";
-    Token[Token["VoidKeyword"] = 139302] = "VoidKeyword";
-    Token[Token["Asterisk"] = 6554151] = "Asterisk";
-    Token[Token["Percent"] = 6554152] = "Percent";
-    Token[Token["Slash"] = 6554153] = "Slash";
-    Token[Token["Equals"] = 4194346] = "Equals";
-    Token[Token["Exclamation"] = 131115] = "Exclamation";
-    Token[Token["TemplateTail"] = 2163756] = "TemplateTail";
-    Token[Token["TemplateContinuation"] = 2163757] = "TemplateContinuation";
-    Token[Token["OfKeyword"] = 4204590] = "OfKeyword";
+    Token[Token["DotDot"] = 10] = "DotDot";
+    Token[Token["DotDotDot"] = 11] = "DotDotDot";
+    Token[Token["QuestionDot"] = 2162700] = "QuestionDot";
+    Token[Token["CloseBrace"] = 7340045] = "CloseBrace";
+    Token[Token["CloseParen"] = 7340046] = "CloseParen";
+    Token[Token["Comma"] = 6291471] = "Comma";
+    Token[Token["OpenBracket"] = 2688016] = "OpenBracket";
+    Token[Token["CloseBracket"] = 7340051] = "CloseBracket";
+    Token[Token["Colon"] = 6291476] = "Colon";
+    Token[Token["Question"] = 6291477] = "Question";
+    Token[Token["Ampersand"] = 6291478] = "Ampersand";
+    Token[Token["Bar"] = 6291479] = "Bar";
+    Token[Token["QuestionQuestion"] = 6553752] = "QuestionQuestion";
+    Token[Token["BarBar"] = 6553817] = "BarBar";
+    Token[Token["AmpersandAmpersand"] = 6553882] = "AmpersandAmpersand";
+    Token[Token["EqualsEquals"] = 6553947] = "EqualsEquals";
+    Token[Token["ExclamationEquals"] = 6553948] = "ExclamationEquals";
+    Token[Token["EqualsEqualsEquals"] = 6553949] = "EqualsEqualsEquals";
+    Token[Token["ExclamationEqualsEquals"] = 6553950] = "ExclamationEqualsEquals";
+    Token[Token["LessThan"] = 6554015] = "LessThan";
+    Token[Token["GreaterThan"] = 6554016] = "GreaterThan";
+    Token[Token["LessThanEquals"] = 6554017] = "LessThanEquals";
+    Token[Token["GreaterThanEquals"] = 6554018] = "GreaterThanEquals";
+    Token[Token["InKeyword"] = 6562211] = "InKeyword";
+    Token[Token["InstanceOfKeyword"] = 6562212] = "InstanceOfKeyword";
+    Token[Token["Plus"] = 2490853] = "Plus";
+    Token[Token["Minus"] = 2490854] = "Minus";
+    Token[Token["TypeofKeyword"] = 139303] = "TypeofKeyword";
+    Token[Token["VoidKeyword"] = 139304] = "VoidKeyword";
+    Token[Token["Asterisk"] = 6554153] = "Asterisk";
+    Token[Token["Percent"] = 6554154] = "Percent";
+    Token[Token["Slash"] = 6554155] = "Slash";
+    Token[Token["Equals"] = 4194348] = "Equals";
+    Token[Token["Exclamation"] = 131117] = "Exclamation";
+    Token[Token["TemplateTail"] = 2163758] = "TemplateTail";
+    Token[Token["TemplateContinuation"] = 2163759] = "TemplateContinuation";
+    Token[Token["OfKeyword"] = 4204592] = "OfKeyword";
+    Token[Token["Arrow"] = 49] = "Arrow";
 })(Token || (Token = {}));
 const $false = PrimitiveLiteralExpression.$false;
 const $true = PrimitiveLiteralExpression.$true;
@@ -3163,6 +3232,7 @@ exports.ExpressionType = void 0;
 let $input = '';
 let $index = 0;
 let $length = 0;
+let $scopeDepth = 0;
 let $startIndex = 0;
 let $currentToken = 6291456;
 let $tokenValue = '';
@@ -3174,9 +3244,15 @@ function $tokenRaw() {
 }
 function parseExpression(input, expressionType) {
     $input = input;
-    $length = input.length;
     $index = 0;
+    $length = input.length;
+    $scopeDepth = 0;
+    $startIndex = 0;
+    $currentToken = 6291456;
+    $tokenValue = '';
     $currentChar = input.charCodeAt(0);
+    $assignable = true;
+    $optional = false;
     return parse(61, expressionType === void 0 ? 8 : expressionType);
 }
 function parse(minPrecedence, expressionType) {
@@ -3189,7 +3265,7 @@ function parse(minPrecedence, expressionType) {
         }
         nextToken();
         if ($currentToken & 4194304) {
-            throw new Error(`AUR0151: Invalid start of expression: '${$input}'`);
+            throw invalidStartOfExpression();
         }
     }
     $assignable = 513 > minPrecedence;
@@ -3206,70 +3282,97 @@ function parse(minPrecedence, expressionType) {
     else {
         primary: switch ($currentToken) {
             case 12294:
+                ancestor = $scopeDepth;
                 $assignable = false;
                 do {
                     nextToken();
                     ++ancestor;
-                    if (consumeOpt(65545)) {
-                        if ($currentToken === 65545) {
-                            throw new Error(`AUR0152: Double dot and spread operators are not supported: '${$input}'`);
-                        }
-                        else if ($currentToken === 6291456) {
-                            throw new Error(`AUR0153: Expected identifier: '${$input}'`);
-                        }
-                    }
-                    else if ($currentToken === 2162698) {
-                        $optional = true;
-                        nextToken();
-                        if (($currentToken & 12288) === 0) {
-                            result = ancestor === 0 ? $this : ancestor === 1 ? $parent : new AccessThisExpression(ancestor);
-                            optionalThisTail = true;
-                            break primary;
-                        }
-                    }
-                    else if ($currentToken & 2097152) {
-                        result = ancestor === 0 ? $this : ancestor === 1 ? $parent : new AccessThisExpression(ancestor);
-                        break primary;
-                    }
-                    else {
-                        throw new Error(`AUR0154: Invalid member expression: '${$input}'`);
+                    switch ($currentToken) {
+                        case 65545:
+                            nextToken();
+                            if (($currentToken & 12288) === 0) {
+                                throw expectedIdentifier();
+                            }
+                            break;
+                        case 10:
+                        case 11:
+                            throw expectedIdentifier();
+                        case 2162700:
+                            $optional = true;
+                            nextToken();
+                            if (($currentToken & 12288) === 0) {
+                                result = ancestor === 0 ? $this : ancestor === 1 ? $parent : new AccessThisExpression(ancestor);
+                                optionalThisTail = true;
+                                break primary;
+                            }
+                            break;
+                        default:
+                            if ($currentToken & 2097152) {
+                                result = ancestor === 0 ? $this : ancestor === 1 ? $parent : new AccessThisExpression(ancestor);
+                                break primary;
+                            }
+                            throw invalidMemberExpression();
                     }
                 } while ($currentToken === 12294);
-            case 4096:
+            case 4096: {
+                const id = $tokenValue;
                 if (expressionType & 2) {
-                    result = new BindingIdentifier($tokenValue);
+                    result = new BindingIdentifier(id);
                 }
                 else {
-                    result = new AccessScopeExpression($tokenValue, ancestor);
+                    result = new AccessScopeExpression(id, ancestor);
                 }
                 $assignable = !$optional;
                 nextToken();
+                if (consumeOpt(49)) {
+                    if ($currentToken === 524296) {
+                        throw functionBodyInArrowFN();
+                    }
+                    const _optional = $optional;
+                    const _scopeDepth = $scopeDepth;
+                    ++$scopeDepth;
+                    const body = parse(62, 0);
+                    $optional = _optional;
+                    $scopeDepth = _scopeDepth;
+                    $assignable = false;
+                    result = new ArrowFunction([new BindingIdentifier(id)], body);
+                }
                 break;
+            }
+            case 10:
+                throw unexpectedDoubleDot();
+            case 11:
+                throw invalidSpreadOp();
             case 12292:
                 $assignable = false;
                 nextToken();
-                result = $this;
+                switch ($scopeDepth) {
+                    case 0:
+                        result = $this;
+                        break;
+                    case 1:
+                        result = $parent;
+                        break;
+                    default:
+                        result = new AccessThisExpression($scopeDepth);
+                        break;
+                }
                 break;
-            case 2688007: {
-                nextToken();
-                const _optional = $optional;
-                result = parse(62, expressionType);
-                $optional = _optional;
-                consume(7340044);
+            case 2688007:
+                result = parseCoverParenthesizedExpressionAndArrowParameterList(expressionType);
                 break;
-            }
-            case 2688014:
+            case 2688016:
                 result = $input.search(/\s+of\s+/) > $index ? parseArrayDestructuring() : parseArrayLiteralExpression(expressionType);
                 break;
             case 524296:
                 result = parseObjectLiteralExpression(expressionType);
                 break;
-            case 2163756:
+            case 2163758:
                 result = new TemplateExpression([$tokenValue]);
                 $assignable = false;
                 nextToken();
                 break;
-            case 2163757:
+            case 2163759:
                 result = parseTemplate(expressionType, result, false);
                 break;
             case 16384:
@@ -3288,10 +3391,10 @@ function parse(minPrecedence, expressionType) {
                 break;
             default:
                 if ($index >= $length) {
-                    throw new Error(`AUR0155: Unexpected end of expression: '${$input}'`);
+                    throw unexpectedEndOfExpression();
                 }
                 else {
-                    throw new Error(`AUR0156: Unconsumed token: '${$input}'`);
+                    throw unconsumedToken();
                 }
         }
         if (expressionType & 2) {
@@ -3300,13 +3403,18 @@ function parse(minPrecedence, expressionType) {
         if (514 < minPrecedence) {
             return result;
         }
+        if ($currentToken === 10 || $currentToken === 11) {
+            throw expectedIdentifier();
+        }
         if (result.$kind === 1793) {
             switch ($currentToken) {
-                case 2162698:
+                case 2162700:
                     $optional = true;
                     $assignable = false;
                     nextToken();
-                    ensureOptionalSuffix();
+                    if (($currentToken & 13312) === 0) {
+                        throw unexpectedTokenInOptionalChain();
+                    }
                     if ($currentToken & 12288) {
                         result = new AccessScopeExpression($tokenValue, result.ancestor);
                         nextToken();
@@ -3314,7 +3422,7 @@ function parse(minPrecedence, expressionType) {
                     else if ($currentToken === 2688007) {
                         result = new CallFunctionExpression(result, parseArguments(), true);
                     }
-                    else if ($currentToken === 2688014) {
+                    else if ($currentToken === 2688016) {
                         result = parseKeyedExpression(result, true);
                     }
                     else {
@@ -3324,34 +3432,44 @@ function parse(minPrecedence, expressionType) {
                 case 65545:
                     $assignable = !$optional;
                     nextToken();
-                    ensureIdName();
+                    if (($currentToken & 12288) === 0) {
+                        throw expectedIdentifier();
+                    }
                     result = new AccessScopeExpression($tokenValue, result.ancestor);
                     nextToken();
                     break;
+                case 10:
+                case 11:
+                    throw expectedIdentifier();
                 case 2688007:
                     result = new CallFunctionExpression(result, parseArguments(), optionalThisTail);
                     break;
-                case 2688014:
+                case 2688016:
                     result = parseKeyedExpression(result, optionalThisTail);
                     break;
-                case 2163756:
+                case 2163758:
                     result = createTemplateTail(result);
                     break;
-                case 2163757:
+                case 2163759:
                     result = parseTemplate(expressionType, result, true);
                     break;
             }
         }
         while (($currentToken & 65536) > 0) {
             switch ($currentToken) {
-                case 2162698:
+                case 2162700:
                     result = parseOptionalChainLHS(result);
                     break;
                 case 65545:
                     nextToken();
-                    ensureIdName();
+                    if (($currentToken & 12288) === 0) {
+                        throw expectedIdentifier();
+                    }
                     result = parseMemberExpressionLHS(result, false);
                     break;
+                case 10:
+                case 11:
+                    throw expectedIdentifier();
                 case 2688007:
                     if (result.$kind === 10082) {
                         result = new CallScopeExpression(result.name, parseArguments(), result.ancestor, false);
@@ -3363,16 +3481,16 @@ function parse(minPrecedence, expressionType) {
                         result = new CallFunctionExpression(result, parseArguments(), false);
                     }
                     break;
-                case 2688014:
+                case 2688016:
                     result = parseKeyedExpression(result, false);
                     break;
-                case 2163756:
+                case 2163758:
                     if ($optional) {
                         throw invalidTaggedTemplateOnOptionalChain();
                     }
                     result = createTemplateTail(result);
                     break;
-                case 2163757:
+                case 2163759:
                     if ($optional) {
                         throw invalidTaggedTemplateOnOptionalChain();
                     }
@@ -3380,6 +3498,9 @@ function parse(minPrecedence, expressionType) {
                     break;
             }
         }
+    }
+    if ($currentToken === 10 || $currentToken === 11) {
+        throw expectedIdentifier();
     }
     if (513 < minPrecedence) {
         return result;
@@ -3396,44 +3517,44 @@ function parse(minPrecedence, expressionType) {
     if (63 < minPrecedence) {
         return result;
     }
-    if (consumeOpt(6291475)) {
+    if (consumeOpt(6291477)) {
         const yes = parse(62, expressionType);
-        consume(6291472);
+        consume(6291476);
         result = new ConditionalExpression(result, yes, parse(62, expressionType));
         $assignable = false;
     }
     if (62 < minPrecedence) {
         return result;
     }
-    if (consumeOpt(4194346)) {
+    if (consumeOpt(4194348)) {
         if (!$assignable) {
-            throw new Error(`AUR0158: Left hand side of expression is not assignable: '${$input}'`);
+            throw lhsNotAssignable();
         }
         result = new AssignExpression(result, parse(62, expressionType));
     }
     if (61 < minPrecedence) {
         return result;
     }
-    while (consumeOpt(6291477)) {
+    while (consumeOpt(6291479)) {
         if ($currentToken === 6291456) {
-            throw new Error(`AUR0159: Expected identifier to come after ValueConverter operator: '${$input}'`);
+            throw expectedValueConverterIdentifier();
         }
         const name = $tokenValue;
         nextToken();
         const args = new Array();
-        while (consumeOpt(6291472)) {
+        while (consumeOpt(6291476)) {
             args.push(parse(62, expressionType));
         }
         result = new ValueConverterExpression(result, name, args);
     }
-    while (consumeOpt(6291476)) {
+    while (consumeOpt(6291478)) {
         if ($currentToken === 6291456) {
-            throw new Error(`AUR0160: Expected identifier to come after BindingBehavior operator: '${$input}'`);
+            throw expectedBindingBehaviorIdentifier();
         }
         const name = $tokenValue;
         nextToken();
         const args = new Array();
-        while (consumeOpt(6291472)) {
+        while (consumeOpt(6291476)) {
             args.push(parse(62, expressionType));
         }
         result = new BindingBehaviorExpression(result, name, args);
@@ -3443,38 +3564,36 @@ function parse(minPrecedence, expressionType) {
             return result;
         }
         if ($tokenRaw() === 'of') {
-            throw new Error(`AUR0161: Unexpected keyword "of": '${$input}'`);
+            throw unexpectedOfKeyword();
         }
-        throw new Error(`AUR0162: Unconsumed token: '${$tokenRaw()}' at position ${$index} of '${$input}'`);
+        throw unconsumedToken();
     }
     return result;
 }
 function parseArrayDestructuring() {
     const items = [];
-    const dae = new DestructuringAssignmentExpression(90137, items, void 0, void 0);
+    const dae = new DestructuringAssignmentExpression(90138, items, void 0, void 0);
     let target = '';
     let $continue = true;
     let index = 0;
     while ($continue) {
         nextToken();
         switch ($currentToken) {
-            case 7340047:
+            case 7340051:
                 $continue = false;
                 addItem();
                 break;
-            case 6291469:
+            case 6291471:
                 addItem();
                 break;
             case 4096:
                 target = $tokenRaw();
                 break;
             default:
-                {
-                    throw new Error(`AUR0170: Unexpected '${$tokenRaw()}' at position ${$index - 1} for destructuring assignment in ${$input}`);
-                }
+                throw unexpectedTokenInDestructuring();
         }
     }
-    consume(7340047);
+    consume(7340051);
     return dae;
     function addItem() {
         if (target !== '') {
@@ -3490,13 +3609,13 @@ function parseArguments() {
     const _optional = $optional;
     nextToken();
     const args = [];
-    while ($currentToken !== 7340044) {
+    while ($currentToken !== 7340046) {
         args.push(parse(62, 0));
-        if (!consumeOpt(6291469)) {
+        if (!consumeOpt(6291471)) {
             break;
         }
     }
-    consume(7340044);
+    consume(7340046);
     $assignable = false;
     $optional = _optional;
     return args;
@@ -3505,7 +3624,7 @@ function parseKeyedExpression(result, optional) {
     const _optional = $optional;
     nextToken();
     result = new AccessKeyedExpression(result, parse(62, 0), optional);
-    consume(7340047);
+    consume(7340051);
     $assignable = !_optional;
     $optional = _optional;
     return result;
@@ -3514,7 +3633,9 @@ function parseOptionalChainLHS(lhs) {
     $optional = true;
     $assignable = false;
     nextToken();
-    ensureOptionalSuffix();
+    if (($currentToken & 13312) === 0) {
+        throw unexpectedTokenInOptionalChain();
+    }
     if ($currentToken & 12288) {
         return parseMemberExpressionLHS(lhs, true);
     }
@@ -3529,7 +3650,7 @@ function parseOptionalChainLHS(lhs) {
             return new CallFunctionExpression(lhs, parseArguments(), true);
         }
     }
-    if ($currentToken === 2688014) {
+    if ($currentToken === 2688016) {
         return parseKeyedExpression(lhs, true);
     }
     throw invalidTaggedTemplateOnOptionalChain();
@@ -3537,54 +3658,213 @@ function parseOptionalChainLHS(lhs) {
 function parseMemberExpressionLHS(lhs, optional) {
     const rhs = $tokenValue;
     switch ($currentToken) {
-        case 2162698:
+        case 2162700: {
             $optional = true;
             $assignable = false;
-            save();
+            const indexSave = $index;
+            const startIndexSave = $startIndex;
+            const currentTokenSave = $currentToken;
+            const currentCharSave = $currentChar;
+            const tokenValueSave = $tokenValue;
+            const assignableSave = $assignable;
+            const optionalSave = $optional;
             nextToken();
-            ensureOptionalSuffix();
+            if (($currentToken & 13312) === 0) {
+                throw unexpectedTokenInOptionalChain();
+            }
             if ($currentToken === 2688007) {
                 return new CallMemberExpression(lhs, rhs, parseArguments(), optional, true);
             }
-            restore();
+            $index = indexSave;
+            $startIndex = startIndexSave;
+            $currentToken = currentTokenSave;
+            $currentChar = currentCharSave;
+            $tokenValue = tokenValueSave;
+            $assignable = assignableSave;
+            $optional = optionalSave;
             return new AccessMemberExpression(lhs, rhs, optional);
-        case 2688007:
+        }
+        case 2688007: {
             $assignable = false;
             return new CallMemberExpression(lhs, rhs, parseArguments(), optional, false);
-        default:
+        }
+        default: {
             $assignable = !$optional;
             nextToken();
             return new AccessMemberExpression(lhs, rhs, optional);
+        }
     }
 }
-function ensureOptionalSuffix() {
-    if (($currentToken & 13312) === 0) {
-        throw new Error(`AUR0171: Unexpected '${$tokenRaw()}' at position ${$index - 1} for optional chain in ${$input}`);
+var ArrowFnParams;
+(function (ArrowFnParams) {
+    ArrowFnParams[ArrowFnParams["Valid"] = 1] = "Valid";
+    ArrowFnParams[ArrowFnParams["Invalid"] = 2] = "Invalid";
+    ArrowFnParams[ArrowFnParams["Default"] = 3] = "Default";
+    ArrowFnParams[ArrowFnParams["Destructuring"] = 4] = "Destructuring";
+})(ArrowFnParams || (ArrowFnParams = {}));
+function parseCoverParenthesizedExpressionAndArrowParameterList(expressionType) {
+    nextToken();
+    const indexSave = $index;
+    const startIndexSave = $startIndex;
+    const currentTokenSave = $currentToken;
+    const currentCharSave = $currentChar;
+    const tokenValueSave = $tokenValue;
+    const assignableSave = $assignable;
+    const optionalSave = $optional;
+    const arrowParams = [];
+    let paramsState = 1;
+    let isParamList = false;
+    loop: while (true) {
+        if ($currentToken === 11) {
+            nextToken();
+            if ($currentToken !== 4096) {
+                throw expectedIdentifier();
+            }
+            arrowParams.push(new BindingIdentifier($tokenValue));
+            nextToken();
+            if ($currentToken === 6291471) {
+                throw restParamsMustBeLastParam();
+            }
+            if ($currentToken !== 7340046) {
+                throw invalidSpreadOp();
+            }
+            nextToken();
+            if ($currentToken !== 49) {
+                throw invalidSpreadOp();
+            }
+            nextToken();
+            const _optional = $optional;
+            const _scopeDepth = $scopeDepth;
+            ++$scopeDepth;
+            const body = parse(62, 0);
+            $optional = _optional;
+            $scopeDepth = _scopeDepth;
+            $assignable = false;
+            return new ArrowFunction(arrowParams, body, true);
+        }
+        switch ($currentToken) {
+            case 4096:
+                arrowParams.push(new BindingIdentifier($tokenValue));
+                nextToken();
+                break;
+            case 7340046:
+                nextToken();
+                break loop;
+            case 524296:
+            case 2688016:
+                nextToken();
+                paramsState = 4;
+                break;
+            case 6291471:
+                paramsState = 2;
+                isParamList = true;
+                break loop;
+            case 2688007:
+                paramsState = 2;
+                break loop;
+            default:
+                nextToken();
+                paramsState = 2;
+                break;
+        }
+        switch ($currentToken) {
+            case 6291471:
+                nextToken();
+                isParamList = true;
+                if (paramsState === 1) {
+                    break;
+                }
+                break loop;
+            case 7340046:
+                nextToken();
+                break loop;
+            case 4194348:
+                if (paramsState === 1) {
+                    paramsState = 3;
+                }
+                break loop;
+            case 49:
+                if (isParamList) {
+                    throw invalidArrowParameterList();
+                }
+                nextToken();
+                paramsState = 2;
+                break loop;
+            default:
+                if (paramsState === 1) {
+                    paramsState = 2;
+                }
+                break loop;
+        }
     }
-}
-function ensureIdName() {
-    if (($currentToken & 12288) === 0) {
-        throw new Error(`AUR0153: Expected identifier: '${$input}'`);
+    if ($currentToken === 49) {
+        if (paramsState === 1) {
+            nextToken();
+            if ($currentToken === 524296) {
+                throw functionBodyInArrowFN();
+            }
+            const _optional = $optional;
+            const _scopeDepth = $scopeDepth;
+            ++$scopeDepth;
+            const body = parse(62, 0);
+            $optional = _optional;
+            $scopeDepth = _scopeDepth;
+            $assignable = false;
+            return new ArrowFunction(arrowParams, body);
+        }
+        throw invalidArrowParameterList();
     }
-}
-function invalidTaggedTemplateOnOptionalChain() {
-    return new Error(`AUR0172: Invalid tagged template on optional chain in ${$input}`);
+    else if (paramsState === 1 && arrowParams.length === 0) {
+        throw missingExpectedToken(49);
+    }
+    if (isParamList) {
+        switch (paramsState) {
+            case 2:
+                throw invalidArrowParameterList();
+            case 3:
+                throw defaultParamsInArrowFn();
+            case 4:
+                throw destructuringParamsInArrowFn();
+        }
+    }
+    $index = indexSave;
+    $startIndex = startIndexSave;
+    $currentToken = currentTokenSave;
+    $currentChar = currentCharSave;
+    $tokenValue = tokenValueSave;
+    $assignable = assignableSave;
+    $optional = optionalSave;
+    const _optional = $optional;
+    const expr = parse(62, expressionType);
+    $optional = _optional;
+    consume(7340046);
+    if ($currentToken === 49) {
+        switch (paramsState) {
+            case 2:
+                throw invalidArrowParameterList();
+            case 3:
+                throw defaultParamsInArrowFn();
+            case 4:
+                throw destructuringParamsInArrowFn();
+        }
+    }
+    return expr;
 }
 function parseArrayLiteralExpression(expressionType) {
     const _optional = $optional;
     nextToken();
     const elements = new Array();
-    while ($currentToken !== 7340047) {
-        if (consumeOpt(6291469)) {
+    while ($currentToken !== 7340051) {
+        if (consumeOpt(6291471)) {
             elements.push($undefined);
-            if ($currentToken === 7340047) {
+            if ($currentToken === 7340051) {
                 break;
             }
         }
         else {
             elements.push(parse(62, expressionType & ~2));
-            if (consumeOpt(6291469)) {
-                if ($currentToken === 7340047) {
+            if (consumeOpt(6291471)) {
+                if ($currentToken === 7340051) {
                     break;
                 }
             }
@@ -3594,7 +3874,7 @@ function parseArrayLiteralExpression(expressionType) {
         }
     }
     $optional = _optional;
-    consume(7340047);
+    consume(7340051);
     if (expressionType & 2) {
         return new ArrayBindingPattern(elements);
     }
@@ -3605,10 +3885,10 @@ function parseArrayLiteralExpression(expressionType) {
 }
 function parseForOfStatement(result) {
     if ((result.$kind & 65536) === 0) {
-        throw new Error(`AUR0163: Invalid BindingIdentifier at left hand side of "of": '${$input}'`);
+        throw invalidLHSBindingIdentifierInForOf();
     }
-    if ($currentToken !== 4204590) {
-        throw new Error(`AUR0163: Invalid BindingIdentifier at left hand side of "of": '${$input}'`);
+    if ($currentToken !== 4204592) {
+        throw invalidLHSBindingIdentifierInForOf();
     }
     nextToken();
     const declaration = result;
@@ -3620,11 +3900,11 @@ function parseObjectLiteralExpression(expressionType) {
     const keys = new Array();
     const values = new Array();
     nextToken();
-    while ($currentToken !== 7340043) {
+    while ($currentToken !== 7340045) {
         keys.push($tokenValue);
         if ($currentToken & 49152) {
             nextToken();
-            consume(6291472);
+            consume(6291476);
             values.push(parse(62, expressionType & ~2));
         }
         else if ($currentToken & 12288) {
@@ -3632,7 +3912,7 @@ function parseObjectLiteralExpression(expressionType) {
             const currentToken = $currentToken;
             const index = $index;
             nextToken();
-            if (consumeOpt(6291472)) {
+            if (consumeOpt(6291476)) {
                 values.push(parse(62, expressionType & ~2));
             }
             else {
@@ -3643,14 +3923,14 @@ function parseObjectLiteralExpression(expressionType) {
             }
         }
         else {
-            throw new Error(`AUR0164: Invalid or unsupported property definition in object literal: '${$input}'`);
+            throw invalidPropDefInObjLiteral();
         }
-        if ($currentToken !== 7340043) {
-            consume(6291469);
+        if ($currentToken !== 7340045) {
+            consume(6291471);
         }
     }
     $optional = _optional;
-    consume(7340043);
+    consume(7340045);
     if (expressionType & 2) {
         return new ObjectBindingPattern(keys, values);
     }
@@ -3698,11 +3978,11 @@ function parseInterpolation() {
 function parseTemplate(expressionType, result, tagged) {
     const _optional = $optional;
     const cooked = [$tokenValue];
-    consume(2163757);
+    consume(2163759);
     const expressions = [parse(62, expressionType)];
-    while (($currentToken = scanTemplateTail()) !== 2163756) {
+    while (($currentToken = scanTemplateTail()) !== 2163758) {
         cooked.push($tokenValue);
-        consume(2163757);
+        consume(2163759);
         expressions.push(parse(62, expressionType));
     }
     cooked.push($tokenValue);
@@ -3732,34 +4012,6 @@ function nextToken() {
     }
     $currentToken = 6291456;
 }
-const { save, restore } = (function () {
-    let index = 0;
-    let _startIndex = 0;
-    let _currentToken = 6291456;
-    let _currentChar = 0;
-    let _tokenValue = '';
-    let _assignable = true;
-    let _optional = false;
-    function save() {
-        index = $index;
-        _startIndex = $startIndex;
-        _currentToken = $currentToken;
-        _currentChar = $currentChar;
-        _tokenValue = $tokenValue;
-        _assignable = $assignable;
-        _optional = $optional;
-    }
-    function restore() {
-        $index = index;
-        $startIndex = _startIndex;
-        $currentToken = _currentToken;
-        $currentChar = _currentChar;
-        $tokenValue = _tokenValue;
-        $assignable = _assignable;
-        $optional = _optional;
-    }
-    return { save, restore };
-})();
 function nextChar() {
     return $currentChar = $input.charCodeAt(++$index);
 }
@@ -3812,7 +4064,7 @@ function scanString() {
             marker = $index;
         }
         else if ($index >= $length) {
-            throw new Error(`AUR0165: Unterminated quote in string literal: '${$input}'`);
+            throw unterminatedStringLiteral();
         }
         else {
             nextChar();
@@ -3844,7 +4096,7 @@ function scanTemplate() {
         }
         else {
             if ($index >= $length) {
-                throw new Error(`AUR0166: Unterminated template string: '${$input}'`);
+                throw unterminatedTemplateLiteral();
             }
             result += String.fromCharCode($currentChar);
         }
@@ -3852,13 +4104,13 @@ function scanTemplate() {
     nextChar();
     $tokenValue = result;
     if (tail) {
-        return 2163756;
+        return 2163758;
     }
-    return 2163757;
+    return 2163759;
 }
 function scanTemplateTail() {
     if ($index >= $length) {
-        throw new Error(`AUR0166: Unterminated template string: '${$input}'`);
+        throw unterminatedTemplateLiteral();
     }
     $index--;
     return scanTemplate();
@@ -3875,16 +4127,147 @@ function consume(token) {
         nextToken();
     }
     else {
-        throw new Error(`AUR0167: Missing expected token: '${$input}'`);
+        throw missingExpectedToken(token);
+    }
+}
+function invalidStartOfExpression() {
+    {
+        return new Error(`AUR0151: Invalid start of expression: '${$input}'`);
+    }
+}
+function invalidSpreadOp() {
+    {
+        return new Error(`AUR0152: Spread operator is not supported: '${$input}'`);
+    }
+}
+function expectedIdentifier() {
+    {
+        return new Error(`AUR0153: Expected identifier: '${$input}'`);
+    }
+}
+function invalidMemberExpression() {
+    {
+        return new Error(`AUR0154: Invalid member expression: '${$input}'`);
+    }
+}
+function unexpectedEndOfExpression() {
+    {
+        return new Error(`AUR0155: Unexpected end of expression: '${$input}'`);
+    }
+}
+function unconsumedToken() {
+    {
+        return new Error(`AUR0156: Unconsumed token: '${$tokenRaw()}' at position ${$index} of '${$input}'`);
+    }
+}
+function invalidEmptyExpression() {
+    {
+        return new Error(`AUR0157: Invalid expression. Empty expression is only valid in event bindings (trigger, delegate, capture etc...)`);
+    }
+}
+function lhsNotAssignable() {
+    {
+        return new Error(`AUR0158: Left hand side of expression is not assignable: '${$input}'`);
+    }
+}
+function expectedValueConverterIdentifier() {
+    {
+        return new Error(`AUR0159: Expected identifier to come after ValueConverter operator: '${$input}'`);
+    }
+}
+function expectedBindingBehaviorIdentifier() {
+    {
+        return new Error(`AUR0160: Expected identifier to come after BindingBehavior operator: '${$input}'`);
+    }
+}
+function unexpectedOfKeyword() {
+    {
+        return new Error(`AUR0161: Unexpected keyword "of": '${$input}'`);
+    }
+}
+function invalidLHSBindingIdentifierInForOf() {
+    {
+        return new Error(`AUR0163: Invalid BindingIdentifier at left hand side of "of": '${$input}'`);
+    }
+}
+function invalidPropDefInObjLiteral() {
+    {
+        return new Error(`AUR0164: Invalid or unsupported property definition in object literal: '${$input}'`);
+    }
+}
+function unterminatedStringLiteral() {
+    {
+        return new Error(`AUR0165: Unterminated quote in string literal: '${$input}'`);
+    }
+}
+function unterminatedTemplateLiteral() {
+    {
+        return new Error(`AUR0166: Unterminated template string: '${$input}'`);
+    }
+}
+function missingExpectedToken(token) {
+    {
+        return new Error(`AUR0167: Missing expected token '${TokenValues[token & 63]}' in '${$input}' `);
+    }
+}
+const unexpectedCharacter = () => {
+    {
+        throw new Error(`AUR0168: Unexpected character: '${$input}'`);
+    }
+};
+unexpectedCharacter.notMapped = true;
+function unexpectedTokenInDestructuring() {
+    {
+        return new Error(`AUR0170: Unexpected '${$tokenRaw()}' at position ${$index - 1} for destructuring assignment in ${$input}`);
+    }
+}
+function unexpectedTokenInOptionalChain() {
+    {
+        return new Error(`AUR0171: Unexpected '${$tokenRaw()}' at position ${$index - 1} for optional chain in ${$input}`);
+    }
+}
+function invalidTaggedTemplateOnOptionalChain() {
+    {
+        return new Error(`AUR0172: Invalid tagged template on optional chain in ${$input}`);
+    }
+}
+function invalidArrowParameterList() {
+    {
+        return new Error(`AUR0173: Invalid arrow parameter list in ${$input}`);
+    }
+}
+function defaultParamsInArrowFn() {
+    {
+        return new Error(`AUR0174: Arrow function with default parameters is not supported: ${$input}`);
+    }
+}
+function destructuringParamsInArrowFn() {
+    {
+        return new Error(`AUR0175: Arrow function with destructuring parameters is not supported: ${$input}`);
+    }
+}
+function restParamsMustBeLastParam() {
+    {
+        return new Error(`AUR0176: Rest parameter must be last formal parameter in arrow function: ${$input}`);
+    }
+}
+function functionBodyInArrowFN() {
+    {
+        return new Error(`AUR0178: Arrow function with function body is not supported: ${$input}`);
+    }
+}
+function unexpectedDoubleDot() {
+    {
+        return new Error(`AUR0179: Unexpected token '.' at position ${$index - 1} in ${$input}`);
     }
 }
 const TokenValues = [
     $false, $true, $null, $undefined, '$this', null, '$parent',
-    '(', '{', '.', '?.', '}', ')', ',', '[', ']', ':', '?', '\'', '"',
+    '(', '{', '.', '..', '...', '?.', '}', ')', ',', '[', ']', ':', '?', '\'', '"',
     '&', '|', '??', '||', '&&', '==', '!=', '===', '!==', '<', '>',
     '<=', '>=', 'in', 'instanceof', '+', '-', 'typeof', 'void', '*', '%', '/', '=', '!',
-    2163756, 2163757,
-    'of'
+    2163758, 2163759,
+    'of', '=>'
 ];
 const KeywordLookup = Object.assign(Object.create(null), {
     true: 8193,
@@ -3893,11 +4276,11 @@ const KeywordLookup = Object.assign(Object.create(null), {
     undefined: 8195,
     $this: 12292,
     $parent: 12294,
-    in: 6562209,
-    instanceof: 6562210,
-    typeof: 139301,
-    void: 139302,
-    of: 4204590,
+    in: 6562211,
+    instanceof: 6562212,
+    typeof: 139303,
+    void: 139304,
+    of: 4204592,
 });
 const codes = {
     AsciiIdPart: [0x24, 0, 0x30, 0x3A, 0x41, 0x5B, 0x5F, 0, 0x61, 0x7B],
@@ -3927,10 +4310,6 @@ function returnToken(token) {
         return token;
     };
 }
-const unexpectedCharacter = () => {
-    throw new Error(`AUR0168: Unexpected character: '${$input}'`);
-};
-unexpectedCharacter.notMapped = true;
 const AsciiIdParts = new Set();
 decompress(null, AsciiIdParts, codes.AsciiIdPart, true);
 const IdParts = new Uint8Array(0xFFFF);
@@ -3953,88 +4332,97 @@ CharScanners[96] = () => {
 };
 CharScanners[33] = () => {
     if (nextChar() !== 61) {
-        return 131115;
+        return 131117;
     }
     if (nextChar() !== 61) {
-        return 6553946;
+        return 6553948;
     }
     nextChar();
-    return 6553948;
+    return 6553950;
 };
 CharScanners[61] = () => {
-    if (nextChar() !== 61) {
-        return 4194346;
+    if (nextChar() === 62) {
+        nextChar();
+        return 49;
+    }
+    if ($currentChar !== 61) {
+        return 4194348;
     }
     if (nextChar() !== 61) {
-        return 6553945;
+        return 6553947;
     }
     nextChar();
-    return 6553947;
+    return 6553949;
 };
 CharScanners[38] = () => {
     if (nextChar() !== 38) {
-        return 6291476;
+        return 6291478;
     }
     nextChar();
-    return 6553880;
+    return 6553882;
 };
 CharScanners[124] = () => {
     if (nextChar() !== 124) {
-        return 6291477;
+        return 6291479;
     }
     nextChar();
-    return 6553815;
+    return 6553817;
 };
 CharScanners[63] = () => {
     if (nextChar() === 46) {
         const peek = $input.charCodeAt($index + 1);
         if (peek <= 48 || peek >= 57) {
             nextChar();
-            return 2162698;
+            return 2162700;
         }
-        return 6291475;
+        return 6291477;
     }
     if ($currentChar !== 63) {
-        return 6291475;
+        return 6291477;
     }
-    if (nextChar() === 61) {
-        throw new Error('Operator ??= is not supported.');
-    }
-    return 6553750;
+    nextChar();
+    return 6553752;
 };
 CharScanners[46] = () => {
     if (nextChar() <= 57 && $currentChar >= 48) {
         return scanNumber(true);
     }
+    if ($currentChar === 46) {
+        if (nextChar() !== 46) {
+            return 10;
+        }
+        nextChar();
+        return 11;
+    }
     return 65545;
 };
 CharScanners[60] = () => {
     if (nextChar() !== 61) {
-        return 6554013;
+        return 6554015;
     }
     nextChar();
-    return 6554015;
+    return 6554017;
 };
 CharScanners[62] = () => {
     if (nextChar() !== 61) {
-        return 6554014;
+        return 6554016;
     }
     nextChar();
-    return 6554016;
+    return 6554018;
 };
-CharScanners[37] = returnToken(6554152);
+CharScanners[37] = returnToken(6554154);
 CharScanners[40] = returnToken(2688007);
-CharScanners[41] = returnToken(7340044);
-CharScanners[42] = returnToken(6554151);
-CharScanners[43] = returnToken(2490851);
-CharScanners[44] = returnToken(6291469);
-CharScanners[45] = returnToken(2490852);
-CharScanners[47] = returnToken(6554153);
-CharScanners[58] = returnToken(6291472);
-CharScanners[91] = returnToken(2688014);
-CharScanners[93] = returnToken(7340047);
+CharScanners[41] = returnToken(7340046);
+CharScanners[42] = returnToken(6554153);
+CharScanners[43] = returnToken(2490853);
+CharScanners[44] = returnToken(6291471);
+CharScanners[45] = returnToken(2490854);
+CharScanners[47] = returnToken(6554155);
+CharScanners[58] = returnToken(6291476);
+CharScanners[91] = returnToken(2688016);
+CharScanners[93] = returnToken(7340051);
 CharScanners[123] = returnToken(524296);
-CharScanners[125] = returnToken(7340043);
+CharScanners[125] = returnToken(7340045);
 
 let _connectable = null;
 const connectables = [];
@@ -5135,6 +5523,7 @@ exports.ArrayBindingPattern = ArrayBindingPattern;
 exports.ArrayIndexObserver = ArrayIndexObserver;
 exports.ArrayLiteralExpression = ArrayLiteralExpression;
 exports.ArrayObserver = ArrayObserver;
+exports.ArrowFunction = ArrowFunction;
 exports.AssignExpression = AssignExpression;
 exports.BinaryExpression = BinaryExpression;
 exports.BindingBehavior = BindingBehavior;

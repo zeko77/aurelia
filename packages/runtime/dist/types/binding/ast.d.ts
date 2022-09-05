@@ -31,17 +31,18 @@ export declare const enum ExpressionKind {
     Binary = 46,
     Conditional = 63,
     Assign = 8208,
-    ValueConverter = 36913,
-    BindingBehavior = 38962,
-    HtmlLiteral = 51,
-    ArrayBindingPattern = 65556,
-    ObjectBindingPattern = 65557,
-    BindingIdentifier = 65558,
-    ForOfStatement = 6199,
-    Interpolation = 24,
-    ArrayDestructuring = 90137,
-    ObjectDestructuring = 106521,
-    DestructuringAssignmentLeaf = 139289
+    ArrowFunction = 17,
+    ValueConverter = 36914,
+    BindingBehavior = 38963,
+    HtmlLiteral = 52,
+    ArrayBindingPattern = 65557,
+    ObjectBindingPattern = 65558,
+    BindingIdentifier = 65559,
+    ForOfStatement = 6200,
+    Interpolation = 25,
+    ArrayDestructuring = 90138,
+    ObjectDestructuring = 106523,
+    DestructuringAssignmentLeaf = 139292
 }
 export declare type UnaryOperator = 'void' | 'typeof' | '!' | '-' | '+';
 export declare type BinaryOperator = '??' | '&&' | '||' | '==' | '===' | '!=' | '!==' | 'instanceof' | 'in' | '+' | '-' | '*' | '/' | '%' | '<' | '>' | '<=' | '>=';
@@ -51,7 +52,7 @@ export declare type IsLeftHandSide = IsPrimary | CallFunctionExpression | CallMe
 export declare type IsUnary = IsLeftHandSide | UnaryExpression;
 export declare type IsBinary = IsUnary | BinaryExpression;
 export declare type IsConditional = IsBinary | ConditionalExpression;
-export declare type IsAssign = IsConditional | AssignExpression;
+export declare type IsAssign = IsConditional | AssignExpression | ArrowFunction;
 export declare type IsValueConverter = IsAssign | ValueConverterExpression;
 export declare type IsBindingBehavior = IsValueConverter | BindingBehaviorExpression;
 export declare type IsAssignable = AccessScopeExpression | AccessKeyedExpression | AccessMemberExpression | AssignExpression;
@@ -69,6 +70,7 @@ export interface IVisitor<T = unknown> {
     visitAccessThis(expr: AccessThisExpression): T;
     visitArrayBindingPattern(expr: ArrayBindingPattern): T;
     visitArrayLiteral(expr: ArrayLiteralExpression): T;
+    visitArrowFunction(expr: ArrowFunction): T;
     visitAssign(expr: AssignExpression): T;
     visitBinary(expr: BinaryExpression): T;
     visitBindingBehavior(expr: BindingBehaviorExpression): T;
@@ -99,6 +101,7 @@ export declare class Unparser implements IVisitor<void> {
     visitAccessThis(expr: AccessThisExpression): void;
     visitAccessScope(expr: AccessScopeExpression): void;
     visitArrayLiteral(expr: ArrayLiteralExpression): void;
+    visitArrowFunction(expr: ArrowFunction): void;
     visitObjectLiteral(expr: ObjectLiteralExpression): void;
     visitPrimitiveLiteral(expr: PrimitiveLiteralExpression): void;
     visitCallFunction(expr: CallFunctionExpression): void;
@@ -482,6 +485,19 @@ export declare class DestructuringAssignmentRestExpression {
     evaluate(_f: LF, _s: Scope, _l: IServiceLocator, _c: IConnectable | null): undefined;
     assign(f: LF, s: Scope, l: IServiceLocator, value: unknown): void;
     accept<T>(_visitor: IVisitor<T>): T;
+    toString(): string;
+}
+export declare class ArrowFunction {
+    args: BindingIdentifier[];
+    body: IsAssign;
+    rest: boolean;
+    get $kind(): ExpressionKind.ArrowFunction;
+    get hasBind(): false;
+    get hasUnbind(): false;
+    constructor(args: BindingIdentifier[], body: IsAssign, rest?: boolean);
+    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
+    assign(f: LF, s: Scope, l: IServiceLocator, value: unknown): void;
+    accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
 //# sourceMappingURL=ast.d.ts.map

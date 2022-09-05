@@ -1,5 +1,5 @@
 import { noop, isArrayIndex, DI, Registration, kebabCase, emptyArray, EventAggregator, ILogger } from '../../../kernel/dist/native-modules/index.mjs';
-import { IObserverLocator, valueConverter, IDirtyChecker, INodeObserverLocator, Scope, OverrideContext } from '../../../runtime/dist/native-modules/index.mjs';
+import { IObserverLocator, FlushQueue, valueConverter, IDirtyChecker, INodeObserverLocator, Scope, OverrideContext } from '../../../runtime/dist/native-modules/index.mjs';
 import { StandardConfiguration, IPlatform, ITemplateCompiler, CustomElement, CustomAttribute, Aurelia, bindable, customElement } from '../../../runtime-html/dist/native-modules/index.mjs';
 import { BrowserPlatform } from '../../../platform-browser/dist/native-modules/index.mjs';
 import { Metadata } from '../../../metadata/dist/native-modules/index.mjs';
@@ -7518,8 +7518,29 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
     const component = container.get(App);
     let startPromise = void 0;
     if (autoStart) {
-        au.app({ host: host, component });
-        startPromise = au.start();
+        try {
+            au.app({ host: host, component });
+            startPromise = au.start();
+        }
+        catch (ex) {
+            try {
+                const dispose = () => {
+                    root.remove();
+                    au.dispose();
+                };
+                const ret = au.stop();
+                if (ret instanceof Promise)
+                    void ret.then(dispose);
+                else
+                    dispose();
+                FlushQueue.instance.clear();
+            }
+            catch (_a) {
+                console.warn('(!) corrupted fixture state, should isolate the failing test and restart the run'
+                    + 'as it is likely that this failing fixture creation will pollute others.');
+            }
+            throw ex;
+        }
     }
     let tornCount = 0;
     const getBy = (selector) => {

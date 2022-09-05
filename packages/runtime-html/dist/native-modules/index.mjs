@@ -4717,7 +4717,7 @@ let fn = class LetElementRenderer {
             l = s[a];
             h = rn(this.ep, l.from, 8);
             c = new LetBinding(h, l.to, this.oL, r, n);
-            t.addBinding(38962 === h.$kind ? xn(c, h, r) : c);
+            t.addBinding(38963 === h.$kind ? xn(c, h, r) : c);
             ++a;
         }
     }
@@ -4735,7 +4735,7 @@ let dn = class CallBindingRenderer {
     render(t, i, e) {
         const s = rn(this.ep, e.from, 8 | 4);
         const n = new CallBinding(s, on(i), e.to, this.oL, t.container);
-        t.addBinding(38962 === s.$kind ? xn(n, s, t.container) : n);
+        t.addBinding(38963 === s.$kind ? xn(n, s, t.container) : n);
     }
 };
 
@@ -4750,7 +4750,7 @@ let vn = class RefBindingRenderer {
     render(t, i, e) {
         const s = rn(this.ep, e.from, 8);
         const n = new RefBinding(s, ln(i, e.to), t.container);
-        t.addBinding(38962 === s.$kind ? xn(n, s, t.container) : n);
+        t.addBinding(38963 === s.$kind ? xn(n, s, t.container) : n);
     }
 };
 
@@ -4774,7 +4774,7 @@ let mn = class InterpolationBindingRenderer {
         let a;
         for (;h > c; ++c) {
             a = l[c];
-            if (38962 === a.sourceExpression.$kind) l[c] = xn(a, a.sourceExpression, n);
+            if (38963 === a.sourceExpression.$kind) l[c] = xn(a, a.sourceExpression, n);
         }
         i.addBinding(o);
     }
@@ -4793,7 +4793,7 @@ let gn = class PropertyBindingRenderer {
     render(t, i, e) {
         const s = rn(this.ep, e.from, 8);
         const n = new PropertyBinding(s, on(i), e.to, e.mode, this.oL, t.container, this.p.domWriteQueue);
-        t.addBinding(38962 === s.$kind ? xn(n, s, t.container) : n);
+        t.addBinding(38963 === s.$kind ? xn(n, s, t.container) : n);
     }
 };
 
@@ -4810,7 +4810,7 @@ let pn = class IteratorBindingRenderer {
     render(i, e, s) {
         const n = rn(this.ep, s.from, 2);
         const r = new PropertyBinding(n, on(e), s.to, t.toView, this.oL, i.container, this.p.domWriteQueue);
-        i.addBinding(38962 === n.iterable.$kind ? xn(r, n.iterable, i.container) : r);
+        i.addBinding(38963 === n.iterable.$kind ? xn(r, n.iterable, i.container) : r);
     }
 };
 
@@ -4859,7 +4859,7 @@ let yn = class TextBindingRenderer {
         for (;a > u; ++u) {
             v = c[u];
             d = new ContentBinding(v, r.insertBefore(o.createTextNode(""), n), s, this.oL, this.p, e.strict);
-            t.addBinding(38962 === v.$kind ? xn(d, v, s) : d);
+            t.addBinding(38963 === v.$kind ? xn(d, v, s) : d);
             f = h[u + 1];
             if ("" !== f) r.insertBefore(o.createTextNode(f), n);
         }
@@ -4889,7 +4889,7 @@ let Cn = class ListenerBindingRenderer {
     render(t, i, e) {
         const s = rn(this.ep, e.from, 4);
         const n = new Listener(this.p, e.to, s, i, this.Jt, t.container, new ListenerOptions(e.preventDefault, e.strategy, this.Qt.expAsHandler));
-        t.addBinding(38962 === s.$kind ? xn(n, s, t.container) : n);
+        t.addBinding(38963 === s.$kind ? xn(n, s, t.container) : n);
     }
 };
 
@@ -4930,7 +4930,7 @@ let En = class StylePropertyBindingRenderer {
     render(i, e, s) {
         const n = rn(this.ep, s.from, 8);
         const r = new PropertyBinding(n, e.style, s.to, t.toView, this.oL, i.container, this.p.domWriteQueue);
-        i.addBinding(38962 === n.$kind ? xn(r, n, i.container) : r);
+        i.addBinding(38963 === n.$kind ? xn(r, n, i.container) : r);
     }
 };
 
@@ -4946,7 +4946,7 @@ let Bn = class AttributeBindingRenderer {
     render(i, e, s) {
         const n = rn(this.ep, s.from, 8);
         const r = new AttributeBinding(n, e, s.attr, s.to, t.toView, this.oL, i.container);
-        i.addBinding(38962 === n.$kind ? xn(r, n, i.container) : r);
+        i.addBinding(38963 === n.$kind ? xn(r, n, i.container) : r);
     }
 };
 
@@ -7855,7 +7855,7 @@ function Zr(t) {
     t.dispose();
 }
 
-const Jr = [ 38962, 36913 ];
+const Jr = [ 38963, 36914 ];
 
 class Repeat {
     constructor(t, i, e) {
@@ -7894,7 +7894,7 @@ class Repeat {
         }
         this.we(e);
         const h = o.declaration;
-        if (!(this.ge = 90137 === h.$kind || 106521 === h.$kind)) this.local = h.evaluate(e, this.$controller.scope, r.locator, null);
+        if (!(this.ge = 90138 === h.$kind || 106523 === h.$kind)) this.local = h.evaluate(e, this.$controller.scope, r.locator, null);
     }
     attaching(t, i, e) {
         this.be(e);

@@ -5354,7 +5354,7 @@ let LetElementRenderer = class LetElementRenderer {
             childInstruction = childInstructions[i];
             expr = ensureExpression(this._exprParser, childInstruction.from, 8);
             binding = new LetBinding(expr, childInstruction.to, this._observerLocator, container, toBindingContext);
-            renderingCtrl.addBinding(expr.$kind === 38962
+            renderingCtrl.addBinding(expr.$kind === 38963
                 ? applyBindingBehavior(binding, expr, container)
                 : binding);
             ++i;
@@ -5373,7 +5373,7 @@ let CallBindingRenderer = class CallBindingRenderer {
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.from, 8 | 4);
         const binding = new CallBinding(expr, getTarget(target), instruction.to, this._observerLocator, renderingCtrl.container);
-        renderingCtrl.addBinding(expr.$kind === 38962
+        renderingCtrl.addBinding(expr.$kind === 38963
             ? applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }
@@ -5389,7 +5389,7 @@ let RefBindingRenderer = class RefBindingRenderer {
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.from, 8);
         const binding = new RefBinding(expr, getRefTarget(target, instruction.to), renderingCtrl.container);
-        renderingCtrl.addBinding(expr.$kind === 38962
+        renderingCtrl.addBinding(expr.$kind === 38963
             ? applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }
@@ -5414,7 +5414,7 @@ let InterpolationBindingRenderer = class InterpolationBindingRenderer {
         let partBinding;
         for (; ii > i; ++i) {
             partBinding = partBindings[i];
-            if (partBinding.sourceExpression.$kind === 38962) {
+            if (partBinding.sourceExpression.$kind === 38963) {
                 partBindings[i] = applyBindingBehavior(partBinding, partBinding.sourceExpression, container);
             }
         }
@@ -5434,7 +5434,7 @@ let PropertyBindingRenderer = class PropertyBindingRenderer {
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.from, 8);
         const binding = new PropertyBinding(expr, getTarget(target), instruction.to, instruction.mode, this._observerLocator, renderingCtrl.container, this._platform.domWriteQueue);
-        renderingCtrl.addBinding(expr.$kind === 38962
+        renderingCtrl.addBinding(expr.$kind === 38963
             ? applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }
@@ -5452,7 +5452,7 @@ let IteratorBindingRenderer = class IteratorBindingRenderer {
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.from, 2);
         const binding = new PropertyBinding(expr, getTarget(target), instruction.to, BindingMode.toView, this._observerLocator, renderingCtrl.container, this._platform.domWriteQueue);
-        renderingCtrl.addBinding(expr.iterable.$kind === 38962
+        renderingCtrl.addBinding(expr.iterable.$kind === 38963
             ? applyBindingBehavior(binding, expr.iterable, renderingCtrl.container)
             : binding);
     }
@@ -5503,7 +5503,7 @@ let TextBindingRenderer = class TextBindingRenderer {
         for (; ii > i; ++i) {
             part = dynamicParts[i];
             binding = new ContentBinding(part, parent.insertBefore(doc.createTextNode(''), next), container, this._observerLocator, this._platform, instruction.strict);
-            renderingCtrl.addBinding(part.$kind === 38962
+            renderingCtrl.addBinding(part.$kind === 38963
                 ? applyBindingBehavior(binding, part, container)
                 : binding);
             text = staticParts[i + 1];
@@ -5536,7 +5536,7 @@ let ListenerBindingRenderer = class ListenerBindingRenderer {
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.from, 4);
         const binding = new Listener(this._platform, instruction.to, expr, target, this._eventDelegator, renderingCtrl.container, new ListenerOptions(instruction.preventDefault, instruction.strategy, this._listenerBehaviorOptions.expAsHandler));
-        renderingCtrl.addBinding(expr.$kind === 38962
+        renderingCtrl.addBinding(expr.$kind === 38963
             ? applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }
@@ -5578,7 +5578,7 @@ let StylePropertyBindingRenderer = class StylePropertyBindingRenderer {
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.from, 8);
         const binding = new PropertyBinding(expr, target.style, instruction.to, BindingMode.toView, this._observerLocator, renderingCtrl.container, this._platform.domWriteQueue);
-        renderingCtrl.addBinding(expr.$kind === 38962
+        renderingCtrl.addBinding(expr.$kind === 38963
             ? applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }
@@ -5595,7 +5595,7 @@ let AttributeBindingRenderer = class AttributeBindingRenderer {
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.from, 8);
         const binding = new AttributeBinding(expr, target, instruction.attr, instruction.to, BindingMode.toView, this._observerLocator, renderingCtrl.container);
-        renderingCtrl.addBinding(expr.$kind === 38962
+        renderingCtrl.addBinding(expr.$kind === 38963
             ? applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }
@@ -8898,8 +8898,8 @@ function dispose(disposable) {
     disposable.dispose();
 }
 const wrappedExprs = [
-    38962,
-    36913,
+    38963,
+    36914,
 ];
 class Repeat {
     constructor(_location, _parent, _factory) {
@@ -8938,7 +8938,7 @@ class Repeat {
         }
         this._refreshCollectionObserver(flags);
         const dec = forOf.declaration;
-        if (!(this._hasDestructuredLocal = dec.$kind === 90137 || dec.$kind === 106521)) {
+        if (!(this._hasDestructuredLocal = dec.$kind === 90138 || dec.$kind === 106523)) {
             this.local = dec.evaluate(flags, this.$controller.scope, binding.locator, null);
         }
     }

@@ -486,7 +486,7 @@ exports.DispatchBindingInstructionRenderer = class DispatchBindingInstructionRen
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.expr, 8);
         const binding = new exports.StateDispatchBinding(renderingCtrl.container, this._stateContainer, expr, target, instruction.from);
-        renderingCtrl.addBinding(expr.$kind === 38962
+        renderingCtrl.addBinding(expr.$kind === 38963
             ? runtimeHtml.applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }

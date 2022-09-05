@@ -85,8 +85,8 @@ function getPropertyInfo(binding, info, flags = 0) {
     while (expression !== void 0 && (expression === null || expression === void 0 ? void 0 : expression.$kind) !== 10082) {
         let memberName;
         switch (expression.$kind) {
-            case 38962:
-            case 36913:
+            case 38963:
+            case 36914:
                 expression = expression.expression;
                 continue;
             case 9323:

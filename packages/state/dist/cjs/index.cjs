@@ -429,7 +429,7 @@ exports.DispatchBindingInstructionRenderer = class DispatchBindingInstructionRen
     render(t, s, e) {
         const n = v(this.ep, e.expr, 8);
         const h = new exports.StateDispatchBinding(t.container, this._, n, s, e.from);
-        t.addBinding(38962 === n.$kind ? i.applyBindingBehavior(h, n, t.container) : h);
+        t.addBinding(38963 === n.$kind ? i.applyBindingBehavior(h, n, t.container) : h);
     }
 };
 
