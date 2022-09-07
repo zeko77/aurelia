@@ -1242,7 +1242,7 @@ class AttributeObserver {
     setValue(value, flags) {
         this._value = value;
         this._hasChanges = value !== this._oldValue;
-        if ((flags & 64) === 0) {
+        if ((flags & 32) === 0) {
             this._flushChanges();
         }
     }
@@ -1444,7 +1444,7 @@ class AttributeBinding {
             }
             this.interceptor.$unbind(flags | 2);
         }
-        this.persistentFlags = flags & 97;
+        this.persistentFlags = flags & 33;
         this.$scope = scope;
         let sourceExpression = this.sourceExpression;
         if (sourceExpression.hasBind) {
@@ -1719,7 +1719,16 @@ class ContentBinding {
         }
     }
     handleCollectionChange() {
-        this.queueUpdate(this.value, 0);
+        if (!this.isBound) {
+            return;
+        }
+        this.obs.version++;
+        const v = this.value = this.sourceExpression.evaluate(0, this.$scope, this.locator, (this.mode & toView$1) > 0 ? this.interceptor : null);
+        this.obs.clear();
+        if (v instanceof Array) {
+            this.observeCollection(v);
+        }
+        this.queueUpdate(v, 0);
     }
     $bind(flags, scope) {
         if (this.isBound) {
@@ -1787,6 +1796,20 @@ class LetBinding {
         const previousValue = target[targetProperty];
         this.obs.version++;
         newValue = this.sourceExpression.evaluate(flags, this.$scope, this.locator, this.interceptor);
+        this.obs.clear();
+        if (newValue !== previousValue) {
+            target[targetProperty] = newValue;
+        }
+    }
+    handleCollectionChange(_indexMap, flags) {
+        if (!this.isBound) {
+            return;
+        }
+        const target = this.target;
+        const targetProperty = this.targetProperty;
+        const previousValue = target[targetProperty];
+        this.obs.version++;
+        const newValue = this.sourceExpression.evaluate(flags, this.$scope, this.locator, this.interceptor);
         this.obs.clear();
         if (newValue !== previousValue) {
             target[targetProperty] = newValue;
@@ -1886,6 +1909,27 @@ class PropertyBinding {
             this.interceptor.updateTarget(newValue, flags);
         }
     }
+    handleCollectionChange(_indexMap, flags) {
+        if (!this.isBound) {
+            return;
+        }
+        const shouldQueueFlush = (flags & 2) === 0 && (this.targetObserver.type & 4) > 0;
+        this.obs.version++;
+        const newValue = this.sourceExpression.evaluate(flags, this.$scope, this.locator, this.interceptor);
+        this.obs.clear();
+        if (shouldQueueFlush) {
+            task = this.task;
+            this.task = this.taskQueue.queueTask(() => {
+                this.interceptor.updateTarget(newValue, flags);
+                this.task = null;
+            }, updateTaskOpts);
+            task === null || task === void 0 ? void 0 : task.cancel();
+            task = null;
+        }
+        else {
+            this.interceptor.updateTarget(newValue, flags);
+        }
+    }
     $bind(flags, scope) {
         var _a;
         if (this.isBound) {
@@ -1895,7 +1939,7 @@ class PropertyBinding {
             this.interceptor.$unbind(flags | 2);
         }
         flags |= 1;
-        this.persistentFlags = flags & 97;
+        this.persistentFlags = flags & 33;
         this.$scope = scope;
         let sourceExpression = this.sourceExpression;
         if (sourceExpression.hasBind) {
@@ -2637,7 +2681,7 @@ class ClassAttributeAccessor {
     setValue(newValue, flags) {
         this.value = newValue;
         this._hasChanges = newValue !== this._oldValue;
-        if ((flags & 64) === 0) {
+        if ((flags & 32) === 0) {
             this._flushChanges();
         }
     }
@@ -7829,7 +7873,7 @@ class SelectValueObserver {
         this._value = newValue;
         this._hasChanges = newValue !== this._oldValue;
         this._observeArray(newValue instanceof Array ? newValue : null);
-        if ((flags & 64) === 0) {
+        if ((flags & 32) === 0) {
             this._flushChanges();
         }
     }
@@ -8014,7 +8058,7 @@ class StyleAttributeAccessor {
     setValue(newValue, flags) {
         this.value = newValue;
         this._hasChanges = newValue !== this._oldValue;
-        if ((flags & 64) === 0) {
+        if ((flags & 32) === 0) {
             this._flushChanges();
         }
     }
@@ -8159,7 +8203,7 @@ class ValueAttributeObserver {
         this._oldValue = this._value;
         this._value = newValue;
         this._hasChanges = true;
-        if (!this.handler.config.readonly && (flags & 64) === 0) {
+        if (!this.handler.config.readonly && (flags & 32) === 0) {
             this._flushChanges(flags);
         }
     }
@@ -8718,38 +8762,6 @@ __decorate([
     bindable()
 ], Portal.prototype, "callbackContext", void 0);
 templateController('portal')(Portal);
-
-class FlagsTemplateController {
-    constructor(factory, location, _flags) {
-        this._flags = _flags;
-        this.id = kernel.nextId('au$component');
-        this.view = factory.create().setLocation(location);
-    }
-    attaching(initiator, parent, flags) {
-        const { $controller } = this;
-        return this.view.activate(initiator, $controller, flags | this._flags, $controller.scope);
-    }
-    detaching(initiator, parent, flags) {
-        return this.view.deactivate(initiator, this.$controller, flags);
-    }
-    dispose() {
-        this.view.dispose();
-        this.view = (void 0);
-    }
-    accept(visitor) {
-        var _a;
-        if (((_a = this.view) === null || _a === void 0 ? void 0 : _a.accept(visitor)) === true) {
-            return true;
-        }
-    }
-}
-class ObserveShallow extends FlagsTemplateController {
-    constructor(factory, location) {
-        super(factory, location, 32);
-    }
-}
-ObserveShallow.inject = [IViewFactory, IRenderLocation];
-templateController('observe-shallow')(ObserveShallow);
 
 class If {
     constructor(ifFactory, location, work) {
@@ -10538,7 +10550,6 @@ const DefaultBindingLanguage = [
 ];
 const SanitizeValueConverterRegistration = exports.SanitizeValueConverter;
 const ViewValueConverterRegistration = exports.ViewValueConverter;
-const ObserveShallowRegistration = ObserveShallow;
 const IfRegistration = If;
 const ElseRegistration = Else;
 const RepeatRegistration = Repeat;
@@ -10571,7 +10582,6 @@ const DefaultResources = [
     TwoWayBindingBehaviorRegistration,
     SanitizeValueConverterRegistration,
     ViewValueConverterRegistration,
-    ObserveShallowRegistration,
     IfRegistration,
     ElseRegistration,
     RepeatRegistration,
@@ -11415,7 +11425,6 @@ exports.ListenerBindingRendererRegistration = ListenerBindingRendererRegistratio
 exports.NodeObserverConfig = NodeObserverConfig;
 exports.NodeObserverLocator = NodeObserverLocator;
 exports.NoopSVGAnalyzer = NoopSVGAnalyzer;
-exports.ObserveShallow = ObserveShallow;
 exports.OneTimeBindingBehavior = OneTimeBindingBehavior;
 exports.OneTimeBindingBehaviorRegistration = OneTimeBindingBehaviorRegistration;
 exports.OneTimeBindingCommandRegistration = OneTimeBindingCommandRegistration;

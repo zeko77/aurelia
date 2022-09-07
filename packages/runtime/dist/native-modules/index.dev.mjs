@@ -5,6 +5,7 @@ const hasOwnProp = Object.prototype.hasOwnProperty;
 const def = Reflect.defineProperty;
 const isFunction = (v) => typeof v === 'function';
 const isString = (v) => typeof v === 'string';
+const isArray = (v) => v instanceof Array;
 function defineHiddenProp(obj, key, value) {
     def(obj, key, {
         enumerable: false,
@@ -949,7 +950,7 @@ class AccessMemberExpression {
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
-        const instance = this.object.evaluate(f, s, l, (f & 32) > 0 ? null : c);
+        const instance = this.object.evaluate(f, s, l, c);
         if (f & 1) {
             if (instance == null) {
                 return instance;
@@ -996,9 +997,9 @@ class AccessKeyedExpression {
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
-        const instance = this.object.evaluate(f, s, l, (f & 32) > 0 ? null : c);
+        const instance = this.object.evaluate(f, s, l, c);
         if (instance instanceof Object) {
-            const key = this.key.evaluate(f, s, l, (f & 32) > 0 ? null : c);
+            const key = this.key.evaluate(f, s, l, c);
             if (c !== null) {
                 c.observe(instance, key);
             }
@@ -1047,6 +1048,7 @@ class CallScopeExpression {
         return Unparser.unparse(this);
     }
 }
+const autoObserveArrayMethods = 'at map filter includes indexOf lastIndexOf findIndex find flat flatMap join reduce reduceRight slice every some sort'.split(' ');
 class CallMemberExpression {
     constructor(object, name, args, optionalMember = false, optionalCall = false) {
         this.object = object;
@@ -1059,10 +1061,13 @@ class CallMemberExpression {
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
-        const instance = this.object.evaluate(f, s, l, (f & 32) > 0 ? null : c);
+        const instance = this.object.evaluate(f, s, l, c);
         const args = this.args.map(a => a.evaluate(f, s, l, c));
         const func = getFunction(f, instance, this.name);
         if (func) {
+            if (isArray(instance) && autoObserveArrayMethods.includes(this.name)) {
+                c === null || c === void 0 ? void 0 : c.observeCollection(instance);
+            }
             return func.apply(instance, args);
         }
         return void 0;
@@ -1682,7 +1687,7 @@ class ArrowFunction {
         };
         return func;
     }
-    assign(f, s, l, value) {
+    assign(_f, _s, _l, _value) {
         return void 0;
     }
     accept(visitor) {
@@ -1743,9 +1748,8 @@ var BindingMode;
 var LifecycleFlags;
 (function (LifecycleFlags) {
     LifecycleFlags[LifecycleFlags["none"] = 0] = "none";
-    LifecycleFlags[LifecycleFlags["persistentBindingFlags"] = 97] = "persistentBindingFlags";
-    LifecycleFlags[LifecycleFlags["observeLeafPropertiesOnly"] = 32] = "observeLeafPropertiesOnly";
-    LifecycleFlags[LifecycleFlags["noFlush"] = 64] = "noFlush";
+    LifecycleFlags[LifecycleFlags["persistentBindingFlags"] = 33] = "persistentBindingFlags";
+    LifecycleFlags[LifecycleFlags["noFlush"] = 32] = "noFlush";
     LifecycleFlags[LifecycleFlags["bindingStrategy"] = 1] = "bindingStrategy";
     LifecycleFlags[LifecycleFlags["isStrictBindingStrategy"] = 1] = "isStrictBindingStrategy";
     LifecycleFlags[LifecycleFlags["fromBind"] = 2] = "fromBind";
@@ -1824,7 +1828,7 @@ function cloneIndexMap(indexMap) {
     return clone;
 }
 function isIndexMap(value) {
-    return value instanceof Array && value.isIndexMap === true;
+    return isArray(value) && value.isIndexMap === true;
 }
 
 function subscriberCollection(target) {
@@ -2055,7 +2059,7 @@ class CollectionLengthObserver {
     setValue(newValue, flags) {
         const currentValue = this._value;
         if (newValue !== currentValue && isArrayIndex(newValue)) {
-            if ((flags & 64) === 0) {
+            if ((flags & 32) === 0) {
                 this._obj.length = newValue;
             }
             this._value = newValue;
@@ -2426,7 +2430,7 @@ const observe$3 = {
             $sort.call(this, compareFn);
             return this;
         }
-        const len = this.length;
+        let len = this.length;
         if (len < 2) {
             return this;
         }
@@ -2442,7 +2446,16 @@ const observe$3 = {
             compareFn = sortCompare;
         }
         quickSort(this, o.indexMap, 0, i, compareFn);
-        o.notify();
+        let shouldNotify = false;
+        for (i = 0, len = o.indexMap.length; len > i; ++i) {
+            if (o.indexMap[i] !== i) {
+                shouldNotify = true;
+                break;
+            }
+        }
+        if (shouldNotify) {
+            o.notify();
+        }
         return this;
     }
 };
@@ -2861,7 +2874,7 @@ function getObserverRecord() {
 }
 function observeCollection(collection) {
     let obs;
-    if (collection instanceof Array) {
+    if (isArray(collection)) {
         obs = getArrayObserver(collection);
     }
     else if (collection instanceof Set) {
@@ -4510,7 +4523,7 @@ function doNotCollect(key) {
         || key === Symbol.toStringTag;
 }
 function createProxy(obj) {
-    const handler = obj instanceof Array
+    const handler = isArray(obj)
         ? arrayHandler
         : obj instanceof Map || obj instanceof Set
             ? collectionHandler
@@ -5290,7 +5303,7 @@ class ObserverLocator {
         }
         switch (key) {
             case 'length':
-                if (obj instanceof Array) {
+                if (isArray(obj)) {
                     return getArrayObserver(obj).getLengthObserver();
                 }
                 break;
@@ -5303,7 +5316,7 @@ class ObserverLocator {
                 }
                 break;
             default:
-                if (obj instanceof Array && isArrayIndex(key)) {
+                if (isArray(obj) && isArrayIndex(key)) {
                     return getArrayObserver(obj).getIndexObserver(Number(key));
                 }
                 break;
@@ -5359,7 +5372,7 @@ class ObserverLocator {
 ObserverLocator.inject = [IDirtyChecker, INodeObserverLocator];
 function getCollectionObserver(collection) {
     let obs;
-    if (collection instanceof Array) {
+    if (isArray(collection)) {
         obs = getArrayObserver(collection);
     }
     else if (collection instanceof Map) {

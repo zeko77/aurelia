@@ -1,4 +1,4 @@
-import { BindingMode, LifecycleFlags } from '@aurelia/runtime';
+import { BindingMode, IndexMap, LifecycleFlags } from '@aurelia/runtime';
 import type { TaskQueue } from '@aurelia/platform';
 import type { IServiceLocator } from '@aurelia/kernel';
 import type { AccessorOrObserver, ForOfStatement, IObserverLocator, IsBindingBehavior, Scope } from '@aurelia/runtime';
@@ -23,6 +23,7 @@ export declare class PropertyBinding implements IAstBasedBinding {
     updateTarget(value: unknown, flags: LifecycleFlags): void;
     updateSource(value: unknown, flags: LifecycleFlags): void;
     handleChange(newValue: unknown, _previousValue: unknown, flags: LifecycleFlags): void;
+    handleCollectionChange(_indexMap: IndexMap, flags: LifecycleFlags): void;
     $bind(flags: LifecycleFlags, scope: Scope): void;
     $unbind(flags: LifecycleFlags): void;
 }

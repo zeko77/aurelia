@@ -496,7 +496,7 @@ export declare class ArrowFunction {
     get hasUnbind(): false;
     constructor(args: BindingIdentifier[], body: IsAssign, rest?: boolean);
     evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
-    assign(f: LF, s: Scope, l: IServiceLocator, value: unknown): void;
+    assign(_f: LF, _s: Scope, _l: IServiceLocator, _value: unknown): void;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
