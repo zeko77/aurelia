@@ -26,9 +26,8 @@ export declare enum BindingMode {
 }
 export declare const enum LifecycleFlags {
     none = 0,
-    persistentBindingFlags = 97,
-    observeLeafPropertiesOnly = 32,
-    noFlush = 64,
+    persistentBindingFlags = 33,
+    noFlush = 32,
     bindingStrategy = 1,
     isStrictBindingStrategy = 1,
     fromBind = 2,

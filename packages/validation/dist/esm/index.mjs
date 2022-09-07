@@ -47,13 +47,13 @@ const p = Object.freeze({
     }
 });
 
-function g(e) {
+function v(e) {
     return function(t) {
         return p.define(t, e);
     };
 }
 
-let v = class BaseValidationRule {
+let g = class BaseValidationRule {
     constructor(e = void 0) {
         this.messageKey = e;
         this.tag = void 0;
@@ -69,16 +69,16 @@ let v = class BaseValidationRule {
     }
 };
 
-v.$TYPE = "";
+g.$TYPE = "";
 
-v = $([ g({
+g = $([ v({
     aliases: [ {
         name: void 0,
         defaultMessage: `\${$displayName} is invalid.`
     } ]
-}) ], v);
+}) ], g);
 
-let w = class RequiredRule extends v {
+let w = class RequiredRule extends g {
     constructor() {
         super("required");
     }
@@ -92,14 +92,14 @@ let w = class RequiredRule extends v {
 
 w.$TYPE = "RequiredRule";
 
-w = $([ g({
+w = $([ v({
     aliases: [ {
         name: "required",
         defaultMessage: `\${$displayName} is required.`
     } ]
 }) ], w);
 
-let y = class RegexRule extends v {
+let y = class RegexRule extends g {
     constructor(e, t = "matches") {
         super(t);
         this.pattern = e;
@@ -114,7 +114,7 @@ let y = class RegexRule extends v {
 
 y.$TYPE = "RegexRule";
 
-y = $([ g({
+y = $([ v({
     aliases: [ {
         name: "matches",
         defaultMessage: `\${$displayName} is not correctly formatted.`
@@ -124,7 +124,7 @@ y = $([ g({
     } ]
 }) ], y);
 
-let x = class LengthRule extends v {
+let x = class LengthRule extends g {
     constructor(e, t) {
         super(t ? "maxLength" : "minLength");
         this.length = e;
@@ -140,7 +140,7 @@ let x = class LengthRule extends v {
 
 x.$TYPE = "LengthRule";
 
-x = $([ g({
+x = $([ v({
     aliases: [ {
         name: "minLength",
         defaultMessage: `\${$displayName} must be at least \${$rule.length} character\${$rule.length === 1 ? '' : 's'}.`
@@ -150,7 +150,7 @@ x = $([ g({
     } ]
 }) ], x);
 
-let R = class SizeRule extends v {
+let R = class SizeRule extends g {
     constructor(e, t) {
         super(t ? "maxItems" : "minItems");
         this.count = e;
@@ -166,7 +166,7 @@ let R = class SizeRule extends v {
 
 R.$TYPE = "SizeRule";
 
-R = $([ g({
+R = $([ v({
     aliases: [ {
         name: "minItems",
         defaultMessage: `\${$displayName} must contain at least \${$rule.count} item\${$rule.count === 1 ? '' : 's'}.`
@@ -176,7 +176,7 @@ R = $([ g({
     } ]
 }) ], R);
 
-let E = class RangeRule extends v {
+let E = class RangeRule extends g {
     constructor(e, {min: t, max: s}) {
         super(void 0 !== t && void 0 !== s ? e ? "range" : "between" : void 0 !== t ? "min" : "max");
         this.isInclusive = e;
@@ -195,7 +195,7 @@ let E = class RangeRule extends v {
 
 E.$TYPE = "RangeRule";
 
-E = $([ g({
+E = $([ v({
     aliases: [ {
         name: "min",
         defaultMessage: `\${$displayName} must be at least \${$rule.min}.`
@@ -211,7 +211,7 @@ E = $([ g({
     } ]
 }) ], E);
 
-let P = class EqualsRule extends v {
+let P = class EqualsRule extends g {
     constructor(e) {
         super("equals");
         this.expectedValue = e;
@@ -226,7 +226,7 @@ let P = class EqualsRule extends v {
 
 P.$TYPE = "EqualsRule";
 
-P = $([ g({
+P = $([ v({
     aliases: [ {
         name: "equals",
         defaultMessage: `\${$displayName} must be \${$rule.expectedValue}.`
@@ -313,7 +313,7 @@ class PropertyRule {
     async validate(e, t, s, i) {
         if (void 0 === s) s = 0;
         if (void 0 === i) i = l.create({
-            [A]: e
+            [Y]: e
         });
         const r = this.property.expression;
         let n;
@@ -376,7 +376,7 @@ class PropertyRule {
         return this;
     }
     satisfies(e) {
-        const t = new class extends v {
+        const t = new class extends g {
             constructor() {
                 super(...arguments);
                 this.execute = e;
@@ -515,9 +515,9 @@ z = $([ m(0, i), m(1, h), m(2, f), m(3, d) ], z);
 
 const N = /^function\s*\([$_\w\d]+\)\s*\{(?:\s*["']{1}use strict["']{1};)?(?:[$_\s\w\d\/\*.['"\]+;]+)?\s*return\s+[$_\w\d]+((\.[$_\w\d]+|\[['"$_\w\d]+\])+)\s*;?\s*\}$/;
 
-const Y = /^\(?[$_\w\d]+\)?\s*=>\s*[$_\w\d]+((\.[$_\w\d]+|\[['"$_\w\d]+\])+)$/;
+const A = /^\(?[$_\w\d]+\)?\s*=>\s*[$_\w\d]+((\.[$_\w\d]+|\[['"$_\w\d]+\])+)$/;
 
-const A = "$root";
+const Y = "$root";
 
 function S(e, t) {
     var s;
@@ -528,7 +528,7 @@ function S(e, t) {
       case "function":
         {
             const t = e.toString();
-            const i = null !== (s = Y.exec(t)) && void 0 !== s ? s : N.exec(t);
+            const i = null !== (s = A.exec(t)) && void 0 !== s ? s : N.exec(t);
             if (null === i) throw new Error(`Unable to parse accessor function:\n${t}`);
             e = i[1].substring(1);
             break;
@@ -537,7 +537,7 @@ function S(e, t) {
       default:
         throw new Error(`Unable to parse accessor function:\n${e}`);
     }
-    return [ e, t.parse(`${A}.${e}`, 8) ];
+    return [ e, t.parse(`${Y}.${e}`, 8) ];
 }
 
 class ValidationResult {
@@ -578,7 +578,7 @@ let j = class ValidationMessageProvider {
         let n;
         const a = i.length;
         if (1 === a && void 0 === r) n = i[0].defaultMessage; else n = null === (t = i.find((e => e.name === r))) || void 0 === t ? void 0 : t.defaultMessage;
-        if (!n) n = p.getDefaultMessages(v)[0].defaultMessage;
+        if (!n) n = p.getDefaultMessages(g)[0].defaultMessage;
         return this.setMessage(e, n);
     }
     setMessage(e, t) {
@@ -588,7 +588,7 @@ let j = class ValidationMessageProvider {
     }
     parseMessage(e) {
         const t = this.parser.parse(e, 1);
-        if (24 === (null === t || void 0 === t ? void 0 : t.$kind)) {
+        if (25 === (null === t || void 0 === t ? void 0 : t.$kind)) {
             for (const s of t.expressions) {
                 const t = s.name;
                 if (V.has(t)) this.logger.warn(`Did you mean to use "$${t}" instead of "${t}" in this validation message template: "${e}"?`);
@@ -637,6 +637,7 @@ var O;
     e["DestructuringAssignment"] = "DestructuringAssignment";
     e["DestructuringSingleAssignment"] = "DestructuringSingleAssignment";
     e["DestructuringRestAssignment"] = "DestructuringRestAssignment";
+    e["ArrowFunction"] = "ArrowFunction";
 })(O || (O = {}));
 
 class Deserializer {
@@ -794,6 +795,9 @@ class Deserializer {
           case O.DestructuringRestAssignment:
             return new u.DestructuringAssignmentRestExpression(this.hydrate(e.target), this.hydrate(e.indexOrProperties));
 
+          case O.ArrowFunction:
+            return new u.ArrowFunction(this.hydrate(e.parameters), this.hydrate(e.body), this.hydrate(e.rest));
+
           default:
             if (Array.isArray(e)) if ("object" === typeof e[0]) return this.deserializeExpressions(e); else return e.map(B); else if ("object" !== typeof e) return B(e);
             throw new Error(`unable to deserialize the expression: ${e}`);
@@ -892,6 +896,9 @@ class Serializer {
     }
     visitDestructuringAssignmentRestExpression(e) {
         return `{"$TYPE":"${O.DestructuringRestAssignment}","target":${e.target.accept(this)},"indexOrProperties":${Array.isArray(e.indexOrProperties) ? I(e.indexOrProperties) : L(e.indexOrProperties)}}`;
+    }
+    visitArrowFunction(e) {
+        return `{"$TYPE":"${O.ArrowFunction}","parameters":${this.serializeExpressions(e.args)},"body":${e.body.accept(this)},"rest":${L(e.rest)}}`;
     }
     serializeExpressions(e) {
         let t = "[";
@@ -1276,7 +1283,7 @@ class StandardValidator {
         const u = e.flags;
         const c = null !== (s = null !== (t = e.rules) && void 0 !== t ? t : M.get(n, e.objectTag)) && void 0 !== s ? s : [];
         const h = l.create({
-            [A]: n
+            [Y]: n
         });
         if (void 0 !== a) return null !== (r = await (null === (i = c.find((e => e.property.name === a))) || void 0 === i ? void 0 : i.validate(n, o, u, h))) && void 0 !== r ? r : [];
         return (await Promise.all(c.map((async e => e.validate(n, o, u, h))))).flat();
@@ -1292,7 +1299,7 @@ function K() {
     };
 }
 
-function Z(e) {
+function F(e) {
     return {
         optionsProvider: e,
         register(t) {
@@ -1302,12 +1309,12 @@ function Z(e) {
             return t;
         },
         customize(t) {
-            return Z(null !== t && void 0 !== t ? t : e);
+            return F(null !== t && void 0 !== t ? t : e);
         }
     };
 }
 
-const F = Z(a);
+const Z = F(a);
 
-export { v as BaseValidationRule, Deserializer, P as EqualsRule, b as ICustomMessages, d as IValidationExpressionHydrator, f as IValidationMessageProvider, T as IValidationRules, k as IValidator, x as LengthRule, ModelBasedRule, _ as ModelValidationExpressionHydrator, PropertyRule, E as RangeRule, y as RegexRule, w as RequiredRule, RuleProperty, Serializer, R as SizeRule, StandardValidator, ValidateInstruction, F as ValidationConfiguration, C as ValidationDeserializer, j as ValidationMessageProvider, ValidationResult, p as ValidationRuleAliasMessage, z as ValidationRules, ValidationSerializer, B as deserializePrimitive, K as getDefaultValidationConfiguration, S as parsePropertyName, A as rootObjectSymbol, L as serializePrimitive, I as serializePrimitives, g as validationRule, M as validationRulesRegistrar };
+export { g as BaseValidationRule, Deserializer, P as EqualsRule, b as ICustomMessages, d as IValidationExpressionHydrator, f as IValidationMessageProvider, T as IValidationRules, k as IValidator, x as LengthRule, ModelBasedRule, _ as ModelValidationExpressionHydrator, PropertyRule, E as RangeRule, y as RegexRule, w as RequiredRule, RuleProperty, Serializer, R as SizeRule, StandardValidator, ValidateInstruction, Z as ValidationConfiguration, C as ValidationDeserializer, j as ValidationMessageProvider, ValidationResult, p as ValidationRuleAliasMessage, z as ValidationRules, ValidationSerializer, B as deserializePrimitive, K as getDefaultValidationConfiguration, S as parsePropertyName, Y as rootObjectSymbol, L as serializePrimitive, I as serializePrimitives, v as validationRule, M as validationRulesRegistrar };
 //# sourceMappingURL=index.mjs.map

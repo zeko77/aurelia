@@ -423,7 +423,7 @@ let K = class DispatchBindingInstructionRenderer {
     render(t, i, s) {
         const n = M(this.ep, s.expr, 8);
         const e = new G(t.container, this.T, n, i, s.from);
-        t.addBinding(38962 === n.$kind ? S(e, n, t.container) : e);
+        t.addBinding(38963 === n.$kind ? S(e, n, t.container) : e);
     }
 };
 

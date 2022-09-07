@@ -185,7 +185,7 @@ function R(t, e) {
     return t - e;
 }
 
-function m(t, e, r) {
+function y(t, e, r) {
     if (void 0 === t || null === t || t === At) if (void 0 === e || null === e || e === At) return At; else return r ? e.slice(0) : e; else if (void 0 === e || null === e || e === At) return r ? t.slice(0) : t;
     const n = {};
     const i = r ? t.slice(0) : t;
@@ -203,7 +203,7 @@ function m(t, e, r) {
     return i;
 }
 
-function y(t, e, r) {
+function m(t, e, r) {
     return {
         configurable: true,
         enumerable: r.enumerable,
@@ -238,7 +238,7 @@ function b(...t) {
     return e;
 }
 
-function C(...t) {
+function $(...t) {
     const e = {};
     const r = t.length;
     let n;
@@ -251,7 +251,7 @@ function C(...t) {
     return e;
 }
 
-function $(...t) {
+function C(...t) {
     const e = t.length;
     let r;
     let n = 0;
@@ -350,7 +350,7 @@ const L = Object.freeze({
 
 const U = "au:resource";
 
-const T = Object.freeze({
+const S = Object.freeze({
     name: U,
     appendTo(t, r) {
         const i = e(U, t);
@@ -373,20 +373,20 @@ const T = Object.freeze({
     }
 });
 
-const D = {
+const T = {
     annotation: L,
-    resource: T
+    resource: S
 };
 
-const P = Object.prototype.hasOwnProperty;
+const D = Object.prototype.hasOwnProperty;
 
-function S(t, r, n, i) {
+function P(t, r, n, i) {
     let s = e(k(t), n);
     if (void 0 === s) {
         s = r[t];
         if (void 0 === s) {
             s = n[t];
-            if (void 0 === s || !P.call(n, t)) return i();
+            if (void 0 === s || !D.call(n, t)) return i();
             return s;
         }
         return s;
@@ -398,7 +398,7 @@ function N(t, r, n) {
     let i = e(k(t), r);
     if (void 0 === i) {
         i = r[t];
-        if (void 0 === i || !P.call(r, t)) return n();
+        if (void 0 === i || !D.call(r, t)) return n();
         return i;
     }
     return i;
@@ -430,7 +430,7 @@ class ResolverBuilder {
         return this.registerResolver(3, t);
     }
     cachedCallback(t) {
-        return this.registerResolver(3, yt(t));
+        return this.registerResolver(3, mt(t));
     }
     aliasTo(t) {
         return this.registerResolver(5, t);
@@ -851,8 +851,8 @@ class Container {
         for (;u < l; ++u) {
             r = e[u];
             if (!t.isObject(r)) continue;
-            if (dt(r)) r.register(this); else if (D.resource.has(r)) {
-                const t = D.resource.getAll(r);
+            if (dt(r)) r.register(this); else if (T.resource.has(r)) {
+                const t = T.resource.getAll(r);
                 if (1 === t.length) t[0].register(this); else {
                     s = 0;
                     o = t.length;
@@ -876,7 +876,7 @@ class Container {
         return this;
     }
     registerResolver(t, e, r = false) {
-        Ct(t);
+        $t(t);
         const n = this.u;
         const i = n.get(t);
         if (null == i) {
@@ -901,7 +901,7 @@ class Container {
         return false;
     }
     getResolver(t, e = true) {
-        Ct(t);
+        $t(t);
         if (void 0 !== t.resolve) return t;
         let r = this;
         let n;
@@ -921,7 +921,7 @@ class Container {
         return this.u.has(t) ? true : e && null != this.parent ? this.parent.has(t, true) : false;
     }
     get(t) {
-        Ct(t);
+        $t(t);
         if (t.$isResolver) return t.resolve(this, this);
         let e = this;
         let r;
@@ -939,7 +939,7 @@ class Container {
         throw new Error(`AUR0008:${String(t)}`);
     }
     getAll(t, e = false) {
-        Ct(t);
+        $t(t);
         const r = this;
         let n = r;
         let i;
@@ -947,7 +947,7 @@ class Container {
             let e = At;
             while (null != n) {
                 i = n.u.get(t);
-                if (null != i) e = e.concat($t(i, n, r));
+                if (null != i) e = e.concat(Ct(i, n, r));
                 n = n.parent;
             }
             return e;
@@ -956,7 +956,7 @@ class Container {
             if (null == i) {
                 n = n.parent;
                 if (null == n) return At;
-            } else return $t(i, n, r);
+            } else return Ct(i, n, r);
         }
         return At;
     }
@@ -1039,8 +1039,8 @@ class Container {
                 throw new Error(`AUR0011`);
             }
             return r;
-        } else if (D.resource.has(t)) {
-            const r = D.resource.getAll(t);
+        } else if (T.resource.has(t)) {
+            const r = T.resource.getAll(t);
             if (1 === r.length) r[0].register(e); else {
                 const t = r.length;
                 for (let n = 0; n < t; ++n) r[n].register(e);
@@ -1069,12 +1069,12 @@ class ParameterizedRegistry {
     }
 }
 
-const mt = new WeakMap;
+const yt = new WeakMap;
 
-function yt(t) {
+function mt(t) {
     return function(e, r, n) {
-        let i = mt.get(e);
-        if (void 0 === i) mt.set(e, i = new WeakMap);
+        let i = yt.get(e);
+        if (void 0 === i) yt.set(e, i = new WeakMap);
         if (i.has(n)) return i.get(n);
         const s = t(e, r, n);
         i.set(n, s);
@@ -1096,7 +1096,7 @@ const bt = {
         return new Resolver(t, 3, e);
     },
     cachedCallback(t, e) {
-        return new Resolver(t, 3, yt(e));
+        return new Resolver(t, 3, mt(e));
     },
     aliasTo(t, e) {
         return new Resolver(e, 5, t);
@@ -1108,33 +1108,33 @@ const bt = {
 
 class InstanceProvider {
     constructor(t, e) {
-        this.C = null;
-        this.$ = t;
-        if (void 0 !== e) this.C = e;
+        this.$ = null;
+        this.C = t;
+        if (void 0 !== e) this.$ = e;
     }
     get friendlyName() {
-        return this.$;
+        return this.C;
     }
     prepare(t) {
-        this.C = t;
+        this.$ = t;
     }
     get $isResolver() {
         return true;
     }
     resolve() {
-        if (null == this.C) throw new Error(`AUR0013:${this.$}`);
-        return this.C;
+        if (null == this.$) throw new Error(`AUR0013:${this.C}`);
+        return this.$;
     }
     dispose() {
-        this.C = null;
+        this.$ = null;
     }
 }
 
-function Ct(t) {
+function $t(t) {
     if (null === t || void 0 === t) throw new Error(`AUR0014`);
 }
 
-function $t(t, e, r) {
+function Ct(t, e, r) {
     if (t instanceof Resolver && 4 === t.strategy) {
         const n = t.state;
         let i = n.length;
@@ -1194,11 +1194,11 @@ const Lt = Q.createInterface("ISink");
 
 const Ut = Q.createInterface("ILogEventFactory", (t => t.singleton(exports.DefaultLogEventFactory)));
 
-const Tt = Q.createInterface("ILogger", (t => t.singleton(exports.DefaultLogger)));
+const St = Q.createInterface("ILogger", (t => t.singleton(exports.DefaultLogger)));
 
-const Dt = Q.createInterface("ILogScope");
+const Tt = Q.createInterface("ILogScope");
 
-const Pt = Object.freeze({
+const Dt = Object.freeze({
     key: k("logger-sink-handles"),
     define(t, e) {
         n(this.key, e.handles, t.prototype);
@@ -1209,9 +1209,9 @@ const Pt = Object.freeze({
     }
 });
 
-function St(t) {
+function Pt(t) {
     return function(e) {
-        return Pt.define(e, t);
+        return Dt.define(e, t);
     };
 }
 
@@ -1389,7 +1389,7 @@ exports.DefaultLogger = class DefaultLogger {
             w = this.errorSinks = [];
             g = this.fatalSinks = [];
             for (const t of r) {
-                const e = Pt.getHandles(t);
+                const e = Dt.getHandles(t);
                 if (null !== (s = null === e || void 0 === e ? void 0 : e.includes(0)) && void 0 !== s ? s : true) h.push(t);
                 if (null !== (u = null === e || void 0 === e ? void 0 : e.includes(1)) && void 0 !== u ? u : true) d.push(t);
                 if (null !== (l = null === e || void 0 === e ? void 0 : e.includes(2)) && void 0 !== l ? l : true) v.push(t);
@@ -1439,19 +1439,19 @@ exports.DefaultLogger = class DefaultLogger {
     }
 };
 
-Mt([ y ], exports.DefaultLogger.prototype, "trace", null);
+Mt([ m ], exports.DefaultLogger.prototype, "trace", null);
 
-Mt([ y ], exports.DefaultLogger.prototype, "debug", null);
+Mt([ m ], exports.DefaultLogger.prototype, "debug", null);
 
-Mt([ y ], exports.DefaultLogger.prototype, "info", null);
+Mt([ m ], exports.DefaultLogger.prototype, "info", null);
 
-Mt([ y ], exports.DefaultLogger.prototype, "warn", null);
+Mt([ m ], exports.DefaultLogger.prototype, "warn", null);
 
-Mt([ y ], exports.DefaultLogger.prototype, "error", null);
+Mt([ m ], exports.DefaultLogger.prototype, "error", null);
 
-Mt([ y ], exports.DefaultLogger.prototype, "fatal", null);
+Mt([ m ], exports.DefaultLogger.prototype, "fatal", null);
 
-exports.DefaultLogger = Mt([ kt(0, Ft), kt(1, Ut), kt(2, et(Lt)), kt(3, nt(Dt)), kt(4, it) ], exports.DefaultLogger);
+exports.DefaultLogger = Mt([ kt(0, Ft), kt(1, Ut), kt(2, et(Lt)), kt(3, nt(Tt)), kt(4, it) ], exports.DefaultLogger);
 
 const Qt = A({
     create({level: t = 3, colorOptions: e = 0, sinks: r = []} = {}) {
@@ -1499,6 +1499,8 @@ class ModuleTransformer {
         return e;
     }
     M(t) {
+        if (null == t) throw new Error(`Invalid input: ${String(t)}. Expected Object.`);
+        if ("object" !== typeof t) return new AnalyzedModule(t, []);
         let e;
         let r;
         let n;
@@ -1516,7 +1518,7 @@ class ModuleTransformer {
               case "function":
                 r = i(e.register);
                 n = void 0 !== e.prototype;
-                s = D.resource.getAll(e);
+                s = T.resource.getAll(e);
                 break;
 
               default:
@@ -1641,7 +1643,7 @@ exports.ILogConfig = Ft;
 
 exports.ILogEventFactory = Ut;
 
-exports.ILogger = Tt;
+exports.ILogger = St;
 
 exports.IModuleLoader = _t;
 
@@ -1659,13 +1661,13 @@ exports.LoggerConfiguration = Qt;
 
 exports.ModuleItem = ModuleItem;
 
-exports.Protocol = D;
+exports.Protocol = T;
 
 exports.Registration = bt;
 
 exports.all = et;
 
-exports.bound = y;
+exports.bound = m;
 
 exports.camelCase = h;
 
@@ -1677,11 +1679,11 @@ exports.emptyObject = jt;
 
 exports.factory = st;
 
-exports.firstDefined = $;
+exports.firstDefined = C;
 
 exports.format = Nt;
 
-exports.fromAnnotationOrDefinitionOrTypeOrDefault = S;
+exports.fromAnnotationOrDefinitionOrTypeOrDefault = P;
 
 exports.fromAnnotationOrTypeOrDefault = N;
 
@@ -1707,9 +1709,9 @@ exports.lazy = rt;
 
 exports.mergeArrays = b;
 
-exports.mergeDistinct = m;
+exports.mergeDistinct = y;
 
-exports.mergeObjects = C;
+exports.mergeObjects = $;
 
 exports.newInstanceForScope = ot;
 
@@ -1731,7 +1733,7 @@ exports.resolveAll = O;
 
 exports.singleton = Z;
 
-exports.sink = St;
+exports.sink = Pt;
 
 exports.toArray = p;
 

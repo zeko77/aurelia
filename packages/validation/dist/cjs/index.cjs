@@ -602,7 +602,7 @@ exports.ValidationMessageProvider = class ValidationMessageProvider {
     }
     parseMessage(e) {
         const t = this.parser.parse(e, 1);
-        if (24 === (null === t || void 0 === t ? void 0 : t.$kind)) {
+        if (25 === (null === t || void 0 === t ? void 0 : t.$kind)) {
             for (const s of t.expressions) {
                 const t = s.name;
                 if (v.has(t)) this.logger.warn(`Did you mean to use "$${t}" instead of "${t}" in this validation message template: "${e}"?`);
@@ -651,6 +651,7 @@ var g;
     e["DestructuringAssignment"] = "DestructuringAssignment";
     e["DestructuringSingleAssignment"] = "DestructuringSingleAssignment";
     e["DestructuringRestAssignment"] = "DestructuringRestAssignment";
+    e["ArrowFunction"] = "ArrowFunction";
 })(g || (g = {}));
 
 class Deserializer {
@@ -808,6 +809,9 @@ class Deserializer {
           case g.DestructuringRestAssignment:
             return new i.DestructuringAssignmentRestExpression(this.hydrate(e.target), this.hydrate(e.indexOrProperties));
 
+          case g.ArrowFunction:
+            return new i.ArrowFunction(this.hydrate(e.parameters), this.hydrate(e.body), this.hydrate(e.rest));
+
           default:
             if (Array.isArray(e)) if ("object" === typeof e[0]) return this.deserializeExpressions(e); else return e.map(P); else if ("object" !== typeof e) return P(e);
             throw new Error(`unable to deserialize the expression: ${e}`);
@@ -906,6 +910,9 @@ class Serializer {
     }
     visitDestructuringAssignmentRestExpression(e) {
         return `{"$TYPE":"${g.DestructuringRestAssignment}","target":${e.target.accept(this)},"indexOrProperties":${Array.isArray(e.indexOrProperties) ? w(e.indexOrProperties) : y(e.indexOrProperties)}}`;
+    }
+    visitArrowFunction(e) {
+        return `{"$TYPE":"${g.ArrowFunction}","parameters":${this.serializeExpressions(e.args)},"body":${e.body.accept(this)},"rest":${y(e.rest)}}`;
     }
     serializeExpressions(e) {
         let t = "[";

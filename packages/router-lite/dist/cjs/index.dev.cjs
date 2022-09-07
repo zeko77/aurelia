@@ -3730,6 +3730,12 @@ class RouteContext {
     }
     resolveLazy(promise) {
         return this.moduleLoader.load(promise, m => {
+            const raw = m.raw;
+            if (typeof raw === 'function') {
+                const def = kernel.Protocol.resource.getAll(raw).find(isCustomElementDefinition);
+                if (def !== void 0)
+                    return def;
+            }
             let defaultExport = void 0;
             let firstNonDefaultExport = void 0;
             for (const item of m.items) {
@@ -3909,9 +3915,11 @@ class NavigationModel {
         return kernel.onResolve(this._promise, kernel.noop);
     }
     setIsActive(router, context) {
-        for (const route of this.routes) {
-            route.setIsActive(router, context);
-        }
+        void kernel.onResolve(this._promise, () => {
+            for (const route of this.routes) {
+                route.setIsActive(router, context);
+            }
+        });
     }
     addRoute(routeDef) {
         const routes = this.routes;
@@ -4268,7 +4276,7 @@ function configure(container, config) {
         const url = new URL(window.document.baseURI);
         url.pathname = normalizePath(basePath !== null && basePath !== void 0 ? basePath : url.pathname);
         return url;
-    }), runtimeHtml.AppTask.hydrated(kernel.IContainer, RouteContext.setRoot), runtimeHtml.AppTask.afterActivate(IRouter, activation), runtimeHtml.AppTask.afterDeactivate(IRouter, router => {
+    }), runtimeHtml.AppTask.hydrated(kernel.IContainer, RouteContext.setRoot), runtimeHtml.AppTask.activated(IRouter, activation), runtimeHtml.AppTask.deactivated(IRouter, router => {
         router.stop();
     }), ...DefaultComponents, ...DefaultResources);
 }

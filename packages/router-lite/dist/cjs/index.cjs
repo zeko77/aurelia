@@ -3415,18 +3415,23 @@ class RouteContext {
         });
     }
     resolveLazy(t) {
-        return this.moduleLoader.load(t, (e => {
-            let i;
-            let s;
-            for (const t of e.items) if (t.isConstructable) {
+        return this.moduleLoader.load(t, (i => {
+            const s = i.raw;
+            if ("function" === typeof s) {
+                const t = e.Protocol.resource.getAll(s).find(wt);
+                if (void 0 !== t) return t;
+            }
+            let n;
+            let o;
+            for (const t of i.items) if (t.isConstructable) {
                 const e = t.definitions.find(wt);
-                if (void 0 !== e) if ("default" === t.key) i = e; else if (void 0 === s) s = e;
+                if (void 0 !== e) if ("default" === t.key) n = e; else if (void 0 === o) o = e;
             }
-            if (void 0 === i) {
-                if (void 0 === s) throw new Error(`${t} does not appear to be a component or CustomElement recognizable by Aurelia`);
-                return s;
+            if (void 0 === n) {
+                if (void 0 === o) throw new Error(`${t} does not appear to be a component or CustomElement recognizable by Aurelia`);
+                return o;
             }
-            return i;
+            return n;
         }));
     }
     generateViewportInstruction(t) {
@@ -3568,8 +3573,10 @@ class NavigationModel {
     resolve() {
         return e.onResolve(this.M, e.noop);
     }
-    setIsActive(t, e) {
-        for (const i of this.routes) i.setIsActive(t, e);
+    setIsActive(t, i) {
+        void e.onResolve(this.M, (() => {
+            for (const e of this.routes) e.setIsActive(t, i);
+        }));
     }
     addRoute(t) {
         const i = this.routes;
@@ -3860,7 +3867,7 @@ function St(s, n) {
         const o = new URL(n.document.baseURI);
         o.pathname = I(null !== a && void 0 !== a ? a : o.pathname);
         return o;
-    })), i.AppTask.hydrated(e.IContainer, RouteContext.setRoot), i.AppTask.afterActivate(tt, r), i.AppTask.afterDeactivate(tt, (t => {
+    })), i.AppTask.hydrated(e.IContainer, RouteContext.setRoot), i.AppTask.activated(tt, r), i.AppTask.deactivated(tt, (t => {
         t.stop();
     })), ...$t, ...bt);
 }

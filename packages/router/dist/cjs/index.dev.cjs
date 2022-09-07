@@ -2832,7 +2832,7 @@ class RoutingInstruction {
         return ((_b = (_a = this.nextScopeInstructions) === null || _a === void 0 ? void 0 : _a.length) !== null && _b !== void 0 ? _b : 0) > 0;
     }
     get isUnresolved() {
-        return this.component.isFunction() && this.component.isPromise();
+        return this.component.isFunction() || this.component.isPromise();
     }
     resolve() {
         return this.component.resolve(this);
@@ -5756,7 +5756,7 @@ class RouterConfiguration {
         _this.options = RouterConfiguration.options;
         _this.options.setRouterConfiguration(_this);
         RouterConfiguration.options = RouterOptions.create();
-        return container.register(...DefaultComponents, ...DefaultResources, runtimeHtml.AppTask.beforeActivate(IRouter, RouterConfiguration.configurationCall), runtimeHtml.AppTask.afterActivate(IRouter, (router) => router.initialLoad()), runtimeHtml.AppTask.afterDeactivate(IRouter, (router) => router.stop()));
+        return container.register(...DefaultComponents, ...DefaultResources, runtimeHtml.AppTask.activating(IRouter, RouterConfiguration.configurationCall), runtimeHtml.AppTask.activated(IRouter, (router) => router.initialLoad()), runtimeHtml.AppTask.deactivated(IRouter, (router) => router.stop()));
     }
     static customize(config) {
         if (config === undefined) {

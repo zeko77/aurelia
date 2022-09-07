@@ -1,4 +1,4 @@
-import { ForOfStatement, Interpolation, AnyBindingExpression, IsAssign, IsBinary, IsBindingBehavior, IsConditional, IsLeftHandSide, IsPrimary, IsUnary } from './ast';
+import { ForOfStatement, Interpolation, AnyBindingExpression, IsBindingBehavior } from './ast';
 export interface IExpressionParser extends ExpressionParser {
 }
 export declare const IExpressionParser: import("@aurelia/kernel").InterfaceSymbol<IExpressionParser>;
@@ -114,17 +114,17 @@ export declare const enum Precedence {
     Variadic = 61,
     Assign = 62,
     Conditional = 63,
-    NullishCoalescing = 64,
-    LogicalOR = 128,
-    LogicalAND = 192,
-    Equality = 256,
-    Relational = 320,
-    Additive = 384,
-    Multiplicative = 448,
-    Binary = 449,
-    LeftHandSide = 450,
-    Primary = 451,
-    Unary = 452
+    NullishCoalescing = 128,
+    LogicalOR = 192,
+    LogicalAND = 256,
+    Equality = 320,
+    Relational = 384,
+    Additive = 448,
+    Multiplicative = 512,
+    Binary = 513,
+    LeftHandSide = 514,
+    Primary = 515,
+    Unary = 516
 }
 export declare const enum ExpressionType {
     None = 0,
@@ -134,12 +134,6 @@ export declare const enum ExpressionType {
     IsProperty = 8,
     IsCustom = 16
 }
-export declare class ParserState {
-    ip: string;
-    index: number;
-    length: number;
-    constructor(ip: string);
-}
-export declare function parseExpression<TType extends ExpressionType = ExpressionType.IsProperty>(input: string, expressionType?: TType): TType extends ExpressionType.Interpolation ? Interpolation : TType extends ExpressionType.IsIterator ? ForOfStatement : IsBindingBehavior;
-export declare function parse<TPrec extends Precedence, TType extends ExpressionType>(state: ParserState, minPrecedence: TPrec, expressionType: TType): TPrec extends Precedence.Unary ? IsUnary : TPrec extends Precedence.Binary ? IsBinary : TPrec extends Precedence.LeftHandSide ? IsLeftHandSide : TPrec extends Precedence.Assign ? IsAssign : TPrec extends Precedence.Conditional ? IsConditional : TPrec extends Precedence.Primary ? IsPrimary : TPrec extends Precedence.Multiplicative ? IsBinary : TPrec extends Precedence.Additive ? IsBinary : TPrec extends Precedence.Relational ? IsBinary : TPrec extends Precedence.Equality ? IsBinary : TPrec extends Precedence.LogicalAND ? IsBinary : TPrec extends Precedence.LogicalOR ? IsBinary : TPrec extends Precedence.Variadic ? TType extends ExpressionType.Interpolation ? Interpolation : TType extends ExpressionType.IsIterator ? ForOfStatement : never : never;
+export declare function parseExpression(input: string, expressionType?: ExpressionType): AnyBindingExpression;
+export declare function parse(minPrecedence: Precedence, expressionType: ExpressionType): AnyBindingExpression;
 //# sourceMappingURL=expression-parser.d.ts.map

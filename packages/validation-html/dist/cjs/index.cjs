@@ -81,8 +81,8 @@ function n(t, i, s = 0) {
     while (void 0 !== o && 10082 !== (null === o || void 0 === o ? void 0 : o.$kind)) {
         let t;
         switch (o.$kind) {
-          case 38962:
-          case 36913:
+          case 38963:
+          case 36914:
             o = o.expression;
             continue;
 

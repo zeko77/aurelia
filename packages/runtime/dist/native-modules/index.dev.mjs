@@ -5,6 +5,7 @@ const hasOwnProp = Object.prototype.hasOwnProperty;
 const def = Reflect.defineProperty;
 const isFunction = (v) => typeof v === 'function';
 const isString = (v) => typeof v === 'string';
+const isArray = (v) => v instanceof Array;
 function defineHiddenProp(obj, key, value) {
     def(obj, key, {
         enumerable: false,
@@ -397,17 +398,18 @@ var ExpressionKind;
     ExpressionKind[ExpressionKind["Binary"] = 46] = "Binary";
     ExpressionKind[ExpressionKind["Conditional"] = 63] = "Conditional";
     ExpressionKind[ExpressionKind["Assign"] = 8208] = "Assign";
-    ExpressionKind[ExpressionKind["ValueConverter"] = 36913] = "ValueConverter";
-    ExpressionKind[ExpressionKind["BindingBehavior"] = 38962] = "BindingBehavior";
-    ExpressionKind[ExpressionKind["HtmlLiteral"] = 51] = "HtmlLiteral";
-    ExpressionKind[ExpressionKind["ArrayBindingPattern"] = 65556] = "ArrayBindingPattern";
-    ExpressionKind[ExpressionKind["ObjectBindingPattern"] = 65557] = "ObjectBindingPattern";
-    ExpressionKind[ExpressionKind["BindingIdentifier"] = 65558] = "BindingIdentifier";
-    ExpressionKind[ExpressionKind["ForOfStatement"] = 6199] = "ForOfStatement";
-    ExpressionKind[ExpressionKind["Interpolation"] = 24] = "Interpolation";
-    ExpressionKind[ExpressionKind["ArrayDestructuring"] = 90137] = "ArrayDestructuring";
-    ExpressionKind[ExpressionKind["ObjectDestructuring"] = 106521] = "ObjectDestructuring";
-    ExpressionKind[ExpressionKind["DestructuringAssignmentLeaf"] = 139289] = "DestructuringAssignmentLeaf";
+    ExpressionKind[ExpressionKind["ArrowFunction"] = 17] = "ArrowFunction";
+    ExpressionKind[ExpressionKind["ValueConverter"] = 36914] = "ValueConverter";
+    ExpressionKind[ExpressionKind["BindingBehavior"] = 38963] = "BindingBehavior";
+    ExpressionKind[ExpressionKind["HtmlLiteral"] = 52] = "HtmlLiteral";
+    ExpressionKind[ExpressionKind["ArrayBindingPattern"] = 65557] = "ArrayBindingPattern";
+    ExpressionKind[ExpressionKind["ObjectBindingPattern"] = 65558] = "ObjectBindingPattern";
+    ExpressionKind[ExpressionKind["BindingIdentifier"] = 65559] = "BindingIdentifier";
+    ExpressionKind[ExpressionKind["ForOfStatement"] = 6200] = "ForOfStatement";
+    ExpressionKind[ExpressionKind["Interpolation"] = 25] = "Interpolation";
+    ExpressionKind[ExpressionKind["ArrayDestructuring"] = 90138] = "ArrayDestructuring";
+    ExpressionKind[ExpressionKind["ObjectDestructuring"] = 106523] = "ObjectDestructuring";
+    ExpressionKind[ExpressionKind["DestructuringAssignmentLeaf"] = 139292] = "DestructuringAssignmentLeaf";
 })(ExpressionKind || (ExpressionKind = {}));
 class Unparser {
     constructor() {
@@ -456,6 +458,27 @@ class Unparser {
             elements[i].accept(this);
         }
         this.text += ']';
+    }
+    visitArrowFunction(expr) {
+        const args = expr.args;
+        const ii = args.length;
+        let i = 0;
+        let text = '(';
+        let name;
+        for (; i < ii; ++i) {
+            name = args[i].name;
+            if (i > 0) {
+                text += ', ';
+            }
+            if (i < ii - 1) {
+                text += name;
+            }
+            else {
+                text += expr.rest ? `...${name}` : name;
+            }
+        }
+        this.text += `${text}) => `;
+        expr.body.accept(this);
     }
     visitObjectLiteral(expr) {
         const keys = expr.keys;
@@ -628,7 +651,7 @@ class Unparser {
     }
     visitDestructuringAssignmentExpression(expr) {
         const $kind = expr.$kind;
-        const isObjDes = $kind === 106521;
+        const isObjDes = $kind === 106523;
         this.text += isObjDes ? '{' : '[';
         const list = expr.list;
         const len = list.length;
@@ -637,11 +660,11 @@ class Unparser {
         for (i = 0; i < len; i++) {
             item = list[i];
             switch (item.$kind) {
-                case 139289:
+                case 139292:
                     item.accept(this);
                     break;
-                case 90137:
-                case 106521: {
+                case 90138:
+                case 106523: {
                     const source = item.source;
                     if (source) {
                         source.accept(this);
@@ -694,7 +717,7 @@ class BindingBehaviorExpression {
         this.args = args;
         this.behaviorKey = BindingBehavior.keyFrom(name);
     }
-    get $kind() { return 38962; }
+    get $kind() { return 38963; }
     get hasBind() { return true; }
     get hasUnbind() { return true; }
     evaluate(f, s, l, c) {
@@ -748,7 +771,7 @@ class ValueConverterExpression {
         this.args = args;
         this.converterKey = ValueConverter.keyFrom(name);
     }
-    get $kind() { return 36913; }
+    get $kind() { return 36914; }
     get hasBind() { return false; }
     get hasUnbind() { return true; }
     evaluate(f, s, l, c) {
@@ -927,7 +950,7 @@ class AccessMemberExpression {
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
-        const instance = this.object.evaluate(f, s, l, (f & 32) > 0 ? null : c);
+        const instance = this.object.evaluate(f, s, l, c);
         if (f & 1) {
             if (instance == null) {
                 return instance;
@@ -974,9 +997,9 @@ class AccessKeyedExpression {
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
-        const instance = this.object.evaluate(f, s, l, (f & 32) > 0 ? null : c);
+        const instance = this.object.evaluate(f, s, l, c);
         if (instance instanceof Object) {
-            const key = this.key.evaluate(f, s, l, (f & 32) > 0 ? null : c);
+            const key = this.key.evaluate(f, s, l, c);
             if (c !== null) {
                 c.observe(instance, key);
             }
@@ -1025,6 +1048,7 @@ class CallScopeExpression {
         return Unparser.unparse(this);
     }
 }
+const autoObserveArrayMethods = 'at map filter includes indexOf lastIndexOf findIndex find flat flatMap join reduce reduceRight slice every some sort'.split(' ');
 class CallMemberExpression {
     constructor(object, name, args, optionalMember = false, optionalCall = false) {
         this.object = object;
@@ -1037,10 +1061,13 @@ class CallMemberExpression {
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
-        const instance = this.object.evaluate(f, s, l, (f & 32) > 0 ? null : c);
+        const instance = this.object.evaluate(f, s, l, c);
         const args = this.args.map(a => a.evaluate(f, s, l, c));
         const func = getFunction(f, instance, this.name);
         if (func) {
+            if (isArray(instance) && autoObserveArrayMethods.includes(this.name)) {
+                c === null || c === void 0 ? void 0 : c.observeCollection(instance);
+            }
             return func.apply(instance, args);
         }
         return void 0;
@@ -1233,7 +1260,7 @@ class HtmlLiteralExpression {
     constructor(parts) {
         this.parts = parts;
     }
-    get $kind() { return 51; }
+    get $kind() { return 52; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
@@ -1363,7 +1390,7 @@ class ArrayBindingPattern {
     constructor(elements) {
         this.elements = elements;
     }
-    get $kind() { return 65556; }
+    get $kind() { return 65557; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(_f, _s, _l, _c) {
@@ -1384,7 +1411,7 @@ class ObjectBindingPattern {
         this.keys = keys;
         this.values = values;
     }
-    get $kind() { return 65557; }
+    get $kind() { return 65558; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(_f, _s, _l, _c) {
@@ -1404,7 +1431,7 @@ class BindingIdentifier {
     constructor(name) {
         this.name = name;
     }
-    get $kind() { return 65558; }
+    get $kind() { return 65559; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(_f, _s, _l, _c) {
@@ -1423,7 +1450,7 @@ class ForOfStatement {
         this.declaration = declaration;
         this.iterable = iterable;
     }
-    get $kind() { return 6199; }
+    get $kind() { return 6200; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
@@ -1478,7 +1505,7 @@ class Interpolation {
         this.isMulti = expressions.length > 1;
         this.firstExpression = expressions[0];
     }
-    get $kind() { return 24; }
+    get $kind() { return 25; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(f, s, l, c) {
@@ -1525,11 +1552,11 @@ class DestructuringAssignmentExpression {
         for (i = 0; i < len; i++) {
             item = list[i];
             switch (item.$kind) {
-                case 139289:
+                case 139292:
                     item.assign(f, s, l, value);
                     break;
-                case 90137:
-                case 106521: {
+                case 90138:
+                case 106523: {
                     if (typeof value !== 'object' || value === null) {
                         {
                             throw new Error(`AUR0112: Cannot use non-object value for destructuring assignment.`);
@@ -1558,7 +1585,7 @@ class DestructuringAssignmentSingleExpression {
         this.source = source;
         this.initializer = initializer;
     }
-    get $kind() { return 139289; }
+    get $kind() { return 139292; }
     evaluate(_f, _s, _l, _c) {
         return void 0;
     }
@@ -1590,7 +1617,7 @@ class DestructuringAssignmentRestExpression {
         this.target = target;
         this.indexOrProperties = indexOrProperties;
     }
-    get $kind() { return 139289; }
+    get $kind() { return 139292; }
     evaluate(_f, _s, _l, _c) {
         return void 0;
     }
@@ -1627,6 +1654,44 @@ class DestructuringAssignmentRestExpression {
     }
     accept(_visitor) {
         return _visitor.visitDestructuringAssignmentRestExpression(this);
+    }
+    toString() {
+        return Unparser.unparse(this);
+    }
+}
+class ArrowFunction {
+    constructor(args, body, rest = false) {
+        this.args = args;
+        this.body = body;
+        this.rest = rest;
+    }
+    get $kind() { return 17; }
+    get hasBind() { return false; }
+    get hasUnbind() { return false; }
+    evaluate(f, s, l, c) {
+        const func = (...args) => {
+            const params = this.args;
+            const rest = this.rest;
+            const lastIdx = params.length - 1;
+            const context = params.reduce((map, param, i) => {
+                if (rest && i === lastIdx) {
+                    map[param.name] = args.slice(i);
+                }
+                else {
+                    map[param.name] = args[i];
+                }
+                return map;
+            }, {});
+            const functionScope = Scope.fromParent(s, context);
+            return this.body.evaluate(f, functionScope, l, c);
+        };
+        return func;
+    }
+    assign(_f, _s, _l, _value) {
+        return void 0;
+    }
+    accept(visitor) {
+        return visitor.visitArrowFunction(this);
     }
     toString() {
         return Unparser.unparse(this);
@@ -1683,9 +1748,8 @@ var BindingMode;
 var LifecycleFlags;
 (function (LifecycleFlags) {
     LifecycleFlags[LifecycleFlags["none"] = 0] = "none";
-    LifecycleFlags[LifecycleFlags["persistentBindingFlags"] = 97] = "persistentBindingFlags";
-    LifecycleFlags[LifecycleFlags["observeLeafPropertiesOnly"] = 32] = "observeLeafPropertiesOnly";
-    LifecycleFlags[LifecycleFlags["noFlush"] = 64] = "noFlush";
+    LifecycleFlags[LifecycleFlags["persistentBindingFlags"] = 33] = "persistentBindingFlags";
+    LifecycleFlags[LifecycleFlags["noFlush"] = 32] = "noFlush";
     LifecycleFlags[LifecycleFlags["bindingStrategy"] = 1] = "bindingStrategy";
     LifecycleFlags[LifecycleFlags["isStrictBindingStrategy"] = 1] = "isStrictBindingStrategy";
     LifecycleFlags[LifecycleFlags["fromBind"] = 2] = "fromBind";
@@ -1764,7 +1828,7 @@ function cloneIndexMap(indexMap) {
     return clone;
 }
 function isIndexMap(value) {
-    return value instanceof Array && value.isIndexMap === true;
+    return isArray(value) && value.isIndexMap === true;
 }
 
 function subscriberCollection(target) {
@@ -1995,7 +2059,7 @@ class CollectionLengthObserver {
     setValue(newValue, flags) {
         const currentValue = this._value;
         if (newValue !== currentValue && isArrayIndex(newValue)) {
-            if ((flags & 64) === 0) {
+            if ((flags & 32) === 0) {
                 this._obj.length = newValue;
             }
             this._value = newValue;
@@ -2366,7 +2430,7 @@ const observe$3 = {
             $sort.call(this, compareFn);
             return this;
         }
-        const len = this.length;
+        let len = this.length;
         if (len < 2) {
             return this;
         }
@@ -2382,7 +2446,16 @@ const observe$3 = {
             compareFn = sortCompare;
         }
         quickSort(this, o.indexMap, 0, i, compareFn);
-        o.notify();
+        let shouldNotify = false;
+        for (i = 0, len = o.indexMap.length; len > i; ++i) {
+            if (o.indexMap[i] !== i) {
+                shouldNotify = true;
+                break;
+            }
+        }
+        if (shouldNotify) {
+            o.notify();
+        }
         return this;
     }
 };
@@ -2801,7 +2874,7 @@ function getObserverRecord() {
 }
 function observeCollection(collection) {
     let obs;
-    if (collection instanceof Array) {
+    if (isArray(collection)) {
         obs = getArrayObserver(collection);
     }
     else if (collection instanceof Set) {
@@ -2925,7 +2998,7 @@ class ExpressionParser {
                     if ((expressionType & (4 | 8)) > 0) {
                         return PrimitiveLiteralExpression.$empty;
                     }
-                    throw new Error(`AUR0169: Invalid expression. Empty expression is only valid in event bindings (trigger, delegate, capture etc...)`);
+                    throw invalidEmptyExpression();
                 }
                 found = this._expressionLookup[expression];
                 if (found === void 0) {
@@ -2936,11 +3009,17 @@ class ExpressionParser {
         }
     }
     $parse(expression, expressionType) {
-        $state.ip = expression;
-        $state.length = expression.length;
-        $state.index = 0;
-        $state._currentChar = expression.charCodeAt(0);
-        return parse($state, 61, expressionType === void 0 ? 8 : expressionType);
+        $input = expression;
+        $index = 0;
+        $length = expression.length;
+        $scopeDepth = 0;
+        $startIndex = 0;
+        $currentToken = 6291456;
+        $tokenValue = '';
+        $currentChar = expression.charCodeAt(0);
+        $assignable = true;
+        $optional = false;
+        return parse(61, expressionType === void 0 ? 8 : expressionType);
     }
 }
 var Char;
@@ -3064,17 +3143,17 @@ var Precedence;
     Precedence[Precedence["Variadic"] = 61] = "Variadic";
     Precedence[Precedence["Assign"] = 62] = "Assign";
     Precedence[Precedence["Conditional"] = 63] = "Conditional";
-    Precedence[Precedence["NullishCoalescing"] = 64] = "NullishCoalescing";
-    Precedence[Precedence["LogicalOR"] = 128] = "LogicalOR";
-    Precedence[Precedence["LogicalAND"] = 192] = "LogicalAND";
-    Precedence[Precedence["Equality"] = 256] = "Equality";
-    Precedence[Precedence["Relational"] = 320] = "Relational";
-    Precedence[Precedence["Additive"] = 384] = "Additive";
-    Precedence[Precedence["Multiplicative"] = 448] = "Multiplicative";
-    Precedence[Precedence["Binary"] = 449] = "Binary";
-    Precedence[Precedence["LeftHandSide"] = 450] = "LeftHandSide";
-    Precedence[Precedence["Primary"] = 451] = "Primary";
-    Precedence[Precedence["Unary"] = 452] = "Unary";
+    Precedence[Precedence["NullishCoalescing"] = 128] = "NullishCoalescing";
+    Precedence[Precedence["LogicalOR"] = 192] = "LogicalOR";
+    Precedence[Precedence["LogicalAND"] = 256] = "LogicalAND";
+    Precedence[Precedence["Equality"] = 320] = "Equality";
+    Precedence[Precedence["Relational"] = 384] = "Relational";
+    Precedence[Precedence["Additive"] = 448] = "Additive";
+    Precedence[Precedence["Multiplicative"] = 512] = "Multiplicative";
+    Precedence[Precedence["Binary"] = 513] = "Binary";
+    Precedence[Precedence["LeftHandSide"] = 514] = "LeftHandSide";
+    Precedence[Precedence["Primary"] = 515] = "Primary";
+    Precedence[Precedence["Unary"] = 516] = "Unary";
 })(Precedence || (Precedence = {}));
 var Token;
 (function (Token) {
@@ -3105,41 +3184,44 @@ var Token;
     Token[Token["OpenParen"] = 2688007] = "OpenParen";
     Token[Token["OpenBrace"] = 524296] = "OpenBrace";
     Token[Token["Dot"] = 65545] = "Dot";
-    Token[Token["QuestionDot"] = 2162698] = "QuestionDot";
-    Token[Token["CloseBrace"] = 7340043] = "CloseBrace";
-    Token[Token["CloseParen"] = 7340044] = "CloseParen";
-    Token[Token["Comma"] = 6291469] = "Comma";
-    Token[Token["OpenBracket"] = 2688014] = "OpenBracket";
-    Token[Token["CloseBracket"] = 7340047] = "CloseBracket";
-    Token[Token["Colon"] = 6291472] = "Colon";
-    Token[Token["Question"] = 6291475] = "Question";
-    Token[Token["Ampersand"] = 6291476] = "Ampersand";
-    Token[Token["Bar"] = 6291477] = "Bar";
-    Token[Token["QuestionQuestion"] = 6553750] = "QuestionQuestion";
-    Token[Token["BarBar"] = 6553815] = "BarBar";
-    Token[Token["AmpersandAmpersand"] = 6553880] = "AmpersandAmpersand";
-    Token[Token["EqualsEquals"] = 6553945] = "EqualsEquals";
-    Token[Token["ExclamationEquals"] = 6553946] = "ExclamationEquals";
-    Token[Token["EqualsEqualsEquals"] = 6553947] = "EqualsEqualsEquals";
-    Token[Token["ExclamationEqualsEquals"] = 6553948] = "ExclamationEqualsEquals";
-    Token[Token["LessThan"] = 6554013] = "LessThan";
-    Token[Token["GreaterThan"] = 6554014] = "GreaterThan";
-    Token[Token["LessThanEquals"] = 6554015] = "LessThanEquals";
-    Token[Token["GreaterThanEquals"] = 6554016] = "GreaterThanEquals";
-    Token[Token["InKeyword"] = 6562209] = "InKeyword";
-    Token[Token["InstanceOfKeyword"] = 6562210] = "InstanceOfKeyword";
-    Token[Token["Plus"] = 2490851] = "Plus";
-    Token[Token["Minus"] = 2490852] = "Minus";
-    Token[Token["TypeofKeyword"] = 139301] = "TypeofKeyword";
-    Token[Token["VoidKeyword"] = 139302] = "VoidKeyword";
-    Token[Token["Asterisk"] = 6554151] = "Asterisk";
-    Token[Token["Percent"] = 6554152] = "Percent";
-    Token[Token["Slash"] = 6554153] = "Slash";
-    Token[Token["Equals"] = 4194346] = "Equals";
-    Token[Token["Exclamation"] = 131115] = "Exclamation";
-    Token[Token["TemplateTail"] = 2163756] = "TemplateTail";
-    Token[Token["TemplateContinuation"] = 2163757] = "TemplateContinuation";
-    Token[Token["OfKeyword"] = 4204590] = "OfKeyword";
+    Token[Token["DotDot"] = 10] = "DotDot";
+    Token[Token["DotDotDot"] = 11] = "DotDotDot";
+    Token[Token["QuestionDot"] = 2162700] = "QuestionDot";
+    Token[Token["CloseBrace"] = 7340045] = "CloseBrace";
+    Token[Token["CloseParen"] = 7340046] = "CloseParen";
+    Token[Token["Comma"] = 6291471] = "Comma";
+    Token[Token["OpenBracket"] = 2688016] = "OpenBracket";
+    Token[Token["CloseBracket"] = 7340051] = "CloseBracket";
+    Token[Token["Colon"] = 6291476] = "Colon";
+    Token[Token["Question"] = 6291477] = "Question";
+    Token[Token["Ampersand"] = 6291478] = "Ampersand";
+    Token[Token["Bar"] = 6291479] = "Bar";
+    Token[Token["QuestionQuestion"] = 6553752] = "QuestionQuestion";
+    Token[Token["BarBar"] = 6553817] = "BarBar";
+    Token[Token["AmpersandAmpersand"] = 6553882] = "AmpersandAmpersand";
+    Token[Token["EqualsEquals"] = 6553947] = "EqualsEquals";
+    Token[Token["ExclamationEquals"] = 6553948] = "ExclamationEquals";
+    Token[Token["EqualsEqualsEquals"] = 6553949] = "EqualsEqualsEquals";
+    Token[Token["ExclamationEqualsEquals"] = 6553950] = "ExclamationEqualsEquals";
+    Token[Token["LessThan"] = 6554015] = "LessThan";
+    Token[Token["GreaterThan"] = 6554016] = "GreaterThan";
+    Token[Token["LessThanEquals"] = 6554017] = "LessThanEquals";
+    Token[Token["GreaterThanEquals"] = 6554018] = "GreaterThanEquals";
+    Token[Token["InKeyword"] = 6562211] = "InKeyword";
+    Token[Token["InstanceOfKeyword"] = 6562212] = "InstanceOfKeyword";
+    Token[Token["Plus"] = 2490853] = "Plus";
+    Token[Token["Minus"] = 2490854] = "Minus";
+    Token[Token["TypeofKeyword"] = 139303] = "TypeofKeyword";
+    Token[Token["VoidKeyword"] = 139304] = "VoidKeyword";
+    Token[Token["Asterisk"] = 6554153] = "Asterisk";
+    Token[Token["Percent"] = 6554154] = "Percent";
+    Token[Token["Slash"] = 6554155] = "Slash";
+    Token[Token["Equals"] = 4194348] = "Equals";
+    Token[Token["Exclamation"] = 131117] = "Exclamation";
+    Token[Token["TemplateTail"] = 2163758] = "TemplateTail";
+    Token[Token["TemplateContinuation"] = 2163759] = "TemplateContinuation";
+    Token[Token["OfKeyword"] = 4204592] = "OfKeyword";
+    Token[Token["Arrow"] = 49] = "Arrow";
 })(Token || (Token = {}));
 const $false = PrimitiveLiteralExpression.$false;
 const $true = PrimitiveLiteralExpression.$true;
@@ -3156,326 +3238,371 @@ var ExpressionType;
     ExpressionType[ExpressionType["IsProperty"] = 8] = "IsProperty";
     ExpressionType[ExpressionType["IsCustom"] = 16] = "IsCustom";
 })(ExpressionType || (ExpressionType = {}));
-class ParserState {
-    constructor(ip) {
-        this.ip = ip;
-        this.index = 0;
-        this._startIndex = 0;
-        this._currentToken = 6291456;
-        this._tokenValue = '';
-        this._assignable = true;
-        this._optional = false;
-        this.length = ip.length;
-        this._currentChar = ip.charCodeAt(0);
-    }
-    get _tokenRaw() {
-        return this.ip.slice(this._startIndex, this.index);
-    }
+let $input = '';
+let $index = 0;
+let $length = 0;
+let $scopeDepth = 0;
+let $startIndex = 0;
+let $currentToken = 6291456;
+let $tokenValue = '';
+let $currentChar;
+let $assignable = true;
+let $optional = false;
+function $tokenRaw() {
+    return $input.slice($startIndex, $index);
 }
-const $state = new ParserState('');
 function parseExpression(input, expressionType) {
-    $state.ip = input;
-    $state.length = input.length;
-    $state.index = 0;
-    $state._currentChar = input.charCodeAt(0);
-    return parse($state, 61, expressionType === void 0 ? 8 : expressionType);
+    $input = input;
+    $index = 0;
+    $length = input.length;
+    $scopeDepth = 0;
+    $startIndex = 0;
+    $currentToken = 6291456;
+    $tokenValue = '';
+    $currentChar = input.charCodeAt(0);
+    $assignable = true;
+    $optional = false;
+    return parse(61, expressionType === void 0 ? 8 : expressionType);
 }
-function parse(state, minPrecedence, expressionType) {
+function parse(minPrecedence, expressionType) {
     if (expressionType === 16) {
-        return new CustomExpression(state.ip);
+        return new CustomExpression($input);
     }
-    if (state.index === 0) {
+    if ($index === 0) {
         if (expressionType & 1) {
-            return parseInterpolation(state);
+            return parseInterpolation();
         }
-        nextToken(state);
-        if (state._currentToken & 4194304) {
-            throw new Error(`AUR0151: Invalid start of expression: '${state.ip}'`);
+        nextToken();
+        if ($currentToken & 4194304) {
+            throw invalidStartOfExpression();
         }
     }
-    state._assignable = 449 > minPrecedence;
-    state._optional = false;
+    $assignable = 513 > minPrecedence;
+    $optional = false;
     let optionalThisTail = false;
     let result = void 0;
     let ancestor = 0;
-    if (state._currentToken & 131072) {
-        const op = TokenValues[state._currentToken & 63];
-        nextToken(state);
-        result = new UnaryExpression(op, parse(state, 450, expressionType));
-        state._assignable = false;
+    if ($currentToken & 131072) {
+        const op = TokenValues[$currentToken & 63];
+        nextToken();
+        result = new UnaryExpression(op, parse(514, expressionType));
+        $assignable = false;
     }
     else {
-        primary: switch (state._currentToken) {
+        primary: switch ($currentToken) {
             case 12294:
-                state._assignable = false;
+                ancestor = $scopeDepth;
+                $assignable = false;
                 do {
-                    nextToken(state);
+                    nextToken();
                     ++ancestor;
-                    if (consumeOpt(state, 65545)) {
-                        if (state._currentToken === 65545) {
-                            throw new Error(`AUR0152: Double dot and spread operators are not supported: '${state.ip}'`);
-                        }
-                        else if (state._currentToken === 6291456) {
-                            throw new Error(`AUR0153: Expected identifier: '${state.ip}'`);
-                        }
+                    switch ($currentToken) {
+                        case 65545:
+                            nextToken();
+                            if (($currentToken & 12288) === 0) {
+                                throw expectedIdentifier();
+                            }
+                            break;
+                        case 10:
+                        case 11:
+                            throw expectedIdentifier();
+                        case 2162700:
+                            $optional = true;
+                            nextToken();
+                            if (($currentToken & 12288) === 0) {
+                                result = ancestor === 0 ? $this : ancestor === 1 ? $parent : new AccessThisExpression(ancestor);
+                                optionalThisTail = true;
+                                break primary;
+                            }
+                            break;
+                        default:
+                            if ($currentToken & 2097152) {
+                                result = ancestor === 0 ? $this : ancestor === 1 ? $parent : new AccessThisExpression(ancestor);
+                                break primary;
+                            }
+                            throw invalidMemberExpression();
                     }
-                    else if (state._currentToken === 2162698) {
-                        state._optional = true;
-                        nextToken(state);
-                        if ((state._currentToken & 12288) === 0) {
-                            result = ancestor === 0 ? $this : ancestor === 1 ? $parent : new AccessThisExpression(ancestor);
-                            optionalThisTail = true;
-                            break primary;
-                        }
-                    }
-                    else if (state._currentToken & 2097152) {
-                        result = ancestor === 0 ? $this : ancestor === 1 ? $parent : new AccessThisExpression(ancestor);
-                        break primary;
-                    }
-                    else {
-                        throw new Error(`AUR0154: Invalid member expression: '${state.ip}'`);
-                    }
-                } while (state._currentToken === 12294);
-            case 4096:
+                } while ($currentToken === 12294);
+            case 4096: {
+                const id = $tokenValue;
                 if (expressionType & 2) {
-                    result = new BindingIdentifier(state._tokenValue);
+                    result = new BindingIdentifier(id);
                 }
                 else {
-                    result = new AccessScopeExpression(state._tokenValue, ancestor);
+                    result = new AccessScopeExpression(id, ancestor);
                 }
-                state._assignable = !state._optional;
-                nextToken(state);
-                break;
-            case 12292:
-                state._assignable = false;
-                nextToken(state);
-                result = $this;
-                break;
-            case 2688007: {
-                nextToken(state);
-                const _optional = state._optional;
-                result = parse(state, 62, expressionType);
-                state._optional = _optional;
-                consume(state, 7340044);
+                $assignable = !$optional;
+                nextToken();
+                if (consumeOpt(49)) {
+                    if ($currentToken === 524296) {
+                        throw functionBodyInArrowFN();
+                    }
+                    const _optional = $optional;
+                    const _scopeDepth = $scopeDepth;
+                    ++$scopeDepth;
+                    const body = parse(62, 0);
+                    $optional = _optional;
+                    $scopeDepth = _scopeDepth;
+                    $assignable = false;
+                    result = new ArrowFunction([new BindingIdentifier(id)], body);
+                }
                 break;
             }
-            case 2688014:
-                result = state.ip.search(/\s+of\s+/) > state.index ? parseArrayDestructuring(state) : parseArrayLiteralExpression(state, expressionType);
+            case 10:
+                throw unexpectedDoubleDot();
+            case 11:
+                throw invalidSpreadOp();
+            case 12292:
+                $assignable = false;
+                nextToken();
+                switch ($scopeDepth) {
+                    case 0:
+                        result = $this;
+                        break;
+                    case 1:
+                        result = $parent;
+                        break;
+                    default:
+                        result = new AccessThisExpression($scopeDepth);
+                        break;
+                }
+                break;
+            case 2688007:
+                result = parseCoverParenthesizedExpressionAndArrowParameterList(expressionType);
+                break;
+            case 2688016:
+                result = $input.search(/\s+of\s+/) > $index ? parseArrayDestructuring() : parseArrayLiteralExpression(expressionType);
                 break;
             case 524296:
-                result = parseObjectLiteralExpression(state, expressionType);
+                result = parseObjectLiteralExpression(expressionType);
                 break;
-            case 2163756:
-                result = new TemplateExpression([state._tokenValue]);
-                state._assignable = false;
-                nextToken(state);
+            case 2163758:
+                result = new TemplateExpression([$tokenValue]);
+                $assignable = false;
+                nextToken();
                 break;
-            case 2163757:
-                result = parseTemplate(state, expressionType, result, false);
+            case 2163759:
+                result = parseTemplate(expressionType, result, false);
                 break;
             case 16384:
             case 32768:
-                result = new PrimitiveLiteralExpression(state._tokenValue);
-                state._assignable = false;
-                nextToken(state);
+                result = new PrimitiveLiteralExpression($tokenValue);
+                $assignable = false;
+                nextToken();
                 break;
             case 8194:
             case 8195:
             case 8193:
             case 8192:
-                result = TokenValues[state._currentToken & 63];
-                state._assignable = false;
-                nextToken(state);
+                result = TokenValues[$currentToken & 63];
+                $assignable = false;
+                nextToken();
                 break;
             default:
-                if (state.index >= state.length) {
-                    throw new Error(`AUR0155: Unexpected end of expression: '${state.ip}'`);
+                if ($index >= $length) {
+                    throw unexpectedEndOfExpression();
                 }
                 else {
-                    throw new Error(`AUR0156: Unconsumed token: '${state.ip}'`);
+                    throw unconsumedToken();
                 }
         }
         if (expressionType & 2) {
-            return parseForOfStatement(state, result);
+            return parseForOfStatement(result);
         }
-        if (450 < minPrecedence) {
+        if (514 < minPrecedence) {
             return result;
         }
+        if ($currentToken === 10 || $currentToken === 11) {
+            throw expectedIdentifier();
+        }
         if (result.$kind === 1793) {
-            switch (state._currentToken) {
-                case 2162698:
-                    state._optional = true;
-                    state._assignable = false;
-                    nextToken(state);
-                    ensureOptionalSuffix(state);
-                    if (state._currentToken & 12288) {
-                        result = new AccessScopeExpression(state._tokenValue, result.ancestor);
-                        nextToken(state);
+            switch ($currentToken) {
+                case 2162700:
+                    $optional = true;
+                    $assignable = false;
+                    nextToken();
+                    if (($currentToken & 13312) === 0) {
+                        throw unexpectedTokenInOptionalChain();
                     }
-                    else if (state._currentToken === 2688007) {
-                        result = new CallFunctionExpression(result, parseArguments(state), true);
+                    if ($currentToken & 12288) {
+                        result = new AccessScopeExpression($tokenValue, result.ancestor);
+                        nextToken();
                     }
-                    else if (state._currentToken === 2688014) {
-                        result = parseKeyedExpression(state, result, true);
+                    else if ($currentToken === 2688007) {
+                        result = new CallFunctionExpression(result, parseArguments(), true);
+                    }
+                    else if ($currentToken === 2688016) {
+                        result = parseKeyedExpression(result, true);
                     }
                     else {
-                        throw invalidTaggedTemplateOnOptionalChain(state);
+                        throw invalidTaggedTemplateOnOptionalChain();
                     }
                     break;
                 case 65545:
-                    state._assignable = !state._optional;
-                    nextToken(state);
-                    ensureIdName(state);
-                    result = new AccessScopeExpression(state._tokenValue, result.ancestor);
-                    nextToken(state);
+                    $assignable = !$optional;
+                    nextToken();
+                    if (($currentToken & 12288) === 0) {
+                        throw expectedIdentifier();
+                    }
+                    result = new AccessScopeExpression($tokenValue, result.ancestor);
+                    nextToken();
                     break;
+                case 10:
+                case 11:
+                    throw expectedIdentifier();
                 case 2688007:
-                    result = new CallFunctionExpression(result, parseArguments(state), optionalThisTail);
+                    result = new CallFunctionExpression(result, parseArguments(), optionalThisTail);
                     break;
-                case 2688014:
-                    result = parseKeyedExpression(state, result, optionalThisTail);
+                case 2688016:
+                    result = parseKeyedExpression(result, optionalThisTail);
                     break;
-                case 2163756:
-                    result = createTemplateTail(state, result);
+                case 2163758:
+                    result = createTemplateTail(result);
                     break;
-                case 2163757:
-                    result = parseTemplate(state, expressionType, result, true);
+                case 2163759:
+                    result = parseTemplate(expressionType, result, true);
                     break;
             }
         }
-        while ((state._currentToken & 65536) > 0) {
-            switch (state._currentToken) {
-                case 2162698:
-                    result = parseOptionalChainLHS(state, result);
+        while (($currentToken & 65536) > 0) {
+            switch ($currentToken) {
+                case 2162700:
+                    result = parseOptionalChainLHS(result);
                     break;
                 case 65545:
-                    nextToken(state);
-                    ensureIdName(state);
-                    result = parseMemberExpressionLHS(state, result, false);
+                    nextToken();
+                    if (($currentToken & 12288) === 0) {
+                        throw expectedIdentifier();
+                    }
+                    result = parseMemberExpressionLHS(result, false);
                     break;
+                case 10:
+                case 11:
+                    throw expectedIdentifier();
                 case 2688007:
                     if (result.$kind === 10082) {
-                        result = new CallScopeExpression(result.name, parseArguments(state), result.ancestor, false);
+                        result = new CallScopeExpression(result.name, parseArguments(), result.ancestor, false);
                     }
                     else if (result.$kind === 9323) {
-                        result = new CallMemberExpression(result.object, result.name, parseArguments(state), result.optional, false);
+                        result = new CallMemberExpression(result.object, result.name, parseArguments(), result.optional, false);
                     }
                     else {
-                        result = new CallFunctionExpression(result, parseArguments(state), false);
+                        result = new CallFunctionExpression(result, parseArguments(), false);
                     }
                     break;
-                case 2688014:
-                    result = parseKeyedExpression(state, result, false);
+                case 2688016:
+                    result = parseKeyedExpression(result, false);
                     break;
-                case 2163756:
-                    if (state._optional) {
-                        throw invalidTaggedTemplateOnOptionalChain(state);
+                case 2163758:
+                    if ($optional) {
+                        throw invalidTaggedTemplateOnOptionalChain();
                     }
-                    result = createTemplateTail(state, result);
+                    result = createTemplateTail(result);
                     break;
-                case 2163757:
-                    if (state._optional) {
-                        throw invalidTaggedTemplateOnOptionalChain(state);
+                case 2163759:
+                    if ($optional) {
+                        throw invalidTaggedTemplateOnOptionalChain();
                     }
-                    result = parseTemplate(state, expressionType, result, true);
+                    result = parseTemplate(expressionType, result, true);
                     break;
             }
         }
     }
-    if (449 < minPrecedence) {
+    if ($currentToken === 10 || $currentToken === 11) {
+        throw expectedIdentifier();
+    }
+    if (513 < minPrecedence) {
         return result;
     }
-    while ((state._currentToken & 262144) > 0) {
-        const opToken = state._currentToken;
+    while (($currentToken & 262144) > 0) {
+        const opToken = $currentToken;
         if ((opToken & 960) <= minPrecedence) {
             break;
         }
-        nextToken(state);
-        result = new BinaryExpression(TokenValues[opToken & 63], result, parse(state, opToken & 960, expressionType));
-        state._assignable = false;
+        nextToken();
+        result = new BinaryExpression(TokenValues[opToken & 63], result, parse(opToken & 960, expressionType));
+        $assignable = false;
     }
     if (63 < minPrecedence) {
         return result;
     }
-    if (consumeOpt(state, 6291475)) {
-        const yes = parse(state, 62, expressionType);
-        consume(state, 6291472);
-        result = new ConditionalExpression(result, yes, parse(state, 62, expressionType));
-        state._assignable = false;
+    if (consumeOpt(6291477)) {
+        const yes = parse(62, expressionType);
+        consume(6291476);
+        result = new ConditionalExpression(result, yes, parse(62, expressionType));
+        $assignable = false;
     }
     if (62 < minPrecedence) {
         return result;
     }
-    if (consumeOpt(state, 4194346)) {
-        if (!state._assignable) {
-            throw new Error(`AUR0158: Left hand side of expression is not assignable: '${state.ip}'`);
+    if (consumeOpt(4194348)) {
+        if (!$assignable) {
+            throw lhsNotAssignable();
         }
-        result = new AssignExpression(result, parse(state, 62, expressionType));
+        result = new AssignExpression(result, parse(62, expressionType));
     }
     if (61 < minPrecedence) {
         return result;
     }
-    while (consumeOpt(state, 6291477)) {
-        if (state._currentToken === 6291456) {
-            throw new Error(`AUR0159: Expected identifier to come after ValueConverter operator: '${state.ip}'`);
+    while (consumeOpt(6291479)) {
+        if ($currentToken === 6291456) {
+            throw expectedValueConverterIdentifier();
         }
-        const name = state._tokenValue;
-        nextToken(state);
+        const name = $tokenValue;
+        nextToken();
         const args = new Array();
-        while (consumeOpt(state, 6291472)) {
-            args.push(parse(state, 62, expressionType));
+        while (consumeOpt(6291476)) {
+            args.push(parse(62, expressionType));
         }
         result = new ValueConverterExpression(result, name, args);
     }
-    while (consumeOpt(state, 6291476)) {
-        if (state._currentToken === 6291456) {
-            throw new Error(`AUR0160: Expected identifier to come after BindingBehavior operator: '${state.ip}'`);
+    while (consumeOpt(6291478)) {
+        if ($currentToken === 6291456) {
+            throw expectedBindingBehaviorIdentifier();
         }
-        const name = state._tokenValue;
-        nextToken(state);
+        const name = $tokenValue;
+        nextToken();
         const args = new Array();
-        while (consumeOpt(state, 6291472)) {
-            args.push(parse(state, 62, expressionType));
+        while (consumeOpt(6291476)) {
+            args.push(parse(62, expressionType));
         }
         result = new BindingBehaviorExpression(result, name, args);
     }
-    if (state._currentToken !== 6291456) {
+    if ($currentToken !== 6291456) {
         if (expressionType & 1) {
             return result;
         }
-        if (state._tokenRaw === 'of') {
-            throw new Error(`AUR0161: Unexpected keyword "of": '${state.ip}'`);
+        if ($tokenRaw() === 'of') {
+            throw unexpectedOfKeyword();
         }
-        throw new Error(`AUR0162: Unconsumed token: '${state._tokenRaw}' at position ${state.index} of '${state.ip}'`);
+        throw unconsumedToken();
     }
     return result;
 }
-function parseArrayDestructuring(state) {
+function parseArrayDestructuring() {
     const items = [];
-    const dae = new DestructuringAssignmentExpression(90137, items, void 0, void 0);
+    const dae = new DestructuringAssignmentExpression(90138, items, void 0, void 0);
     let target = '';
     let $continue = true;
     let index = 0;
     while ($continue) {
-        nextToken(state);
-        switch (state._currentToken) {
-            case 7340047:
+        nextToken();
+        switch ($currentToken) {
+            case 7340051:
                 $continue = false;
                 addItem();
                 break;
-            case 6291469:
+            case 6291471:
                 addItem();
                 break;
             case 4096:
-                target = state._tokenRaw;
+                target = $tokenRaw();
                 break;
             default:
-                {
-                    throw new Error(`AUR0170: Unexpected '${state._tokenRaw}' at position ${state.index - 1} for destructuring assignment in ${state.ip}`);
-                }
+                throw unexpectedTokenInDestructuring();
         }
     }
-    consume(state, 7340047);
+    consume(7340051);
     return dae;
     function addItem() {
         if (target !== '') {
@@ -3487,105 +3614,266 @@ function parseArrayDestructuring(state) {
         }
     }
 }
-function parseArguments(state) {
-    const _optional = state._optional;
-    nextToken(state);
+function parseArguments() {
+    const _optional = $optional;
+    nextToken();
     const args = [];
-    while (state._currentToken !== 7340044) {
-        args.push(parse(state, 62, 0));
-        if (!consumeOpt(state, 6291469)) {
+    while ($currentToken !== 7340046) {
+        args.push(parse(62, 0));
+        if (!consumeOpt(6291471)) {
             break;
         }
     }
-    consume(state, 7340044);
-    state._assignable = false;
-    state._optional = _optional;
+    consume(7340046);
+    $assignable = false;
+    $optional = _optional;
     return args;
 }
-function parseKeyedExpression(state, result, optional) {
-    const _optional = state._optional;
-    nextToken(state);
-    result = new AccessKeyedExpression(result, parse(state, 62, 0), optional);
-    consume(state, 7340047);
-    state._assignable = !_optional;
-    state._optional = _optional;
+function parseKeyedExpression(result, optional) {
+    const _optional = $optional;
+    nextToken();
+    result = new AccessKeyedExpression(result, parse(62, 0), optional);
+    consume(7340051);
+    $assignable = !_optional;
+    $optional = _optional;
     return result;
 }
-function parseOptionalChainLHS(state, lhs) {
-    state._optional = true;
-    state._assignable = false;
-    nextToken(state);
-    ensureOptionalSuffix(state);
-    if (state._currentToken & 12288) {
-        return parseMemberExpressionLHS(state, lhs, true);
+function parseOptionalChainLHS(lhs) {
+    $optional = true;
+    $assignable = false;
+    nextToken();
+    if (($currentToken & 13312) === 0) {
+        throw unexpectedTokenInOptionalChain();
     }
-    if (state._currentToken === 2688007) {
+    if ($currentToken & 12288) {
+        return parseMemberExpressionLHS(lhs, true);
+    }
+    if ($currentToken === 2688007) {
         if (lhs.$kind === 10082) {
-            return new CallScopeExpression(lhs.name, parseArguments(state), lhs.ancestor, true);
+            return new CallScopeExpression(lhs.name, parseArguments(), lhs.ancestor, true);
         }
         else if (lhs.$kind === 9323) {
-            return new CallMemberExpression(lhs.object, lhs.name, parseArguments(state), lhs.optional, true);
+            return new CallMemberExpression(lhs.object, lhs.name, parseArguments(), lhs.optional, true);
         }
         else {
-            return new CallFunctionExpression(lhs, parseArguments(state), true);
+            return new CallFunctionExpression(lhs, parseArguments(), true);
         }
     }
-    if (state._currentToken === 2688014) {
-        return parseKeyedExpression(state, lhs, true);
+    if ($currentToken === 2688016) {
+        return parseKeyedExpression(lhs, true);
     }
-    throw invalidTaggedTemplateOnOptionalChain(state);
+    throw invalidTaggedTemplateOnOptionalChain();
 }
-function parseMemberExpressionLHS(state, lhs, optional) {
-    const rhs = state._tokenValue;
-    switch (state._currentToken) {
-        case 2162698:
-            state._optional = true;
-            state._assignable = false;
-            save(state);
-            nextToken(state);
-            ensureOptionalSuffix(state);
-            if (state._currentToken === 2688007) {
-                return new CallMemberExpression(lhs, rhs, parseArguments(state), optional, true);
+function parseMemberExpressionLHS(lhs, optional) {
+    const rhs = $tokenValue;
+    switch ($currentToken) {
+        case 2162700: {
+            $optional = true;
+            $assignable = false;
+            const indexSave = $index;
+            const startIndexSave = $startIndex;
+            const currentTokenSave = $currentToken;
+            const currentCharSave = $currentChar;
+            const tokenValueSave = $tokenValue;
+            const assignableSave = $assignable;
+            const optionalSave = $optional;
+            nextToken();
+            if (($currentToken & 13312) === 0) {
+                throw unexpectedTokenInOptionalChain();
             }
-            restore(state);
+            if ($currentToken === 2688007) {
+                return new CallMemberExpression(lhs, rhs, parseArguments(), optional, true);
+            }
+            $index = indexSave;
+            $startIndex = startIndexSave;
+            $currentToken = currentTokenSave;
+            $currentChar = currentCharSave;
+            $tokenValue = tokenValueSave;
+            $assignable = assignableSave;
+            $optional = optionalSave;
             return new AccessMemberExpression(lhs, rhs, optional);
-        case 2688007:
-            state._assignable = false;
-            return new CallMemberExpression(lhs, rhs, parseArguments(state), optional, false);
-        default:
-            state._assignable = !state._optional;
-            nextToken(state);
+        }
+        case 2688007: {
+            $assignable = false;
+            return new CallMemberExpression(lhs, rhs, parseArguments(), optional, false);
+        }
+        default: {
+            $assignable = !$optional;
+            nextToken();
             return new AccessMemberExpression(lhs, rhs, optional);
+        }
     }
 }
-function ensureOptionalSuffix(state) {
-    if ((state._currentToken & 13312) === 0) {
-        throw new Error(`AUR0171: Unexpected '${state._tokenRaw}' at position ${state.index - 1} for optional chain in ${state.ip}`);
+var ArrowFnParams;
+(function (ArrowFnParams) {
+    ArrowFnParams[ArrowFnParams["Valid"] = 1] = "Valid";
+    ArrowFnParams[ArrowFnParams["Invalid"] = 2] = "Invalid";
+    ArrowFnParams[ArrowFnParams["Default"] = 3] = "Default";
+    ArrowFnParams[ArrowFnParams["Destructuring"] = 4] = "Destructuring";
+})(ArrowFnParams || (ArrowFnParams = {}));
+function parseCoverParenthesizedExpressionAndArrowParameterList(expressionType) {
+    nextToken();
+    const indexSave = $index;
+    const startIndexSave = $startIndex;
+    const currentTokenSave = $currentToken;
+    const currentCharSave = $currentChar;
+    const tokenValueSave = $tokenValue;
+    const assignableSave = $assignable;
+    const optionalSave = $optional;
+    const arrowParams = [];
+    let paramsState = 1;
+    let isParamList = false;
+    loop: while (true) {
+        if ($currentToken === 11) {
+            nextToken();
+            if ($currentToken !== 4096) {
+                throw expectedIdentifier();
+            }
+            arrowParams.push(new BindingIdentifier($tokenValue));
+            nextToken();
+            if ($currentToken === 6291471) {
+                throw restParamsMustBeLastParam();
+            }
+            if ($currentToken !== 7340046) {
+                throw invalidSpreadOp();
+            }
+            nextToken();
+            if ($currentToken !== 49) {
+                throw invalidSpreadOp();
+            }
+            nextToken();
+            const _optional = $optional;
+            const _scopeDepth = $scopeDepth;
+            ++$scopeDepth;
+            const body = parse(62, 0);
+            $optional = _optional;
+            $scopeDepth = _scopeDepth;
+            $assignable = false;
+            return new ArrowFunction(arrowParams, body, true);
+        }
+        switch ($currentToken) {
+            case 4096:
+                arrowParams.push(new BindingIdentifier($tokenValue));
+                nextToken();
+                break;
+            case 7340046:
+                nextToken();
+                break loop;
+            case 524296:
+            case 2688016:
+                nextToken();
+                paramsState = 4;
+                break;
+            case 6291471:
+                paramsState = 2;
+                isParamList = true;
+                break loop;
+            case 2688007:
+                paramsState = 2;
+                break loop;
+            default:
+                nextToken();
+                paramsState = 2;
+                break;
+        }
+        switch ($currentToken) {
+            case 6291471:
+                nextToken();
+                isParamList = true;
+                if (paramsState === 1) {
+                    break;
+                }
+                break loop;
+            case 7340046:
+                nextToken();
+                break loop;
+            case 4194348:
+                if (paramsState === 1) {
+                    paramsState = 3;
+                }
+                break loop;
+            case 49:
+                if (isParamList) {
+                    throw invalidArrowParameterList();
+                }
+                nextToken();
+                paramsState = 2;
+                break loop;
+            default:
+                if (paramsState === 1) {
+                    paramsState = 2;
+                }
+                break loop;
+        }
     }
-}
-function ensureIdName(state) {
-    if ((state._currentToken & 12288) === 0) {
-        throw new Error(`AUR0153: Expected identifier: '${state.ip}'`);
+    if ($currentToken === 49) {
+        if (paramsState === 1) {
+            nextToken();
+            if ($currentToken === 524296) {
+                throw functionBodyInArrowFN();
+            }
+            const _optional = $optional;
+            const _scopeDepth = $scopeDepth;
+            ++$scopeDepth;
+            const body = parse(62, 0);
+            $optional = _optional;
+            $scopeDepth = _scopeDepth;
+            $assignable = false;
+            return new ArrowFunction(arrowParams, body);
+        }
+        throw invalidArrowParameterList();
     }
+    else if (paramsState === 1 && arrowParams.length === 0) {
+        throw missingExpectedToken(49);
+    }
+    if (isParamList) {
+        switch (paramsState) {
+            case 2:
+                throw invalidArrowParameterList();
+            case 3:
+                throw defaultParamsInArrowFn();
+            case 4:
+                throw destructuringParamsInArrowFn();
+        }
+    }
+    $index = indexSave;
+    $startIndex = startIndexSave;
+    $currentToken = currentTokenSave;
+    $currentChar = currentCharSave;
+    $tokenValue = tokenValueSave;
+    $assignable = assignableSave;
+    $optional = optionalSave;
+    const _optional = $optional;
+    const expr = parse(62, expressionType);
+    $optional = _optional;
+    consume(7340046);
+    if ($currentToken === 49) {
+        switch (paramsState) {
+            case 2:
+                throw invalidArrowParameterList();
+            case 3:
+                throw defaultParamsInArrowFn();
+            case 4:
+                throw destructuringParamsInArrowFn();
+        }
+    }
+    return expr;
 }
-function invalidTaggedTemplateOnOptionalChain(state) {
-    return new Error(`AUR0172: Invalid tagged template on optional chain in ${state.ip}`);
-}
-function parseArrayLiteralExpression(state, expressionType) {
-    const _optional = state._optional;
-    nextToken(state);
+function parseArrayLiteralExpression(expressionType) {
+    const _optional = $optional;
+    nextToken();
     const elements = new Array();
-    while (state._currentToken !== 7340047) {
-        if (consumeOpt(state, 6291469)) {
+    while ($currentToken !== 7340051) {
+        if (consumeOpt(6291471)) {
             elements.push($undefined);
-            if (state._currentToken === 7340047) {
+            if ($currentToken === 7340051) {
                 break;
             }
         }
         else {
-            elements.push(parse(state, 62, expressionType & ~2));
-            if (consumeOpt(state, 6291469)) {
-                if (state._currentToken === 7340047) {
+            elements.push(parse(62, expressionType & ~2));
+            if (consumeOpt(6291471)) {
+                if ($currentToken === 7340051) {
                     break;
                 }
             }
@@ -3594,85 +3882,87 @@ function parseArrayLiteralExpression(state, expressionType) {
             }
         }
     }
-    state._optional = _optional;
-    consume(state, 7340047);
+    $optional = _optional;
+    consume(7340051);
     if (expressionType & 2) {
         return new ArrayBindingPattern(elements);
     }
     else {
-        state._assignable = false;
+        $assignable = false;
         return new ArrayLiteralExpression(elements);
     }
 }
-function parseForOfStatement(state, result) {
+function parseForOfStatement(result) {
     if ((result.$kind & 65536) === 0) {
-        throw new Error(`AUR0163: Invalid BindingIdentifier at left hand side of "of": '${state.ip}'`);
+        throw invalidLHSBindingIdentifierInForOf();
     }
-    if (state._currentToken !== 4204590) {
-        throw new Error(`AUR0163: Invalid BindingIdentifier at left hand side of "of": '${state.ip}'`);
+    if ($currentToken !== 4204592) {
+        throw invalidLHSBindingIdentifierInForOf();
     }
-    nextToken(state);
+    nextToken();
     const declaration = result;
-    const statement = parse(state, 61, 0);
+    const statement = parse(61, 0);
     return new ForOfStatement(declaration, statement);
 }
-function parseObjectLiteralExpression(state, expressionType) {
-    const _optional = state._optional;
+function parseObjectLiteralExpression(expressionType) {
+    const _optional = $optional;
     const keys = new Array();
     const values = new Array();
-    nextToken(state);
-    while (state._currentToken !== 7340043) {
-        keys.push(state._tokenValue);
-        if (state._currentToken & 49152) {
-            nextToken(state);
-            consume(state, 6291472);
-            values.push(parse(state, 62, expressionType & ~2));
+    nextToken();
+    while ($currentToken !== 7340045) {
+        keys.push($tokenValue);
+        if ($currentToken & 49152) {
+            nextToken();
+            consume(6291476);
+            values.push(parse(62, expressionType & ~2));
         }
-        else if (state._currentToken & 12288) {
-            const { _currentChar: currentChar, _currentToken: currentToken, index: index } = state;
-            nextToken(state);
-            if (consumeOpt(state, 6291472)) {
-                values.push(parse(state, 62, expressionType & ~2));
+        else if ($currentToken & 12288) {
+            const currentChar = $currentChar;
+            const currentToken = $currentToken;
+            const index = $index;
+            nextToken();
+            if (consumeOpt(6291476)) {
+                values.push(parse(62, expressionType & ~2));
             }
             else {
-                state._currentChar = currentChar;
-                state._currentToken = currentToken;
-                state.index = index;
-                values.push(parse(state, 451, expressionType & ~2));
+                $currentChar = currentChar;
+                $currentToken = currentToken;
+                $index = index;
+                values.push(parse(515, expressionType & ~2));
             }
         }
         else {
-            throw new Error(`AUR0164: Invalid or unsupported property definition in object literal: '${state.ip}'`);
+            throw invalidPropDefInObjLiteral();
         }
-        if (state._currentToken !== 7340043) {
-            consume(state, 6291469);
+        if ($currentToken !== 7340045) {
+            consume(6291471);
         }
     }
-    state._optional = _optional;
-    consume(state, 7340043);
+    $optional = _optional;
+    consume(7340045);
     if (expressionType & 2) {
         return new ObjectBindingPattern(keys, values);
     }
     else {
-        state._assignable = false;
+        $assignable = false;
         return new ObjectLiteralExpression(keys, values);
     }
 }
-function parseInterpolation(state) {
+function parseInterpolation() {
     const parts = [];
     const expressions = [];
-    const length = state.length;
+    const length = $length;
     let result = '';
-    while (state.index < length) {
-        switch (state._currentChar) {
+    while ($index < length) {
+        switch ($currentChar) {
             case 36:
-                if (state.ip.charCodeAt(state.index + 1) === 123) {
+                if ($input.charCodeAt($index + 1) === 123) {
                     parts.push(result);
                     result = '';
-                    state.index += 2;
-                    state._currentChar = state.ip.charCodeAt(state.index);
-                    nextToken(state);
-                    const expression = parse(state, 61, 1);
+                    $index += 2;
+                    $currentChar = $input.charCodeAt($index);
+                    nextToken();
+                    const expression = parse(61, 1);
                     expressions.push(expression);
                     continue;
                 }
@@ -3681,12 +3971,12 @@ function parseInterpolation(state) {
                 }
                 break;
             case 92:
-                result += String.fromCharCode(unescapeCode(nextChar(state)));
+                result += String.fromCharCode(unescapeCode(nextChar()));
                 break;
             default:
-                result += String.fromCharCode(state._currentChar);
+                result += String.fromCharCode($currentChar);
         }
-        nextChar(state);
+        nextChar();
     }
     if (expressions.length) {
         parts.push(result);
@@ -3694,143 +3984,115 @@ function parseInterpolation(state) {
     }
     return null;
 }
-function parseTemplate(state, expressionType, result, tagged) {
-    const _optional = state._optional;
-    const cooked = [state._tokenValue];
-    consume(state, 2163757);
-    const expressions = [parse(state, 62, expressionType)];
-    while ((state._currentToken = scanTemplateTail(state)) !== 2163756) {
-        cooked.push(state._tokenValue);
-        consume(state, 2163757);
-        expressions.push(parse(state, 62, expressionType));
+function parseTemplate(expressionType, result, tagged) {
+    const _optional = $optional;
+    const cooked = [$tokenValue];
+    consume(2163759);
+    const expressions = [parse(62, expressionType)];
+    while (($currentToken = scanTemplateTail()) !== 2163758) {
+        cooked.push($tokenValue);
+        consume(2163759);
+        expressions.push(parse(62, expressionType));
     }
-    cooked.push(state._tokenValue);
-    state._assignable = false;
-    state._optional = _optional;
+    cooked.push($tokenValue);
+    $assignable = false;
+    $optional = _optional;
     if (tagged) {
-        nextToken(state);
+        nextToken();
         return new TaggedTemplateExpression(cooked, cooked, result, expressions);
     }
     else {
-        nextToken(state);
+        nextToken();
         return new TemplateExpression(cooked, expressions);
     }
 }
-function createTemplateTail(state, result) {
-    state._assignable = false;
-    const strings = [state._tokenValue];
-    nextToken(state);
+function createTemplateTail(result) {
+    $assignable = false;
+    const strings = [$tokenValue];
+    nextToken();
     return new TaggedTemplateExpression(strings, strings, result);
 }
-function nextToken(state) {
-    while (state.index < state.length) {
-        state._startIndex = state.index;
-        if ((state._currentToken = (CharScanners[state._currentChar](state))) != null) {
+function nextToken() {
+    while ($index < $length) {
+        $startIndex = $index;
+        if (($currentToken = (CharScanners[$currentChar]())) != null) {
             return;
         }
     }
-    state._currentToken = 6291456;
+    $currentToken = 6291456;
 }
-const { save, restore } = (function () {
-    let index = 0;
-    let _startIndex = 0;
-    let _currentToken = 6291456;
-    let _currentChar = 0;
-    let _tokenValue = '';
-    let _assignable = true;
-    let _optional = false;
-    function save(state) {
-        index = state.index;
-        _startIndex = state._startIndex;
-        _currentToken = state._currentToken;
-        _currentChar = state._currentChar;
-        _tokenValue = state._tokenValue;
-        _assignable = state._assignable;
-        _optional = state._optional;
-    }
-    function restore(state) {
-        state.index = index;
-        state._startIndex = _startIndex;
-        state._currentToken = _currentToken;
-        state._currentChar = _currentChar;
-        state._tokenValue = _tokenValue;
-        state._assignable = _assignable;
-        state._optional = _optional;
-    }
-    return { save, restore };
-})();
-function nextChar(state) {
-    return state._currentChar = state.ip.charCodeAt(++state.index);
+function nextChar() {
+    return $currentChar = $input.charCodeAt(++$index);
 }
-function scanIdentifier(state) {
-    while (IdParts[nextChar(state)])
+function scanIdentifier() {
+    while (IdParts[nextChar()])
         ;
-    const token = KeywordLookup[state._tokenValue = state._tokenRaw];
+    const token = KeywordLookup[$tokenValue = $tokenRaw()];
     return token === undefined ? 4096 : token;
 }
-function scanNumber(state, isFloat) {
-    let char = state._currentChar;
+function scanNumber(isFloat) {
+    let char = $currentChar;
     if (isFloat === false) {
         do {
-            char = nextChar(state);
+            char = nextChar();
         } while (char <= 57 && char >= 48);
         if (char !== 46) {
-            state._tokenValue = parseInt(state._tokenRaw, 10);
+            $tokenValue = parseInt($tokenRaw(), 10);
             return 32768;
         }
-        char = nextChar(state);
-        if (state.index >= state.length) {
-            state._tokenValue = parseInt(state._tokenRaw.slice(0, -1), 10);
+        char = nextChar();
+        if ($index >= $length) {
+            $tokenValue = parseInt($tokenRaw().slice(0, -1), 10);
             return 32768;
         }
     }
     if (char <= 57 && char >= 48) {
         do {
-            char = nextChar(state);
+            char = nextChar();
         } while (char <= 57 && char >= 48);
     }
     else {
-        state._currentChar = state.ip.charCodeAt(--state.index);
+        $currentChar = $input.charCodeAt(--$index);
     }
-    state._tokenValue = parseFloat(state._tokenRaw);
+    $tokenValue = parseFloat($tokenRaw());
     return 32768;
 }
-function scanString(state) {
-    const quote = state._currentChar;
-    nextChar(state);
+function scanString() {
+    const quote = $currentChar;
+    nextChar();
     let unescaped = 0;
     const buffer = new Array();
-    let marker = state.index;
-    while (state._currentChar !== quote) {
-        if (state._currentChar === 92) {
-            buffer.push(state.ip.slice(marker, state.index));
-            nextChar(state);
-            unescaped = unescapeCode(state._currentChar);
-            nextChar(state);
+    let marker = $index;
+    while ($currentChar !== quote) {
+        if ($currentChar === 92) {
+            buffer.push($input.slice(marker, $index));
+            nextChar();
+            unescaped = unescapeCode($currentChar);
+            nextChar();
             buffer.push(String.fromCharCode(unescaped));
-            marker = state.index;
+            marker = $index;
         }
-        else if (state.index >= state.length) {
-            throw new Error(`AUR0165: Unterminated quote in string literal: '${state.ip}'`);
+        else if ($index >= $length) {
+            throw unterminatedStringLiteral();
         }
         else {
-            nextChar(state);
+            nextChar();
         }
     }
-    const last = state.ip.slice(marker, state.index);
-    nextChar(state);
+    const last = $input.slice(marker, $index);
+    nextChar();
     buffer.push(last);
     const unescapedStr = buffer.join('');
-    state._tokenValue = unescapedStr;
+    $tokenValue = unescapedStr;
     return 16384;
 }
-function scanTemplate(state) {
+function scanTemplate() {
     let tail = true;
     let result = '';
-    while (nextChar(state) !== 96) {
-        if (state._currentChar === 36) {
-            if ((state.index + 1) < state.length && state.ip.charCodeAt(state.index + 1) === 123) {
-                state.index++;
+    while (nextChar() !== 96) {
+        if ($currentChar === 36) {
+            if (($index + 1) < $length && $input.charCodeAt($index + 1) === 123) {
+                $index++;
                 tail = false;
                 break;
             }
@@ -3838,65 +4100,197 @@ function scanTemplate(state) {
                 result += '$';
             }
         }
-        else if (state._currentChar === 92) {
-            result += String.fromCharCode(unescapeCode(nextChar(state)));
+        else if ($currentChar === 92) {
+            result += String.fromCharCode(unescapeCode(nextChar()));
         }
         else {
-            if (state.index >= state.length) {
-                throw new Error(`AUR0166: Unterminated template string: '${state.ip}'`);
+            if ($index >= $length) {
+                throw unterminatedTemplateLiteral();
             }
-            result += String.fromCharCode(state._currentChar);
+            result += String.fromCharCode($currentChar);
         }
     }
-    nextChar(state);
-    state._tokenValue = result;
+    nextChar();
+    $tokenValue = result;
     if (tail) {
-        return 2163756;
+        return 2163758;
     }
-    return 2163757;
+    return 2163759;
 }
-function scanTemplateTail(state) {
-    if (state.index >= state.length) {
-        throw new Error(`AUR0166: Unterminated template string: '${state.ip}'`);
+function scanTemplateTail() {
+    if ($index >= $length) {
+        throw unterminatedTemplateLiteral();
     }
-    state.index--;
-    return scanTemplate(state);
+    $index--;
+    return scanTemplate();
 }
-function consumeOpt(state, token) {
-    if (state._currentToken === token) {
-        nextToken(state);
+function consumeOpt(token) {
+    if ($currentToken === token) {
+        nextToken();
         return true;
     }
     return false;
 }
-function consume(state, token) {
-    if (state._currentToken === token) {
-        nextToken(state);
+function consume(token) {
+    if ($currentToken === token) {
+        nextToken();
     }
     else {
-        throw new Error(`AUR0167: Missing expected token: '${state.ip}'`);
+        throw missingExpectedToken(token);
+    }
+}
+function invalidStartOfExpression() {
+    {
+        return new Error(`AUR0151: Invalid start of expression: '${$input}'`);
+    }
+}
+function invalidSpreadOp() {
+    {
+        return new Error(`AUR0152: Spread operator is not supported: '${$input}'`);
+    }
+}
+function expectedIdentifier() {
+    {
+        return new Error(`AUR0153: Expected identifier: '${$input}'`);
+    }
+}
+function invalidMemberExpression() {
+    {
+        return new Error(`AUR0154: Invalid member expression: '${$input}'`);
+    }
+}
+function unexpectedEndOfExpression() {
+    {
+        return new Error(`AUR0155: Unexpected end of expression: '${$input}'`);
+    }
+}
+function unconsumedToken() {
+    {
+        return new Error(`AUR0156: Unconsumed token: '${$tokenRaw()}' at position ${$index} of '${$input}'`);
+    }
+}
+function invalidEmptyExpression() {
+    {
+        return new Error(`AUR0157: Invalid expression. Empty expression is only valid in event bindings (trigger, delegate, capture etc...)`);
+    }
+}
+function lhsNotAssignable() {
+    {
+        return new Error(`AUR0158: Left hand side of expression is not assignable: '${$input}'`);
+    }
+}
+function expectedValueConverterIdentifier() {
+    {
+        return new Error(`AUR0159: Expected identifier to come after ValueConverter operator: '${$input}'`);
+    }
+}
+function expectedBindingBehaviorIdentifier() {
+    {
+        return new Error(`AUR0160: Expected identifier to come after BindingBehavior operator: '${$input}'`);
+    }
+}
+function unexpectedOfKeyword() {
+    {
+        return new Error(`AUR0161: Unexpected keyword "of": '${$input}'`);
+    }
+}
+function invalidLHSBindingIdentifierInForOf() {
+    {
+        return new Error(`AUR0163: Invalid BindingIdentifier at left hand side of "of": '${$input}'`);
+    }
+}
+function invalidPropDefInObjLiteral() {
+    {
+        return new Error(`AUR0164: Invalid or unsupported property definition in object literal: '${$input}'`);
+    }
+}
+function unterminatedStringLiteral() {
+    {
+        return new Error(`AUR0165: Unterminated quote in string literal: '${$input}'`);
+    }
+}
+function unterminatedTemplateLiteral() {
+    {
+        return new Error(`AUR0166: Unterminated template string: '${$input}'`);
+    }
+}
+function missingExpectedToken(token) {
+    {
+        return new Error(`AUR0167: Missing expected token '${TokenValues[token & 63]}' in '${$input}' `);
+    }
+}
+const unexpectedCharacter = () => {
+    {
+        throw new Error(`AUR0168: Unexpected character: '${$input}'`);
+    }
+};
+unexpectedCharacter.notMapped = true;
+function unexpectedTokenInDestructuring() {
+    {
+        return new Error(`AUR0170: Unexpected '${$tokenRaw()}' at position ${$index - 1} for destructuring assignment in ${$input}`);
+    }
+}
+function unexpectedTokenInOptionalChain() {
+    {
+        return new Error(`AUR0171: Unexpected '${$tokenRaw()}' at position ${$index - 1} for optional chain in ${$input}`);
+    }
+}
+function invalidTaggedTemplateOnOptionalChain() {
+    {
+        return new Error(`AUR0172: Invalid tagged template on optional chain in ${$input}`);
+    }
+}
+function invalidArrowParameterList() {
+    {
+        return new Error(`AUR0173: Invalid arrow parameter list in ${$input}`);
+    }
+}
+function defaultParamsInArrowFn() {
+    {
+        return new Error(`AUR0174: Arrow function with default parameters is not supported: ${$input}`);
+    }
+}
+function destructuringParamsInArrowFn() {
+    {
+        return new Error(`AUR0175: Arrow function with destructuring parameters is not supported: ${$input}`);
+    }
+}
+function restParamsMustBeLastParam() {
+    {
+        return new Error(`AUR0176: Rest parameter must be last formal parameter in arrow function: ${$input}`);
+    }
+}
+function functionBodyInArrowFN() {
+    {
+        return new Error(`AUR0178: Arrow function with function body is not supported: ${$input}`);
+    }
+}
+function unexpectedDoubleDot() {
+    {
+        return new Error(`AUR0179: Unexpected token '.' at position ${$index - 1} in ${$input}`);
     }
 }
 const TokenValues = [
     $false, $true, $null, $undefined, '$this', null, '$parent',
-    '(', '{', '.', '?.', '}', ')', ',', '[', ']', ':', '?', '\'', '"',
+    '(', '{', '.', '..', '...', '?.', '}', ')', ',', '[', ']', ':', '?', '\'', '"',
     '&', '|', '??', '||', '&&', '==', '!=', '===', '!==', '<', '>',
     '<=', '>=', 'in', 'instanceof', '+', '-', 'typeof', 'void', '*', '%', '/', '=', '!',
-    2163756, 2163757,
-    'of'
+    2163758, 2163759,
+    'of', '=>'
 ];
-const KeywordLookup = createLookup();
-KeywordLookup.true = 8193;
-KeywordLookup.null = 8194;
-KeywordLookup.false = 8192;
-KeywordLookup.undefined = 8195;
-KeywordLookup.$this = 12292;
-KeywordLookup.$parent = 12294;
-KeywordLookup.in = 6562209;
-KeywordLookup.instanceof = 6562210;
-KeywordLookup.typeof = 139301;
-KeywordLookup.void = 139302;
-KeywordLookup.of = 4204590;
+const KeywordLookup = Object.assign(Object.create(null), {
+    true: 8193,
+    null: 8194,
+    false: 8192,
+    undefined: 8195,
+    $this: 12292,
+    $parent: 12294,
+    in: 6562211,
+    instanceof: 6562212,
+    typeof: 139303,
+    void: 139304,
+    of: 4204592,
+});
 const codes = {
     AsciiIdPart: [0x24, 0, 0x30, 0x3A, 0x41, 0x5B, 0x5F, 0, 0x61, 0x7B],
     IdStart: [0x24, 0, 0x41, 0x5B, 0x5F, 0, 0x61, 0x7B, 0xAA, 0, 0xBA, 0, 0xC0, 0xD7, 0xD8, 0xF7, 0xF8, 0x2B9, 0x2E0, 0x2E5, 0x1D00, 0x1D26, 0x1D2C, 0x1D5D, 0x1D62, 0x1D66, 0x1D6B, 0x1D78, 0x1D79, 0x1DBF, 0x1E00, 0x1F00, 0x2071, 0, 0x207F, 0, 0x2090, 0x209D, 0x212A, 0x212C, 0x2132, 0, 0x214E, 0, 0x2160, 0x2189, 0x2C60, 0x2C80, 0xA722, 0xA788, 0xA78B, 0xA7AF, 0xA7B0, 0xA7B8, 0xA7F7, 0xA800, 0xAB30, 0xAB5B, 0xAB5C, 0xAB65, 0xFB00, 0xFB07, 0xFF21, 0xFF3B, 0xFF41, 0xFF5B],
@@ -3920,15 +4314,11 @@ function decompress(lookup, $set, compressed, value) {
     }
 }
 function returnToken(token) {
-    return s => {
-        nextChar(s);
+    return () => {
+        nextChar();
         return token;
     };
 }
-const unexpectedCharacter = s => {
-    throw new Error(`AUR0168: Unexpected character: '${s.ip}'`);
-};
-unexpectedCharacter.notMapped = true;
 const AsciiIdParts = new Set();
 decompress(null, AsciiIdParts, codes.AsciiIdPart, true);
 const IdParts = new Uint8Array(0xFFFF);
@@ -3936,103 +4326,112 @@ decompress(IdParts, null, codes.IdStart, 1);
 decompress(IdParts, null, codes.Digit, 1);
 const CharScanners = new Array(0xFFFF);
 CharScanners.fill(unexpectedCharacter, 0, 0xFFFF);
-decompress(CharScanners, null, codes.Skip, s => {
-    nextChar(s);
+decompress(CharScanners, null, codes.Skip, () => {
+    nextChar();
     return null;
 });
 decompress(CharScanners, null, codes.IdStart, scanIdentifier);
-decompress(CharScanners, null, codes.Digit, s => scanNumber(s, false));
+decompress(CharScanners, null, codes.Digit, () => scanNumber(false));
 CharScanners[34] =
-    CharScanners[39] = s => {
-        return scanString(s);
+    CharScanners[39] = () => {
+        return scanString();
     };
-CharScanners[96] = s => {
-    return scanTemplate(s);
+CharScanners[96] = () => {
+    return scanTemplate();
 };
-CharScanners[33] = s => {
-    if (nextChar(s) !== 61) {
-        return 131115;
+CharScanners[33] = () => {
+    if (nextChar() !== 61) {
+        return 131117;
     }
-    if (nextChar(s) !== 61) {
-        return 6553946;
+    if (nextChar() !== 61) {
+        return 6553948;
     }
-    nextChar(s);
-    return 6553948;
+    nextChar();
+    return 6553950;
 };
-CharScanners[61] = s => {
-    if (nextChar(s) !== 61) {
-        return 4194346;
+CharScanners[61] = () => {
+    if (nextChar() === 62) {
+        nextChar();
+        return 49;
     }
-    if (nextChar(s) !== 61) {
-        return 6553945;
+    if ($currentChar !== 61) {
+        return 4194348;
     }
-    nextChar(s);
-    return 6553947;
+    if (nextChar() !== 61) {
+        return 6553947;
+    }
+    nextChar();
+    return 6553949;
 };
-CharScanners[38] = s => {
-    if (nextChar(s) !== 38) {
-        return 6291476;
+CharScanners[38] = () => {
+    if (nextChar() !== 38) {
+        return 6291478;
     }
-    nextChar(s);
-    return 6553880;
+    nextChar();
+    return 6553882;
 };
-CharScanners[124] = s => {
-    if (nextChar(s) !== 124) {
+CharScanners[124] = () => {
+    if (nextChar() !== 124) {
+        return 6291479;
+    }
+    nextChar();
+    return 6553817;
+};
+CharScanners[63] = () => {
+    if (nextChar() === 46) {
+        const peek = $input.charCodeAt($index + 1);
+        if (peek <= 48 || peek >= 57) {
+            nextChar();
+            return 2162700;
+        }
         return 6291477;
     }
-    nextChar(s);
-    return 6553815;
+    if ($currentChar !== 63) {
+        return 6291477;
+    }
+    nextChar();
+    return 6553752;
 };
-CharScanners[63] = s => {
-    if (nextChar(s) === 46) {
-        const peek = s.ip.charCodeAt(s.index + 1);
-        if (peek <= 48 || peek >= 57) {
-            nextChar(s);
-            return 2162698;
+CharScanners[46] = () => {
+    if (nextChar() <= 57 && $currentChar >= 48) {
+        return scanNumber(true);
+    }
+    if ($currentChar === 46) {
+        if (nextChar() !== 46) {
+            return 10;
         }
-        return 6291475;
-    }
-    if (s._currentChar !== 63) {
-        return 6291475;
-    }
-    if (nextChar(s) === 61) {
-        throw new Error('Operator ??= is not supported.');
-    }
-    return 6553750;
-};
-CharScanners[46] = s => {
-    if (nextChar(s) <= 57 && s._currentChar >= 48) {
-        return scanNumber(s, true);
+        nextChar();
+        return 11;
     }
     return 65545;
 };
-CharScanners[60] = s => {
-    if (nextChar(s) !== 61) {
-        return 6554013;
+CharScanners[60] = () => {
+    if (nextChar() !== 61) {
+        return 6554015;
     }
-    nextChar(s);
-    return 6554015;
+    nextChar();
+    return 6554017;
 };
-CharScanners[62] = s => {
-    if (nextChar(s) !== 61) {
-        return 6554014;
+CharScanners[62] = () => {
+    if (nextChar() !== 61) {
+        return 6554016;
     }
-    nextChar(s);
-    return 6554016;
+    nextChar();
+    return 6554018;
 };
-CharScanners[37] = returnToken(6554152);
+CharScanners[37] = returnToken(6554154);
 CharScanners[40] = returnToken(2688007);
-CharScanners[41] = returnToken(7340044);
-CharScanners[42] = returnToken(6554151);
-CharScanners[43] = returnToken(2490851);
-CharScanners[44] = returnToken(6291469);
-CharScanners[45] = returnToken(2490852);
-CharScanners[47] = returnToken(6554153);
-CharScanners[58] = returnToken(6291472);
-CharScanners[91] = returnToken(2688014);
-CharScanners[93] = returnToken(7340047);
+CharScanners[41] = returnToken(7340046);
+CharScanners[42] = returnToken(6554153);
+CharScanners[43] = returnToken(2490853);
+CharScanners[44] = returnToken(6291471);
+CharScanners[45] = returnToken(2490854);
+CharScanners[47] = returnToken(6554155);
+CharScanners[58] = returnToken(6291476);
+CharScanners[91] = returnToken(2688016);
+CharScanners[93] = returnToken(7340051);
 CharScanners[123] = returnToken(524296);
-CharScanners[125] = returnToken(7340043);
+CharScanners[125] = returnToken(7340045);
 
 let _connectable = null;
 const connectables = [];
@@ -4124,7 +4523,7 @@ function doNotCollect(key) {
         || key === Symbol.toStringTag;
 }
 function createProxy(obj) {
-    const handler = obj instanceof Array
+    const handler = isArray(obj)
         ? arrayHandler
         : obj instanceof Map || obj instanceof Set
             ? collectionHandler
@@ -4904,7 +5303,7 @@ class ObserverLocator {
         }
         switch (key) {
             case 'length':
-                if (obj instanceof Array) {
+                if (isArray(obj)) {
                     return getArrayObserver(obj).getLengthObserver();
                 }
                 break;
@@ -4917,7 +5316,7 @@ class ObserverLocator {
                 }
                 break;
             default:
-                if (obj instanceof Array && isArrayIndex(key)) {
+                if (isArray(obj) && isArrayIndex(key)) {
                     return getArrayObserver(obj).getIndexObserver(Number(key));
                 }
                 break;
@@ -4973,7 +5372,7 @@ class ObserverLocator {
 ObserverLocator.inject = [IDirtyChecker, INodeObserverLocator];
 function getCollectionObserver(collection) {
     let obs;
-    if (collection instanceof Array) {
+    if (isArray(collection)) {
         obs = getArrayObserver(collection);
     }
     else if (collection instanceof Map) {
@@ -5125,5 +5524,5 @@ function getNotifier(obj, key, callbackKey, initialValue, set) {
     return notifier;
 }
 
-export { AccessKeyedExpression, AccessMemberExpression, AccessScopeExpression, AccessThisExpression, AccessorType, ArrayBindingPattern, ArrayIndexObserver, ArrayLiteralExpression, ArrayObserver, AssignExpression, BinaryExpression, BindingBehavior, BindingBehaviorDefinition, BindingBehaviorExpression, BindingBehaviorFactory, BindingBehaviorStrategy, BindingContext, BindingIdentifier, BindingInterceptor, BindingMediator, BindingMode, BindingObserverRecord, CallFunctionExpression, CallMemberExpression, CallScopeExpression, Char, CollectionKind, CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, ConditionalExpression, ConnectableSwitcher, CustomExpression, DelegationStrategy, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, DirtyCheckProperty, DirtyCheckSettings, ExpressionKind, ExpressionType, FlushQueue, ForOfStatement, HtmlLiteralExpression, ICoercionConfiguration, IDirtyChecker, IExpressionParser, INodeObserverLocator, IObservation, IObserverLocator, ISignaler, Interpolation, LifecycleFlags, MapObserver, ObjectBindingPattern, ObjectLiteralExpression, Observation, ObserverLocator, OverrideContext, ParserState, Precedence, PrimitiveLiteralExpression, PrimitiveObserver, PropertyAccessor, ProxyObservable, Scope, SetObserver, SetterObserver, SubscriberRecord, TaggedTemplateExpression, TemplateExpression, UnaryExpression, ValueConverter, ValueConverterDefinition, ValueConverterExpression, alias, applyMutationsToIndices, bindingBehavior, cloneIndexMap, connectable, copyIndexMap, createIndexMap, disableArrayObservation, disableMapObservation, disableSetObservation, enableArrayObservation, enableMapObservation, enableSetObservation, getCollectionObserver, isIndexMap, observable, parse, parseExpression, registerAliases, subscriberCollection, synchronizeIndices, valueConverter, withFlushQueue };
+export { AccessKeyedExpression, AccessMemberExpression, AccessScopeExpression, AccessThisExpression, AccessorType, ArrayBindingPattern, ArrayIndexObserver, ArrayLiteralExpression, ArrayObserver, ArrowFunction, AssignExpression, BinaryExpression, BindingBehavior, BindingBehaviorDefinition, BindingBehaviorExpression, BindingBehaviorFactory, BindingBehaviorStrategy, BindingContext, BindingIdentifier, BindingInterceptor, BindingMediator, BindingMode, BindingObserverRecord, CallFunctionExpression, CallMemberExpression, CallScopeExpression, Char, CollectionKind, CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, ConditionalExpression, ConnectableSwitcher, CustomExpression, DelegationStrategy, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, DirtyCheckProperty, DirtyCheckSettings, ExpressionKind, ExpressionType, FlushQueue, ForOfStatement, HtmlLiteralExpression, ICoercionConfiguration, IDirtyChecker, IExpressionParser, INodeObserverLocator, IObservation, IObserverLocator, ISignaler, Interpolation, LifecycleFlags, MapObserver, ObjectBindingPattern, ObjectLiteralExpression, Observation, ObserverLocator, OverrideContext, PrimitiveLiteralExpression, PrimitiveObserver, PropertyAccessor, ProxyObservable, Scope, SetObserver, SetterObserver, SubscriberRecord, TaggedTemplateExpression, TemplateExpression, UnaryExpression, ValueConverter, ValueConverterDefinition, ValueConverterExpression, alias, applyMutationsToIndices, bindingBehavior, cloneIndexMap, connectable, copyIndexMap, createIndexMap, disableArrayObservation, disableMapObservation, disableSetObservation, enableArrayObservation, enableMapObservation, enableSetObservation, getCollectionObserver, isIndexMap, observable, parseExpression, registerAliases, subscriberCollection, synchronizeIndices, valueConverter, withFlushQueue };
 //# sourceMappingURL=index.dev.mjs.map

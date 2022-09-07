@@ -7522,8 +7522,29 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
     const component = container.get(App);
     let startPromise = void 0;
     if (autoStart) {
-        au.app({ host: host, component });
-        startPromise = au.start();
+        try {
+            au.app({ host: host, component });
+            startPromise = au.start();
+        }
+        catch (ex) {
+            try {
+                const dispose = () => {
+                    root.remove();
+                    au.dispose();
+                };
+                const ret = au.stop();
+                if (ret instanceof Promise)
+                    void ret.then(dispose);
+                else
+                    dispose();
+                runtime.FlushQueue.instance.clear();
+            }
+            catch (_a) {
+                console.warn('(!) corrupted fixture state, should isolate the failing test and restart the run'
+                    + 'as it is likely that this failing fixture creation will pollute others.');
+            }
+            throw ex;
+        }
     }
     let tornCount = 0;
     const getBy = (selector) => {

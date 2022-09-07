@@ -1819,6 +1819,10 @@ class ModuleTransformer {
         return ret;
     }
     _analyze(m) {
+        if (m == null)
+            throw new Error(`Invalid input: ${String(m)}. Expected Object.`);
+        if (typeof m !== 'object')
+            return new AnalyzedModule(m, []);
         let value;
         let isRegistry;
         let isConstructable;

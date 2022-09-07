@@ -2260,7 +2260,7 @@ class RoutingInstruction {
         return (null !== (i = null === (t = this.nextScopeInstructions) || void 0 === t ? void 0 : t.length) && void 0 !== i ? i : 0) > 0;
     }
     get isUnresolved() {
-        return this.component.isFunction() && this.component.isPromise();
+        return this.component.isFunction() || this.component.isPromise();
     }
     resolve() {
         return this.component.resolve(this);
@@ -4607,7 +4607,7 @@ class RouterConfiguration {
         i.options = RouterConfiguration.options;
         i.options.setRouterConfiguration(i);
         RouterConfiguration.options = RouterOptions.create();
-        return t.register(...ot, ...at, I.beforeActivate(L, RouterConfiguration.configurationCall), I.afterActivate(L, (t => t.initialLoad())), I.afterDeactivate(L, (t => t.stop())));
+        return t.register(...ot, ...at, I.activating(L, RouterConfiguration.configurationCall), I.activated(L, (t => t.initialLoad())), I.deactivated(L, (t => t.stop())));
     }
     static customize(t) {
         if (void 0 === t) {
