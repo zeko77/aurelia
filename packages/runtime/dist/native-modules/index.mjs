@@ -1020,7 +1020,7 @@ class CallScopeExpression {
     }
 }
 
-const N = "at map filter includes indexOf lastIndexOf findIndex find flat flatMap join reduce reduceRight slice every some sort".split(" ");
+const N = "at map filter includes indexOf lastIndexOf findIndex find flat flatMap join reduce reduceRight slice every some".split(" ");
 
 class CallMemberExpression {
     constructor(t, e, r, s = false, i = false) {

@@ -1048,7 +1048,7 @@ class CallScopeExpression {
         return Unparser.unparse(this);
     }
 }
-const autoObserveArrayMethods = 'at map filter includes indexOf lastIndexOf findIndex find flat flatMap join reduce reduceRight slice every some sort'.split(' ');
+const autoObserveArrayMethods = 'at map filter includes indexOf lastIndexOf findIndex find flat flatMap join reduce reduceRight slice every some'.split(' ');
 class CallMemberExpression {
     constructor(object, name, args, optionalMember = false, optionalCall = false) {
         this.object = object;
