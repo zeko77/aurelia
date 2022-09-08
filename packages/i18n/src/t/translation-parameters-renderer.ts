@@ -10,8 +10,6 @@ import {
 import {
   CommandType,
   IHydratableController,
-  IRenderer,
-  renderer,
   attributePattern,
   AttrSyntax,
   bindingCommand,
@@ -21,7 +19,6 @@ import {
 } from '@aurelia/runtime-html';
 
 import type {
-  CallBindingInstruction,
   BindingCommandInstance,
 } from '@aurelia/runtime-html';
 
@@ -44,6 +41,28 @@ export class TranslationParametersBindingInstruction {
     public from: IsBindingBehavior,
     public to: string,
   ) {}
+
+  public render(
+    controller: IHydratableController,
+    target: HTMLElement,
+  ): void {
+    const context = controller.container;
+
+    const platform = context.get(IPlatform);
+    const parser = context.get(IExpressionParser);
+    const observerLocator = context.get(IObserverLocator);
+
+    TranslationBinding.create({
+      parser,
+      observerLocator,
+      context,
+      controller,
+      target,
+      instruction: this,
+      isParameterContext: true,
+      platform
+    });
+  }
 }
 
 @bindingCommand(attribute)
@@ -75,38 +94,3 @@ export class TranslationParametersBindingCommand implements BindingCommandInstan
   }
 }
 
-@renderer(TranslationParametersInstructionType)
-export class TranslationParametersBindingRenderer implements IRenderer {
-  /** @internal */ protected static inject = [IExpressionParser, IObserverLocator, IPlatform];
-  /** @internal */ private readonly _exprParser: IExpressionParser;
-  /** @internal */ private readonly _observerLocator: IObserverLocator;
-  /** @internal */ private readonly _platform: IPlatform;
-
-  public target!: typeof TranslationParametersInstructionType;
-  public constructor(
-    exprParser: IExpressionParser,
-    observerLocator: IObserverLocator,
-    p: IPlatform,
-  ) {
-    this._exprParser = exprParser;
-    this._observerLocator = observerLocator;
-    this._platform = p;
-  }
-
-  public render(
-    renderingCtrl: IHydratableController,
-    target: HTMLElement,
-    instruction: CallBindingInstruction,
-  ): void {
-    TranslationBinding.create({
-      parser: this._exprParser,
-      observerLocator: this._observerLocator,
-      context: renderingCtrl.container,
-      controller: renderingCtrl,
-      target,
-      instruction,
-      isParameterContext: true,
-      platform: this._platform
-    });
-  }
-}

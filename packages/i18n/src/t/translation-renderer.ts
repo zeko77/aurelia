@@ -10,8 +10,6 @@ import {
 } from '@aurelia/runtime';
 import {
   CommandType,
-  IRenderer,
-  renderer,
   IHydratableController,
   AttrSyntax,
   IPlatform,
@@ -20,7 +18,6 @@ import {
 } from '@aurelia/runtime-html';
 
 import type {
-  CallBindingInstruction,
   BindingCommandInstance,
 } from '@aurelia/runtime-html';
 
@@ -45,6 +42,27 @@ export class TranslationBindingInstruction {
     public from: IsBindingBehavior,
     public to: string,
   ) { }
+
+  public render(
+    controller: IHydratableController,
+    target: HTMLElement,
+  ): void {
+    const context = controller.container;
+
+    const platform = context.get(IPlatform);
+    const parser = context.get(IExpressionParser);
+    const observerLocator = context.get(IObserverLocator);
+
+    TranslationBinding.create({
+      parser,
+      observerLocator,
+      context,
+      controller,
+      target,
+      instruction: this,
+      platform,
+    });
+  }
 }
 
 export class TranslationBindingCommand implements BindingCommandInstance {
@@ -69,41 +87,6 @@ export class TranslationBindingCommand implements BindingCommandInstance {
       target = info.bindable.property;
     }
     return new TranslationBindingInstruction(new CustomExpression(info.attr.rawValue) as IsBindingBehavior, target);
-  }
-}
-
-@renderer(TranslationInstructionType)
-export class TranslationBindingRenderer implements IRenderer {
-  /** @internal */ protected static inject = [IExpressionParser, IObserverLocator, IPlatform];
-  /** @internal */ private readonly _exprParser: IExpressionParser;
-  /** @internal */ private readonly _observerLocator: IObserverLocator;
-  /** @internal */ private readonly _platform: IPlatform;
-
-  public target!: typeof TranslationInstructionType;
-  public constructor(
-    exprParser: IExpressionParser,
-    observerLocator: IObserverLocator,
-    p: IPlatform,
-  ) {
-    this._exprParser = exprParser;
-    this._observerLocator = observerLocator;
-    this._platform = p;
-  }
-
-  public render(
-    renderingCtrl: IHydratableController,
-    target: HTMLElement,
-    instruction: CallBindingInstruction,
-  ): void {
-    TranslationBinding.create({
-      parser: this._exprParser,
-      observerLocator: this._observerLocator,
-      context: renderingCtrl.container,
-      controller: renderingCtrl,
-      target,
-      instruction,
-      platform: this._platform,
-    });
   }
 }
 
@@ -143,7 +126,7 @@ export class TranslationBindBindingCommand implements BindingCommandInstance {
     this._exprParser = exprParser;
   }
 
-  public build(info: ICommandBuildInfo): TranslationBindingInstruction {
+  public build(info: ICommandBuildInfo): TranslationBindBindingInstruction {
     let target: string;
     if (info.bindable == null) {
       target = this._attrMapper.map(info.node, info.attr.target)
@@ -154,31 +137,5 @@ export class TranslationBindBindingCommand implements BindingCommandInstance {
       target = info.bindable.property;
     }
     return new TranslationBindBindingInstruction(this._exprParser.parse(info.attr.rawValue, ExpressionType.IsProperty), target);
-  }
-}
-
-@renderer(TranslationBindInstructionType)
-export class TranslationBindBindingRenderer implements IRenderer {
-  public target!: typeof TranslationBindInstructionType;
-  public constructor(
-    @IExpressionParser private readonly parser: IExpressionParser,
-    @IObserverLocator private readonly oL: IObserverLocator,
-    @IPlatform private readonly p: IPlatform,
-  ) { }
-
-  public render(
-    renderingCtrl: IHydratableController,
-    target: HTMLElement,
-    instruction: CallBindingInstruction,
-  ): void {
-    TranslationBinding.create({
-      parser: this.parser,
-      observerLocator: this.oL,
-      context: renderingCtrl.container,
-      controller: renderingCtrl,
-      target,
-      instruction,
-      platform: this.p
-    });
   }
 }

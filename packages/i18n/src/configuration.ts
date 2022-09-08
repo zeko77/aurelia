@@ -13,15 +13,12 @@ import { TranslationBindingBehavior } from './t/translation-binding-behavior';
 import {
   TranslationParametersAttributePattern,
   TranslationParametersBindingCommand,
-  TranslationParametersBindingRenderer
 } from './t/translation-parameters-renderer';
 import {
   TranslationAttributePattern,
   TranslationBindAttributePattern,
   TranslationBindBindingCommand,
-  TranslationBindBindingRenderer,
   TranslationBindingCommand,
-  TranslationBindingRenderer
 } from './t/translation-renderer';
 import { TranslationValueConverter } from './t/translation-value-converter';
 
@@ -57,13 +54,10 @@ function coreComponents(options: I18nConfigurationOptions) {
   const renderers = [
     AttributePattern.define(patterns, TranslationAttributePattern),
     BindingCommand.define({name:'t', aliases: commandAliases}, TranslationBindingCommand),
-    TranslationBindingRenderer,
     AttributePattern.define(bindPatterns, TranslationBindAttributePattern),
     BindingCommand.define({name:'t.bind', aliases: bindCommandAliases}, TranslationBindBindingCommand),
-    TranslationBindBindingRenderer,
     TranslationParametersAttributePattern,
     TranslationParametersBindingCommand,
-    TranslationParametersBindingRenderer
   ];
 
   return {

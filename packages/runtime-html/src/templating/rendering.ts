@@ -2,9 +2,9 @@ import { DI, IContainer } from '@aurelia/kernel';
 
 import { FragmentNodeSequence, INode, INodeSequence } from '../dom';
 import { IPlatform } from '../platform';
-import { ICompliationInstruction, IInstruction, IRenderer, ITemplateCompiler } from '../renderer';
+import { ICompliationInstruction, IInstruction, ITemplateCompiler, render } from '../renderer';
 import { CustomElementDefinition, PartialCustomElementDefinition } from '../resources/custom-element';
-import { createLookup, isString } from '../utilities';
+import { isString } from '../utilities';
 import { IViewFactory, ViewFactory } from './view';
 import type { IHydratableController } from './controller';
 
@@ -15,9 +15,6 @@ export class Rendering {
   /** @internal */
   protected static inject: unknown[] = [IContainer];
   /** @internal */
-  private readonly _ctn: IContainer;
-  private rs: Record<string, IRenderer> | undefined;
-  /** @internal */
   private readonly _p: IPlatform;
   /** @internal */
   private readonly _compilationCache: WeakMap<PartialCustomElementDefinition, CustomElementDefinition> = new WeakMap();
@@ -26,17 +23,8 @@ export class Rendering {
   /** @internal */
   private readonly _empty: INodeSequence;
 
-  public get renderers(): Record<string, IRenderer> {
-    return this.rs == null
-      ? (this.rs = this._ctn.getAll(IRenderer, false).reduce((all, r) => {
-          all[r.target] = r;
-          return all;
-        }, createLookup<IRenderer>()))
-      : this.rs;
-  }
-
   public constructor(container: IContainer) {
-    this._p = (this._ctn = container.root).get(IPlatform);
+    this._p = container.root.get(IPlatform);
     this._empty = new FragmentNodeSequence(this._p, this._p.document.createDocumentFragment());
   }
 
@@ -109,7 +97,6 @@ export class Rendering {
     host: INode | null | undefined,
   ): void {
     const rows = definition.instructions;
-    const renderers = this.renderers;
     const ii = targets.length;
     if (targets.length !== rows.length) {
       if (__DEV__)
@@ -133,7 +120,7 @@ export class Rendering {
         jj = row.length;
         while (jj > j) {
           instruction = row[j];
-          renderers[instruction.type].render(controller, target, instruction);
+          render(controller, target, instruction);
           ++j;
         }
         ++i;
@@ -146,7 +133,7 @@ export class Rendering {
         j = 0;
         while (jj > j) {
           instruction = row[j];
-          renderers[instruction.type].render(controller, host, instruction);
+          render(controller, host, instruction);
           ++j;
         }
       }

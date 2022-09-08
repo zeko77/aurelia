@@ -128,11 +128,9 @@ export {
 
 export {
   applyBindingBehavior,
-  IRenderer,
   type IInstructionTypeClassifier,
   ITemplateCompiler,
   type ICompliationInstruction,
-  renderer,
   CallBindingInstruction,
   HydrateAttributeInstruction,
   HydrateElementInstruction,
@@ -344,27 +342,6 @@ export {
   AuRenderRegistration,
 
   DefaultResources,
-
-  AttributeBindingRendererRegistration,
-  ListenerBindingRendererRegistration,
-  SetAttributeRendererRegistration,
-  SetClassAttributeRendererRegistration,
-  SetStyleAttributeRendererRegistration,
-  StylePropertyBindingRendererRegistration,
-  TextBindingRendererRegistration,
-
-  RefBindingRendererRegistration,
-  CallBindingRendererRegistration,
-  CustomAttributeRendererRegistration,
-  CustomElementRendererRegistration,
-  InterpolationBindingRendererRegistration,
-  IteratorBindingRendererRegistration,
-  LetElementRendererRegistration,
-  PropertyBindingRendererRegistration,
-  SetPropertyRendererRegistration,
-  TemplateControllerRendererRegistration,
-
-  DefaultRenderers,
 
   StandardConfiguration
 } from './configuration';

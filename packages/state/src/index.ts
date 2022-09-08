@@ -18,12 +18,10 @@ export {
   StateAttributePattern,
   StateBindingCommand,
   StateBindingInstruction,
-  StateBindingInstructionRenderer,
 
   DispatchAttributePattern,
   DispatchBindingCommand,
   DispatchBindingInstruction,
-  DispatchBindingInstructionRenderer,
 } from './state-templating';
 
 export { StateBindingBehavior } from './state-binding-behavior';

@@ -633,8 +633,6 @@ export {
   // ICollectionObserver,
   // ICollectionSubscriber,
 
-  renderer,
-
   // DefaultBindingLanguage as JitDefaultBindingLanguage,
 
   // JitConfiguration,
@@ -741,7 +739,6 @@ export {
 
   // CompiledTemplate,
   // ChildrenObserver,
-  // IRenderer,
   // IInstructionTypeClassifier,
   // IRenderingEngine,
   // ITemplate,

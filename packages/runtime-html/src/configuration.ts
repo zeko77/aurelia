@@ -25,26 +25,6 @@ import {
 } from './resources/binding-command';
 import { TemplateCompiler } from './template-compiler';
 import {
-  CallBindingRenderer,
-  CustomAttributeRenderer,
-  CustomElementRenderer,
-  InterpolationBindingRenderer,
-  IteratorBindingRenderer,
-  LetElementRenderer,
-  PropertyBindingRenderer,
-  RefBindingRenderer,
-  SetPropertyRenderer,
-  TemplateControllerRenderer,
-  AttributeBindingRenderer,
-  ListenerBindingRenderer,
-  SetAttributeRenderer,
-  StylePropertyBindingRenderer,
-  TextBindingRenderer,
-  SetClassAttributeRenderer,
-  SetStyleAttributeRenderer,
-  SpreadRenderer,
-} from './renderer';
-import {
   FromViewBindingBehavior,
   OneTimeBindingBehavior,
   ToViewBindingBehavior,
@@ -245,63 +225,6 @@ export const DefaultResources = [
   AuSlot,
 ];
 
-export const CallBindingRendererRegistration = CallBindingRenderer as unknown as IRegistry;
-export const CustomAttributeRendererRegistration = CustomAttributeRenderer as unknown as IRegistry;
-export const CustomElementRendererRegistration = CustomElementRenderer as unknown as IRegistry;
-export const InterpolationBindingRendererRegistration = InterpolationBindingRenderer as unknown as IRegistry;
-export const IteratorBindingRendererRegistration = IteratorBindingRenderer as unknown as IRegistry;
-export const LetElementRendererRegistration = LetElementRenderer as unknown as IRegistry;
-export const PropertyBindingRendererRegistration = PropertyBindingRenderer as unknown as IRegistry;
-export const RefBindingRendererRegistration = RefBindingRenderer as unknown as IRegistry;
-export const SetPropertyRendererRegistration = SetPropertyRenderer as unknown as IRegistry;
-export const TemplateControllerRendererRegistration = TemplateControllerRenderer as unknown as IRegistry;
-export const ListenerBindingRendererRegistration = ListenerBindingRenderer as unknown as IRegistry;
-export const AttributeBindingRendererRegistration = AttributeBindingRenderer as unknown as IRegistry;
-export const SetAttributeRendererRegistration = SetAttributeRenderer as unknown as IRegistry;
-export const SetClassAttributeRendererRegistration = SetClassAttributeRenderer as unknown as IRegistry;
-export const SetStyleAttributeRendererRegistration = SetStyleAttributeRenderer as unknown as IRegistry;
-export const StylePropertyBindingRendererRegistration = StylePropertyBindingRenderer as unknown as IRegistry;
-export const TextBindingRendererRegistration = TextBindingRenderer as unknown as IRegistry;
-export const SpreadRendererRegistration = SpreadRenderer as unknown as IRegistry;
-
-/**
- * Default renderers for:
- * - PropertyBinding: `bind`, `one-time`, `to-view`, `from-view`, `two-way`
- * - IteratorBinding: `for`
- * - CallBinding: `call`
- * - RefBinding: `ref`
- * - InterpolationBinding: `${}`
- * - SetProperty
- * - `customElement` hydration
- * - `customAttribute` hydration
- * - `templateController` hydration
- * - `let` element hydration
- * - Listener Bindings: `trigger`, `capture`, `delegate`
- * - SetAttribute
- * - StyleProperty: `style`, `css`
- * - TextBinding: `${}`
- */
-export const DefaultRenderers = [
-  PropertyBindingRendererRegistration,
-  IteratorBindingRendererRegistration,
-  CallBindingRendererRegistration,
-  RefBindingRendererRegistration,
-  InterpolationBindingRendererRegistration,
-  SetPropertyRendererRegistration,
-  CustomElementRendererRegistration,
-  CustomAttributeRendererRegistration,
-  TemplateControllerRendererRegistration,
-  LetElementRendererRegistration,
-  ListenerBindingRendererRegistration,
-  AttributeBindingRendererRegistration,
-  SetAttributeRendererRegistration,
-  SetClassAttributeRendererRegistration,
-  SetStyleAttributeRendererRegistration,
-  StylePropertyBindingRendererRegistration,
-  TextBindingRendererRegistration,
-  SpreadRendererRegistration,
-];
-
 export const StandardConfiguration = createConfiguration(noop);
 
 function createConfiguration(optionsProvider: ConfigurationOptionsProvider) {
@@ -333,7 +256,6 @@ function createConfiguration(optionsProvider: ConfigurationOptionsProvider) {
         ...DefaultResources,
         ...DefaultBindingSyntax,
         ...DefaultBindingLanguage,
-        ...DefaultRenderers,
       );
     },
     customize(cb?: ConfigurationOptionsProvider) {

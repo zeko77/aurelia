@@ -28,10 +28,9 @@ import { IPlatform } from './platform';
 import { IViewFactory } from './templating/view';
 import { IRendering } from './templating/rendering';
 import { AttrSyntax } from './resources/attribute-pattern';
-import { defineProp, isString } from './utilities';
-import { singletonRegistration } from './utilities-di';
+import { isString } from './utilities';
 
-import type { IServiceLocator, IContainer, Class, IRegistry, Constructable, IResolver } from '@aurelia/kernel';
+import type { IServiceLocator, IContainer, Constructable, IResolver } from '@aurelia/kernel';
 import type {
   Interpolation,
   IsBindingBehavior,
@@ -70,8 +69,15 @@ export const enum InstructionType {
 
 export type InstructionTypeName = string;
 
-export interface IInstruction {
+export type IInstruction = {
   readonly type: InstructionTypeName;
+} | {
+  readonly type?: undefined;
+  render(
+    renderingCtrl: IHydratableController,
+    target: INode | IController,
+  ): void;
+
 }
 export const IInstruction = DI.createInterface<IInstruction>('Instruction');
 
@@ -355,38 +361,6 @@ export interface ICompliationInstruction {
 export interface IInstructionTypeClassifier<TType extends string = string> {
   target: TType;
 }
-export interface IRenderer<
-  TType extends InstructionTypeName = InstructionTypeName
-> extends IInstructionTypeClassifier<TType> {
-  render(
-    /**
-     * The controller that is current invoking this renderer
-     */
-    renderingCtrl: IHydratableController,
-    target: unknown,
-    instruction: IInstruction,
-  ): void;
-}
-
-export const IRenderer = DI.createInterface<IRenderer>('IRenderer');
-
-type DecoratableInstructionRenderer<TType extends string, TProto, TClass> = Class<TProto & Partial<IInstructionTypeClassifier<TType> & Pick<IRenderer, 'render'>>, TClass> & Partial<IRegistry>;
-type DecoratedInstructionRenderer<TType extends string, TProto, TClass> =  Class<TProto & IInstructionTypeClassifier<TType> & Pick<IRenderer, 'render'>, TClass> & IRegistry;
-
-type InstructionRendererDecorator<TType extends string> = <TProto, TClass>(target: DecoratableInstructionRenderer<TType, TProto, TClass>) => DecoratedInstructionRenderer<TType, TProto, TClass>;
-
-export function renderer<TType extends string>(targetType: TType): InstructionRendererDecorator<TType> {
-  return function decorator<TProto, TClass>(target: DecoratableInstructionRenderer<TType, TProto, TClass>): DecoratedInstructionRenderer<TType, TProto, TClass> {
-    target.register = function (container: IContainer): void {
-      singletonRegistration(IRenderer, this).register(container);
-    };
-    defineProp(target.prototype, 'target', {
-      configurable: true,
-      get: function () { return targetType; }
-    });
-    return target as DecoratedInstructionRenderer<TType, TProto, TClass>;
-  };
-}
 
 function ensureExpression<TFrom>(parser: IExpressionParser, srcOrExpr: TFrom, expressionType: ExpressionType): Exclude<TFrom, string> {
   if (isString(srcOrExpr)) {
@@ -436,487 +410,6 @@ function getRefTarget(refHost: INode, refTargetName: string): object {
   }
 }
 
-@renderer(InstructionType.setProperty)
-/** @internal */
-export class SetPropertyRenderer implements IRenderer {
-  public target!: InstructionType.setProperty;
-
-  public render(
-    renderingCtrl: IHydratableController,
-    target: IController,
-    instruction: SetPropertyInstruction,
-  ): void {
-    const obj = getTarget(target) as IObservable;
-    if (obj.$observers !== void 0 && obj.$observers[instruction.to] !== void 0) {
-      obj.$observers[instruction.to].setValue(instruction.value, LifecycleFlags.fromBind);
-    } else {
-      obj[instruction.to] = instruction.value;
-    }
-  }
-}
-
-@renderer(InstructionType.hydrateElement)
-/** @internal */
-export class CustomElementRenderer implements IRenderer {
-  /** @internal */ protected static get inject(): unknown[] { return [IRendering, IPlatform]; }
-  /** @internal */ private readonly _rendering: IRendering;
-  /** @internal */ private readonly _platform: IPlatform;
-
-  public target!: InstructionType.hydrateElement;
-
-  public constructor(rendering: IRendering, platform: IPlatform) {
-    this._rendering = rendering;
-    this._platform = platform;
-  }
-
-  public render(
-    renderingCtrl: IHydratableController,
-    target: HTMLElement,
-    instruction: HydrateElementInstruction,
-  ): void {
-    /* eslint-disable prefer-const */
-    let def: CustomElementDefinition | null;
-    let Ctor: Constructable<ICustomElementViewModel>;
-    let component: ICustomElementViewModel;
-    let childCtrl: ICustomElementController;
-    const res = instruction.res;
-    const projections = instruction.projections;
-    const ctxContainer = renderingCtrl.container;
-    switch (typeof res) {
-      case 'string':
-        def = ctxContainer.find(CustomElement, res);
-        if (def == null) {
-          if (__DEV__)
-            throw new Error(`AUR0752: Element ${res} is not registered in ${(renderingCtrl as Controller)['name']}.`);
-          else
-            throw new Error(`AUR0752:${res}@${(renderingCtrl as Controller)['name']}`);
-        }
-        break;
-      // constructor based instruction
-      // will be enabled later if needed.
-      // As both AOT + runtime based can use definition for perf
-      // -----------------
-      // case 'function':
-      //   def = CustomElement.getDefinition(res);
-      //   break;
-      default:
-        def = res;
-    }
-    const containerless = instruction.containerless || def.containerless;
-    const location = containerless ? convertToRenderLocation(target) : null;
-    const container = createElementContainer(
-      /* platform         */this._platform,
-      /* parentController */renderingCtrl,
-      /* host             */target,
-      /* instruction      */instruction,
-      /* location         */location,
-      /* auSlotsInfo      */projections == null ? void 0 : new AuSlotsInfo(Object.keys(projections)),
-    );
-    Ctor = def.Type;
-    component = container.invoke(Ctor);
-    container.registerResolver(Ctor, new InstanceProvider<typeof Ctor>(def.key, component));
-    childCtrl = Controller.$el(
-      /* own container       */container,
-      /* viewModel           */component,
-      /* host                */target,
-      /* instruction         */instruction,
-      /* definition          */def,
-      /* location            */location
-    );
-
-    setRef(target, def.key, childCtrl);
-
-    const renderers = this._rendering.renderers;
-    const props = instruction.props;
-    const ii = props.length;
-    let i = 0;
-    let propInst: IInstruction;
-    while (ii > i) {
-      propInst = props[i];
-      renderers[propInst.type].render(renderingCtrl, childCtrl, propInst);
-      ++i;
-    }
-
-    renderingCtrl.addChild(childCtrl);
-    /* eslint-enable prefer-const */
-  }
-}
-
-@renderer(InstructionType.hydrateAttribute)
-/** @internal */
-export class CustomAttributeRenderer implements IRenderer {
-  /** @internal */ protected static get inject(): unknown[] { return [IRendering, IPlatform]; }
-  /** @internal */ private readonly _rendering: IRendering;
-  /** @internal */ private readonly _platform: IPlatform;
-
-  public target!: InstructionType.hydrateAttribute;
-
-  public constructor(rendering: IRendering, platform: IPlatform) {
-    this._rendering = rendering;
-    this._platform = platform;
-  }
-
-  public render(
-    /**
-     * The cotroller that is currently invoking this renderer
-     */
-    renderingCtrl: IHydratableController,
-    target: HTMLElement,
-    instruction: HydrateAttributeInstruction,
-  ): void {
-    /* eslint-disable prefer-const */
-    let ctxContainer = renderingCtrl.container;
-    let def: CustomAttributeDefinition | null;
-    switch (typeof instruction.res) {
-      case 'string':
-        def = ctxContainer.find(CustomAttribute, instruction.res);
-        if (def == null) {
-          if (__DEV__)
-            throw new Error(`AUR0753: Attribute ${instruction.res} is not registered in ${(renderingCtrl as Controller)['name']}.`);
-          else
-            throw new Error(`AUR0753:${instruction.res}@${(renderingCtrl as Controller)['name']}`);
-        }
-        break;
-      // constructor based instruction
-      // will be enabled later if needed.
-      // As both AOT + runtime based can use definition for perf
-      // -----------------
-      // case 'function':
-      //   def = CustomAttribute.getDefinition(instruction.res);
-      //   break;
-      default:
-        def = instruction.res;
-    }
-    const results = invokeAttribute(
-      /* platform         */this._platform,
-      /* attr definition  */def,
-      /* parentController */renderingCtrl,
-      /* host             */target,
-      /* instruction      */instruction,
-      /* viewFactory      */void 0,
-      /* location         */void 0,
-    );
-    const childController = Controller.$attr(
-      /* context ct */results.ctn,
-      /* viewModel  */results.vm,
-      /* host       */target,
-      /* definition */def,
-    );
-
-    setRef(target, def.key, childController);
-
-    const renderers = this._rendering.renderers;
-    const props = instruction.props;
-    const ii = props.length;
-    let i = 0;
-    let propInst: IInstruction;
-    while (ii > i) {
-      propInst = props[i];
-      renderers[propInst.type].render(renderingCtrl, childController, propInst);
-      ++i;
-    }
-
-    renderingCtrl.addChild(childController);
-    /* eslint-enable prefer-const */
-  }
-}
-
-@renderer(InstructionType.hydrateTemplateController)
-/** @internal */
-export class TemplateControllerRenderer implements IRenderer {
-  /** @internal */ protected static get inject(): unknown[] { return [IRendering, IPlatform]; }
-  /** @internal */ private readonly _rendering: IRendering;
-  /** @internal */ private readonly _platform: IPlatform;
-
-  public target!: InstructionType.hydrateTemplateController;
-  public constructor(rendering: IRendering, platform: IPlatform) {
-    this._rendering = rendering;
-    this._platform = platform;
-  }
-
-  public render(
-    renderingCtrl: IHydratableController,
-    target: HTMLElement,
-    instruction: HydrateTemplateController,
-  ): void {
-    /* eslint-disable prefer-const */
-    let ctxContainer = renderingCtrl.container;
-    let def: CustomAttributeDefinition | null;
-    switch (typeof instruction.res) {
-      case 'string':
-        def = ctxContainer.find(CustomAttribute, instruction.res);
-        if (def == null) {
-          if (__DEV__)
-            throw new Error(`AUR0754: Attribute ${instruction.res} is not registered in ${(renderingCtrl as Controller)['name']}.`);
-          else
-            throw new Error(`AUR0754:${instruction.res}@${(renderingCtrl as Controller)['name']}`);
-        }
-        break;
-      // constructor based instruction
-      // will be enabled later if needed.
-      // As both AOT + runtime based can use definition for perf
-      // -----------------
-      // case 'function':
-      //   def = CustomAttribute.getDefinition(instruction.res);
-      //   break;
-      default:
-        def = instruction.res;
-    }
-    const viewFactory = this._rendering.getViewFactory(instruction.def, ctxContainer);
-    const renderLocation = convertToRenderLocation(target);
-    const results = invokeAttribute(
-      /* platform         */this._platform,
-      /* attr definition  */def,
-      /* parentController */renderingCtrl,
-      /* host             */target,
-      /* instruction      */instruction,
-      /* viewFactory      */viewFactory,
-      /* location         */renderLocation,
-    );
-    const childController = Controller.$attr(
-      /* container ct */results.ctn,
-      /* viewModel    */results.vm,
-      /* host         */target,
-      /* definition   */def,
-    );
-
-    setRef(renderLocation, def.key, childController);
-
-    results.vm.link?.(renderingCtrl, childController, target, instruction);
-
-    const renderers = this._rendering.renderers;
-    const props = instruction.props;
-    const ii = props.length;
-    let i = 0;
-    let propInst: IInstruction;
-    while (ii > i) {
-      propInst = props[i];
-      renderers[propInst.type].render(renderingCtrl, childController, propInst);
-      ++i;
-    }
-
-    renderingCtrl.addChild(childController);
-    /* eslint-enable prefer-const */
-  }
-}
-
-@renderer(InstructionType.hydrateLetElement)
-/** @internal */
-export class LetElementRenderer implements IRenderer {
-  /** @internal */ protected static inject = [IExpressionParser, IObserverLocator];
-  /** @internal */ private readonly _exprParser: IExpressionParser;
-  /** @internal */ private readonly _observerLocator: IObserverLocator;
-
-  public target!: InstructionType.hydrateLetElement;
-  public constructor(
-    exprParser: IExpressionParser,
-    observerLocator: IObserverLocator,
-  ) {
-    this._exprParser = exprParser;
-    this._observerLocator = observerLocator;
-  }
-
-  public render(
-    renderingCtrl: IHydratableController,
-    target: Node & ChildNode,
-    instruction: HydrateLetElementInstruction,
-  ): void {
-    target.remove();
-    const childInstructions = instruction.instructions;
-    const toBindingContext = instruction.toBindingContext;
-    const container = renderingCtrl.container;
-    const ii = childInstructions.length;
-
-    let childInstruction: LetBindingInstruction;
-    let expr: AnyBindingExpression;
-    let binding: LetBinding;
-    let i = 0;
-    while (ii > i) {
-      childInstruction = childInstructions[i];
-      expr = ensureExpression(this._exprParser, childInstruction.from, ExpressionType.IsProperty);
-      binding = new LetBinding(expr, childInstruction.to, this._observerLocator, container, toBindingContext);
-      renderingCtrl.addBinding(expr.$kind === ExpressionKind.BindingBehavior
-        ? applyBindingBehavior(binding, expr, container)
-        : binding
-      );
-      ++i;
-    }
-  }
-}
-
-@renderer(InstructionType.callBinding)
-/** @internal */
-export class CallBindingRenderer implements IRenderer {
-  /** @internal */ protected static inject = [IExpressionParser, IObserverLocator];
-  /** @internal */ private readonly _exprParser: IExpressionParser;
-  /** @internal */ private readonly _observerLocator: IObserverLocator;
-
-  public target!: InstructionType.callBinding;
-  public constructor(
-    exprParser: IExpressionParser,
-    observerLocator: IObserverLocator,
-  ) {
-    this._exprParser = exprParser;
-    this._observerLocator = observerLocator;
-  }
-
-  public render(
-    renderingCtrl: IHydratableController,
-    target: IController,
-    instruction: CallBindingInstruction,
-  ): void {
-    const expr = ensureExpression(this._exprParser, instruction.from, ExpressionType.IsProperty | ExpressionType.IsFunction);
-    const binding = new CallBinding(expr, getTarget(target), instruction.to, this._observerLocator, renderingCtrl.container);
-    renderingCtrl.addBinding(expr.$kind === ExpressionKind.BindingBehavior
-      ? applyBindingBehavior(binding, expr, renderingCtrl.container)
-      : binding
-    );
-  }
-}
-
-@renderer(InstructionType.refBinding)
-/** @internal */
-export class RefBindingRenderer implements IRenderer {
-  /** @internal */ protected static inject = [IExpressionParser];
-  /** @internal */ private readonly _exprParser: IExpressionParser;
-
-  public target!: InstructionType.refBinding;
-  public constructor(exprParser: IExpressionParser) {
-    this._exprParser = exprParser;
-  }
-
-  public render(
-    renderingCtrl: IHydratableController,
-    target: INode,
-    instruction: RefBindingInstruction,
-  ): void {
-    const expr = ensureExpression(this._exprParser, instruction.from, ExpressionType.IsProperty);
-    const binding = new RefBinding(expr, getRefTarget(target, instruction.to), renderingCtrl.container);
-    renderingCtrl.addBinding(expr.$kind === ExpressionKind.BindingBehavior
-      ? applyBindingBehavior(binding, expr, renderingCtrl.container)
-      : binding
-    );
-  }
-}
-
-@renderer(InstructionType.interpolation)
-/** @internal */
-export class InterpolationBindingRenderer implements IRenderer {
-  /** @internal */ protected static inject = [IExpressionParser, IObserverLocator, IPlatform];
-  /** @internal */ private readonly _exprParser: IExpressionParser;
-  /** @internal */ private readonly _observerLocator: IObserverLocator;
-  /** @internal */ private readonly _platform: IPlatform;
-
-  public target!: InstructionType.interpolation;
-  public constructor(
-    exprParser: IExpressionParser,
-    observerLocator: IObserverLocator,
-    p: IPlatform,
-  ) {
-    this._exprParser = exprParser;
-    this._observerLocator = observerLocator;
-    this._platform = p;
-  }
-
-  public render(
-    renderingCtrl: IHydratableController,
-    target: IController,
-    instruction: InterpolationInstruction,
-  ): void {
-    const container = renderingCtrl.container;
-    const expr = ensureExpression(this._exprParser, instruction.from, ExpressionType.Interpolation);
-    const binding = new InterpolationBinding(
-      this._observerLocator,
-      expr,
-      getTarget(target),
-      instruction.to,
-      BindingMode.toView,
-      container,
-      this._platform.domWriteQueue,
-    );
-    const partBindings = binding.partBindings;
-    const ii = partBindings.length;
-    let i = 0;
-    let partBinding: InterpolationPartBinding;
-    for (; ii > i; ++i) {
-      partBinding = partBindings[i];
-      if (partBinding.sourceExpression.$kind === ExpressionKind.BindingBehavior) {
-        partBindings[i] = applyBindingBehavior(
-          partBinding,
-          partBinding.sourceExpression as unknown as IsBindingBehavior,
-          container
-        );
-      }
-    }
-    renderingCtrl.addBinding(binding);
-  }
-}
-
-@renderer(InstructionType.propertyBinding)
-/** @internal */
-export class PropertyBindingRenderer implements IRenderer {
-  /** @internal */ protected static inject = [IExpressionParser, IObserverLocator, IPlatform];
-  /** @internal */ private readonly _exprParser: IExpressionParser;
-  /** @internal */ private readonly _observerLocator: IObserverLocator;
-  /** @internal */ private readonly _platform: IPlatform;
-
-  public target!: InstructionType.propertyBinding;
-  public constructor(
-    exprParser: IExpressionParser,
-    observerLocator: IObserverLocator,
-    p: IPlatform,
-  ) {
-    this._exprParser = exprParser;
-    this._observerLocator = observerLocator;
-    this._platform = p;
-  }
-
-  public render(
-    renderingCtrl: IHydratableController,
-    target: IController,
-    instruction: PropertyBindingInstruction,
-  ): void {
-    const expr = ensureExpression(this._exprParser, instruction.from, ExpressionType.IsProperty);
-    const binding = new PropertyBinding(expr, getTarget(target), instruction.to, instruction.mode, this._observerLocator, renderingCtrl.container, this._platform.domWriteQueue);
-    renderingCtrl.addBinding(expr.$kind === ExpressionKind.BindingBehavior
-      ? applyBindingBehavior(binding, expr, renderingCtrl.container)
-      : binding
-    );
-  }
-}
-
-@renderer(InstructionType.iteratorBinding)
-/** @internal */
-export class IteratorBindingRenderer implements IRenderer {
-  /** @internal */ protected static inject = [IExpressionParser, IObserverLocator, IPlatform];
-  /** @internal */ private readonly _exprParser: IExpressionParser;
-  /** @internal */ private readonly _observerLocator: IObserverLocator;
-  /** @internal */ private readonly _platform: IPlatform;
-
-  public target!: InstructionType.iteratorBinding;
-  public constructor(
-    exprParser: IExpressionParser,
-    observerLocator: IObserverLocator,
-    p: IPlatform,
-  ) {
-    this._exprParser = exprParser;
-    this._observerLocator = observerLocator;
-    this._platform = p;
-  }
-
-  public render(
-    renderingCtrl: IHydratableController,
-    target: IController,
-    instruction: IteratorBindingInstruction,
-  ): void {
-    const expr = ensureExpression(this._exprParser, instruction.from, ExpressionType.IsIterator);
-    const binding = new PropertyBinding(expr, getTarget(target), instruction.to, BindingMode.toView, this._observerLocator, renderingCtrl.container, this._platform.domWriteQueue);
-    renderingCtrl.addBinding(expr.iterable.$kind === ExpressionKind.BindingBehavior
-      ? applyBindingBehavior(binding, expr.iterable, renderingCtrl.container)
-      : binding);
-  }
-}
-
 let behaviorExpressionIndex = 0;
 const behaviorExpressions: BindingBehaviorExpression[] = [];
 
@@ -940,78 +433,6 @@ export function applyBindingBehavior<T extends IInterceptableBinding>(
   return binding;
 }
 
-@renderer(InstructionType.textBinding)
-/** @internal */
-export class TextBindingRenderer implements IRenderer {
-  /** @internal */ protected static inject = [IExpressionParser, IObserverLocator, IPlatform];
-  /** @internal */ private readonly _exprParser: IExpressionParser;
-  /** @internal */ private readonly _observerLocator: IObserverLocator;
-  /** @internal */ private readonly _platform: IPlatform;
-
-  public target!: InstructionType.textBinding;
-  public constructor(
-    exprParser: IExpressionParser,
-    observerLocator: IObserverLocator,
-    p: IPlatform,
-  ) {
-    this._exprParser = exprParser;
-    this._observerLocator = observerLocator;
-    this._platform = p;
-  }
-
-  public render(
-    renderingCtrl: IHydratableController,
-    target: ChildNode,
-    instruction: TextBindingInstruction,
-  ): void {
-    const container = renderingCtrl.container;
-    const next = target.nextSibling!;
-    const parent = target.parentNode!;
-    const doc = this._platform.document;
-    const expr = ensureExpression(this._exprParser, instruction.from, ExpressionType.Interpolation);
-    const staticParts = expr.parts;
-    const dynamicParts = expr.expressions;
-
-    const ii = dynamicParts.length;
-    let i = 0;
-    let text = staticParts[0];
-    let binding: ContentBinding;
-    let part: IsBindingBehavior;
-    if (text !== '') {
-      parent.insertBefore(doc.createTextNode(text), next);
-    }
-    for (; ii > i; ++i) {
-      part = dynamicParts[i];
-      binding = new ContentBinding(
-        part,
-        // using a text node instead of comment, as a mean to:
-        // support seamless transition between a html node, or a text
-        // reduce the noise in the template, caused by html comment
-        parent.insertBefore(doc.createTextNode(''), next),
-        container,
-        this._observerLocator,
-        this._platform,
-        instruction.strict
-      );
-      renderingCtrl.addBinding(part.$kind === ExpressionKind.BindingBehavior
-        // each of the dynamic expression of an interpolation
-        // will be mapped to a ContentBinding
-        ? applyBindingBehavior(binding, part, container)
-        : binding
-      );
-      // while each of the static part of an interpolation
-      // will just be a text node
-      text = staticParts[i + 1];
-      if (text !== '') {
-        parent.insertBefore(doc.createTextNode(text), next);
-      }
-    }
-    if (target.nodeName === 'AU-M') {
-      target.remove();
-    }
-  }
-}
-
 export interface IListenerBehaviorOptions {
   /**
    * `true` if the expression specified in the template is meant to be treated as a handler
@@ -1022,209 +443,6 @@ export const IListenerBehaviorOptions = DI.createInterface<IListenerBehaviorOpti
 
 class ListenerBehaviorOptions implements IListenerBehaviorOptions {
   public expAsHandler = false;
-}
-
-@renderer(InstructionType.listenerBinding)
-/** @internal */
-export class ListenerBindingRenderer implements IRenderer {
-  /** @internal */ protected static inject = [IExpressionParser, IEventDelegator, IPlatform, IListenerBehaviorOptions];
-  /** @internal */ private readonly _exprParser: IExpressionParser;
-  /** @internal */ private readonly _eventDelegator: IEventDelegator;
-  /** @internal */ private readonly _platform: IPlatform;
-  /** @internal */ private readonly _listenerBehaviorOptions: IListenerBehaviorOptions;
-
-  public target!: InstructionType.listenerBinding;
-  public constructor(
-    parser: IExpressionParser,
-    eventDelegator: IEventDelegator,
-    p: IPlatform,
-    listenerBehaviorOptions: IListenerBehaviorOptions,
-  ) {
-    this._exprParser = parser;
-    this._eventDelegator = eventDelegator;
-    this._platform = p;
-    this._listenerBehaviorOptions = listenerBehaviorOptions;
-  }
-
-  public render(
-    renderingCtrl: IHydratableController,
-    target: HTMLElement,
-    instruction: ListenerBindingInstruction,
-  ): void {
-    const expr = ensureExpression(this._exprParser, instruction.from, ExpressionType.IsFunction);
-    const binding = new Listener(
-      this._platform,
-      instruction.to,
-      expr,
-      target,
-      this._eventDelegator,
-      renderingCtrl.container,
-      new ListenerOptions(instruction.preventDefault, instruction.strategy, this._listenerBehaviorOptions.expAsHandler),
-    );
-    renderingCtrl.addBinding(expr.$kind === ExpressionKind.BindingBehavior
-      ? applyBindingBehavior(binding, expr, renderingCtrl.container)
-      : binding
-    );
-  }
-}
-
-@renderer(InstructionType.setAttribute)
-/** @internal */
-export class SetAttributeRenderer implements IRenderer {
-
-  public target!: InstructionType.setAttribute;
-  public render(
-    _: IHydratableController,
-    target: HTMLElement,
-    instruction: SetAttributeInstruction,
-  ): void {
-    target.setAttribute(instruction.to, instruction.value);
-  }
-}
-
-@renderer(InstructionType.setClassAttribute)
-export class SetClassAttributeRenderer implements IRenderer {
-  public target!: InstructionType.setClassAttribute;
-  public render(
-    _: IHydratableController,
-    target: HTMLElement,
-    instruction: SetClassAttributeInstruction,
-  ): void {
-    addClasses(target.classList, instruction.value);
-  }
-}
-
-@renderer(InstructionType.setStyleAttribute)
-export class SetStyleAttributeRenderer implements IRenderer {
-  public target!: InstructionType.setStyleAttribute;
-  public render(
-    _: IHydratableController,
-    target: HTMLElement,
-    instruction: SetStyleAttributeInstruction,
-  ): void {
-    target.style.cssText += instruction.value;
-  }
-}
-
-@renderer(InstructionType.stylePropertyBinding)
-/** @internal */
-export class StylePropertyBindingRenderer implements IRenderer {
-  /** @internal */ protected static inject = [IExpressionParser, IObserverLocator, IPlatform];
-
-  public target!: InstructionType.stylePropertyBinding;
-  public constructor(
-    /** @internal */ private readonly _exprParser: IExpressionParser,
-    /** @internal */ private readonly _observerLocator: IObserverLocator,
-    /** @internal */ private readonly _platform: IPlatform,
-  ) {}
-
-  public render(
-    renderingCtrl: IHydratableController,
-    target: HTMLElement,
-    instruction: StylePropertyBindingInstruction,
-  ): void {
-    const expr = ensureExpression(this._exprParser, instruction.from, ExpressionType.IsProperty);
-    const binding = new PropertyBinding(expr, target.style, instruction.to, BindingMode.toView, this._observerLocator, renderingCtrl.container, this._platform.domWriteQueue);
-    renderingCtrl.addBinding(expr.$kind === ExpressionKind.BindingBehavior
-      ? applyBindingBehavior(binding, expr, renderingCtrl.container)
-      : binding
-    );
-  }
-}
-
-@renderer(InstructionType.attributeBinding)
-/** @internal */
-export class AttributeBindingRenderer implements IRenderer {
-  /** @internal */ protected static inject = [IExpressionParser, IObserverLocator];
-
-  public target!: InstructionType.attributeBinding;
-  public constructor(
-    /** @internal */ private readonly _exprParser: IExpressionParser,
-    /** @internal */ private readonly _observerLocator: IObserverLocator,
-  ) {}
-
-  public render(
-    renderingCtrl: IHydratableController,
-    target: HTMLElement,
-    instruction: AttributeBindingInstruction,
-  ): void {
-    const expr = ensureExpression(this._exprParser, instruction.from, ExpressionType.IsProperty);
-    const binding = new AttributeBinding(
-      expr,
-      target,
-      instruction.attr/* targetAttribute */,
-      instruction.to/* targetKey */,
-      BindingMode.toView,
-      this._observerLocator,
-      renderingCtrl.container
-    );
-    renderingCtrl.addBinding(expr.$kind === ExpressionKind.BindingBehavior
-      ? applyBindingBehavior(binding, expr, renderingCtrl.container)
-      : binding
-    );
-  }
-}
-
-@renderer(InstructionType.spreadBinding)
-export class SpreadRenderer implements IRenderer {
-  /** @internal */ protected static get inject() { return [ITemplateCompiler, IRendering]; }
-
-  public target!: InstructionType.spreadBinding;
-  public constructor(
-    /** @internal */ private readonly _compiler: ITemplateCompiler,
-    /** @internal */ private readonly _rendering: IRendering,
-  ) {}
-
-  public render(
-    renderingCtrl: IHydratableController,
-    target: HTMLElement,
-    _instruction: SpreadBindingInstruction,
-  ): void {
-    const container = renderingCtrl.container;
-    const hydrationContext = container.get(IHydrationContext);
-    const renderers = this._rendering.renderers;
-    const getHydrationContext = (ancestor: number) => {
-      let currentLevel = ancestor;
-      let currentContext: IHydrationContext | undefined = hydrationContext;
-      while (currentContext != null && currentLevel > 0) {
-        currentContext = currentContext.parent;
-        --currentLevel;
-      }
-      if (currentContext == null) {
-        throw new Error('No scope context for spread binding.');
-      }
-      return currentContext as IHydrationContext<object>;
-    };
-    const renderSpreadInstruction = (ancestor: number) => {
-      const context = getHydrationContext(ancestor);
-      const spreadBinding = createSurrogateBinding(context);
-      const instructions = this._compiler.compileSpread(
-        context.controller.definition,
-        context.instruction?.captures ?? emptyArray,
-        context.controller.container,
-        target,
-      );
-      let inst: IInstruction;
-      for (inst of instructions) {
-        switch (inst.type) {
-          case InstructionType.spreadBinding:
-            renderSpreadInstruction(ancestor + 1);
-            break;
-          case InstructionType.spreadElementProp:
-            renderers[(inst as SpreadElementPropBindingInstruction).instructions.type].render(
-              spreadBinding,
-              findElementControllerFor(target),
-              (inst as SpreadElementPropBindingInstruction).instructions,
-            );
-            break;
-          default:
-            renderers[inst.type].render(spreadBinding, target, inst);
-        }
-      }
-      renderingCtrl.addBinding(spreadBinding);
-    };
-    renderSpreadInstruction(0);
-  }
 }
 
 class SpreadBinding implements IBinding {
@@ -1428,3 +646,530 @@ class RenderLocationProvider implements IResolver {
 const noLocationProvider = new RenderLocationProvider(null);
 const noViewFactoryProvider = new ViewFactoryProvider(null);
 const noAuSlotProvider = new InstanceProvider<IAuSlotsInfo>(slotInfoProviderName, new AuSlotsInfo(emptyArray));
+
+export type RenderingInstruction = (
+  | InterpolationInstruction
+  | PropertyBindingInstruction
+  | IteratorBindingInstruction
+  | CallBindingInstruction
+  | RefBindingInstruction
+  | SetPropertyInstruction
+  | HydrateElementInstruction
+  | HydrateAttributeInstruction
+  | HydrateTemplateController
+  | HydrateLetElementInstruction
+  | LetBindingInstruction
+  | TextBindingInstruction
+  | ListenerBindingInstruction
+  | StylePropertyBindingInstruction
+  | SetAttributeInstruction
+  | SetClassAttributeInstruction
+  | SetStyleAttributeInstruction
+  | AttributeBindingInstruction
+  | SpreadBindingInstruction
+  | SpreadElementPropBindingInstruction
+  | {
+    type?: undefined;
+    render(
+      renderingCtrl: IHydratableController,
+      target: INode | IController,
+    ): void;
+  }
+);
+
+export function render(
+  renderingCtrl: IHydratableController,
+  target: INode | IController,
+  instruction: IInstruction,
+) {
+  const _instruction = instruction as RenderingInstruction;
+  switch (_instruction.type) {
+    case InstructionType.hydrateElement: {
+      /* eslint-disable prefer-const */
+      let def: CustomElementDefinition | null;
+      let Ctor: Constructable<ICustomElementViewModel>;
+      let component: ICustomElementViewModel;
+      let childCtrl: ICustomElementController;
+      const res = _instruction.res;
+      const projections = _instruction.projections;
+      const ctxContainer = renderingCtrl.container;
+      switch (typeof res) {
+        case 'string':
+          def = ctxContainer.find(CustomElement, res);
+          if (def == null) {
+            if (__DEV__)
+              throw new Error(`AUR0752: Element ${res} is not registered in ${(renderingCtrl as Controller)['name']}.`);
+            else
+              throw new Error(`AUR0752:${res}@${(renderingCtrl as Controller)['name']}`);
+          }
+          break;
+        // constructor based instruction
+        // will be enabled later if needed.
+        // As both AOT + runtime based can use definition for perf
+        // -----------------
+        // case 'function':
+        //   def = CustomElement.getDefinition(res);
+        //   break;
+        default:
+          def = res;
+      }
+      const platform = ctxContainer.get(IPlatform);
+      const containerless = _instruction.containerless || def.containerless;
+      const location = containerless ? convertToRenderLocation(target as HTMLElement) : null;
+      const container = createElementContainer(
+        /* platform         */platform,
+        /* parentController */renderingCtrl,
+        /* host             */target as HTMLElement,
+        /* instruction      */_instruction,
+        /* location         */location,
+        /* auSlotsInfo      */projections == null ? void 0 : new AuSlotsInfo(Object.keys(projections)),
+      );
+      Ctor = def.Type;
+      component = container.invoke(Ctor);
+      container.registerResolver(Ctor, new InstanceProvider<typeof Ctor>(def.key, component));
+      childCtrl = Controller.$el(
+        /* own container       */container,
+        /* viewModel           */component,
+        /* host                */target as HTMLElement,
+        /* instruction         */_instruction,
+        /* definition          */def,
+        /* location            */location
+      );
+
+      setRef(target as HTMLElement, def.key, childCtrl);
+
+      const props = _instruction.props;
+      const ii = props.length;
+      let i = 0;
+      while (ii > i) {
+        render(renderingCtrl, childCtrl, props[i] as RenderingInstruction);
+        ++i;
+      }
+
+      renderingCtrl.addChild(childCtrl);
+      /* eslint-enable prefer-const */
+      break;
+    }
+    case InstructionType.hydrateAttribute: {
+      /* eslint-disable prefer-const */
+      let ctxContainer = renderingCtrl.container;
+      let def: CustomAttributeDefinition | null;
+      switch (typeof _instruction.res) {
+        case 'string':
+          def = ctxContainer.find(CustomAttribute, _instruction.res);
+          if (def == null) {
+            if (__DEV__)
+              throw new Error(`AUR0753: Attribute ${_instruction.res} is not registered in ${(renderingCtrl as Controller)['name']}.`);
+            else
+              throw new Error(`AUR0753:${_instruction.res}@${(renderingCtrl as Controller)['name']}`);
+          }
+          break;
+        // constructor based instruction
+        // will be enabled later if needed.
+        // As both AOT + runtime based can use definition for perf
+        // -----------------
+        // case 'function':
+        //   def = CustomAttribute.getDefinition(instruction.res);
+        //   break;
+        default:
+          def = _instruction.res;
+      }
+      const platform = ctxContainer.get(IPlatform);
+      const results = invokeAttribute(
+        /* platform         */platform,
+        /* attr definition  */def,
+        /* parentController */renderingCtrl,
+        /* host             */target as HTMLElement,
+        /* instruction      */_instruction,
+        /* viewFactory      */void 0,
+        /* location         */void 0,
+      );
+      const childController = Controller.$attr(
+        /* context ct */results.ctn,
+        /* viewModel  */results.vm,
+        /* host       */target as HTMLElement,
+        /* definition */def,
+      );
+
+      setRef(target as HTMLElement, def.key, childController);
+
+      const props = _instruction.props;
+      const ii = props.length;
+      let i = 0;
+      while (ii > i) {
+        render(renderingCtrl, childController, props[i] as RenderingInstruction);
+        ++i;
+      }
+
+      renderingCtrl.addChild(childController);
+      /* eslint-enable prefer-const */
+      break;
+    }
+    case InstructionType.hydrateTemplateController: {
+      /* eslint-disable prefer-const */
+      let ctxContainer = renderingCtrl.container;
+      let def: CustomAttributeDefinition | null;
+      switch (typeof _instruction.res) {
+        case 'string':
+          def = ctxContainer.find(CustomAttribute, _instruction.res);
+          if (def == null) {
+            if (__DEV__)
+              throw new Error(`AUR0754: Attribute ${_instruction.res} is not registered in ${(renderingCtrl as Controller)['name']}.`);
+            else
+              throw new Error(`AUR0754:${_instruction.res}@${(renderingCtrl as Controller)['name']}`);
+          }
+          break;
+        // constructor based instruction
+        // will be enabled later if needed.
+        // As both AOT + runtime based can use definition for perf
+        // -----------------
+        // case 'function':
+        //   def = CustomAttribute.getDefinition(instruction.res);
+        //   break;
+        default:
+          def = _instruction.res;
+      }
+      const rendering = ctxContainer.get(IRendering);
+      const platform = ctxContainer.get(IPlatform);
+      const viewFactory = rendering.getViewFactory(_instruction.def, ctxContainer);
+      const renderLocation = convertToRenderLocation(target as HTMLElement);
+      const results = invokeAttribute(
+        /* platform         */platform,
+        /* attr definition  */def,
+        /* parentController */renderingCtrl,
+        /* host             */target as HTMLElement,
+        /* instruction      */_instruction,
+        /* viewFactory      */viewFactory,
+        /* location         */renderLocation,
+      );
+      const childController = Controller.$attr(
+        /* container ct */results.ctn,
+        /* viewModel    */results.vm,
+        /* host         */target as HTMLElement,
+        /* definition   */def,
+      );
+
+      setRef(renderLocation, def.key, childController);
+
+      results.vm.link?.(renderingCtrl, childController, target as HTMLElement, _instruction);
+
+      const props = _instruction.props;
+      const ii = props.length;
+      let i = 0;
+      while (ii > i) {
+        render(renderingCtrl, childController, props[i] as RenderingInstruction);
+        ++i;
+      }
+
+      renderingCtrl.addChild(childController);
+      /* eslint-enable prefer-const */
+      break;
+    }
+    case InstructionType.hydrateLetElement: {
+      (target as HTMLElement).remove();
+      const childInstructions = _instruction.instructions;
+      const toBindingContext = _instruction.toBindingContext;
+      const container = renderingCtrl.container;
+      const ii = childInstructions.length;
+
+      const exprParser = container.get(IExpressionParser);
+      const observerLocator = container.get(IObserverLocator);
+
+      let childInstruction: LetBindingInstruction;
+      let expr: AnyBindingExpression;
+      let binding: LetBinding;
+      let i = 0;
+      while (ii > i) {
+        childInstruction = childInstructions[i];
+        expr = ensureExpression(exprParser, childInstruction.from, ExpressionType.IsProperty);
+        binding = new LetBinding(expr, childInstruction.to, observerLocator, container, toBindingContext);
+        renderingCtrl.addBinding(expr.$kind === ExpressionKind.BindingBehavior
+          ? applyBindingBehavior(binding, expr, container)
+          : binding
+        );
+        ++i;
+      }
+      break;
+    }
+    case InstructionType.setProperty: {
+      const obj = getTarget(target) as IObservable;
+      if (obj.$observers !== void 0 && obj.$observers[_instruction.to] !== void 0) {
+        obj.$observers[_instruction.to].setValue(_instruction.value, LifecycleFlags.fromBind);
+      } else {
+        obj[_instruction.to] = _instruction.value;
+      }
+      break;
+    }
+    case InstructionType.interpolation: {
+      const container = renderingCtrl.container;
+
+      const platform = container.get(IPlatform);
+      const exprParser = container.get(IExpressionParser);
+      const observerLocator = container.get(IObserverLocator);
+
+      const expr = ensureExpression(exprParser, _instruction.from, ExpressionType.Interpolation);
+      const binding = new InterpolationBinding(
+        observerLocator,
+        expr,
+        getTarget(target),
+        _instruction.to,
+        BindingMode.toView,
+        container,
+        platform.domWriteQueue,
+      );
+      const partBindings = binding.partBindings;
+      const ii = partBindings.length;
+      let i = 0;
+      let partBinding: InterpolationPartBinding;
+      for (; ii > i; ++i) {
+        partBinding = partBindings[i];
+        if (partBinding.sourceExpression.$kind === ExpressionKind.BindingBehavior) {
+          partBindings[i] = applyBindingBehavior(
+            partBinding,
+            partBinding.sourceExpression as unknown as IsBindingBehavior,
+            container
+          );
+        }
+      }
+      renderingCtrl.addBinding(binding);
+      break;
+    }
+    case InstructionType.propertyBinding: {
+      const container = renderingCtrl.container;
+
+      const platform = container.get(IPlatform);
+      const exprParser = container.get(IExpressionParser);
+      const observerLocator = container.get(IObserverLocator);
+
+      const expr = ensureExpression(exprParser, _instruction.from, ExpressionType.IsProperty);
+      const binding = new PropertyBinding(expr, getTarget(target), _instruction.to, _instruction.mode, observerLocator, renderingCtrl.container, platform.domWriteQueue);
+      renderingCtrl.addBinding(expr.$kind === ExpressionKind.BindingBehavior
+        ? applyBindingBehavior(binding, expr, renderingCtrl.container)
+        : binding
+      );
+      break;
+    }
+    case InstructionType.callBinding: {
+      const container = renderingCtrl.container;
+
+      const exprParser = container.get(IExpressionParser);
+      const observerLocator = container.get(IObserverLocator);
+
+      const expr = ensureExpression(exprParser, _instruction.from, ExpressionType.IsProperty | ExpressionType.IsFunction);
+      const binding = new CallBinding(expr, getTarget(target), _instruction.to, observerLocator, renderingCtrl.container);
+      renderingCtrl.addBinding(expr.$kind === ExpressionKind.BindingBehavior
+        ? applyBindingBehavior(binding, expr, renderingCtrl.container)
+        : binding
+      );
+      break;
+    }
+    case InstructionType.letBinding: {
+      break;
+    }
+    case InstructionType.refBinding: {
+      const container = renderingCtrl.container;
+
+      const exprParser = container.get(IExpressionParser);
+
+      const expr = ensureExpression(exprParser, _instruction.from, ExpressionType.IsProperty);
+      const binding = new RefBinding(expr, getRefTarget(target as HTMLElement, _instruction.to), renderingCtrl.container);
+      renderingCtrl.addBinding(expr.$kind === ExpressionKind.BindingBehavior
+        ? applyBindingBehavior(binding, expr, renderingCtrl.container)
+        : binding
+      );
+      break;
+    }
+    case InstructionType.iteratorBinding: {
+      const container = renderingCtrl.container;
+
+      const platform = container.get(IPlatform);
+      const exprParser = container.get(IExpressionParser);
+      const observerLocator = container.get(IObserverLocator);
+
+      const expr = ensureExpression(exprParser, _instruction.from, ExpressionType.IsIterator);
+      const binding = new PropertyBinding(expr, getTarget(target), _instruction.to, BindingMode.toView, observerLocator, renderingCtrl.container, platform.domWriteQueue);
+      renderingCtrl.addBinding(expr.iterable.$kind === ExpressionKind.BindingBehavior
+        ? applyBindingBehavior(binding, expr.iterable, renderingCtrl.container)
+        : binding);
+      break;
+    }
+    case InstructionType.textBinding: {
+      const container = renderingCtrl.container;
+
+      const platform = container.get(IPlatform);
+      const exprParser = container.get(IExpressionParser);
+      const observerLocator = container.get(IObserverLocator);
+
+      const next = (target as HTMLElement).nextSibling!;
+      const parent = (target as HTMLElement).parentNode!;
+      const doc = platform.document;
+      const expr = ensureExpression(exprParser, _instruction.from, ExpressionType.Interpolation);
+      const staticParts = expr.parts;
+      const dynamicParts = expr.expressions;
+
+      const ii = dynamicParts.length;
+      let i = 0;
+      let text = staticParts[0];
+      let binding: ContentBinding;
+      let part: IsBindingBehavior;
+      if (text !== '') {
+        parent.insertBefore(doc.createTextNode(text), next);
+      }
+      for (; ii > i; ++i) {
+        part = dynamicParts[i];
+        binding = new ContentBinding(
+          part,
+          // using a text node instead of comment, as a mean to:
+          // support seamless transition between a html node, or a text
+          // reduce the noise in the template, caused by html comment
+          parent.insertBefore(doc.createTextNode(''), next),
+          container,
+          observerLocator,
+          platform,
+          _instruction.strict
+        );
+        renderingCtrl.addBinding(part.$kind === ExpressionKind.BindingBehavior
+          // each of the dynamic expression of an interpolation
+          // will be mapped to a ContentBinding
+          ? applyBindingBehavior(binding, part, container)
+          : binding
+        );
+        // while each of the static part of an interpolation
+        // will just be a text node
+        text = staticParts[i + 1];
+        if (text !== '') {
+          parent.insertBefore(doc.createTextNode(text), next);
+        }
+      }
+      if ((target as HTMLElement).nodeName === 'AU-M') {
+        (target as HTMLElement).remove();
+      }
+      break;
+    }
+    case InstructionType.listenerBinding: {
+      const container = renderingCtrl.container;
+
+      const platform = container.get(IPlatform);
+      const exprParser = container.get(IExpressionParser);
+      const eventDelegator = container.get(IEventDelegator);
+      const listenerBehaviorOptions = container.get(IListenerBehaviorOptions);
+
+      const expr = ensureExpression(exprParser, _instruction.from, ExpressionType.IsFunction);
+      const binding = new Listener(
+        platform,
+        _instruction.to,
+        expr,
+        target as HTMLElement,
+        eventDelegator,
+        renderingCtrl.container,
+        new ListenerOptions(_instruction.preventDefault, _instruction.strategy, listenerBehaviorOptions.expAsHandler),
+      );
+      renderingCtrl.addBinding(expr.$kind === ExpressionKind.BindingBehavior
+        ? applyBindingBehavior(binding, expr, renderingCtrl.container)
+        : binding
+      );
+      break;
+    }
+    case InstructionType.attributeBinding: {
+      const container = renderingCtrl.container;
+
+      const exprParser = container.get(IExpressionParser);
+      const observerLocator = container.get(IObserverLocator);
+
+      const expr = ensureExpression(exprParser, _instruction.from, ExpressionType.IsProperty);
+      const binding = new AttributeBinding(
+        expr,
+        target as HTMLElement,
+        _instruction.attr/* targetAttribute */,
+        _instruction.to/* targetKey */,
+        BindingMode.toView,
+        observerLocator,
+        renderingCtrl.container
+      );
+      renderingCtrl.addBinding(expr.$kind === ExpressionKind.BindingBehavior
+        ? applyBindingBehavior(binding, expr, renderingCtrl.container)
+        : binding
+      );
+      break;
+    }
+    case InstructionType.stylePropertyBinding: {
+      const container = renderingCtrl.container;
+
+      const platform = container.get(IPlatform);
+      const exprParser = container.get(IExpressionParser);
+      const observerLocator = container.get(IObserverLocator);
+
+      const expr = ensureExpression(exprParser, _instruction.from, ExpressionType.IsProperty);
+      const binding = new PropertyBinding(expr, (target as HTMLElement).style, _instruction.to, BindingMode.toView, observerLocator, renderingCtrl.container, platform.domWriteQueue);
+      renderingCtrl.addBinding(expr.$kind === ExpressionKind.BindingBehavior
+        ? applyBindingBehavior(binding, expr, renderingCtrl.container)
+        : binding
+      );
+      break;
+    }
+    case InstructionType.setAttribute: {
+      (target as HTMLElement).setAttribute(_instruction.to, _instruction.value);
+      break;
+    }
+    case InstructionType.setClassAttribute:
+    addClasses((target as HTMLElement).classList, _instruction.value);{
+      break;
+    }
+    case InstructionType.setStyleAttribute: {
+      (target as HTMLElement).style.cssText += _instruction.value;
+      break;
+    }
+    case InstructionType.spreadBinding: {
+      const container = renderingCtrl.container;
+      const hydrationContext = container.get(IHydrationContext);
+      const compiler = container.get(ITemplateCompiler);
+      const getHydrationContext = (ancestor: number) => {
+        let currentLevel = ancestor;
+        let currentContext: IHydrationContext | undefined = hydrationContext;
+        while (currentContext != null && currentLevel > 0) {
+          currentContext = currentContext.parent;
+          --currentLevel;
+        }
+        if (currentContext == null) {
+          throw new Error('No scope context for spread binding.');
+        }
+        return currentContext as IHydrationContext<object>;
+      };
+      const renderSpreadInstruction = (ancestor: number) => {
+        const context = getHydrationContext(ancestor);
+        const spreadBinding = createSurrogateBinding(context);
+        const instructions = compiler.compileSpread(
+          context.controller.definition,
+          context.instruction?.captures ?? emptyArray,
+          context.controller.container,
+          target as HTMLElement,
+        );
+        let inst: IInstruction;
+        for (inst of instructions) {
+          switch (inst.type) {
+            case InstructionType.spreadBinding:
+              renderSpreadInstruction(ancestor + 1);
+              break;
+            case InstructionType.spreadElementProp:
+              render(
+                spreadBinding,
+                findElementControllerFor(target as HTMLElement),
+                (inst as SpreadElementPropBindingInstruction).instructions as RenderingInstruction,
+              );
+              break;
+            default:
+              render(spreadBinding, target, inst as RenderingInstruction);
+          }
+        }
+        renderingCtrl.addBinding(spreadBinding);
+      };
+      renderSpreadInstruction(0);
+      break;
+    }
+    case InstructionType.spreadElementProp: {
+      break;
+    }
+    default:
+      _instruction.render(renderingCtrl, target);
+  }
+}

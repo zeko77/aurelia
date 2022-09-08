@@ -6,20 +6,16 @@ import { StateBindingBehavior } from './state-binding-behavior';
 import {
   DispatchAttributePattern,
   DispatchBindingCommand,
-  DispatchBindingInstructionRenderer,
   StateAttributePattern,
   StateBindingCommand,
-  StateBindingInstructionRenderer,
 } from './state-templating';
 
 const standardRegistrations = [
   StateAttributePattern,
   StateBindingCommand,
-  StateBindingInstructionRenderer,
 
   DispatchAttributePattern,
   DispatchBindingCommand,
-  DispatchBindingInstructionRenderer,
 
   StateBindingBehavior,
 
