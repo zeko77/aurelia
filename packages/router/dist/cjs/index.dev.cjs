@@ -1907,14 +1907,26 @@ class ViewportContent extends EndpointContent {
                 .parentViewport) === null || _a === void 0 ? void 0 : _a.getTimeContent(this.navigation.timestamp)) === null || _b === void 0 ? void 0 : _b.instruction) === null || _c === void 0 ? void 0 : _c.typeParameters(this.router);
             const parameters = this.instruction.typeParameters(this.router);
             const merged = { ...this.navigation.parameters, ...parentParameters, ...parameters };
-            const hooks = this.getLifecycleHooks(instance, 'load').map(hook => () => hook(instance, merged, this.instruction, this.navigation));
+            const hooks = this.getLifecycleHooks(instance, 'loading').map(hook => () => hook(instance, merged, this.instruction, this.navigation));
+            hooks.push(...this.getLifecycleHooks(instance, 'load').map(hook => () => {
+                console.warn(`[Deprecated] Found deprecated hook name "load" in ${this.instruction.component.name}. Please use the new name "loading" instead.`);
+                return hook(instance, merged, this.instruction, this.navigation);
+            }));
             if (hooks.length !== 0) {
+                if (instance.loading != null) {
+                    hooks.push(() => instance.loading(merged, this.instruction, this.navigation));
+                }
                 if (instance.load != null) {
+                    console.warn(`[Deprecated] Found deprecated hook name "load" in ${this.instruction.component.name}. Please use the new name "loading" instead.`);
                     hooks.push(() => instance.load(merged, this.instruction, this.navigation));
                 }
                 return Runner.run(null, ...hooks);
             }
+            if (instance.loading != null) {
+                return instance.loading(merged, this.instruction, this.navigation);
+            }
             if (instance.load != null) {
+                console.warn(`[Deprecated] Found deprecated hook name "load" in ${this.instruction.component.name}. Please use the new name "loading" instead.`);
                 return instance.load(merged, this.instruction, this.navigation);
             }
         });
@@ -1932,14 +1944,26 @@ class ViewportContent extends EndpointContent {
                 previous: this.navigation,
             });
         }
-        const hooks = this.getLifecycleHooks(instance, 'unload').map(hook => () => hook(instance, this.instruction, navigation));
+        const hooks = this.getLifecycleHooks(instance, 'unloading').map(hook => () => hook(instance, this.instruction, navigation));
+        hooks.push(...this.getLifecycleHooks(instance, 'unload').map(hook => () => {
+            console.warn(`[Deprecated] Found deprecated hook name "unload" in ${this.instruction.component.name}. Please use the new name "unloading" instead.`);
+            return hook(instance, this.instruction, navigation);
+        }));
         if (hooks.length !== 0) {
+            if (instance.unloading != null) {
+                hooks.push(() => instance.unloading(this.instruction, navigation));
+            }
             if (instance.unload != null) {
+                console.warn(`[Deprecated] Found deprecated hook name "unload" in ${this.instruction.component.name}. Please use the new name "unloading" instead.`);
                 hooks.push(() => instance.unload(this.instruction, navigation));
             }
             return Runner.run(null, ...hooks);
         }
+        if (instance.unloading != null) {
+            return instance.unloading(this.instruction, navigation);
+        }
         if (instance.unload != null) {
+            console.warn(`[Deprecated] Found deprecated hook name "unload" in ${this.instruction.component.name}. Please use the new name "unloading" instead.`);
             return instance.unload(this.instruction, navigation);
         }
     }
@@ -4017,7 +4041,7 @@ class RoutingScope {
     }
     findMatchingRouteInRoutes(path, routes) {
         var _a, _b, _c;
-        if (!Array.isArray(routes) || routes.length === 0) {
+        if (routes.length === 0) {
             return null;
         }
         routes = routes.map(route => this.ensureProperRoute(route));

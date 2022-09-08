@@ -1580,12 +1580,24 @@ class ViewportContent extends EndpointContent {
                 ...e,
                 ...o
             };
-            const l = this.getLifecycleHooks(s, "load").map((t => () => t(s, r, this.instruction, this.navigation)));
+            const l = this.getLifecycleHooks(s, "loading").map((t => () => t(s, r, this.instruction, this.navigation)));
+            l.push(...this.getLifecycleHooks(s, "load").map((t => () => {
+                console.warn(`[Deprecated] Found deprecated hook name "load" in ${this.instruction.component.name}. Please use the new name "loading" instead.`);
+                return t(s, r, this.instruction, this.navigation);
+            })));
             if (0 !== l.length) {
-                if (null != s.load) l.push((() => s.load(r, this.instruction, this.navigation)));
+                if (null != s.loading) l.push((() => s.loading(r, this.instruction, this.navigation)));
+                if (null != s.load) {
+                    console.warn(`[Deprecated] Found deprecated hook name "load" in ${this.instruction.component.name}. Please use the new name "loading" instead.`);
+                    l.push((() => s.load(r, this.instruction, this.navigation)));
+                }
                 return Runner.run(null, ...l);
             }
-            if (null != s.load) return s.load(r, this.instruction, this.navigation);
+            if (null != s.loading) return s.loading(r, this.instruction, this.navigation);
+            if (null != s.load) {
+                console.warn(`[Deprecated] Found deprecated hook name "load" in ${this.instruction.component.name}. Please use the new name "loading" instead.`);
+                return s.load(r, this.instruction, this.navigation);
+            }
         }));
     }
     unload(t) {
@@ -1597,12 +1609,24 @@ class ViewportContent extends EndpointContent {
             fullStateInstruction: "",
             previous: this.navigation
         });
-        const n = this.getLifecycleHooks(i, "unload").map((n => () => n(i, this.instruction, t)));
+        const n = this.getLifecycleHooks(i, "unloading").map((n => () => n(i, this.instruction, t)));
+        n.push(...this.getLifecycleHooks(i, "unload").map((n => () => {
+            console.warn(`[Deprecated] Found deprecated hook name "unload" in ${this.instruction.component.name}. Please use the new name "unloading" instead.`);
+            return n(i, this.instruction, t);
+        })));
         if (0 !== n.length) {
-            if (null != i.unload) n.push((() => i.unload(this.instruction, t)));
+            if (null != i.unloading) n.push((() => i.unloading(this.instruction, t)));
+            if (null != i.unload) {
+                console.warn(`[Deprecated] Found deprecated hook name "unload" in ${this.instruction.component.name}. Please use the new name "unloading" instead.`);
+                n.push((() => i.unload(this.instruction, t)));
+            }
             return Runner.run(null, ...n);
         }
-        if (null != i.unload) return i.unload(this.instruction, t);
+        if (null != i.unloading) return i.unloading(this.instruction, t);
+        if (null != i.unload) {
+            console.warn(`[Deprecated] Found deprecated hook name "unload" in ${this.instruction.component.name}. Please use the new name "unloading" instead.`);
+            return i.unload(this.instruction, t);
+        }
     }
     activateComponent(t, i, n, s, e, o, r) {
         return Runner.run(t, (() => this.contentStates.await("loaded")), (() => this.waitForParent(n)), (() => {
@@ -3132,7 +3156,7 @@ class RoutingScope {
     }
     findMatchingRouteInRoutes(t, i) {
         var n, s, e;
-        if (!Array.isArray(i) || 0 === i.length) return null;
+        if (0 === i.length) return null;
         i = i.map((t => this.ensureProperRoute(t)));
         const o = [];
         for (const t of i) {
