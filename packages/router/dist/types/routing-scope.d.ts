@@ -148,8 +148,8 @@ export declare class RoutingScope {
     getAllRoutingScopes(timestamp: number): RoutingScope[];
     getOwnedRoutingScopes(timestamp: number): RoutingScope[];
     getRoutingInstructions(timestamp: number): RoutingInstruction[] | null;
-    canUnload(step: Step<boolean> | null): boolean | Promise<boolean>;
-    unload(step: Step<void> | null): Step<void>;
+    canUnload(coordinator: NavigationCoordinator, step: Step<boolean> | null): boolean | Promise<boolean>;
+    unload(coordinator: NavigationCoordinator, step: Step<void> | null): Step<void>;
     matchScope(instructions: RoutingInstruction[], deep?: boolean): RoutingInstruction[];
     findMatchingRoute(path: string): FoundRoute | null;
     private findMatchingRouteInRoutes;

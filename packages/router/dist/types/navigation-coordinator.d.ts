@@ -165,6 +165,12 @@ export declare class NavigationCoordinator {
      */
     setEndpointStep(endpoint: IEndpoint, step: Step<void>): void;
     /**
+     * Get the Runner step controlling the transition for an endpoint.
+     *
+     * @param endpoint - The endpoint to get the step for
+     */
+    getEndpointStep(endpoint: IEndpoint): Step<void> | null;
+    /**
      * Add a (reached) navigation state for an endpoint.
      *
      * @param endpoint - The endpoint that's reached a state

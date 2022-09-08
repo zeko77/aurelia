@@ -75,6 +75,10 @@ export declare class RoutingInstruction {
      * in the string after the actual part for the instruction itself.
      */
     unparsed: string | null;
+    /**
+     * Whether the routing instruction has been cancelled (aborted) for some reason
+     */
+    cancelled: boolean;
     constructor(component?: ComponentAppellation | Promise<ComponentAppellation>, endpoint?: EndpointHandle, parameters?: ComponentParameters);
     /**
      * Create a new routing instruction.

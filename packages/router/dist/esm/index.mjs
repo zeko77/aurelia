@@ -4,7 +4,7 @@ import { CustomElement as o, isCustomElementViewModel as r, Controller as l, IPl
 
 import { Metadata as E } from "@aurelia/metadata";
 
-import { RouteRecognizer as y, ConfigurableRoute as C, RecognizedRoute as S, Endpoint as N } from "@aurelia/route-recognizer";
+import { RouteRecognizer as C, ConfigurableRoute as y, RecognizedRoute as S, Endpoint as N } from "@aurelia/route-recognizer";
 
 import { BindingMode as b } from "@aurelia/runtime";
 
@@ -26,6 +26,12 @@ class Endpoint$1 {
     }
     getTimeContent(t = 1 / 0) {
         return this.getContent();
+    }
+    getNavigationContent(t) {
+        var i;
+        if (t instanceof NavigationCoordinator) t = t.navigation;
+        if (t instanceof Navigation) return null !== (i = this.contents.find((i => i.navigation === t))) && void 0 !== i ? i : null;
+        return null;
     }
     get activeContent() {
         var t;
@@ -72,7 +78,7 @@ class Endpoint$1 {
     finalizeContentChange(t, i) {
         throw new Error(`Method 'finalizeContentChange' needs to be implemented in all endpoints!`);
     }
-    cancelContentChange(t, i) {
+    cancelContentChange(t, i = null) {
         throw new Error(`Method 'cancelContentChange' needs to be implemented in all endpoints!`);
     }
     getRoutes() {
@@ -82,21 +88,19 @@ class Endpoint$1 {
         throw new Error(`Method 'getTitle' needs to be implemented in all endpoints!`);
     }
     removeEndpoint(t, i) {
-        var n;
-        this.getContent().delete();
-        null === (n = this.getNextContent()) || void 0 === n ? void 0 : n.delete();
+        this.contents.forEach((t => t.delete()));
         return true;
     }
-    canUnload(t) {
+    canUnload(t, i) {
         return true;
     }
-    canLoad(t) {
+    canLoad(t, i) {
         return true;
     }
-    unload(t) {
+    unload(t, i) {
         return;
     }
-    load(t) {
+    load(t, i) {
         return;
     }
 }
@@ -1235,7 +1239,7 @@ class ViewportScope extends Endpoint$1 {
         return "swap";
     }
     transition(t) {
-        Runner.run(null, (() => t.addEndpointState(this, "guardedUnload")), (() => t.addEndpointState(this, "guardedLoad")), (() => t.addEndpointState(this, "guarded")), (() => t.addEndpointState(this, "loaded")), (() => t.addEndpointState(this, "unloaded")), (() => t.addEndpointState(this, "routed")), (() => t.addEndpointState(this, "swapped")), (() => t.addEndpointState(this, "completed")));
+        Runner.run(null, (i => t.setEndpointStep(this, i.root)), (() => t.addEndpointState(this, "guardedUnload")), (() => t.addEndpointState(this, "guardedLoad")), (() => t.addEndpointState(this, "guarded")), (() => t.addEndpointState(this, "loaded")), (() => t.addEndpointState(this, "unloaded")), (() => t.addEndpointState(this, "routed")), (() => t.addEndpointState(this, "swapped")), (() => t.addEndpointState(this, "completed")));
     }
     finalizeContentChange(t, i) {
         var n;
@@ -1256,8 +1260,10 @@ class ViewportScope extends Endpoint$1 {
         this.contents.splice(0, o);
         if (this.remove && Array.isArray(this.source)) this.removeSourceItem();
     }
-    cancelContentChange(t, i) {
+    cancelContentChange(t, i = null) {
+        [ ...new Set(this.scope.children.map((t => t.endpoint))) ].forEach((n => n.cancelContentChange(t, i)));
         const n = this.contents.findIndex((i => i.navigation === t.navigation));
+        if (n < 0) return;
         this.contents.splice(n, 1);
         if (this.add) {
             const t = this.source.indexOf(this.sourceItem);
@@ -1297,11 +1303,13 @@ class ViewportScope extends Endpoint$1 {
         if (this.sourceItemIndex >= 0) this.source.splice(this.sourceItemIndex, 1);
     }
     getRoutes() {
+        var t;
+        const i = [];
         if (null !== this.rootComponentType) {
-            const t = this.rootComponentType.constructor === this.rootComponentType.constructor.constructor ? this.rootComponentType : this.rootComponentType.constructor;
-            return A.getConfiguration(t);
+            const n = this.rootComponentType.constructor === this.rootComponentType.constructor.constructor ? this.rootComponentType : this.rootComponentType.constructor;
+            i.push(...null !== (t = A.getConfiguration(n)) && void 0 !== t ? t : []);
         }
-        return null;
+        return i;
     }
 }
 
@@ -1505,7 +1513,7 @@ class ViewportContent extends EndpointContent {
             }
             if ("string" === typeof n) {
                 i.exit();
-                return [ RoutingInstruction.create(n, this.endpoint) ];
+                return n;
             }
             return n;
         }));
@@ -1513,14 +1521,13 @@ class ViewportContent extends EndpointContent {
             const t = Runner.run(null, ...l);
             if (true !== t) {
                 if (false === t) return false;
-                if ("string" === typeof t) return [ RoutingInstruction.create(t, this.endpoint) ];
+                if ("string" === typeof t) return t;
                 return t;
             }
         }
         if (null == s.canLoad) return true;
         const u = s.canLoad(r, this.instruction, this.navigation);
-        if ("boolean" === typeof u) return u;
-        if ("string" === typeof u) return [ RoutingInstruction.create(u, this.endpoint) ];
+        if ("boolean" === typeof u || "string" === typeof u) return u;
         return u;
     }
     canUnload(t) {
@@ -1720,6 +1727,9 @@ class Viewport extends Endpoint$1 {
         }
         return i;
     }
+    getNavigationContent(t) {
+        return super.getNavigationContent(t);
+    }
     get parentViewport() {
         let t = this.connectedScope;
         while (null != (null === t || void 0 === t ? void 0 : t.parent)) {
@@ -1752,7 +1762,7 @@ class Viewport extends Endpoint$1 {
         var n;
         t.endpoint.set(this);
         this.clear = t.isClear(this.router);
-        const s = this.contents[this.contents.length - 1];
+        const s = this.getContent();
         const e = new ViewportContent(this.router, this, this.owningScope, this.scope.hasScope, !this.clear ? t : void 0, i, null !== (n = this.connectedCE) && void 0 !== n ? n : null);
         this.contents.push(e);
         e.fromHistory = null !== e.componentInstance && i.navigation ? !!i.navigation.back || !!i.navigation.forward : false;
@@ -1847,35 +1857,55 @@ class Viewport extends Endpoint$1 {
         let r = this.parentViewport;
         if (null !== r && "reload" !== r.transitionAction && "swap" !== r.transitionAction) r = null;
         const l = [ i => {
-            if (this.isActiveNavigation(t)) return this.canUnload(i);
+            if (this.isActiveNavigation(t)) return this.canUnload(t, i);
         }, i => {
             if (this.isActiveNavigation(t)) if (!i.previousValue) t.cancel(); else if (this.router.isRestrictedNavigation) {
-                const t = this.router.configuration.options;
-                this.getNextContent().createComponent(this.connectedCE, this.options.fallback || t.fallback, this.options.fallbackAction || t.fallbackAction);
+                const i = this.router.configuration.options;
+                this.getNavigationContent(t).createComponent(this.connectedCE, this.options.fallback || i.fallback, this.options.fallbackAction || i.fallbackAction);
             }
             t.addEndpointState(this, "guardedUnload");
         }, () => t.waitForSyncState("guardedUnload", this), () => null !== r ? t.waitForEndpointState(r, "guardedLoad") : void 0, i => {
-            if (this.isActiveNavigation(t)) return this.canLoad(i);
+            if (this.isActiveNavigation(t)) return this.canLoad(t, i);
         }, i => {
+            var n;
             if (this.isActiveNavigation(t)) {
-                const n = i.previousValue;
-                if ("boolean" === typeof n) {
-                    if (!n) {
+                let s = i.previousValue;
+                if ("boolean" === typeof s) {
+                    if (!s) {
                         i.cancel();
                         t.cancel();
+                        this.getNavigationContent(t).instruction.nextScopeInstructions = null;
                         return;
                     }
-                } else return Runner.run(i, (() => this.router.load(n, {
-                    append: true
-                })), (i => this.cancelContentChange(t, i)));
+                } else {
+                    this.getNavigationContent(t).instruction.nextScopeInstructions = null;
+                    if ("string" === typeof s) {
+                        const t = this.scope;
+                        const i = this.router.configuration.options;
+                        let e = RoutingInstruction.parse(this.router, s);
+                        const o = null === (n = t.parent) || void 0 === n ? void 0 : n.findInstructions(e, i.useDirectRouting, i.useConfiguredRoutes);
+                        if ((null === o || void 0 === o ? void 0 : o.foundConfiguration) || (null === o || void 0 === o ? void 0 : o.foundInstructions)) e = o.instructions;
+                        for (const i of e) {
+                            i.endpoint.set(this);
+                            i.scope = t.owningScope;
+                        }
+                        s = e;
+                    }
+                    return Runner.run(i, (i => this.cancelContentChange(t, i)), (t => {
+                        void this.router.load(s, {
+                            append: true
+                        });
+                        return t.exit();
+                    }));
+                }
             }
             t.addEndpointState(this, "guardedLoad");
             t.addEndpointState(this, "guarded");
         } ];
         const u = [ () => t.waitForSyncState("guarded", this), i => {
-            if (this.isActiveNavigation(t)) return this.unload(i);
+            if (this.isActiveNavigation(t)) return this.unload(t, i);
         }, () => t.addEndpointState(this, "unloaded"), () => t.waitForSyncState("unloaded", this), () => null !== r ? t.waitForEndpointState(r, "loaded") : void 0, i => {
-            if (this.isActiveNavigation(t)) return this.load(i);
+            if (this.isActiveNavigation(t)) return this.load(t, i);
         }, () => t.addEndpointState(this, "loaded"), () => t.addEndpointState(this, "routed") ];
         const h = [ () => t.waitForSyncState("routed", this), () => t.waitForEndpointState(this, "routed") ];
         const a = this.router.configuration.options.swapOrder;
@@ -1922,24 +1952,24 @@ class Viewport extends Endpoint$1 {
         }));
         if (c instanceof Promise) c.catch((t => {}));
     }
-    canUnload(t) {
-        return Runner.run(t, (t => this.getContent().connectedScope.canUnload(t)), (t => {
-            var i, n;
-            if (!t.previousValue) return false;
-            return this.getContent().canUnload(null !== (n = null === (i = this.getNextContent()) || void 0 === i ? void 0 : i.navigation) && void 0 !== n ? n : null);
+    canUnload(t, i) {
+        return Runner.run(i, (i => this.getContent().connectedScope.canUnload(t, i)), (i => {
+            if (!i.previousValue) return false;
+            return this.getContent().canUnload(t.navigation);
         }));
     }
-    canLoad(t) {
+    canLoad(t, i) {
         if (this.clear) return true;
-        return Runner.run(t, (() => this.waitForConnected()), (() => {
-            const t = this.router.configuration.options;
-            this.getNextContent().createComponent(this.connectedCE, this.options.fallback || t.fallback, this.options.fallbackAction || t.fallbackAction);
-            return this.getNextContent().canLoad();
+        return Runner.run(i, (() => this.waitForConnected()), (() => {
+            const i = this.router.configuration.options;
+            const n = this.getNavigationContent(t);
+            n.createComponent(this.connectedCE, this.options.fallback || i.fallback, this.options.fallbackAction || i.fallbackAction);
+            return n.canLoad();
         }));
     }
-    load(t) {
+    load(t, i) {
         if (this.clear) return;
-        return this.getNextContent().load(t);
+        return this.getNavigationContent(t).load(i);
     }
     addContent(t, i) {
         return this.activate(t, null, this.connectedController, 0, i);
@@ -1958,10 +1988,10 @@ class Viewport extends Endpoint$1 {
         const o = this.getContent();
         if (null != (null === o || void 0 === o ? void 0 : o.componentInstance) && !o.reload && o.componentInstance !== (null === (e = this.getNextContent()) || void 0 === e ? void 0 : e.componentInstance)) return o.deactivateComponent(t, i, n, s, this.connectedCE, this.router.statefulHistory || this.options.stateful);
     }
-    unload(t) {
-        return Runner.run(t, (t => this.getContent().connectedScope.unload(t)), (() => {
-            var t, i;
-            return null != this.getContent().componentInstance ? this.getContent().unload(null !== (i = null === (t = this.getNextContent()) || void 0 === t ? void 0 : t.navigation) && void 0 !== i ? i : null) : void 0;
+    unload(t, i) {
+        return Runner.run(i, (i => this.getContent().connectedScope.unload(t, i)), (() => {
+            var i;
+            return null != this.getContent().componentInstance ? this.getContent().unload(null !== (i = t.navigation) && void 0 !== i ? i : null) : void 0;
         }));
     }
     dispose() {
@@ -1996,26 +2026,31 @@ class Viewport extends Endpoint$1 {
         this.contents.splice(0, c);
         T(this.coordinators, (i => i === t));
     }
-    cancelContentChange(t, i) {
-        const n = this.contents.findIndex((i => i.navigation === t.navigation));
-        const s = this.contents[n];
-        const e = this.contents[n - 1];
-        return Runner.run(i, (t => {
-            if (null != s) return s.freeContent(t, this.connectedCE, s.navigation, this.historyCache, this.router.statefulHistory || this.options.stateful);
-        }), (() => {
-            var i, n, o, r;
+    cancelContentChange(t, i = null) {
+        var n, s;
+        [ ...new Set(this.scope.children.map((t => t.endpoint))) ].forEach((n => n.cancelContentChange(t, i)));
+        const e = this.contents.findIndex((i => i.navigation === t.navigation));
+        if (e < 0) return;
+        const o = null !== (s = null === (n = t.getEndpointStep(this)) || void 0 === n ? void 0 : n.current) && void 0 !== s ? s : null;
+        const r = this.contents[e];
+        const l = this.contents[e - 1];
+        r.instruction.cancelled = true;
+        return Runner.run(o, (t => r.freeContent(t, this.connectedCE, r.navigation, this.historyCache, this.router.statefulHistory || this.options.stateful)), (() => {
+            var i, n, s, e;
             if (this.previousViewportState) Object.assign(this, this.previousViewportState);
-            null === s || void 0 === s ? void 0 : s.delete();
-            if (null !== s) this.contents.splice(this.contents.indexOf(s), 1);
+            null === r || void 0 === r ? void 0 : r.delete();
+            if (null !== r) this.contents.splice(this.contents.indexOf(r), 1);
             this.transitionAction = "";
-            null === e || void 0 === e ? void 0 : e.contentStates.delete("checkedUnload");
-            null === e || void 0 === e ? void 0 : e.contentStates.delete("checkedLoad");
-            const l = this.router.configuration.options.indicators.viewportNavigating;
-            null === (n = null === (i = this.connectedCE) || void 0 === i ? void 0 : i.setActivity) || void 0 === n ? void 0 : n.call(i, l, false);
-            null === (r = null === (o = this.connectedCE) || void 0 === o ? void 0 : o.setActivity) || void 0 === r ? void 0 : r.call(o, t.navigation.navigation, false);
+            null === l || void 0 === l ? void 0 : l.contentStates.delete("checkedUnload");
+            null === l || void 0 === l ? void 0 : l.contentStates.delete("checkedLoad");
+            const o = this.router.configuration.options.indicators.viewportNavigating;
+            null === (n = null === (i = this.connectedCE) || void 0 === i ? void 0 : i.setActivity) || void 0 === n ? void 0 : n.call(i, o, false);
+            null === (e = null === (s = this.connectedCE) || void 0 === s ? void 0 : s.setActivity) || void 0 === e ? void 0 : e.call(s, t.navigation.navigation, false);
             t.removeEndpoint(this);
             T(this.coordinators, (i => i === t));
-        }), (() => null === i || void 0 === i ? void 0 : i.exit()));
+        }), (() => {
+            if (o !== i) return null === o || void 0 === o ? void 0 : o.exit();
+        }));
     }
     wantComponent(t) {
         return this.options.usedBy.includes(t);
@@ -2039,11 +2074,14 @@ class Viewport extends Endpoint$1 {
         }));
     }
     getRoutes() {
-        let t = this.getComponentType();
-        if (null === t) return null;
-        t = t.constructor === t.constructor.constructor ? t : t.constructor;
-        const i = A.getConfiguration(t);
-        return Array.isArray(i) ? i : null;
+        var t;
+        const i = [];
+        let n = this.getComponentType();
+        if (null != n) {
+            n = n.constructor === n.constructor.constructor ? n : n.constructor;
+            i.push(...null !== (t = A.getConfiguration(n)) && void 0 !== t ? t : []);
+        }
+        return i;
     }
     getTitle(t) {
         var i, n;
@@ -2164,6 +2202,7 @@ class RoutingInstruction {
         this.default = false;
         this.topInstruction = false;
         this.unparsed = null;
+        this.cancelled = false;
         this.component = InstructionComponent.create(t);
         this.endpoint = InstructionEndpoint.create(i);
         this.parameters = InstructionParameters.create(n);
@@ -2573,9 +2612,9 @@ let x = class Navigator {
 
 x = k([ $(0, i), $(1, n) ], x);
 
-const U = y;
+const U = C;
 
-const M = C;
+const M = y;
 
 const F = S;
 
@@ -2605,7 +2644,7 @@ class EndpointMatcher {
         const e = [];
         const o = t.getOwnedRoutingScopes(1 / 0);
         const r = o.map((t => t.endpoint));
-        const l = r.filter((t => null !== t && !n.some((i => t === i.endpoint.instance))));
+        const l = r.filter((t => null !== t && !n.some((i => t === i.endpoint.instance && !i.cancelled))));
         const u = new Collection(...i.slice());
         let h = null;
         EndpointMatcher.matchKnownEndpoints(t.router, "ViewportScope", u, l, e, false);
@@ -2820,7 +2859,7 @@ class RoutingScope {
             i.endpoint.set(i.scope.endpoint.name);
             i.scope = i.scope.owningScope;
         }
-        const v = [];
+        let v = [];
         let {matchedInstructions: p, remainingInstructions: g} = this.matchEndpoints(t, i);
         let w = 100;
         do {
@@ -2906,6 +2945,11 @@ class RoutingScope {
             }
             const I = t.filter((t => t.isUnresolved)).map((t => t.resolve())).filter((t => t instanceof Promise));
             if (I.length > 0) await Promise.all(I);
+            i.filter((t => t.cancelled)).forEach((t => {
+                const n = i.lastIndexOf(t);
+                const s = i[n];
+                if (s.cancelled) v = v.filter((t => t !== s.endpoint.instance));
+            }));
         } while (p.length > 0 || g.length > 0);
         return v;
     }
@@ -2942,28 +2986,28 @@ class RoutingScope {
         };
     }
     findInstructions(t, i, n) {
-        var s, e;
-        const o = this.router;
-        let r = new FoundRoute;
-        if (n && !RoutingInstruction.containsSiblings(o, t)) {
-            let n = t.filter((t => t.isClear(o) || t.isClearAll(o)));
-            const l = t.filter((t => !t.isClear(o) && !t.isClearAll(o)));
-            if (l.length > 0) for (const u of l) {
-                const h = this.findMatchingRoute(RoutingInstruction.stringify(o, l));
-                if (null !== (s = null === h || void 0 === h ? void 0 : h.foundConfiguration) && void 0 !== s ? s : false) {
-                    r = h;
-                    r.instructions = [ ...n, ...r.instructions ];
+        var s, e, o;
+        const r = this.router;
+        let l = new FoundRoute;
+        if (n && !RoutingInstruction.containsSiblings(r, t)) {
+            let n = t.filter((t => t.isClear(r) || t.isClearAll(r)));
+            const u = t.filter((t => !t.isClear(r) && !t.isClearAll(r)));
+            if (u.length > 0) for (const h of u) {
+                const a = this.findMatchingRoute(null !== (s = h.unparsed) && void 0 !== s ? s : RoutingInstruction.stringify(r, u));
+                if (null !== (e = null === a || void 0 === a ? void 0 : a.foundConfiguration) && void 0 !== e ? e : false) {
+                    l = a;
+                    l.instructions = [ ...n, ...l.instructions ];
                     n = [];
                 } else if (i) {
-                    r.instructions = [ ...n, ...r.instructions, u ];
+                    l.instructions = [ ...n, ...l.instructions, h ];
                     n = [];
-                    r.remaining = RoutingInstruction.stringify(o, null !== (e = u.nextScopeInstructions) && void 0 !== e ? e : []);
-                } else throw new Error(`No route found for: ${RoutingInstruction.stringify(o, t)}!`);
-            } else r.instructions = [ ...n ];
-        } else if (i) r.instructions.push(...t); else throw new Error(`No way to process sibling viewport routes with direct routing disabled: ${RoutingInstruction.stringify(o, t)}!`);
-        r.instructions = r.instructions.filter((t => "" !== t.component.name));
-        for (const t of r.instructions) if (null === t.scope) t.scope = this;
-        return r;
+                    l.remaining = RoutingInstruction.stringify(r, null !== (o = h.nextScopeInstructions) && void 0 !== o ? o : []);
+                } else throw new Error(`No route found for: ${RoutingInstruction.stringify(r, t)}!`);
+            } else l.instructions = [ ...n ];
+        } else if (i) l.instructions.push(...t); else throw new Error(`No way to process sibling viewport routes with direct routing disabled: ${RoutingInstruction.stringify(r, t)}!`);
+        l.instructions = l.instructions.filter((t => "" !== t.component.name));
+        for (const t of l.instructions) if (null === t.scope) t.scope = this;
+        return l;
     }
     matchEndpoints(t, i, n = false) {
         const s = [];
@@ -3059,11 +3103,11 @@ class RoutingScope {
         }
         return s;
     }
-    canUnload(t) {
-        return Runner.run(t, (t => Runner.runParallel(t, ...this.children.map((t => null !== t.endpoint ? i => t.endpoint.canUnload(i) : i => t.canUnload(i))))), (t => t.previousValue.every((t => t))));
+    canUnload(t, i) {
+        return Runner.run(i, (i => Runner.runParallel(i, ...this.children.map((i => null !== i.endpoint ? n => i.endpoint.canUnload(t, n) : n => i.canUnload(t, n))))), (t => t.previousValue.every((t => t))));
     }
-    unload(t) {
-        return Runner.runParallel(t, ...this.children.map((t => null !== t.endpoint ? i => t.endpoint.unload(i) : i => t.unload(i))));
+    unload(t, i) {
+        return Runner.runParallel(i, ...this.children.map((i => null !== i.endpoint ? n => i.endpoint.unload(t, n) : n => i.unload(t, n))));
     }
     matchScope(t, i = false) {
         const n = [];
@@ -3071,17 +3115,18 @@ class RoutingScope {
         return n;
     }
     findMatchingRoute(t) {
-        if (this.isViewportScope && !this.passThroughScope) return this.findMatchingRouteInRoutes(t, this.endpoint.getRoutes());
-        if (this.isViewport) return this.findMatchingRouteInRoutes(t, this.endpoint.getRoutes());
-        for (const i of this.enabledChildren) {
-            const n = i.findMatchingRoute(t);
-            if (null !== n) return n;
+        let i = null;
+        if (this.isViewportScope && !this.passThroughScope) i = this.findMatchingRouteInRoutes(t, this.endpoint.getRoutes()); else if (this.isViewport) i = this.findMatchingRouteInRoutes(t, this.endpoint.getRoutes()); else for (const n of this.enabledChildren) {
+            i = n.findMatchingRoute(t);
+            if (null === i || void 0 === i ? void 0 : i.foundConfiguration) break;
         }
-        return null;
+        if (null === i || void 0 === i ? void 0 : i.foundConfiguration) return i;
+        if (null != this.parent) return this.parent.findMatchingRoute(t);
+        return i;
     }
     findMatchingRouteInRoutes(t, i) {
         var n, s, e;
-        if (!Array.isArray(i)) return null;
+        if (!Array.isArray(i) || 0 === i.length) return null;
         i = i.map((t => this.ensureProperRoute(t)));
         const o = [];
         for (const t of i) {
@@ -3494,9 +3539,7 @@ class NavigationCoordinator {
         this.syncStates.set(t, i);
     }
     addEndpoint(t) {
-        let i = this.entities.find((i => i.endpoint === t));
-        if (void 0 !== i) return i;
-        i = new Entity(t);
+        const i = new Entity(t);
         this.entities.push(i);
         this.recheckSyncStates();
         if (this.running) i.endpoint.transition(this);
@@ -3510,6 +3553,11 @@ class NavigationCoordinator {
         let n = this.entities.find((i => i.endpoint === t));
         if (void 0 === n) n = this.addEndpoint(t);
         n.step = i;
+    }
+    getEndpointStep(t) {
+        var i;
+        const n = this.entities.find((i => i.endpoint === t));
+        return null !== (i = null === n || void 0 === n ? void 0 : n.step) && void 0 !== i ? i : null;
     }
     addEndpointState(t, i) {
         let n = this.entities.find((i => i.endpoint === t));
@@ -3564,9 +3612,8 @@ class NavigationCoordinator {
     cancel() {
         this.cancelled = true;
         this.entities.forEach((t => {
-            var i, n;
-            const s = t.endpoint.cancelContentChange(this, null !== (n = null === (i = t.step) || void 0 === i ? void 0 : i.current) && void 0 !== n ? n : null);
-            if (s instanceof Promise) s.catch((t => {
+            const i = t.endpoint.cancelContentChange(this);
+            if (i instanceof Promise) i.catch((t => {
                 throw t;
             }));
         }));
@@ -3592,7 +3639,7 @@ class NavigationCoordinator {
         while (s.length > 0) {
             const e = s.shift();
             T(this.appendedInstructions, (t => t === e));
-            const o = i.some((t => t.sameEndpoint(e, true)));
+            const o = i.some((t => !t.cancelled && t.sameEndpoint(e, true)));
             const r = t.find((t => t.sameEndpoint(e, true)));
             const l = n.find((t => t.sameEndpoint(e, true)));
             if (e.default && (o || void 0 !== r && !r.default || void 0 !== l && !l.default)) continue;

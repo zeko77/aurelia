@@ -23,6 +23,16 @@ class Endpoint$1 {
     getTimeContent(_timestamp = Infinity) {
         return this.getContent();
     }
+    getNavigationContent(navigation) {
+        var _a;
+        if (navigation instanceof NavigationCoordinator) {
+            navigation = navigation.navigation;
+        }
+        if (navigation instanceof Navigation) {
+            return (_a = this.contents.find(content => content.navigation === navigation)) !== null && _a !== void 0 ? _a : null;
+        }
+        return null;
+    }
     get activeContent() {
         var _a;
         return (_a = this.getNextContent()) !== null && _a !== void 0 ? _a : this.getContent();
@@ -68,7 +78,7 @@ class Endpoint$1 {
     finalizeContentChange(_coordinator, _step) {
         throw new Error(`Method 'finalizeContentChange' needs to be implemented in all endpoints!`);
     }
-    cancelContentChange(_coordinator, _step) {
+    cancelContentChange(_coordinator, _noExitStep = null) {
         throw new Error(`Method 'cancelContentChange' needs to be implemented in all endpoints!`);
     }
     getRoutes() {
@@ -78,21 +88,19 @@ class Endpoint$1 {
         throw new Error(`Method 'getTitle' needs to be implemented in all endpoints!`);
     }
     removeEndpoint(_step, _connectedCE) {
-        var _a;
-        this.getContent().delete();
-        (_a = this.getNextContent()) === null || _a === void 0 ? void 0 : _a.delete();
+        this.contents.forEach(content => content.delete());
         return true;
     }
-    canUnload(_step) {
+    canUnload(_coordinator, _step) {
         return true;
     }
-    canLoad(_step) {
+    canLoad(_coordinator, _step) {
         return true;
     }
-    unload(_step) {
+    unload(_coordinator, _step) {
         return;
     }
-    load(_step) {
+    load(_coordinator, _step) {
         return;
     }
 }
@@ -1473,7 +1481,7 @@ class ViewportScope extends Endpoint$1 {
         return 'swap';
     }
     transition(coordinator) {
-        Runner.run(null, () => coordinator.addEndpointState(this, 'guardedUnload'), () => coordinator.addEndpointState(this, 'guardedLoad'), () => coordinator.addEndpointState(this, 'guarded'), () => coordinator.addEndpointState(this, 'loaded'), () => coordinator.addEndpointState(this, 'unloaded'), () => coordinator.addEndpointState(this, 'routed'), () => coordinator.addEndpointState(this, 'swapped'), () => coordinator.addEndpointState(this, 'completed'));
+        Runner.run(null, (step) => coordinator.setEndpointStep(this, step.root), () => coordinator.addEndpointState(this, 'guardedUnload'), () => coordinator.addEndpointState(this, 'guardedLoad'), () => coordinator.addEndpointState(this, 'guarded'), () => coordinator.addEndpointState(this, 'loaded'), () => coordinator.addEndpointState(this, 'unloaded'), () => coordinator.addEndpointState(this, 'routed'), () => coordinator.addEndpointState(this, 'swapped'), () => coordinator.addEndpointState(this, 'completed'));
     }
     finalizeContentChange(coordinator, _step) {
         var _a;
@@ -1498,8 +1506,12 @@ class ViewportScope extends Endpoint$1 {
             this.removeSourceItem();
         }
     }
-    cancelContentChange(coordinator, _step) {
+    cancelContentChange(coordinator, noExitStep = null) {
+        [...new Set(this.scope.children.map(scope => scope.endpoint))].forEach(child => child.cancelContentChange(coordinator, noExitStep));
         const nextContentIndex = this.contents.findIndex(content => content.navigation === coordinator.navigation);
+        if (nextContentIndex < 0) {
+            return;
+        }
         this.contents.splice(nextContentIndex, 1);
         if (this.add) {
             const index = this.source.indexOf(this.sourceItem);
@@ -1563,13 +1575,15 @@ class ViewportScope extends Endpoint$1 {
         }
     }
     getRoutes() {
+        var _a;
+        const routes = [];
         if (this.rootComponentType !== null) {
             const Type = this.rootComponentType.constructor === this.rootComponentType.constructor.constructor
                 ? this.rootComponentType
                 : this.rootComponentType.constructor;
-            return Routes.getConfiguration(Type);
+            routes.push(...((_a = Routes.getConfiguration(Type)) !== null && _a !== void 0 ? _a : []));
         }
-        return null;
+        return routes;
     }
 }
 
@@ -1807,7 +1821,7 @@ class ViewportContent extends EndpointContent {
             }
             if (typeof result === 'string') {
                 innerStep.exit();
-                return [RoutingInstruction.create(result, this.endpoint)];
+                return result;
             }
             return result;
         }));
@@ -1818,7 +1832,7 @@ class ViewportContent extends EndpointContent {
                     return false;
                 }
                 if (typeof hooksResult === 'string') {
-                    return [RoutingInstruction.create(hooksResult, this.endpoint)];
+                    return hooksResult;
                 }
                 return hooksResult;
             }
@@ -1827,11 +1841,8 @@ class ViewportContent extends EndpointContent {
             return true;
         }
         const result = instance.canLoad(merged, this.instruction, this.navigation);
-        if (typeof result === 'boolean') {
+        if (typeof result === 'boolean' || typeof result === 'string') {
             return result;
-        }
-        if (typeof result === 'string') {
-            return [RoutingInstruction.create(result, this.endpoint)];
         }
         return result;
     }
@@ -2097,6 +2108,9 @@ class Viewport extends Endpoint$1 {
         }
         return content;
     }
+    getNavigationContent(navigation) {
+        return super.getNavigationContent(navigation);
+    }
     get parentViewport() {
         let scope = this.connectedScope;
         while ((scope === null || scope === void 0 ? void 0 : scope.parent) != null) {
@@ -2133,7 +2147,7 @@ class Viewport extends Endpoint$1 {
         var _a;
         instruction.endpoint.set(this);
         this.clear = instruction.isClear(this.router);
-        const content = this.contents[this.contents.length - 1];
+        const content = this.getContent();
         const nextContent = new ViewportContent(this.router, this, this.owningScope, this.scope.hasScope, !this.clear ? instruction : void 0, navigation, (_a = this.connectedCE) !== null && _a !== void 0 ? _a : null);
         this.contents.push(nextContent);
         nextContent.fromHistory = nextContent.componentInstance !== null && navigation.navigation
@@ -2252,7 +2266,7 @@ class Viewport extends Endpoint$1 {
         const guardSteps = [
             (step) => {
                 if (this.isActiveNavigation(coordinator)) {
-                    return this.canUnload(step);
+                    return this.canUnload(coordinator, step);
                 }
             },
             (step) => {
@@ -2263,7 +2277,7 @@ class Viewport extends Endpoint$1 {
                     else {
                         if (this.router.isRestrictedNavigation) {
                             const routerOptions = this.router.configuration.options;
-                            this.getNextContent().createComponent(this.connectedCE, this.options.fallback || routerOptions.fallback, this.options.fallbackAction || routerOptions.fallbackAction);
+                            this.getNavigationContent(coordinator).createComponent(this.connectedCE, this.options.fallback || routerOptions.fallback, this.options.fallbackAction || routerOptions.fallbackAction);
                         }
                     }
                 }
@@ -2273,21 +2287,41 @@ class Viewport extends Endpoint$1 {
             () => actingParentViewport !== null ? coordinator.waitForEndpointState(actingParentViewport, 'guardedLoad') : void 0,
             (step) => {
                 if (this.isActiveNavigation(coordinator)) {
-                    return this.canLoad(step);
+                    return this.canLoad(coordinator, step);
                 }
             },
             (step) => {
+                var _a;
                 if (this.isActiveNavigation(coordinator)) {
-                    const canLoadResult = step.previousValue;
+                    let canLoadResult = step.previousValue;
                     if (typeof canLoadResult === 'boolean') {
                         if (!canLoadResult) {
                             step.cancel();
                             coordinator.cancel();
+                            this.getNavigationContent(coordinator).instruction.nextScopeInstructions = null;
                             return;
                         }
                     }
                     else {
-                        return Runner.run(step, () => this.router.load(canLoadResult, { append: true }), (innerStep) => this.cancelContentChange(coordinator, innerStep));
+                        this.getNavigationContent(coordinator).instruction.nextScopeInstructions = null;
+                        if (typeof canLoadResult === 'string') {
+                            const scope = this.scope;
+                            const options = this.router.configuration.options;
+                            let instructions = RoutingInstruction.parse(this.router, canLoadResult);
+                            const foundRoute = (_a = scope.parent) === null || _a === void 0 ? void 0 : _a.findInstructions(instructions, options.useDirectRouting, options.useConfiguredRoutes);
+                            if ((foundRoute === null || foundRoute === void 0 ? void 0 : foundRoute.foundConfiguration) || (foundRoute === null || foundRoute === void 0 ? void 0 : foundRoute.foundInstructions)) {
+                                instructions = foundRoute.instructions;
+                            }
+                            for (const instruction of instructions) {
+                                instruction.endpoint.set(this);
+                                instruction.scope = scope.owningScope;
+                            }
+                            canLoadResult = instructions;
+                        }
+                        return Runner.run(step, (innerStep) => this.cancelContentChange(coordinator, innerStep), (innerStep) => {
+                            void this.router.load(canLoadResult, { append: true });
+                            return innerStep.exit();
+                        });
                     }
                 }
                 coordinator.addEndpointState(this, 'guardedLoad');
@@ -2298,7 +2332,7 @@ class Viewport extends Endpoint$1 {
             () => coordinator.waitForSyncState('guarded', this),
             (step) => {
                 if (this.isActiveNavigation(coordinator)) {
-                    return this.unload(step);
+                    return this.unload(coordinator, step);
                 }
             },
             () => coordinator.addEndpointState(this, 'unloaded'),
@@ -2306,7 +2340,7 @@ class Viewport extends Endpoint$1 {
             () => actingParentViewport !== null ? coordinator.waitForEndpointState(actingParentViewport, 'loaded') : void 0,
             (step) => {
                 if (this.isActiveNavigation(coordinator)) {
-                    return this.load(step);
+                    return this.load(coordinator, step);
                 }
             },
             () => coordinator.addEndpointState(this, 'loaded'),
@@ -2359,32 +2393,32 @@ class Viewport extends Endpoint$1 {
             result.catch(_err => { });
         }
     }
-    canUnload(step) {
+    canUnload(coordinator, step) {
         return Runner.run(step, (innerStep) => {
-            return this.getContent().connectedScope.canUnload(innerStep);
+            return this.getContent().connectedScope.canUnload(coordinator, innerStep);
         }, (innerStep) => {
-            var _a, _b;
             if (!innerStep.previousValue) {
                 return false;
             }
-            return this.getContent().canUnload((_b = (_a = this.getNextContent()) === null || _a === void 0 ? void 0 : _a.navigation) !== null && _b !== void 0 ? _b : null);
+            return this.getContent().canUnload(coordinator.navigation);
         });
     }
-    canLoad(step) {
+    canLoad(coordinator, step) {
         if (this.clear) {
             return true;
         }
         return Runner.run(step, () => this.waitForConnected(), () => {
             const routerOptions = this.router.configuration.options;
-            this.getNextContent().createComponent(this.connectedCE, this.options.fallback || routerOptions.fallback, this.options.fallbackAction || routerOptions.fallbackAction);
-            return this.getNextContent().canLoad();
+            const navigationContent = this.getNavigationContent(coordinator);
+            navigationContent.createComponent(this.connectedCE, this.options.fallback || routerOptions.fallback, this.options.fallbackAction || routerOptions.fallbackAction);
+            return navigationContent.canLoad();
         });
     }
-    load(step) {
+    load(coordinator, step) {
         if (this.clear) {
             return;
         }
-        return this.getNextContent().load(step);
+        return this.getNavigationContent(coordinator).load(step);
     }
     addContent(step, coordinator) {
         return this.activate(step, null, this.connectedController, 0, coordinator);
@@ -2411,8 +2445,8 @@ class Viewport extends Endpoint$1 {
             return content.deactivateComponent(step, initiator, parent, flags, this.connectedCE, this.router.statefulHistory || this.options.stateful);
         }
     }
-    unload(step) {
-        return Runner.run(step, (unloadStep) => this.getContent().connectedScope.unload(unloadStep), () => { var _a, _b; return this.getContent().componentInstance != null ? this.getContent().unload((_b = (_a = this.getNextContent()) === null || _a === void 0 ? void 0 : _a.navigation) !== null && _b !== void 0 ? _b : null) : void 0; });
+    unload(coordinator, step) {
+        return Runner.run(step, (unloadStep) => this.getContent().connectedScope.unload(coordinator, unloadStep), () => { var _a; return this.getContent().componentInstance != null ? this.getContent().unload((_a = coordinator.navigation) !== null && _a !== void 0 ? _a : null) : void 0; });
     }
     dispose() {
         var _a;
@@ -2455,14 +2489,19 @@ class Viewport extends Endpoint$1 {
         this.contents.splice(0, removeable);
         arrayRemove(this.coordinators, (coord => coord === coordinator));
     }
-    cancelContentChange(coordinator, step) {
+    cancelContentChange(coordinator, noExitStep = null) {
+        var _a, _b;
+        [...new Set(this.scope.children.map(scope => scope.endpoint))].forEach(child => child.cancelContentChange(coordinator, noExitStep));
         const nextContentIndex = this.contents.findIndex(content => content.navigation === coordinator.navigation);
+        if (nextContentIndex < 0) {
+            return;
+        }
+        const step = (_b = (_a = coordinator.getEndpointStep(this)) === null || _a === void 0 ? void 0 : _a.current) !== null && _b !== void 0 ? _b : null;
         const nextContent = this.contents[nextContentIndex];
         const previousContent = this.contents[nextContentIndex - 1];
+        nextContent.instruction.cancelled = true;
         return Runner.run(step, (innerStep) => {
-            if (nextContent != null) {
-                return nextContent.freeContent(innerStep, this.connectedCE, nextContent.navigation, this.historyCache, this.router.statefulHistory || this.options.stateful);
-            }
+            return nextContent.freeContent(innerStep, this.connectedCE, nextContent.navigation, this.historyCache, this.router.statefulHistory || this.options.stateful);
         }, () => {
             var _a, _b, _c, _d;
             if (this.previousViewportState) {
@@ -2480,7 +2519,11 @@ class Viewport extends Endpoint$1 {
             (_d = (_c = this.connectedCE) === null || _c === void 0 ? void 0 : _c.setActivity) === null || _d === void 0 ? void 0 : _d.call(_c, coordinator.navigation.navigation, false);
             coordinator.removeEndpoint(this);
             arrayRemove(this.coordinators, (coord => coord === coordinator));
-        }, () => step === null || step === void 0 ? void 0 : step.exit());
+        }, () => {
+            if (step !== noExitStep) {
+                return step === null || step === void 0 ? void 0 : step.exit();
+            }
+        });
     }
     wantComponent(component) {
         return this.options.usedBy.includes(component);
@@ -2514,15 +2557,16 @@ class Viewport extends Endpoint$1 {
         }
     }
     getRoutes() {
+        var _a;
+        const routes = [];
         let componentType = this.getComponentType();
-        if (componentType === null) {
-            return null;
+        if (componentType != null) {
+            componentType = componentType.constructor === componentType.constructor.constructor
+                ? componentType
+                : componentType.constructor;
+            routes.push(...((_a = Routes.getConfiguration(componentType)) !== null && _a !== void 0 ? _a : []));
         }
-        componentType = componentType.constructor === componentType.constructor.constructor
-            ? componentType
-            : componentType.constructor;
-        const routes = Routes.getConfiguration(componentType);
-        return Array.isArray(routes) ? routes : null;
+        return routes;
     }
     getTitle(navigation) {
         var _a, _b;
@@ -2686,6 +2730,7 @@ class RoutingInstruction {
         this.default = false;
         this.topInstruction = false;
         this.unparsed = null;
+        this.cancelled = false;
         this.component = InstructionComponent.create(component);
         this.endpoint = InstructionEndpoint.create(endpoint);
         this.parameters = InstructionParameters.create(parameters);
@@ -3294,7 +3339,7 @@ class EndpointMatcher {
         const endpoints = ownedScopes.map(scope => scope.endpoint);
         const availableEndpoints = endpoints
             .filter(endpoint => endpoint !== null
-            && !alreadyMatched.some(found => endpoint === found.endpoint.instance));
+            && !alreadyMatched.some(found => endpoint === found.endpoint.instance && !found.cancelled));
         const routingInstructions = new Collection(...instructions.slice());
         let instruction = null;
         EndpointMatcher.matchKnownEndpoints(routingScope.router, 'ViewportScope', routingInstructions, availableEndpoints, matchedInstructions, false);
@@ -3589,7 +3634,7 @@ class RoutingScope {
             addInstruction.endpoint.set(addInstruction.scope.endpoint.name);
             addInstruction.scope = addInstruction.scope.owningScope;
         }
-        const allChangedEndpoints = [];
+        let allChangedEndpoints = [];
         let { matchedInstructions, remainingInstructions } = this.matchEndpoints(instructions, earlierMatchedInstructions);
         let guard = 100;
         do {
@@ -3710,6 +3755,13 @@ class RoutingScope {
             if (resolvePromises.length > 0) {
                 await Promise.all(resolvePromises);
             }
+            earlierMatchedInstructions.filter(instruction => instruction.cancelled).forEach(instruction => {
+                const lastIndex = earlierMatchedInstructions.lastIndexOf(instruction);
+                const lastInstruction = earlierMatchedInstructions[lastIndex];
+                if (lastInstruction.cancelled) {
+                    allChangedEndpoints = allChangedEndpoints.filter(endpoint => endpoint !== lastInstruction.endpoint.instance);
+                }
+            });
         } while (matchedInstructions.length > 0 || remainingInstructions.length > 0);
         return allChangedEndpoints;
     }
@@ -3755,7 +3807,7 @@ class RoutingScope {
         return { clearEndpoints, instructions };
     }
     findInstructions(instructions, useDirectRouting, useConfiguredRoutes) {
-        var _a, _b;
+        var _a, _b, _c;
         const router = this.router;
         let route = new FoundRoute();
         if (useConfiguredRoutes && !RoutingInstruction.containsSiblings(router, instructions)) {
@@ -3763,8 +3815,8 @@ class RoutingScope {
             const nonClearInstructions = instructions.filter(instruction => !instruction.isClear(router) && !instruction.isClearAll(router));
             if (nonClearInstructions.length > 0) {
                 for (const instruction of nonClearInstructions) {
-                    const foundRoute = this.findMatchingRoute(RoutingInstruction.stringify(router, nonClearInstructions));
-                    if ((_a = foundRoute === null || foundRoute === void 0 ? void 0 : foundRoute.foundConfiguration) !== null && _a !== void 0 ? _a : false) {
+                    const foundRoute = this.findMatchingRoute((_a = instruction.unparsed) !== null && _a !== void 0 ? _a : RoutingInstruction.stringify(router, nonClearInstructions));
+                    if ((_b = foundRoute === null || foundRoute === void 0 ? void 0 : foundRoute.foundConfiguration) !== null && _b !== void 0 ? _b : false) {
                         route = foundRoute;
                         route.instructions = [...clearInstructions, ...route.instructions];
                         clearInstructions = [];
@@ -3772,7 +3824,7 @@ class RoutingScope {
                     else if (useDirectRouting) {
                         route.instructions = [...clearInstructions, ...route.instructions, instruction];
                         clearInstructions = [];
-                        route.remaining = RoutingInstruction.stringify(router, (_b = instruction.nextScopeInstructions) !== null && _b !== void 0 ? _b : []);
+                        route.remaining = RoutingInstruction.stringify(router, (_c = instruction.nextScopeInstructions) !== null && _c !== void 0 ? _c : []);
                     }
                     else {
                         throw new Error(`No route found for: ${RoutingInstruction.stringify(router, instructions)}!`);
@@ -3911,17 +3963,17 @@ class RoutingScope {
         }
         return instructions;
     }
-    canUnload(step) {
+    canUnload(coordinator, step) {
         return Runner.run(step, (stepParallel) => {
             return Runner.runParallel(stepParallel, ...this.children.map(child => child.endpoint !== null
-                ? (childStep) => child.endpoint.canUnload(childStep)
-                : (childStep) => child.canUnload(childStep)));
+                ? (childStep) => child.endpoint.canUnload(coordinator, childStep)
+                : (childStep) => child.canUnload(coordinator, childStep)));
         }, (step) => step.previousValue.every(result => result));
     }
-    unload(step) {
+    unload(coordinator, step) {
         return Runner.runParallel(step, ...this.children.map(child => child.endpoint !== null
-            ? (childStep) => child.endpoint.unload(childStep)
-            : (childStep) => child.unload(childStep)));
+            ? (childStep) => child.endpoint.unload(coordinator, childStep)
+            : (childStep) => child.unload(coordinator, childStep)));
     }
     matchScope(instructions, deep = false) {
         const matching = [];
@@ -3936,23 +3988,32 @@ class RoutingScope {
         return matching;
     }
     findMatchingRoute(path) {
+        let found = null;
         if (this.isViewportScope && !this.passThroughScope) {
-            return this.findMatchingRouteInRoutes(path, this.endpoint.getRoutes());
+            found = this.findMatchingRouteInRoutes(path, this.endpoint.getRoutes());
         }
-        if (this.isViewport) {
-            return this.findMatchingRouteInRoutes(path, this.endpoint.getRoutes());
+        else if (this.isViewport) {
+            found = this.findMatchingRouteInRoutes(path, this.endpoint.getRoutes());
         }
-        for (const child of this.enabledChildren) {
-            const found = child.findMatchingRoute(path);
-            if (found !== null) {
-                return found;
+        else {
+            for (const child of this.enabledChildren) {
+                found = child.findMatchingRoute(path);
+                if (found === null || found === void 0 ? void 0 : found.foundConfiguration) {
+                    break;
+                }
             }
         }
-        return null;
+        if (found === null || found === void 0 ? void 0 : found.foundConfiguration) {
+            return found;
+        }
+        if (this.parent != null) {
+            return this.parent.findMatchingRoute(path);
+        }
+        return found;
     }
     findMatchingRouteInRoutes(path, routes) {
         var _a, _b, _c;
-        if (!Array.isArray(routes)) {
+        if (!Array.isArray(routes) || routes.length === 0) {
             return null;
         }
         routes = routes.map(route => this.ensureProperRoute(route));
@@ -4406,11 +4467,7 @@ class NavigationCoordinator {
         this.syncStates.set(state, openPromise);
     }
     addEndpoint(endpoint) {
-        let entity = this.entities.find(e => e.endpoint === endpoint);
-        if (entity !== void 0) {
-            return entity;
-        }
-        entity = new Entity(endpoint);
+        const entity = new Entity(endpoint);
         this.entities.push(entity);
         this.recheckSyncStates();
         if (this.running) {
@@ -4430,6 +4487,11 @@ class NavigationCoordinator {
             entity = this.addEndpoint(endpoint);
         }
         entity.step = step;
+    }
+    getEndpointStep(endpoint) {
+        var _a;
+        const entity = this.entities.find(e => e.endpoint === endpoint);
+        return (_a = entity === null || entity === void 0 ? void 0 : entity.step) !== null && _a !== void 0 ? _a : null;
     }
     addEndpointState(endpoint, state) {
         let entity = this.entities.find(e => e.endpoint === endpoint);
@@ -4496,8 +4558,7 @@ class NavigationCoordinator {
     cancel() {
         this.cancelled = true;
         this.entities.forEach(entity => {
-            var _a, _b;
-            const abort = entity.endpoint.cancelContentChange(this, (_b = (_a = entity.step) === null || _a === void 0 ? void 0 : _a.current) !== null && _b !== void 0 ? _b : null);
+            const abort = entity.endpoint.cancelContentChange(this);
             if (abort instanceof Promise) {
                 abort.catch(error => { throw error; });
             }
@@ -4524,7 +4585,7 @@ class NavigationCoordinator {
         while (appendedInstructions.length > 0) {
             const appendedInstruction = appendedInstructions.shift();
             arrayRemove(this.appendedInstructions, instr => instr === appendedInstruction);
-            const foundEarlierExisting = earlierMatchedInstructions.some(instr => instr.sameEndpoint(appendedInstruction, true));
+            const foundEarlierExisting = earlierMatchedInstructions.some(instr => !instr.cancelled && instr.sameEndpoint(appendedInstruction, true));
             const existingMatched = matchedInstructions.find(instr => instr.sameEndpoint(appendedInstruction, true));
             const existingRemaining = remainingInstructions.find(instr => instr.sameEndpoint(appendedInstruction, true));
             if (appendedInstruction.default &&
