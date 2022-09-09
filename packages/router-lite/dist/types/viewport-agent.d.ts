@@ -40,8 +40,8 @@ export declare class ViewportAgent {
     isAvailable(resolution: ResolutionMode): boolean;
     canUnload(tr: Transition, b: Batch): void;
     canLoad(tr: Transition, b: Batch): void;
-    unload(tr: Transition, b: Batch): void;
-    load(tr: Transition, b: Batch): void;
+    unloading(tr: Transition, b: Batch): void;
+    loading(tr: Transition, b: Batch): void;
     deactivate(initiator: IHydratedController | null, tr: Transition, b: Batch): void;
     activate(initiator: IHydratedController | null, tr: Transition, b: Batch): void;
     swap(tr: Transition, b: Batch): void;

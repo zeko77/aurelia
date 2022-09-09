@@ -1241,17 +1241,17 @@ class ViewportAgent {
             i.pop();
         })).start();
     }
-    unload(t, i) {
+    unloading(t, i) {
         xt(t);
         $t(this, t);
         i.push();
         Batch.start((i => {
-            this.logger.trace(`unload() - invoking on children at %s`, this);
-            for (const e of this.currNode.children) e.context.vpa.unload(t, i);
+            this.logger.trace(`unloading() - invoking on children at %s`, this);
+            for (const e of this.currNode.children) e.context.vpa.unloading(t, i);
         })).continueWith((e => {
             switch (this.currState) {
               case 1024:
-                this.logger.trace(`unload() - invoking on existing component at %s`, this);
+                this.logger.trace(`unloading() - invoking on existing component at %s`, this);
                 switch (this.$plan) {
                   case "none":
                     this.currState = 256;
@@ -1262,10 +1262,10 @@ class ViewportAgent {
                     this.currState = 512;
                     e.push();
                     Batch.start((i => {
-                        this.logger.trace(`unload() - finished invoking on children, now invoking on own component at %s`, this);
-                        this.curCA.unload(t, this.nextNode, i);
+                        this.logger.trace(`unloading() - finished invoking on children, now invoking on own component at %s`, this);
+                        this.curCA.unloading(t, this.nextNode, i);
                     })).continueWith((() => {
-                        this.logger.trace(`unload() - finished at %s`, this);
+                        this.logger.trace(`unloading() - finished at %s`, this);
                         this.currState = 256;
                         e.pop();
                     })).start();
@@ -1273,60 +1273,60 @@ class ViewportAgent {
                 }
 
               case 8192:
-                this.logger.trace(`unload() - nothing to unload at %s`, this);
-                for (const e of this.currNode.children) e.context.vpa.unload(t, i);
+                this.logger.trace(`unloading() - nothing to unload at %s`, this);
+                for (const e of this.currNode.children) e.context.vpa.unloading(t, i);
                 return;
 
               default:
-                this.unexpectedState("unload");
+                this.unexpectedState("unloading");
             }
         })).continueWith((() => {
             i.pop();
         })).start();
     }
-    load(t, i) {
+    loading(t, i) {
         xt(t);
         $t(this, t);
         i.push();
         Batch.start((i => {
             switch (this.nextState) {
               case 8:
-                this.logger.trace(`load() - invoking on new component at %s`, this);
+                this.logger.trace(`loading() - invoking on new component at %s`, this);
                 this.nextState = 4;
                 switch (this.$plan) {
                   case "none":
                     return;
 
                   case "invoke-lifecycles":
-                    return this.curCA.load(t, this.nextNode, i);
+                    return this.curCA.loading(t, this.nextNode, i);
 
                   case "replace":
-                    return this.nextCA.load(t, this.nextNode, i);
+                    return this.nextCA.loading(t, this.nextNode, i);
                 }
 
               case 64:
-                this.logger.trace(`load() - nothing to load at %s`, this);
+                this.logger.trace(`loading() - nothing to load at %s`, this);
                 return;
 
               default:
-                this.unexpectedState("load");
+                this.unexpectedState("loading");
             }
         })).continueWith((i => {
             switch (this.nextState) {
               case 4:
-                this.logger.trace(`load() - finished own component, now invoking on children at %s`, this);
+                this.logger.trace(`loading() - finished own component, now invoking on children at %s`, this);
                 this.nextState = 2;
-                for (const e of this.nextNode.children) e.context.vpa.load(t, i);
+                for (const e of this.nextNode.children) e.context.vpa.loading(t, i);
                 return;
 
               case 64:
                 return;
 
               default:
-                this.unexpectedState("load");
+                this.unexpectedState("loading");
             }
         })).continueWith((() => {
-            this.logger.trace(`load() - finished at %s`, this);
+            this.logger.trace(`loading() - finished at %s`, this);
             i.pop();
         })).start();
     }
@@ -1374,11 +1374,11 @@ class ViewportAgent {
         $t(this, i);
         e.push();
         if (32 === this.nextState && "dynamic" === this.$resolution) {
-            this.logger.trace(`activate() - invoking canLoad(), load() and activate() on new component due to resolution 'dynamic' at %s`, this);
+            this.logger.trace(`activate() - invoking canLoad(), loading() and activate() on new component due to resolution 'dynamic' at %s`, this);
             Batch.start((t => {
                 this.canLoad(i, t);
             })).continueWith((t => {
-                this.load(i, t);
+                this.loading(i, t);
             })).continueWith((e => {
                 this.activate(t, i, e);
             })).continueWith((() => {
@@ -1499,7 +1499,7 @@ class ViewportAgent {
             })).continueWith((i => {
                 for (const n of e) t.run((() => {
                     i.push();
-                    return n.context.vpa.load(t, i);
+                    return n.context.vpa.loading(t, i);
                 }), (() => {
                     i.pop();
                 }));
@@ -2472,11 +2472,11 @@ let Mt = class Router {
                     this.cancelNavigation(t);
                 }
             })).continueWith((e => {
-                this.logger.trace(`run() - invoking unload on ${i.length} nodes`);
-                for (const n of i) n.context.vpa.unload(t, e);
+                this.logger.trace(`run() - invoking unloading on ${i.length} nodes`);
+                for (const n of i) n.context.vpa.unloading(t, e);
             })).continueWith((i => {
-                this.logger.trace(`run() - invoking load on ${e.length} nodes`);
-                for (const n of e) n.context.vpa.load(t, i);
+                this.logger.trace(`run() - invoking loading on ${e.length} nodes`);
+                for (const n of e) n.context.vpa.loading(t, i);
             })).continueWith((i => {
                 this.logger.trace(`run() - invoking swap on ${n.length} nodes`);
                 for (const e of n) e.context.vpa.swap(t, i);
@@ -3013,13 +3013,13 @@ class ComponentAgent {
         this.R.trace(`constructor()`);
         const u = i.lifecycleHooks;
         this.canLoadHooks = (null !== (r = u.canLoad) && void 0 !== r ? r : []).map((t => t.instance));
-        this.loadHooks = (null !== (a = u.load) && void 0 !== a ? a : []).map((t => t.instance));
+        this.loadHooks = (null !== (a = u.loading) && void 0 !== a ? a : []).map((t => t.instance));
         this.canUnloadHooks = (null !== (h = u.canUnload) && void 0 !== h ? h : []).map((t => t.instance));
-        this.unloadHooks = (null !== (c = u.unload) && void 0 !== c ? c : []).map((t => t.instance));
+        this.unloadHooks = (null !== (c = u.unloading) && void 0 !== c ? c : []).map((t => t.instance));
         this.C = "canLoad" in t;
-        this.I = "load" in t;
+        this.I = "loading" in t;
         this.N = "canUnload" in t;
-        this.A = "unload" in t;
+        this.A = "unloading" in t;
     }
     static for(t, i, e, n) {
         let s = _t.get(t);
@@ -3120,35 +3120,35 @@ class ComponentAgent {
         }
         e.pop();
     }
-    unload(t, i, e) {
-        this.R.trace(`unload(next:%s) - invoking ${this.unloadHooks.length} hooks`, i);
+    unloading(t, i, e) {
+        this.R.trace(`unloading(next:%s) - invoking ${this.unloadHooks.length} hooks`, i);
         e.push();
         for (const n of this.unloadHooks) t.run((() => {
             e.push();
-            return n.unload(this.instance, i, this.routeNode);
+            return n.unloading(this.instance, i, this.routeNode);
         }), (() => {
             e.pop();
         }));
         if (this.A) t.run((() => {
             e.push();
-            return this.instance.unload(i, this.routeNode);
+            return this.instance.unloading(i, this.routeNode);
         }), (() => {
             e.pop();
         }));
         e.pop();
     }
-    load(t, i, e) {
-        this.R.trace(`load(next:%s) - invoking ${this.loadHooks.length} hooks`, i);
+    loading(t, i, e) {
+        this.R.trace(`loading(next:%s) - invoking ${this.loadHooks.length} hooks`, i);
         e.push();
         for (const n of this.loadHooks) t.run((() => {
             e.push();
-            return n.load(this.instance, i.params, i, this.routeNode);
+            return n.loading(this.instance, i.params, i, this.routeNode);
         }), (() => {
             e.pop();
         }));
         if (this.I) t.run((() => {
             e.push();
-            return this.instance.load(i.params, i, this.routeNode);
+            return this.instance.loading(i.params, i, this.routeNode);
         }), (() => {
             e.pop();
         }));

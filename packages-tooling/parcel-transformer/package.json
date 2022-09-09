@@ -1,6 +1,6 @@
 {
   "name": "@aurelia/parcel-transformer",
-  "version": "2.1.0-dev.202209091200",
+  "version": "2.1.0-dev.202209092134",
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.mjs",
   "exports": {
@@ -43,11 +43,11 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurelia/kernel": "2.1.0-dev.202209091200",
-    "@aurelia/metadata": "2.1.0-dev.202209091200",
-    "@aurelia/platform": "2.1.0-dev.202209091200",
-    "@aurelia/plugin-conventions": "2.1.0-dev.202209091200",
-    "@aurelia/runtime": "2.1.0-dev.202209091200",
+    "@aurelia/kernel": "2.1.0-dev.202209092134",
+    "@aurelia/metadata": "2.1.0-dev.202209092134",
+    "@aurelia/platform": "2.1.0-dev.202209092134",
+    "@aurelia/plugin-conventions": "2.1.0-dev.202209092134",
+    "@aurelia/runtime": "2.1.0-dev.202209092134",
     "@parcel/plugin": "^2.5.0",
     "@parcel/source-map": "^2.0.2"
   },
