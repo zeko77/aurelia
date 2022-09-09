@@ -2240,7 +2240,9 @@ class Viewport extends Endpoint$1 {
                 this.connectionResolve();
             }
         }
-        const parentDefaultRoute = ((_b = (_a = this.scope.parent) === null || _a === void 0 ? void 0 : _a.endpoint.getRoutes()) !== null && _b !== void 0 ? _b : []).filter(route => route.path === '').length > 0;
+        const parentDefaultRoute = ((_b = (_a = this.scope.parent) === null || _a === void 0 ? void 0 : _a.endpoint.getRoutes()) !== null && _b !== void 0 ? _b : [])
+            .filter(route => (Array.isArray(route.path) ? route.path : [route.path]).includes(''))
+            .length > 0;
         if (this.getContent().componentInstance === null && ((_c = this.getNextContent()) === null || _c === void 0 ? void 0 : _c.componentInstance) == null && (this.options.default || parentDefaultRoute)) {
             const instructions = RoutingInstruction.parse(this.router, (_d = this.options.default) !== null && _d !== void 0 ? _d : '');
             if (instructions.length === 0 && parentDefaultRoute) {
@@ -3776,7 +3778,7 @@ class RoutingScope {
                     matchedInstructions = clearEndpoints.map(endpoint => RoutingInstruction.createClear(router, endpoint));
                 }
             }
-            const resolvePromises = instructions
+            const resolvePromises = matchedInstructions
                 .filter(instr => instr.isUnresolved)
                 .map(instr => instr.resolve())
                 .filter(result => result instanceof Promise);

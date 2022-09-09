@@ -1837,7 +1837,7 @@ class Viewport extends Endpoint$1 {
             this.options.apply(i);
             if (null != this.connectionResolve) this.connectionResolve();
         }
-        const l = (null !== (s = null === (n = this.scope.parent) || void 0 === n ? void 0 : n.endpoint.getRoutes()) && void 0 !== s ? s : []).filter((t => "" === t.path)).length > 0;
+        const l = (null !== (s = null === (n = this.scope.parent) || void 0 === n ? void 0 : n.endpoint.getRoutes()) && void 0 !== s ? s : []).filter((t => (Array.isArray(t.path) ? t.path : [ t.path ]).includes(""))).length > 0;
         if (null === this.getContent().componentInstance && null == (null === (e = this.getNextContent()) || void 0 === e ? void 0 : e.componentInstance) && (this.options.default || l)) {
             const t = RoutingInstruction.parse(this.router, null !== (o = this.options.default) && void 0 !== o ? o : "");
             if (0 === t.length && l) {
@@ -2967,7 +2967,7 @@ class RoutingScope {
                     ({matchedInstructions: p, remainingInstructions: g} = s.dequeueAppendedInstructions(p, i, g));
                 } else p = d.map((t => RoutingInstruction.createClear(h, t)));
             }
-            const I = t.filter((t => t.isUnresolved)).map((t => t.resolve())).filter((t => t instanceof Promise));
+            const I = p.filter((t => t.isUnresolved)).map((t => t.resolve())).filter((t => t instanceof Promise));
             if (I.length > 0) await Promise.all(I);
             i.filter((t => t.cancelled)).forEach((t => {
                 const n = i.lastIndexOf(t);
