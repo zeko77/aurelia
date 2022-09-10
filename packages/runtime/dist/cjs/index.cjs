@@ -3593,7 +3593,7 @@ function Oe(t, e) {
         s = new BindingBehaviorExpression(s, t, r);
     }
     if (6291456 !== xe) {
-        if (1 & e) return s;
+        if ((1 & e) > 0 && 7340045 === xe) return s;
         if ("of" === Ue()) throw nr();
         throw tr();
     }

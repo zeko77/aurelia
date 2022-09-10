@@ -3587,7 +3587,7 @@ function _e(t, e) {
         s = new BindingBehaviorExpression(s, t, r);
     }
     if (6291456 !== Fe) {
-        if (1 & e) return s;
+        if ((1 & e) > 0 && 7340045 === Fe) return s;
         if ("of" === He()) throw Sr();
         throw Ar();
     }

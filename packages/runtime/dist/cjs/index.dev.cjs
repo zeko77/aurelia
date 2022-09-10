@@ -3573,7 +3573,7 @@ function parse(minPrecedence, expressionType) {
         result = new BindingBehaviorExpression(result, name, args);
     }
     if ($currentToken !== 6291456) {
-        if (expressionType & 1) {
+        if ((expressionType & 1) > 0 && $currentToken === 7340045) {
             return result;
         }
         if ($tokenRaw() === 'of') {
