@@ -1,4 +1,4 @@
-import { BindingMode } from '@aurelia/runtime';
+import { BindingMode } from '../../binding/interfaces-bindings';
 import { INode } from '../../dom';
 import { IPlatform } from '../../platform';
 import { customAttribute } from '../custom-attribute';
@@ -102,8 +102,10 @@ export class Focus implements ICustomAttributeViewModel {
     const el = this._element;
     const isFocused = this._isElFocused;
     const shouldFocus = this.value;
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (shouldFocus && !isFocused) {
       el.focus();
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     } else if (!shouldFocus && isFocused) {
       el.blur();
     }

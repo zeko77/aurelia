@@ -5,12 +5,14 @@ import {
   createObserverLocator,
   createScopeForTest,
 } from '@aurelia/testing';
-import { Interpolation, ConditionalExpression, AccessScopeExpression, BindingMode, LifecycleFlags, ValueConverter } from '@aurelia/runtime';
+import { Interpolation, ConditionalExpression, AccessScopeExpression, LifecycleFlags } from '@aurelia/runtime';
 import {
+  BindingMode,
   CustomElement,
   InterpolationBinding,
   SVGAnalyzerRegistration,
   IPlatform,
+  ValueConverter,
 } from '@aurelia/runtime-html';
 
 type CaseType = {
@@ -290,13 +292,14 @@ describe('3-runtime/interpolation.spec.ts -- [UNIT]interpolation', function () {
       );
       const target = { value: '' };
       const binding = new InterpolationBinding(
+        { state: 0 },
+        container,
         observerLocator,
+        {} as any,
         interpolation,
         target,
         'value',
         BindingMode.toView,
-        container,
-        {} as any,
       );
       const source = { checked: false, yesMsg: 'yes', noMsg: 'no' };
 
@@ -373,13 +376,14 @@ describe('3-runtime/interpolation.spec.ts -- [UNIT]interpolation', function () {
       );
       const target = { value: '' };
       const binding = new InterpolationBinding(
+        { state: 0 },
+        container,
         observerLocator,
+        {} as any,
         interpolation,
         target,
         'value',
         BindingMode.toView,
-        container,
-        {} as any,
       );
       const source = {
         checked1: false,

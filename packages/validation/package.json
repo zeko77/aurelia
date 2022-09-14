@@ -44,10 +44,11 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurelia/kernel": "2.1.0-dev.202209101038",
-    "@aurelia/metadata": "2.1.0-dev.202209101038",
-    "@aurelia/platform": "2.1.0-dev.202209101038",
-    "@aurelia/runtime": "2.1.0-dev.202209101038"
+    "@aurelia/kernel": "2.0.0-alpha.40",
+    "@aurelia/metadata": "2.0.0-alpha.40",
+    "@aurelia/platform": "2.0.0-alpha.40",
+    "@aurelia/runtime": "2.0.0-alpha.40",
+    "@aurelia/runtime-html": "2.0.0-alpha.40"
   },
   "devDependencies": {
     "typescript": "4.7.3"
