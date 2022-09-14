@@ -1,5 +1,7 @@
-import { BindingBehaviorExpression, BindingInterceptor, LifecycleFlags, Scope } from '@aurelia/runtime';
-import { BindingWithBehavior, ValidationResultsSubscriber, ValidationEvent } from './validation-controller';
+import { IServiceLocator } from '@aurelia/kernel';
+import { BindingBehaviorExpression, IConnectableBinding, IObserverLocator, LifecycleFlags, Scope } from '@aurelia/runtime';
+import { BindingInterceptor } from '@aurelia/runtime-html';
+import { BindingWithBehavior, ValidationEvent, ValidationResultsSubscriber } from './validation-controller';
 /**
  * Validation triggers.
  */
@@ -59,16 +61,26 @@ export declare class ValidateBindingBehavior extends BindingInterceptor implemen
     handleControllerChange(newValue: unknown, _previousValue: unknown, _flags: LifecycleFlags): void;
     handleRulesChange(newValue: unknown, _previousValue: unknown, _flags: LifecycleFlags): void;
     handleValidationEvent(event: ValidationEvent): void;
-    private processBindingExpressionArgs;
     private task;
     private validateBinding;
-    private processDelta;
-    private ensureTrigger;
-    private ensureController;
-    private ensureRules;
-    private setPropertyBinding;
-    private setTarget;
     private setTriggerEvent;
     private setBindingInfo;
 }
+declare type MediatedBinding<K extends string> = {
+    [key in K]: (newValue: unknown, previousValue: unknown, flags: LifecycleFlags) => void;
+};
+export interface BindingMediator<K extends string> extends IConnectableBinding {
+}
+export declare class BindingMediator<K extends string> implements IConnectableBinding {
+    readonly key: K;
+    readonly binding: MediatedBinding<K>;
+    oL: IObserverLocator;
+    locator: IServiceLocator;
+    interceptor: this;
+    constructor(key: K, binding: MediatedBinding<K>, oL: IObserverLocator, locator: IServiceLocator);
+    $bind(): void;
+    $unbind(): void;
+    handleChange(newValue: unknown, previousValue: unknown, flags: LifecycleFlags): void;
+}
+export {};
 //# sourceMappingURL=validate-binding-behavior.d.ts.map

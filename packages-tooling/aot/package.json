@@ -1,6 +1,6 @@
 {
   "name": "@aurelia/aot",
-  "version": "2.1.0-dev.202209101038",
+  "version": "2.1.0-dev.202209140433",
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.mjs",
   "exports": {
@@ -44,10 +44,10 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurelia/kernel": "2.1.0-dev.202209101038",
-    "@aurelia/metadata": "2.1.0-dev.202209101038",
-    "@aurelia/platform": "2.1.0-dev.202209101038",
-    "@aurelia/runtime": "2.1.0-dev.202209101038",
+    "@aurelia/kernel": "2.1.0-dev.202209140433",
+    "@aurelia/metadata": "2.1.0-dev.202209140433",
+    "@aurelia/platform": "2.1.0-dev.202209140433",
+    "@aurelia/runtime": "2.1.0-dev.202209140433",
     "jsdom": "^19.0.0",
     "typescript": "4.7.3"
   },

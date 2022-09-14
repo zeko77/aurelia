@@ -8,7 +8,6 @@ function s(t) {
 
 class Platform {
     constructor(t, i = {}) {
-        var e, h, r, n, o, a, l, c, u, f, d, v, w;
         this.macroTaskRequested = false;
         this.macroTaskHandle = -1;
         this.globalThis = t;
@@ -18,13 +17,13 @@ class Platform {
         this.encodeURIComponent = "encodeURIComponent" in i ? i.encodeURIComponent : t.encodeURIComponent;
         this.Date = "Date" in i ? i.Date : t.Date;
         this.Reflect = "Reflect" in i ? i.Reflect : t.Reflect;
-        this.clearInterval = "clearInterval" in i ? i.clearInterval : null !== (h = null === (e = t.clearInterval) || void 0 === e ? void 0 : e.bind(t)) && void 0 !== h ? h : s("clearInterval");
-        this.clearTimeout = "clearTimeout" in i ? i.clearTimeout : null !== (n = null === (r = t.clearTimeout) || void 0 === r ? void 0 : r.bind(t)) && void 0 !== n ? n : s("clearTimeout");
-        this.queueMicrotask = "queueMicrotask" in i ? i.queueMicrotask : null !== (a = null === (o = t.queueMicrotask) || void 0 === o ? void 0 : o.bind(t)) && void 0 !== a ? a : s("queueMicrotask");
-        this.setInterval = "setInterval" in i ? i.setInterval : null !== (c = null === (l = t.setInterval) || void 0 === l ? void 0 : l.bind(t)) && void 0 !== c ? c : s("setInterval");
-        this.setTimeout = "setTimeout" in i ? i.setTimeout : null !== (f = null === (u = t.setTimeout) || void 0 === u ? void 0 : u.bind(t)) && void 0 !== f ? f : s("setTimeout");
+        this.clearInterval = "clearInterval" in i ? i.clearInterval : t.clearInterval?.bind(t) ?? s("clearInterval");
+        this.clearTimeout = "clearTimeout" in i ? i.clearTimeout : t.clearTimeout?.bind(t) ?? s("clearTimeout");
+        this.queueMicrotask = "queueMicrotask" in i ? i.queueMicrotask : t.queueMicrotask?.bind(t) ?? s("queueMicrotask");
+        this.setInterval = "setInterval" in i ? i.setInterval : t.setInterval?.bind(t) ?? s("setInterval");
+        this.setTimeout = "setTimeout" in i ? i.setTimeout : t.setTimeout?.bind(t) ?? s("setTimeout");
         this.console = "console" in i ? i.console : t.console;
-        this.performanceNow = "performanceNow" in i ? i.performanceNow : null !== (w = null === (v = null === (d = t.performance) || void 0 === d ? void 0 : d.now) || void 0 === v ? void 0 : v.bind(t.performance)) && void 0 !== w ? w : s("performance.now");
+        this.performanceNow = "performanceNow" in i ? i.performanceNow : t.performance?.now?.bind(t.performance) ?? s("performance.now");
         this.flushMacroTask = this.flushMacroTask.bind(this);
         this.taskQueue = new TaskQueue(this, this.requestMacroTask.bind(this), this.cancelMacroTask.bind(this));
     }
@@ -138,7 +137,7 @@ class TaskQueue {
     }
     async yield() {
         if (this.isEmpty) ; else {
-            if (void 0 === this.h) this.h = u();
+            if (void 0 === this.h) this.h = f();
             await this.h;
         }
     }
@@ -153,19 +152,19 @@ class TaskQueue {
         }
         if (0 === this.processing.length) this.I();
         const a = this.platform.performanceNow();
-        let l;
+        let c;
         if (r) {
             const s = this.taskPool;
             const o = this.u - 1;
             if (o >= 0) {
-                l = s[o];
+                c = s[o];
                 s[o] = void 0;
                 this.u = o;
-                l.reuse(a, i, e, h, n, t);
-            } else l = new Task(this.M, this, a, a + i, e, h, n, r, t);
-        } else l = new Task(this.M, this, a, a + i, e, h, n, r, t);
-        if (e) this.processing[this.processing.length] = l; else if (0 === i) this.pending[this.pending.length] = l; else this.delayed[this.delayed.length] = l;
-        return l;
+                c.reuse(a, i, e, h, n, t);
+            } else c = new Task(this.M, this, a, a + i, e, h, n, r, t);
+        } else c = new Task(this.M, this, a, a + i, e, h, n, r, t);
+        if (e) this.processing[this.processing.length] = c; else if (0 === i) this.pending[this.pending.length] = c; else this.delayed[this.delayed.length] = c;
+        return c;
     }
     remove(t) {
         let s = this.processing.indexOf(t);
@@ -193,9 +192,8 @@ class TaskQueue {
         if (t.createdTime === t.queueTime) this.pending[this.pending.length] = t; else this.delayed[this.delayed.length] = t;
     }
     completeAsyncTask(t) {
-        var s;
         if (true === t.suspend) {
-            if (this.t !== t) throw new Error(`Async task completion mismatch: suspenderTask=${null === (s = this.t) || void 0 === s ? void 0 : s.id}, task=${t.id}`);
+            if (this.t !== t) throw new Error(`Async task completion mismatch: suspenderTask=${this.t?.id}, task=${t.id}`);
             this.t = void 0;
         } else --this.i;
         if (void 0 !== this.h && this.P) {
@@ -226,7 +224,7 @@ var h;
 })(h || (h = {}));
 
 class Task {
-    constructor(t, s, i, h, r, n, o, a, l) {
+    constructor(t, s, i, h, r, n, o, a, c) {
         this.taskQueue = s;
         this.createdTime = i;
         this.queueTime = h;
@@ -234,7 +232,7 @@ class Task {
         this.persistent = n;
         this.suspend = o;
         this.reusable = a;
-        this.callback = l;
+        this.callback = c;
         this.id = ++e;
         this.R = void 0;
         this.A = void 0;
@@ -247,7 +245,7 @@ class Task {
         if (void 0 === t) switch (this.C) {
           case 0:
             {
-                const t = this.q = u();
+                const t = this.q = f();
                 this.R = t.resolve;
                 this.A = t.reject;
                 return t;
@@ -392,11 +390,11 @@ class Tracer {
             const n = Math.round(10 * s["queueTime"]) / 10;
             const o = s["preempt"];
             const a = s["reusable"];
-            const l = s["persistent"];
-            const c = s["suspend"];
-            const u = r(s["C"]);
-            const f = `id=${e} created=${h} queue=${n} preempt=${o} persistent=${l} reusable=${a} status=${u} suspend=${c}`;
-            this.console.log(`${t}[T.${i}] ${f}`);
+            const c = s["persistent"];
+            const l = s["suspend"];
+            const f = r(s["C"]);
+            const u = `id=${e} created=${h} queue=${n} preempt=${o} persistent=${c} reusable=${a} status=${f} suspend=${l}`;
+            this.console.log(`${t}[T.${i}] ${u}`);
         }
     }
 }
@@ -419,17 +417,17 @@ const o = {
 
 let a;
 
-let l;
+let c;
 
-function c(t, s) {
+function l(t, s) {
     a = t;
-    l = s;
+    c = s;
 }
 
-function u() {
-    const t = new Promise(c);
+function f() {
+    const t = new Promise(l);
     t.resolve = a;
-    t.reject = l;
+    t.reject = c;
     return t;
 }
 

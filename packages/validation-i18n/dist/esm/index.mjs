@@ -10,13 +10,13 @@ import { ValidationMessageProvider as c, IValidator as u } from "@aurelia/valida
 
 import { ValidationController as f, ValidationControllerFactory as d, getDefaultValidationHtmlConfiguration as m, ValidationHtmlConfiguration as h } from "@aurelia/validation-html";
 
-function v(t, e, i, o) {
+function p(t, e, i, o) {
     var r = arguments.length, n = r < 3 ? e : null === o ? o = Object.getOwnPropertyDescriptor(e, i) : o, a;
     if ("object" === typeof Reflect && "function" === typeof Reflect.decorate) n = Reflect.decorate(t, e, i, o); else for (var l = t.length - 1; l >= 0; l--) if (a = t[l]) n = (r < 3 ? a(n) : r > 3 ? a(e, i, n) : a(e, i)) || n;
     return r > 3 && n && Object.defineProperty(e, i, n), n;
 }
 
-function p(t, e) {
+function v(t, e) {
     return function(i, o) {
         e(i, o, t);
     };
@@ -37,7 +37,7 @@ let x = class LocalizedValidationController extends f {
     }
 };
 
-x = v([ p(0, i), p(1, o), p(2, u), p(3, l), p(4, s) ], x);
+x = p([ v(0, i), v(1, o), v(2, u), v(3, l), v(4, s) ], x);
 
 class LocalizedValidationControllerFactory extends d {
     construct(t, e) {
@@ -76,7 +76,7 @@ let z = class LocalizedValidationMessageProvider extends c {
     }
 };
 
-z = v([ p(0, g), p(1, t), p(2, o), p(3, l), p(4, r) ], z);
+z = p([ v(0, g), v(1, t), v(2, o), v(3, l), v(4, r) ], z);
 
 function C(t) {
     return {
@@ -99,7 +99,7 @@ function C(t) {
             })), n.callback(g, (() => o)));
         },
         customize(e) {
-            return C(null !== e && void 0 !== e ? e : t);
+            return C(e ?? t);
         }
     };
 }

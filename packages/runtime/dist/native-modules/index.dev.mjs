@@ -1,4 +1,4 @@
-import { Protocol, Registration, DI, firstDefined, mergeArrays, fromAnnotationOrDefinitionOrTypeOrDefault, isNumberOrBigInt, isStringOrDate, emptyArray, isArrayIndex, IPlatform, ILogger } from '../../../kernel/dist/native-modules/index.mjs';
+import { Protocol, DI, isNumberOrBigInt, isStringOrDate, emptyArray, isArrayIndex, IPlatform, ILogger } from '../../../kernel/dist/native-modules/index.mjs';
 import { Metadata } from '../../../metadata/dist/native-modules/index.mjs';
 
 const hasOwnProp = Object.prototype.hasOwnProperty;
@@ -15,38 +15,19 @@ function defineHiddenProp(obj, key, value) {
     });
     return value;
 }
-function ensureProto(proto, key, defaultValue, force = false) {
-    if (force || !hasOwnProp.call(proto, key)) {
+function ensureProto(proto, key, defaultValue) {
+    if (!(key in proto)) {
         defineHiddenProp(proto, key, defaultValue);
     }
 }
 const createLookup = () => Object.create(null);
-const getOwnMetadata = Metadata.getOwn;
-const hasOwnMetadata = Metadata.hasOwn;
-const defineMetadata = Metadata.define;
-const getAnnotationKeyFor = Protocol.annotation.keyFor;
-const getResourceKeyFor = Protocol.resource.keyFor;
-const appendResourceKey = Protocol.resource.appendTo;
+Metadata.getOwn;
+Metadata.hasOwn;
+Metadata.define;
+Protocol.annotation.keyFor;
+Protocol.resource.keyFor;
+Protocol.resource.appendTo;
 
-function alias(...aliases) {
-    return function (target) {
-        const key = getAnnotationKeyFor('aliases');
-        const existing = getOwnMetadata(key, target);
-        if (existing === void 0) {
-            defineMetadata(key, aliases, target);
-        }
-        else {
-            existing.push(...aliases);
-        }
-    };
-}
-function registerAliases(aliases, resource, key, container) {
-    for (let i = 0, ii = aliases.length; i < ii; ++i) {
-        Registration.aliasTo(key, resource.keyFrom(aliases[i])).register(container);
-    }
-}
-
-Object.freeze({});
 class BindingContext {
     constructor(keyOrObj, value) {
         if (keyOrObj !== void 0) {
@@ -65,8 +46,7 @@ class BindingContext {
     static create(keyOrObj, value) {
         return new BindingContext(keyOrObj, value);
     }
-    static get(scope, name, ancestor, flags) {
-        var _a, _b;
+    static get(scope, name, ancestor) {
         if (scope == null) {
             throw new Error(`AUR0203: Scope is ${scope}.`);
         }
@@ -76,20 +56,20 @@ class BindingContext {
             while (ancestor > 0) {
                 ancestor--;
                 currentScope = currentScope.parentScope;
-                if ((currentScope === null || currentScope === void 0 ? void 0 : currentScope.overrideContext) == null) {
+                if (currentScope?.overrideContext == null) {
                     return void 0;
                 }
             }
             overrideContext = currentScope.overrideContext;
             return name in overrideContext ? overrideContext : overrideContext.bindingContext;
         }
-        while (!(currentScope === null || currentScope === void 0 ? void 0 : currentScope.isBoundary)
+        while (!currentScope?.isBoundary
             && overrideContext != null
             && !(name in overrideContext)
             && !(overrideContext.bindingContext
                 && name in overrideContext.bindingContext)) {
-            currentScope = (_a = currentScope.parentScope) !== null && _a !== void 0 ? _a : null;
-            overrideContext = (_b = currentScope === null || currentScope === void 0 ? void 0 : currentScope.overrideContext) !== null && _b !== void 0 ? _b : null;
+            currentScope = currentScope.parentScope ?? null;
+            overrideContext = currentScope?.overrideContext ?? null;
         }
         if (overrideContext) {
             return name in overrideContext ? overrideContext : overrideContext.bindingContext;
@@ -105,7 +85,7 @@ class Scope {
         this.isBoundary = isBoundary;
     }
     static create(bc, oc, isBoundary) {
-        return new Scope(null, bc, oc == null ? OverrideContext.create(bc) : oc, isBoundary !== null && isBoundary !== void 0 ? isBoundary : false);
+        return new Scope(null, bc, oc == null ? OverrideContext.create(bc) : oc, isBoundary ?? false);
     }
     static fromOverride(oc) {
         if (oc == null) {
@@ -155,219 +135,9 @@ class Signaler {
         }
     }
     removeSignalListener(name, listener) {
-        const listeners = this.signals[name];
-        if (listeners) {
-            listeners.delete(listener);
-        }
+        this.signals[name]?.delete(listener);
     }
 }
-
-var BindingBehaviorStrategy;
-(function (BindingBehaviorStrategy) {
-    BindingBehaviorStrategy[BindingBehaviorStrategy["singleton"] = 1] = "singleton";
-    BindingBehaviorStrategy[BindingBehaviorStrategy["interceptor"] = 2] = "interceptor";
-})(BindingBehaviorStrategy || (BindingBehaviorStrategy = {}));
-function bindingBehavior(nameOrDef) {
-    return function (target) {
-        return BindingBehavior.define(nameOrDef, target);
-    };
-}
-class BindingBehaviorDefinition {
-    constructor(Type, name, aliases, key, strategy) {
-        this.Type = Type;
-        this.name = name;
-        this.aliases = aliases;
-        this.key = key;
-        this.strategy = strategy;
-    }
-    static create(nameOrDef, Type) {
-        let name;
-        let def;
-        if (isString(nameOrDef)) {
-            name = nameOrDef;
-            def = { name };
-        }
-        else {
-            name = nameOrDef.name;
-            def = nameOrDef;
-        }
-        const inheritsFromInterceptor = Object.getPrototypeOf(Type) === BindingInterceptor;
-        return new BindingBehaviorDefinition(Type, firstDefined(getBehaviorAnnotation(Type, 'name'), name), mergeArrays(getBehaviorAnnotation(Type, 'aliases'), def.aliases, Type.aliases), BindingBehavior.keyFrom(name), fromAnnotationOrDefinitionOrTypeOrDefault('strategy', def, Type, () => inheritsFromInterceptor ? 2 : 1));
-    }
-    register(container) {
-        const { Type, key, aliases, strategy } = this;
-        switch (strategy) {
-            case 1:
-                Registration.singleton(key, Type).register(container);
-                break;
-            case 2:
-                Registration.instance(key, new BindingBehaviorFactory(container, Type)).register(container);
-                break;
-        }
-        Registration.aliasTo(key, Type).register(container);
-        registerAliases(aliases, BindingBehavior, key, container);
-    }
-}
-class BindingBehaviorFactory {
-    constructor(ctn, Type) {
-        this.ctn = ctn;
-        this.Type = Type;
-        this.deps = DI.getDependencies(Type);
-    }
-    construct(binding, expr) {
-        const container = this.ctn;
-        const deps = this.deps;
-        switch (deps.length) {
-            case 0:
-                return new this.Type(binding, expr);
-            case 1:
-                return new this.Type(container.get(deps[0]), binding, expr);
-            case 2:
-                return new this.Type(container.get(deps[0]), container.get(deps[1]), binding, expr);
-            default:
-                return new this.Type(...deps.map(d => container.get(d)), binding, expr);
-        }
-    }
-}
-class BindingInterceptor {
-    constructor(binding, expr) {
-        this.binding = binding;
-        this.expr = expr;
-        this.interceptor = this;
-        let interceptor;
-        while (binding.interceptor !== this) {
-            interceptor = binding.interceptor;
-            binding.interceptor = this;
-            binding = interceptor;
-        }
-    }
-    updateTarget(value, flags) {
-        this.binding.updateTarget(value, flags);
-    }
-    updateSource(value, flags) {
-        this.binding.updateSource(value, flags);
-    }
-    callSource(args) {
-        return this.binding.callSource(args);
-    }
-    handleChange(newValue, previousValue, flags) {
-        this.binding.handleChange(newValue, previousValue, flags);
-    }
-    handleCollectionChange(indexMap, flags) {
-        this.binding.handleCollectionChange(indexMap, flags);
-    }
-    observe(obj, key) {
-        this.binding.observe(obj, key);
-    }
-    observeCollection(observer) {
-        this.binding.observeCollection(observer);
-    }
-    $bind(flags, scope) {
-        this.binding.$bind(flags, scope);
-    }
-    $unbind(flags) {
-        this.binding.$unbind(flags);
-    }
-}
-const interceptableProperties = ['isBound', '$scope', 'obs', 'sourceExpression', 'locator', 'oL'];
-interceptableProperties.forEach(prop => {
-    def(BindingInterceptor.prototype, prop, {
-        enumerable: false,
-        configurable: true,
-        get: function () {
-            return this.binding[prop];
-        },
-    });
-});
-const bbBaseName = getResourceKeyFor('binding-behavior');
-const getBehaviorAnnotation = (Type, prop) => getOwnMetadata(getAnnotationKeyFor(prop), Type);
-const BindingBehavior = Object.freeze({
-    name: bbBaseName,
-    keyFrom(name) {
-        return `${bbBaseName}:${name}`;
-    },
-    isType(value) {
-        return isFunction(value) && hasOwnMetadata(bbBaseName, value);
-    },
-    define(nameOrDef, Type) {
-        const definition = BindingBehaviorDefinition.create(nameOrDef, Type);
-        defineMetadata(bbBaseName, definition, definition.Type);
-        defineMetadata(bbBaseName, definition, definition);
-        appendResourceKey(Type, bbBaseName);
-        return definition.Type;
-    },
-    getDefinition(Type) {
-        const def = getOwnMetadata(bbBaseName, Type);
-        if (def === void 0) {
-            throw new Error(`AUR0151: No definition found for type ${Type.name}`);
-        }
-        return def;
-    },
-    annotate(Type, prop, value) {
-        defineMetadata(getAnnotationKeyFor(prop), value, Type);
-    },
-    getAnnotation: getBehaviorAnnotation,
-});
-
-function valueConverter(nameOrDef) {
-    return function (target) {
-        return ValueConverter.define(nameOrDef, target);
-    };
-}
-class ValueConverterDefinition {
-    constructor(Type, name, aliases, key) {
-        this.Type = Type;
-        this.name = name;
-        this.aliases = aliases;
-        this.key = key;
-    }
-    static create(nameOrDef, Type) {
-        let name;
-        let def;
-        if (isString(nameOrDef)) {
-            name = nameOrDef;
-            def = { name };
-        }
-        else {
-            name = nameOrDef.name;
-            def = nameOrDef;
-        }
-        return new ValueConverterDefinition(Type, firstDefined(getConverterAnnotation(Type, 'name'), name), mergeArrays(getConverterAnnotation(Type, 'aliases'), def.aliases, Type.aliases), ValueConverter.keyFrom(name));
-    }
-    register(container) {
-        const { Type, key, aliases } = this;
-        Registration.singleton(key, Type).register(container);
-        Registration.aliasTo(key, Type).register(container);
-        registerAliases(aliases, ValueConverter, key, container);
-    }
-}
-const vcBaseName = getResourceKeyFor('value-converter');
-const getConverterAnnotation = (Type, prop) => getOwnMetadata(getAnnotationKeyFor(prop), Type);
-const ValueConverter = Object.freeze({
-    name: vcBaseName,
-    keyFrom: (name) => `${vcBaseName}:${name}`,
-    isType(value) {
-        return isFunction(value) && hasOwnMetadata(vcBaseName, value);
-    },
-    define(nameOrDef, Type) {
-        const definition = ValueConverterDefinition.create(nameOrDef, Type);
-        defineMetadata(vcBaseName, definition, definition.Type);
-        defineMetadata(vcBaseName, definition, definition);
-        appendResourceKey(Type, vcBaseName);
-        return definition.Type;
-    },
-    getDefinition(Type) {
-        const def = getOwnMetadata(vcBaseName, Type);
-        if (def === void 0) {
-            throw new Error(`AUR0152: No definition found for type ${Type.name}`);
-        }
-        return def;
-    },
-    annotate(Type, prop, value) {
-        defineMetadata(getAnnotationKeyFor(prop), value, Type);
-    },
-    getAnnotation: getConverterAnnotation,
-});
 
 var ExpressionKind;
 (function (ExpressionKind) {
@@ -706,7 +476,7 @@ class CustomExpression {
     constructor(value) {
         this.value = value;
     }
-    evaluate(_f, _s, _l, _c) {
+    evaluate(_s, _e, _c) {
         return this.value;
     }
 }
@@ -715,43 +485,41 @@ class BindingBehaviorExpression {
         this.expression = expression;
         this.name = name;
         this.args = args;
-        this.behaviorKey = BindingBehavior.keyFrom(name);
+        this._key = `_bb_${name}`;
     }
     get $kind() { return 38963; }
     get hasBind() { return true; }
     get hasUnbind() { return true; }
-    evaluate(f, s, l, c) {
-        return this.expression.evaluate(f, s, l, c);
+    evaluate(s, e, c) {
+        return this.expression.evaluate(s, e, c);
     }
-    assign(f, s, l, val) {
-        return this.expression.assign(f, s, l, val);
+    assign(s, e, val) {
+        return this.expression.assign(s, e, val);
     }
     bind(f, s, b) {
         if (this.expression.hasBind) {
             this.expression.bind(f, s, b);
         }
-        const behavior = b.locator.get(this.behaviorKey);
+        const name = this.name;
+        const key = this._key;
+        const behavior = b.getBehavior?.(name);
         if (behavior == null) {
-            throw new Error(`AUR0101: BindingBehavior named '${this.name}' could not be found. Did you forget to register it as a dependency?`);
+            throw new Error(`AUR0101: BindingBehavior '${name}' could not be found. Did you forget to register it as a dependency?`);
         }
-        if (!(behavior instanceof BindingBehaviorFactory)) {
-            if (b[this.behaviorKey] === void 0) {
-                b[this.behaviorKey] = behavior;
-                behavior.bind(f, s, b, ...this.args.map(a => a.evaluate(f, s, b.locator, null)));
-            }
-            else {
-                throw new Error(`AUR0102: BindingBehavior named '${this.name}' already applied.`);
-            }
+        if (b[key] === void 0) {
+            b[key] = behavior;
+            behavior.bind?.(f, s, b, ...this.args.map(a => a.evaluate(s, b, null)));
+        }
+        else {
+            throw new Error(`AUR0102: BindingBehavior '${name}' already applied.`);
         }
     }
     unbind(f, s, b) {
-        const key = this.behaviorKey;
+        const internalKey = this._key;
         const $b = b;
-        if ($b[key] !== void 0) {
-            if (isFunction($b[key].unbind)) {
-                $b[key].unbind(f, s, b);
-            }
-            $b[key] = void 0;
+        if ($b[internalKey] !== void 0) {
+            $b[internalKey].unbind?.(f, s, b);
+            $b[internalKey] = void 0;
         }
         if (this.expression.hasUnbind) {
             this.expression.unbind(f, s, b);
@@ -769,47 +537,51 @@ class ValueConverterExpression {
         this.expression = expression;
         this.name = name;
         this.args = args;
-        this.converterKey = ValueConverter.keyFrom(name);
     }
     get $kind() { return 36914; }
     get hasBind() { return false; }
     get hasUnbind() { return true; }
-    evaluate(f, s, l, c) {
-        const vc = l.get(this.converterKey);
+    evaluate(s, e, c) {
+        const name = this.name;
+        const vc = e?.getConverter?.(name);
         if (vc == null) {
-            throw new Error(`AUR0103: ValueConverter named '${this.name}' could not be found. Did you forget to register it as a dependency?`);
+            throw new Error(`AUR0103: ValueConverter '${name}' could not be found. Did you forget to register it as a dependency?`);
         }
         if (c !== null && ('handleChange' in c)) {
             const signals = vc.signals;
             if (signals != null) {
-                const signaler = l.get(ISignaler);
-                for (let i = 0, ii = signals.length; i < ii; ++i) {
-                    signaler.addSignalListener(signals[i], c);
+                const signaler = e?.get?.(ISignaler);
+                const ii = signals.length;
+                let i = 0;
+                for (; i < ii; ++i) {
+                    signaler?.addSignalListener(signals[i], c);
                 }
             }
         }
         if ('toView' in vc) {
-            return vc.toView(this.expression.evaluate(f, s, l, c), ...this.args.map(a => a.evaluate(f, s, l, c)));
+            return vc.toView(this.expression.evaluate(s, e, c), ...this.args.map(a => a.evaluate(s, e, c)));
         }
-        return this.expression.evaluate(f, s, l, c);
+        return this.expression.evaluate(s, e, c);
     }
-    assign(f, s, l, val) {
-        const vc = l.get(this.converterKey);
+    assign(s, e, val) {
+        const name = this.name;
+        const vc = e?.getConverter?.(name);
         if (vc == null) {
-            throw new Error(`AUR0104: ValueConverter named '${this.name}' could not be found. Did you forget to register it as a dependency?`);
+            throw new Error(`AUR0104: ValueConverter '${name}' could not be found. Did you forget to register it as a dependency?`);
         }
         if ('fromView' in vc) {
-            val = vc.fromView(val, ...this.args.map(a => a.evaluate(f, s, l, null)));
+            val = vc.fromView(val, ...this.args.map(a => a.evaluate(s, e, null)));
         }
-        return this.expression.assign(f, s, l, val);
+        return this.expression.assign(s, e, val);
     }
     unbind(_f, _s, b) {
-        const vc = b.locator.get(this.converterKey);
-        if (vc.signals === void 0) {
+        const vc = b.getConverter?.(this.name);
+        if (vc?.signals === void 0) {
             return;
         }
-        const signaler = b.locator.get(ISignaler);
-        for (let i = 0; i < vc.signals.length; ++i) {
+        const signaler = b.get(ISignaler);
+        let i = 0;
+        for (; i < vc.signals.length; ++i) {
             signaler.removeSignalListener(vc.signals[i], b);
         }
     }
@@ -828,12 +600,12 @@ class AssignExpression {
     get $kind() { return 8208; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, l, c) {
-        return this.target.assign(f, s, l, this.value.evaluate(f, s, l, c));
+    evaluate(s, e, c) {
+        return this.target.assign(s, e, this.value.evaluate(s, e, c));
     }
-    assign(f, s, l, val) {
-        this.value.assign(f, s, l, val);
-        return this.target.assign(f, s, l, val);
+    assign(s, e, val) {
+        this.value.assign(s, e, val);
+        return this.target.assign(s, e, val);
     }
     accept(visitor) {
         return visitor.visitAssign(this);
@@ -851,10 +623,10 @@ class ConditionalExpression {
     get $kind() { return 63; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, l, c) {
-        return this.condition.evaluate(f, s, l, c) ? this.yes.evaluate(f, s, l, c) : this.no.evaluate(f, s, l, c);
+    evaluate(s, e, c) {
+        return this.condition.evaluate(s, e, c) ? this.yes.evaluate(s, e, c) : this.no.evaluate(s, e, c);
     }
-    assign(_f, _s, _l, _obj) {
+    assign(_s, _e, _obj) {
         return void 0;
     }
     accept(visitor) {
@@ -871,18 +643,17 @@ class AccessThisExpression {
     get $kind() { return 1793; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(_f, s, _l, _c) {
-        var _a;
+    evaluate(s, _e, _c) {
         let oc = s.overrideContext;
         let currentScope = s;
         let i = this.ancestor;
         while (i-- && oc) {
             currentScope = currentScope.parentScope;
-            oc = (_a = currentScope === null || currentScope === void 0 ? void 0 : currentScope.overrideContext) !== null && _a !== void 0 ? _a : null;
+            oc = currentScope?.overrideContext ?? null;
         }
         return i < 1 && oc ? oc.bindingContext : void 0;
     }
-    assign(_f, _s, _l, _obj) {
+    assign(_s, _e, _obj) {
         return void 0;
     }
     accept(visitor) {
@@ -902,8 +673,8 @@ class AccessScopeExpression {
     get $kind() { return 10082; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, _l, c) {
-        const obj = BindingContext.get(s, this.name, this.ancestor, f);
+    evaluate(s, e, c) {
+        const obj = BindingContext.get(s, this.name, this.ancestor);
         if (c !== null) {
             c.observe(obj, this.name);
         }
@@ -911,20 +682,19 @@ class AccessScopeExpression {
         if (evaluatedValue == null && this.name === '$host') {
             throw new Error(`AUR0105: Unable to find $host context. Did you forget [au-slot] attribute?`);
         }
-        if (f & 1) {
+        if (e?.strict) {
             return evaluatedValue;
         }
         return evaluatedValue == null ? '' : evaluatedValue;
     }
-    assign(f, s, _l, val) {
-        var _a;
+    assign(s, _e, val) {
         if (this.name === '$host') {
             throw new Error(`AUR0106: Invalid assignment. $host is a reserved keyword.`);
         }
-        const obj = BindingContext.get(s, this.name, this.ancestor, f);
+        const obj = BindingContext.get(s, this.name, this.ancestor);
         if (obj instanceof Object) {
-            if (((_a = obj.$observers) === null || _a === void 0 ? void 0 : _a[this.name]) !== void 0) {
-                obj.$observers[this.name].setValue(val, f);
+            if (obj.$observers?.[this.name] !== void 0) {
+                obj.$observers[this.name].setValue(val, 0);
                 return val;
             }
             else {
@@ -949,9 +719,9 @@ class AccessMemberExpression {
     get $kind() { return 9323; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, l, c) {
-        const instance = this.object.evaluate(f, s, l, c);
-        if (f & 1) {
+    evaluate(s, e, c) {
+        const instance = this.object.evaluate(s, e, c);
+        if (e?.strict) {
             if (instance == null) {
                 return instance;
             }
@@ -965,18 +735,18 @@ class AccessMemberExpression {
         }
         return instance ? instance[this.name] : '';
     }
-    assign(f, s, l, val) {
-        const obj = this.object.evaluate(f, s, l, null);
+    assign(s, e, val) {
+        const obj = this.object.evaluate(s, e, null);
         if (obj instanceof Object) {
             if (obj.$observers !== void 0 && obj.$observers[this.name] !== void 0) {
-                obj.$observers[this.name].setValue(val, f);
+                obj.$observers[this.name].setValue(val, 0);
             }
             else {
                 obj[this.name] = val;
             }
         }
         else {
-            this.object.assign(f, s, l, { [this.name]: val });
+            this.object.assign(s, e, { [this.name]: val });
         }
         return val;
     }
@@ -996,10 +766,10 @@ class AccessKeyedExpression {
     get $kind() { return 9324; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, l, c) {
-        const instance = this.object.evaluate(f, s, l, c);
+    evaluate(s, e, c) {
+        const instance = this.object.evaluate(s, e, c);
         if (instance instanceof Object) {
-            const key = this.key.evaluate(f, s, l, c);
+            const key = this.key.evaluate(s, e, c);
             if (c !== null) {
                 c.observe(instance, key);
             }
@@ -1007,9 +777,9 @@ class AccessKeyedExpression {
         }
         return void 0;
     }
-    assign(f, s, l, val) {
-        const instance = this.object.evaluate(f, s, l, null);
-        const key = this.key.evaluate(f, s, l, null);
+    assign(s, e, val) {
+        const instance = this.object.evaluate(s, e, null);
+        const key = this.key.evaluate(s, e, null);
         return instance[key] = val;
     }
     accept(visitor) {
@@ -1029,16 +799,16 @@ class CallScopeExpression {
     get $kind() { return 1448; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, l, c) {
-        const args = this.args.map(a => a.evaluate(f, s, l, c));
-        const context = BindingContext.get(s, this.name, this.ancestor, f);
-        const func = getFunction(f, context, this.name);
+    evaluate(s, e, c) {
+        const args = this.args.map(a => a.evaluate(s, e, c));
+        const context = BindingContext.get(s, this.name, this.ancestor);
+        const func = getFunction(e?.strictFnCall, context, this.name);
         if (func) {
             return func.apply(context, args);
         }
         return void 0;
     }
-    assign(_f, _s, _l, _obj) {
+    assign(_s, _e, _obj) {
         return void 0;
     }
     accept(visitor) {
@@ -1060,19 +830,19 @@ class CallMemberExpression {
     get $kind() { return 1161; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, l, c) {
-        const instance = this.object.evaluate(f, s, l, c);
-        const args = this.args.map(a => a.evaluate(f, s, l, c));
-        const func = getFunction(f, instance, this.name);
+    evaluate(s, e, c) {
+        const instance = this.object.evaluate(s, e, c);
+        const args = this.args.map(a => a.evaluate(s, e, c));
+        const func = getFunction(e?.strictFnCall, instance, this.name);
         if (func) {
             if (isArray(instance) && autoObserveArrayMethods.includes(this.name)) {
-                c === null || c === void 0 ? void 0 : c.observeCollection(instance);
+                c?.observeCollection(instance);
             }
             return func.apply(instance, args);
         }
         return void 0;
     }
-    assign(_f, _s, _l, _obj) {
+    assign(_s, _e, _obj) {
         return void 0;
     }
     accept(visitor) {
@@ -1091,17 +861,17 @@ class CallFunctionExpression {
     get $kind() { return 1162; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, l, c) {
-        const func = this.func.evaluate(f, s, l, c);
+    evaluate(s, e, c) {
+        const func = this.func.evaluate(s, e, c);
         if (isFunction(func)) {
-            return func(...this.args.map(a => a.evaluate(f, s, l, c)));
+            return func(...this.args.map(a => a.evaluate(s, e, c)));
         }
-        if (!(f & 8) && (func == null)) {
+        if (!e?.strictFnCall && func == null) {
             return void 0;
         }
         throw new Error(`AUR0107: Expression is not a function.`);
     }
-    assign(_f, _s, _l, _obj) {
+    assign(_s, _e, _obj) {
         return void 0;
     }
     accept(visitor) {
@@ -1120,41 +890,40 @@ class BinaryExpression {
     get $kind() { return 46; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, l, c) {
-        var _a;
+    evaluate(s, e, c) {
         switch (this.operation) {
             case '&&':
-                return this.left.evaluate(f, s, l, c) && this.right.evaluate(f, s, l, c);
+                return this.left.evaluate(s, e, c) && this.right.evaluate(s, e, c);
             case '||':
-                return this.left.evaluate(f, s, l, c) || this.right.evaluate(f, s, l, c);
+                return this.left.evaluate(s, e, c) || this.right.evaluate(s, e, c);
             case '??':
-                return (_a = this.left.evaluate(f, s, l, c)) !== null && _a !== void 0 ? _a : this.right.evaluate(f, s, l, c);
+                return this.left.evaluate(s, e, c) ?? this.right.evaluate(s, e, c);
             case '==':
-                return this.left.evaluate(f, s, l, c) == this.right.evaluate(f, s, l, c);
+                return this.left.evaluate(s, e, c) == this.right.evaluate(s, e, c);
             case '===':
-                return this.left.evaluate(f, s, l, c) === this.right.evaluate(f, s, l, c);
+                return this.left.evaluate(s, e, c) === this.right.evaluate(s, e, c);
             case '!=':
-                return this.left.evaluate(f, s, l, c) != this.right.evaluate(f, s, l, c);
+                return this.left.evaluate(s, e, c) != this.right.evaluate(s, e, c);
             case '!==':
-                return this.left.evaluate(f, s, l, c) !== this.right.evaluate(f, s, l, c);
+                return this.left.evaluate(s, e, c) !== this.right.evaluate(s, e, c);
             case 'instanceof': {
-                const right = this.right.evaluate(f, s, l, c);
+                const right = this.right.evaluate(s, e, c);
                 if (isFunction(right)) {
-                    return this.left.evaluate(f, s, l, c) instanceof right;
+                    return this.left.evaluate(s, e, c) instanceof right;
                 }
                 return false;
             }
             case 'in': {
-                const right = this.right.evaluate(f, s, l, c);
+                const right = this.right.evaluate(s, e, c);
                 if (right instanceof Object) {
-                    return this.left.evaluate(f, s, l, c) in right;
+                    return this.left.evaluate(s, e, c) in right;
                 }
                 return false;
             }
             case '+': {
-                const left = this.left.evaluate(f, s, l, c);
-                const right = this.right.evaluate(f, s, l, c);
-                if ((f & 1) > 0) {
+                const left = this.left.evaluate(s, e, c);
+                const right = this.right.evaluate(s, e, c);
+                if (e?.strict) {
                     return left + right;
                 }
                 if (!left || !right) {
@@ -1168,26 +937,26 @@ class BinaryExpression {
                 return left + right;
             }
             case '-':
-                return this.left.evaluate(f, s, l, c) - this.right.evaluate(f, s, l, c);
+                return this.left.evaluate(s, e, c) - this.right.evaluate(s, e, c);
             case '*':
-                return this.left.evaluate(f, s, l, c) * this.right.evaluate(f, s, l, c);
+                return this.left.evaluate(s, e, c) * this.right.evaluate(s, e, c);
             case '/':
-                return this.left.evaluate(f, s, l, c) / this.right.evaluate(f, s, l, c);
+                return this.left.evaluate(s, e, c) / this.right.evaluate(s, e, c);
             case '%':
-                return this.left.evaluate(f, s, l, c) % this.right.evaluate(f, s, l, c);
+                return this.left.evaluate(s, e, c) % this.right.evaluate(s, e, c);
             case '<':
-                return this.left.evaluate(f, s, l, c) < this.right.evaluate(f, s, l, c);
+                return this.left.evaluate(s, e, c) < this.right.evaluate(s, e, c);
             case '>':
-                return this.left.evaluate(f, s, l, c) > this.right.evaluate(f, s, l, c);
+                return this.left.evaluate(s, e, c) > this.right.evaluate(s, e, c);
             case '<=':
-                return this.left.evaluate(f, s, l, c) <= this.right.evaluate(f, s, l, c);
+                return this.left.evaluate(s, e, c) <= this.right.evaluate(s, e, c);
             case '>=':
-                return this.left.evaluate(f, s, l, c) >= this.right.evaluate(f, s, l, c);
+                return this.left.evaluate(s, e, c) >= this.right.evaluate(s, e, c);
             default:
                 throw new Error(`AUR0108: Unknown binary operator: '${this.operation}'`);
         }
     }
-    assign(_f, _s, _l, _obj) {
+    assign(_s, _e, _obj) {
         return void 0;
     }
     accept(visitor) {
@@ -1205,23 +974,23 @@ class UnaryExpression {
     get $kind() { return 39; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, l, c) {
+    evaluate(s, e, c) {
         switch (this.operation) {
             case 'void':
-                return void this.expression.evaluate(f, s, l, c);
+                return void this.expression.evaluate(s, e, c);
             case 'typeof':
-                return typeof this.expression.evaluate(f | 1, s, l, c);
+                return typeof this.expression.evaluate(s, e, c);
             case '!':
-                return !this.expression.evaluate(f, s, l, c);
+                return !this.expression.evaluate(s, e, c);
             case '-':
-                return -this.expression.evaluate(f, s, l, c);
+                return -this.expression.evaluate(s, e, c);
             case '+':
-                return +this.expression.evaluate(f, s, l, c);
+                return +this.expression.evaluate(s, e, c);
             default:
                 throw new Error(`AUR0109: Unknown unary operator: '${this.operation}'`);
         }
     }
-    assign(_f, _s, _l, _obj) {
+    assign(_s, _e, _obj) {
         return void 0;
     }
     accept(visitor) {
@@ -1238,10 +1007,10 @@ class PrimitiveLiteralExpression {
     get $kind() { return 17925; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(_f, _s, _l, _c) {
+    evaluate(_s, _e, _c) {
         return this.value;
     }
-    assign(_f, _s, _l, _obj) {
+    assign(_s, _e, _obj) {
         return void 0;
     }
     accept(visitor) {
@@ -1263,10 +1032,10 @@ class HtmlLiteralExpression {
     get $kind() { return 52; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, l, c) {
+    evaluate(s, e, c) {
         let result = '';
         for (let i = 0; i < this.parts.length; ++i) {
-            const v = this.parts[i].evaluate(f, s, l, c);
+            const v = this.parts[i].evaluate(s, e, c);
             if (v == null) {
                 continue;
             }
@@ -1274,7 +1043,7 @@ class HtmlLiteralExpression {
         }
         return result;
     }
-    assign(_f, _s, _l, _obj, _projection) {
+    assign(_s, _e, _obj, _projection) {
         return void 0;
     }
     accept(visitor) {
@@ -1291,10 +1060,10 @@ class ArrayLiteralExpression {
     get $kind() { return 17955; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, l, c) {
-        return this.elements.map(e => e.evaluate(f, s, l, c));
+    evaluate(s, e, c) {
+        return this.elements.map(el => el.evaluate(s, e, c));
     }
-    assign(_f, _s, _l, _obj) {
+    assign(_s, _e, _obj) {
         return void 0;
     }
     accept(visitor) {
@@ -1313,14 +1082,14 @@ class ObjectLiteralExpression {
     get $kind() { return 17956; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, l, c) {
+    evaluate(s, e, c) {
         const instance = {};
         for (let i = 0; i < this.keys.length; ++i) {
-            instance[this.keys[i]] = this.values[i].evaluate(f, s, l, c);
+            instance[this.keys[i]] = this.values[i].evaluate(s, e, c);
         }
         return instance;
     }
-    assign(_f, _s, _l, _obj) {
+    assign(_s, _e, _obj) {
         return void 0;
     }
     accept(visitor) {
@@ -1339,15 +1108,15 @@ class TemplateExpression {
     get $kind() { return 17958; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, l, c) {
+    evaluate(s, e, c) {
         let result = this.cooked[0];
         for (let i = 0; i < this.expressions.length; ++i) {
-            result += String(this.expressions[i].evaluate(f, s, l, c));
+            result += String(this.expressions[i].evaluate(s, e, c));
             result += this.cooked[i + 1];
         }
         return result;
     }
-    assign(_f, _s, _l, _obj) {
+    assign(_s, _e, _obj) {
         return void 0;
     }
     accept(visitor) {
@@ -1368,15 +1137,15 @@ class TaggedTemplateExpression {
     get $kind() { return 1197; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, l, c) {
-        const results = this.expressions.map(e => e.evaluate(f, s, l, c));
-        const func = this.func.evaluate(f, s, l, c);
+    evaluate(s, e, c) {
+        const results = this.expressions.map(el => el.evaluate(s, e, c));
+        const func = this.func.evaluate(s, e, c);
         if (!isFunction(func)) {
             throw new Error(`AUR0110: Left-hand side of tagged template expression is not a function.`);
         }
         return func(this.cooked, ...results);
     }
-    assign(_f, _s, _l, _obj) {
+    assign(_s, _e, _obj) {
         return void 0;
     }
     accept(visitor) {
@@ -1393,10 +1162,10 @@ class ArrayBindingPattern {
     get $kind() { return 65557; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(_f, _s, _l, _c) {
+    evaluate(_s, _e, _c) {
         return void 0;
     }
-    assign(_f, _s, _l, _obj) {
+    assign(_s, _e, _obj) {
         return void 0;
     }
     accept(visitor) {
@@ -1414,10 +1183,10 @@ class ObjectBindingPattern {
     get $kind() { return 65558; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(_f, _s, _l, _c) {
+    evaluate(_s, _e, _c) {
         return void 0;
     }
-    assign(_f, _s, _l, _obj) {
+    assign(_s, _e, _obj) {
         return void 0;
     }
     accept(visitor) {
@@ -1434,7 +1203,7 @@ class BindingIdentifier {
     get $kind() { return 65559; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(_f, _s, _l, _c) {
+    evaluate(_s, _e, _c) {
         return this.name;
     }
     accept(visitor) {
@@ -1453,10 +1222,10 @@ class ForOfStatement {
     get $kind() { return 6200; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, l, c) {
-        return this.iterable.evaluate(f, s, l, c);
+    evaluate(s, e, c) {
+        return this.iterable.evaluate(s, e, c);
     }
-    assign(_f, _s, _l, _obj) {
+    assign(_s, _e, _obj) {
         return void 0;
     }
     count(_f, result) {
@@ -1508,20 +1277,21 @@ class Interpolation {
     get $kind() { return 25; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, l, c) {
+    evaluate(s, e, c) {
         if (this.isMulti) {
             let result = this.parts[0];
-            for (let i = 0; i < this.expressions.length; ++i) {
-                result += String(this.expressions[i].evaluate(f, s, l, c));
+            let i = 0;
+            for (; i < this.expressions.length; ++i) {
+                result += String(this.expressions[i].evaluate(s, e, c));
                 result += this.parts[i + 1];
             }
             return result;
         }
         else {
-            return `${this.parts[0]}${this.firstExpression.evaluate(f, s, l, c)}${this.parts[1]}`;
+            return `${this.parts[0]}${this.firstExpression.evaluate(s, e, c)}${this.parts[1]}`;
         }
     }
-    assign(_f, _s, _l, _obj) {
+    assign(_s, _e, _obj) {
         return void 0;
     }
     accept(visitor) {
@@ -1540,11 +1310,10 @@ class DestructuringAssignmentExpression {
     }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(_f, _s, _l, _c) {
+    evaluate(_s, _e, _c) {
         return void 0;
     }
-    assign(f, s, l, value) {
-        var _a;
+    assign(s, l, value) {
         const list = this.list;
         const len = list.length;
         let i;
@@ -1553,7 +1322,7 @@ class DestructuringAssignmentExpression {
             item = list[i];
             switch (item.$kind) {
                 case 139292:
-                    item.assign(f, s, l, value);
+                    item.assign(s, l, value);
                     break;
                 case 90138:
                 case 106523: {
@@ -1562,11 +1331,11 @@ class DestructuringAssignmentExpression {
                             throw new Error(`AUR0112: Cannot use non-object value for destructuring assignment.`);
                         }
                     }
-                    let source = item.source.evaluate(f, Scope.create(value), l, null);
+                    let source = item.source.evaluate(Scope.create(value), l, null);
                     if (source === void 0) {
-                        source = (_a = item.initializer) === null || _a === void 0 ? void 0 : _a.evaluate(f, s, l, null);
+                        source = item.initializer?.evaluate(s, l, null);
                     }
-                    item.assign(f, s, l, source);
+                    item.assign(s, l, source);
                     break;
                 }
             }
@@ -1586,11 +1355,10 @@ class DestructuringAssignmentSingleExpression {
         this.initializer = initializer;
     }
     get $kind() { return 139292; }
-    evaluate(_f, _s, _l, _c) {
+    evaluate(_s, _e, _c) {
         return void 0;
     }
-    assign(f, s, l, value) {
-        var _a;
+    assign(s, l, value) {
         if (value == null) {
             return;
         }
@@ -1599,11 +1367,11 @@ class DestructuringAssignmentSingleExpression {
                 throw new Error(`AUR0112: Cannot use non-object value for destructuring assignment.`);
             }
         }
-        let source = this.source.evaluate(f, Scope.create(value), l, null);
+        let source = this.source.evaluate(Scope.create(value), l, null);
         if (source === void 0) {
-            source = (_a = this.initializer) === null || _a === void 0 ? void 0 : _a.evaluate(f, s, l, null);
+            source = this.initializer?.evaluate(s, l, null);
         }
-        this.target.assign(f, s, l, source);
+        this.target.assign(s, l, source);
     }
     accept(visitor) {
         return visitor.visitDestructuringAssignmentSingleExpression(this);
@@ -1618,10 +1386,10 @@ class DestructuringAssignmentRestExpression {
         this.indexOrProperties = indexOrProperties;
     }
     get $kind() { return 139292; }
-    evaluate(_f, _s, _l, _c) {
+    evaluate(_s, _e, _c) {
         return void 0;
     }
-    assign(f, s, l, value) {
+    assign(s, l, value) {
         if (value == null) {
             return;
         }
@@ -1650,7 +1418,7 @@ class DestructuringAssignmentRestExpression {
                 return acc;
             }, {});
         }
-        this.target.assign(f, s, l, restValue);
+        this.target.assign(s, l, restValue);
     }
     accept(_visitor) {
         return _visitor.visitDestructuringAssignmentRestExpression(this);
@@ -1668,7 +1436,7 @@ class ArrowFunction {
     get $kind() { return 17; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
-    evaluate(f, s, l, c) {
+    evaluate(s, e, c) {
         const func = (...args) => {
             const params = this.args;
             const rest = this.rest;
@@ -1683,11 +1451,11 @@ class ArrowFunction {
                 return map;
             }, {});
             const functionScope = Scope.fromParent(s, context);
-            return this.body.evaluate(f, functionScope, l, c);
+            return this.body.evaluate(functionScope, e, c);
         };
         return func;
     }
-    assign(_f, _s, _l, _value) {
+    assign(_s, _e, _value) {
         return void 0;
     }
     accept(visitor) {
@@ -1697,12 +1465,12 @@ class ArrowFunction {
         return Unparser.unparse(this);
     }
 }
-function getFunction(f, obj, name) {
+function getFunction(mustEvaluate, obj, name) {
     const func = obj == null ? null : obj[name];
     if (isFunction(func)) {
         return func;
     }
-    if (!(f & 8) && func == null) {
+    if (!mustEvaluate && func == null) {
         return null;
     }
     throw new Error(`AUR0111: Expected '${name}' to be a function`);
@@ -1737,14 +1505,6 @@ function $number(result, func) {
 }
 
 const ICoercionConfiguration = DI.createInterface('ICoercionConfiguration');
-var BindingMode;
-(function (BindingMode) {
-    BindingMode[BindingMode["oneTime"] = 1] = "oneTime";
-    BindingMode[BindingMode["toView"] = 2] = "toView";
-    BindingMode[BindingMode["fromView"] = 4] = "fromView";
-    BindingMode[BindingMode["twoWay"] = 6] = "twoWay";
-    BindingMode[BindingMode["default"] = 8] = "default";
-})(BindingMode || (BindingMode = {}));
 var LifecycleFlags;
 (function (LifecycleFlags) {
     LifecycleFlags[LifecycleFlags["none"] = 0] = "none";
@@ -2113,8 +1873,8 @@ class CollectionSizeObserver {
 }
 function implementLengthObserver(klass) {
     const proto = klass.prototype;
-    ensureProto(proto, 'subscribe', subscribe, true);
-    ensureProto(proto, 'unsubscribe', unsubscribe, true);
+    ensureProto(proto, 'subscribe', subscribe);
+    ensureProto(proto, 'unsubscribe', unsubscribe);
     withFlushQueue(klass);
     subscriberCollection(klass);
 }
@@ -2497,13 +2257,11 @@ class ArrayObserver {
         this.subs.notifyCollection(indexMap, 0);
     }
     getLengthObserver() {
-        var _a;
-        return (_a = this.lenObs) !== null && _a !== void 0 ? _a : (this.lenObs = new CollectionLengthObserver(this));
+        return this.lenObs ?? (this.lenObs = new CollectionLengthObserver(this));
     }
     getIndexObserver(index) {
         var _a;
-        var _b;
-        return (_a = (_b = this.indexObservers)[index]) !== null && _a !== void 0 ? _a : (_b[index] = new ArrayIndexObserver(this, index));
+        return (_a = this.indexObservers)[index] ?? (_a[index] = new ArrayIndexObserver(this, index));
     }
 }
 class ArrayIndexObserver {
@@ -2711,8 +2469,7 @@ class SetObserver {
         this.subs.notifyCollection(indexMap, 0);
     }
     getLengthObserver() {
-        var _a;
-        return (_a = this.lenObs) !== null && _a !== void 0 ? _a : (this.lenObs = new CollectionSizeObserver(this));
+        return this.lenObs ?? (this.lenObs = new CollectionSizeObserver(this));
     }
 }
 subscriberCollection(SetObserver);
@@ -2852,8 +2609,7 @@ class MapObserver {
         this.subs.notifyCollection(indexMap, 0);
     }
     getLengthObserver() {
-        var _a;
-        return (_a = this.lenObs) !== null && _a !== void 0 ? _a : (this.lenObs = new CollectionSizeObserver(this));
+        return this.lenObs ?? (this.lenObs = new CollectionSizeObserver(this));
     }
 }
 subscriberCollection(MapObserver);
@@ -2938,9 +2694,9 @@ function unsubscribeStale(version, subscribable) {
 }
 function connectableDecorator(target) {
     const proto = target.prototype;
-    ensureProto(proto, 'observe', observe, true);
-    ensureProto(proto, 'observeCollection', observeCollection, true);
-    ensureProto(proto, 'subscribeTo', subscribeTo, true);
+    ensureProto(proto, 'observe', observe);
+    ensureProto(proto, 'observeCollection', observeCollection);
+    ensureProto(proto, 'subscribeTo', subscribeTo);
     def(proto, 'obs', { get: getObserverRecord });
     ensureProto(proto, 'handleChange', noopHandleChange);
     ensureProto(proto, 'handleCollectionChange', noopHandleCollectionChange);
@@ -2949,25 +2705,6 @@ function connectableDecorator(target) {
 function connectable(target) {
     return target == null ? connectableDecorator : connectableDecorator(target);
 }
-class BindingMediator {
-    constructor(key, binding, oL, locator) {
-        this.key = key;
-        this.binding = binding;
-        this.oL = oL;
-        this.locator = locator;
-        this.interceptor = this;
-    }
-    $bind() {
-        throw new Error(`AUR0213: Method not implemented.`);
-    }
-    $unbind() {
-        throw new Error(`AUR0214: Method not implemented.`);
-    }
-    handleChange(newValue, previousValue, flags) {
-        this.binding[this.key](newValue, previousValue, flags);
-    }
-}
-connectableDecorator(BindingMediator);
 
 const IExpressionParser = DI.createInterface('IExpressionParser', x => x.singleton(ExpressionParser));
 class ExpressionParser {
@@ -4505,12 +4242,10 @@ function wrap(v) {
     return canWrap(v) ? getProxy(v) : v;
 }
 function getProxy(obj) {
-    var _a;
-    return (_a = proxyMap.get(obj)) !== null && _a !== void 0 ? _a : createProxy(obj);
+    return proxyMap.get(obj) ?? createProxy(obj);
 }
 function getRaw(obj) {
-    var _a;
-    return (_a = obj[rawKey]) !== null && _a !== void 0 ? _a : obj;
+    return obj[rawKey] ?? obj;
 }
 function unwrap(v) {
     return canWrap(v) && v[rawKey] || v;
@@ -4614,83 +4349,71 @@ const arrayHandler = {
         return wrap(R$get(target, key, receiver));
     },
     ownKeys(target) {
-        var _a;
-        (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observe(target, 'length');
+        currentConnectable()?.observe(target, 'length');
         return Reflect.ownKeys(target);
     },
 };
 function wrappedArrayMap(cb, thisArg) {
-    var _a;
     const raw = getRaw(this);
     const res = raw.map((v, i) => unwrap(cb.call(thisArg, wrap(v), i, this)));
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return wrap(res);
 }
 function wrappedArrayEvery(cb, thisArg) {
-    var _a;
     const raw = getRaw(this);
     const res = raw.every((v, i) => cb.call(thisArg, wrap(v), i, this));
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return res;
 }
 function wrappedArrayFilter(cb, thisArg) {
-    var _a;
     const raw = getRaw(this);
     const res = raw.filter((v, i) => unwrap(cb.call(thisArg, wrap(v), i, this)));
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return wrap(res);
 }
 function wrappedArrayIncludes(v) {
-    var _a;
     const raw = getRaw(this);
     const res = raw.includes(unwrap(v));
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return res;
 }
 function wrappedArrayIndexOf(v) {
-    var _a;
     const raw = getRaw(this);
     const res = raw.indexOf(unwrap(v));
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return res;
 }
 function wrappedArrayLastIndexOf(v) {
-    var _a;
     const raw = getRaw(this);
     const res = raw.lastIndexOf(unwrap(v));
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return res;
 }
 function wrappedArrayFindIndex(cb, thisArg) {
-    var _a;
     const raw = getRaw(this);
     const res = raw.findIndex((v, i) => unwrap(cb.call(thisArg, wrap(v), i, this)));
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return res;
 }
 function wrappedArrayFind(cb, thisArg) {
-    var _a;
     const raw = getRaw(this);
     const res = raw.find((v, i) => cb(wrap(v), i, this), thisArg);
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return wrap(res);
 }
 function wrappedArrayFlat() {
-    var _a;
     const raw = getRaw(this);
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return wrap(raw.flat());
 }
 function wrappedArrayFlatMap(cb, thisArg) {
-    var _a;
     const raw = getRaw(this);
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return getProxy(raw.flatMap((v, i) => wrap(cb.call(thisArg, wrap(v), i, this))));
 }
 function wrappedArrayJoin(separator) {
-    var _a;
     const raw = getRaw(this);
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return raw.join(separator);
 }
 function wrappedArrayPop() {
@@ -4709,44 +4432,38 @@ function wrappedArraySplice(...args) {
     return wrap(getRaw(this).splice(...args));
 }
 function wrappedArrayReverse(..._args) {
-    var _a;
     const raw = getRaw(this);
     const res = raw.reverse();
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return wrap(res);
 }
 function wrappedArraySome(cb, thisArg) {
-    var _a;
     const raw = getRaw(this);
     const res = raw.some((v, i) => unwrap(cb.call(thisArg, wrap(v), i, this)));
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return res;
 }
 function wrappedArraySort(cb) {
-    var _a;
     const raw = getRaw(this);
     const res = raw.sort(cb);
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return wrap(res);
 }
 function wrappedArraySlice(start, end) {
-    var _a;
     const raw = getRaw(this);
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return getProxy(raw.slice(start, end));
 }
 function wrappedReduce(cb, initValue) {
-    var _a;
     const raw = getRaw(this);
     const res = raw.reduce((curr, v, i) => cb(curr, wrap(v), i, this), initValue);
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return wrap(res);
 }
 function wrappedReduceRight(cb, initValue) {
-    var _a;
     const raw = getRaw(this);
     const res = raw.reduceRight((curr, v, i) => cb(curr, wrap(v), i, this), initValue);
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return wrap(res);
 }
 const collectionHandler = {
@@ -4798,23 +4515,20 @@ const collectionHandler = {
     },
 };
 function wrappedForEach(cb, thisArg) {
-    var _a;
     const raw = getRaw(this);
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return raw.forEach((v, key) => {
         cb.call(thisArg, wrap(v), wrap(key), this);
     });
 }
 function wrappedHas(v) {
-    var _a;
     const raw = getRaw(this);
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return raw.has(unwrap(v));
 }
 function wrappedGet(k) {
-    var _a;
     const raw = getRaw(this);
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     return wrap(raw.get(unwrap(k)));
 }
 function wrappedSet(k, v) {
@@ -4830,9 +4544,8 @@ function wrappedDelete(k) {
     return wrap(getRaw(this).delete(unwrap(k)));
 }
 function wrappedKeys() {
-    var _a;
     const raw = getRaw(this);
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     const iterator = raw.keys();
     return {
         next() {
@@ -4849,9 +4562,8 @@ function wrappedKeys() {
     };
 }
 function wrappedValues() {
-    var _a;
     const raw = getRaw(this);
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     const iterator = raw.values();
     return {
         next() {
@@ -4868,9 +4580,8 @@ function wrappedValues() {
     };
 }
 function wrappedEntries() {
-    var _a;
     const raw = getRaw(this);
-    (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.observeCollection(raw);
+    currentConnectable()?.observeCollection(raw);
     const iterator = raw.entries();
     return {
         next() {
@@ -4903,8 +4614,8 @@ class ComputedObserver {
         this._isRunning = false;
         this._isDirty = false;
         this._obj = obj;
-        this.get = get;
-        this.set = set;
+        this.$get = get;
+        this.$set = set;
         this._useProxy = useProxy;
         this.oL = observerLocator;
     }
@@ -4926,7 +4637,7 @@ class ComputedObserver {
     }
     getValue() {
         if (this.subs.count === 0) {
-            return this.get.call(this._obj, this);
+            return this.$get.call(this._obj, this);
         }
         if (this._isDirty) {
             this.compute();
@@ -4935,10 +4646,10 @@ class ComputedObserver {
         return this._value;
     }
     setValue(v, _flags) {
-        if (isFunction(this.set)) {
+        if (isFunction(this.$set)) {
             if (v !== this._value) {
                 this._isRunning = true;
-                this.set.call(this._obj, v);
+                this.$set.call(this._obj, v);
                 this._isRunning = false;
                 this.run();
             }
@@ -4993,7 +4704,7 @@ class ComputedObserver {
         this.obs.version++;
         try {
             enterConnectable(this);
-            return this._value = unwrap(this.get.call(this._useProxy ? wrap(this._obj) : this._obj, this));
+            return this._value = unwrap(this.$get.call(this._useProxy ? wrap(this._obj) : this._obj, this));
         }
         finally {
             this.obs.clear();
@@ -5217,7 +4928,6 @@ class SetterNotifier {
         return this._value;
     }
     setValue(value, flags) {
-        var _a;
         if (this._hasSetter) {
             value = this._setter(value, null);
         }
@@ -5225,7 +4935,7 @@ class SetterNotifier {
             this._oldValue = this._value;
             this._value = value;
             this.f = flags;
-            (_a = this.cb) === null || _a === void 0 ? void 0 : _a.call(this._obj, this._value, this._oldValue, flags);
+            this.cb?.call(this._obj, this._value, this._oldValue, flags);
             this.queue.add(this);
         }
     }
@@ -5270,12 +4980,11 @@ class ObserverLocator {
         this._adapters.push(adapter);
     }
     getObserver(obj, key) {
-        var _a, _b;
-        return (_b = (_a = obj.$observers) === null || _a === void 0 ? void 0 : _a[key]) !== null && _b !== void 0 ? _b : this._cache(obj, key, this.createObserver(obj, key));
+        return obj.$observers?.[key]
+            ?? this._cache(obj, key, this.createObserver(obj, key));
     }
     getAccessor(obj, key) {
-        var _a;
-        const cached = (_a = obj.$observers) === null || _a === void 0 ? void 0 : _a[key];
+        const cached = obj.$observers?.[key];
         if (cached !== void 0) {
             return cached;
         }
@@ -5294,7 +5003,6 @@ class ObserverLocator {
         return getSetObserver(observedSet);
     }
     createObserver(obj, key) {
-        var _a, _b, _c, _d;
         if (!(obj instanceof Object)) {
             return new PrimitiveObserver(obj, key);
         }
@@ -5337,7 +5045,7 @@ class ObserverLocator {
         if (pd !== void 0 && !hasOwnProp.call(pd, 'value')) {
             let obs = this._getAdapterObserver(obj, key, pd);
             if (obs == null) {
-                obs = (_d = ((_b = (_a = pd.get) === null || _a === void 0 ? void 0 : _a.getObserver) !== null && _b !== void 0 ? _b : (_c = pd.set) === null || _c === void 0 ? void 0 : _c.getObserver)) === null || _d === void 0 ? void 0 : _d(obj, this);
+                obs = (pd.get?.getObserver ?? pd.set?.getObserver)?.(obj, this);
             }
             return obs == null
                 ? pd.configurable
@@ -5468,7 +5176,6 @@ function observable(targetOrConfig, key, descriptor) {
     }
     return deco(targetOrConfig, key, descriptor);
     function deco(target, key, descriptor, config) {
-        var _a;
         const isClassDecorator = key === void 0;
         config = typeof config !== 'object'
             ? { name: config }
@@ -5484,7 +5191,7 @@ function observable(targetOrConfig, key, descriptor) {
         if (descriptor) {
             delete descriptor.value;
             delete descriptor.writable;
-            initialValue = (_a = descriptor.initializer) === null || _a === void 0 ? void 0 : _a.call(descriptor);
+            initialValue = descriptor.initializer?.();
             delete descriptor.initializer;
         }
         else {
@@ -5495,9 +5202,8 @@ function observable(targetOrConfig, key, descriptor) {
         }
         const $set = config.set;
         descriptor.get = function g() {
-            var _a;
             const notifier = getNotifier(this, key, callback, initialValue, $set);
-            (_a = currentConnectable()) === null || _a === void 0 ? void 0 : _a.subscribeTo(notifier);
+            currentConnectable()?.subscribeTo(notifier);
             return notifier.getValue();
         };
         descriptor.set = function s(newValue) {
@@ -5524,5 +5230,5 @@ function getNotifier(obj, key, callbackKey, initialValue, set) {
     return notifier;
 }
 
-export { AccessKeyedExpression, AccessMemberExpression, AccessScopeExpression, AccessThisExpression, AccessorType, ArrayBindingPattern, ArrayIndexObserver, ArrayLiteralExpression, ArrayObserver, ArrowFunction, AssignExpression, BinaryExpression, BindingBehavior, BindingBehaviorDefinition, BindingBehaviorExpression, BindingBehaviorFactory, BindingBehaviorStrategy, BindingContext, BindingIdentifier, BindingInterceptor, BindingMediator, BindingMode, BindingObserverRecord, CallFunctionExpression, CallMemberExpression, CallScopeExpression, Char, CollectionKind, CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, ConditionalExpression, ConnectableSwitcher, CustomExpression, DelegationStrategy, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, DirtyCheckProperty, DirtyCheckSettings, ExpressionKind, ExpressionType, FlushQueue, ForOfStatement, HtmlLiteralExpression, ICoercionConfiguration, IDirtyChecker, IExpressionParser, INodeObserverLocator, IObservation, IObserverLocator, ISignaler, Interpolation, LifecycleFlags, MapObserver, ObjectBindingPattern, ObjectLiteralExpression, Observation, ObserverLocator, OverrideContext, PrimitiveLiteralExpression, PrimitiveObserver, PropertyAccessor, ProxyObservable, Scope, SetObserver, SetterObserver, SubscriberRecord, TaggedTemplateExpression, TemplateExpression, UnaryExpression, ValueConverter, ValueConverterDefinition, ValueConverterExpression, alias, applyMutationsToIndices, bindingBehavior, cloneIndexMap, connectable, copyIndexMap, createIndexMap, disableArrayObservation, disableMapObservation, disableSetObservation, enableArrayObservation, enableMapObservation, enableSetObservation, getCollectionObserver, isIndexMap, observable, parseExpression, registerAliases, subscriberCollection, synchronizeIndices, valueConverter, withFlushQueue };
+export { AccessKeyedExpression, AccessMemberExpression, AccessScopeExpression, AccessThisExpression, AccessorType, ArrayBindingPattern, ArrayIndexObserver, ArrayLiteralExpression, ArrayObserver, ArrowFunction, AssignExpression, BinaryExpression, BindingBehaviorExpression, BindingContext, BindingIdentifier, BindingObserverRecord, CallFunctionExpression, CallMemberExpression, CallScopeExpression, Char, CollectionKind, CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, ConditionalExpression, ConnectableSwitcher, CustomExpression, DelegationStrategy, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, DirtyCheckProperty, DirtyCheckSettings, ExpressionKind, ExpressionType, FlushQueue, ForOfStatement, HtmlLiteralExpression, ICoercionConfiguration, IDirtyChecker, IExpressionParser, INodeObserverLocator, IObservation, IObserverLocator, ISignaler, Interpolation, LifecycleFlags, MapObserver, ObjectBindingPattern, ObjectLiteralExpression, Observation, ObserverLocator, OverrideContext, PrimitiveLiteralExpression, PrimitiveObserver, PropertyAccessor, ProxyObservable, Scope, SetObserver, SetterObserver, SubscriberRecord, TaggedTemplateExpression, TemplateExpression, UnaryExpression, ValueConverterExpression, applyMutationsToIndices, cloneIndexMap, connectable, copyIndexMap, createIndexMap, disableArrayObservation, disableMapObservation, disableSetObservation, enableArrayObservation, enableMapObservation, enableSetObservation, getCollectionObserver, isIndexMap, observable, parseExpression, subscriberCollection, synchronizeIndices, withFlushQueue };
 //# sourceMappingURL=index.dev.mjs.map

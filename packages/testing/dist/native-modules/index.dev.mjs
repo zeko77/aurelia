@@ -1,6 +1,6 @@
 import { noop, isArrayIndex, DI, Registration, kebabCase, emptyArray, EventAggregator, ILogger } from '../../../kernel/dist/native-modules/index.mjs';
-import { IObserverLocator, FlushQueue, valueConverter, IDirtyChecker, INodeObserverLocator, Scope, OverrideContext } from '../../../runtime/dist/native-modules/index.mjs';
-import { StandardConfiguration, IPlatform, ITemplateCompiler, CustomElement, CustomAttribute, Aurelia, bindable, customElement } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { IObserverLocator, FlushQueue, IDirtyChecker, INodeObserverLocator, Scope, OverrideContext } from '../../../runtime/dist/native-modules/index.mjs';
+import { StandardConfiguration, IPlatform, ITemplateCompiler, CustomElement, CustomAttribute, Aurelia, valueConverter, bindable, customElement } from '../../../runtime-html/dist/native-modules/index.mjs';
 import { BrowserPlatform } from '../../../platform-browser/dist/native-modules/index.mjs';
 import { Metadata } from '../../../metadata/dist/native-modules/index.mjs';
 
@@ -2078,7 +2078,7 @@ function formatRaw(ctx, value, recurseTimes, typedArray) {
     try {
         output = formatter(ctx, value, recurseTimes, keys, braces);
         let $key;
-        const isNotNode = (PLATFORM === null || PLATFORM === void 0 ? void 0 : PLATFORM.Node) != null && !(value instanceof PLATFORM.Node);
+        const isNotNode = PLATFORM?.Node != null && !(value instanceof PLATFORM.Node);
         for (i = 0; i < keys.length; i++) {
             $key = keys[i];
             if ((isNotNode || $key === 'textContent' || $key === 'outerHTML')
@@ -2204,21 +2204,18 @@ function verifyEqual(actual, expected, depth, property, index) {
     }
 }
 function nextAncestor(host, node) {
-    var _a, _b, _c;
-    const parent = (_b = (_a = node.parentNode) !== null && _a !== void 0 ? _a : node.host) !== null && _b !== void 0 ? _b : null;
+    const parent = node.parentNode ?? node.host ?? null;
     if (parent === null || parent === host) {
         return null;
     }
-    return (_c = parent.nextSibling) !== null && _c !== void 0 ? _c : nextAncestor(host, parent);
+    return parent.nextSibling ?? nextAncestor(host, parent);
 }
 function nextNode(host, node) {
-    var _a, _b, _c, _d, _e;
-    return (_e = (_d = (_c = (_b = (_a = CustomElement.for(node, { optional: true })) === null || _a === void 0 ? void 0 : _a.shadowRoot) === null || _b === void 0 ? void 0 : _b.firstChild) !== null && _c !== void 0 ? _c : node.firstChild) !== null && _d !== void 0 ? _d : node.nextSibling) !== null && _e !== void 0 ? _e : nextAncestor(host, node);
+    return CustomElement.for(node, { optional: true })?.shadowRoot?.firstChild ?? node.firstChild ?? node.nextSibling ?? nextAncestor(host, node);
 }
 function getVisibleText(host, removeWhiteSpace) {
-    var _a, _b, _c;
     let text = '';
-    let cur = (_c = (_b = (_a = CustomElement.for(host, { optional: true })) === null || _a === void 0 ? void 0 : _a.shadowRoot) === null || _b === void 0 ? void 0 : _b.firstChild) !== null && _c !== void 0 ? _c : host.firstChild;
+    let cur = CustomElement.for(host, { optional: true })?.shadowRoot?.firstChild ?? host.firstChild;
     while (cur !== null) {
         if (cur.nodeType === 3) {
             text += cur.data;
@@ -2914,7 +2911,6 @@ const areTaskQueuesEmpty = (function () {
         return ((num * 10 + .5) | 0) / 10;
     }
     function reportTask(task) {
-        var _a;
         const id = task.id;
         const created = round(task.createdTime);
         const queue = round(task.queueTime);
@@ -2923,7 +2919,7 @@ const areTaskQueuesEmpty = (function () {
         const persistent = task.persistent;
         const status = task.status;
         return `    task id=${id} createdTime=${created} queueTime=${queue} preempt=${preempt} reusable=${reusable} persistent=${persistent} status=${status}\n`
-            + `    task callback="${(_a = task.callback) === null || _a === void 0 ? void 0 : _a.toString()}"`;
+            + `    task callback="${task.callback?.toString()}"`;
     }
     function reportTaskQueue(name, taskQueue) {
         const processing = taskQueue['processing'];
@@ -7535,7 +7531,7 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
                     dispose();
                 FlushQueue.instance.clear();
             }
-            catch (_a) {
+            catch {
                 console.warn('(!) corrupted fixture state, should isolate the failing test and restart the run'
                     + 'as it is likely that this failing fixture creation will pollute others.');
             }
@@ -7683,11 +7679,10 @@ class FixtureBuilder {
         return this;
     }
     build() {
-        var _a;
         if (this._html === void 0) {
             throw new Error('Builder is not ready, missing template, call .html()/.html`` first');
         }
-        return createFixture(typeof this._html === 'string' ? this._html : brokenProcessFastTemplate(this._html, ...(_a = this._htmlArgs) !== null && _a !== void 0 ? _a : []), this._comp, this._args);
+        return createFixture(typeof this._html === 'string' ? this._html : brokenProcessFastTemplate(this._html, ...this._htmlArgs ?? []), this._comp, this._args);
     }
 }
 function brokenProcessFastTemplate(html, ..._args) {
@@ -7705,6 +7700,10 @@ class MockBinding {
     constructor() {
         this.interceptor = this;
         this.calls = [];
+    }
+    get(key) {
+        this.trace('get', key);
+        return null;
     }
     updateTarget(value, flags) {
         this.trace('updateTarget', value, flags);
@@ -8107,7 +8106,7 @@ let SortValueConverter = class SortValueConverter {
     toView(arr, prop, dir = 'asc') {
         if (Array.isArray(arr)) {
             const factor = dir === 'asc' ? 1 : -1;
-            if (prop === null || prop === void 0 ? void 0 : prop.length) {
+            if (prop?.length) {
                 arr.sort((a, b) => a[prop] - b[prop] * factor);
             }
             else {

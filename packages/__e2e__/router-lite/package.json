@@ -6,7 +6,7 @@
     "node": ">=14.15.0",
     "npm": ">=6.14.8"
   },
-  "version": "2.1.0-dev.202209101038",
+  "version": "2.1.0-dev.202209140433",
   "scripts": {
     "dev": "vite",
     "build": "webpack",
@@ -18,14 +18,14 @@
     "test:debugger": "cross-env PWDEBUG=1 playwright test"
   },
   "dependencies": {
-    "aurelia": "2.1.0-dev.202209101038",
-    "@aurelia/kernel": "2.1.0-dev.202209101038",
-    "@aurelia/metadata": "2.1.0-dev.202209101038",
-    "@aurelia/platform": "2.1.0-dev.202209101038",
-    "@aurelia/platform-browser": "2.1.0-dev.202209101038",
-    "@aurelia/runtime": "2.1.0-dev.202209101038",
-    "@aurelia/runtime-html": "2.1.0-dev.202209101038",
-    "@aurelia/router-lite": "2.1.0-dev.202209101038",
+    "aurelia": "2.1.0-dev.202209140433",
+    "@aurelia/kernel": "2.1.0-dev.202209140433",
+    "@aurelia/metadata": "2.1.0-dev.202209140433",
+    "@aurelia/platform": "2.1.0-dev.202209140433",
+    "@aurelia/platform-browser": "2.1.0-dev.202209140433",
+    "@aurelia/runtime": "2.1.0-dev.202209140433",
+    "@aurelia/runtime-html": "2.1.0-dev.202209140433",
+    "@aurelia/router-lite": "2.1.0-dev.202209140433",
     "perf-monitor": "latest"
   },
   "devDependencies": {

@@ -3,8 +3,8 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 var kernel = require('@aurelia/kernel');
-var runtime = require('@aurelia/runtime');
 var runtimeHtml = require('@aurelia/runtime-html');
+var runtime = require('@aurelia/runtime');
 
 const IActionHandler = kernel.DI.createInterface('IActionHandler');
 const IStore = kernel.DI.createInterface('IStore');
@@ -30,7 +30,7 @@ class Store {
         this._subs = new Set();
         this._dispatching = 0;
         this._dispatchQueues = [];
-        this._state = initialState !== null && initialState !== void 0 ? initialState : new State();
+        this._state = initialState ?? new State();
         this._handlers = reducers;
         this._logger = logger;
     }
@@ -74,9 +74,9 @@ class Store {
         let $$action;
         const reduce = ($state, $action, params) => this._handlers.reduce(($state, handler) => {
             if ($state instanceof Promise) {
-                return $state.then($ => handler($, $action, ...params !== null && params !== void 0 ? params : []));
+                return $state.then($ => handler($, $action, ...params ?? []));
             }
-            return handler($state, $action, ...params !== null && params !== void 0 ? params : []);
+            return handler($state, $action, ...params ?? []);
         }, $state);
         const afterDispatch = ($state) => {
             if (this._dispatchQueues.length > 0) {
@@ -155,9 +155,9 @@ function isSubscribable$1(v) {
     return v instanceof Object && 'subscribe' in v;
 }
 
-const { toView, oneTime } = runtime.BindingMode;
-exports.StateBinding = class StateBinding {
-    constructor(locator, taskQueue, store, observerLocator, expr, target, prop) {
+const { toView, oneTime } = runtimeHtml.BindingMode;
+class StateBinding {
+    constructor(controller, locator, observerLocator, taskQueue, ast, target, prop, store) {
         this.interceptor = this;
         this.isBound = false;
         this.task = null;
@@ -166,11 +166,12 @@ exports.StateBinding = class StateBinding {
         this._updateCount = 0;
         this.persistentFlags = 0;
         this.mode = toView;
+        this._controller = controller;
         this.locator = locator;
         this.taskQueue = taskQueue;
         this._store = store;
         this.oL = observerLocator;
-        this.sourceExpression = expr;
+        this.ast = ast;
         this.target = target;
         this.targetProperty = prop;
     }
@@ -207,10 +208,9 @@ exports.StateBinding = class StateBinding {
         this.targetObserver = this.oL.getAccessor(this.target, this.targetProperty);
         this.$scope = createStateBindingScope(this._store.getState(), scope);
         this._store.subscribe(this);
-        this.updateTarget(this._value = this.sourceExpression.evaluate(1, this.$scope, this.locator, this.mode > oneTime ? this : null), 0);
+        this.updateTarget(this._value = this.ast.evaluate(this.$scope, this, this.mode > oneTime ? this : null), 0);
     }
     $unbind() {
-        var _a;
         if (!this.isBound) {
             return;
         }
@@ -218,7 +218,7 @@ exports.StateBinding = class StateBinding {
         this._updateCount++;
         this.isBound = false;
         this.$scope = void 0;
-        (_a = this.task) === null || _a === void 0 ? void 0 : _a.cancel();
+        this.task?.cancel();
         this.task = null;
         this._store.unsubscribe(this);
     }
@@ -227,10 +227,10 @@ exports.StateBinding = class StateBinding {
             return;
         }
         flags |= this.persistentFlags;
-        const shouldQueueFlush = (flags & 2) === 0 && (this.targetObserver.type & 4) > 0;
+        const shouldQueueFlush = this._controller.state !== 1 && (this.targetObserver.type & 4) > 0;
         const obsRecord = this.obs;
         obsRecord.version++;
-        newValue = this.sourceExpression.evaluate(flags, this.$scope, this.locator, this.interceptor);
+        newValue = this.ast.evaluate(this.$scope, this, this.interceptor);
         obsRecord.clear();
         let task;
         if (shouldQueueFlush) {
@@ -239,7 +239,7 @@ exports.StateBinding = class StateBinding {
                 this.interceptor.updateTarget(newValue, flags);
                 this.task = null;
             }, updateTaskOpts);
-            task === null || task === void 0 ? void 0 : task.cancel();
+            task?.cancel();
             task = null;
         }
         else {
@@ -250,8 +250,8 @@ exports.StateBinding = class StateBinding {
         const $scope = this.$scope;
         const overrideContext = $scope.overrideContext;
         $scope.bindingContext = overrideContext.bindingContext = overrideContext.$state = state;
-        const value = this.sourceExpression.evaluate(1, $scope, this.locator, this.mode > oneTime ? this : null);
-        const shouldQueueFlush = (this.targetObserver.type & 4) > 0;
+        const value = this.ast.evaluate($scope, this, this.mode > oneTime ? this : null);
+        const shouldQueueFlush = this._controller.state !== 1 && (this.targetObserver.type & 4) > 0;
         if (value === this._value) {
             return;
         }
@@ -263,27 +263,23 @@ exports.StateBinding = class StateBinding {
                 this.interceptor.updateTarget(value, 1);
                 this.task = null;
             }, updateTaskOpts);
-            task === null || task === void 0 ? void 0 : task.cancel();
+            task?.cancel();
         }
         else {
             this.interceptor.updateTarget(this._value, 0);
         }
     }
     _unsub() {
-        var _a, _b, _c, _d;
         if (typeof this._sub === 'function') {
             this._sub();
         }
         else if (this._sub !== void 0) {
-            (_b = (_a = this._sub).dispose) === null || _b === void 0 ? void 0 : _b.call(_a);
-            (_d = (_c = this._sub).unsubscribe) === null || _d === void 0 ? void 0 : _d.call(_c);
+            this._sub.dispose?.();
+            this._sub.unsubscribe?.();
         }
         this._sub = void 0;
     }
-};
-exports.StateBinding = __decorate([
-    runtime.connectable()
-], exports.StateBinding);
+}
 function isSubscribable(v) {
     return v instanceof Object && 'subscribe' in v;
 }
@@ -291,12 +287,14 @@ const updateTaskOpts = {
     reusable: false,
     preempt: true,
 };
+runtime.connectable(StateBinding);
+runtimeHtml.astEvaluator(true)(StateBinding);
 
-exports.StateBindingBehavior = class StateBindingBehavior extends runtime.BindingInterceptor {
+exports.StateBindingBehavior = class StateBindingBehavior extends runtimeHtml.BindingInterceptor {
     constructor(store, binding, expr) {
         super(binding, expr);
         this._store = store;
-        this._isStateBinding = binding instanceof exports.StateBinding;
+        this._isStateBinding = binding instanceof StateBinding;
     }
     $bind(flags, scope) {
         const binding = this.binding;
@@ -321,7 +319,7 @@ exports.StateBindingBehavior = class StateBindingBehavior extends runtime.Bindin
 };
 exports.StateBindingBehavior.inject = [IStore];
 exports.StateBindingBehavior = __decorate([
-    runtime.bindingBehavior('state')
+    runtimeHtml.bindingBehavior('state')
 ], exports.StateBindingBehavior);
 ['target', 'targetProperty'].forEach(p => {
     defProto(exports.StateBindingBehavior, p, {
@@ -336,20 +334,20 @@ exports.StateBindingBehavior = __decorate([
     });
 });
 
-exports.StateDispatchBinding = class StateDispatchBinding {
-    constructor(locator, store, expr, target, prop) {
+class StateDispatchBinding {
+    constructor(locator, expr, target, prop, store) {
         this.interceptor = this;
         this.isBound = false;
         this.locator = locator;
         this._store = store;
-        this.expr = expr;
+        this.ast = expr;
         this.target = target;
         this.targetProperty = prop;
     }
     callSource(e) {
         const $scope = this.$scope;
         $scope.overrideContext.$event = e;
-        const value = this.expr.evaluate(1, $scope, this.locator, null);
+        const value = this.ast.evaluate($scope, this, null);
         delete $scope.overrideContext.$event;
         if (!this.isAction(value)) {
             throw new Error(`Invalid dispatch value from expression on ${this.target} on event: "${e.type}"`);
@@ -387,10 +385,9 @@ exports.StateDispatchBinding = class StateDispatchBinding {
             && typeof value === 'object'
             && 'type' in value;
     }
-};
-exports.StateDispatchBinding = __decorate([
-    runtime.connectable()
-], exports.StateDispatchBinding);
+}
+runtime.connectable(StateDispatchBinding);
+runtimeHtml.astEvaluator(true)(StateDispatchBinding);
 
 exports.StateAttributePattern = class StateAttributePattern {
     'PART.state'(rawName, rawValue, parts) {
@@ -415,12 +412,12 @@ exports.StateBindingCommand = class StateBindingCommand {
     }
     get name() { return 'state'; }
     build(info) {
-        var _a;
         const attr = info.attr;
         let target = attr.target;
         let value = attr.rawValue;
         if (info.bindable == null) {
-            target = (_a = this._attrMapper.map(info.node, target)) !== null && _a !== void 0 ? _a : kernel.camelCase(target);
+            target = this._attrMapper.map(info.node, target)
+                ?? kernel.camelCase(target);
         }
         else {
             if (value === '' && info.def.type === 1) {
@@ -470,7 +467,7 @@ exports.StateBindingInstructionRenderer = class StateBindingInstructionRenderer 
         this.p = p;
     }
     render(renderingCtrl, target, instruction) {
-        const binding = new exports.StateBinding(renderingCtrl.container, this.p.domWriteQueue, this._stateContainer, this._observerLocator, ensureExpression(this._exprParser, instruction.from, 4), target, instruction.to);
+        const binding = new StateBinding(renderingCtrl, renderingCtrl.container, this._observerLocator, this.p.domWriteQueue, ensureExpression(this._exprParser, instruction.from, 4), target, instruction.to, this._stateContainer);
         renderingCtrl.addBinding(binding);
     }
 };
@@ -485,7 +482,7 @@ exports.DispatchBindingInstructionRenderer = class DispatchBindingInstructionRen
     }
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.expr, 8);
-        const binding = new exports.StateDispatchBinding(renderingCtrl.container, this._stateContainer, expr, target, instruction.from);
+        const binding = new StateDispatchBinding(renderingCtrl.container, expr, target, instruction.from, this._stateContainer);
         renderingCtrl.addBinding(expr.$kind === 38963
             ? runtimeHtml.applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
@@ -523,7 +520,7 @@ const createConfiguration = (initialState, reducers) => {
 const StateDefaultConfiguration = createConfiguration({}, []);
 
 let StateGetterBinding = class StateGetterBinding {
-    constructor(locator, store, getValue, target, prop) {
+    constructor(locator, target, prop, store, getValue) {
         this.interceptor = this;
         this.isBound = false;
         this._value = void 0;
@@ -591,13 +588,12 @@ let StateGetterBinding = class StateGetterBinding {
         this.updateTarget(value);
     }
     _unsub() {
-        var _a, _b, _c, _d;
         if (typeof this._sub === 'function') {
             this._sub();
         }
         else if (this._sub !== void 0) {
-            (_b = (_a = this._sub).dispose) === null || _b === void 0 ? void 0 : _b.call(_a);
-            (_d = (_c = this._sub).unsubscribe) === null || _d === void 0 ? void 0 : _d.call(_c);
+            this._sub.dispose?.();
+            this._sub.unsubscribe?.();
         }
         this._sub = void 0;
     }
@@ -611,7 +607,7 @@ function fromState(getValue) {
         if (typeof target === 'function') {
             throw new Error(`Invalid usage. @state can only be used on a field`);
         }
-        if (typeof (desc === null || desc === void 0 ? void 0 : desc.value) !== 'undefined') {
+        if (typeof desc?.value !== 'undefined') {
             throw new Error(`Invalid usage. @state can only be used on a field`);
         }
         target = target.constructor;
@@ -638,7 +634,7 @@ let HydratingLifecycleHooks = class HydratingLifecycleHooks {
     }
     hydrating(vm, controller) {
         const container = controller.container;
-        controller.addBinding(new StateGetterBinding(container, container.get(IStore), this.$get, vm, this.key));
+        controller.addBinding(new StateGetterBinding(container, vm, this.key, container.get(IStore), this.$get));
     }
 };
 HydratingLifecycleHooks = __decorate([
@@ -654,7 +650,7 @@ let CreatedLifecycleHooks = class CreatedLifecycleHooks {
     }
     created(vm, controller) {
         const container = controller.container;
-        controller.addBinding(new StateGetterBinding(container, container.get(IStore), this.$get, vm, this.key));
+        controller.addBinding(new StateGetterBinding(container, vm, this.key, container.get(IStore), this.$get));
     }
 };
 CreatedLifecycleHooks = __decorate([
@@ -666,7 +662,9 @@ exports.DispatchBindingInstruction = DispatchBindingInstruction;
 exports.IActionHandler = IActionHandler;
 exports.IState = IState;
 exports.IStore = IStore;
+exports.StateBinding = StateBinding;
 exports.StateBindingInstruction = StateBindingInstruction;
 exports.StateDefaultConfiguration = StateDefaultConfiguration;
+exports.StateDispatchBinding = StateDispatchBinding;
 exports.fromState = fromState;
 //# sourceMappingURL=index.dev.cjs.map

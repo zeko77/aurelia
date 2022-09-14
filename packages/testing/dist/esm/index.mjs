@@ -1,8 +1,8 @@
 import { noop as e, isArrayIndex as t, DI as n, Registration as i, kebabCase as r, emptyArray as a, EventAggregator as s, ILogger as o } from "@aurelia/kernel";
 
-import { IObserverLocator as l, FlushQueue as u, valueConverter as c, IDirtyChecker as f, INodeObserverLocator as h, Scope as d, OverrideContext as p } from "@aurelia/runtime";
+import { IObserverLocator as l, FlushQueue as u, IDirtyChecker as c, INodeObserverLocator as f, Scope as h, OverrideContext as d } from "@aurelia/runtime";
 
-import { StandardConfiguration as m, IPlatform as g, ITemplateCompiler as b, CustomElement as v, CustomAttribute as y, Aurelia as $, bindable as x, customElement as w } from "@aurelia/runtime-html";
+import { StandardConfiguration as p, IPlatform as m, ITemplateCompiler as g, CustomElement as b, CustomAttribute as v, Aurelia as y, valueConverter as $, bindable as x, customElement as w } from "@aurelia/runtime-html";
 
 import { BrowserPlatform as k } from "@aurelia/platform-browser";
 
@@ -732,18 +732,18 @@ class TestContext {
     get container() {
         if (void 0 === this.c) {
             this.c = n.createContainer();
-            m.register(this.c);
+            p.register(this.c);
             this.c.register(i.instance(TestContext, this));
-            if (false === this.c.has(g, true)) this.c.register(xt);
+            if (false === this.c.has(m, true)) this.c.register(xt);
         }
         return this.c;
     }
     get platform() {
-        if (void 0 === this.p) this.p = this.container.get(g);
+        if (void 0 === this.p) this.p = this.container.get(m);
         return this.p;
     }
     get templateCompiler() {
-        if (void 0 === this.t) this.t = this.container.get(b);
+        if (void 0 === this.t) this.t = this.container.get(g);
         return this.t;
     }
     get observerLocator() {
@@ -784,7 +784,7 @@ let xt;
 
 function wt(e) {
     $t = e;
-    xt = i.instance(g, e);
+    xt = i.instance(m, e);
 }
 
 function kt(...e) {
@@ -1685,7 +1685,7 @@ function qn(e, t, n, i) {
     try {
         d = l(e, t, n, r, u);
         let i;
-        const a = null != (null === $t || void 0 === $t ? void 0 : $t.Node) && !(t instanceof $t.Node);
+        const a = null != $t?.Node && !(t instanceof $t.Node);
         for (f = 0; f < r.length; f++) {
             i = r[f];
             if ((a || "textContent" === i || "outerHTML" === i) && "$$calls" !== i) d.push(Mn(e, t, n, r[f], h));
@@ -1778,30 +1778,27 @@ function Fn(e, t, n, i, r) {
 }
 
 function Nn(e, t) {
-    var n, i, r;
-    const a = null !== (i = null !== (n = t.parentNode) && void 0 !== n ? n : t.host) && void 0 !== i ? i : null;
-    if (null === a || a === e) return null;
-    return null !== (r = a.nextSibling) && void 0 !== r ? r : Nn(e, a);
+    const n = t.parentNode ?? t.host ?? null;
+    if (null === n || n === e) return null;
+    return n.nextSibling ?? Nn(e, n);
 }
 
 function Pn(e, t) {
-    var n, i, r, a, s;
-    return null !== (s = null !== (a = null !== (r = null === (i = null === (n = v.for(t, {
+    return b.for(t, {
         optional: true
-    })) || void 0 === n ? void 0 : n.shadowRoot) || void 0 === i ? void 0 : i.firstChild) && void 0 !== r ? r : t.firstChild) && void 0 !== a ? a : t.nextSibling) && void 0 !== s ? s : Nn(e, t);
+    })?.shadowRoot?.firstChild ?? t.firstChild ?? t.nextSibling ?? Nn(e, t);
 }
 
 function Bn(e, t) {
-    var n, i, r;
-    let a = "";
-    let s = null !== (r = null === (i = null === (n = v.for(e, {
+    let n = "";
+    let i = b.for(e, {
         optional: true
-    })) || void 0 === n ? void 0 : n.shadowRoot) || void 0 === i ? void 0 : i.firstChild) && void 0 !== r ? r : e.firstChild;
-    while (null !== s) {
-        if (3 === s.nodeType) a += s.data;
-        s = Pn(e, s);
+    })?.shadowRoot?.firstChild ?? e.firstChild;
+    while (null !== i) {
+        if (3 === i.nodeType) n += i.data;
+        i = Pn(e, i);
     }
-    return t && a ? a.replace(/\s\s+/g, " ").trim() : a;
+    return t && n ? n.replace(/\s\s+/g, " ").trim() : n;
 }
 
 function In(e) {
@@ -2293,7 +2290,7 @@ function Si(e, t, n) {
 }
 
 function Oi(e, t) {
-    if (!v.isType(e)) Hn({
+    if (!b.isType(e)) Hn({
         actual: false,
         expected: true,
         message: t,
@@ -2303,7 +2300,7 @@ function Oi(e, t) {
 }
 
 function Ei(e, t) {
-    if (!y.isType(e)) Hn({
+    if (!v.isType(e)) Hn({
         actual: false,
         expected: true,
         message: t,
@@ -2402,15 +2399,14 @@ const zi = function() {
         return (10 * e + .5 | 0) / 10;
     }
     function t(t) {
-        var n;
-        const i = t.id;
-        const r = e(t.createdTime);
-        const a = e(t.queueTime);
-        const s = t.preempt;
-        const o = t.reusable;
-        const l = t.persistent;
-        const u = t.status;
-        return `    task id=${i} createdTime=${r} queueTime=${a} preempt=${s} reusable=${o} persistent=${l} status=${u}\n` + `    task callback="${null === (n = t.callback) || void 0 === n ? void 0 : n.toString()}"`;
+        const n = t.id;
+        const i = e(t.createdTime);
+        const r = e(t.queueTime);
+        const a = t.preempt;
+        const s = t.reusable;
+        const o = t.persistent;
+        const l = t.status;
+        return `    task id=${n} createdTime=${i} queueTime=${r} preempt=${a} reusable=${s} persistent=${o} status=${l}\n` + `    task callback="${t.callback?.toString()}"`;
     }
     function n(e, n) {
         const i = n["processing"];
@@ -3664,30 +3660,30 @@ function Zi(e, t, n = [], i = true, r = TestContext.create()) {
     a.register(...n);
     const c = r.doc.body.appendChild(r.createElement("div"));
     const f = c.appendChild(r.createElement("app"));
-    const h = new $(a);
+    const h = new y(a);
     const d = "function" === typeof t ? t : null == t ? class {} : function e() {
         Object.setPrototypeOf(t, e.prototype);
         return t;
     };
     const p = [ "aliases", "bindables", "cache", "capture", "childrenObservers", "containerless", "dependencies", "enhance" ];
     if (d !== t && null != t) p.forEach((e => {
-        C.define(e, v.getAnnotation(t, e), d);
+        C.define(e, b.getAnnotation(t, e), d);
     }));
-    const m = v.isType(d) ? v.getDefinition(d) : {};
-    const g = v.define({
+    const m = b.isType(d) ? b.getDefinition(d) : {};
+    const g = b.define({
         ...m,
         name: "app",
         template: e
     }, d);
     if (a.has(g, true)) throw new Error("Container of the context contains instance of the application root component. " + "Consider using a different class, or context as it will likely cause surprises in tests.");
-    const b = a.get(g);
-    let y;
+    const v = a.get(g);
+    let $;
     if (i) try {
         h.app({
             host: f,
-            component: b
+            component: v
         });
-        y = h.start();
+        $ = h.start();
     } catch (e) {
         try {
             const e = () => {
@@ -3697,7 +3693,7 @@ function Zi(e, t, n = [], i = true, r = TestContext.create()) {
             const t = h.stop();
             if (t instanceof Promise) void t.then(e); else e();
             u.instance.clear();
-        } catch (e) {
+        } catch {
             console.warn("(!) corrupted fixture state, should isolate the failing test and restart the run" + "as it is likely that this failing fixture creation will pollute others.");
         }
         throw e;
@@ -3760,7 +3756,7 @@ function Zi(e, t, n = [], i = true, r = TestContext.create()) {
     };
     const M = new class Results {
         constructor() {
-            this.startPromise = y;
+            this.startPromise = $;
             this.ctx = r;
             this.host = r.doc.firstElementChild;
             this.container = a;
@@ -3768,7 +3764,7 @@ function Zi(e, t, n = [], i = true, r = TestContext.create()) {
             this.testHost = c;
             this.appHost = f;
             this.au = h;
-            this.component = b;
+            this.component = v;
             this.observerLocator = l;
             this.logger = a.get(o);
             this.hJsx = Ki.bind(r.doc);
@@ -3784,7 +3780,7 @@ function Zi(e, t, n = [], i = true, r = TestContext.create()) {
         async start() {
             await h.app({
                 host: f,
-                component: b
+                component: v
             }).start();
         }
         tearDown() {
@@ -3803,7 +3799,7 @@ function Zi(e, t, n = [], i = true, r = TestContext.create()) {
             return x > 0;
         }
         get started() {
-            if (y instanceof Promise) return Promise.resolve(y).then((() => this));
+            if ($ instanceof Promise) return Promise.resolve($).then((() => this));
             return Promise.resolve(this);
         }
     };
@@ -3826,9 +3822,8 @@ class FixtureBuilder {
         return this;
     }
     build() {
-        var e;
         if (void 0 === this.u) throw new Error("Builder is not ready, missing template, call .html()/.html`` first");
-        return Zi("string" === typeof this.u ? this.u : er(this.u, ...null !== (e = this.h) && void 0 !== e ? e : []), this.$, this.C);
+        return Zi("string" === typeof this.u ? this.u : er(this.u, ...this.h ?? []), this.$, this.C);
     }
 }
 
@@ -3848,6 +3843,10 @@ class MockBinding {
     constructor() {
         this.interceptor = this;
         this.calls = [];
+    }
+    get(e) {
+        this.trace("get", e);
+        return null;
     }
     updateTarget(e, t) {
         this.trace("updateTarget", e, t);
@@ -4207,13 +4206,13 @@ let nr = class SortValueConverter {
     toView(e, t, n = "asc") {
         if (Array.isArray(e)) {
             const i = "asc" === n ? 1 : -1;
-            if (null === t || void 0 === t ? void 0 : t.length) e.sort(((e, n) => e[t] - n[t] * i)); else e.sort(((e, t) => e - t * i));
+            if (t?.length) e.sort(((e, n) => e[t] - n[t] * i)); else e.sort(((e, t) => e - t * i));
         }
         return e;
     }
 };
 
-nr = tr([ c("sort") ], nr);
+nr = tr([ $("sort") ], nr);
 
 let ir = class JsonValueConverter {
     toView(e) {
@@ -4224,7 +4223,7 @@ let ir = class JsonValueConverter {
     }
 };
 
-ir = tr([ c("json") ], ir);
+ir = tr([ $("json") ], ir);
 
 let rr = class NameTag {};
 
@@ -4390,13 +4389,13 @@ function gr(e) {
             return false;
         }
     };
-    i.instance(f, null).register(t);
-    i.instance(h, n).register(t);
+    i.instance(c, null).register(t);
+    i.instance(f, n).register(t);
     return t.get(l);
 }
 
 function br(e = {}, t, n) {
-    return t ? d.fromParent(d.create(t), e) : d.create(e, p.create(e), n);
+    return t ? h.fromParent(h.create(t), e) : h.create(e, d.create(e), n);
 }
 
 class Call {

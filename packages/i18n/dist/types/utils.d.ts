@@ -11,7 +11,7 @@ export declare const enum ValueConverters {
     relativeTimeValueConverterName = "rt"
 }
 export declare type BindingWithBehavior = IBinding & {
-    sourceExpression: BindingBehaviorExpression;
+    ast: BindingBehaviorExpression;
 };
 export declare function createIntlFormatValueConverterExpression(name: string, binding: BindingWithBehavior): void;
 //# sourceMappingURL=utils.d.ts.map

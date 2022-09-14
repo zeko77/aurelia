@@ -1,5 +1,6 @@
-import { BindingInterceptor, LifecycleFlags } from '@aurelia/runtime';
-import type { BindingBehaviorExpression, IInterceptableBinding, Scope } from '@aurelia/runtime';
+import { LifecycleFlags } from '@aurelia/runtime';
+import { BindingInterceptor, IInterceptableBinding } from '../resources/binding-behavior';
+import type { BindingBehaviorExpression, Scope } from '@aurelia/runtime';
 export declare class ThrottleBindingBehavior extends BindingInterceptor {
     private readonly _taskQueue;
     private readonly _platform;
@@ -12,7 +13,6 @@ export declare class ThrottleBindingBehavior extends BindingInterceptor {
     callSource(args: object): unknown;
     handleChange(newValue: unknown, oldValue: unknown, flags: LifecycleFlags): void;
     updateSource(newValue: unknown, flags: LifecycleFlags): void;
-    private _queueTask;
     $bind(flags: LifecycleFlags, scope: Scope): void;
     $unbind(flags: LifecycleFlags): void;
 }

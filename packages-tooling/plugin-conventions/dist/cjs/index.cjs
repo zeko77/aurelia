@@ -6,7 +6,7 @@ var kernel = require('@aurelia/kernel');
 var path = require('path');
 var modifyCode = require('modify-code');
 var ts = require('typescript');
-var runtime = require('@aurelia/runtime');
+var runtimeHtml = require('@aurelia/runtime-html');
 var parse5 = require('parse5');
 var fs = require('fs');
 
@@ -119,7 +119,7 @@ const getHmrCode = (className, moduleText = 'module') => {
         // @ts-ignore
         Object.keys(values).forEach(key => {
           // @ts-ignore
-          if (!controller.bindings?.some(y => y.sourceExpression?.name === key && y.targetProperty)) {
+          if (!controller.bindings?.some(y => y.ast?.name === key && y.targetProperty)) {
             delete values[key];
           }
         });
@@ -539,13 +539,13 @@ function toBindingMode(mode) {
     if (mode) {
         const normalizedMode = kernel.kebabCase(mode);
         if (normalizedMode === 'one-time')
-            return runtime.BindingMode.oneTime;
+            return runtimeHtml.BindingMode.oneTime;
         if (normalizedMode === 'one-way' || normalizedMode === 'to-view')
-            return runtime.BindingMode.toView;
+            return runtimeHtml.BindingMode.toView;
         if (normalizedMode === 'from-view')
-            return runtime.BindingMode.fromView;
+            return runtimeHtml.BindingMode.fromView;
         if (normalizedMode === 'two-way')
-            return runtime.BindingMode.twoWay;
+            return runtimeHtml.BindingMode.twoWay;
     }
 }
 

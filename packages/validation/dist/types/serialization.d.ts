@@ -1,5 +1,5 @@
 import { IContainer, IServiceLocator } from '@aurelia/kernel';
-import { IExpressionParser } from '@aurelia/runtime';
+import { IExpressionParser, IAstEvaluator } from '@aurelia/runtime';
 import { Deserializer } from './ast-serialization';
 import { IPropertyRule, IRuleProperty, IValidationExpressionHydrator, IValidationRule, IValidationVisitor, IValidateable } from './rule-interfaces';
 import { IValidationRules, PropertyRule, RuleProperty } from './rule-provider';
@@ -31,6 +31,8 @@ export declare class ValidationDeserializer implements IValidationExpressionHydr
     constructor(locator: IServiceLocator, messageProvider: IValidationMessageProvider, parser: IExpressionParser);
     hydrate(raw: any, validationRules: IValidationRules): any;
     hydrateRuleset(ruleset: any[], validationRules: IValidationRules): PropertyRule[];
+}
+export interface ModelValidationExpressionHydrator extends IAstEvaluator {
 }
 export declare class ModelValidationExpressionHydrator implements IValidationExpressionHydrator {
     private readonly locator;

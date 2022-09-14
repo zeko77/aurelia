@@ -8,6 +8,7 @@ export interface IBinding {
     readonly isBound: boolean;
     $bind(flags: LifecycleFlags, scope: Scope): void;
     $unbind(flags: LifecycleFlags): void;
+    get: IServiceLocator['get'];
 }
 export declare const ICoercionConfiguration: import("@aurelia/kernel").InterfaceSymbol<ICoercionConfiguration>;
 export interface ICoercionConfiguration {
@@ -17,13 +18,6 @@ export interface ICoercionConfiguration {
     coerceNullish: boolean;
 }
 export declare type InterceptorFunc<TInput = unknown, TOutput = unknown> = (value: TInput, coercionConfig: ICoercionConfiguration | null) => TOutput;
-export declare enum BindingMode {
-    oneTime = 1,
-    toView = 2,
-    fromView = 4,
-    twoWay = 6,
-    default = 8
-}
 export declare const enum LifecycleFlags {
     none = 0,
     persistentBindingFlags = 33,

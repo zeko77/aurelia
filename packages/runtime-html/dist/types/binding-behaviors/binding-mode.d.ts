@@ -1,4 +1,5 @@
-import { BindingBehaviorInstance, BindingMode, LifecycleFlags } from '@aurelia/runtime';
+import { BindingBehaviorInstance, LifecycleFlags } from '@aurelia/runtime';
+import { BindingMode } from '../binding/interfaces-bindings';
 import type { Scope } from '@aurelia/runtime';
 import type { PropertyBinding } from '../binding/property-binding';
 export declare abstract class BindingModeBehavior implements BindingBehaviorInstance {

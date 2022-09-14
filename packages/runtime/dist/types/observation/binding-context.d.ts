@@ -1,4 +1,3 @@
-import { LifecycleFlags } from '../observation';
 import type { IIndexable } from '@aurelia/kernel';
 import type { IBinding, IBindingContext, IOverrideContext } from '../observation';
 export declare class BindingContext implements IBindingContext {
@@ -24,7 +23,7 @@ export declare class BindingContext implements IBindingContext {
      * to keep strong typing in situations where the arguments are dynamic.
      */
     static create(keyOrObj?: string | IIndexable, value?: unknown): BindingContext;
-    static get(scope: Scope, name: string, ancestor: number, flags: LifecycleFlags): IBindingContext | IOverrideContext | IBinding | undefined | null;
+    static get(scope: Scope, name: string, ancestor: number): IBindingContext | IOverrideContext | IBinding | undefined | null;
 }
 export declare class Scope {
     parentScope: Scope | null;

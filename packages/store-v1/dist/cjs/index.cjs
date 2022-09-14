@@ -13,7 +13,7 @@ var r = require("rxjs");
 var s = require("rxjs/operators");
 
 function i(t, e) {
-    if (!u(t)) throw Error("Provided state is not of type StateHistory");
+    if (!h(t)) throw Error("Provided state is not of type StateHistory");
     if (e > 0) return o(t, e - 1);
     if (e < 0) return n(t, t.past.length + e);
     return t;
@@ -55,18 +55,18 @@ function c(t, e) {
 }
 
 function a(t, e) {
-    if (u(t)) {
+    if (h(t)) {
         if (t.past.length > e) t.past = t.past.slice(t.past.length - e);
         if (t.future.length > e) t.future = t.future.slice(0, e);
     }
     return t;
 }
 
-function u(t) {
+function h(t) {
     return "undefined" !== typeof t.present && "undefined" !== typeof t.future && "undefined" !== typeof t.past && Array.isArray(t.future) && Array.isArray(t.past);
 }
 
-function h(t, e, r, s) {
+function u(t, e, r, s) {
     var i = arguments.length, o = i < 3 ? e : null === s ? s = Object.getOwnPropertyDescriptor(e, r) : s, n;
     if ("object" === typeof Reflect && "function" === typeof Reflect.decorate) o = Reflect.decorate(t, e, r, s); else for (var c = t.length - 1; c >= 0; c--) if (n = t[c]) o = (i < 3 ? n(o) : i > 3 ? n(e, r, o) : n(e, r)) || o;
     return i > 3 && o && Object.defineProperty(e, r, o), o;
@@ -88,27 +88,27 @@ exports.MiddlewarePlacement = void 0;
 })(exports.MiddlewarePlacement || (exports.MiddlewarePlacement = {}));
 
 function d(e, r, s) {
-    const i = w.container.get(t.IPlatform).console;
-    const o = void 0 !== (null === s || void 0 === s ? void 0 : s.logType) && void 0 !== i[s.logType] ? s.logType : "log";
+    const i = y.container.get(t.IPlatform).console;
+    const o = void 0 !== s?.logType && void 0 !== i[s.logType] ? s.logType : "log";
     i[o]("New state: ", e);
 }
 
 function l(t, r, s) {
-    const i = w.container.get(e.IWindow).localStorage;
+    const i = y.container.get(e.IWindow).localStorage;
     if (void 0 !== i) {
-        const e = void 0 !== (null === s || void 0 === s ? void 0 : s.key) ? s.key : p;
+        const e = void 0 !== s?.key ? s.key : p;
         i.setItem(e, JSON.stringify(t));
     }
 }
 
-function v(t, r) {
-    const s = w.container.get(e.IWindow).localStorage;
+function x(t, r) {
+    const s = y.container.get(e.IWindow).localStorage;
     if (void 0 === s) return t;
     const i = s.getItem(void 0 === r ? p : r);
     if (null === i || "" === i) return t;
     try {
         return JSON.parse(i);
-    } catch (t) {}
+    } catch {}
     return t;
 }
 
@@ -122,9 +122,8 @@ exports.LogLevel = void 0;
     t["error"] = "error";
 })(exports.LogLevel || (exports.LogLevel = {}));
 
-function x(t, e, r) {
-    var s;
-    if ((null === (s = t.logDefinitions) || void 0 === s ? void 0 : s.hasOwnProperty(e)) && t.logDefinitions[e] && Object.values(exports.LogLevel).includes(t.logDefinitions[e])) return t.logDefinitions[e];
+function w(t, e, r) {
+    if (t.logDefinitions?.hasOwnProperty(e) && t.logDefinitions[e] && Object.values(exports.LogLevel).includes(t.logDefinitions[e])) return t.logDefinitions[e];
     return r;
 }
 
@@ -135,7 +134,7 @@ exports.PerformanceMeasurement = void 0;
     t["All"] = "all";
 })(exports.PerformanceMeasurement || (exports.PerformanceMeasurement = {}));
 
-const w = {
+const y = {
     container: null
 };
 
@@ -153,7 +152,6 @@ class ReducerNoStateError extends Error {}
 
 exports.Store = class Store {
     constructor(t, e, s, i) {
-        var o, n, c, a;
         this.initialState = t;
         this.logger = e;
         this.t = s;
@@ -161,12 +159,12 @@ exports.Store = class Store {
         this.actions = new Map;
         this.middlewares = new Map;
         this.dispatchQueue = [];
-        this.options = null !== i && void 0 !== i ? i : {};
-        const u = true === (null === (n = null === (o = this.options) || void 0 === o ? void 0 : o.history) || void 0 === n ? void 0 : n.undoable);
+        this.options = i ?? {};
+        const o = true === this.options?.history?.undoable;
         this._state = new r.BehaviorSubject(t);
         this.state = this._state.asObservable();
-        if (true !== (null === (a = null === (c = this.options) || void 0 === c ? void 0 : c.devToolsOptions) || void 0 === a ? void 0 : a.disable)) this.setupDevTools();
-        if (u) this.registerHistoryMethods();
+        if (true !== this.options?.devToolsOptions?.disable) this.setupDevTools();
+        if (o) this.registerHistoryMethods();
     }
     registerMiddleware(t, e, r) {
         this.middlewares.set(t, {
@@ -251,65 +249,64 @@ exports.Store = class Store {
         }
     }
     async internalDispatch(t) {
-        var r;
-        const s = t.find((t => !this.actions.has(t.reducer)));
-        if (s) throw new UnregisteredActionError(s.reducer);
-        w.container.get(e.IWindow).performance.mark("dispatch-start");
-        const i = t.map((t => ({
+        const r = t.find((t => !this.actions.has(t.reducer)));
+        if (r) throw new UnregisteredActionError(r.reducer);
+        y.container.get(e.IWindow).performance.mark("dispatch-start");
+        const s = t.map((t => ({
             type: this.actions.get(t.reducer).type,
             params: t.params,
             reducer: t.reducer
         })));
-        const o = {
-            name: i.map((t => t.type)).join("->"),
-            params: i.reduce(((t, e) => t.concat(e.params)), []),
-            pipedActions: i.map((t => ({
+        const i = {
+            name: s.map((t => t.type)).join("->"),
+            params: s.reduce(((t, e) => t.concat(e.params)), []),
+            pipedActions: s.map((t => ({
                 name: t.type,
                 params: t.params
             })))
         };
-        if (this.options.logDispatchedActions) this.logger[x(this.options, "dispatchedActions", exports.LogLevel.info)](`Dispatching: ${o.name}`);
-        const n = await this.executeMiddlewares(this._state.getValue(), exports.MiddlewarePlacement.Before, o);
-        if (false === n) {
-            w.container.get(e.IWindow).performance.clearMarks();
-            w.container.get(e.IWindow).performance.clearMeasures();
+        if (this.options.logDispatchedActions) this.logger[w(this.options, "dispatchedActions", exports.LogLevel.info)](`Dispatching: ${i.name}`);
+        const o = await this.executeMiddlewares(this._state.getValue(), exports.MiddlewarePlacement.Before, i);
+        if (false === o) {
+            y.container.get(e.IWindow).performance.clearMarks();
+            y.container.get(e.IWindow).performance.clearMeasures();
             return;
         }
-        let c = n;
-        for (const t of i) {
-            c = await t.reducer(c, ...t.params);
-            if (false === c) {
-                w.container.get(e.IWindow).performance.clearMarks();
-                w.container.get(e.IWindow).performance.clearMeasures();
+        let n = o;
+        for (const t of s) {
+            n = await t.reducer(n, ...t.params);
+            if (false === n) {
+                y.container.get(e.IWindow).performance.clearMarks();
+                y.container.get(e.IWindow).performance.clearMeasures();
                 return;
             }
-            w.container.get(e.IWindow).performance.mark(`dispatch-after-reducer-${t.type}`);
-            if (!c && "object" !== typeof c) throw new ReducerNoStateError("The reducer has to return a new state");
+            y.container.get(e.IWindow).performance.mark(`dispatch-after-reducer-${t.type}`);
+            if (!n && "object" !== typeof n) throw new ReducerNoStateError("The reducer has to return a new state");
         }
-        let h = await this.executeMiddlewares(c, exports.MiddlewarePlacement.After, o);
-        if (false === h) {
-            w.container.get(e.IWindow).performance.clearMarks();
-            w.container.get(e.IWindow).performance.clearMeasures();
+        let c = await this.executeMiddlewares(n, exports.MiddlewarePlacement.After, i);
+        if (false === c) {
+            y.container.get(e.IWindow).performance.clearMarks();
+            y.container.get(e.IWindow).performance.clearMeasures();
             return;
         }
-        if (u(h) && (null === (r = this.options.history) || void 0 === r ? void 0 : r.limit)) h = a(h, this.options.history.limit);
-        this._state.next(h);
-        w.container.get(e.IWindow).performance.mark("dispatch-end");
+        if (h(c) && this.options.history?.limit) c = a(c, this.options.history.limit);
+        this._state.next(c);
+        y.container.get(e.IWindow).performance.mark("dispatch-end");
         if (this.options.measurePerformance === exports.PerformanceMeasurement.StartEnd) {
-            w.container.get(e.IWindow).performance.measure("startEndDispatchDuration", "dispatch-start", "dispatch-end");
-            const t = w.container.get(e.IWindow).performance.getEntriesByName("startEndDispatchDuration");
-            this.logger[x(this.options, "performanceLog", exports.LogLevel.info)](`Total duration ${t[0].duration} of dispatched action ${o.name}:`, t);
+            y.container.get(e.IWindow).performance.measure("startEndDispatchDuration", "dispatch-start", "dispatch-end");
+            const t = y.container.get(e.IWindow).performance.getEntriesByName("startEndDispatchDuration");
+            this.logger[w(this.options, "performanceLog", exports.LogLevel.info)](`Total duration ${t[0].duration} of dispatched action ${i.name}:`, t);
         } else if (this.options.measurePerformance === exports.PerformanceMeasurement.All) {
-            const t = w.container.get(e.IWindow).performance.getEntriesByType("mark");
+            const t = y.container.get(e.IWindow).performance.getEntriesByType("mark");
             const r = t[t.length - 1].startTime - t[0].startTime;
-            this.logger[x(this.options, "performanceLog", exports.LogLevel.info)](`Total duration ${r} of dispatched action ${o.name}:`, t);
+            this.logger[w(this.options, "performanceLog", exports.LogLevel.info)](`Total duration ${r} of dispatched action ${i.name}:`, t);
         }
-        w.container.get(e.IWindow).performance.clearMarks();
-        w.container.get(e.IWindow).performance.clearMeasures();
+        y.container.get(e.IWindow).performance.clearMarks();
+        y.container.get(e.IWindow).performance.clearMeasures();
         this.updateDevToolsState({
-            type: o.name,
-            params: o.params
-        }, h);
+            type: i.name,
+            params: i.params
+        }, c);
     }
     executeMiddlewares(t, r, s) {
         return Array.from(this.middlewares).filter((t => t[1].placement === r)).reduce((async (t, i, o) => {
@@ -321,28 +318,26 @@ exports.Store = class Store {
                 if (this.options.propagateError) throw e;
                 return await t;
             } finally {
-                w.container.get(e.IWindow).performance.mark(`dispatch-${r}-${i[0].name}`);
+                y.container.get(e.IWindow).performance.mark(`dispatch-${r}-${i[0].name}`);
             }
         }), t);
     }
     setupDevTools() {
         if (this.t.__REDUX_DEVTOOLS_EXTENSION__) {
-            this.logger[x(this.options, "devToolsStatus", exports.LogLevel.debug)]("DevTools are available");
+            this.logger[w(this.options, "devToolsStatus", exports.LogLevel.debug)]("DevTools are available");
             this.devToolsAvailable = true;
             this.devTools = this.t.__REDUX_DEVTOOLS_EXTENSION__.connect(this.options.devToolsOptions);
             this.devTools.init(this.initialState);
             this.devTools.subscribe((t => {
-                var e, r;
-                this.logger[x(this.options, "devToolsStatus", exports.LogLevel.debug)](`DevTools sent change ${t.type}`);
+                this.logger[w(this.options, "devToolsStatus", exports.LogLevel.debug)](`DevTools sent change ${t.type}`);
                 if ("ACTION" === t.type && void 0 !== t.payload) {
-                    const s = Array.from(this.actions).find((function([e]) {
-                        var r;
-                        return e.name === (null === (r = t.payload) || void 0 === r ? void 0 : r.name);
+                    const e = Array.from(this.actions).find((function([e]) {
+                        return e.name === t.payload?.name;
                     }));
-                    const i = null !== (r = this.lookupAction(null === (e = t.payload) || void 0 === e ? void 0 : e.name)) && void 0 !== r ? r : null === s || void 0 === s ? void 0 : s[0];
-                    if (!i) throw new DevToolsRemoteDispatchError("Tried to remotely dispatch an unregistered action");
+                    const r = this.lookupAction(t.payload?.name) ?? e?.[0];
+                    if (!r) throw new DevToolsRemoteDispatchError("Tried to remotely dispatch an unregistered action");
                     if (!t.payload.args || t.payload.args.length < 1) throw new DevToolsRemoteDispatchError("No action arguments provided");
-                    this.dispatch(i, ...t.payload.args.slice(1).map((t => JSON.parse(t)))).catch((() => {
+                    this.dispatch(r, ...t.payload.args.slice(1).map((t => JSON.parse(t)))).catch((() => {
                         throw new DevToolsRemoteDispatchError("Issue when trying to dispatch an action through devtools");
                     }));
                     return;
@@ -381,10 +376,10 @@ exports.Store = class Store {
     }
 };
 
-exports.Store = h([ f(1, t.ILogger), f(2, e.IWindow) ], exports.Store);
+exports.Store = u([ f(1, t.ILogger), f(2, e.IWindow) ], exports.Store);
 
-function y(t) {
-    const e = w.container.get(exports.Store);
+function v(t) {
+    const e = y.container.get(exports.Store);
     return async function(...r) {
         return e.dispatch(t, ...r);
     };
@@ -439,25 +434,22 @@ function E(t) {
         };
         return Object.entries({
             ...t ? s.selector : e
-        }).map((([e, r]) => {
-            var i, o;
-            return {
-                targets: s.target && t ? [ s.target, e ] : [ e ],
-                selector: r,
-                changeHandlers: {
-                    [null !== (i = s.onChanged) && void 0 !== i ? i : ""]: 1,
-                    [`${null !== (o = s.target) && void 0 !== o ? o : e}Changed`]: s.target ? 0 : 1,
-                    propertyChanged: 0
-                }
-            };
-        }));
+        }).map((([e, r]) => ({
+            targets: s.target && t ? [ s.target, e ] : [ e ],
+            selector: r,
+            changeHandlers: {
+                [s.onChanged ?? ""]: 1,
+                [`${s.target ?? e}Changed`]: s.target ? 0 : 1,
+                propertyChanged: 0
+            }
+        })));
     }
     return function(s) {
         const n = "object" === typeof t && t.setup ? s.prototype[t.setup] : s.prototype.binding;
         const c = "object" === typeof t && t.teardown ? s.prototype[t.teardown] : s.prototype.unbinding;
         s.prototype["object" === typeof t && void 0 !== t.setup ? t.setup : "binding"] = function() {
             if ("object" === typeof t && "string" === typeof t.onChanged && !(t.onChanged in this)) throw new Error("Provided onChanged handler does not exist on target VM");
-            const r = e.Controller.getCached(this) ? e.Controller.getCached(this).container.get(exports.Store) : w.container.get(exports.Store);
+            const r = e.Controller.getCached(this) ? e.Controller.getCached(this).container.get(exports.Store) : y.container.get(exports.Store);
             this._stateSubscriptions = o().map((t => i(r, t.selector).subscribe((e => {
                 const r = t.targets.length - 1;
                 const s = t.targets.reduce(((t = {}, e) => t[e]), this);
@@ -490,20 +482,19 @@ const T = {
         return this;
     },
     register(r) {
-        var s;
-        w.container = r;
-        const i = Reflect.get(this, "state");
-        const o = Reflect.get(this, "options");
-        const n = r.get(t.ILogger);
-        const c = r.get(e.IWindow);
-        if (!i) throw new Error("initialState must be provided via withInitialState builder method");
-        let a = i;
-        if ((null === (s = null === o || void 0 === o ? void 0 : o.history) || void 0 === s ? void 0 : s.undoable) && !u(i)) a = {
+        y.container = r;
+        const s = Reflect.get(this, "state");
+        const i = Reflect.get(this, "options");
+        const o = r.get(t.ILogger);
+        const n = r.get(e.IWindow);
+        if (!s) throw new Error("initialState must be provided via withInitialState builder method");
+        let c = s;
+        if (i?.history?.undoable && !h(s)) c = {
             past: [],
-            present: i,
+            present: s,
             future: []
         };
-        t.Registration.instance(exports.Store, new exports.Store(a, n, c, o)).register(r);
+        t.Registration.instance(exports.Store, new exports.Store(c, o, n, i)).register(r);
         return r;
     }
 };
@@ -516,7 +507,7 @@ exports.DevToolsRemoteDispatchError = DevToolsRemoteDispatchError;
 
 exports.ReducerNoStateError = ReducerNoStateError;
 
-exports.STORE = w;
+exports.STORE = y;
 
 exports.StoreConfiguration = T;
 
@@ -526,13 +517,13 @@ exports.applyLimits = a;
 
 exports.connectTo = E;
 
-exports.dispatchify = y;
+exports.dispatchify = v;
 
 exports.executeSteps = g;
 
-exports.getLogType = x;
+exports.getLogType = w;
 
-exports.isStateHistory = u;
+exports.isStateHistory = h;
 
 exports.jump = i;
 
@@ -542,5 +533,5 @@ exports.logMiddleware = d;
 
 exports.nextStateHistory = c;
 
-exports.rehydrateFromLocalStorage = v;
+exports.rehydrateFromLocalStorage = x;
 //# sourceMappingURL=index.cjs.map

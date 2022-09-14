@@ -466,9 +466,8 @@ class ContainerConfiguration {
         this.defaultResolver = e;
     }
     static from(t) {
-        var e, n;
         if (void 0 === t || t === ContainerConfiguration.DEFAULT) return ContainerConfiguration.DEFAULT;
-        return new ContainerConfiguration(null !== (e = t.inheritParentResources) && void 0 !== e ? e : false, null !== (n = t.defaultResolver) && void 0 !== n ? n : G.singleton);
+        return new ContainerConfiguration(t.inheritParentResources ?? false, t.defaultResolver ?? G.singleton);
     }
 }
 
@@ -498,7 +497,7 @@ const K = {
         i.$isInterface = true;
         i.friendlyName = null == r ? "(anonymous)" : r;
         if (null != n) i.register = function(t, e) {
-            return n(new ResolverBuilder(t, null !== e && void 0 !== e ? e : i));
+            return n(new ResolverBuilder(t, e ?? i));
         };
         i.toString = function t() {
             return `InterfaceSymbol<${i.friendlyName}>`;
@@ -738,14 +737,13 @@ class Resolver {
         }
     }
     getFactory(t) {
-        var e, n, r;
         switch (this.strategy) {
           case 1:
           case 2:
             return t.getFactory(this.state);
 
           case 5:
-            return null !== (r = null === (n = null === (e = t.getResolver(this.state)) || void 0 === e ? void 0 : e.getFactory) || void 0 === n ? void 0 : n.call(e, t)) && void 0 !== r ? r : null;
+            return t.getResolver(this.state)?.getFactory?.(t) ?? null;
 
           default:
             return null;
@@ -774,8 +772,7 @@ class Factory {
         return this.transformers.reduce(dt, n);
     }
     registerTransformer(t) {
-        var e;
-        (null !== (e = this.transformers) && void 0 !== e ? e : this.transformers = []).push(t);
+        (this.transformers ?? (this.transformers = [])).push(t);
     }
 }
 
@@ -977,7 +974,7 @@ class Container {
                 inheritParentResources: false
             }));
         }
-        return new Container(this, ContainerConfiguration.from(null !== t && void 0 !== t ? t : this.config));
+        return new Container(this, ContainerConfiguration.from(t ?? this.config));
     }
     disposeResolvers() {
         const t = this.u;
@@ -1008,15 +1005,14 @@ class Container {
         return null;
     }
     create(t, e) {
-        var n, r;
-        const i = t.keyFrom(e);
-        let s = this.res[i];
-        if (void 0 === s) {
-            s = this.root.res[i];
-            if (void 0 === s) return null;
-            return null !== (n = s.resolve(this.root, this)) && void 0 !== n ? n : null;
+        const n = t.keyFrom(e);
+        let r = this.res[n];
+        if (void 0 === r) {
+            r = this.root.res[n];
+            if (void 0 === r) return null;
+            return r.resolve(this.root, this) ?? null;
         }
-        return null !== (r = s.resolve(this, this)) && void 0 !== r ? r : null;
+        return r.resolve(this, this) ?? null;
     }
     dispose() {
         if (this.i.size > 0) this.disposeResolvers();
@@ -1362,44 +1358,43 @@ Vt = Lt([ Ut(0, Ft) ], Vt);
 
 let qt = class DefaultLogger {
     constructor(t, e, n, r = [], i = null) {
-        var s, o, u, c, f, a;
         this.config = t;
         this.factory = e;
         this.scope = r;
         this.scopedLoggers = l();
-        let h;
-        let d;
-        let v;
-        let w;
-        let g;
-        let p;
+        let s;
+        let o;
+        let u;
+        let c;
+        let f;
+        let a;
         if (null === i) {
             this.root = this;
             this.parent = this;
-            h = this.traceSinks = [];
-            d = this.debugSinks = [];
-            v = this.infoSinks = [];
-            w = this.warnSinks = [];
-            g = this.errorSinks = [];
-            p = this.fatalSinks = [];
+            s = this.traceSinks = [];
+            o = this.debugSinks = [];
+            u = this.infoSinks = [];
+            c = this.warnSinks = [];
+            f = this.errorSinks = [];
+            a = this.fatalSinks = [];
             for (const t of n) {
                 const e = zt.getHandles(t);
-                if (null !== (s = null === e || void 0 === e ? void 0 : e.includes(0)) && void 0 !== s ? s : true) h.push(t);
-                if (null !== (o = null === e || void 0 === e ? void 0 : e.includes(1)) && void 0 !== o ? o : true) d.push(t);
-                if (null !== (u = null === e || void 0 === e ? void 0 : e.includes(2)) && void 0 !== u ? u : true) v.push(t);
-                if (null !== (c = null === e || void 0 === e ? void 0 : e.includes(3)) && void 0 !== c ? c : true) w.push(t);
-                if (null !== (f = null === e || void 0 === e ? void 0 : e.includes(4)) && void 0 !== f ? f : true) g.push(t);
-                if (null !== (a = null === e || void 0 === e ? void 0 : e.includes(5)) && void 0 !== a ? a : true) p.push(t);
+                if (e?.includes(0) ?? true) s.push(t);
+                if (e?.includes(1) ?? true) o.push(t);
+                if (e?.includes(2) ?? true) u.push(t);
+                if (e?.includes(3) ?? true) c.push(t);
+                if (e?.includes(4) ?? true) f.push(t);
+                if (e?.includes(5) ?? true) a.push(t);
             }
         } else {
             this.root = i.root;
             this.parent = i;
-            h = this.traceSinks = i.traceSinks;
-            d = this.debugSinks = i.debugSinks;
-            v = this.infoSinks = i.infoSinks;
-            w = this.warnSinks = i.warnSinks;
-            g = this.errorSinks = i.errorSinks;
-            p = this.fatalSinks = i.fatalSinks;
+            s = this.traceSinks = i.traceSinks;
+            o = this.debugSinks = i.debugSinks;
+            u = this.infoSinks = i.infoSinks;
+            c = this.warnSinks = i.warnSinks;
+            f = this.errorSinks = i.errorSinks;
+            a = this.fatalSinks = i.fatalSinks;
         }
     }
     trace(t, ...e) {

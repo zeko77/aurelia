@@ -48,6 +48,7 @@ export interface IRoutingInstruction {
     parameters?: ComponentParameters;
     children?: LoadInstruction[];
     options?: ILoadOptions;
+    id?: string;
 }
 export interface IComponentAndOrViewportOrNothing {
     component?: ComponentAppellation;

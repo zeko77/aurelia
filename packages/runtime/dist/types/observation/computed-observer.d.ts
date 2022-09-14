@@ -10,8 +10,14 @@ export declare class ComputedObserver implements IObserver, IConnectableBinding,
     interceptor: this;
     type: AccessorType;
     readonly queue: FlushQueue;
-    readonly get: (watcher: IConnectable) => unknown;
-    readonly set: undefined | ((v: unknown) => void);
+    /**
+     * The getter this observer is wrapping
+     */
+    readonly $get: (watcher: IConnectable) => unknown;
+    /**
+     * The setter this observer is wrapping
+     */
+    readonly $set: undefined | ((v: unknown) => void);
     /**
      * A semi-private property used by connectable mixin
      */

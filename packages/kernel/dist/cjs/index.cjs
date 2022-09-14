@@ -137,7 +137,7 @@ const h = function() {
     };
 }();
 
-const d = function() {
+const p = function() {
     const t = o();
     return function(e) {
         let r = t[e];
@@ -150,7 +150,7 @@ const d = function() {
     };
 }();
 
-const v = function() {
+const d = function() {
     const t = o();
     function e(t, e) {
         return e ? `-${t.toLowerCase()}` : t.toLowerCase();
@@ -162,7 +162,7 @@ const v = function() {
     };
 }();
 
-function p(t) {
+function v(t) {
     const {length: e} = t;
     const r = Array(e);
     let n = 0;
@@ -472,9 +472,8 @@ class ContainerConfiguration {
         this.defaultResolver = e;
     }
     static from(t) {
-        var e, r;
         if (void 0 === t || t === ContainerConfiguration.DEFAULT) return ContainerConfiguration.DEFAULT;
-        return new ContainerConfiguration(null !== (e = t.inheritParentResources) && void 0 !== e ? e : false, null !== (r = t.defaultResolver) && void 0 !== r ? r : z.singleton);
+        return new ContainerConfiguration(t.inheritParentResources ?? false, t.defaultResolver ?? z.singleton);
     }
 }
 
@@ -504,7 +503,7 @@ const Q = {
         o.$isInterface = true;
         o.friendlyName = null == n ? "(anonymous)" : n;
         if (null != r) o.register = function(t, e) {
-            return r(new ResolverBuilder(t, null !== e && void 0 !== e ? e : o));
+            return r(new ResolverBuilder(t, e ?? o));
         };
         o.toString = function t() {
             return `InterfaceSymbol<${o.friendlyName}>`;
@@ -744,14 +743,13 @@ class Resolver {
         }
     }
     getFactory(t) {
-        var e, r, n;
         switch (this.strategy) {
           case 1:
           case 2:
             return t.getFactory(this.state);
 
           case 5:
-            return null !== (n = null === (r = null === (e = t.getResolver(this.state)) || void 0 === e ? void 0 : e.getFactory) || void 0 === r ? void 0 : r.call(e, t)) && void 0 !== n ? n : null;
+            return t.getResolver(this.state)?.getFactory?.(t) ?? null;
 
           default:
             return null;
@@ -780,8 +778,7 @@ class Factory {
         return this.transformers.reduce(at, r);
     }
     registerTransformer(t) {
-        var e;
-        (null !== (e = this.transformers) && void 0 !== e ? e : this.transformers = []).push(t);
+        (this.transformers ?? (this.transformers = [])).push(t);
     }
 }
 
@@ -792,16 +789,16 @@ const ht = {
     }
 };
 
-function dt(t) {
+function pt(t) {
     return i(t.register);
 }
 
-function vt(t) {
-    return dt(t) && "boolean" === typeof t.registerInRequestor;
+function dt(t) {
+    return pt(t) && "boolean" === typeof t.registerInRequestor;
 }
 
-function pt(t) {
-    return vt(t) && t.registerInRequestor;
+function vt(t) {
+    return dt(t) && t.registerInRequestor;
 }
 
 function wt(t) {
@@ -851,7 +848,7 @@ class Container {
         for (;u < l; ++u) {
             r = e[u];
             if (!t.isObject(r)) continue;
-            if (dt(r)) r.register(this); else if (T.resource.has(r)) {
+            if (pt(r)) r.register(this); else if (T.resource.has(r)) {
                 const t = T.resource.getAll(r);
                 if (1 === t.length) t[0].register(this); else {
                     s = 0;
@@ -868,7 +865,7 @@ class Container {
                 for (;s < o; ++s) {
                     i = r[n[s]];
                     if (!t.isObject(i)) continue;
-                    if (dt(i)) i.register(this); else this.register(i);
+                    if (pt(i)) i.register(this); else this.register(i);
                 }
             }
         }
@@ -909,7 +906,7 @@ class Container {
             n = r.u.get(t);
             if (null == n) {
                 if (null == r.parent) {
-                    const n = pt(t) ? this : r;
+                    const n = vt(t) ? this : r;
                     return e ? this.R(t, n) : null;
                 }
                 r = r.parent;
@@ -929,7 +926,7 @@ class Container {
             r = e.u.get(t);
             if (null == r) {
                 if (null == e.parent) {
-                    const n = pt(t) ? this : e;
+                    const n = vt(t) ? this : e;
                     r = this.R(t, n);
                     return r.resolve(e, this);
                 }
@@ -983,7 +980,7 @@ class Container {
                 inheritParentResources: false
             }));
         }
-        return new Container(this, ContainerConfiguration.from(null !== t && void 0 !== t ? t : this.config));
+        return new Container(this, ContainerConfiguration.from(t ?? this.config));
     }
     disposeResolvers() {
         const t = this.u;
@@ -1014,15 +1011,14 @@ class Container {
         return null;
     }
     create(t, e) {
-        var r, n;
-        const i = t.keyFrom(e);
-        let s = this.res[i];
-        if (void 0 === s) {
-            s = this.root.res[i];
-            if (void 0 === s) return null;
-            return null !== (r = s.resolve(this.root, this)) && void 0 !== r ? r : null;
+        const r = t.keyFrom(e);
+        let n = this.res[r];
+        if (void 0 === n) {
+            n = this.root.res[r];
+            if (void 0 === n) return null;
+            return n.resolve(this.root, this) ?? null;
         }
-        return null !== (n = s.resolve(this, this)) && void 0 !== n ? n : null;
+        return n.resolve(this, this) ?? null;
     }
     dispose() {
         if (this.i.size > 0) this.disposeResolvers();
@@ -1031,7 +1027,7 @@ class Container {
     R(t, e) {
         if (!i(t)) throw new Error(`AUR0009:${t}`);
         if (xt.has(t.name)) throw new Error(`AUR0010:${t.name}`);
-        if (dt(t)) {
+        if (pt(t)) {
             const r = t.register(e, t);
             if (!(r instanceof Object) || null == r.resolve) {
                 const r = e.u.get(t);
@@ -1368,44 +1364,43 @@ exports.ConsoleSink = Mt([ kt(0, Ot) ], exports.ConsoleSink);
 
 exports.DefaultLogger = class DefaultLogger {
     constructor(t, e, r, n = [], i = null) {
-        var s, u, l, c, f, a;
         this.config = t;
         this.factory = e;
         this.scope = n;
         this.scopedLoggers = o();
-        let h;
-        let d;
-        let v;
-        let p;
-        let w;
-        let g;
+        let s;
+        let u;
+        let l;
+        let c;
+        let f;
+        let a;
         if (null === i) {
             this.root = this;
             this.parent = this;
-            h = this.traceSinks = [];
-            d = this.debugSinks = [];
-            v = this.infoSinks = [];
-            p = this.warnSinks = [];
-            w = this.errorSinks = [];
-            g = this.fatalSinks = [];
+            s = this.traceSinks = [];
+            u = this.debugSinks = [];
+            l = this.infoSinks = [];
+            c = this.warnSinks = [];
+            f = this.errorSinks = [];
+            a = this.fatalSinks = [];
             for (const t of r) {
                 const e = Dt.getHandles(t);
-                if (null !== (s = null === e || void 0 === e ? void 0 : e.includes(0)) && void 0 !== s ? s : true) h.push(t);
-                if (null !== (u = null === e || void 0 === e ? void 0 : e.includes(1)) && void 0 !== u ? u : true) d.push(t);
-                if (null !== (l = null === e || void 0 === e ? void 0 : e.includes(2)) && void 0 !== l ? l : true) v.push(t);
-                if (null !== (c = null === e || void 0 === e ? void 0 : e.includes(3)) && void 0 !== c ? c : true) p.push(t);
-                if (null !== (f = null === e || void 0 === e ? void 0 : e.includes(4)) && void 0 !== f ? f : true) w.push(t);
-                if (null !== (a = null === e || void 0 === e ? void 0 : e.includes(5)) && void 0 !== a ? a : true) g.push(t);
+                if (e?.includes(0) ?? true) s.push(t);
+                if (e?.includes(1) ?? true) u.push(t);
+                if (e?.includes(2) ?? true) l.push(t);
+                if (e?.includes(3) ?? true) c.push(t);
+                if (e?.includes(4) ?? true) f.push(t);
+                if (e?.includes(5) ?? true) a.push(t);
             }
         } else {
             this.root = i.root;
             this.parent = i;
-            h = this.traceSinks = i.traceSinks;
-            d = this.debugSinks = i.debugSinks;
-            v = this.infoSinks = i.infoSinks;
-            p = this.warnSinks = i.warnSinks;
-            w = this.errorSinks = i.errorSinks;
-            g = this.fatalSinks = i.fatalSinks;
+            s = this.traceSinks = i.traceSinks;
+            u = this.debugSinks = i.debugSinks;
+            l = this.infoSinks = i.infoSinks;
+            c = this.warnSinks = i.warnSinks;
+            f = this.errorSinks = i.errorSinks;
+            a = this.fatalSinks = i.fatalSinks;
         }
     }
     trace(t, ...e) {
@@ -1703,7 +1698,7 @@ exports.isNumberOrBigInt = c;
 
 exports.isStringOrDate = f;
 
-exports.kebabCase = v;
+exports.kebabCase = d;
 
 exports.lazy = rt;
 
@@ -1725,7 +1720,7 @@ exports.onResolve = I;
 
 exports.optional = nt;
 
-exports.pascalCase = d;
+exports.pascalCase = p;
 
 exports.resetId = x;
 
@@ -1735,7 +1730,7 @@ exports.singleton = Z;
 
 exports.sink = Pt;
 
-exports.toArray = p;
+exports.toArray = v;
 
 exports.transient = X;
 //# sourceMappingURL=index.cjs.map

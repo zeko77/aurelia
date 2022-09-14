@@ -5,13 +5,13 @@ import type { IAstBasedBinding } from './interfaces-bindings';
 export interface RefBinding extends IAstBasedBinding {
 }
 export declare class RefBinding implements IAstBasedBinding {
-    sourceExpression: IsBindingBehavior;
-    target: object;
     locator: IServiceLocator;
+    ast: IsBindingBehavior;
+    target: object;
     interceptor: this;
     isBound: boolean;
     $scope?: Scope;
-    constructor(sourceExpression: IsBindingBehavior, target: object, locator: IServiceLocator);
+    constructor(locator: IServiceLocator, ast: IsBindingBehavior, target: object);
     $bind(flags: LifecycleFlags, scope: Scope): void;
     $unbind(flags: LifecycleFlags): void;
     observe(_obj: IIndexable, _propertyName: string): void;

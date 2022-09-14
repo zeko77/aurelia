@@ -116,6 +116,10 @@ exports.AuSlotsInfo = e.AuSlotsInfo;
 
 exports.Bindable = e.Bindable;
 
+exports.BindingBehavior = e.BindingBehavior;
+
+exports.BindingMode = e.BindingMode;
+
 exports.Controller = e.Controller;
 
 exports.CustomAttribute = e.CustomAttribute;
@@ -190,13 +194,19 @@ exports.StyleConfiguration = e.StyleConfiguration;
 
 exports.TemplateCompilerHooks = e.TemplateCompilerHooks;
 
+exports.ValueConverter = e.ValueConverter;
+
 exports.ViewFactory = e.ViewFactory;
 
 exports.WcCustomElementRegistry = e.WcCustomElementRegistry;
 
+exports.alias = e.alias;
+
 exports.attributePattern = e.attributePattern;
 
 exports.bindable = e.bindable;
+
+exports.bindingBehavior = e.bindingBehavior;
 
 exports.bindingCommand = e.bindingCommand;
 
@@ -218,6 +228,8 @@ exports.customElement = e.customElement;
 
 exports.lifecycleHooks = e.lifecycleHooks;
 
+exports.registerAliases = e.registerAliases;
+
 exports.renderer = e.renderer;
 
 exports.shadowCSS = e.shadowCSS;
@@ -229,6 +241,8 @@ exports.templateCompilerHooks = e.templateCompilerHooks;
 exports.templateController = e.templateController;
 
 exports.useShadowDOM = e.useShadowDOM;
+
+exports.valueConverter = e.valueConverter;
 
 exports.HttpClient = s.HttpClient;
 
@@ -274,10 +288,6 @@ exports.RouterRegistration = x.RouterRegistration;
 
 exports.route = x.route;
 
-exports.BindingBehavior = a.BindingBehavior;
-
-exports.BindingMode = a.BindingMode;
-
 exports.CollectionKind = a.CollectionKind;
 
 exports.ComputedObserver = a.ComputedObserver;
@@ -288,19 +298,9 @@ exports.ISignaler = a.ISignaler;
 
 exports.LifecycleFlags = a.LifecycleFlags;
 
-exports.ValueConverter = a.ValueConverter;
-
-exports.alias = a.alias;
-
-exports.bindingBehavior = a.bindingBehavior;
-
 exports.observable = a.observable;
 
-exports.registerAliases = a.registerAliases;
-
 exports.subscriberCollection = a.subscriberCollection;
-
-exports.valueConverter = a.valueConverter;
 
 exports.Aurelia = Aurelia;
 

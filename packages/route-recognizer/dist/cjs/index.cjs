@@ -36,30 +36,29 @@ class RecognizedRoute {
 
 class Candidate {
     constructor(t, s, e, n) {
-        var i;
         this.chars = t;
         this.states = s;
         this.skippedStates = e;
         this.result = n;
         this.head = s[s.length - 1];
-        this.endpoint = null === (i = this.head) || void 0 === i ? void 0 : i.endpoint;
+        this.endpoint = this.head?.endpoint;
     }
     advance(t) {
         const {chars: s, states: e, skippedStates: n, result: i} = this;
         let r = null;
         let o = 0;
         const l = e[e.length - 1];
-        function u(c, a) {
-            if (c.isMatch(t)) if (1 === ++o) r = c; else i.add(new Candidate(s.concat(t), e.concat(c), null === a ? n : n.concat(a), i));
-            if (null === l.segment && c.isOptional && null !== c.nextStates) {
-                if (c.nextStates.length > 1) throw new Error(`${c.nextStates.length} nextStates`);
-                const t = c.nextStates[0];
+        function c(u, h) {
+            if (u.isMatch(t)) if (1 === ++o) r = u; else i.add(new Candidate(s.concat(t), e.concat(u), null === h ? n : n.concat(h), i));
+            if (null === l.segment && u.isOptional && null !== u.nextStates) {
+                if (u.nextStates.length > 1) throw new Error(`${u.nextStates.length} nextStates`);
+                const t = u.nextStates[0];
                 if (!t.isSeparator) throw new Error(`Not a separator`);
-                if (null !== t.nextStates) for (const s of t.nextStates) u(s, c);
+                if (null !== t.nextStates) for (const s of t.nextStates) c(s, u);
             }
         }
-        if (l.isDynamic) u(l, null);
-        if (null !== l.nextStates) for (const t of l.nextStates) u(t, null);
+        if (l.isDynamic) c(l, null);
+        if (null !== l.nextStates) for (const t of l.nextStates) c(t, null);
         if (null !== r) {
             e.push(this.head = r);
             s.push(t);
@@ -210,9 +209,9 @@ class RouteRecognizer {
                 break;
             }
         }
-        const u = new Endpoint(i, o);
-        l.setEndpoint(u);
-        n.set(s, u);
+        const c = new Endpoint(i, o);
+        l.setEndpoint(c);
+        n.set(s, c);
     }
     recognize(t) {
         let s = this.cache.get(t);
@@ -236,8 +235,7 @@ class RouteRecognizer {
         return new RecognizedRoute(n, i);
     }
     getEndpoint(t) {
-        var s;
-        return null !== (s = this.endpointLookup.get(t)) && void 0 !== s ? s : null;
+        return this.endpointLookup.get(t) ?? null;
     }
 }
 
@@ -248,7 +246,7 @@ class State {
         this.value = e;
         this.nextStates = null;
         this.endpoint = null;
-        switch (null === s || void 0 === s ? void 0 : s.kind) {
+        switch (s?.kind) {
           case 2:
             this.length = t.length + 1;
             this.isSeparator = false;
@@ -284,10 +282,7 @@ class State {
         if (null === n) {
             e = void 0;
             n = this.nextStates = [];
-        } else if (null === t) e = n.find((t => t.value === s)); else e = n.find((s => {
-            var e;
-            return null === (e = s.segment) || void 0 === e ? void 0 : e.equals(t);
-        }));
+        } else if (null === t) e = n.find((t => t.value === s)); else e = n.find((s => s.segment?.equals(t)));
         if (void 0 === e) n.push(e = new State(this, t, s));
         return e;
     }
@@ -301,7 +296,7 @@ class State {
     }
     isMatch(t) {
         const s = this.segment;
-        switch (null === s || void 0 === s ? void 0 : s.kind) {
+        switch (s?.kind) {
           case 2:
             return !this.value.includes(t);
 

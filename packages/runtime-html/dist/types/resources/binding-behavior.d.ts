@@ -1,18 +1,11 @@
-import { ResourceType } from '@aurelia/kernel';
-import { BindingMode, Collection, IndexMap, LifecycleFlags } from './observation';
-import type { Constructable, IContainer, ResourceDefinition, IResourceKind, PartialResourceDefinition, IServiceLocator } from '@aurelia/kernel';
-import type { BindingObserverRecord, IConnectableBinding } from './binding/connectable';
-import type { BindingBehaviorExpression, ForOfStatement, IsBindingBehavior } from './binding/ast';
-import type { IObserverLocator } from './observation/observer-locator';
-import type { IBinding } from './observation';
-import type { Scope } from './observation/binding-context';
+import { Resolved, ResourceType } from '@aurelia/kernel';
+import { BindingBehaviorInstance, Collection, IndexMap, LifecycleFlags, ValueConverterInstance } from '@aurelia/runtime';
+import { BindingMode } from '../binding/interfaces-bindings';
+import type { Constructable, IContainer, IResourceKind, IServiceLocator, Key, PartialResourceDefinition, ResourceDefinition } from '@aurelia/kernel';
+import type { BindingBehaviorExpression, BindingObserverRecord, ForOfStatement, IConnectableBinding, IObserverLocator, IsBindingBehavior, Scope } from '@aurelia/runtime';
 export declare type PartialBindingBehaviorDefinition = PartialResourceDefinition<{
     strategy?: BindingBehaviorStrategy;
 }>;
-export declare type BindingBehaviorInstance<T extends {} = {}> = {
-    bind(flags: LifecycleFlags, scope: Scope, binding: IBinding, ...args: T[]): void;
-    unbind(flags: LifecycleFlags, scope: Scope, binding: IBinding, ...args: T[]): void;
-} & T;
 export declare const enum BindingBehaviorStrategy {
     singleton = 1,
     interceptor = 2
@@ -59,15 +52,19 @@ export interface BindingInterceptor extends IConnectableBinding {
 export declare class BindingInterceptor implements IInterceptableBinding {
     readonly binding: IInterceptableBinding;
     readonly expr: BindingBehaviorExpression;
+    readonly type = "instance";
     interceptor: this;
     readonly oL: IObserverLocator;
     readonly locator: IServiceLocator;
     readonly $scope: Scope | undefined;
     readonly isBound: boolean;
     readonly obs: BindingObserverRecord;
-    readonly sourceExpression: IsBindingBehavior | ForOfStatement;
+    readonly ast: IsBindingBehavior | ForOfStatement;
     readonly mode: BindingMode;
     constructor(binding: IInterceptableBinding, expr: BindingBehaviorExpression);
+    get(key: Key): Resolved<Key>;
+    getConverter<T>(name: string): ValueConverterInstance<T> | undefined;
+    getBehavior<T>(name: string): BindingBehaviorInstance<T> | undefined;
     updateTarget(value: unknown, flags: LifecycleFlags): void;
     updateSource(value: unknown, flags: LifecycleFlags): void;
     callSource(args: object): unknown;

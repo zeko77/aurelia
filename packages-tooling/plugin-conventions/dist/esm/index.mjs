@@ -2,7 +2,7 @@ import { camelCase, kebabCase } from '@aurelia/kernel';
 import * as path from 'path';
 import modifyCode from 'modify-code';
 import * as ts from 'typescript';
-import { BindingMode } from '@aurelia/runtime';
+import { BindingMode } from '@aurelia/runtime-html';
 import { parseFragment } from 'parse5';
 import * as fs from 'fs';
 
@@ -96,7 +96,7 @@ const getHmrCode = (className, moduleText = 'module') => {
         // @ts-ignore
         Object.keys(values).forEach(key => {
           // @ts-ignore
-          if (!controller.bindings?.some(y => y.sourceExpression?.name === key && y.targetProperty)) {
+          if (!controller.bindings?.some(y => y.ast?.name === key && y.targetProperty)) {
             delete values[key];
           }
         });

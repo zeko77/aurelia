@@ -10,6 +10,7 @@ import { Step } from './utilities/runner';
 import { Endpoint, IConnectedCustomElement } from './endpoints/endpoint';
 import { EndpointContent, Navigation } from './index';
 import { IContainer } from '@aurelia/kernel';
+import { Parameters } from './instructions/instruction-parameters';
 export declare type TransitionAction = 'skip' | 'reload' | 'swap' | '';
 /**
  * The router uses routing scopes to organize all endpoints (viewports and viewport
@@ -151,7 +152,7 @@ export declare class RoutingScope {
     canUnload(coordinator: NavigationCoordinator, step: Step<boolean> | null): boolean | Promise<boolean>;
     unload(coordinator: NavigationCoordinator, step: Step<void> | null): Step<void>;
     matchScope(instructions: RoutingInstruction[], deep?: boolean): RoutingInstruction[];
-    findMatchingRoute(path: string): FoundRoute | null;
+    findMatchingRoute(path: string, parameters: Parameters): FoundRoute;
     private findMatchingRouteInRoutes;
     private ensureProperRoute;
 }

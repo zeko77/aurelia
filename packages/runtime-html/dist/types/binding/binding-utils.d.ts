@@ -1,4 +1,5 @@
-import type { ISubscriber, LifecycleFlags } from '@aurelia/runtime';
+import { Constructable } from '@aurelia/kernel';
+import { IAstEvaluator, ISubscriber, LifecycleFlags } from '@aurelia/runtime';
 import type { IAstBasedBinding } from './interfaces-bindings';
 interface ITwoWayBindingImpl extends IAstBasedBinding {
     updateSource(value: unknown, flags: LifecycleFlags): void;
@@ -11,5 +12,11 @@ export declare class BindingTargetSubscriber implements ISubscriber {
     constructor(b: ITwoWayBindingImpl);
     handleChange(value: unknown, _: unknown, flags: LifecycleFlags): void;
 }
+/**
+ * Turns a class into AST evaluator, and optionally connectable
+ *
+ * @param strict - whether the evaluation of AST nodes will be in strict mode
+ */
+export declare function astEvaluator(strict?: boolean | undefined, strictFnCall?: boolean): (target: Constructable<IAstEvaluator>) => void;
 export {};
 //# sourceMappingURL=binding-utils.d.ts.map

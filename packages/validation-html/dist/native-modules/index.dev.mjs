@@ -1,7 +1,7 @@
 import { DI, IServiceLocator, optional, Registration, noop } from '../../../kernel/dist/native-modules/index.mjs';
 import { parsePropertyName, ValidationResult, ValidateInstruction, PropertyRule, IValidator, getDefaultValidationConfiguration, ValidationConfiguration } from '../../../validation/dist/native-modules/index.mjs';
-import { IPlatform, bindable, INode, customAttribute, PropertyBinding, CustomElement } from '../../../runtime-html/dist/native-modules/index.mjs';
-import { IExpressionParser, BindingMode, bindingBehavior, BindingInterceptor, BindingMediator } from '../../../runtime/dist/native-modules/index.mjs';
+import { IPlatform, bindable, INode, BindingMode, customAttribute, bindingBehavior, astEvaluator, BindingInterceptor, PropertyBinding, CustomElement } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { IExpressionParser, connectable } from '../../../runtime/dist/native-modules/index.mjs';
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -68,17 +68,16 @@ class PropertyInfo {
         this.propertyName = propertyName;
     }
 }
-function getPropertyInfo(binding, info, flags = 0) {
+function getPropertyInfo(binding, info, _flags = 0) {
     let propertyInfo = info.propertyInfo;
     if (propertyInfo !== void 0) {
         return propertyInfo;
     }
     const scope = info.scope;
-    let expression = binding.sourceExpression.expression;
-    const locator = binding.locator;
+    let expression = binding.ast.expression;
     let toCachePropertyName = true;
     let propertyName = '';
-    while (expression !== void 0 && (expression === null || expression === void 0 ? void 0 : expression.$kind) !== 10082) {
+    while (expression !== void 0 && expression?.$kind !== 10082) {
         let memberName;
         switch (expression.$kind) {
             case 38963:
@@ -93,7 +92,7 @@ function getPropertyInfo(binding, info, flags = 0) {
                 if (toCachePropertyName) {
                     toCachePropertyName = keyExpr.$kind === 17925;
                 }
-                memberName = `[${keyExpr.evaluate(flags, scope, locator, null).toString()}]`;
+                memberName = `[${keyExpr.evaluate(scope, binding, null).toString()}]`;
                 break;
             }
             default:
@@ -104,7 +103,7 @@ function getPropertyInfo(binding, info, flags = 0) {
         expression = expression.object;
     }
     if (expression === void 0) {
-        throw new Error(`Unable to parse binding expression: ${binding.sourceExpression.expression}`);
+        throw new Error(`Unable to parse binding expression: ${binding.ast.expression}`);
     }
     let object;
     if (propertyName.length === 0) {
@@ -112,7 +111,7 @@ function getPropertyInfo(binding, info, flags = 0) {
         object = scope.bindingContext;
     }
     else {
-        object = expression.evaluate(flags, scope, locator, null);
+        object = expression.evaluate(scope, binding, null);
     }
     if (object === null || object === void 0) {
         return (void 0);
@@ -172,11 +171,10 @@ let ValidationController = class ValidationController {
         this.bindings.delete(binding);
     }
     async validate(instruction) {
-        var _a;
-        const { object: obj, objectTag, flags } = instruction !== null && instruction !== void 0 ? instruction : {};
+        const { object: obj, objectTag, flags } = instruction ?? {};
         let instructions;
         if (obj !== void 0) {
-            instructions = [new ValidateInstruction(obj, instruction.propertyName, (_a = instruction.rules) !== null && _a !== void 0 ? _a : this.objects.get(obj), objectTag, instruction.propertyTag)];
+            instructions = [new ValidateInstruction(obj, instruction.propertyName, instruction.rules ?? this.objects.get(obj), objectTag, instruction.propertyTag)];
         }
         else {
             instructions = [
@@ -391,8 +389,7 @@ let ValidationContainerCustomElement = class ValidationContainerCustomElement {
         });
     }
     binding() {
-        var _a;
-        this.controller = (_a = this.controller) !== null && _a !== void 0 ? _a : this.scopedController;
+        this.controller = this.controller ?? this.scopedController;
         this.controller.addSubscriber(this);
     }
     unbinding() {
@@ -442,8 +439,7 @@ let ValidationErrorsCustomAttribute = class ValidationErrorsCustomAttribute {
         this.errors = this.errorsInternal;
     }
     binding() {
-        var _a;
-        this.controller = (_a = this.controller) !== null && _a !== void 0 ? _a : this.scopedController;
+        this.controller = this.controller ?? this.scopedController;
         this.controller.addSubscriber(this);
     }
     unbinding() {
@@ -492,7 +488,7 @@ let ValidateBindingBehavior = class ValidateBindingBehavior extends BindingInter
         if (locator.has(IValidationController, true)) {
             this.scopedController = locator.get(IValidationController);
         }
-        this.setPropertyBinding();
+        this._setPropertyBinding();
     }
     updateSource(value, flags) {
         if (this.interceptor !== this) {
@@ -515,84 +511,79 @@ let ValidateBindingBehavior = class ValidateBindingBehavior extends BindingInter
     $bind(flags, scope) {
         this.scope = scope;
         this.binding.$bind(flags, scope);
-        this.setTarget();
-        const delta = this.processBindingExpressionArgs(flags);
-        this.processDelta(delta);
+        this._setTarget();
+        const delta = this._processBindingExpressionArgs(flags);
+        this._processDelta(delta);
     }
     $unbind(flags) {
-        var _a, _b, _c, _d;
-        (_a = this.task) === null || _a === void 0 ? void 0 : _a.cancel();
+        this.task?.cancel();
         this.task = null;
         const event = this.triggerEvent;
         if (event !== null) {
-            (_b = this.target) === null || _b === void 0 ? void 0 : _b.removeEventListener(event, this);
+            this.target?.removeEventListener(event, this);
         }
-        (_c = this.controller) === null || _c === void 0 ? void 0 : _c.removeSubscriber(this);
-        (_d = this.controller) === null || _d === void 0 ? void 0 : _d.unregisterBinding(this.propertyBinding);
+        this.controller?.removeSubscriber(this);
+        this.controller?.unregisterBinding(this.propertyBinding);
         this.binding.$unbind(flags);
     }
     handleTriggerChange(newValue, _previousValue, _flags) {
-        this.processDelta(new ValidateArgumentsDelta(void 0, this.ensureTrigger(newValue), void 0));
+        this._processDelta(new ValidateArgumentsDelta(void 0, this._ensureTrigger(newValue), void 0));
     }
     handleControllerChange(newValue, _previousValue, _flags) {
-        this.processDelta(new ValidateArgumentsDelta(this.ensureController(newValue), void 0, void 0));
+        this._processDelta(new ValidateArgumentsDelta(this._ensureController(newValue), void 0, void 0));
     }
     handleRulesChange(newValue, _previousValue, _flags) {
-        this.processDelta(new ValidateArgumentsDelta(void 0, void 0, this.ensureRules(newValue)));
+        this._processDelta(new ValidateArgumentsDelta(void 0, void 0, this._ensureRules(newValue)));
     }
     handleValidationEvent(event) {
-        var _a;
         if (this.validatedOnce || !this.isChangeTrigger)
             return;
         const triggerEvent = this.triggerEvent;
         if (triggerEvent === null)
             return;
-        const propertyName = (_a = this.bindingInfo.propertyInfo) === null || _a === void 0 ? void 0 : _a.propertyName;
+        const propertyName = this.bindingInfo.propertyInfo?.propertyName;
         if (propertyName === void 0)
             return;
         this.validatedOnce = event.addedResults.find((r) => r.result.propertyName === propertyName) !== void 0;
     }
-    processBindingExpressionArgs(flags) {
+    _processBindingExpressionArgs(_flags) {
         const scope = this.scope;
-        const locator = this.locator;
         let rules;
         let trigger;
         let controller;
-        let expression = this.propertyBinding.sourceExpression;
-        while (expression.name !== 'validate' && expression !== void 0) {
-            expression = expression.expression;
+        let ast = this.propertyBinding.ast;
+        while (ast.name !== 'validate' && ast !== void 0) {
+            ast = ast.expression;
         }
-        const evaluationFlags = flags | 1;
-        const args = expression.args;
+        const args = ast.args;
         for (let i = 0, ii = args.length; i < ii; i++) {
             const arg = args[i];
             switch (i) {
                 case 0:
-                    trigger = this.ensureTrigger(arg.evaluate(evaluationFlags, scope, locator, this.triggerMediator));
+                    trigger = this._ensureTrigger(arg.evaluate(scope, this, this.triggerMediator));
                     break;
                 case 1:
-                    controller = this.ensureController(arg.evaluate(evaluationFlags, scope, locator, this.controllerMediator));
+                    controller = this._ensureController(arg.evaluate(scope, this, this.controllerMediator));
                     break;
                 case 2:
-                    rules = this.ensureRules(arg.evaluate(evaluationFlags, scope, locator, this.rulesMediator));
+                    rules = this._ensureRules(arg.evaluate(scope, this, this.rulesMediator));
                     break;
                 default:
-                    throw new Error(`Unconsumed argument#${i + 1} for validate binding behavior: ${arg.evaluate(evaluationFlags, scope, locator, null)}`);
+                    throw new Error(`Unconsumed argument#${i + 1} for validate binding behavior: ${arg.evaluate(scope, this, null)}`);
             }
         }
-        return new ValidateArgumentsDelta(this.ensureController(controller), this.ensureTrigger(trigger), rules);
+        return new ValidateArgumentsDelta(this._ensureController(controller), this._ensureTrigger(trigger), rules);
     }
     validateBinding() {
         const task = this.task;
         this.task = this.platform.domReadQueue.queueTask(() => this.controller.validateBinding(this.propertyBinding));
         if (task !== this.task) {
-            task === null || task === void 0 ? void 0 : task.cancel();
+            task?.cancel();
         }
     }
-    processDelta(delta) {
-        var _a, _b, _c, _d;
-        const trigger = (_a = delta.trigger) !== null && _a !== void 0 ? _a : this.trigger;
-        const controller = (_b = delta.controller) !== null && _b !== void 0 ? _b : this.controller;
+    _processDelta(delta) {
+        const trigger = delta.trigger ?? this.trigger;
+        const controller = delta.controller ?? this.controller;
         const rules = delta.rules;
         if (this.trigger !== trigger) {
             let event = this.triggerEvent;
@@ -611,14 +602,14 @@ let ValidateBindingBehavior = class ValidateBindingBehavior extends BindingInter
             }
         }
         if (this.controller !== controller || rules !== void 0) {
-            (_c = this.controller) === null || _c === void 0 ? void 0 : _c.removeSubscriber(this);
-            (_d = this.controller) === null || _d === void 0 ? void 0 : _d.unregisterBinding(this.propertyBinding);
+            this.controller?.removeSubscriber(this);
+            this.controller?.unregisterBinding(this.propertyBinding);
             this.controller = controller;
             controller.registerBinding(this.propertyBinding, this.setBindingInfo(rules));
             controller.addSubscriber(this);
         }
     }
-    ensureTrigger(trigger) {
+    _ensureTrigger(trigger) {
         if (trigger === (void 0) || trigger === null) {
             trigger = this.defaultTrigger;
         }
@@ -627,7 +618,7 @@ let ValidateBindingBehavior = class ValidateBindingBehavior extends BindingInter
         }
         return trigger;
     }
-    ensureController(controller) {
+    _ensureController(controller) {
         if (controller === (void 0) || controller === null) {
             controller = this.scopedController;
         }
@@ -636,12 +627,12 @@ let ValidateBindingBehavior = class ValidateBindingBehavior extends BindingInter
         }
         return controller;
     }
-    ensureRules(rules) {
+    _ensureRules(rules) {
         if (Array.isArray(rules) && rules.every((item) => item instanceof PropertyRule)) {
             return rules;
         }
     }
-    setPropertyBinding() {
+    _setPropertyBinding() {
         let binding = this.binding;
         while (!(binding instanceof PropertyBinding) && binding !== void 0) {
             binding = binding.binding;
@@ -651,13 +642,13 @@ let ValidateBindingBehavior = class ValidateBindingBehavior extends BindingInter
         }
         this.propertyBinding = binding;
     }
-    setTarget() {
+    _setTarget() {
         const target = this.propertyBinding.target;
         if (target instanceof this.platform.Node) {
             this.target = target;
         }
         else {
-            const controller = target === null || target === void 0 ? void 0 : target.$controller;
+            const controller = target?.$controller;
             if (controller === void 0) {
                 throw new Error('Invalid binding target');
             }
@@ -685,6 +676,8 @@ let ValidateBindingBehavior = class ValidateBindingBehavior extends BindingInter
 ValidateBindingBehavior = __decorate([
     bindingBehavior('validate')
 ], ValidateBindingBehavior);
+connectable()(ValidateBindingBehavior);
+astEvaluator(true)(ValidateBindingBehavior);
 class ValidateArgumentsDelta {
     constructor(controller, trigger, rules) {
         this.controller = controller;
@@ -692,6 +685,26 @@ class ValidateArgumentsDelta {
         this.rules = rules;
     }
 }
+class BindingMediator {
+    constructor(key, binding, oL, locator) {
+        this.key = key;
+        this.binding = binding;
+        this.oL = oL;
+        this.locator = locator;
+        this.interceptor = this;
+    }
+    $bind() {
+        throw new Error(`AUR0213: Method not implemented.`);
+    }
+    $unbind() {
+        throw new Error(`AUR0214: Method not implemented.`);
+    }
+    handleChange(newValue, previousValue, flags) {
+        this.binding[this.key](newValue, previousValue, flags);
+    }
+}
+connectable()(BindingMediator);
+astEvaluator(true)(BindingMediator);
 
 function getDefaultValidationHtmlConfiguration() {
     return {
@@ -726,7 +739,7 @@ function createConfiguration(optionsProvider) {
             return container;
         },
         customize(cb) {
-            return createConfiguration(cb !== null && cb !== void 0 ? cb : optionsProvider);
+            return createConfiguration(cb ?? optionsProvider);
         },
     };
 }
@@ -786,10 +799,9 @@ let ValidationResultPresenterService = class ValidationResultPresenterService {
         }, []));
     }
     removeResults(messageContainer, results) {
-        var _a;
         for (const result of results) {
             if (!result.valid) {
-                (_a = messageContainer.querySelector(`[${resultIdAttribute}="${result.id}"]`)) === null || _a === void 0 ? void 0 : _a.remove();
+                messageContainer.querySelector(`[${resultIdAttribute}="${result.id}"]`)?.remove();
             }
         }
     }
@@ -811,5 +823,5 @@ ValidationResultPresenterService = __decorate([
     __param(0, IPlatform)
 ], ValidationResultPresenterService);
 
-export { BindingInfo, ControllerValidateResult, IDefaultTrigger, IValidationController, IValidationResultPresenterService, ValidateBindingBehavior, ValidateEventKind, ValidationContainerCustomElement, ValidationController, ValidationControllerFactory, ValidationErrorsCustomAttribute, ValidationEvent, ValidationHtmlConfiguration, ValidationResultPresenterService, ValidationResultTarget, ValidationTrigger, defaultContainerDefinition, defaultContainerTemplate, getDefaultValidationHtmlConfiguration, getPropertyInfo };
+export { BindingInfo, BindingMediator, ControllerValidateResult, IDefaultTrigger, IValidationController, IValidationResultPresenterService, ValidateBindingBehavior, ValidateEventKind, ValidationContainerCustomElement, ValidationController, ValidationControllerFactory, ValidationErrorsCustomAttribute, ValidationEvent, ValidationHtmlConfiguration, ValidationResultPresenterService, ValidationResultTarget, ValidationTrigger, defaultContainerDefinition, defaultContainerTemplate, getDefaultValidationHtmlConfiguration, getPropertyInfo };
 //# sourceMappingURL=index.dev.mjs.map

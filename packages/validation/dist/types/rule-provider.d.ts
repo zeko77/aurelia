@@ -1,5 +1,5 @@
 import { Class, ILogger, IServiceLocator } from '@aurelia/kernel';
-import { IExpressionParser, Interpolation, IsBindingBehavior, LifecycleFlags, PrimitiveLiteralExpression, Scope } from '@aurelia/runtime';
+import { IExpressionParser, Interpolation, IsBindingBehavior, LifecycleFlags, PrimitiveLiteralExpression, Scope, IAstEvaluator } from '@aurelia/runtime';
 import { ValidationRuleAlias, IValidationMessageProvider } from './rules';
 import { IValidateable, ValidationRuleExecutionPredicate, IValidationVisitor, ValidationDisplayNameAccessor, IRuleProperty, IPropertyRule, IValidationExpressionHydrator, IValidationRule } from './rule-interfaces';
 /**
@@ -26,6 +26,8 @@ export declare const validationRulesRegistrar: Readonly<{
     unset(target: IValidateable, tag?: string): void;
     isValidationRulesSet(target: IValidateable): boolean;
 }>;
+export interface PropertyRule extends IAstEvaluator {
+}
 export declare class PropertyRule<TObject extends IValidateable = IValidateable, TValue = unknown> implements IPropertyRule {
     private readonly locator;
     readonly validationRules: IValidationRules;
@@ -37,7 +39,7 @@ export declare class PropertyRule<TObject extends IValidateable = IValidateable,
     constructor(locator: IServiceLocator, validationRules: IValidationRules, messageProvider: IValidationMessageProvider, property: RuleProperty, $rules?: IValidationRule[][]);
     accept(visitor: IValidationVisitor): string;
     private getLeafRules;
-    validate(object?: IValidateable, tag?: string, flags?: LifecycleFlags, scope?: Scope): Promise<ValidationResult[]>;
+    validate(object?: IValidateable, tag?: string, _flags?: LifecycleFlags, scope?: Scope): Promise<ValidationResult[]>;
     /**
      * Validate subsequent rules after previously declared rules have been validated successfully.
      * Use to postpone validation of costly rules until less expensive rules pass validation.

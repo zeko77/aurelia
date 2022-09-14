@@ -1,5 +1,6 @@
-import { BindingInterceptor, LifecycleFlags } from '@aurelia/runtime';
-import type { BindingBehaviorExpression, IInterceptableBinding, Scope } from '@aurelia/runtime';
+import { LifecycleFlags } from '@aurelia/runtime';
+import { BindingInterceptor, IInterceptableBinding } from '../resources/binding-behavior';
+import type { BindingBehaviorExpression, Scope } from '@aurelia/runtime';
 export declare class DebounceBindingBehavior extends BindingInterceptor {
     private readonly taskQueue;
     private readonly opts;

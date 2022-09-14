@@ -1,5 +1,7 @@
-import { BindingMode, IExpressionParser, IObserverLocator } from '@aurelia/runtime';
+import { IExpressionParser, IObserverLocator } from '@aurelia/runtime';
+import { BindingMode } from './binding/interfaces-bindings';
 import { IEventDelegator } from './observation/event-delegator';
+import { IInterceptableBinding } from './resources/binding-behavior';
 import { CustomElementDefinition } from './resources/custom-element';
 import { IProjections } from './resources/slot-injectables';
 import { CustomAttributeDefinition } from './resources/custom-attribute';
@@ -9,7 +11,7 @@ import { IPlatform } from './platform';
 import { IRendering } from './templating/rendering';
 import { AttrSyntax } from './resources/attribute-pattern';
 import type { IServiceLocator, IContainer, Class, IRegistry } from '@aurelia/kernel';
-import type { Interpolation, IsBindingBehavior, IInterceptableBinding, ForOfStatement, DelegationStrategy } from '@aurelia/runtime';
+import type { Interpolation, IsBindingBehavior, ForOfStatement, DelegationStrategy } from '@aurelia/runtime';
 import type { IHydratableController } from './templating/controller';
 import type { PartialCustomElementDefinition } from './resources/custom-element';
 export declare const enum InstructionType {
@@ -390,6 +392,7 @@ export declare class StylePropertyBindingRenderer implements IRenderer {
 export declare class AttributeBindingRenderer implements IRenderer {
     target: InstructionType.attributeBinding;
     constructor(
+    /** @internal */ _platform: IPlatform, 
     /** @internal */ _exprParser: IExpressionParser, 
     /** @internal */ _observerLocator: IObserverLocator);
     render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: AttributeBindingInstruction): void;

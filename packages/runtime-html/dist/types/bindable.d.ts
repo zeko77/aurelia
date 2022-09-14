@@ -1,5 +1,5 @@
 import { Class } from '@aurelia/kernel';
-import { BindingMode } from '@aurelia/runtime';
+import { BindingMode } from './binding/interfaces-bindings';
 import type { Constructable } from '@aurelia/kernel';
 import type { InterceptorFunc } from '@aurelia/runtime';
 declare type PropertyType = typeof Number | typeof String | typeof Boolean | typeof BigInt | {

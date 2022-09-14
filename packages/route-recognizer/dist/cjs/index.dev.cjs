@@ -30,13 +30,12 @@ class RecognizedRoute {
 }
 class Candidate {
     constructor(chars, states, skippedStates, result) {
-        var _a;
         this.chars = chars;
         this.states = states;
         this.skippedStates = skippedStates;
         this.result = result;
         this.head = states[states.length - 1];
-        this.endpoint = (_a = this.head) === null || _a === void 0 ? void 0 : _a.endpoint;
+        this.endpoint = this.head?.endpoint;
     }
     advance(ch) {
         const { chars, states, skippedStates, result } = this;
@@ -313,8 +312,7 @@ class RouteRecognizer {
         return new RecognizedRoute(endpoint, params);
     }
     getEndpoint(path) {
-        var _a;
-        return (_a = this.endpointLookup.get(path)) !== null && _a !== void 0 ? _a : null;
+        return this.endpointLookup.get(path) ?? null;
     }
 }
 class State {
@@ -324,7 +322,7 @@ class State {
         this.value = value;
         this.nextStates = null;
         this.endpoint = null;
-        switch (segment === null || segment === void 0 ? void 0 : segment.kind) {
+        switch (segment?.kind) {
             case 2:
                 this.length = prevState.length + 1;
                 this.isSeparator = false;
@@ -362,7 +360,7 @@ class State {
             state = nextStates.find(s => s.value === value);
         }
         else {
-            state = nextStates.find(s => { var _a; return (_a = s.segment) === null || _a === void 0 ? void 0 : _a.equals(segment); });
+            state = nextStates.find(s => s.segment?.equals(segment));
         }
         if (state === void 0) {
             nextStates.push(state = new State(this, segment, value));
@@ -383,7 +381,7 @@ class State {
     }
     isMatch(ch) {
         const segment = this.segment;
-        switch (segment === null || segment === void 0 ? void 0 : segment.kind) {
+        switch (segment?.kind) {
             case 2:
                 return !this.value.includes(ch);
             case 1:

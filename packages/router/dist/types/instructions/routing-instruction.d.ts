@@ -55,7 +55,7 @@ export declare class RoutingInstruction {
     /**
      * The configured route, if any, that the routing instruction is part of.
      */
-    route: FoundRoute | null;
+    route: FoundRoute | string | null;
     /**
      * The instruction is the start/first instruction of a configured route.
      */
@@ -128,6 +128,12 @@ export declare class RoutingInstruction {
      * @param endpointContext - Whether to include endpoint context in the string
      */
     static stringify(context: IRouterConfiguration | IRouter | IContainer, instructions: RoutingInstruction[] | string, excludeEndpoint?: boolean, endpointContext?: boolean): string;
+    /**
+     * Resolve a list of routing instructions, returning a promise that should be awaited if needed.
+     *
+     * @param instructions - The instructions to resolve
+     */
+    static resolve(instructions: RoutingInstruction[]): void | Promise<void | ComponentAppellation[]>;
     /**
      * Whether the instructions, on any level, contains siblings
      *

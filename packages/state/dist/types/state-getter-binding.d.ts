@@ -14,7 +14,7 @@ export declare class StateGetterBinding implements IConnectableBinding, IStoreSu
     private readonly $get;
     private readonly target;
     private readonly key;
-    constructor(locator: IServiceLocator, store: IStore<object>, getValue: (s: unknown) => unknown, target: object, prop: PropertyKey);
+    constructor(locator: IServiceLocator, target: object, prop: PropertyKey, store: IStore<object>, getValue: (s: unknown) => unknown);
     private updateTarget;
     $bind(flags: LifecycleFlags, scope: Scope): void;
     $unbind(): void;

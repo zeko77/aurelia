@@ -535,12 +535,11 @@ class ContainerConfiguration {
         this.defaultResolver = defaultResolver;
     }
     static from(config) {
-        var _a, _b;
         if (config === void 0 ||
             config === ContainerConfiguration.DEFAULT) {
             return ContainerConfiguration.DEFAULT;
         }
-        return new ContainerConfiguration((_a = config.inheritParentResources) !== null && _a !== void 0 ? _a : false, (_b = config.defaultResolver) !== null && _b !== void 0 ? _b : DefaultResolver.singleton);
+        return new ContainerConfiguration(config.inheritParentResources ?? false, config.defaultResolver ?? DefaultResolver.singleton);
     }
 }
 ContainerConfiguration.DEFAULT = ContainerConfiguration.from({});
@@ -573,7 +572,7 @@ const DI = {
         Interface.friendlyName = friendlyName == null ? '(anonymous)' : friendlyName;
         if (configure != null) {
             Interface.register = function (container, key) {
-                return configure(new ResolverBuilder(container, key !== null && key !== void 0 ? key : Interface));
+                return configure(new ResolverBuilder(container, key ?? Interface));
             };
         }
         Interface.toString = function toString() {
@@ -833,13 +832,12 @@ class Resolver {
         }
     }
     getFactory(container) {
-        var _a, _b, _c;
         switch (this.strategy) {
             case 1:
             case 2:
                 return container.getFactory(this.state);
             case 5:
-                return (_c = (_b = (_a = container.getResolver(this.state)) === null || _a === void 0 ? void 0 : _a.getFactory) === null || _b === void 0 ? void 0 : _b.call(_a, container)) !== null && _c !== void 0 ? _c : null;
+                return container.getResolver(this.state)?.getFactory?.(container) ?? null;
             default:
                 return null;
         }
@@ -871,8 +869,7 @@ class Factory {
         return this.transformers.reduce(transformInstance, instance);
     }
     registerTransformer(transformer) {
-        var _a;
-        ((_a = this.transformers) !== null && _a !== void 0 ? _a : (this.transformers = [])).push(transformer);
+        (this.transformers ?? (this.transformers = [])).push(transformer);
     }
 }
 const containerResolver = {
@@ -1180,7 +1177,7 @@ class Container {
                 inheritParentResources: false,
             }));
         }
-        return new Container(this, ContainerConfiguration.from(config !== null && config !== void 0 ? config : this.config));
+        return new Container(this, ContainerConfiguration.from(config ?? this.config));
     }
     disposeResolvers() {
         const resolvers = this._resolvers;
@@ -1219,7 +1216,6 @@ class Container {
         return null;
     }
     create(kind, name) {
-        var _a, _b;
         const key = kind.keyFrom(name);
         let resolver = this.res[key];
         if (resolver === void 0) {
@@ -1227,9 +1223,9 @@ class Container {
             if (resolver === void 0) {
                 return null;
             }
-            return (_a = resolver.resolve(this.root, this)) !== null && _a !== void 0 ? _a : null;
+            return resolver.resolve(this.root, this) ?? null;
         }
-        return (_b = resolver.resolve(this, this)) !== null && _b !== void 0 ? _b : null;
+        return resolver.resolve(this, this) ?? null;
     }
     dispose() {
         if (this._disposableResolvers.size > 0) {
@@ -1628,7 +1624,6 @@ exports.ConsoleSink = __decorate([
 ], exports.ConsoleSink);
 exports.DefaultLogger = class DefaultLogger {
     constructor(config, factory, sinks, scope = [], parent = null) {
-        var _a, _b, _c, _d, _e, _f;
         this.config = config;
         this.factory = factory;
         this.scope = scope;
@@ -1650,22 +1645,22 @@ exports.DefaultLogger = class DefaultLogger {
             fatalSinks = this.fatalSinks = [];
             for (const $sink of sinks) {
                 const handles = LoggerSink.getHandles($sink);
-                if ((_a = handles === null || handles === void 0 ? void 0 : handles.includes(0)) !== null && _a !== void 0 ? _a : true) {
+                if (handles?.includes(0) ?? true) {
                     traceSinks.push($sink);
                 }
-                if ((_b = handles === null || handles === void 0 ? void 0 : handles.includes(1)) !== null && _b !== void 0 ? _b : true) {
+                if (handles?.includes(1) ?? true) {
                     debugSinks.push($sink);
                 }
-                if ((_c = handles === null || handles === void 0 ? void 0 : handles.includes(2)) !== null && _c !== void 0 ? _c : true) {
+                if (handles?.includes(2) ?? true) {
                     infoSinks.push($sink);
                 }
-                if ((_d = handles === null || handles === void 0 ? void 0 : handles.includes(3)) !== null && _d !== void 0 ? _d : true) {
+                if (handles?.includes(3) ?? true) {
                     warnSinks.push($sink);
                 }
-                if ((_e = handles === null || handles === void 0 ? void 0 : handles.includes(4)) !== null && _e !== void 0 ? _e : true) {
+                if (handles?.includes(4) ?? true) {
                     errorSinks.push($sink);
                 }
-                if ((_f = handles === null || handles === void 0 ? void 0 : handles.includes(5)) !== null && _f !== void 0 ? _f : true) {
+                if (handles?.includes(5) ?? true) {
                     fatalSinks.push($sink);
                 }
             }

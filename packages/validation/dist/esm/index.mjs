@@ -6,26 +6,28 @@ import * as u from "@aurelia/runtime";
 
 import { Scope as l, PrimitiveLiteralExpression as c, IExpressionParser as h } from "@aurelia/runtime";
 
+import { astEvaluator as $ } from "@aurelia/runtime-html";
+
 const d = e.createInterface("IValidationExpressionHydrator");
 
-function $(e, t, s, i) {
+function m(e, t, s, i) {
     var r = arguments.length, n = r < 3 ? t : null === i ? i = Object.getOwnPropertyDescriptor(t, s) : i, a;
     if ("object" === typeof Reflect && "function" === typeof Reflect.decorate) n = Reflect.decorate(e, t, s, i); else for (var o = e.length - 1; o >= 0; o--) if (a = e[o]) n = (r < 3 ? a(n) : r > 3 ? a(t, s, n) : a(t, s)) || n;
     return r > 3 && n && Object.defineProperty(t, s, n), n;
 }
 
-function m(e, t) {
+function f(e, t) {
     return function(s, i) {
         t(s, i, e);
     };
 }
 
-const f = e.createInterface("IValidationMessageProvider");
+const p = e.createInterface("IValidationMessageProvider");
 
-const p = Object.freeze({
+const g = Object.freeze({
     aliasKey: t.annotation.keyFor("validation-rule-alias-message"),
     define(e, t) {
-        p.setDefaultMessage(e, t);
+        g.setDefaultMessage(e, t);
         return e;
     },
     setDefaultMessage(e, {aliases: t}, i = true) {
@@ -40,20 +42,20 @@ const p = Object.freeze({
                 defaultMessage: t
             })));
         }
-        o.define(p.aliasKey, t, e instanceof Function ? e.prototype : e);
+        o.define(g.aliasKey, t, e instanceof Function ? e.prototype : e);
     },
     getDefaultMessages(e) {
         return o.get(this.aliasKey, e instanceof Function ? e.prototype : e);
     }
 });
 
-function v(e) {
+function w(e) {
     return function(t) {
-        return p.define(t, e);
+        return g.define(t, e);
     };
 }
 
-let g = class BaseValidationRule {
+let y = class BaseValidationRule {
     constructor(e = void 0) {
         this.messageKey = e;
         this.tag = void 0;
@@ -69,16 +71,16 @@ let g = class BaseValidationRule {
     }
 };
 
-g.$TYPE = "";
+y.$TYPE = "";
 
-g = $([ v({
+y = m([ w({
     aliases: [ {
         name: void 0,
         defaultMessage: `\${$displayName} is invalid.`
     } ]
-}) ], g);
+}) ], y);
 
-let w = class RequiredRule extends g {
+let v = class RequiredRule extends y {
     constructor() {
         super("required");
     }
@@ -90,16 +92,16 @@ let w = class RequiredRule extends g {
     }
 };
 
-w.$TYPE = "RequiredRule";
+v.$TYPE = "RequiredRule";
 
-w = $([ v({
+v = m([ w({
     aliases: [ {
         name: "required",
         defaultMessage: `\${$displayName} is required.`
     } ]
-}) ], w);
+}) ], v);
 
-let y = class RegexRule extends g {
+let x = class RegexRule extends y {
     constructor(e, t = "matches") {
         super(t);
         this.pattern = e;
@@ -112,9 +114,9 @@ let y = class RegexRule extends g {
     }
 };
 
-y.$TYPE = "RegexRule";
+x.$TYPE = "RegexRule";
 
-y = $([ v({
+x = m([ w({
     aliases: [ {
         name: "matches",
         defaultMessage: `\${$displayName} is not correctly formatted.`
@@ -122,9 +124,9 @@ y = $([ v({
         name: "email",
         defaultMessage: `\${$displayName} is not a valid email.`
     } ]
-}) ], y);
+}) ], x);
 
-let x = class LengthRule extends g {
+let R = class LengthRule extends y {
     constructor(e, t) {
         super(t ? "maxLength" : "minLength");
         this.length = e;
@@ -138,9 +140,9 @@ let x = class LengthRule extends g {
     }
 };
 
-x.$TYPE = "LengthRule";
+R.$TYPE = "LengthRule";
 
-x = $([ v({
+R = m([ w({
     aliases: [ {
         name: "minLength",
         defaultMessage: `\${$displayName} must be at least \${$rule.length} character\${$rule.length === 1 ? '' : 's'}.`
@@ -148,9 +150,9 @@ x = $([ v({
         name: "maxLength",
         defaultMessage: `\${$displayName} cannot be longer than \${$rule.length} character\${$rule.length === 1 ? '' : 's'}.`
     } ]
-}) ], x);
+}) ], R);
 
-let R = class SizeRule extends g {
+let E = class SizeRule extends y {
     constructor(e, t) {
         super(t ? "maxItems" : "minItems");
         this.count = e;
@@ -164,9 +166,9 @@ let R = class SizeRule extends g {
     }
 };
 
-R.$TYPE = "SizeRule";
+E.$TYPE = "SizeRule";
 
-R = $([ v({
+E = m([ w({
     aliases: [ {
         name: "minItems",
         defaultMessage: `\${$displayName} must contain at least \${$rule.count} item\${$rule.count === 1 ? '' : 's'}.`
@@ -174,16 +176,16 @@ R = $([ v({
         name: "maxItems",
         defaultMessage: `\${$displayName} cannot contain more than \${$rule.count} item\${$rule.count === 1 ? '' : 's'}.`
     } ]
-}) ], R);
+}) ], E);
 
-let E = class RangeRule extends g {
+let P = class RangeRule extends y {
     constructor(e, {min: t, max: s}) {
         super(void 0 !== t && void 0 !== s ? e ? "range" : "between" : void 0 !== t ? "min" : "max");
         this.isInclusive = e;
         this.min = Number.NEGATIVE_INFINITY;
         this.max = Number.POSITIVE_INFINITY;
-        this.min = null !== t && void 0 !== t ? t : this.min;
-        this.max = null !== s && void 0 !== s ? s : this.max;
+        this.min = t ?? this.min;
+        this.max = s ?? this.max;
     }
     execute(e, t) {
         return null === e || void 0 === e || (this.isInclusive ? e >= this.min && e <= this.max : e > this.min && e < this.max);
@@ -193,9 +195,9 @@ let E = class RangeRule extends g {
     }
 };
 
-E.$TYPE = "RangeRule";
+P.$TYPE = "RangeRule";
 
-E = $([ v({
+P = m([ w({
     aliases: [ {
         name: "min",
         defaultMessage: `\${$displayName} must be at least \${$rule.min}.`
@@ -209,9 +211,9 @@ E = $([ v({
         name: "between",
         defaultMessage: `\${$displayName} must be between but not equal to \${$rule.min} and \${$rule.max}.`
     } ]
-}) ], E);
+}) ], P);
 
-let P = class EqualsRule extends g {
+let b = class EqualsRule extends y {
     constructor(e) {
         super("equals");
         this.expectedValue = e;
@@ -224,16 +226,16 @@ let P = class EqualsRule extends g {
     }
 };
 
-P.$TYPE = "EqualsRule";
+b.$TYPE = "EqualsRule";
 
-P = $([ v({
+b = m([ w({
     aliases: [ {
         name: "equals",
         defaultMessage: `\${$displayName} must be \${$rule.expectedValue}.`
     } ]
-}) ], P);
+}) ], b);
 
-const b = e.createInterface("ICustomMessages");
+const M = e.createInterface("ICustomMessages");
 
 class RuleProperty {
     constructor(e, t = void 0, s = void 0) {
@@ -248,23 +250,22 @@ class RuleProperty {
 
 RuleProperty.$TYPE = "RuleProperty";
 
-const M = Object.freeze({
+const T = Object.freeze({
     name: "validation-rules",
     defaultRuleSetName: "__default",
     set(e, s, i) {
-        const r = `${M.name}:${null !== i && void 0 !== i ? i : M.defaultRuleSetName}`;
+        const r = `${T.name}:${i ?? T.defaultRuleSetName}`;
         o.define(t.annotation.keyFor(r), s, e);
         const n = o.getOwn(t.annotation.name, e);
         if (void 0 === n) o.define(t.annotation.name, [ r ], e); else n.push(r);
     },
     get(e, s) {
-        var i;
-        const r = t.annotation.keyFor(M.name, null !== s && void 0 !== s ? s : M.defaultRuleSetName);
-        return null !== (i = o.get(r, e)) && void 0 !== i ? i : o.getOwn(r, e.constructor);
+        const i = t.annotation.keyFor(T.name, s ?? T.defaultRuleSetName);
+        return o.get(i, e) ?? o.getOwn(i, e.constructor);
     },
     unset(e, s) {
         const i = o.getOwn(t.annotation.name, e);
-        for (const r of i.slice(0)) if (r.startsWith(M.name) && (void 0 === s || r.endsWith(s))) {
+        for (const r of i.slice(0)) if (r.startsWith(T.name) && (void 0 === s || r.endsWith(s))) {
             o.delete(t.annotation.keyFor(r), e);
             const s = i.indexOf(r);
             if (s > -1) i.splice(s, 1);
@@ -272,7 +273,7 @@ const M = Object.freeze({
     },
     isValidationRulesSet(e) {
         const s = o.getOwn(t.annotation.name, e);
-        return void 0 !== s && s.some((e => e.startsWith(M.name)));
+        return void 0 !== s && s.some((e => e.startsWith(T.name)));
     }
 });
 
@@ -311,30 +312,29 @@ class PropertyRule {
         return this.$rules[e];
     }
     async validate(e, t, s, i) {
-        if (void 0 === s) s = 0;
         if (void 0 === i) i = l.create({
-            [Y]: e
+            [S]: e
         });
         const r = this.property.expression;
         let n;
-        if (void 0 === r) n = e; else n = r.evaluate(s, i, this.locator, null);
+        if (void 0 === r) n = e; else n = r.evaluate(i, this, null);
         let a = true;
-        const o = async i => {
-            const r = async t => {
-                let i = t.execute(n, e);
-                if (i instanceof Promise) i = await i;
-                a = a && i;
-                const {displayName: r, name: o} = this.property;
-                let u;
-                if (!i) {
-                    const i = l.create(new ValidationMessageEvaluationContext(this.messageProvider, this.messageProvider.getDisplayName(o, r), o, n, t, e));
-                    u = this.messageProvider.getMessage(t).evaluate(s, i, null, null);
+        const o = async s => {
+            const i = async t => {
+                let s = t.execute(n, e);
+                if (s instanceof Promise) s = await s;
+                a = a && s;
+                const {displayName: i, name: r} = this.property;
+                let o;
+                if (!s) {
+                    const s = l.create(new ValidationMessageEvaluationContext(this.messageProvider, this.messageProvider.getDisplayName(r, i), r, n, t, e));
+                    o = this.messageProvider.getMessage(t).evaluate(s, this, null);
                 }
-                return new ValidationResult(i, u, o, e, t, this);
+                return new ValidationResult(s, o, r, e, t, this);
             };
-            const o = [];
-            for (const s of i) if (s.canExecute(e) && (void 0 === t || s.tag === t)) o.push(r(s));
-            return Promise.all(o);
+            const r = [];
+            for (const n of s) if (n.canExecute(e) && (void 0 === t || n.tag === t)) r.push(i(n));
+            return Promise.all(r);
         };
         const u = async (e, t) => {
             const s = await o(t);
@@ -376,7 +376,7 @@ class PropertyRule {
         return this;
     }
     satisfies(e) {
-        const t = new class extends g {
+        const t = new class extends y {
             constructor() {
                 super(...arguments);
                 this.execute = e;
@@ -388,51 +388,51 @@ class PropertyRule {
         return this.addRule(e);
     }
     required() {
-        return this.addRule(new w);
+        return this.addRule(new v);
     }
     matches(e) {
-        return this.addRule(new y(e));
+        return this.addRule(new x(e));
     }
     email() {
         const e = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-        return this.addRule(new y(e, "email"));
+        return this.addRule(new x(e, "email"));
     }
     minLength(e) {
-        return this.addRule(new x(e, false));
-    }
-    maxLength(e) {
-        return this.addRule(new x(e, true));
-    }
-    minItems(e) {
         return this.addRule(new R(e, false));
     }
-    maxItems(e) {
+    maxLength(e) {
         return this.addRule(new R(e, true));
     }
+    minItems(e) {
+        return this.addRule(new E(e, false));
+    }
+    maxItems(e) {
+        return this.addRule(new E(e, true));
+    }
     min(e) {
-        return this.addRule(new E(true, {
+        return this.addRule(new P(true, {
             min: e
         }));
     }
     max(e) {
-        return this.addRule(new E(true, {
+        return this.addRule(new P(true, {
             max: e
         }));
     }
     range(e, t) {
-        return this.addRule(new E(true, {
+        return this.addRule(new P(true, {
             min: e,
             max: t
         }));
     }
     between(e, t) {
-        return this.addRule(new E(false, {
+        return this.addRule(new P(false, {
             min: e,
             max: t
         }));
     }
     equals(e) {
-        return this.addRule(new P(e));
+        return this.addRule(new b(e));
     }
     ensure(e) {
         this.latestRule = void 0;
@@ -452,16 +452,18 @@ class PropertyRule {
 
 PropertyRule.$TYPE = "PropertyRule";
 
+$()(PropertyRule);
+
 class ModelBasedRule {
-    constructor(e, t = M.defaultRuleSetName) {
+    constructor(e, t = T.defaultRuleSetName) {
         this.ruleset = e;
         this.tag = t;
     }
 }
 
-const T = e.createInterface("IValidationRules");
+const z = e.createInterface("IValidationRules");
 
-let z = class ValidationRules {
+let N = class ValidationRules {
     constructor(e, t, s, i) {
         this.locator = e;
         this.parser = t;
@@ -471,7 +473,7 @@ let z = class ValidationRules {
         this.targets = new Set;
     }
     ensure(e) {
-        const [t, s] = S(e, this.parser);
+        const [t, s] = V(e, this.parser);
         let i = this.rules.find((e => e.property.name == t));
         if (void 0 === i) {
             i = new PropertyRule(this.locator, this, this.messageProvider, new RuleProperty(s, t));
@@ -485,18 +487,18 @@ let z = class ValidationRules {
         return e;
     }
     on(e, t) {
-        const s = M.get(e, t);
+        const s = T.get(e, t);
         if (Object.is(s, this.rules)) return this;
-        this.rules = null !== s && void 0 !== s ? s : [];
-        M.set(e, this.rules, t);
+        this.rules = s ?? [];
+        T.set(e, this.rules, t);
         this.targets.add(e);
         return this;
     }
     off(e, t) {
         const s = void 0 !== e ? [ e ] : Array.from(this.targets);
         for (const e of s) {
-            M.unset(e, t);
-            if (!M.isValidationRulesSet(e)) this.targets.delete(e);
+            T.unset(e, t);
+            if (!T.isValidationRulesSet(e)) this.targets.delete(e);
         }
     }
     applyModelBasedRules(e, t) {
@@ -505,22 +507,21 @@ let z = class ValidationRules {
             const t = i.tag;
             if (s.has(t)) console.warn(`A ruleset for tag ${t} is already defined which will be overwritten`);
             const r = this.deserializer.hydrateRuleset(i.ruleset, this);
-            M.set(e, r, t);
+            T.set(e, r, t);
             s.add(t);
         }
     }
 };
 
-z = $([ m(0, i), m(1, h), m(2, f), m(3, d) ], z);
+N = m([ f(0, i), f(1, h), f(2, p), f(3, d) ], N);
 
-const N = /^function\s*\([$_\w\d]+\)\s*\{(?:\s*["']{1}use strict["']{1};)?(?:[$_\s\w\d\/\*.['"\]+;]+)?\s*return\s+[$_\w\d]+((\.[$_\w\d]+|\[['"$_\w\d]+\])+)\s*;?\s*\}$/;
+const A = /^function\s*\([$_\w\d]+\)\s*\{(?:\s*["']{1}use strict["']{1};)?(?:[$_\s\w\d\/\*.['"\]+;]+)?\s*return\s+[$_\w\d]+((\.[$_\w\d]+|\[['"$_\w\d]+\])+)\s*;?\s*\}$/;
 
-const A = /^\(?[$_\w\d]+\)?\s*=>\s*[$_\w\d]+((\.[$_\w\d]+|\[['"$_\w\d]+\])+)$/;
+const Y = /^\(?[$_\w\d]+\)?\s*=>\s*[$_\w\d]+((\.[$_\w\d]+|\[['"$_\w\d]+\])+)$/;
 
-const Y = "$root";
+const S = "$root";
 
-function S(e, t) {
-    var s;
+function V(e, t) {
     switch (typeof e) {
       case "string":
         break;
@@ -528,16 +529,16 @@ function S(e, t) {
       case "function":
         {
             const t = e.toString();
-            const i = null !== (s = A.exec(t)) && void 0 !== s ? s : N.exec(t);
-            if (null === i) throw new Error(`Unable to parse accessor function:\n${t}`);
-            e = i[1].substring(1);
+            const s = Y.exec(t) ?? A.exec(t);
+            if (null === s) throw new Error(`Unable to parse accessor function:\n${t}`);
+            e = s[1].substring(1);
             break;
         }
 
       default:
         throw new Error(`Unable to parse accessor function:\n${e}`);
     }
-    return [ e, t.parse(`${Y}.${e}`, 8) ];
+    return [ e, t.parse(`${S}.${e}`, 8) ];
 }
 
 class ValidationResult {
@@ -558,28 +559,27 @@ class ValidationResult {
 
 ValidationResult.nextId = 0;
 
-const V = new Set([ "displayName", "propertyName", "value", "object", "config", "getDisplayName" ]);
+const j = new Set([ "displayName", "propertyName", "value", "object", "config", "getDisplayName" ]);
 
-let j = class ValidationMessageProvider {
+let O = class ValidationMessageProvider {
     constructor(e, t, s) {
         this.parser = e;
         this.registeredMessages = new WeakMap;
         this.logger = t.scopeTo(ValidationMessageProvider.name);
-        for (const {rule: e, aliases: t} of s) p.setDefaultMessage(e, {
+        for (const {rule: e, aliases: t} of s) g.setDefaultMessage(e, {
             aliases: t
         });
     }
     getMessage(e) {
-        var t;
-        const s = this.registeredMessages.get(e);
-        if (void 0 !== s) return s;
-        const i = p.getDefaultMessages(e);
-        const r = e.messageKey;
-        let n;
-        const a = i.length;
-        if (1 === a && void 0 === r) n = i[0].defaultMessage; else n = null === (t = i.find((e => e.name === r))) || void 0 === t ? void 0 : t.defaultMessage;
-        if (!n) n = p.getDefaultMessages(g)[0].defaultMessage;
-        return this.setMessage(e, n);
+        const t = this.registeredMessages.get(e);
+        if (void 0 !== t) return t;
+        const s = g.getDefaultMessages(e);
+        const i = e.messageKey;
+        let r;
+        const n = s.length;
+        if (1 === n && void 0 === i) r = s[0].defaultMessage; else r = s.find((e => e.name === i))?.defaultMessage;
+        if (!r) r = g.getDefaultMessages(y)[0].defaultMessage;
+        return this.setMessage(e, r);
     }
     setMessage(e, t) {
         const s = this.parseMessage(t);
@@ -588,10 +588,10 @@ let j = class ValidationMessageProvider {
     }
     parseMessage(e) {
         const t = this.parser.parse(e, 1);
-        if (25 === (null === t || void 0 === t ? void 0 : t.$kind)) {
+        if (25 === t?.$kind) {
             for (const s of t.expressions) {
                 const t = s.name;
-                if (V.has(t)) this.logger.warn(`Did you mean to use "$${t}" instead of "${t}" in this validation message template: "${e}"?`);
+                if (j.has(t)) this.logger.warn(`Did you mean to use "$${t}" instead of "${t}" in this validation message template: "${e}"?`);
                 if (1793 === s.$kind || s.ancestor > 0) throw new Error("$parent is not permitted in validation message expressions.");
             }
             return t;
@@ -606,9 +606,9 @@ let j = class ValidationMessageProvider {
     }
 };
 
-j = $([ m(0, h), m(1, r), m(2, b) ], j);
+O = m([ f(0, h), f(1, r), f(2, M) ], O);
 
-var O;
+var I;
 
 (function(e) {
     e["BindingBehaviorExpression"] = "BindingBehaviorExpression";
@@ -638,7 +638,7 @@ var O;
     e["DestructuringSingleAssignment"] = "DestructuringSingleAssignment";
     e["DestructuringRestAssignment"] = "DestructuringRestAssignment";
     e["ArrowFunction"] = "ArrowFunction";
-})(O || (O = {}));
+})(I || (I = {}));
 
 class Deserializer {
     static deserialize(e) {
@@ -648,158 +648,158 @@ class Deserializer {
     }
     hydrate(e) {
         switch (e.$TYPE) {
-          case O.AccessMemberExpression:
+          case I.AccessMemberExpression:
             {
                 const t = e;
                 return new u.AccessMemberExpression(this.hydrate(t.object), t.name);
             }
 
-          case O.AccessKeyedExpression:
+          case I.AccessKeyedExpression:
             {
                 const t = e;
                 return new u.AccessKeyedExpression(this.hydrate(t.object), this.hydrate(t.key));
             }
 
-          case O.AccessThisExpression:
+          case I.AccessThisExpression:
             {
                 const t = e;
                 return new u.AccessThisExpression(t.ancestor);
             }
 
-          case O.AccessScopeExpression:
+          case I.AccessScopeExpression:
             {
                 const t = e;
                 return new u.AccessScopeExpression(t.name, t.ancestor);
             }
 
-          case O.ArrayLiteralExpression:
+          case I.ArrayLiteralExpression:
             {
                 const t = e;
                 return new u.ArrayLiteralExpression(this.hydrate(t.elements));
             }
 
-          case O.ObjectLiteralExpression:
+          case I.ObjectLiteralExpression:
             {
                 const t = e;
                 return new u.ObjectLiteralExpression(this.hydrate(t.keys), this.hydrate(t.values));
             }
 
-          case O.PrimitiveLiteralExpression:
+          case I.PrimitiveLiteralExpression:
             {
                 const t = e;
                 return new u.PrimitiveLiteralExpression(this.hydrate(t.value));
             }
 
-          case O.CallFunctionExpression:
+          case I.CallFunctionExpression:
             {
                 const t = e;
                 return new u.CallFunctionExpression(this.hydrate(t.func), this.hydrate(t.args));
             }
 
-          case O.CallMemberExpression:
+          case I.CallMemberExpression:
             {
                 const t = e;
                 return new u.CallMemberExpression(this.hydrate(t.object), t.name, this.hydrate(t.args));
             }
 
-          case O.CallScopeExpression:
+          case I.CallScopeExpression:
             {
                 const t = e;
                 return new u.CallScopeExpression(t.name, this.hydrate(t.args), t.ancestor);
             }
 
-          case O.TemplateExpression:
+          case I.TemplateExpression:
             {
                 const t = e;
                 return new u.TemplateExpression(this.hydrate(t.cooked), this.hydrate(t.expressions));
             }
 
-          case O.TaggedTemplateExpression:
+          case I.TaggedTemplateExpression:
             {
                 const t = e;
                 return new u.TaggedTemplateExpression(this.hydrate(t.cooked), this.hydrate(t.raw), this.hydrate(t.func), this.hydrate(t.expressions));
             }
 
-          case O.UnaryExpression:
+          case I.UnaryExpression:
             {
                 const t = e;
                 return new u.UnaryExpression(t.operation, this.hydrate(t.expression));
             }
 
-          case O.BinaryExpression:
+          case I.BinaryExpression:
             {
                 const t = e;
                 return new u.BinaryExpression(t.operation, this.hydrate(t.left), this.hydrate(t.right));
             }
 
-          case O.ConditionalExpression:
+          case I.ConditionalExpression:
             {
                 const t = e;
                 return new u.ConditionalExpression(this.hydrate(t.condition), this.hydrate(t.yes), this.hydrate(t.no));
             }
 
-          case O.AssignExpression:
+          case I.AssignExpression:
             {
                 const t = e;
                 return new u.AssignExpression(this.hydrate(t.target), this.hydrate(t.value));
             }
 
-          case O.ValueConverterExpression:
+          case I.ValueConverterExpression:
             {
                 const t = e;
                 return new u.ValueConverterExpression(this.hydrate(t.expression), t.name, this.hydrate(t.args));
             }
 
-          case O.BindingBehaviorExpression:
+          case I.BindingBehaviorExpression:
             {
                 const t = e;
                 return new u.BindingBehaviorExpression(this.hydrate(t.expression), t.name, this.hydrate(t.args));
             }
 
-          case O.ArrayBindingPattern:
+          case I.ArrayBindingPattern:
             {
                 const t = e;
                 return new u.ArrayBindingPattern(this.hydrate(t.elements));
             }
 
-          case O.ObjectBindingPattern:
+          case I.ObjectBindingPattern:
             {
                 const t = e;
                 return new u.ObjectBindingPattern(this.hydrate(t.keys), this.hydrate(t.values));
             }
 
-          case O.BindingIdentifier:
+          case I.BindingIdentifier:
             {
                 const t = e;
                 return new u.BindingIdentifier(t.name);
             }
 
-          case O.ForOfStatement:
+          case I.ForOfStatement:
             {
                 const t = e;
                 return new u.ForOfStatement(this.hydrate(t.declaration), this.hydrate(t.iterable));
             }
 
-          case O.Interpolation:
+          case I.Interpolation:
             {
                 const t = e;
                 return new u.Interpolation(this.hydrate(t.cooked), this.hydrate(t.expressions));
             }
 
-          case O.DestructuringAssignment:
+          case I.DestructuringAssignment:
             return new u.DestructuringAssignmentExpression(this.hydrate(e.$kind), this.hydrate(e.list), this.hydrate(e.source), this.hydrate(e.initializer));
 
-          case O.DestructuringSingleAssignment:
+          case I.DestructuringSingleAssignment:
             return new u.DestructuringAssignmentSingleExpression(this.hydrate(e.target), this.hydrate(e.source), this.hydrate(e.initializer));
 
-          case O.DestructuringRestAssignment:
+          case I.DestructuringRestAssignment:
             return new u.DestructuringAssignmentRestExpression(this.hydrate(e.target), this.hydrate(e.indexOrProperties));
 
-          case O.ArrowFunction:
+          case I.ArrowFunction:
             return new u.ArrowFunction(this.hydrate(e.parameters), this.hydrate(e.body), this.hydrate(e.rest));
 
           default:
-            if (Array.isArray(e)) if ("object" === typeof e[0]) return this.deserializeExpressions(e); else return e.map(B); else if ("object" !== typeof e) return B(e);
+            if (Array.isArray(e)) if ("object" === typeof e[0]) return this.deserializeExpressions(e); else return e.map(C); else if ("object" !== typeof e) return C(e);
             throw new Error(`unable to deserialize the expression: ${e}`);
         }
     }
@@ -817,88 +817,88 @@ class Serializer {
         return e.accept(t);
     }
     visitAccessMember(e) {
-        return `{"$TYPE":"${O.AccessMemberExpression}","name":"${e.name}","object":${e.object.accept(this)}}`;
+        return `{"$TYPE":"${I.AccessMemberExpression}","name":"${e.name}","object":${e.object.accept(this)}}`;
     }
     visitAccessKeyed(e) {
-        return `{"$TYPE":"${O.AccessKeyedExpression}","object":${e.object.accept(this)},"key":${e.key.accept(this)}}`;
+        return `{"$TYPE":"${I.AccessKeyedExpression}","object":${e.object.accept(this)},"key":${e.key.accept(this)}}`;
     }
     visitAccessThis(e) {
-        return `{"$TYPE":"${O.AccessThisExpression}","ancestor":${e.ancestor}}`;
+        return `{"$TYPE":"${I.AccessThisExpression}","ancestor":${e.ancestor}}`;
     }
     visitAccessScope(e) {
-        return `{"$TYPE":"${O.AccessScopeExpression}","name":"${e.name}","ancestor":${e.ancestor}}`;
+        return `{"$TYPE":"${I.AccessScopeExpression}","name":"${e.name}","ancestor":${e.ancestor}}`;
     }
     visitArrayLiteral(e) {
-        return `{"$TYPE":"${O.ArrayLiteralExpression}","elements":${this.serializeExpressions(e.elements)}}`;
+        return `{"$TYPE":"${I.ArrayLiteralExpression}","elements":${this.serializeExpressions(e.elements)}}`;
     }
     visitObjectLiteral(e) {
-        return `{"$TYPE":"${O.ObjectLiteralExpression}","keys":${I(e.keys)},"values":${this.serializeExpressions(e.values)}}`;
+        return `{"$TYPE":"${I.ObjectLiteralExpression}","keys":${L(e.keys)},"values":${this.serializeExpressions(e.values)}}`;
     }
     visitPrimitiveLiteral(e) {
-        return `{"$TYPE":"${O.PrimitiveLiteralExpression}","value":${L(e.value)}}`;
+        return `{"$TYPE":"${I.PrimitiveLiteralExpression}","value":${D(e.value)}}`;
     }
     visitCallFunction(e) {
-        return `{"$TYPE":"${O.CallFunctionExpression}","func":${e.func.accept(this)},"args":${this.serializeExpressions(e.args)}}`;
+        return `{"$TYPE":"${I.CallFunctionExpression}","func":${e.func.accept(this)},"args":${this.serializeExpressions(e.args)}}`;
     }
     visitCallMember(e) {
-        return `{"$TYPE":"${O.CallMemberExpression}","name":"${e.name}","object":${e.object.accept(this)},"args":${this.serializeExpressions(e.args)}}`;
+        return `{"$TYPE":"${I.CallMemberExpression}","name":"${e.name}","object":${e.object.accept(this)},"args":${this.serializeExpressions(e.args)}}`;
     }
     visitCallScope(e) {
-        return `{"$TYPE":"${O.CallScopeExpression}","name":"${e.name}","ancestor":${e.ancestor},"args":${this.serializeExpressions(e.args)}}`;
+        return `{"$TYPE":"${I.CallScopeExpression}","name":"${e.name}","ancestor":${e.ancestor},"args":${this.serializeExpressions(e.args)}}`;
     }
     visitTemplate(e) {
-        return `{"$TYPE":"${O.TemplateExpression}","cooked":${I(e.cooked)},"expressions":${this.serializeExpressions(e.expressions)}}`;
+        return `{"$TYPE":"${I.TemplateExpression}","cooked":${L(e.cooked)},"expressions":${this.serializeExpressions(e.expressions)}}`;
     }
     visitTaggedTemplate(e) {
-        return `{"$TYPE":"${O.TaggedTemplateExpression}","cooked":${I(e.cooked)},"raw":${I(e.cooked.raw)},"func":${e.func.accept(this)},"expressions":${this.serializeExpressions(e.expressions)}}`;
+        return `{"$TYPE":"${I.TaggedTemplateExpression}","cooked":${L(e.cooked)},"raw":${L(e.cooked.raw)},"func":${e.func.accept(this)},"expressions":${this.serializeExpressions(e.expressions)}}`;
     }
     visitUnary(e) {
-        return `{"$TYPE":"${O.UnaryExpression}","operation":"${e.operation}","expression":${e.expression.accept(this)}}`;
+        return `{"$TYPE":"${I.UnaryExpression}","operation":"${e.operation}","expression":${e.expression.accept(this)}}`;
     }
     visitBinary(e) {
-        return `{"$TYPE":"${O.BinaryExpression}","operation":"${e.operation}","left":${e.left.accept(this)},"right":${e.right.accept(this)}}`;
+        return `{"$TYPE":"${I.BinaryExpression}","operation":"${e.operation}","left":${e.left.accept(this)},"right":${e.right.accept(this)}}`;
     }
     visitConditional(e) {
-        return `{"$TYPE":"${O.ConditionalExpression}","condition":${e.condition.accept(this)},"yes":${e.yes.accept(this)},"no":${e.no.accept(this)}}`;
+        return `{"$TYPE":"${I.ConditionalExpression}","condition":${e.condition.accept(this)},"yes":${e.yes.accept(this)},"no":${e.no.accept(this)}}`;
     }
     visitAssign(e) {
-        return `{"$TYPE":"${O.AssignExpression}","target":${e.target.accept(this)},"value":${e.value.accept(this)}}`;
+        return `{"$TYPE":"${I.AssignExpression}","target":${e.target.accept(this)},"value":${e.value.accept(this)}}`;
     }
     visitValueConverter(e) {
-        return `{"$TYPE":"${O.ValueConverterExpression}","name":"${e.name}","expression":${e.expression.accept(this)},"args":${this.serializeExpressions(e.args)}}`;
+        return `{"$TYPE":"${I.ValueConverterExpression}","name":"${e.name}","expression":${e.expression.accept(this)},"args":${this.serializeExpressions(e.args)}}`;
     }
     visitBindingBehavior(e) {
-        return `{"$TYPE":"${O.BindingBehaviorExpression}","name":"${e.name}","expression":${e.expression.accept(this)},"args":${this.serializeExpressions(e.args)}}`;
+        return `{"$TYPE":"${I.BindingBehaviorExpression}","name":"${e.name}","expression":${e.expression.accept(this)},"args":${this.serializeExpressions(e.args)}}`;
     }
     visitArrayBindingPattern(e) {
-        return `{"$TYPE":"${O.ArrayBindingPattern}","elements":${this.serializeExpressions(e.elements)}}`;
+        return `{"$TYPE":"${I.ArrayBindingPattern}","elements":${this.serializeExpressions(e.elements)}}`;
     }
     visitObjectBindingPattern(e) {
-        return `{"$TYPE":"${O.ObjectBindingPattern}","keys":${I(e.keys)},"values":${this.serializeExpressions(e.values)}}`;
+        return `{"$TYPE":"${I.ObjectBindingPattern}","keys":${L(e.keys)},"values":${this.serializeExpressions(e.values)}}`;
     }
     visitBindingIdentifier(e) {
-        return `{"$TYPE":"${O.BindingIdentifier}","name":"${e.name}"}`;
+        return `{"$TYPE":"${I.BindingIdentifier}","name":"${e.name}"}`;
     }
     visitHtmlLiteral(e) {
         throw new Error("visitHtmlLiteral");
     }
     visitForOfStatement(e) {
-        return `{"$TYPE":"${O.ForOfStatement}","declaration":${e.declaration.accept(this)},"iterable":${e.iterable.accept(this)}}`;
+        return `{"$TYPE":"${I.ForOfStatement}","declaration":${e.declaration.accept(this)},"iterable":${e.iterable.accept(this)}}`;
     }
     visitInterpolation(e) {
-        return `{"$TYPE":"${O.Interpolation}","cooked":${I(e.parts)},"expressions":${this.serializeExpressions(e.expressions)}}`;
+        return `{"$TYPE":"${I.Interpolation}","cooked":${L(e.parts)},"expressions":${this.serializeExpressions(e.expressions)}}`;
     }
     visitDestructuringAssignmentExpression(e) {
-        return `{"$TYPE":"${O.DestructuringAssignment}","$kind":${L(e.$kind)},"list":${this.serializeExpressions(e.list)},"source":${void 0 === e.source ? L(e.source) : e.source.accept(this)},"initializer":${void 0 === e.initializer ? L(e.initializer) : e.initializer.accept(this)}}`;
+        return `{"$TYPE":"${I.DestructuringAssignment}","$kind":${D(e.$kind)},"list":${this.serializeExpressions(e.list)},"source":${void 0 === e.source ? D(e.source) : e.source.accept(this)},"initializer":${void 0 === e.initializer ? D(e.initializer) : e.initializer.accept(this)}}`;
     }
     visitDestructuringAssignmentSingleExpression(e) {
-        return `{"$TYPE":"${O.DestructuringSingleAssignment}","source":${e.source.accept(this)},"target":${e.target.accept(this)},"initializer":${void 0 === e.initializer ? L(e.initializer) : e.initializer.accept(this)}}`;
+        return `{"$TYPE":"${I.DestructuringSingleAssignment}","source":${e.source.accept(this)},"target":${e.target.accept(this)},"initializer":${void 0 === e.initializer ? D(e.initializer) : e.initializer.accept(this)}}`;
     }
     visitDestructuringAssignmentRestExpression(e) {
-        return `{"$TYPE":"${O.DestructuringRestAssignment}","target":${e.target.accept(this)},"indexOrProperties":${Array.isArray(e.indexOrProperties) ? I(e.indexOrProperties) : L(e.indexOrProperties)}}`;
+        return `{"$TYPE":"${I.DestructuringRestAssignment}","target":${e.target.accept(this)},"indexOrProperties":${Array.isArray(e.indexOrProperties) ? L(e.indexOrProperties) : D(e.indexOrProperties)}}`;
     }
     visitArrowFunction(e) {
-        return `{"$TYPE":"${O.ArrowFunction}","parameters":${this.serializeExpressions(e.args)},"body":${e.body.accept(this)},"rest":${L(e.rest)}}`;
+        return `{"$TYPE":"${I.ArrowFunction}","parameters":${this.serializeExpressions(e.args)},"body":${e.body.accept(this)},"rest":${D(e.rest)}}`;
     }
     serializeExpressions(e) {
         let t = "[";
@@ -911,27 +911,27 @@ class Serializer {
     }
 }
 
-function I(e) {
+function L(e) {
     let t = "[";
     for (let s = 0, i = e.length; s < i; ++s) {
         if (0 !== s) t += ",";
-        t += L(e[s]);
+        t += D(e[s]);
     }
     t += "]";
     return t;
 }
 
-function L(e) {
-    if ("string" === typeof e) return `"\\"${D(e)}\\""`; else if (null == e) return `"${e}"`; else return `${e}`;
-}
-
 function D(e) {
-    let t = "";
-    for (let s = 0, i = e.length; s < i; ++s) t += q(e.charAt(s));
-    return t;
+    if ("string" === typeof e) return `"\\"${q(e)}\\""`; else if (null == e) return `"${e}"`; else return `${e}`;
 }
 
 function q(e) {
+    let t = "";
+    for (let s = 0, i = e.length; s < i; ++s) t += B(e.charAt(s));
+    return t;
+}
+
+function B(e) {
     switch (e) {
       case "\b":
         return "\\b";
@@ -962,7 +962,7 @@ function q(e) {
     }
 }
 
-function B(e) {
+function C(e) {
     if ("string" === typeof e) {
         if ("null" === e) return null;
         if ("undefined" === e) return;
@@ -977,32 +977,32 @@ class ValidationSerializer {
         return e.accept(t);
     }
     visitRequiredRule(e) {
-        return `{"$TYPE":"${w.$TYPE}","messageKey":"${e.messageKey}","tag":${L(e.tag)}}`;
+        return `{"$TYPE":"${v.$TYPE}","messageKey":"${e.messageKey}","tag":${D(e.tag)}}`;
     }
     visitRegexRule(e) {
         const t = e.pattern;
-        return `{"$TYPE":"${y.$TYPE}","messageKey":"${e.messageKey}","tag":${L(e.tag)},"pattern":{"source":${L(t.source)},"flags":"${t.flags}"}}`;
+        return `{"$TYPE":"${x.$TYPE}","messageKey":"${e.messageKey}","tag":${D(e.tag)},"pattern":{"source":${D(t.source)},"flags":"${t.flags}"}}`;
     }
     visitLengthRule(e) {
-        return `{"$TYPE":"${x.$TYPE}","messageKey":"${e.messageKey}","tag":${L(e.tag)},"length":${L(e.length)},"isMax":${L(e.isMax)}}`;
+        return `{"$TYPE":"${R.$TYPE}","messageKey":"${e.messageKey}","tag":${D(e.tag)},"length":${D(e.length)},"isMax":${D(e.isMax)}}`;
     }
     visitSizeRule(e) {
-        return `{"$TYPE":"${R.$TYPE}","messageKey":"${e.messageKey}","tag":${L(e.tag)},"count":${L(e.count)},"isMax":${L(e.isMax)}}`;
+        return `{"$TYPE":"${E.$TYPE}","messageKey":"${e.messageKey}","tag":${D(e.tag)},"count":${D(e.count)},"isMax":${D(e.isMax)}}`;
     }
     visitRangeRule(e) {
-        return `{"$TYPE":"${E.$TYPE}","messageKey":"${e.messageKey}","tag":${L(e.tag)},"isInclusive":${e.isInclusive},"min":${this.serializeNumber(e.min)},"max":${this.serializeNumber(e.max)}}`;
+        return `{"$TYPE":"${P.$TYPE}","messageKey":"${e.messageKey}","tag":${D(e.tag)},"isInclusive":${e.isInclusive},"min":${this.serializeNumber(e.min)},"max":${this.serializeNumber(e.max)}}`;
     }
     visitEqualsRule(e) {
         const t = e.expectedValue;
         let s;
-        if ("object" !== typeof t || null === t) s = L(t); else s = JSON.stringify(t);
-        return `{"$TYPE":"${P.$TYPE}","messageKey":"${e.messageKey}","tag":${L(e.tag)},"expectedValue":${s}}`;
+        if ("object" !== typeof t || null === t) s = D(t); else s = JSON.stringify(t);
+        return `{"$TYPE":"${b.$TYPE}","messageKey":"${e.messageKey}","tag":${D(e.tag)},"expectedValue":${s}}`;
     }
     visitRuleProperty(e) {
         const t = e.displayName;
         if (void 0 !== t && "string" !== typeof t) throw new Error("Serializing a non-string displayName for rule property is not supported.");
         const s = e.expression;
-        return `{"$TYPE":"${RuleProperty.$TYPE}","name":${L(e.name)},"expression":${s ? Serializer.serialize(s) : null},"displayName":${L(t)}}`;
+        return `{"$TYPE":"${RuleProperty.$TYPE}","name":${D(e.name)},"expression":${s ? Serializer.serialize(s) : null},"displayName":${D(t)}}`;
     }
     visitPropertyRule(e) {
         return `{"$TYPE":"${PropertyRule.$TYPE}","property":${e.property.accept(this)},"$rules":${this.serializeRules(e.$rules)}}`;
@@ -1015,7 +1015,7 @@ class ValidationSerializer {
     }
 }
 
-let C = class ValidationDeserializer {
+let _ = class ValidationDeserializer {
     constructor(e, t, s) {
         this.locator = e;
         this.messageProvider = t;
@@ -1026,47 +1026,37 @@ let C = class ValidationDeserializer {
         this.container = e;
     }
     static deserialize(e, t) {
-        const s = this.container.get(f);
+        const s = this.container.get(p);
         const i = this.container.get(h);
         const r = new ValidationDeserializer(this.container, s, i);
         const n = JSON.parse(e);
         return r.hydrate(n, t);
     }
     hydrate(e, t) {
-        var s, i;
         switch (e.$TYPE) {
-          case w.$TYPE:
+          case v.$TYPE:
             {
                 const t = e;
-                const s = new w;
+                const s = new v;
                 s.messageKey = t.messageKey;
                 s.tag = this.astDeserializer.hydrate(t.tag);
                 return s;
-            }
-
-          case y.$TYPE:
-            {
-                const t = e;
-                const s = t.pattern;
-                const i = this.astDeserializer;
-                const r = new y(new RegExp(i.hydrate(s.source), s.flags), t.messageKey);
-                r.tag = i.hydrate(t.tag);
-                return r;
             }
 
           case x.$TYPE:
             {
                 const t = e;
-                const s = new x(t.length, t.isMax);
-                s.messageKey = t.messageKey;
-                s.tag = this.astDeserializer.hydrate(t.tag);
-                return s;
+                const s = t.pattern;
+                const i = this.astDeserializer;
+                const r = new x(new RegExp(i.hydrate(s.source), s.flags), t.messageKey);
+                r.tag = i.hydrate(t.tag);
+                return r;
             }
 
           case R.$TYPE:
             {
                 const t = e;
-                const s = new R(t.count, t.isMax);
+                const s = new R(t.length, t.isMax);
                 s.messageKey = t.messageKey;
                 s.tag = this.astDeserializer.hydrate(t.tag);
                 return s;
@@ -1075,20 +1065,29 @@ let C = class ValidationDeserializer {
           case E.$TYPE:
             {
                 const t = e;
-                const r = new E(t.isInclusive, {
-                    min: null !== (s = t.min) && void 0 !== s ? s : Number.NEGATIVE_INFINITY,
-                    max: null !== (i = t.max) && void 0 !== i ? i : Number.POSITIVE_INFINITY
-                });
-                r.messageKey = t.messageKey;
-                r.tag = this.astDeserializer.hydrate(t.tag);
-                return r;
+                const s = new E(t.count, t.isMax);
+                s.messageKey = t.messageKey;
+                s.tag = this.astDeserializer.hydrate(t.tag);
+                return s;
             }
 
           case P.$TYPE:
             {
                 const t = e;
+                const s = new P(t.isInclusive, {
+                    min: t.min ?? Number.NEGATIVE_INFINITY,
+                    max: t.max ?? Number.POSITIVE_INFINITY
+                });
+                s.messageKey = t.messageKey;
+                s.tag = this.astDeserializer.hydrate(t.tag);
+                return s;
+            }
+
+          case b.$TYPE:
+            {
+                const t = e;
                 const s = this.astDeserializer;
-                const i = new P("object" !== typeof t.expectedValue ? s.hydrate(t.expectedValue) : t.expectedValue);
+                const i = new b("object" !== typeof t.expectedValue ? s.hydrate(t.expectedValue) : t.expectedValue);
                 i.messageKey = t.messageKey;
                 i.tag = s.hydrate(t.tag);
                 return i;
@@ -1101,7 +1100,7 @@ let C = class ValidationDeserializer {
                 let i = t.name;
                 i = "undefined" === i ? void 0 : s.hydrate(i);
                 let r = t.expression;
-                if (null !== r && void 0 !== r) r = s.hydrate(r); else if (void 0 !== i) [, r] = S(i, this.parser); else r = void 0;
+                if (null !== r && void 0 !== r) r = s.hydrate(r); else if (void 0 !== i) [, r] = V(i, this.parser); else r = void 0;
                 let n = t.displayName;
                 n = "undefined" === n ? void 0 : s.hydrate(n);
                 return new RuleProperty(r, i, n);
@@ -1120,9 +1119,9 @@ let C = class ValidationDeserializer {
     }
 };
 
-C = $([ m(0, i), m(1, f), m(2, h) ], C);
+_ = m([ f(0, i), f(1, p), f(2, h) ], _);
 
-let _ = class ModelValidationExpressionHydrator {
+let k = class ModelValidationExpressionHydrator {
     constructor(e, t, s) {
         this.locator = e;
         this.messageProvider = t;
@@ -1206,40 +1205,37 @@ let _ = class ModelValidationExpressionHydrator {
         const i = e.when;
         if (i) if ("string" === typeof i) {
             const e = this.parser.parse(i, 0);
-            t.canExecute = t => {
-                const s = 0;
-                return e.evaluate(s, l.create({
-                    $object: t
-                }), this.locator, null);
-            };
+            t.canExecute = t => e.evaluate(l.create({
+                $object: t
+            }), this, null);
         } else if ("function" === typeof i) t.canExecute = i;
     }
     isModelPropertyRule(e) {
         return "object" === typeof e && "rules" in e;
     }
     hydrateRequiredRule(e) {
-        const t = new w;
+        const t = new v;
         this.setCommonRuleProperties(e, t);
         return t;
     }
     hydrateRegexRule(e) {
         const t = e.pattern;
-        const s = new y(new RegExp(t.source, t.flags), e.messageKey);
+        const s = new x(new RegExp(t.source, t.flags), e.messageKey);
         s.tag = e.tag;
         return s;
     }
     hydrateLengthRule(e) {
-        const t = new x(e.length, e.isMax);
+        const t = new R(e.length, e.isMax);
         this.setCommonRuleProperties(e, t);
         return t;
     }
     hydrateSizeRule(e) {
-        const t = new R(e.count, e.isMax);
+        const t = new E(e.count, e.isMax);
         this.setCommonRuleProperties(e, t);
         return t;
     }
     hydrateRangeRule(e) {
-        const t = new E(e.isInclusive, {
+        const t = new P(e.isInclusive, {
             min: e.min,
             max: e.max
         });
@@ -1247,19 +1243,21 @@ let _ = class ModelValidationExpressionHydrator {
         return t;
     }
     hydrateEqualsRule(e) {
-        const t = new P(e.expectedValue);
+        const t = new b(e.expectedValue);
         this.setCommonRuleProperties(e, t);
         return t;
     }
     hydrateRuleProperty(e) {
         const t = e.name;
         if (!t || "string" !== typeof t) throw new Error("The property name needs to be a non-empty string");
-        const [s, i] = S(t, this.parser);
+        const [s, i] = V(t, this.parser);
         return new RuleProperty(i, s, e.displayName);
     }
 };
 
-_ = $([ m(0, i), m(1, f), m(2, h) ], _);
+k = m([ f(0, i), f(1, p), f(2, h) ], k);
+
+$()(k);
 
 class ValidateInstruction {
     constructor(e = void 0, t = void 0, s = void 0, i = void 0, r = void 0, n = 0) {
@@ -1272,49 +1270,48 @@ class ValidateInstruction {
     }
 }
 
-const k = e.createInterface("IValidator");
+const K = e.createInterface("IValidator");
 
 class StandardValidator {
     async validate(e) {
-        var t, s, i, r;
-        const n = e.object;
-        const a = e.propertyName;
-        const o = e.propertyTag;
-        const u = e.flags;
-        const c = null !== (s = null !== (t = e.rules) && void 0 !== t ? t : M.get(n, e.objectTag)) && void 0 !== s ? s : [];
-        const h = l.create({
-            [Y]: n
+        const t = e.object;
+        const s = e.propertyName;
+        const i = e.propertyTag;
+        const r = e.flags;
+        const n = e.rules ?? T.get(t, e.objectTag) ?? [];
+        const a = l.create({
+            [S]: t
         });
-        if (void 0 !== a) return null !== (r = await (null === (i = c.find((e => e.property.name === a))) || void 0 === i ? void 0 : i.validate(n, o, u, h))) && void 0 !== r ? r : [];
-        return (await Promise.all(c.map((async e => e.validate(n, o, u, h))))).flat();
+        if (void 0 !== s) return await (n.find((e => e.property.name === s))?.validate(t, i, r, a)) ?? [];
+        return (await Promise.all(n.map((async e => e.validate(t, i, r, a))))).flat();
     }
 }
 
-function K() {
+function F() {
     return {
         ValidatorType: StandardValidator,
-        MessageProviderType: j,
+        MessageProviderType: O,
         CustomMessages: [],
-        HydratorType: _
+        HydratorType: k
     };
 }
 
-function F(e) {
+function Z(e) {
     return {
         optionsProvider: e,
         register(t) {
-            const s = K();
+            const s = F();
             e(s);
-            t.register(n.instance(b, s.CustomMessages), n.singleton(k, s.ValidatorType), n.singleton(f, s.MessageProviderType), n.singleton(d, s.HydratorType), n.transient(T, z), C);
+            t.register(n.instance(M, s.CustomMessages), n.singleton(K, s.ValidatorType), n.singleton(p, s.MessageProviderType), n.singleton(d, s.HydratorType), n.transient(z, N), _);
             return t;
         },
         customize(t) {
-            return F(null !== t && void 0 !== t ? t : e);
+            return Z(t ?? e);
         }
     };
 }
 
-const Z = F(a);
+const H = Z(a);
 
-export { g as BaseValidationRule, Deserializer, P as EqualsRule, b as ICustomMessages, d as IValidationExpressionHydrator, f as IValidationMessageProvider, T as IValidationRules, k as IValidator, x as LengthRule, ModelBasedRule, _ as ModelValidationExpressionHydrator, PropertyRule, E as RangeRule, y as RegexRule, w as RequiredRule, RuleProperty, Serializer, R as SizeRule, StandardValidator, ValidateInstruction, Z as ValidationConfiguration, C as ValidationDeserializer, j as ValidationMessageProvider, ValidationResult, p as ValidationRuleAliasMessage, z as ValidationRules, ValidationSerializer, B as deserializePrimitive, K as getDefaultValidationConfiguration, S as parsePropertyName, Y as rootObjectSymbol, L as serializePrimitive, I as serializePrimitives, v as validationRule, M as validationRulesRegistrar };
+export { y as BaseValidationRule, Deserializer, b as EqualsRule, M as ICustomMessages, d as IValidationExpressionHydrator, p as IValidationMessageProvider, z as IValidationRules, K as IValidator, R as LengthRule, ModelBasedRule, k as ModelValidationExpressionHydrator, PropertyRule, P as RangeRule, x as RegexRule, v as RequiredRule, RuleProperty, Serializer, E as SizeRule, StandardValidator, ValidateInstruction, H as ValidationConfiguration, _ as ValidationDeserializer, O as ValidationMessageProvider, ValidationResult, g as ValidationRuleAliasMessage, N as ValidationRules, ValidationSerializer, C as deserializePrimitive, F as getDefaultValidationConfiguration, V as parsePropertyName, S as rootObjectSymbol, D as serializePrimitive, L as serializePrimitives, w as validationRule, T as validationRulesRegistrar };
 //# sourceMappingURL=index.mjs.map

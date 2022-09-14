@@ -1,3 +1,4 @@
+import { Key } from '@aurelia/kernel';
 import { ExpressionKind, LifecycleFlags } from '@aurelia/runtime';
 import type { IContainer, IDisposable, IIndexable, IServiceLocator } from '@aurelia/kernel';
 import type { Scope, IBinding, IConnectableBinding, IndexMap, IObserverLocator, ISignaler, BindingObserverRecord, Collection, ISubscribable, ICollectionSubscribable } from '@aurelia/runtime';
@@ -12,6 +13,7 @@ export declare class MockBinding implements IConnectableBinding {
     value: unknown;
     obs: BindingObserverRecord;
     calls: [keyof MockBinding, ...any[]][];
+    get(key: Key): never;
     updateTarget(value: unknown, flags: LifecycleFlags): void;
     updateSource(value: unknown, flags: LifecycleFlags): void;
     handleChange(newValue: unknown, _previousValue: unknown, flags: LifecycleFlags): void;
