@@ -1,4 +1,4 @@
-import { connectable, IndexMap, LifecycleFlags } from '@aurelia/runtime';
+import { connectable } from '@aurelia/runtime';
 import { astEvaluator } from './binding-utils';
 
 import type { ITask } from '@aurelia/platform';
@@ -40,7 +40,7 @@ export class LetBinding implements IAstBasedBinding {
     this._toBindingContext = toBindingContext;
   }
 
-  public handleChange(newValue: unknown, _previousValue: unknown, _flags: LifecycleFlags): void {
+  public handleChange(newValue: unknown): void {
     if (!this.isBound) {
       return;
     }
@@ -56,7 +56,7 @@ export class LetBinding implements IAstBasedBinding {
     }
   }
 
-  public handleCollectionChange(_indexMap: IndexMap, _flags: LifecycleFlags): void {
+  public handleCollectionChange(): void {
     if (!this.isBound) {
       return;
     }
@@ -72,12 +72,12 @@ export class LetBinding implements IAstBasedBinding {
     }
   }
 
-  public $bind(flags: LifecycleFlags, scope: Scope): void {
+  public $bind(scope: Scope): void {
     if (this.isBound) {
       if (this.$scope === scope) {
         return;
       }
-      this.interceptor.$unbind(flags | LifecycleFlags.fromBind);
+      this.interceptor.$unbind();
     }
 
     this.$scope = scope;
@@ -85,7 +85,7 @@ export class LetBinding implements IAstBasedBinding {
 
     const ast = this.ast;
     if (ast.hasBind) {
-      ast.bind(flags, scope, this.interceptor);
+      ast.bind(scope, this.interceptor);
     }
     // ast might have been changed during bind
     this.target[this.targetProperty]
@@ -95,14 +95,14 @@ export class LetBinding implements IAstBasedBinding {
     this.isBound = true;
   }
 
-  public $unbind(flags: LifecycleFlags): void {
+  public $unbind(): void {
     if (!this.isBound) {
       return;
     }
 
     const ast = this.ast;
     if (ast.hasUnbind) {
-      ast.unbind(flags, this.$scope!, this.interceptor);
+      ast.unbind(this.$scope!, this.interceptor);
     }
     this.$scope = void 0;
     this.obs.clearAll();

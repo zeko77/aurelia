@@ -4,7 +4,6 @@ import { ITask, QueueTaskOptions, TaskQueue } from '@aurelia/platform';
 import {
   AccessorType,
   connectable,
-  LifecycleFlags,
   Scope,
   type IAccessor,
   type IObserverLocator, type IOverrideContext, type IsBindingBehavior
@@ -41,7 +40,6 @@ export class StateBinding implements IAstBasedBinding, IStoreSubscriber<object> 
   /** @internal */ private _updateCount = 0;
   /** @internal */ private readonly _controller: IBindingController;
 
-  public persistentFlags: LifecycleFlags = LifecycleFlags.none;
   public mode: BindingMode = toView;
 
   public constructor(
@@ -64,7 +62,7 @@ export class StateBinding implements IAstBasedBinding, IStoreSubscriber<object> 
     this.targetProperty = prop;
   }
 
-  public updateTarget(value: unknown, flags: LifecycleFlags) {
+  public updateTarget(value: unknown) {
     const targetAccessor = this.targetObserver;
     const target = this.target;
     const prop = this.targetProperty;
@@ -75,7 +73,7 @@ export class StateBinding implements IAstBasedBinding, IStoreSubscriber<object> 
     if (isSubscribable(value)) {
       this._sub = value.subscribe($value => {
         if (isCurrentValue()) {
-          targetAccessor.setValue($value, flags, target, prop);
+          targetAccessor.setValue($value, target, prop);
         }
       });
       return;
@@ -84,16 +82,16 @@ export class StateBinding implements IAstBasedBinding, IStoreSubscriber<object> 
     if (value instanceof Promise) {
       void value.then($value => {
         if (isCurrentValue()) {
-          targetAccessor.setValue($value, flags, target, prop);
+          targetAccessor.setValue($value, target, prop);
         }
       }, () => {/* todo: don't ignore */});
       return;
     }
 
-    targetAccessor.setValue(value, flags, target, prop);
+    targetAccessor.setValue(value, target, prop);
   }
 
-  public $bind(flags: LifecycleFlags, scope: Scope): void {
+  public $bind(scope: Scope): void {
     if (this.isBound) {
       return;
     }
@@ -105,7 +103,6 @@ export class StateBinding implements IAstBasedBinding, IStoreSubscriber<object> 
       this.$scope,
       this,
       this.mode > oneTime ? this : null),
-      LifecycleFlags.none
     );
   }
 
@@ -123,12 +120,10 @@ export class StateBinding implements IAstBasedBinding, IStoreSubscriber<object> 
     this._store.unsubscribe(this);
   }
 
-  public handleChange(newValue: unknown, previousValue: unknown, flags: LifecycleFlags): void {
+  public handleChange(newValue: unknown): void {
     if (!this.isBound) {
       return;
     }
-
-    flags |= this.persistentFlags;
 
     // Alpha: during bind a simple strategy for bind is always flush immediately
     // todo:
@@ -145,13 +140,13 @@ export class StateBinding implements IAstBasedBinding, IStoreSubscriber<object> 
       // Queue the new one before canceling the old one, to prevent early yield
       task = this.task;
       this.task = this.taskQueue.queueTask(() => {
-        this.interceptor.updateTarget(newValue, flags);
+        this.interceptor.updateTarget(newValue);
         this.task = null;
       }, updateTaskOpts);
       task?.cancel();
       task = null;
     } else {
-      this.interceptor.updateTarget(newValue, flags);
+      this.interceptor.updateTarget(newValue);
     }
   }
 
@@ -175,12 +170,12 @@ export class StateBinding implements IAstBasedBinding, IStoreSubscriber<object> 
       // Queue the new one before canceling the old one, to prevent early yield
       task = this.task;
       this.task = this.taskQueue.queueTask(() => {
-        this.interceptor.updateTarget(value, LifecycleFlags.isStrictBindingStrategy);
+        this.interceptor.updateTarget(value);
         this.task = null;
       }, updateTaskOpts);
       task?.cancel();
     } else {
-      this.interceptor.updateTarget(this._value, LifecycleFlags.none);
+      this.interceptor.updateTarget(this._value);
     }
   }
 

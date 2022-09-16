@@ -9,8 +9,8 @@ import type {
   ISubscriber,
   ISubscriberCollection,
   ISubscriberRecord,
-  LifecycleFlags as LF,
 } from '../observation';
+import { addValueBatch, batching } from './subscriber-batch';
 
 export type IAnySubscriber = ISubscriber | ICollectionSubscriber;
 
@@ -137,7 +137,11 @@ export class SubscriberRecord<T extends IAnySubscriber> implements ISubscriberRe
     return false;
   }
 
-  public notify(val: unknown, oldVal: unknown, flags: LF): void {
+  public notify(val: unknown, oldVal: unknown): void {
+    if (batching) {
+      addValueBatch(this, val, oldVal);
+      return;
+    }
     /**
      * Note: change handlers may have the side-effect of adding/removing subscribers to this collection during this
      * callSubscribers invocation, so we're caching them all before invoking any.
@@ -154,13 +158,13 @@ export class SubscriberRecord<T extends IAnySubscriber> implements ISubscriberRe
     }
 
     if (sub0 !== void 0) {
-      sub0.handleChange(val, oldVal, flags);
+      sub0.handleChange(val, oldVal);
     }
     if (sub1 !== void 0) {
-      sub1.handleChange(val, oldVal, flags);
+      sub1.handleChange(val, oldVal);
     }
     if (sub2 !== void 0) {
-      sub2.handleChange(val, oldVal, flags);
+      sub2.handleChange(val, oldVal);
     }
     if (subs !== void 0) {
       const ii = subs.length;
@@ -169,13 +173,13 @@ export class SubscriberRecord<T extends IAnySubscriber> implements ISubscriberRe
       for (; i < ii; ++i) {
         sub = subs[i];
         if (sub !== void 0) {
-          sub.handleChange(val, oldVal, flags);
+          sub.handleChange(val, oldVal);
         }
       }
     }
   }
 
-  public notifyCollection(indexMap: IndexMap, flags: LF): void {
+  public notifyCollection(indexMap: IndexMap): void {
     const sub0 = this.s0 as ICollectionSubscriber;
     const sub1 = this.s1 as ICollectionSubscriber;
     const sub2 = this.s2 as ICollectionSubscriber;
@@ -185,13 +189,13 @@ export class SubscriberRecord<T extends IAnySubscriber> implements ISubscriberRe
     }
 
     if (sub0 !== void 0) {
-      sub0.handleCollectionChange(indexMap, flags);
+      sub0.handleCollectionChange(indexMap);
     }
     if (sub1 !== void 0) {
-      sub1.handleCollectionChange(indexMap, flags);
+      sub1.handleCollectionChange(indexMap);
     }
     if (sub2 !== void 0) {
-      sub2.handleCollectionChange(indexMap, flags);
+      sub2.handleCollectionChange(indexMap);
     }
     if (subs !== void 0) {
       const ii = subs.length;
@@ -200,7 +204,7 @@ export class SubscriberRecord<T extends IAnySubscriber> implements ISubscriberRe
       for (; i < ii; ++i) {
         sub = subs[i];
         if (sub !== void 0) {
-          sub.handleCollectionChange(indexMap, flags);
+          sub.handleCollectionChange(indexMap);
         }
       }
     }

@@ -3,7 +3,6 @@ import {
   ExpressionType,
   IExpressionParser,
   IObserverLocator,
-  LifecycleFlags,
   BindingBehaviorExpression,
   ExpressionKind,
   IBinding,
@@ -447,7 +446,7 @@ export class SetPropertyRenderer implements IRenderer {
   ): void {
     const obj = getTarget(target) as IObservable;
     if (obj.$observers !== void 0 && obj.$observers[instruction.to] !== void 0) {
-      obj.$observers[instruction.to].setValue(instruction.value, LifecycleFlags.fromBind);
+      obj.$observers[instruction.to].setValue(instruction.value);
     } else {
       obj[instruction.to] = instruction.value;
     }
@@ -1294,7 +1293,7 @@ class SpreadBinding implements IBinding {
     return this.locator.get(key);
   }
 
-  public $bind(flags: LifecycleFlags, _scope: Scope): void {
+  public $bind(_scope: Scope): void {
     if (this.isBound) {
       return;
     }
@@ -1304,11 +1303,11 @@ class SpreadBinding implements IBinding {
       throw new Error('Invalid spreading. Context scope is null/undefined');
     }
 
-    this._innerBindings.forEach(b => b.$bind(flags, innerScope));
+    this._innerBindings.forEach(b => b.$bind(innerScope));
   }
 
-  public $unbind(flags: LifecycleFlags): void {
-    this._innerBindings.forEach(b => b.$unbind(flags));
+  public $unbind(): void {
+    this._innerBindings.forEach(b => b.$unbind());
     this.isBound = false;
   }
 

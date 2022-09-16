@@ -2,7 +2,6 @@ import {
   AccessorOrObserver,
   AccessorType,
   ExpressionKind,
-  LifecycleFlags,
   connectable,
 } from '@aurelia/runtime';
 import { BindingMode } from './interfaces-bindings';
@@ -76,7 +75,7 @@ export class InterpolationBinding implements IBinding {
     }
   }
 
-  public updateTarget(value: unknown, flags: LifecycleFlags): void {
+  public updateTarget(_value: unknown): void {
     const partBindings = this.partBindings;
     const staticParts = this.ast.parts;
     const ii = partBindings.length;
@@ -105,21 +104,21 @@ export class InterpolationBinding implements IBinding {
       task = this.task;
       this.task = this.taskQueue.queueTask(() => {
         this.task = null;
-        targetObserver.setValue(result, flags, this.target, this.targetProperty);
+        targetObserver.setValue(result, this.target, this.targetProperty);
       }, queueTaskOptions);
       task?.cancel();
       task = null;
     } else {
-      targetObserver.setValue(result, flags, this.target, this.targetProperty);
+      targetObserver.setValue(result, this.target, this.targetProperty);
     }
   }
 
-  public $bind(flags: LifecycleFlags, scope: Scope): void {
+  public $bind(scope: Scope): void {
     if (this.isBound) {
       if (this.$scope === scope) {
         return;
       }
-      this.interceptor.$unbind(flags);
+      this.interceptor.$unbind();
     }
     this.isBound = true;
     this.$scope = scope;
@@ -128,12 +127,12 @@ export class InterpolationBinding implements IBinding {
     const ii = partBindings.length;
     let i = 0;
     for (; ii > i; ++i) {
-      partBindings[i].$bind(flags, scope);
+      partBindings[i].$bind(scope);
     }
-    this.updateTarget(void 0, flags);
+    this.updateTarget(void 0);
   }
 
-  public $unbind(flags: LifecycleFlags): void {
+  public $unbind(): void {
     if (!this.isBound) {
       return;
     }
@@ -143,7 +142,7 @@ export class InterpolationBinding implements IBinding {
     const ii = partBindings.length;
     let i = 0;
     for (; ii > i; ++i) {
-      partBindings[i].interceptor.$unbind(flags);
+      partBindings[i].interceptor.$unbind();
     }
     this.task?.cancel();
     this.task = null;
@@ -182,7 +181,7 @@ export class InterpolationPartBinding implements IAstBasedBinding, ICollectionSu
     this.oL = observerLocator;
   }
 
-  public handleChange(newValue: unknown, oldValue: unknown, flags: LifecycleFlags): void {
+  public handleChange(newValue: unknown): void {
     if (!this.isBound) {
       return;
     }
@@ -207,27 +206,27 @@ export class InterpolationPartBinding implements IAstBasedBinding, ICollectionSu
       if (newValue instanceof Array) {
         this.observeCollection(newValue);
       }
-      this.owner.updateTarget(newValue, flags);
+      this.owner.updateTarget(newValue);
     }
   }
 
-  public handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void {
-    this.owner.updateTarget(void 0, flags);
+  public handleCollectionChange(_indexMap: IndexMap): void {
+    this.owner.updateTarget(void 0);
   }
 
-  public $bind(flags: LifecycleFlags, scope: Scope): void {
+  public $bind(scope: Scope): void {
     if (this.isBound) {
       if (this.$scope === scope) {
         return;
       }
-      this.interceptor.$unbind(flags);
+      this.interceptor.$unbind();
     }
 
     this.isBound = true;
     this.$scope = scope;
 
     if (this.ast.hasBind) {
-      this.ast.bind(flags, scope, this.interceptor as IIndexable & this);
+      this.ast.bind(scope, this.interceptor as IIndexable & this);
     }
 
     this.value = this.ast.evaluate(
@@ -240,14 +239,14 @@ export class InterpolationPartBinding implements IAstBasedBinding, ICollectionSu
     }
   }
 
-  public $unbind(flags: LifecycleFlags): void {
+  public $unbind(): void {
     if (!this.isBound) {
       return;
     }
     this.isBound = false;
 
     if (this.ast.hasUnbind) {
-      this.ast.unbind(flags, this.$scope!, this.interceptor);
+      this.ast.unbind(this.$scope!, this.interceptor);
     }
 
     this.$scope = void 0;
@@ -274,9 +273,6 @@ export class ContentBinding implements IAstBasedBinding, ICollectionSubscriber {
   public task: ITask | null = null;
   public isBound: boolean = false;
 
-  /** @internal */
-  private _isBinding = 0;
-
   /**
    * A semi-private property used by connectable mixin
    */
@@ -299,7 +295,7 @@ export class ContentBinding implements IAstBasedBinding, ICollectionSubscriber {
     this.oL = observerLocator;
   }
 
-  public updateTarget(value: unknown, _flags: LifecycleFlags): void {
+  public updateTarget(value: unknown): void {
     const target = this.target;
     const NodeCtor = this.p.Node;
     const oldValue = this.value;
@@ -315,7 +311,7 @@ export class ContentBinding implements IAstBasedBinding, ICollectionSubscriber {
     }
   }
 
-  public handleChange(newValue: unknown, oldValue: unknown, flags: LifecycleFlags): void {
+  public handleChange(newValue: unknown): void {
     if (!this.isBound) {
       return;
     }
@@ -328,7 +324,6 @@ export class ContentBinding implements IAstBasedBinding, ICollectionSubscriber {
       if (shouldConnect) {
         obsRecord.version++;
       }
-      flags |= this.strict ? LifecycleFlags.isStrictBindingStrategy : 0;
       newValue = ast.evaluate(this.$scope!, this, shouldConnect ? this.interceptor : null);
       if (shouldConnect) {
         obsRecord.clear();
@@ -348,9 +343,9 @@ export class ContentBinding implements IAstBasedBinding, ICollectionSubscriber {
     //  (2). if not, then fix tests to reflect the changes/platform to properly yield all with aurelia.start().wait()
     const shouldQueueFlush = this._controller.state !== State.activating;
     if (shouldQueueFlush) {
-      this.queueUpdate(newValue, flags);
+      this.queueUpdate(newValue);
     } else {
-      this.updateTarget(newValue, flags);
+      this.updateTarget(newValue);
     }
   }
 
@@ -368,31 +363,28 @@ export class ContentBinding implements IAstBasedBinding, ICollectionSubscriber {
     if (v instanceof Array) {
       this.observeCollection(v);
     }
-    const shouldQueueFlush = this._isBinding === 0;
+    const shouldQueueFlush = this._controller.state !== State.activating;
     if (shouldQueueFlush) {
-      this.queueUpdate(v, LifecycleFlags.none);
+      this.queueUpdate(v);
     } else {
-      this.updateTarget(v, LifecycleFlags.none);
+      this.updateTarget(v);
     }
   }
 
-  public $bind(flags: LifecycleFlags, scope: Scope): void {
+  public $bind(scope: Scope): void {
     if (this.isBound) {
       if (this.$scope === scope) {
         return;
       }
-      this.interceptor.$unbind(flags);
+      this.interceptor.$unbind();
     }
 
     this.isBound = true;
     this.$scope = scope;
-    this._isBinding++;
 
     if (this.ast.hasBind) {
-      this.ast.bind(flags, scope, this.interceptor as IIndexable & this);
+      this.ast.bind(scope, this.interceptor);
     }
-
-    flags |= this.strict ? LifecycleFlags.isStrictBindingStrategy : 0;
 
     const v = this.value = this.ast.evaluate(
       scope,
@@ -402,18 +394,17 @@ export class ContentBinding implements IAstBasedBinding, ICollectionSubscriber {
     if (v instanceof Array) {
       this.observeCollection(v);
     }
-    this.updateTarget(v, flags);
-    this._isBinding--;
+    this.updateTarget(v);
   }
 
-  public $unbind(flags: LifecycleFlags): void {
+  public $unbind(): void {
     if (!this.isBound) {
       return;
     }
     this.isBound = false;
 
     if (this.ast.hasUnbind) {
-      this.ast.unbind(flags, this.$scope!, this.interceptor);
+      this.ast.unbind(this.$scope!, this.interceptor);
     }
 
     // TODO: should existing value (either connected node, or a string)
@@ -426,11 +417,11 @@ export class ContentBinding implements IAstBasedBinding, ICollectionSubscriber {
   }
 
   // queue a force update
-  private queueUpdate(newValue: unknown, flags: LifecycleFlags): void {
+  private queueUpdate(newValue: unknown): void {
     const task = this.task;
     this.task = this.taskQueue.queueTask(() => {
       this.task = null;
-      this.updateTarget(newValue, flags);
+      this.updateTarget(newValue);
     }, queueTaskOptions);
     task?.cancel();
   }

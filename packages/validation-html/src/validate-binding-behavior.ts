@@ -6,7 +6,6 @@ import {
   IBinding,
   IConnectableBinding,
   IObserverLocator,
-  LifecycleFlags,
   Scope
 } from '@aurelia/runtime';
 import {
@@ -90,10 +89,10 @@ export class ValidateBindingBehavior extends BindingInterceptor implements Valid
     this._setPropertyBinding();
   }
 
-  public updateSource(value: unknown, flags: LifecycleFlags) {
+  public updateSource(value: unknown) {
     // TODO: need better approach. If done incorrectly may cause infinite loop, stack overflow 💣
     if (this.interceptor !== this) {
-      this.interceptor.updateSource(value, flags);
+      this.interceptor.updateSource(value);
     } else {
       // let binding = this as BindingInterceptor;
       // while (binding.binding !== void 0) {
@@ -102,7 +101,7 @@ export class ValidateBindingBehavior extends BindingInterceptor implements Valid
       // binding.updateSource(value, flags);
 
       // this is a shortcut of the above code
-      this.propertyBinding.updateSource(value, flags);
+      this.propertyBinding.updateSource(value);
     }
 
     this.isDirty = true;
@@ -118,15 +117,15 @@ export class ValidateBindingBehavior extends BindingInterceptor implements Valid
     }
   }
 
-  public $bind(flags: LifecycleFlags, scope: Scope) {
+  public $bind(scope: Scope) {
     this.scope = scope;
-    this.binding.$bind(flags, scope);
+    this.binding.$bind(scope);
     this._setTarget();
-    const delta = this._processBindingExpressionArgs(flags);
+    const delta = this._processBindingExpressionArgs();
     this._processDelta(delta);
   }
 
-  public $unbind(flags: LifecycleFlags) {
+  public $unbind() {
     this.task?.cancel();
     this.task = null;
 
@@ -136,18 +135,18 @@ export class ValidateBindingBehavior extends BindingInterceptor implements Valid
     }
     this.controller?.removeSubscriber(this);
     this.controller?.unregisterBinding(this.propertyBinding);
-    this.binding.$unbind(flags);
+    this.binding.$unbind();
   }
 
-  public handleTriggerChange(newValue: unknown, _previousValue: unknown, _flags: LifecycleFlags): void {
+  public handleTriggerChange(newValue: unknown, _previousValue: unknown): void {
     this._processDelta(new ValidateArgumentsDelta(void 0, this._ensureTrigger(newValue), void 0));
   }
 
-  public handleControllerChange(newValue: unknown, _previousValue: unknown, _flags: LifecycleFlags): void {
+  public handleControllerChange(newValue: unknown, _previousValue: unknown): void {
     this._processDelta(new ValidateArgumentsDelta(this._ensureController(newValue), void 0, void 0));
   }
 
-  public handleRulesChange(newValue: unknown, _previousValue: unknown, _flags: LifecycleFlags): void {
+  public handleRulesChange(newValue: unknown, _previousValue: unknown): void {
     this._processDelta(new ValidateArgumentsDelta(void 0, void 0, this._ensureRules(newValue)));
   }
 
@@ -164,7 +163,7 @@ export class ValidateBindingBehavior extends BindingInterceptor implements Valid
   }
 
   /** @internal */
-  private _processBindingExpressionArgs(_flags: LifecycleFlags): ValidateArgumentsDelta {
+  private _processBindingExpressionArgs(): ValidateArgumentsDelta {
     const scope: Scope = this.scope;
     let rules: PropertyRule[] | undefined;
     let trigger: ValidationTrigger | undefined;
@@ -174,7 +173,7 @@ export class ValidateBindingBehavior extends BindingInterceptor implements Valid
     while (ast.name !== 'validate' && ast !== void 0) {
       ast = ast.expression as BindingBehaviorExpression;
     }
-    // const evaluationFlags = flags | LifecycleFlags.isStrictBindingStrategy;
+
     const args = ast.args;
     for (let i = 0, ii = args.length; i < ii; i++) {
       const arg = args[i];
@@ -329,7 +328,7 @@ class ValidateArgumentsDelta {
 }
 
 type MediatedBinding<K extends string> = {
-  [key in K]: (newValue: unknown, previousValue: unknown, flags: LifecycleFlags) => void;
+  [key in K]: (newValue: unknown, previousValue: unknown) => void;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -359,8 +358,8 @@ export class BindingMediator<K extends string> implements IConnectableBinding {
       throw new Error(`AUR0214:$unbind`);
   }
 
-  public handleChange(newValue: unknown, previousValue: unknown, flags: LifecycleFlags): void {
-    this.binding[this.key](newValue, previousValue, flags);
+  public handleChange(newValue: unknown, previousValue: unknown): void {
+    this.binding[this.key](newValue, previousValue);
   }
 }
 

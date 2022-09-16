@@ -1,5 +1,3 @@
-import { LifecycleFlags } from '@aurelia/runtime';
-
 import type { IServiceLocator } from '@aurelia/kernel';
 import type { IAccessor, IObserverLocator, IsBindingBehavior, Scope } from '@aurelia/runtime';
 import type { IAstBasedBinding } from './interfaces-bindings';
@@ -36,38 +34,38 @@ export class CallBinding implements IAstBasedBinding {
     return result;
   }
 
-  public $bind(flags: LifecycleFlags, scope: Scope): void {
+  public $bind(scope: Scope): void {
     if (this.isBound) {
       if (this.$scope === scope) {
         return;
       }
 
-      this.interceptor.$unbind(flags | LifecycleFlags.fromBind);
+      this.interceptor.$unbind();
     }
 
     this.$scope = scope;
 
     if (this.ast.hasBind) {
-      this.ast.bind(flags, scope, this.interceptor);
+      this.ast.bind(scope, this.interceptor);
     }
 
-    this.targetObserver.setValue(($args: object) => this.interceptor.callSource($args), flags, this.target, this.targetProperty);
+    this.targetObserver.setValue(($args: object) => this.interceptor.callSource($args), this.target, this.targetProperty);
 
     // add isBound flag and remove isBinding flag
     this.isBound = true;
   }
 
-  public $unbind(flags: LifecycleFlags): void {
+  public $unbind(): void {
     if (!this.isBound) {
       return;
     }
 
     if (this.ast.hasUnbind) {
-      this.ast.unbind(flags, this.$scope!, this.interceptor);
+      this.ast.unbind(this.$scope!, this.interceptor);
     }
 
     this.$scope = void 0;
-    this.targetObserver.setValue(null, flags, this.target, this.targetProperty);
+    this.targetObserver.setValue(null, this.target, this.targetProperty);
 
     this.isBound = false;
   }
@@ -76,7 +74,7 @@ export class CallBinding implements IAstBasedBinding {
     return;
   }
 
-  public handleChange(_newValue: unknown, _previousValue: unknown, _flags: LifecycleFlags): void {
+  public handleChange(_newValue: unknown, _previousValue: unknown): void {
     return;
   }
 }

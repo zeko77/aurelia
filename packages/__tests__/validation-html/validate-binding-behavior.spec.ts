@@ -5,7 +5,6 @@ import {
   IBinding,
   IObserverLocator,
   Scope,
-  LifecycleFlags,
 } from '@aurelia/runtime';
 import {
   bindable,
@@ -225,24 +224,24 @@ describe('validation-html/validate-binding-behavior.spec.ts/validate-binding-beh
   }
   @bindingBehavior('interceptor')
   class InterceptorBindingBehavior extends BindingInterceptor {
-    public updateSource(value: unknown, flags: LifecycleFlags) {
+    public updateSource(value: unknown) {
       if (this.interceptor !== this) {
-        this.interceptor.updateSource(value, flags);
+        this.interceptor.updateSource(value);
       } else {
         let binding = this as BindingInterceptor;
         while (binding.binding !== void 0) {
           binding = binding.binding as BindingInterceptor;
         }
-        binding.updateSource(value, flags);
+        binding.updateSource(value);
       }
     }
   }
   @bindingBehavior('vanilla')
   class VanillaBindingBehavior implements BindingBehaviorInstance {
-    public bind(_flags: LifecycleFlags, _scope: Scope, _binding: IBinding): void {
+    public bind(_scope: Scope, _binding: IBinding): void {
       return;
     }
-    public unbind(_flags: LifecycleFlags, _scope: Scope, _binding: IBinding): void {
+    public unbind(_scope: Scope, _binding: IBinding): void {
       return;
     }
   }
