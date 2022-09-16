@@ -1231,42 +1231,19 @@ class BindingIdentifier {
         return Unparser.unparse(this);
     }
 }
-const toStringTag$1 = Object.prototype.toString;
 class ForOfStatement {
     constructor(declaration, iterable) {
         this.declaration = declaration;
         this.iterable = iterable;
     }
     get $kind() { return 6200; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
+    get hasBind() { return true; }
+    get hasUnbind() { return true; }
     evaluate(s, e, c) {
         return this.iterable.evaluate(s, e, c);
     }
     assign(_s, _e, _obj) {
         return void 0;
-    }
-    count(_f, result) {
-        switch (toStringTag$1.call(result)) {
-            case '[object Array]': return result.length;
-            case '[object Map]': return result.size;
-            case '[object Set]': return result.size;
-            case '[object Number]': return result;
-            case '[object Null]': return 0;
-            case '[object Undefined]': return 0;
-            default: throw new Error(`Cannot count ${toStringTag$1.call(result)}`);
-        }
-    }
-    iterate(f, result, func) {
-        switch (toStringTag$1.call(result)) {
-            case '[object Array]': return $array(result, func);
-            case '[object Map]': return $map(result, func);
-            case '[object Set]': return $set$1(result, func);
-            case '[object Number]': return $number(result, func);
-            case '[object Null]': return;
-            case '[object Undefined]': return;
-            default: throw new Error(`Cannot iterate over ${toStringTag$1.call(result)}`);
-        }
     }
     bind(s, b) {
         if (this.iterable.hasBind) {
@@ -1492,34 +1469,6 @@ function getFunction(mustEvaluate, obj, name) {
         return null;
     }
     throw new Error(`AUR0111: Expected '${name}' to be a function`);
-}
-function $array(result, func) {
-    for (let i = 0, ii = result.length; i < ii; ++i) {
-        func(result, i, result[i]);
-    }
-}
-function $map(result, func) {
-    const arr = Array(result.size);
-    let i = -1;
-    for (const entry of result.entries()) {
-        arr[++i] = entry;
-    }
-    $array(arr, func);
-}
-function $set$1(result, func) {
-    const arr = Array(result.size);
-    let i = -1;
-    for (const key of result.keys()) {
-        arr[++i] = key;
-    }
-    $array(arr, func);
-}
-function $number(result, func) {
-    const arr = Array(result);
-    for (let i = 0; i < result; ++i) {
-        arr[i] = i;
-    }
-    $array(arr, func);
 }
 
 const ICoercionConfiguration = kernel.DI.createInterface('ICoercionConfiguration');

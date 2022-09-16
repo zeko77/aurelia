@@ -1,4 +1,4 @@
-import { subscriberCollection, withFlushQueue, connectable, ConnectableSwitcher, ProxyObservable, Scope, ICoercionConfiguration, IObserverLocator, IExpressionParser, AccessScopeExpression, DelegationStrategy, BindingBehaviorExpression, PrimitiveLiteralExpression, ISignaler, PropertyAccessor, INodeObserverLocator, SetterObserver, IDirtyChecker, applyMutationsToIndices, getCollectionObserver as getCollectionObserver$1, BindingContext, synchronizeIndices } from '@aurelia/runtime';
+import { subscriberCollection, withFlushQueue, connectable, ConnectableSwitcher, ProxyObservable, Scope, ICoercionConfiguration, IObserverLocator, IExpressionParser, AccessScopeExpression, DelegationStrategy, BindingBehaviorExpression, PrimitiveLiteralExpression, ISignaler, PropertyAccessor, INodeObserverLocator, SetterObserver, IDirtyChecker, applyMutationsToIndices, getCollectionObserver as getCollectionObserver$1, synchronizeIndices, BindingContext } from '@aurelia/runtime';
 export { LifecycleFlags } from '@aurelia/runtime';
 import { Protocol, getPrototypeChain, firstDefined, kebabCase, noop, Registration, DI, emptyArray, all, IPlatform as IPlatform$1, mergeArrays, fromAnnotationOrDefinitionOrTypeOrDefault, fromDefinitionOrDefault, pascalCase, fromAnnotationOrTypeOrDefault, IContainer, nextId, optional, InstanceProvider, ILogger, resolveAll, onResolve, camelCase, toArray, emptyObject, IServiceLocator, transient } from '@aurelia/kernel';
 import { Metadata, isObject } from '@aurelia/metadata';
@@ -9260,12 +9260,8 @@ class Repeat {
             this._normalizedItems = items;
             return;
         }
-        const forOf = this.forOf;
-        if (forOf === void 0) {
-            return;
-        }
         const normalizedItems = [];
-        this.forOf.iterate(0, items, (arr, index, item) => {
+        iterate(items, (item, index) => {
             normalizedItems[index] = item;
         });
         this._normalizedItems = normalizedItems;
@@ -9278,9 +9274,9 @@ class Repeat {
         const { $controller, _factory: factory, local, _location: location, items } = this;
         const parentScope = $controller.scope;
         const forOf = this.forOf;
-        const newLen = forOf.count(0, items);
+        const newLen = getCount(items);
         const views = this.views = Array(newLen);
-        forOf.iterate(0, items, (arr, i, item) => {
+        iterate(items, (item, i) => {
             view = views[i] = factory.create().setLocation(location);
             view.nodes.unlink();
             if (this._hasDestructuredLocal) {
@@ -9490,7 +9486,7 @@ function longestIncreasingSubsequence(indexMap) {
         prevIndices[i] = 0;
     return result;
 }
-function setContextualProperties(oc, index, length) {
+const setContextualProperties = (oc, index, length) => {
     const isFirst = index === 0;
     const isLast = index === length - 1;
     const isEven = index % 2 === 0;
@@ -9501,7 +9497,57 @@ function setContextualProperties(oc, index, length) {
     oc.$even = isEven;
     oc.$odd = !isEven;
     oc.$length = length;
-}
+};
+const toStringTag = Object.prototype.toString;
+const getCount = (result) => {
+    switch (toStringTag.call(result)) {
+        case '[object Array]': return result.length;
+        case '[object Map]': return result.size;
+        case '[object Set]': return result.size;
+        case '[object Number]': return result;
+        case '[object Null]': return 0;
+        case '[object Undefined]': return 0;
+        default: throw new Error(`Cannot count ${toStringTag.call(result)}`);
+    }
+};
+const iterate = (result, func) => {
+    switch (toStringTag.call(result)) {
+        case '[object Array]': return $array(result, func);
+        case '[object Map]': return $map(result, func);
+        case '[object Set]': return $set(result, func);
+        case '[object Number]': return $number(result, func);
+        case '[object Null]': return;
+        case '[object Undefined]': return;
+        default: throw new Error(`Cannot iterate over ${toStringTag.call(result)}`);
+    }
+};
+const $array = (result, func) => {
+    const ii = result.length;
+    let i = 0;
+    for (; i < ii; ++i) {
+        func(result[i], i, result);
+    }
+};
+const $map = (result, func) => {
+    let i = -0;
+    let entry;
+    for (entry of result.entries()) {
+        func(entry, i++, result);
+    }
+};
+const $set = (result, func) => {
+    let i = 0;
+    let key;
+    for (key of result.keys()) {
+        func(key, i++, result);
+    }
+};
+const $number = (result, func) => {
+    let i = 0;
+    for (; i < result; ++i) {
+        func(i, i, result);
+    }
+};
 
 class With {
     constructor(factory, location) {

@@ -1,6 +1,6 @@
 {
   "name": "aurelia",
-  "version": "2.1.0-dev.202209160336",
+  "version": "2.1.0-dev.202209161045",
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.mjs",
   "exports": {
@@ -43,16 +43,16 @@
     "access": "public"
   },
   "dependencies": {
-    "@aurelia/fetch-client": "2.1.0-dev.202209160336",
-    "@aurelia/kernel": "2.1.0-dev.202209160336",
-    "@aurelia/metadata": "2.1.0-dev.202209160336",
-    "@aurelia/platform": "2.1.0-dev.202209160336",
-    "@aurelia/platform-browser": "2.1.0-dev.202209160336",
-    "@aurelia/route-recognizer": "2.1.0-dev.202209160336",
-    "@aurelia/router": "2.1.0-dev.202209160336",
-    "@aurelia/router-lite": "2.1.0-dev.202209160336",
-    "@aurelia/runtime": "2.1.0-dev.202209160336",
-    "@aurelia/runtime-html": "2.1.0-dev.202209160336"
+    "@aurelia/fetch-client": "2.1.0-dev.202209161045",
+    "@aurelia/kernel": "2.1.0-dev.202209161045",
+    "@aurelia/metadata": "2.1.0-dev.202209161045",
+    "@aurelia/platform": "2.1.0-dev.202209161045",
+    "@aurelia/platform-browser": "2.1.0-dev.202209161045",
+    "@aurelia/route-recognizer": "2.1.0-dev.202209161045",
+    "@aurelia/router": "2.1.0-dev.202209161045",
+    "@aurelia/router-lite": "2.1.0-dev.202209161045",
+    "@aurelia/runtime": "2.1.0-dev.202209161045",
+    "@aurelia/runtime-html": "2.1.0-dev.202209161045"
   },
   "devDependencies": {
     "typescript": "4.7.3"

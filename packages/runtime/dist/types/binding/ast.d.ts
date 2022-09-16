@@ -1,8 +1,8 @@
-import { IBinding, LifecycleFlags as LF } from '../observation';
+import { type IBinding } from '../observation';
 import { Scope } from '../observation/binding-context';
 import { IConnectableBinding } from './connectable';
 import type { IServiceLocator, ResourceDefinition } from '@aurelia/kernel';
-import type { Collection, IBindingContext, IOverrideContext, IConnectable } from '../observation';
+import type { IBindingContext, IOverrideContext, IConnectable } from '../observation';
 export declare const enum ExpressionKind {
     CallsFunction = 128,
     HasAncestor = 256,
@@ -448,13 +448,11 @@ export declare class ForOfStatement {
     readonly declaration: BindingIdentifierOrPattern | DestructuringAssignmentExpression;
     readonly iterable: IsBindingBehavior;
     get $kind(): ExpressionKind.ForOfStatement;
-    get hasBind(): false;
-    get hasUnbind(): false;
+    get hasBind(): true;
+    get hasUnbind(): true;
     constructor(declaration: BindingIdentifierOrPattern | DestructuringAssignmentExpression, iterable: IsBindingBehavior);
     evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
     assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
-    count(_f: LF, result: Collection | number | null | undefined): number;
-    iterate(f: LF, result: Collection | number | null | undefined, func: (arr: Collection, index: number, item: unknown) => void): void;
     bind(s: Scope, b: IConnectableBinding): void;
     unbind(s: Scope, b: IConnectableBinding): void;
     accept<T>(visitor: IVisitor<T>): T;
