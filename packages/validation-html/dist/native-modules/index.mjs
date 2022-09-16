@@ -408,38 +408,38 @@ let U = class ValidateBindingBehavior extends m {
         if (s.has(M, true)) this.scopedController = s.get(M);
         this.t();
     }
-    updateSource(t, i) {
-        if (this.interceptor !== this) this.interceptor.updateSource(t, i); else this.propertyBinding.updateSource(t, i);
+    updateSource(t) {
+        if (this.interceptor !== this) this.interceptor.updateSource(t); else this.propertyBinding.updateSource(t);
         this.isDirty = true;
-        const s = this.triggerEvent;
-        if (this.isChangeTrigger && (null === s || null !== s && this.validatedOnce)) this.validateBinding();
+        const i = this.triggerEvent;
+        if (this.isChangeTrigger && (null === i || null !== i && this.validatedOnce)) this.validateBinding();
     }
     handleEvent(t) {
         if (!this.isChangeTrigger || this.isChangeTrigger && this.isDirty) this.validateBinding();
     }
-    $bind(t, i) {
-        this.scope = i;
-        this.binding.$bind(t, i);
+    $bind(t) {
+        this.scope = t;
+        this.binding.$bind(t);
         this.i();
-        const s = this.h(t);
-        this.u(s);
+        const i = this.h();
+        this.u(i);
     }
-    $unbind(t) {
+    $unbind() {
         this.task?.cancel();
         this.task = null;
-        const i = this.triggerEvent;
-        if (null !== i) this.target?.removeEventListener(i, this);
+        const t = this.triggerEvent;
+        if (null !== t) this.target?.removeEventListener(t, this);
         this.controller?.removeSubscriber(this);
         this.controller?.unregisterBinding(this.propertyBinding);
-        this.binding.$unbind(t);
+        this.binding.$unbind();
     }
-    handleTriggerChange(t, i, s) {
+    handleTriggerChange(t, i) {
         this.u(new ValidateArgumentsDelta(void 0, this.V(t), void 0));
     }
-    handleControllerChange(t, i, s) {
+    handleControllerChange(t, i) {
         this.u(new ValidateArgumentsDelta(this.C(t), void 0, void 0));
     }
-    handleRulesChange(t, i, s) {
+    handleRulesChange(t, i) {
         this.u(new ValidateArgumentsDelta(void 0, void 0, this.R(t)));
     }
     handleValidationEvent(t) {
@@ -450,34 +450,34 @@ let U = class ValidateBindingBehavior extends m {
         if (void 0 === s) return;
         this.validatedOnce = void 0 !== t.addedResults.find((t => t.result.propertyName === s));
     }
-    h(t) {
-        const i = this.scope;
+    h() {
+        const t = this.scope;
+        let i;
         let s;
         let e;
-        let n;
-        let r = this.propertyBinding.ast;
-        while ("validate" !== r.name && void 0 !== r) r = r.expression;
-        const o = r.args;
-        for (let t = 0, r = o.length; t < r; t++) {
-            const r = o[t];
-            switch (t) {
+        let n = this.propertyBinding.ast;
+        while ("validate" !== n.name && void 0 !== n) n = n.expression;
+        const r = n.args;
+        for (let n = 0, o = r.length; n < o; n++) {
+            const o = r[n];
+            switch (n) {
               case 0:
-                e = this.V(r.evaluate(i, this, this.triggerMediator));
+                s = this.V(o.evaluate(t, this, this.triggerMediator));
                 break;
 
               case 1:
-                n = this.C(r.evaluate(i, this, this.controllerMediator));
+                e = this.C(o.evaluate(t, this, this.controllerMediator));
                 break;
 
               case 2:
-                s = this.R(r.evaluate(i, this, this.rulesMediator));
+                i = this.R(o.evaluate(t, this, this.rulesMediator));
                 break;
 
               default:
-                throw new Error(`Unconsumed argument#${t + 1} for validate binding behavior: ${r.evaluate(i, this, null)}`);
+                throw new Error(`Unconsumed argument#${n + 1} for validate binding behavior: ${o.evaluate(t, this, null)}`);
             }
         }
-        return new ValidateArgumentsDelta(this.C(n), this.V(e), s);
+        return new ValidateArgumentsDelta(this.C(e), this.V(s), i);
     }
     validateBinding() {
         const t = this.task;
@@ -579,8 +579,8 @@ class BindingMediator {
     $unbind() {
         throw new Error(`AUR0214:$unbind`);
     }
-    handleChange(t, i, s) {
-        this.binding[this.key](t, i, s);
+    handleChange(t, i) {
+        this.binding[this.key](t, i);
     }
 }
 

@@ -1,5 +1,5 @@
 import { type IServiceLocator } from '@aurelia/kernel';
-import { LifecycleFlags, Scope, type IsBindingBehavior } from '@aurelia/runtime';
+import { Scope, type IsBindingBehavior } from '@aurelia/runtime';
 import { type IAstBasedBinding } from '@aurelia/runtime-html';
 import { type IStore } from './interfaces';
 /**
@@ -18,7 +18,7 @@ export declare class StateDispatchBinding implements IAstBasedBinding {
     constructor(locator: IServiceLocator, expr: IsBindingBehavior, target: HTMLElement, prop: string, store: IStore<object>);
     callSource(e: Event): void;
     handleEvent(e: Event): void;
-    $bind(flags: LifecycleFlags, scope: Scope): void;
+    $bind(scope: Scope): void;
     $unbind(): void;
     handleStateChange(state: object): void;
 }

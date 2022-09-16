@@ -1,4 +1,3 @@
-import { LifecycleFlags } from '@aurelia/runtime';
 import type { IServiceLocator } from '@aurelia/kernel';
 import type { IAccessor, IObserverLocator, IsBindingBehavior, Scope } from '@aurelia/runtime';
 import type { IAstBasedBinding } from './interfaces-bindings';
@@ -18,9 +17,9 @@ export declare class CallBinding implements IAstBasedBinding {
     targetObserver: IAccessor;
     constructor(locator: IServiceLocator, observerLocator: IObserverLocator, ast: IsBindingBehavior, target: object, targetProperty: string);
     callSource(args: object): unknown;
-    $bind(flags: LifecycleFlags, scope: Scope): void;
-    $unbind(flags: LifecycleFlags): void;
+    $bind(scope: Scope): void;
+    $unbind(): void;
     observe(_obj: object, _propertyName: string): void;
-    handleChange(_newValue: unknown, _previousValue: unknown, _flags: LifecycleFlags): void;
+    handleChange(_newValue: unknown, _previousValue: unknown): void;
 }
 //# sourceMappingURL=call-binding.d.ts.map

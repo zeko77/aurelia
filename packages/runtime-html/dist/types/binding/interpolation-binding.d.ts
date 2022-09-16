@@ -1,4 +1,3 @@
-import { LifecycleFlags } from '@aurelia/runtime';
 import { BindingMode } from './interfaces-bindings';
 import type { ITask, TaskQueue } from '@aurelia/platform';
 import type { IServiceLocator } from '@aurelia/kernel';
@@ -25,9 +24,9 @@ export declare class InterpolationBinding implements IBinding {
      */
     readonly oL: IObserverLocator;
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, taskQueue: TaskQueue, ast: Interpolation, target: object, targetProperty: string, mode: BindingMode);
-    updateTarget(value: unknown, flags: LifecycleFlags): void;
-    $bind(flags: LifecycleFlags, scope: Scope): void;
-    $unbind(flags: LifecycleFlags): void;
+    updateTarget(_value: unknown): void;
+    $bind(scope: Scope): void;
+    $unbind(): void;
 }
 export interface InterpolationPartBinding extends IAstBasedBinding {
 }
@@ -48,10 +47,10 @@ export declare class InterpolationPartBinding implements IAstBasedBinding, IColl
      */
     readonly oL: IObserverLocator;
     constructor(ast: IsExpression, target: object, targetProperty: string, locator: IServiceLocator, observerLocator: IObserverLocator, owner: InterpolationBinding);
-    handleChange(newValue: unknown, oldValue: unknown, flags: LifecycleFlags): void;
-    handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void;
-    $bind(flags: LifecycleFlags, scope: Scope): void;
-    $unbind(flags: LifecycleFlags): void;
+    handleChange(newValue: unknown): void;
+    handleCollectionChange(_indexMap: IndexMap): void;
+    $bind(scope: Scope): void;
+    $unbind(): void;
 }
 export interface ContentBinding extends IAstBasedBinding {
 }
@@ -76,11 +75,11 @@ export declare class ContentBinding implements IAstBasedBinding, ICollectionSubs
      */
     readonly oL: IObserverLocator;
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, taskQueue: TaskQueue, p: IPlatform, ast: IsExpression, target: Text, strict: boolean);
-    updateTarget(value: unknown, _flags: LifecycleFlags): void;
-    handleChange(newValue: unknown, oldValue: unknown, flags: LifecycleFlags): void;
+    updateTarget(value: unknown): void;
+    handleChange(newValue: unknown): void;
     handleCollectionChange(): void;
-    $bind(flags: LifecycleFlags, scope: Scope): void;
-    $unbind(flags: LifecycleFlags): void;
+    $bind(scope: Scope): void;
+    $unbind(): void;
     private queueUpdate;
 }
 //# sourceMappingURL=interpolation-binding.d.ts.map

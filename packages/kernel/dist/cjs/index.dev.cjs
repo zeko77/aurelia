@@ -187,9 +187,6 @@ function nextId(context) {
 function resetId(context) {
     ids[context] = 0;
 }
-function compareNumber(a, b) {
-    return a - b;
-}
 function mergeDistinct(arr1, arr2, slice) {
     if (arr1 === void 0 || arr1 === null || arr1 === emptyArray) {
         if (arr2 === void 0 || arr2 === null || arr2 === emptyArray) {
@@ -1977,7 +1974,6 @@ exports.Registration = Registration;
 exports.all = all;
 exports.bound = bound;
 exports.camelCase = camelCase;
-exports.compareNumber = compareNumber;
 exports.emptyArray = emptyArray;
 exports.emptyObject = emptyObject;
 exports.factory = factory;

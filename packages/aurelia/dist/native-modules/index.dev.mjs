@@ -7,7 +7,7 @@ export { HttpClient, HttpClientConfiguration, IHttpClient, json } from '../../..
 export { Metadata } from '../../../@aurelia/metadata/dist/native-modules/index.mjs';
 export { Platform, Task, TaskAbortError, TaskQueue, TaskQueuePriority, TaskStatus } from '../../../@aurelia/platform/dist/native-modules/index.mjs';
 export { IRouteContext, IRouter, IRouterEvents, Route, RouteConfig, RouteNode, Router, RouterConfiguration, RouterOptions, RouterRegistration, route } from '../../../@aurelia/router-lite/dist/native-modules/index.mjs';
-export { CollectionKind, ComputedObserver, IObserverLocator, ISignaler, LifecycleFlags, observable, subscriberCollection } from '../../../@aurelia/runtime/dist/native-modules/index.mjs';
+export { CollectionKind, ComputedObserver, IObserverLocator, ISignaler, LifecycleFlags, batch, observable, subscriberCollection } from '../../../@aurelia/runtime/dist/native-modules/index.mjs';
 
 const PLATFORM = BrowserPlatform.getOrCreate(globalThis);
 function createContainer() {

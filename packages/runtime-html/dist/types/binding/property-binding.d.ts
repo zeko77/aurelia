@@ -1,4 +1,4 @@
-import { IndexMap, LifecycleFlags } from '@aurelia/runtime';
+import { IndexMap } from '@aurelia/runtime';
 import { BindingMode } from './interfaces-bindings';
 import type { TaskQueue } from '@aurelia/platform';
 import type { IServiceLocator } from '@aurelia/kernel';
@@ -8,7 +8,6 @@ export interface PropertyBinding extends IAstBasedBinding {
 }
 export declare class PropertyBinding implements IAstBasedBinding {
     locator: IServiceLocator;
-    private readonly taskQueue;
     ast: IsBindingBehavior | ForOfStatement;
     target: object;
     targetProperty: string;
@@ -17,15 +16,14 @@ export declare class PropertyBinding implements IAstBasedBinding {
     isBound: boolean;
     $scope?: Scope;
     targetObserver?: AccessorOrObserver;
-    persistentFlags: LifecycleFlags;
     private task;
     private targetSubscriber;
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, taskQueue: TaskQueue, ast: IsBindingBehavior | ForOfStatement, target: object, targetProperty: string, mode: BindingMode);
-    updateTarget(value: unknown, flags: LifecycleFlags): void;
-    updateSource(value: unknown, _flags: LifecycleFlags): void;
-    handleChange(newValue: unknown, _previousValue: unknown, flags: LifecycleFlags): void;
-    handleCollectionChange(_indexMap: IndexMap, flags: LifecycleFlags): void;
-    $bind(flags: LifecycleFlags, scope: Scope): void;
-    $unbind(flags: LifecycleFlags): void;
+    updateTarget(value: unknown): void;
+    updateSource(value: unknown): void;
+    handleChange(newValue: unknown, _previousValue: unknown): void;
+    handleCollectionChange(_indexMap: IndexMap): void;
+    $bind(scope: Scope): void;
+    $unbind(): void;
 }
 //# sourceMappingURL=property-binding.d.ts.map

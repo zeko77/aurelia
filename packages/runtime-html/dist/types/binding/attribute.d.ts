@@ -1,5 +1,5 @@
 import { IServiceLocator } from '@aurelia/kernel';
-import { LifecycleFlags, IObserver } from '@aurelia/runtime';
+import { IObserver } from '@aurelia/runtime';
 import { BindingMode } from './interfaces-bindings';
 import type { ITask, TaskQueue } from '@aurelia/platform';
 import type { ForOfStatement, IObserverLocator, IsBindingBehavior, Scope } from '@aurelia/runtime';
@@ -26,7 +26,6 @@ export declare class AttributeBinding implements IAstBasedBinding {
      * Target key. In case Attr has inner structure, such as class -> classList, style -> CSSStyleDeclaration
      */
     targetObserver: IObserver;
-    persistentFlags: LifecycleFlags;
     target: Element;
     value: unknown;
     /**
@@ -34,10 +33,10 @@ export declare class AttributeBinding implements IAstBasedBinding {
      */
     oL: IObserverLocator;
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, taskQueue: TaskQueue, ast: IsBindingBehavior | ForOfStatement, target: INode, targetAttribute: string, targetProperty: string, mode: BindingMode);
-    updateTarget(value: unknown, flags: LifecycleFlags): void;
-    updateSource(value: unknown, _flags: LifecycleFlags): void;
-    handleChange(newValue: unknown, _previousValue: unknown, flags: LifecycleFlags): void;
-    $bind(flags: LifecycleFlags, scope: Scope): void;
-    $unbind(flags: LifecycleFlags): void;
+    updateTarget(value: unknown): void;
+    updateSource(value: unknown): void;
+    handleChange(newValue: unknown, _previousValue: unknown): void;
+    $bind(scope: Scope): void;
+    $unbind(): void;
 }
 //# sourceMappingURL=attribute.d.ts.map

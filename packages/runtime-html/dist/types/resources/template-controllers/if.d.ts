@@ -21,8 +21,6 @@ export declare class If implements ICustomAttributeViewModel {
      */
     cache: boolean;
     private pending;
-    private _wantsDeactivate;
-    private _swapId;
     constructor(ifFactory: IViewFactory, location: IRenderLocation, work: IWorkTracker);
     attaching(initiator: IHydratedController, parent: IHydratedController, f: LifecycleFlags): void | Promise<void>;
     detaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void>;

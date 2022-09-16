@@ -85,6 +85,18 @@ export interface IFixture<T> {
      * Will throw if there' more than one elements with matching selector
      */
     assertHtml(selector: string, html: string): void;
+    /**
+     * Assert the attribute value of an element matching the given selector inside the application host equals to a given string.
+     *
+     * Will throw if there' more than one elements with matching selector
+     */
+    assertAttr(selector: string, name: string, value: string): void;
+    /**
+     * Assert the value of an element matching the given selector inside the application host equals to a given value.
+     *
+     * Will throw if there' more than one elements with matching selector
+     */
+    assertValue(selector: string, value: unknown): void;
     hJsx(name: string, attrs: Record<string, string> | null, ...children: (Node | string | (Node | string)[])[]): HTMLElement;
     trigger: ITrigger;
     /**

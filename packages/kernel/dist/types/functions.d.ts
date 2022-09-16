@@ -74,11 +74,6 @@ export declare function nextId(context: string): number;
  */
 export declare function resetId(context: string): void;
 /**
- * A compare function to pass to `Array.prototype.sort` for sorting numbers.
- * This is needed for numeric sort, since the default sorts them as strings.
- */
-export declare function compareNumber(a: number, b: number): number;
-/**
  * Efficiently merge and deduplicate the (primitive) values in two arrays.
  *
  * Does not deduplicate existing values in the first array.

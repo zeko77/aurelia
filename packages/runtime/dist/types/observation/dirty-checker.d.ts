@@ -1,5 +1,5 @@
 import { IPlatform } from '@aurelia/kernel';
-import { AccessorType, IObserver, ISubscriberCollection, LifecycleFlags } from '../observation';
+import { AccessorType, IObserver, ISubscriberCollection } from '../observation';
 import type { IIndexable } from '@aurelia/kernel';
 import type { IObservable, ISubscriber } from '../observation';
 import { FlushQueue, IFlushable, IWithFlushQueue } from './flush-queue';
@@ -54,7 +54,7 @@ export declare class DirtyCheckProperty implements DirtyCheckProperty, IFlushabl
     type: AccessorType;
     constructor(dirtyChecker: IDirtyChecker, obj: IObservable & IIndexable, key: string);
     getValue(): unknown;
-    setValue(v: unknown, f: LifecycleFlags): void;
+    setValue(_v: unknown): void;
     isDirty(): boolean;
     flush(): void;
     subscribe(subscriber: ISubscriber): void;

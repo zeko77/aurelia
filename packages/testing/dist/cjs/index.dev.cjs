@@ -7579,13 +7579,27 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
         if (arguments.length === 2) {
             const el = queryBy(selector);
             if (el === null) {
-                throw new Error(`No element found for selector "${selector}" to compare innerHTML with "${html}"`);
+                throw new Error(`No element found for selector "${selector}" to compare innerHTML against "${html}"`);
             }
             assert.strictEqual(el.innerHTML, html);
         }
         else {
             assert.strictEqual(host.innerHTML, selector);
         }
+    }
+    function assertAttr(selector, name, value) {
+        const el = queryBy(selector);
+        if (el === null) {
+            throw new Error(`No element found for selector "${selector}" to compare attribute against "${value}"`);
+        }
+        assert.strictEqual(el.getAttribute(name), value);
+    }
+    function assertValue(selector, value) {
+        const el = queryBy(selector);
+        if (el === null) {
+            throw new Error(`No element found for selector "${selector}" to compare value against "${value}"`);
+        }
+        assert.strictEqual(el.value, value);
     }
     function trigger(selector, event, init) {
         const el = queryBy(selector);
@@ -7633,6 +7647,8 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             this.queryBy = queryBy;
             this.assertText = assertText;
             this.assertHtml = assertHtml;
+            this.assertAttr = assertAttr;
+            this.assertValue = assertValue;
             this.trigger = trigger;
             this.scrollBy = scrollBy;
             this.flush = flush;
@@ -7709,17 +7725,17 @@ class MockBinding {
         this.trace('get', key);
         return null;
     }
-    updateTarget(value, flags) {
-        this.trace('updateTarget', value, flags);
+    updateTarget(value) {
+        this.trace('updateTarget', value);
     }
-    updateSource(value, flags) {
-        this.trace('updateSource', value, flags);
+    updateSource(value) {
+        this.trace('updateSource', value);
     }
-    handleChange(newValue, _previousValue, flags) {
-        this.trace('handleChange', newValue, _previousValue, flags);
+    handleChange(newValue, _previousValue) {
+        this.trace('handleChange', newValue, _previousValue);
     }
-    handleCollectionChange(indexMap, flags) {
-        this.trace('handleCollectionChange', indexMap, flags);
+    handleCollectionChange(indexMap) {
+        this.trace('handleCollectionChange', indexMap);
     }
     observe(obj, propertyName) {
         this.trace('observe', obj, propertyName);
@@ -7730,11 +7746,11 @@ class MockBinding {
     subscribeTo(subscribable) {
         this.trace('subscribeTo', subscribable);
     }
-    $bind(flags, scope) {
-        this.trace('$bind', flags, scope);
+    $bind(scope) {
+        this.trace('$bind', scope);
     }
-    $unbind(flags) {
-        this.trace('$unbind', flags);
+    $unbind() {
+        this.trace('$unbind');
     }
     trace(fnName, ...args) {
         this.calls.push([fnName, ...args]);
@@ -7747,11 +7763,11 @@ class MockBindingBehavior {
     constructor() {
         this.calls = [];
     }
-    bind(flags, scope, binding, ...rest) {
-        this.trace('bind', flags, scope, binding, ...rest);
+    bind(scope, binding, ...rest) {
+        this.trace('bind', scope, binding, ...rest);
     }
-    unbind(flags, scope, binding, ...rest) {
-        this.trace('unbind', flags, scope, binding, ...rest);
+    unbind(scope, binding, ...rest) {
+        this.trace('unbind', scope, binding, ...rest);
     }
     trace(fnName, ...args) {
         this.calls.push([fnName, ...args]);
@@ -7791,8 +7807,8 @@ class MockPropertySubscriber {
     constructor() {
         this.calls = [];
     }
-    handleChange(newValue, previousValue, flags) {
-        this.trace(`handleChange`, newValue, previousValue, flags);
+    handleChange(newValue, previousValue) {
+        this.trace(`handleChange`, newValue, previousValue);
     }
     trace(fnName, ...args) {
         this.calls.push([fnName, ...args]);
@@ -7957,9 +7973,8 @@ class MockBrowserHistoryLocation {
     }
 }
 class ChangeSet {
-    constructor(index, flags, newValue, oldValue) {
+    constructor(index, newValue, oldValue) {
         this.index = index;
-        this.flags = flags;
         this._newValue = newValue;
         this._oldValue = oldValue;
     }
@@ -7994,9 +8009,8 @@ class ProxyChangeSet {
     }
 }
 class CollectionChangeSet {
-    constructor(index, flags, indexMap) {
+    constructor(index, indexMap) {
         this.index = index;
-        this.flags = flags;
         this._indexMap = indexMap;
     }
     get indexMap() {
@@ -8015,19 +8029,19 @@ class SpySubscriber {
     }
     get changes() {
         if (this._changes === void 0) {
-            return kernel.emptyArray;
+            return [];
         }
         return this._changes;
     }
     get proxyChanges() {
         if (this._proxyChanges === void 0) {
-            return kernel.emptyArray;
+            return [];
         }
         return this._proxyChanges;
     }
     get collectionChanges() {
         if (this._collectionChanges === void 0) {
-            return kernel.emptyArray;
+            return [];
         }
         return this._collectionChanges;
     }
@@ -8043,28 +8057,20 @@ class SpySubscriber {
     get callCount() {
         return this._callCount;
     }
-    handleChange(newValue, oldValue, flags) {
+    handleChange(newValue, oldValue) {
         if (this._changes === void 0) {
-            this._changes = [new ChangeSet(this._callCount++, flags, newValue, oldValue)];
+            this._changes = [new ChangeSet(this._callCount++, newValue, oldValue)];
         }
         else {
-            this._changes.push(new ChangeSet(this._callCount++, flags, newValue, oldValue));
+            this._changes.push(new ChangeSet(this._callCount++, newValue, oldValue));
         }
     }
-    handleProxyChange(key, newValue, oldValue, flags) {
-        if (this._proxyChanges === void 0) {
-            this._proxyChanges = [new ProxyChangeSet(this._callCount++, flags, key, newValue, oldValue)];
-        }
-        else {
-            this._proxyChanges.push(new ProxyChangeSet(this._callCount++, flags, key, newValue, oldValue));
-        }
-    }
-    handleCollectionChange(indexMap, flags) {
+    handleCollectionChange(indexMap) {
         if (this._collectionChanges === void 0) {
-            this._collectionChanges = [new CollectionChangeSet(this._callCount++, flags, indexMap)];
+            this._collectionChanges = [new CollectionChangeSet(this._callCount++, indexMap)];
         }
         else {
-            this._collectionChanges.push(new CollectionChangeSet(this._callCount++, flags, indexMap));
+            this._collectionChanges.push(new CollectionChangeSet(this._callCount++, indexMap));
         }
     }
     dispose() {

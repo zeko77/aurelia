@@ -1954,7 +1954,7 @@ class Viewport extends Endpoint$1 {
     removeContent(t, i) {
         if (this.isEmpty) return;
         const s = this.router.statefulHistory || (this.options.stateful ?? false);
-        return Runner.run(t, (() => i.addEndpointState(this, "bound")), (() => i.waitForSyncState("bound")), (t => this.deactivate(t, null, this.connectedController, s ? 0 : 16)), (() => s ? this.dispose() : void 0));
+        return Runner.run(t, (() => i.addEndpointState(this, "bound")), (() => i.waitForSyncState("bound")), (t => this.deactivate(t, null, this.connectedController, s ? 0 : 4)), (() => s ? this.dispose() : void 0));
     }
     activate(t, i, s, n, e) {
         if (null !== this.activeContent.componentInstance) return Runner.run(t, (() => this.activeContent.canLoad()), (t => this.activeContent.load(t)), (t => this.activeContent.activateComponent(t, i, s, n, this.connectedCE, (() => e?.addEndpointState(this, "bound")), e?.waitForSyncState("bound"))));
@@ -2271,6 +2271,13 @@ class RoutingInstruction {
     typeParameters(t) {
         return this.parameters.toSpecifiedParameters(t, this.component.type?.parameters ?? []);
     }
+    sameRoute(t) {
+        const i = this.route?.match;
+        const s = t.route?.match;
+        if (null == i || null == s) return false;
+        if ("string" === typeof i || "string" === typeof s) return i === s;
+        return i.id === s.id;
+    }
     sameComponent(t, i, s = false, n = false) {
         if (s && !this.sameParameters(t, i, n)) return false;
         return this.component.same(i.component, n);
@@ -2325,7 +2332,9 @@ class RoutingInstruction {
     }
     isIn(t, i, s) {
         const n = i.filter((i => {
-            if (!i.sameComponent(t, this)) return false;
+            if (null != this.route || null != i.route) {
+                if (!i.sameRoute(this)) return false;
+            } else if (!i.sameComponent(t, this)) return false;
             const s = i.component.type ?? this.component.type;
             const n = this.component.type ?? i.component.type;
             const e = i.parameters.toSpecifiedParameters(t, s?.parameters);
@@ -4432,7 +4441,7 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
         this.router = i;
         this.linkHandler = s;
         this.ea = n;
-        this.separateProperties = false;
+        this.h = false;
         this.hasHref = null;
         this.navigationEndHandler = t => {
             void this.updateActive();
@@ -4440,7 +4449,7 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
         this.activeClass = this.router.configuration.options.indicators.loadActive;
     }
     binding() {
-        if (null == this.value) this.separateProperties = true;
+        if (null == this.value) this.h = true;
         this.element.addEventListener("click", this.linkHandler);
         this.updateValue();
         void this.updateActive();
@@ -4455,7 +4464,7 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
         void this.updateActive();
     }
     updateValue() {
-        if (this.separateProperties) this.value = {
+        if (this.h) this.value = {
             component: this.component,
             parameters: this.parameters,
             viewport: this.viewport,
@@ -4464,9 +4473,9 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
         if (null === this.hasHref) this.hasHref = this.element.hasAttribute("href");
         if (!this.hasHref) {
             let t = this.value;
-            if ("string" !== typeof this.value) {
-                const i = RoutingInstruction.from(this.router, this.value).shift();
-                const s = this.findRoute(this.value);
+            if ("string" !== typeof t) {
+                const i = RoutingInstruction.from(this.router, t).shift();
+                const s = this.u(t);
                 if (s.foundConfiguration) i.route = s.matching;
                 t = RoutingInstruction.stringify(this.router, [ i ]);
             }
@@ -4480,16 +4489,14 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
             id: this.value,
             path: this.value
         } : this.value;
-        const n = this.findRoute(s);
+        const n = this.u(s);
         const e = n.foundConfiguration ? n.instructions : y(this.router, t, this.element, this.value);
         const r = C(this.element);
-        const o = RoutingInstruction.resolve(e);
-        if (o instanceof Promise) await o;
         r.classList.toggle(this.activeClass, this.router.checkActive(e, {
             context: t
         }));
     }
-    findRoute(t) {
+    u(t) {
         if ("string" === typeof t) return new FoundRoute;
         const i = RoutingScope.for(this.element) ?? this.router.rootScope.scope;
         if (null != t.id) return i.findMatchingRoute(t.id, t.parameters ?? {});

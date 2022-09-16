@@ -155,7 +155,7 @@ class VirtualRepeat {
         if (itemCount === 0) {
             for (i = 0; currViewCount > i; ++i) {
                 view = views[i];
-                void view.deactivate(controller, controller, 4);
+                void view.deactivate(controller, controller, 2);
                 view.nodes.remove();
             }
             views.length = 0;
@@ -165,7 +165,7 @@ class VirtualRepeat {
         if (currViewCount > maxViewsRequired) {
             while (currViewCount > maxViewsRequired) {
                 view = views[currViewCount - 1];
-                void view.deactivate(controller, controller, 4);
+                void view.deactivate(controller, controller, 2);
                 view.nodes.remove();
                 --currViewCount;
             }
@@ -174,7 +174,7 @@ class VirtualRepeat {
         if (currViewCount > itemCount) {
             while (currViewCount > itemCount) {
                 view = views[currViewCount - 1];
-                void view.deactivate(controller, controller, 4);
+                void view.deactivate(controller, controller, 2);
                 view.nodes.remove();
                 --currViewCount;
             }
@@ -209,7 +209,7 @@ class VirtualRepeat {
                 scope.overrideContext.$index = idx;
                 scope.overrideContext.$length = itemCount;
                 enhanceOverrideContext(scope.overrideContext);
-                void view.activate(controller, controller, 2, scope);
+                void view.activate(controller, controller, 1, scope);
             }
         }
         this._obsMediator.start(items);
@@ -328,7 +328,7 @@ class VirtualRepeat {
     getViews() {
         return this.views.slice(0);
     }
-    handleCollectionChange(_indexMap, _flags) {
+    handleCollectionChange(_indexMap) {
         this.itemsChanged(this.items);
     }
     handleInnerCollectionChange() {
@@ -375,8 +375,8 @@ class CollectionObservationMediator {
         this.repeat = repeat;
         this.key = key;
     }
-    handleCollectionChange(indexMap, flags) {
-        this.repeat[this.key](indexMap, flags);
+    handleCollectionChange(indexMap) {
+        this.repeat[this.key](indexMap);
     }
     start(c) {
         if (this._collection === c) {

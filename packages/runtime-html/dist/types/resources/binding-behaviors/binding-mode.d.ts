@@ -1,12 +1,12 @@
-import { BindingBehaviorInstance, LifecycleFlags } from '@aurelia/runtime';
-import { BindingMode } from '../binding/interfaces-bindings';
+import { BindingBehaviorInstance } from '@aurelia/runtime';
+import { BindingMode } from '../../binding/interfaces-bindings';
 import type { Scope } from '@aurelia/runtime';
-import type { PropertyBinding } from '../binding/property-binding';
+import type { PropertyBinding } from '../../binding/property-binding';
 export declare abstract class BindingModeBehavior implements BindingBehaviorInstance {
     private readonly mode;
     constructor(mode: BindingMode);
-    bind(flags: LifecycleFlags, scope: Scope, binding: PropertyBinding): void;
-    unbind(flags: LifecycleFlags, scope: Scope, binding: PropertyBinding): void;
+    bind(scope: Scope, binding: PropertyBinding): void;
+    unbind(scope: Scope, binding: PropertyBinding): void;
 }
 export declare class OneTimeBindingBehavior extends BindingModeBehavior {
     constructor();

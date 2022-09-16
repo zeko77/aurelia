@@ -3,10 +3,10 @@ export { bindable, Bindable, BindableDefinition, type PartialBindableDefinition,
 export { BindableObserver, } from './observation/bindable-observer';
 export { DebounceBindingBehaviorRegistration, OneTimeBindingBehaviorRegistration, ToViewBindingBehaviorRegistration, FromViewBindingBehaviorRegistration, SignalBindingBehaviorRegistration, ThrottleBindingBehaviorRegistration, TwoWayBindingBehaviorRegistration, } from './configuration';
 export { bindingBehavior, BindingBehavior, BindingBehaviorDefinition, type PartialBindingBehaviorDefinition, type BindingBehaviorKind, type BindingBehaviorDecorator, type BindingBehaviorType, BindingInterceptor, BindingBehaviorFactory, BindingBehaviorStrategy, type IInterceptableBinding, } from './resources/binding-behavior';
-export { BindingModeBehavior, OneTimeBindingBehavior, ToViewBindingBehavior, FromViewBindingBehavior, TwoWayBindingBehavior, } from './binding-behaviors/binding-mode';
-export { DebounceBindingBehavior, } from './binding-behaviors/debounce';
-export { SignalBindingBehavior, } from './binding-behaviors/signals';
-export { ThrottleBindingBehavior, } from './binding-behaviors/throttle';
+export { BindingModeBehavior, OneTimeBindingBehavior, ToViewBindingBehavior, FromViewBindingBehavior, TwoWayBindingBehavior, } from './resources/binding-behaviors/binding-mode';
+export { DebounceBindingBehavior, } from './resources/binding-behaviors/debounce';
+export { SignalBindingBehavior, } from './resources/binding-behaviors/signals';
+export { ThrottleBindingBehavior, } from './resources/binding-behaviors/throttle';
 export { Aurelia, IAurelia, type IEnhancementConfig, } from './aurelia';
 export { type ISinglePageApp, AppRoot, IAppRoot, IWorkTracker, } from './app-root';
 export { type TaskSlot, AppTask, IAppTask, type AppTaskCallback, type AppTaskCallbackNoArg, } from './app-task';

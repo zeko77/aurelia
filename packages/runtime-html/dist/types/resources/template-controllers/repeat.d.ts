@@ -15,11 +15,11 @@ export declare class Repeat<C extends Collection = unknown[]> implements ICustom
     /** @internal */ _location: IRenderLocation, 
     /** @internal */ _parent: IHydratableController, 
     /** @internal */ _factory: IViewFactory);
-    binding(initiator: IHydratedController, parent: IHydratedParentController, flags: LF): void | Promise<void>;
-    attaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LF): void | Promise<void>;
-    detaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LF): void | Promise<void>;
-    itemsChanged(flags: LF): void;
-    handleCollectionChange(indexMap: IndexMap | undefined, flags: LF): void;
+    binding(_initiator: IHydratedController, _parent: IHydratedParentController, _flags: LF): void | Promise<void>;
+    attaching(initiator: IHydratedController, _parent: IHydratedParentController, _flags: LF): void | Promise<void>;
+    detaching(initiator: IHydratedController, _parent: IHydratedParentController, _flags: LF): void | Promise<void>;
+    itemsChanged(): void;
+    handleCollectionChange(indexMap: IndexMap | undefined): void;
     dispose(): void;
     accept(visitor: ControllerVisitor): void | true;
 }

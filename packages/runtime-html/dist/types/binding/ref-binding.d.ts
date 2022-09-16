@@ -1,4 +1,3 @@
-import { LifecycleFlags } from '@aurelia/runtime';
 import type { IIndexable, IServiceLocator } from '@aurelia/kernel';
 import type { IsBindingBehavior, Scope } from '@aurelia/runtime';
 import type { IAstBasedBinding } from './interfaces-bindings';
@@ -12,9 +11,9 @@ export declare class RefBinding implements IAstBasedBinding {
     isBound: boolean;
     $scope?: Scope;
     constructor(locator: IServiceLocator, ast: IsBindingBehavior, target: object);
-    $bind(flags: LifecycleFlags, scope: Scope): void;
-    $unbind(flags: LifecycleFlags): void;
+    $bind(scope: Scope): void;
+    $unbind(): void;
     observe(_obj: IIndexable, _propertyName: string): void;
-    handleChange(_newValue: unknown, _previousValue: unknown, _flags: LifecycleFlags): void;
+    handleChange(_newValue: unknown, _previousValue: unknown): void;
 }
 //# sourceMappingURL=ref-binding.d.ts.map

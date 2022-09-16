@@ -1,4 +1,4 @@
-import { DelegationStrategy, LifecycleFlags } from '@aurelia/runtime';
+import { DelegationStrategy } from '@aurelia/runtime';
 import type { IIndexable, IServiceLocator } from '@aurelia/kernel';
 import type { IsBindingBehavior, Scope } from '@aurelia/runtime';
 import type { IEventDelegator } from '../observation/event-delegator';
@@ -27,9 +27,9 @@ export declare class Listener implements IAstBasedBinding {
     constructor(locator: IServiceLocator, ast: IsBindingBehavior, target: Node, targetEvent: string, eventDelegator: IEventDelegator, options: ListenerOptions);
     callSource(event: Event): ReturnType<IsBindingBehavior['evaluate']>;
     handleEvent(event: Event): void;
-    $bind(flags: LifecycleFlags, scope: Scope): void;
-    $unbind(flags: LifecycleFlags): void;
+    $bind(scope: Scope): void;
+    $unbind(): void;
     observe(obj: IIndexable, propertyName: string): void;
-    handleChange(newValue: unknown, previousValue: unknown, flags: LifecycleFlags): void;
+    handleChange(newValue: unknown, previousValue: unknown): void;
 }
 //# sourceMappingURL=listener.d.ts.map

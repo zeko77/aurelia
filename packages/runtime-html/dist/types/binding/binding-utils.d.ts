@@ -1,8 +1,8 @@
 import { Constructable } from '@aurelia/kernel';
-import { IAstEvaluator, ISubscriber, LifecycleFlags } from '@aurelia/runtime';
+import { IAstEvaluator, ISubscriber } from '@aurelia/runtime';
 import type { IAstBasedBinding } from './interfaces-bindings';
 interface ITwoWayBindingImpl extends IAstBasedBinding {
-    updateSource(value: unknown, flags: LifecycleFlags): void;
+    updateSource(value: unknown): void;
 }
 /**
  * A subscriber that is used for subcribing to target observer & invoking `updateSource` on a binding
@@ -10,7 +10,7 @@ interface ITwoWayBindingImpl extends IAstBasedBinding {
 export declare class BindingTargetSubscriber implements ISubscriber {
     private readonly b;
     constructor(b: ITwoWayBindingImpl);
-    handleChange(value: unknown, _: unknown, flags: LifecycleFlags): void;
+    handleChange(value: unknown, _: unknown): void;
 }
 /**
  * Turns a class into AST evaluator, and optionally connectable

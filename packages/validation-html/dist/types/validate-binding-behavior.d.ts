@@ -1,5 +1,5 @@
 import { IServiceLocator } from '@aurelia/kernel';
-import { BindingBehaviorExpression, IConnectableBinding, IObserverLocator, LifecycleFlags, Scope } from '@aurelia/runtime';
+import { BindingBehaviorExpression, IConnectableBinding, IObserverLocator, Scope } from '@aurelia/runtime';
 import { BindingInterceptor } from '@aurelia/runtime-html';
 import { BindingWithBehavior, ValidationEvent, ValidationResultsSubscriber } from './validation-controller';
 /**
@@ -53,13 +53,13 @@ export declare class ValidateBindingBehavior extends BindingInterceptor implemen
     private bindingInfo;
     private readonly platform;
     constructor(binding: BindingWithBehavior, expr: BindingBehaviorExpression);
-    updateSource(value: unknown, flags: LifecycleFlags): void;
+    updateSource(value: unknown): void;
     handleEvent(_event: Event): void;
-    $bind(flags: LifecycleFlags, scope: Scope): void;
-    $unbind(flags: LifecycleFlags): void;
-    handleTriggerChange(newValue: unknown, _previousValue: unknown, _flags: LifecycleFlags): void;
-    handleControllerChange(newValue: unknown, _previousValue: unknown, _flags: LifecycleFlags): void;
-    handleRulesChange(newValue: unknown, _previousValue: unknown, _flags: LifecycleFlags): void;
+    $bind(scope: Scope): void;
+    $unbind(): void;
+    handleTriggerChange(newValue: unknown, _previousValue: unknown): void;
+    handleControllerChange(newValue: unknown, _previousValue: unknown): void;
+    handleRulesChange(newValue: unknown, _previousValue: unknown): void;
     handleValidationEvent(event: ValidationEvent): void;
     private task;
     private validateBinding;
@@ -67,7 +67,7 @@ export declare class ValidateBindingBehavior extends BindingInterceptor implemen
     private setBindingInfo;
 }
 declare type MediatedBinding<K extends string> = {
-    [key in K]: (newValue: unknown, previousValue: unknown, flags: LifecycleFlags) => void;
+    [key in K]: (newValue: unknown, previousValue: unknown) => void;
 };
 export interface BindingMediator<K extends string> extends IConnectableBinding {
 }
@@ -80,7 +80,7 @@ export declare class BindingMediator<K extends string> implements IConnectableBi
     constructor(key: K, binding: MediatedBinding<K>, oL: IObserverLocator, locator: IServiceLocator);
     $bind(): void;
     $unbind(): void;
-    handleChange(newValue: unknown, previousValue: unknown, flags: LifecycleFlags): void;
+    handleChange(newValue: unknown, previousValue: unknown): void;
 }
 export {};
 //# sourceMappingURL=validate-binding-behavior.d.ts.map

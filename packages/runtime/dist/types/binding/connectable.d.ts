@@ -1,5 +1,5 @@
 import type { Class } from '@aurelia/kernel';
-import type { IConnectable, ISubscribable, ISubscriber, IBinding, ICollectionSubscriber, IndexMap, ICollectionSubscribable, LifecycleFlags } from '../observation';
+import type { IConnectable, ISubscribable, ISubscriber, IBinding, ICollectionSubscriber, IndexMap, ICollectionSubscribable } from '../observation';
 import type { IObserverLocator } from '../observation/observer-locator';
 export interface IObserverLocatorBasedConnectable extends IBinding, ISubscriber, ICollectionSubscriber {
     oL: IObserverLocator;
@@ -21,8 +21,8 @@ export declare class BindingObserverRecord implements ISubscriber, ICollectionSu
     version: number;
     count: number;
     constructor(b: IConnectableBinding);
-    handleChange(value: unknown, oldValue: unknown, flags: LifecycleFlags): unknown;
-    handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void;
+    handleChange(value: unknown, oldValue: unknown): unknown;
+    handleCollectionChange(indexMap: IndexMap): void;
     /**
      * Add, and subscribe to a given observer
      */

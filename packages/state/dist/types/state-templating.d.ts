@@ -27,9 +27,9 @@ export declare class StateBindingInstruction {
 }
 export declare class DispatchBindingInstruction {
     from: string;
-    expr: string | IsBindingBehavior;
+    ast: string | IsBindingBehavior;
     readonly type = "sd";
-    constructor(from: string, expr: string | IsBindingBehavior);
+    constructor(from: string, ast: string | IsBindingBehavior);
 }
 export declare class StateBindingInstructionRenderer implements IRenderer {
     readonly target: 'sb';

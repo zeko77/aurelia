@@ -1,4 +1,4 @@
-import { AccessorType, LifecycleFlags } from '@aurelia/runtime';
+import { AccessorType } from '@aurelia/runtime';
 import type { IAccessor } from '@aurelia/runtime';
 export declare class ClassAttributeAccessor implements IAccessor {
     readonly obj: HTMLElement;
@@ -7,7 +7,7 @@ export declare class ClassAttributeAccessor implements IAccessor {
     value: unknown;
     constructor(obj: HTMLElement);
     getValue(): unknown;
-    setValue(newValue: unknown, flags: LifecycleFlags): void;
+    setValue(newValue: unknown): void;
 }
 export declare function getClassesToAdd(object: Record<string, unknown> | [] | string): string[];
 //# sourceMappingURL=class-attribute-accessor.d.ts.map

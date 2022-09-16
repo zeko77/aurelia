@@ -215,6 +215,13 @@ export declare class RoutingInstruction {
      */
     typeParameters(context: IRouterConfiguration | IRouter | IContainer): Parameters;
     /**
+     * Compare the routing instruction's route with the route of another routing
+     * instruction.
+     *
+     * @param other - The routing instruction to compare to
+     */
+    sameRoute(other: RoutingInstruction): boolean;
+    /**
      * Compare the routing instruction's component with the component of another routing
      * instruction. Compares on name unless `compareType` is `true`.
      *

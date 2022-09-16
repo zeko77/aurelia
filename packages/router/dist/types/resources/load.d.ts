@@ -13,7 +13,6 @@ export declare class LoadCustomAttribute implements ICustomAttributeViewModel {
     parameters?: Parameters;
     viewport?: string;
     id?: string;
-    private separateProperties;
     private hasHref;
     private routerNavigationSubscription;
     private readonly activeClass;
@@ -24,6 +23,5 @@ export declare class LoadCustomAttribute implements ICustomAttributeViewModel {
     private updateValue;
     private readonly navigationEndHandler;
     private updateActive;
-    private findRoute;
 }
 //# sourceMappingURL=load.d.ts.map

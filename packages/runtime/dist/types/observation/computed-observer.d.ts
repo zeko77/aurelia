@@ -1,4 +1,4 @@
-import { LifecycleFlags, AccessorType, IObserver } from '../observation';
+import { AccessorType, IObserver } from '../observation';
 import type { ISubscriber, ICollectionSubscriber, ISubscriberCollection, IConnectable } from '../observation';
 import type { IConnectableBinding } from '../binding/connectable';
 import type { IObserverLocator } from './observer-locator';
@@ -24,7 +24,7 @@ export declare class ComputedObserver implements IObserver, IConnectableBinding,
     readonly oL: IObserverLocator;
     constructor(obj: object, get: (watcher: IConnectable) => unknown, set: undefined | ((v: unknown) => void), useProxy: boolean, observerLocator: IObserverLocator);
     getValue(): unknown;
-    setValue(v: unknown, _flags: LifecycleFlags): void;
+    setValue(v: unknown): void;
     handleChange(): void;
     handleCollectionChange(): void;
     subscribe(subscriber: ISubscriber): void;

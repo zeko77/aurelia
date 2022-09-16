@@ -6,8 +6,8 @@ export interface IBinding {
     readonly locator: IServiceLocator;
     readonly $scope?: Scope;
     readonly isBound: boolean;
-    $bind(flags: LifecycleFlags, scope: Scope): void;
-    $unbind(flags: LifecycleFlags): void;
+    $bind(scope: Scope): void;
+    $unbind(): void;
     get: IServiceLocator['get'];
 }
 export declare const ICoercionConfiguration: import("@aurelia/kernel").InterfaceSymbol<ICoercionConfiguration>;
@@ -20,14 +20,9 @@ export interface ICoercionConfiguration {
 export declare type InterceptorFunc<TInput = unknown, TOutput = unknown> = (value: TInput, coercionConfig: ICoercionConfiguration | null) => TOutput;
 export declare const enum LifecycleFlags {
     none = 0,
-    persistentBindingFlags = 33,
-    noFlush = 32,
-    bindingStrategy = 1,
-    isStrictBindingStrategy = 1,
-    fromBind = 2,
-    fromUnbind = 4,
-    mustEvaluate = 8,
-    dispose = 16
+    fromBind = 1,
+    fromUnbind = 2,
+    dispose = 4
 }
 export interface IConnectable {
     observe(obj: object, key: PropertyKey): void;
@@ -43,10 +38,10 @@ export interface IBatchable {
     flushBatch(flags: LifecycleFlags): void;
 }
 export interface ISubscriber<TValue = unknown> {
-    handleChange(newValue: TValue, previousValue: TValue, flags: LifecycleFlags): void;
+    handleChange(newValue: TValue, previousValue: TValue): void;
 }
 export interface ICollectionSubscriber {
-    handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void;
+    handleCollectionChange(indexMap: IndexMap): void;
 }
 export interface ISubscribable {
     subscribe(subscriber: ISubscriber): void;
@@ -66,8 +61,8 @@ export interface ISubscriberRecord<T extends ISubscriber | ICollectionSubscriber
     has(subscriber: T): boolean;
     remove(subscriber: T): boolean;
     any(): boolean;
-    notify(value: unknown, oldValue: unknown, flags: LifecycleFlags): void;
-    notifyCollection(indexMap: IndexMap, flags: LifecycleFlags): void;
+    notify(value: unknown, oldValue: unknown): void;
+    notifyCollection(indexMap: IndexMap): void;
 }
 /**
  * An internal interface describing the implementation of a ISubscribable of Aurelia that supports batching
@@ -126,7 +121,7 @@ export declare const enum AccessorType {
 export interface IAccessor<TValue = unknown> {
     type: AccessorType;
     getValue(obj?: object, key?: PropertyKey): TValue;
-    setValue(newValue: TValue, flags: LifecycleFlags, obj?: object, key?: PropertyKey): void;
+    setValue(newValue: TValue, obj?: object, key?: PropertyKey): void;
 }
 /**
  * An interface describing a standard contract of an observer in Aurelia binding & observation system
@@ -139,15 +134,17 @@ export declare type AccessorOrObserver = (IAccessor | IObserver) & {
 /**
  * An array of indices, where the index of an element represents the index to map FROM, and the numeric value of the element itself represents the index to map TO
  *
- * The deletedItems property contains the items (in case of an array) or keys (in case of map or set) that have been deleted.
+ * The deletedIndices property contains the items (in case of an array) or keys (in case of map or set) that have been deleted.
  */
-export declare type IndexMap = number[] & {
-    deletedItems: number[];
+export declare type IndexMap<T = unknown> = number[] & {
+    deletedIndices: number[];
+    deletedItems: T[];
     isIndexMap: true;
 };
-export declare function copyIndexMap(existing: number[] & {
-    deletedItems?: number[];
-}, deletedItems?: number[]): IndexMap;
+export declare function copyIndexMap<T = unknown>(existing: number[] & {
+    deletedIndices?: number[];
+    deletedItems?: T[];
+}, deletedIndices?: number[], deletedItems?: T[]): IndexMap;
 export declare function createIndexMap(length?: number): IndexMap;
 export declare function cloneIndexMap(indexMap: IndexMap): IndexMap;
 export declare function isIndexMap(value: unknown): value is IndexMap;

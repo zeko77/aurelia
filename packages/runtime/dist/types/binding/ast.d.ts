@@ -148,8 +148,8 @@ export declare class CustomExpression {
 }
 export declare type BindingBehaviorInstance<T extends {} = {}> = {
     type?: 'instance' | 'factory';
-    bind(flags: LF, scope: Scope, binding: IBinding, ...args: T[]): void;
-    unbind(flags: LF, scope: Scope, binding: IBinding, ...args: T[]): void;
+    bind?(scope: Scope, binding: IBinding, ...args: T[]): void;
+    unbind?(scope: Scope, binding: IBinding, ...args: T[]): void;
 } & T;
 export declare class BindingBehaviorExpression {
     readonly expression: IsBindingBehavior;
@@ -161,12 +161,13 @@ export declare class BindingBehaviorExpression {
     constructor(expression: IsBindingBehavior, name: string, args: readonly IsAssign[]);
     evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
     assign(s: Scope, e: IAstEvaluator | null, val: unknown): unknown;
-    bind(f: LF, s: Scope, b: IAstEvaluator & IConnectableBinding): void;
-    unbind(f: LF, s: Scope, b: IAstEvaluator & IConnectableBinding): void;
+    bind(s: Scope, b: IAstEvaluator & IConnectableBinding): void;
+    unbind(s: Scope, b: IAstEvaluator & IConnectableBinding): void;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
 export declare type ValueConverterInstance<T extends {} = {}> = {
+    signals?: string[];
     toView(input: unknown, ...args: unknown[]): unknown;
     fromView?(input: unknown, ...args: unknown[]): unknown;
 } & T;
@@ -175,12 +176,13 @@ export declare class ValueConverterExpression {
     readonly name: string;
     readonly args: readonly IsAssign[];
     get $kind(): ExpressionKind.ValueConverter;
-    get hasBind(): false;
+    get hasBind(): true;
     get hasUnbind(): true;
     constructor(expression: IsValueConverter, name: string, args: readonly IsAssign[]);
     evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
     assign(s: Scope, e: IAstEvaluator | null, val: unknown): unknown;
-    unbind(_f: LF, _s: Scope, b: IAstEvaluator & IConnectableBinding): void;
+    bind(s: Scope, b: IAstEvaluator & IConnectableBinding): void;
+    unbind(_s: Scope, b: IAstEvaluator & IConnectableBinding): void;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -453,8 +455,8 @@ export declare class ForOfStatement {
     assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
     count(_f: LF, result: Collection | number | null | undefined): number;
     iterate(f: LF, result: Collection | number | null | undefined, func: (arr: Collection, index: number, item: unknown) => void): void;
-    bind(f: LF, s: Scope, b: IConnectableBinding): void;
-    unbind(f: LF, s: Scope, b: IConnectableBinding): void;
+    bind(s: Scope, b: IConnectableBinding): void;
+    unbind(s: Scope, b: IConnectableBinding): void;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }

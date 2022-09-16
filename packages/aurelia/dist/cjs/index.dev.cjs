@@ -169,6 +169,7 @@ exports.ComputedObserver = runtime.ComputedObserver;
 exports.IObserverLocator = runtime.IObserverLocator;
 exports.ISignaler = runtime.ISignaler;
 exports.LifecycleFlags = runtime.LifecycleFlags;
+exports.batch = runtime.batch;
 exports.observable = runtime.observable;
 exports.subscriberCollection = runtime.subscriberCollection;
 exports.Aurelia = Aurelia;

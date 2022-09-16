@@ -51,7 +51,7 @@ function createIntlFormatValueConverterExpression(name, binding) {
 }
 
 let DateFormatBindingBehavior = class DateFormatBindingBehavior {
-    bind(flags, _scope, binding) {
+    bind(_scope, binding) {
         createIntlFormatValueConverterExpression("df", binding);
     }
 };
@@ -245,7 +245,7 @@ DateFormatValueConverter = __decorate([
 ], DateFormatValueConverter);
 
 let NumberFormatBindingBehavior = class NumberFormatBindingBehavior {
-    bind(flags, _scope, binding) {
+    bind(_scope, binding) {
         createIntlFormatValueConverterExpression("nf", binding);
     }
 };
@@ -271,7 +271,7 @@ NumberFormatValueConverter = __decorate([
 ], NumberFormatValueConverter);
 
 let RelativeTimeBindingBehavior = class RelativeTimeBindingBehavior {
-    bind(flags, _scope, binding) {
+    bind(_scope, binding) {
         createIntlFormatValueConverterExpression("rt", binding);
     }
 };
@@ -297,7 +297,7 @@ RelativeTimeValueConverter = __decorate([
 ], RelativeTimeValueConverter);
 
 let TranslationBindingBehavior = class TranslationBindingBehavior {
-    bind(flags, _scope, binding) {
+    bind(_scope, binding) {
         const expression = binding.ast.expression;
         if (!(expression instanceof ValueConverterExpression)) {
             const vcExpression = new ValueConverterExpression(expression, "t", binding.ast.args);
@@ -343,7 +343,7 @@ class TranslationBinding {
         }
         else {
             const interpolation = expr instanceof CustomExpression ? parser.parse(expr.value, 1) : undefined;
-            binding.expr = interpolation || expr;
+            binding.ast = interpolation || expr;
         }
     }
     static getBinding({ observerLocator, context, controller, target, platform, }) {
@@ -354,29 +354,29 @@ class TranslationBinding {
         }
         return binding;
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         if (this.isBound) {
             return;
         }
-        if (!this.expr) {
+        if (!this.ast) {
             throw new Error('key expression is missing');
         }
         this.scope = scope;
-        this._isInterpolation = this.expr instanceof Interpolation;
-        this._keyExpression = this.expr.evaluate(scope, this, this);
+        this._isInterpolation = this.ast instanceof Interpolation;
+        this._keyExpression = this.ast.evaluate(scope, this, this);
         this._ensureKeyExpression();
-        this.parameter?.$bind(flags, scope);
-        this._updateTranslations(flags);
+        this.parameter?.$bind(scope);
+        this._updateTranslations();
         this.isBound = true;
     }
-    $unbind(flags) {
+    $unbind() {
         if (!this.isBound) {
             return;
         }
-        if (this.expr.hasUnbind) {
-            this.expr.unbind(flags, this.scope, this);
+        if (this.ast.hasUnbind) {
+            this.ast.unbind(this.scope, this);
         }
-        this.parameter?.$unbind(flags);
+        this.parameter?.$unbind();
         this._targetAccessors.clear();
         if (this.task !== null) {
             this.task.cancel();
@@ -385,25 +385,25 @@ class TranslationBinding {
         this.scope = (void 0);
         this.obs.clearAll();
     }
-    handleChange(newValue, _previousValue, flags) {
+    handleChange(newValue, _previousValue) {
         this.obs.version++;
         this._keyExpression = this._isInterpolation
-            ? this.expr.evaluate(this.scope, this, this)
+            ? this.ast.evaluate(this.scope, this, this)
             : newValue;
         this.obs.clear();
         this._ensureKeyExpression();
-        this._updateTranslations(flags);
+        this._updateTranslations();
     }
     handleLocaleChange() {
-        this._updateTranslations(0);
+        this._updateTranslations();
     }
     useParameter(expr) {
         if (this.parameter != null) {
             throw new Error('This translation parameter has already been specified.');
         }
-        this.parameter = new ParameterBinding(this, expr, (flags) => this._updateTranslations(flags));
+        this.parameter = new ParameterBinding(this, expr, () => this._updateTranslations());
     }
-    _updateTranslations(flags) {
+    _updateTranslations() {
         const results = this.i18n.evaluate(this._keyExpression, this.parameter?.value);
         const content = Object.create(null);
         const accessorUpdateTasks = [];
@@ -423,10 +423,10 @@ class TranslationBinding {
                         : this.oL.getAccessor(this.target, attribute);
                     const shouldQueueUpdate = this._controller.state !== 1 && (accessor.type & 4) > 0;
                     if (shouldQueueUpdate) {
-                        accessorUpdateTasks.push(new AccessorUpdateTask(accessor, value, flags, this.target, attribute));
+                        accessorUpdateTasks.push(new AccessorUpdateTask(accessor, value, this.target, attribute));
                     }
                     else {
-                        accessor.setValue(value, flags, this.target, attribute);
+                        accessor.setValue(value, this.target, attribute);
                     }
                     this._targetAccessors.add(accessor);
                 }
@@ -436,7 +436,7 @@ class TranslationBinding {
         if (Object.keys(content).length > 0) {
             shouldQueueContent = this._controller.state !== 1;
             if (!shouldQueueContent) {
-                this._updateContent(content, flags);
+                this._updateContent(content);
             }
         }
         if (accessorUpdateTasks.length > 0 || shouldQueueContent) {
@@ -446,7 +446,7 @@ class TranslationBinding {
                     updateTask.run();
                 }
                 if (shouldQueueContent) {
-                    this._updateContent(content, flags);
+                    this._updateContent(content);
                 }
             }, taskQueueOpts);
         }
@@ -467,7 +467,7 @@ class TranslationBinding {
     _isContentAttribute(attribute) {
         return this._contentAttributes.includes(attribute);
     }
-    _updateContent(content, _flags) {
+    _updateContent(content) {
         const children = toArray(this.target.childNodes);
         const fallBackContents = [];
         const marker = 'au-i18n';
@@ -514,53 +514,52 @@ class TranslationBinding {
     }
 }
 class AccessorUpdateTask {
-    constructor(accessor, v, f, el, attr) {
+    constructor(accessor, v, el, attr) {
         this.accessor = accessor;
         this.v = v;
-        this.f = f;
         this.el = el;
         this.attr = attr;
     }
     run() {
-        this.accessor.setValue(this.v, this.f, this.el, this.attr);
+        this.accessor.setValue(this.v, this.el, this.attr);
     }
 }
 class ParameterBinding {
-    constructor(owner, expr, updater) {
+    constructor(owner, ast, updater) {
         this.owner = owner;
-        this.expr = expr;
+        this.ast = ast;
         this.updater = updater;
         this.interceptor = this;
         this.isBound = false;
         this.oL = owner.oL;
         this.locator = owner.locator;
     }
-    handleChange(newValue, _previousValue, flags) {
+    handleChange(_newValue, _previousValue) {
         if (!this.isBound) {
             return;
         }
         this.obs.version++;
-        this.value = this.expr.evaluate(this.scope, this, this);
+        this.value = this.ast.evaluate(this.scope, this, this);
         this.obs.clear();
-        this.updater(flags);
+        this.updater();
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         if (this.isBound) {
             return;
         }
         this.scope = scope;
-        if (this.expr.hasBind) {
-            this.expr.bind(flags, scope, this);
+        if (this.ast.hasBind) {
+            this.ast.bind(scope, this);
         }
-        this.value = this.expr.evaluate(scope, this, this);
+        this.value = this.ast.evaluate(scope, this, this);
         this.isBound = true;
     }
-    $unbind(flags) {
+    $unbind() {
         if (!this.isBound) {
             return;
         }
-        if (this.expr.hasUnbind) {
-            this.expr.unbind(flags, this.scope, this);
+        if (this.ast.hasUnbind) {
+            this.ast.unbind(this.scope, this);
         }
         this.scope = (void 0);
         this.obs.clearAll();

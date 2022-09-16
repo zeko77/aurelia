@@ -70,6 +70,7 @@ const isDataAttribute = (obj, key, svgAnalyzer) => {
             svgAnalyzer.isStandardSvgAttribute(obj, key);
 };
 const isPromise = (v) => v instanceof Promise;
+const isArray = (v) => v instanceof Array;
 const isFunction = (v) => typeof v === 'function';
 const isString = (v) => typeof v === 'string';
 const defineProp = Object.defineProperty;
@@ -268,7 +269,6 @@ class BindableObserver {
         this._coercionConfig = _coercionConfig;
         this._value = void 0;
         this._oldValue = void 0;
-        this.f = 0;
         const cb = obj[cbName];
         const cbAll = obj.propertyChanged;
         const hasCb = this._hasCb = isFunction(cb);
@@ -293,7 +293,7 @@ class BindableObserver {
     getValue() {
         return this._value;
     }
-    setValue(newValue, flags) {
+    setValue(newValue) {
         if (this._hasSetter) {
             newValue = this.set(newValue, this._coercionConfig);
         }
@@ -304,14 +304,13 @@ class BindableObserver {
             }
             this._value = newValue;
             this._oldValue = currentValue;
-            this.f = flags;
             if (this.$controller == null
                 || this.$controller.isBound) {
                 if (this._hasCb) {
-                    this.cb.call(this._obj, newValue, currentValue, flags);
+                    this.cb.call(this._obj, newValue, currentValue);
                 }
                 if (this._hasCbAll) {
-                    this._cbAll.call(this._obj, this._key, newValue, currentValue, flags);
+                    this._cbAll.call(this._obj, this._key, newValue, currentValue);
                 }
             }
             this.queue.add(this);
@@ -333,7 +332,7 @@ class BindableObserver {
     flush() {
         oV$4 = this._oldValue;
         this._oldValue = this._value;
-        this.subs.notify(this._value, oV$4, this.f);
+        this.subs.notify(this._value, oV$4);
     }
     _createGetterSetter() {
         Reflect.defineProperty(this._obj, this._key, {
@@ -341,7 +340,7 @@ class BindableObserver {
             configurable: true,
             get: () => this._value,
             set: (value) => {
-                this.setValue(value, 0);
+                this.setValue(value);
             }
         });
     }
@@ -1297,20 +1296,20 @@ class BindingInterceptor {
     getBehavior(name) {
         return this.binding.getBehavior?.(name);
     }
-    updateTarget(value, flags) {
-        this.binding.updateTarget(value, flags);
+    updateTarget(value) {
+        this.binding.updateTarget(value);
     }
-    updateSource(value, flags) {
-        this.binding.updateSource(value, flags);
+    updateSource(value) {
+        this.binding.updateSource(value);
     }
     callSource(args) {
         return this.binding.callSource(args);
     }
-    handleChange(newValue, previousValue, flags) {
-        this.binding.handleChange(newValue, previousValue, flags);
+    handleChange(newValue, previousValue) {
+        this.binding.handleChange(newValue, previousValue);
     }
-    handleCollectionChange(indexMap, flags) {
-        this.binding.handleCollectionChange(indexMap, flags);
+    handleCollectionChange(indexMap) {
+        this.binding.handleCollectionChange(indexMap);
     }
     observe(obj, key) {
         this.binding.observe(obj, key);
@@ -1318,11 +1317,11 @@ class BindingInterceptor {
     observeCollection(observer) {
         this.binding.observeCollection(observer);
     }
-    $bind(flags, scope) {
-        this.binding.$bind(flags, scope);
+    $bind(scope) {
+        this.binding.$bind(scope);
     }
-    $unbind(flags) {
-        this.binding.$unbind(flags);
+    $unbind() {
+        this.binding.$unbind();
     }
 }
 const interceptableProperties = ['isBound', '$scope', 'obs', 'ast', 'locator', 'oL'];
@@ -1429,10 +1428,10 @@ class BindingTargetSubscriber {
     constructor(b) {
         this.b = b;
     }
-    handleChange(value, _, flags) {
+    handleChange(value, _) {
         const b = this.b;
         if (value !== b.ast.evaluate(b.$scope, b, null)) {
-            b.updateSource(value, flags);
+            b.updateSource(value);
         }
     }
 }
@@ -1472,35 +1471,35 @@ class CallBinding {
         Reflect.deleteProperty(overrideContext, '$event');
         return result;
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         if (this.isBound) {
             if (this.$scope === scope) {
                 return;
             }
-            this.interceptor.$unbind(flags | 2);
+            this.interceptor.$unbind();
         }
         this.$scope = scope;
         if (this.ast.hasBind) {
-            this.ast.bind(flags, scope, this.interceptor);
+            this.ast.bind(scope, this.interceptor);
         }
-        this.targetObserver.setValue(($args) => this.interceptor.callSource($args), flags, this.target, this.targetProperty);
+        this.targetObserver.setValue(($args) => this.interceptor.callSource($args), this.target, this.targetProperty);
         this.isBound = true;
     }
-    $unbind(flags) {
+    $unbind() {
         if (!this.isBound) {
             return;
         }
         if (this.ast.hasUnbind) {
-            this.ast.unbind(flags, this.$scope, this.interceptor);
+            this.ast.unbind(this.$scope, this.interceptor);
         }
         this.$scope = void 0;
-        this.targetObserver.setValue(null, flags, this.target, this.targetProperty);
+        this.targetObserver.setValue(null, this.target, this.targetProperty);
         this.isBound = false;
     }
     observe(_obj, _propertyName) {
         return;
     }
-    handleChange(_newValue, _previousValue, _flags) {
+    handleChange(_newValue, _previousValue) {
         return;
     }
 }
@@ -1512,7 +1511,6 @@ class AttributeObserver {
         this._value = null;
         this._oldValue = null;
         this._hasChanges = false;
-        this.f = 0;
         this._obj = obj;
         this._prop = prop;
         this._attr = attr;
@@ -1520,12 +1518,10 @@ class AttributeObserver {
     getValue() {
         return this._value;
     }
-    setValue(value, flags) {
+    setValue(value) {
         this._value = value;
         this._hasChanges = value !== this._oldValue;
-        if ((flags & 32) === 0) {
-            this._flushChanges();
-        }
+        this._flushChanges();
     }
     _flushChanges() {
         if (this._hasChanges) {
@@ -1582,7 +1578,6 @@ class AttributeObserver {
                 this._oldValue = this._value;
                 this._value = newValue;
                 this._hasChanges = false;
-                this.f = 0;
                 this.queue.add(this);
             }
         }
@@ -1601,7 +1596,7 @@ class AttributeObserver {
     flush() {
         oV$3 = this._oldValue;
         this._oldValue = this._value;
-        this.subs.notify(this._value, oV$3, this.f);
+        this.subs.notify(this._value, oV$3);
     }
 }
 runtime.subscriberCollection(AttributeObserver);
@@ -1653,25 +1648,21 @@ class AttributeBinding {
         this.$scope = null;
         this.task = null;
         this.targetSubscriber = null;
-        this.persistentFlags = 0;
         this.value = void 0;
-        this._isBinding = 0;
         this._controller = controller;
         this.target = target;
         this.oL = observerLocator;
     }
-    updateTarget(value, flags) {
-        flags |= this.persistentFlags;
-        this.targetObserver.setValue(value, flags, this.target, this.targetProperty);
+    updateTarget(value) {
+        this.targetObserver.setValue(value, this.target, this.targetProperty);
     }
-    updateSource(value, _flags) {
+    updateSource(value) {
         this.ast.assign(this.$scope, this, value);
     }
-    handleChange(newValue, _previousValue, flags) {
+    handleChange(newValue, _previousValue) {
         if (!this.isBound) {
             return;
         }
-        flags |= this.persistentFlags;
         const mode = this.mode;
         const interceptor = this.interceptor;
         const ast = this.ast;
@@ -1696,28 +1687,26 @@ class AttributeBinding {
                 task = this.task;
                 this.task = this.taskQueue.queueTask(() => {
                     this.task = null;
-                    interceptor.updateTarget(newValue, flags);
+                    interceptor.updateTarget(newValue);
                 }, taskOptions);
                 task?.cancel();
             }
             else {
-                interceptor.updateTarget(newValue, flags);
+                interceptor.updateTarget(newValue);
             }
         }
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         if (this.isBound) {
             if (this.$scope === scope) {
                 return;
             }
-            this.interceptor.$unbind(flags | 2);
+            this.interceptor.$unbind();
         }
-        this.persistentFlags = flags & 33;
         this.$scope = scope;
-        this._isBinding++;
         let ast = this.ast;
         if (ast.hasBind) {
-            ast.bind(flags, scope, this.interceptor);
+            ast.bind(scope, this.interceptor);
         }
         let targetObserver = this.targetObserver;
         if (!targetObserver) {
@@ -1729,21 +1718,19 @@ class AttributeBinding {
         let shouldConnect = false;
         if ($mode & toViewOrOneTime$1) {
             shouldConnect = ($mode & toView$2) > 0;
-            interceptor.updateTarget(this.value = ast.evaluate(scope, this, shouldConnect ? interceptor : null), flags);
+            interceptor.updateTarget(this.value = ast.evaluate(scope, this, shouldConnect ? interceptor : null));
         }
         if ($mode & fromView$1) {
             targetObserver.subscribe(this.targetSubscriber ?? (this.targetSubscriber = new BindingTargetSubscriber(interceptor)));
         }
-        this._isBinding++;
         this.isBound = true;
     }
-    $unbind(flags) {
+    $unbind() {
         if (!this.isBound) {
             return;
         }
-        this.persistentFlags = 0;
         if (this.ast.hasUnbind) {
-            this.ast.unbind(flags, this.$scope, this.interceptor);
+            this.ast.unbind(this.$scope, this.interceptor);
         }
         this.$scope = null;
         this.value = void 0;
@@ -1787,7 +1774,7 @@ class InterpolationBinding {
             partBindings[i] = new InterpolationPartBinding(expressions[i], target, targetProperty, locator, observerLocator, this);
         }
     }
-    updateTarget(value, flags) {
+    updateTarget(_value) {
         const partBindings = this.partBindings;
         const staticParts = this.ast.parts;
         const ii = partBindings.length;
@@ -1809,21 +1796,21 @@ class InterpolationBinding {
             task = this.task;
             this.task = this.taskQueue.queueTask(() => {
                 this.task = null;
-                targetObserver.setValue(result, flags, this.target, this.targetProperty);
+                targetObserver.setValue(result, this.target, this.targetProperty);
             }, queueTaskOptions);
             task?.cancel();
             task = null;
         }
         else {
-            targetObserver.setValue(result, flags, this.target, this.targetProperty);
+            targetObserver.setValue(result, this.target, this.targetProperty);
         }
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         if (this.isBound) {
             if (this.$scope === scope) {
                 return;
             }
-            this.interceptor.$unbind(flags);
+            this.interceptor.$unbind();
         }
         this.isBound = true;
         this.$scope = scope;
@@ -1831,11 +1818,11 @@ class InterpolationBinding {
         const ii = partBindings.length;
         let i = 0;
         for (; ii > i; ++i) {
-            partBindings[i].$bind(flags, scope);
+            partBindings[i].$bind(scope);
         }
-        this.updateTarget(void 0, flags);
+        this.updateTarget(void 0);
     }
-    $unbind(flags) {
+    $unbind() {
         if (!this.isBound) {
             return;
         }
@@ -1845,7 +1832,7 @@ class InterpolationBinding {
         const ii = partBindings.length;
         let i = 0;
         for (; ii > i; ++i) {
-            partBindings[i].interceptor.$unbind(flags);
+            partBindings[i].interceptor.$unbind();
         }
         this.task?.cancel();
         this.task = null;
@@ -1866,7 +1853,7 @@ class InterpolationPartBinding {
         this.isBound = false;
         this.oL = observerLocator;
     }
-    handleChange(newValue, oldValue, flags) {
+    handleChange(newValue) {
         if (!this.isBound) {
             return;
         }
@@ -1889,36 +1876,36 @@ class InterpolationPartBinding {
             if (newValue instanceof Array) {
                 this.observeCollection(newValue);
             }
-            this.owner.updateTarget(newValue, flags);
+            this.owner.updateTarget(newValue);
         }
     }
-    handleCollectionChange(indexMap, flags) {
-        this.owner.updateTarget(void 0, flags);
+    handleCollectionChange(_indexMap) {
+        this.owner.updateTarget(void 0);
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         if (this.isBound) {
             if (this.$scope === scope) {
                 return;
             }
-            this.interceptor.$unbind(flags);
+            this.interceptor.$unbind();
         }
         this.isBound = true;
         this.$scope = scope;
         if (this.ast.hasBind) {
-            this.ast.bind(flags, scope, this.interceptor);
+            this.ast.bind(scope, this.interceptor);
         }
         this.value = this.ast.evaluate(scope, this, (this.mode & toView$1) > 0 ? this.interceptor : null);
         if (this.value instanceof Array) {
             this.observeCollection(this.value);
         }
     }
-    $unbind(flags) {
+    $unbind() {
         if (!this.isBound) {
             return;
         }
         this.isBound = false;
         if (this.ast.hasUnbind) {
-            this.ast.unbind(flags, this.$scope, this.interceptor);
+            this.ast.unbind(this.$scope, this.interceptor);
         }
         this.$scope = void 0;
         this.obs.clearAll();
@@ -1939,11 +1926,10 @@ class ContentBinding {
         this.value = '';
         this.task = null;
         this.isBound = false;
-        this._isBinding = 0;
         this._controller = controller;
         this.oL = observerLocator;
     }
-    updateTarget(value, _flags) {
+    updateTarget(value) {
         const target = this.target;
         const NodeCtor = this.p.Node;
         const oldValue = this.value;
@@ -1959,7 +1945,7 @@ class ContentBinding {
             target.textContent = String(value);
         }
     }
-    handleChange(newValue, oldValue, flags) {
+    handleChange(newValue) {
         if (!this.isBound) {
             return;
         }
@@ -1972,7 +1958,6 @@ class ContentBinding {
             if (shouldConnect) {
                 obsRecord.version++;
             }
-            flags |= this.strict ? 1 : 0;
             newValue = ast.evaluate(this.$scope, this, shouldConnect ? this.interceptor : null);
             if (shouldConnect) {
                 obsRecord.clear();
@@ -1985,10 +1970,10 @@ class ContentBinding {
         }
         const shouldQueueFlush = this._controller.state !== 1;
         if (shouldQueueFlush) {
-            this.queueUpdate(newValue, flags);
+            this.queueUpdate(newValue);
         }
         else {
-            this.updateTarget(newValue, flags);
+            this.updateTarget(newValue);
         }
     }
     handleCollectionChange() {
@@ -2001,53 +1986,50 @@ class ContentBinding {
         if (v instanceof Array) {
             this.observeCollection(v);
         }
-        const shouldQueueFlush = this._isBinding === 0;
+        const shouldQueueFlush = this._controller.state !== 1;
         if (shouldQueueFlush) {
-            this.queueUpdate(v, 0);
+            this.queueUpdate(v);
         }
         else {
-            this.updateTarget(v, 0);
+            this.updateTarget(v);
         }
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         if (this.isBound) {
             if (this.$scope === scope) {
                 return;
             }
-            this.interceptor.$unbind(flags);
+            this.interceptor.$unbind();
         }
         this.isBound = true;
         this.$scope = scope;
-        this._isBinding++;
         if (this.ast.hasBind) {
-            this.ast.bind(flags, scope, this.interceptor);
+            this.ast.bind(scope, this.interceptor);
         }
-        flags |= this.strict ? 1 : 0;
         const v = this.value = this.ast.evaluate(scope, this, (this.mode & toView$1) > 0 ? this.interceptor : null);
         if (v instanceof Array) {
             this.observeCollection(v);
         }
-        this.updateTarget(v, flags);
-        this._isBinding--;
+        this.updateTarget(v);
     }
-    $unbind(flags) {
+    $unbind() {
         if (!this.isBound) {
             return;
         }
         this.isBound = false;
         if (this.ast.hasUnbind) {
-            this.ast.unbind(flags, this.$scope, this.interceptor);
+            this.ast.unbind(this.$scope, this.interceptor);
         }
         this.$scope = void 0;
         this.obs.clearAll();
         this.task?.cancel();
         this.task = null;
     }
-    queueUpdate(newValue, flags) {
+    queueUpdate(newValue) {
         const task = this.task;
         this.task = this.taskQueue.queueTask(() => {
             this.task = null;
-            this.updateTarget(newValue, flags);
+            this.updateTarget(newValue);
         }, queueTaskOptions);
         task?.cancel();
     }
@@ -2068,7 +2050,7 @@ class LetBinding {
         this.oL = observerLocator;
         this._toBindingContext = toBindingContext;
     }
-    handleChange(newValue, _previousValue, _flags) {
+    handleChange(newValue) {
         if (!this.isBound) {
             return;
         }
@@ -2082,7 +2064,7 @@ class LetBinding {
             target[targetProperty] = newValue;
         }
     }
-    handleCollectionChange(_indexMap, _flags) {
+    handleCollectionChange() {
         if (!this.isBound) {
             return;
         }
@@ -2096,30 +2078,30 @@ class LetBinding {
             target[targetProperty] = newValue;
         }
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         if (this.isBound) {
             if (this.$scope === scope) {
                 return;
             }
-            this.interceptor.$unbind(flags | 2);
+            this.interceptor.$unbind();
         }
         this.$scope = scope;
         this.target = (this._toBindingContext ? scope.bindingContext : scope.overrideContext);
         const ast = this.ast;
         if (ast.hasBind) {
-            ast.bind(flags, scope, this.interceptor);
+            ast.bind(scope, this.interceptor);
         }
         this.target[this.targetProperty]
             = this.ast.evaluate(scope, this, this.interceptor);
         this.isBound = true;
     }
-    $unbind(flags) {
+    $unbind() {
         if (!this.isBound) {
             return;
         }
         const ast = this.ast;
         if (ast.hasUnbind) {
-            ast.unbind(flags, this.$scope, this.interceptor);
+            ast.unbind(this.$scope, this.interceptor);
         }
         this.$scope = void 0;
         this.obs.clearAll();
@@ -2138,7 +2120,6 @@ const updateTaskOpts = {
 class PropertyBinding {
     constructor(controller, locator, observerLocator, taskQueue, ast, target, targetProperty, mode) {
         this.locator = locator;
-        this.taskQueue = taskQueue;
         this.ast = ast;
         this.target = target;
         this.targetProperty = targetProperty;
@@ -2147,24 +2128,22 @@ class PropertyBinding {
         this.isBound = false;
         this.$scope = void 0;
         this.targetObserver = void 0;
-        this.persistentFlags = 0;
         this.task = null;
         this.targetSubscriber = null;
         this._controller = controller;
+        this._taskQueue = taskQueue;
         this.oL = observerLocator;
     }
-    updateTarget(value, flags) {
-        flags |= this.persistentFlags;
-        this.targetObserver.setValue(value, flags, this.target, this.targetProperty);
+    updateTarget(value) {
+        this.targetObserver.setValue(value, this.target, this.targetProperty);
     }
-    updateSource(value, _flags) {
+    updateSource(value) {
         this.ast.assign(this.$scope, this, value);
     }
-    handleChange(newValue, _previousValue, flags) {
+    handleChange(newValue, _previousValue) {
         if (!this.isBound) {
             return;
         }
-        flags |= this.persistentFlags;
         const shouldQueueFlush = this._controller.state !== 1 && (this.targetObserver.type & 4) > 0;
         const obsRecord = this.obs;
         let shouldConnect = false;
@@ -2180,18 +2159,18 @@ class PropertyBinding {
         }
         if (shouldQueueFlush) {
             task = this.task;
-            this.task = this.taskQueue.queueTask(() => {
-                this.interceptor.updateTarget(newValue, flags);
+            this.task = this._taskQueue.queueTask(() => {
+                this.interceptor.updateTarget(newValue);
                 this.task = null;
             }, updateTaskOpts);
             task?.cancel();
             task = null;
         }
         else {
-            this.interceptor.updateTarget(newValue, flags);
+            this.interceptor.updateTarget(newValue);
         }
     }
-    handleCollectionChange(_indexMap, flags) {
+    handleCollectionChange(_indexMap) {
         if (!this.isBound) {
             return;
         }
@@ -2201,30 +2180,28 @@ class PropertyBinding {
         this.obs.clear();
         if (shouldQueueFlush) {
             task = this.task;
-            this.task = this.taskQueue.queueTask(() => {
-                this.interceptor.updateTarget(newValue, flags);
+            this.task = this._taskQueue.queueTask(() => {
+                this.interceptor.updateTarget(newValue);
                 this.task = null;
             }, updateTaskOpts);
             task?.cancel();
             task = null;
         }
         else {
-            this.interceptor.updateTarget(newValue, flags);
+            this.interceptor.updateTarget(newValue);
         }
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         if (this.isBound) {
             if (this.$scope === scope) {
                 return;
             }
-            this.interceptor.$unbind(flags | 2);
+            this.interceptor.$unbind();
         }
-        flags |= 1;
-        this.persistentFlags = flags & 33;
         this.$scope = scope;
         let ast = this.ast;
         if (ast.hasBind) {
-            ast.bind(flags, scope, this.interceptor);
+            ast.bind(scope, this.interceptor);
         }
         const observerLocator = this.oL;
         const $mode = this.mode;
@@ -2242,23 +2219,22 @@ class PropertyBinding {
         const interceptor = this.interceptor;
         const shouldConnect = ($mode & toView) > 0;
         if ($mode & toViewOrOneTime) {
-            interceptor.updateTarget(ast.evaluate(scope, this, shouldConnect ? interceptor : null), flags);
+            interceptor.updateTarget(ast.evaluate(scope, this, shouldConnect ? interceptor : null));
         }
         if ($mode & fromView) {
             targetObserver.subscribe(this.targetSubscriber ?? (this.targetSubscriber = new BindingTargetSubscriber(interceptor)));
             if (!shouldConnect) {
-                interceptor.updateSource(targetObserver.getValue(this.target, this.targetProperty), flags);
+                interceptor.updateSource(targetObserver.getValue(this.target, this.targetProperty));
             }
         }
         this.isBound = true;
     }
-    $unbind(flags) {
+    $unbind() {
         if (!this.isBound) {
             return;
         }
-        this.persistentFlags = 0;
         if (this.ast.hasUnbind) {
-            this.ast.unbind(flags, this.$scope, this.interceptor);
+            this.ast.unbind(this.$scope, this.interceptor);
         }
         this.$scope = void 0;
         task = this.task;
@@ -2286,21 +2262,21 @@ class RefBinding {
         this.isBound = false;
         this.$scope = void 0;
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         if (this.isBound) {
             if (this.$scope === scope) {
                 return;
             }
-            this.interceptor.$unbind(flags | 2);
+            this.interceptor.$unbind();
         }
         this.$scope = scope;
         if (this.ast.hasBind) {
-            this.ast.bind(flags, scope, this);
+            this.ast.bind(scope, this);
         }
         this.ast.assign(this.$scope, this, this.target);
         this.isBound = true;
     }
-    $unbind(flags) {
+    $unbind() {
         if (!this.isBound) {
             return;
         }
@@ -2310,7 +2286,7 @@ class RefBinding {
         }
         ast = this.ast;
         if (ast.hasUnbind) {
-            ast.unbind(flags, this.$scope, this.interceptor);
+            ast.unbind(this.$scope, this.interceptor);
         }
         this.$scope = void 0;
         this.isBound = false;
@@ -2318,7 +2294,7 @@ class RefBinding {
     observe(_obj, _propertyName) {
         return;
     }
-    handleChange(_newValue, _previousValue, _flags) {
+    handleChange(_newValue, _previousValue) {
         return;
     }
 }
@@ -2490,7 +2466,7 @@ class ChildrenObserver {
         if (this.callback !== void 0) {
             this.callback.call(this.obj);
         }
-        this.subs.notify(this.children, undefined, 0);
+        this.subs.notify(this.children, undefined);
     }
     get() {
         return filterChildren(this.controller, this.query, this.filter, this.map);
@@ -2955,12 +2931,10 @@ class ClassAttributeAccessor {
     getValue() {
         return this.value;
     }
-    setValue(newValue, flags) {
+    setValue(newValue) {
         this.value = newValue;
         this._hasChanges = newValue !== this._oldValue;
-        if ((flags & 32) === 0) {
-            this._flushChanges();
-        }
+        this._flushChanges();
     }
     _flushChanges() {
         if (this._hasChanges) {
@@ -3988,7 +3962,7 @@ class Controller {
             this._fullyNamed = true;
             (this.logger ?? (this.logger = this.container.get(kernel.ILogger).root.scopeTo(this.name))).trace(`activate()`);
         }
-        flags |= 2;
+        flags |= 1;
         switch (this.vmKind) {
             case 0:
                 this.scope.parentScope = scope ?? null;
@@ -4005,9 +3979,7 @@ class Controller {
                 }
                 break;
         }
-        if (this.isStrictBinding) {
-            flags |= 1;
-        }
+        if (this.isStrictBinding) ;
         this.$initiator = initiator;
         this.$flags = flags;
         this._enterActivating();
@@ -4053,7 +4025,7 @@ class Controller {
             i = 0;
             ii = this.bindings.length;
             while (ii > i) {
-                this.bindings[i].$bind(this.$flags, this.scope);
+                this.bindings[i].$bind(this.scope);
                 ++i;
             }
         }
@@ -4252,11 +4224,11 @@ class Controller {
         if (this.debug) {
             this.logger.trace(`unbind()`);
         }
-        const flags = this.$flags | 4;
+        const flags = this.$flags | 2;
         let i = 0;
         if (this.bindings !== null) {
             for (; i < this.bindings.length; ++i) {
-                this.bindings[i].$unbind(flags);
+                this.bindings[i].$unbind();
             }
         }
         this.parent = null;
@@ -4278,7 +4250,7 @@ class Controller {
                 this.scope.parentScope = null;
                 break;
         }
-        if ((flags & 16) === 16 && this.$initiator === this) {
+        if ((flags & 4) === 4 && this.$initiator === this) {
             this.dispose();
         }
         this.state = (this.state & 32) | 8;
@@ -4800,7 +4772,7 @@ class AppRoot {
     activate() {
         return kernel.onResolve(this._hydratePromise, () => {
             return kernel.onResolve(this._runAppTasks('activating'), () => {
-                return kernel.onResolve(this.controller.activate(this.controller, null, 2, void 0), () => {
+                return kernel.onResolve(this.controller.activate(this.controller, null, 1, void 0), () => {
                     return this._runAppTasks('activated');
                 });
             });
@@ -5107,17 +5079,17 @@ class Listener {
     handleEvent(event) {
         this.interceptor.callSource(event);
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         if (this.isBound) {
             if (this.$scope === scope) {
                 return;
             }
-            this.interceptor.$unbind(flags | 2);
+            this.interceptor.$unbind();
         }
         this.$scope = scope;
         const ast = this.ast;
         if (ast.hasBind) {
-            ast.bind(flags, scope, this.interceptor);
+            ast.bind(scope, this.interceptor);
         }
         if (this._options.strategy === runtime.DelegationStrategy.none) {
             this.target.addEventListener(this.targetEvent, this);
@@ -5127,13 +5099,12 @@ class Listener {
         }
         this.isBound = true;
     }
-    $unbind(flags) {
+    $unbind() {
         if (!this.isBound) {
             return;
         }
-        const ast = this.ast;
-        if (ast.hasUnbind) {
-            ast.unbind(flags, this.$scope, this.interceptor);
+        if (this.ast.hasUnbind) {
+            this.ast.unbind(this.$scope, this.interceptor);
         }
         this.$scope = null;
         if (this._options.strategy === runtime.DelegationStrategy.none) {
@@ -5148,7 +5119,7 @@ class Listener {
     observe(obj, propertyName) {
         return;
     }
-    handleChange(newValue, previousValue, flags) {
+    handleChange(newValue, previousValue) {
         return;
     }
 }
@@ -5517,7 +5488,7 @@ let SetPropertyRenderer = class SetPropertyRenderer {
     render(renderingCtrl, target, instruction) {
         const obj = getTarget(target);
         if (obj.$observers !== void 0 && obj.$observers[instruction.to] !== void 0) {
-            obj.$observers[instruction.to].setValue(instruction.value, 2);
+            obj.$observers[instruction.to].setValue(instruction.value);
         }
         else {
             obj[instruction.to] = instruction.value;
@@ -5995,7 +5966,7 @@ class SpreadBinding {
     get(key) {
         return this.locator.get(key);
     }
-    $bind(flags, _scope) {
+    $bind(_scope) {
         if (this.isBound) {
             return;
         }
@@ -6004,10 +5975,10 @@ class SpreadBinding {
         if (innerScope == null) {
             throw new Error('Invalid spreading. Context scope is null/undefined');
         }
-        this._innerBindings.forEach(b => b.$bind(flags, innerScope));
+        this._innerBindings.forEach(b => b.$bind(innerScope));
     }
-    $unbind(flags) {
-        this._innerBindings.forEach(b => b.$unbind(flags));
+    $unbind() {
+        this._innerBindings.forEach(b => b.$unbind());
         this.isBound = false;
     }
     addBinding(binding) {
@@ -7685,11 +7656,11 @@ class BindingModeBehavior {
     constructor(mode) {
         this.mode = mode;
     }
-    bind(flags, scope, binding) {
+    bind(scope, binding) {
         originalModesMap.set(binding, binding.mode);
         binding.mode = this.mode;
     }
-    unbind(flags, scope, binding) {
+    unbind(scope, binding) {
         binding.mode = originalModesMap.get(binding);
         originalModesMap.delete(binding);
     }
@@ -7735,15 +7706,15 @@ class DebounceBindingBehavior extends BindingInterceptor {
         this.queueTask(() => this.binding.callSource(args));
         return void 0;
     }
-    handleChange(newValue, oldValue, flags) {
+    handleChange(newValue, oldValue) {
         if (this.task !== null) {
             this.task.cancel();
             this.task = null;
         }
-        this.binding.handleChange(newValue, oldValue, flags);
+        this.binding.handleChange(newValue, oldValue);
     }
-    updateSource(newValue, flags) {
-        this.queueTask(() => this.binding.updateSource(newValue, flags));
+    updateSource(newValue) {
+        this.queueTask(() => this.binding.updateSource(newValue));
     }
     queueTask(callback) {
         const task = this.task;
@@ -7753,17 +7724,17 @@ class DebounceBindingBehavior extends BindingInterceptor {
         }, this.opts);
         task?.cancel();
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         if (this.firstArg !== null) {
             const delay = Number(this.firstArg.evaluate(scope, this, null));
             this.opts.delay = isNaN(delay) ? defaultDelay$1 : delay;
         }
-        this.binding.$bind(flags, scope);
+        this.binding.$bind(scope);
     }
-    $unbind(flags) {
+    $unbind() {
         this.task?.cancel();
         this.task = null;
-        this.binding.$unbind(flags);
+        this.binding.$unbind();
     }
 }
 bindingBehavior('debounce')(DebounceBindingBehavior);
@@ -7773,7 +7744,7 @@ class SignalBindingBehavior {
         this._lookup = new Map();
         this._signaler = signaler;
     }
-    bind(flags, scope, binding, ...names) {
+    bind(scope, binding, ...names) {
         if (!('handleChange' in binding)) {
             throw new Error(`AUR0817: The signal behavior can only be used with bindings that have a "handleChange" method`);
         }
@@ -7786,7 +7757,7 @@ class SignalBindingBehavior {
             this._signaler.addSignalListener(name, binding);
         }
     }
-    unbind(flags, scope, binding) {
+    unbind(scope, binding) {
         const names = this._lookup.get(binding);
         this._lookup.delete(binding);
         let name;
@@ -7817,16 +7788,16 @@ class ThrottleBindingBehavior extends BindingInterceptor {
         this._queueTask(() => this.binding.callSource(args));
         return void 0;
     }
-    handleChange(newValue, oldValue, flags) {
+    handleChange(newValue, oldValue) {
         if (this.task !== null) {
             this.task.cancel();
             this.task = null;
             this.lastCall = this._platform.performanceNow();
         }
-        this.binding.handleChange(newValue, oldValue, flags);
+        this.binding.handleChange(newValue, oldValue);
     }
-    updateSource(newValue, flags) {
-        this._queueTask(() => this.binding.updateSource(newValue, flags));
+    updateSource(newValue) {
+        this._queueTask(() => this.binding.updateSource(newValue));
     }
     _queueTask(callback) {
         const opts = this.opts;
@@ -7848,17 +7819,17 @@ class ThrottleBindingBehavior extends BindingInterceptor {
             callback();
         }
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         if (this.firstArg !== null) {
             const delay = Number(this.firstArg.evaluate(scope, this, null));
             this.opts.delay = this.delay = isNaN(delay) ? defaultDelay : delay;
         }
-        this.binding.$bind(flags, scope);
+        this.binding.$bind(scope);
     }
-    $unbind(flags) {
+    $unbind() {
         this.task?.cancel();
         this.task = null;
-        super.$unbind(flags);
+        super.$unbind();
     }
 }
 bindingBehavior('throttle')(ThrottleBindingBehavior);
@@ -7870,7 +7841,7 @@ class DataAttributeAccessor {
     getValue(obj, key) {
         return obj.getAttribute(key);
     }
-    setValue(newValue, f, obj, key) {
+    setValue(newValue, obj, key) {
         if (newValue == null) {
             obj.removeAttribute(key);
         }
@@ -7882,10 +7853,10 @@ class DataAttributeAccessor {
 const attrAccessor = new DataAttributeAccessor();
 
 class AttrBindingBehavior {
-    bind(_flags, _scope, binding) {
+    bind(_scope, binding) {
         binding.targetObserver = attrAccessor;
     }
-    unbind(_flags, _scope, _binding) {
+    unbind(_scope, _binding) {
         return;
     }
 }
@@ -7899,14 +7870,14 @@ function handleSelfEvent(event) {
     return this.selfEventCallSource(event);
 }
 class SelfBindingBehavior {
-    bind(flags, _scope, binding) {
+    bind(_scope, binding) {
         if (!binding.callSource || !binding.targetEvent) {
             throw new Error(`AUR0801: Self binding behavior only supports events.`);
         }
         binding.selfEventCallSource = binding.callSource;
         binding.callSource = handleSelfEvent;
     }
-    unbind(flags, _scope, binding) {
+    unbind(_scope, binding) {
         binding.callSource = binding.selfEventCallSource;
         binding.selfEventCallSource = null;
     }
@@ -7925,7 +7896,7 @@ class AttributeNSAccessor {
     getValue(obj, propertyKey) {
         return obj.getAttributeNS(this.ns, propertyKey);
     }
-    setValue(newValue, f, obj, key) {
+    setValue(newValue, obj, key) {
         if (newValue == null) {
             obj.removeAttributeNS(this.ns, key);
         }
@@ -7946,29 +7917,27 @@ class CheckedObserver {
         this._oldValue = void 0;
         this._collectionObserver = void 0;
         this._valueObserver = void 0;
-        this.f = 0;
         this._obj = obj;
         this.oL = observerLocator;
     }
     getValue() {
         return this._value;
     }
-    setValue(newValue, flags) {
+    setValue(newValue) {
         const currentValue = this._value;
         if (newValue === currentValue) {
             return;
         }
         this._value = newValue;
         this._oldValue = currentValue;
-        this.f = flags;
         this._observe();
         this._synchronizeElement();
         this.queue.add(this);
     }
-    handleCollectionChange(_indexMap, _flags) {
+    handleCollectionChange() {
         this._synchronizeElement();
     }
-    handleChange(_newValue, _previousValue, _flags) {
+    handleChange(_newValue, _previousValue) {
         this._synchronizeElement();
     }
     _synchronizeElement() {
@@ -7985,7 +7954,7 @@ class CheckedObserver {
         }
         else {
             let hasMatch = false;
-            if (currentValue instanceof Array) {
+            if (isArray(currentValue)) {
                 hasMatch = currentValue.findIndex(item => !!matcher(item, elementValue)) !== -1;
             }
             else if (currentValue instanceof Set) {
@@ -8016,7 +7985,7 @@ class CheckedObserver {
         const isChecked = obj.checked;
         const matcher = obj.matcher !== void 0 ? obj.matcher : defaultMatcher$1;
         if (obj.type === 'checkbox') {
-            if (currentValue instanceof Array) {
+            if (isArray(currentValue)) {
                 const index = currentValue.findIndex(item => !!matcher(item, elementValue));
                 if (isChecked && index === -1) {
                     currentValue.push(elementValue);
@@ -8089,7 +8058,7 @@ class CheckedObserver {
     flush() {
         oV$2 = this._oldValue;
         this._oldValue = this._value;
-        this.subs.notify(this._value, oV$2, this.f);
+        this.subs.notify(this._value, oV$2);
     }
     _observe() {
         const obj = this._obj;
@@ -8133,14 +8102,12 @@ class SelectValueObserver {
                 ? getSelectedOptions(this._obj.options)
                 : this._obj.value;
     }
-    setValue(newValue, flags) {
+    setValue(newValue) {
         this._oldValue = this._value;
         this._value = newValue;
         this._hasChanges = newValue !== this._oldValue;
         this._observeArray(newValue instanceof Array ? newValue : null);
-        if ((flags & 32) === 0) {
-            this._flushChanges();
-        }
+        this._flushChanges();
     }
     _flushChanges() {
         if (this._hasChanges) {
@@ -8154,14 +8121,14 @@ class SelectValueObserver {
     syncOptions() {
         const value = this._value;
         const obj = this._obj;
-        const isArray = Array.isArray(value);
+        const $isArray = isArray(value);
         const matcher = obj.matcher ?? defaultMatcher;
         const options = obj.options;
         let i = options.length;
         while (i-- > 0) {
             const option = options[i];
             const optionValue = hasOwnProperty.call(option, 'model') ? option.model : option.value;
-            if (isArray) {
+            if ($isArray) {
                 option.selected = value.findIndex(item => !!matcher(optionValue, item)) !== -1;
                 continue;
             }
@@ -8279,7 +8246,7 @@ class SelectValueObserver {
     flush() {
         oV$1 = this._oldValue;
         this._oldValue = this._value;
-        this.subs.notify(this._value, oV$1, 0);
+        this.subs.notify(this._value, oV$1);
     }
 }
 runtime.subscriberCollection(SelectValueObserver);
@@ -8317,12 +8284,10 @@ class StyleAttributeAccessor {
     getValue() {
         return this.obj.style.cssText;
     }
-    setValue(newValue, flags) {
+    setValue(newValue) {
         this.value = newValue;
         this._hasChanges = newValue !== this._oldValue;
-        if ((flags & 32) === 0) {
-            this._flushChanges();
-        }
+        this._flushChanges();
     }
     _getStyleTuplesFromString(currentValue) {
         const styleTuples = [];
@@ -8440,7 +8405,7 @@ class StyleAttributeAccessor {
         }
         this.obj.style.setProperty(style, value, priority);
     }
-    bind(_flags) {
+    bind() {
         this.value = this._oldValue = this.obj.style.cssText;
     }
 }
@@ -8458,24 +8423,22 @@ class ValueAttributeObserver {
     getValue() {
         return this._value;
     }
-    setValue(newValue, flags) {
+    setValue(newValue) {
         if (Object.is(newValue, this._value)) {
             return;
         }
         this._oldValue = this._value;
         this._value = newValue;
         this._hasChanges = true;
-        if (!this.handler.config.readonly && (flags & 32) === 0) {
-            this._flushChanges(flags);
+        if (!this.handler.config.readonly) {
+            this._flushChanges();
         }
     }
-    _flushChanges(flags) {
+    _flushChanges() {
         if (this._hasChanges) {
             this._hasChanges = false;
             this._obj[this._key] = this._value ?? this.handler.config.default;
-            if ((flags & 2) === 0) {
-                this.queue.add(this);
-            }
+            this.queue.add(this);
         }
     }
     handleEvent() {
@@ -8500,7 +8463,7 @@ class ValueAttributeObserver {
     flush() {
         oV = this._oldValue;
         this._oldValue = this._value;
-        this.subs.notify(this._value, oV, 0);
+        this.subs.notify(this._value, oV);
     }
 }
 runtime.subscriberCollection(ValueAttributeObserver);
@@ -8638,6 +8601,11 @@ class NodeObserverLocator {
             case 'src':
             case 'href':
             case 'role':
+            case 'minLength':
+            case 'maxLength':
+            case 'placeholder':
+            case 'type':
+            case 'size':
                 return attrAccessor;
             default: {
                 const nsProps = nsAttributes[key];
@@ -8722,7 +8690,7 @@ class UpdateTriggerBindingBehavior {
     constructor(observerLocator) {
         this.oL = observerLocator;
     }
-    bind(flags, _scope, binding, ...events) {
+    bind(_scope, binding, ...events) {
         if (events.length === 0) {
             throw new Error(`AUR0802: The updateTrigger binding behavior requires at least one event name argument: eg <input value.bind="firstName & updateTrigger:'blur'">`);
         }
@@ -8742,7 +8710,7 @@ class UpdateTriggerBindingBehavior {
             readonly: originalHandler.config.readonly
         }));
     }
-    unbind(flags, _scope, binding) {
+    unbind(_scope, binding) {
         binding.targetObserver.handler.dispose();
         binding.targetObserver.handler = binding.targetObserver.originalHandler;
         binding.targetObserver.originalHandler = null;
@@ -9180,7 +9148,7 @@ class Repeat {
         this._normalizedItems = void 0;
         this._hasDestructuredLocal = false;
     }
-    binding(initiator, parent, flags) {
+    binding(_initiator, _parent, _flags) {
         const bindings = this._parent.bindings;
         const ii = bindings.length;
         let binding = (void 0);
@@ -9200,36 +9168,35 @@ class Repeat {
                 break;
             }
         }
-        this._refreshCollectionObserver(flags);
+        this._refreshCollectionObserver();
         const dec = forOf.declaration;
         if (!(this._hasDestructuredLocal = dec.$kind === 90138 || dec.$kind === 106523)) {
             this.local = dec.evaluate(this.$controller.scope, binding, null);
         }
     }
-    attaching(initiator, parent, flags) {
-        this._normalizeToArray(flags);
-        return this._activateAllViews(initiator, flags);
+    attaching(initiator, _parent, _flags) {
+        this._normalizeToArray();
+        return this._activateAllViews(initiator);
     }
-    detaching(initiator, parent, flags) {
-        this._refreshCollectionObserver(flags);
-        return this._deactivateAllViews(initiator, flags);
+    detaching(initiator, _parent, _flags) {
+        this._refreshCollectionObserver();
+        return this._deactivateAllViews(initiator);
     }
-    itemsChanged(flags) {
+    itemsChanged() {
         const { $controller } = this;
         if (!$controller.isActive) {
             return;
         }
-        flags |= $controller.flags;
-        this._refreshCollectionObserver(flags);
-        this._normalizeToArray(flags);
-        const ret = kernel.onResolve(this._deactivateAllViews(null, flags), () => {
-            return this._activateAllViews(null, flags);
+        this._refreshCollectionObserver();
+        this._normalizeToArray();
+        const ret = kernel.onResolve(this._deactivateAllViews(null), () => {
+            return this._activateAllViews(null);
         });
         if (isPromise(ret)) {
             ret.catch(rethrow);
         }
     }
-    handleCollectionChange(indexMap, flags) {
+    handleCollectionChange(indexMap) {
         const { $controller } = this;
         if (!$controller.isActive) {
             return;
@@ -9243,11 +9210,10 @@ class Repeat {
             this._reevaluating = false;
             return;
         }
-        flags |= $controller.flags;
-        this._normalizeToArray(flags);
+        this._normalizeToArray();
         if (indexMap === void 0) {
-            const ret = kernel.onResolve(this._deactivateAllViews(null, flags), () => {
-                return this._activateAllViews(null, flags);
+            const ret = kernel.onResolve(this._deactivateAllViews(null), () => {
+                return this._activateAllViews(null);
             });
             if (isPromise(ret)) {
                 ret.catch(rethrow);
@@ -9256,21 +9222,20 @@ class Repeat {
         else {
             const oldLength = this.views.length;
             const $indexMap = runtime.applyMutationsToIndices(indexMap);
-            if ($indexMap.deletedItems.length > 0) {
-                $indexMap.deletedItems.sort(kernel.compareNumber);
-                const ret = kernel.onResolve(this._deactivateAndRemoveViewsByKey($indexMap, flags), () => {
-                    return this._createAndActivateAndSortViewsByKey(oldLength, $indexMap, flags);
+            if ($indexMap.deletedIndices.length > 0) {
+                const ret = kernel.onResolve(this._deactivateAndRemoveViewsByKey($indexMap), () => {
+                    return this._createAndActivateAndSortViewsByKey(oldLength, $indexMap);
                 });
                 if (isPromise(ret)) {
                     ret.catch(rethrow);
                 }
             }
             else {
-                this._createAndActivateAndSortViewsByKey(oldLength, $indexMap, flags);
+                this._createAndActivateAndSortViewsByKey(oldLength, $indexMap);
             }
         }
     }
-    _refreshCollectionObserver(_flags) {
+    _refreshCollectionObserver() {
         const scope = this.$controller.scope;
         let innerItems = this._innerItems;
         let observingInnerItems = this._observingInnerItems;
@@ -9292,7 +9257,7 @@ class Repeat {
             this._observer = undefined;
         }
     }
-    _normalizeToArray(flags) {
+    _normalizeToArray() {
         const items = this.items;
         if (items instanceof Array) {
             this._normalizedItems = items;
@@ -9303,12 +9268,12 @@ class Repeat {
             return;
         }
         const normalizedItems = [];
-        this.forOf.iterate(flags, items, (arr, index, item) => {
+        this.forOf.iterate(0, items, (arr, index, item) => {
             normalizedItems[index] = item;
         });
         this._normalizedItems = normalizedItems;
     }
-    _activateAllViews(initiator, flags) {
+    _activateAllViews(initiator) {
         let promises = void 0;
         let ret;
         let view;
@@ -9316,9 +9281,9 @@ class Repeat {
         const { $controller, _factory: factory, local, _location: location, items } = this;
         const parentScope = $controller.scope;
         const forOf = this.forOf;
-        const newLen = forOf.count(flags, items);
+        const newLen = forOf.count(0, items);
         const views = this.views = Array(newLen);
-        forOf.iterate(flags, items, (arr, i, item) => {
+        forOf.iterate(0, items, (arr, i, item) => {
             view = views[i] = factory.create().setLocation(location);
             view.nodes.unlink();
             if (this._hasDestructuredLocal) {
@@ -9328,7 +9293,7 @@ class Repeat {
                 viewScope = runtime.Scope.fromParent(parentScope, runtime.BindingContext.create(local, item));
             }
             setContextualProperties(viewScope.overrideContext, i, newLen);
-            ret = view.activate(initiator ?? view, $controller, flags, viewScope);
+            ret = view.activate(initiator ?? view, $controller, 0, viewScope);
             if (isPromise(ret)) {
                 (promises ?? (promises = [])).push(ret);
             }
@@ -9339,7 +9304,7 @@ class Repeat {
                 : Promise.all(promises);
         }
     }
-    _deactivateAllViews(initiator, flags) {
+    _deactivateAllViews(initiator) {
         let promises = void 0;
         let ret;
         let view;
@@ -9349,7 +9314,7 @@ class Repeat {
         for (; ii > i; ++i) {
             view = views[i];
             view.release();
-            ret = view.deactivate(initiator ?? view, $controller, flags);
+            ret = view.deactivate(initiator ?? view, $controller, 0);
             if (isPromise(ret)) {
                 (promises ?? (promises = [])).push(ret);
             }
@@ -9360,18 +9325,18 @@ class Repeat {
                 : Promise.all(promises));
         }
     }
-    _deactivateAndRemoveViewsByKey(indexMap, flags) {
+    _deactivateAndRemoveViewsByKey(indexMap) {
         let promises = void 0;
         let ret;
         let view;
         const { $controller, views } = this;
-        const deleted = indexMap.deletedItems;
+        const deleted = indexMap.deletedIndices;
         const deletedLen = deleted.length;
         let i = 0;
         for (; deletedLen > i; ++i) {
             view = views[deleted[i]];
             view.release();
-            ret = view.deactivate(view, $controller, flags);
+            ret = view.deactivate(view, $controller, 0);
             if (isPromise(ret)) {
                 (promises ?? (promises = [])).push(ret);
             }
@@ -9388,7 +9353,7 @@ class Repeat {
                 : Promise.all(promises);
         }
     }
-    _createAndActivateAndSortViewsByKey(oldLength, indexMap, flags) {
+    _createAndActivateAndSortViewsByKey(oldLength, indexMap) {
         let promises = void 0;
         let ret;
         let view;
@@ -9426,7 +9391,7 @@ class Repeat {
                 }
                 setContextualProperties(viewScope.overrideContext, i, newLen);
                 view.setLocation(location);
-                ret = view.activate(view, $controller, flags, viewScope);
+                ret = view.activate(view, $controller, 0, viewScope);
                 if (isPromise(ret)) {
                     (promises ?? (promises = [])).push(ret);
                 }
@@ -9555,7 +9520,7 @@ class With {
         if ($controller.isActive && bindings != null) {
             scope = runtime.Scope.fromParent($controller.scope, newValue === void 0 ? {} : newValue);
             for (ii = bindings.length; ii > i; ++i) {
-                bindings[i].$bind(2, scope);
+                bindings[i].$bind(scope);
             }
         }
     }
@@ -9599,7 +9564,7 @@ exports.Switch = class Switch {
         const view = this.view;
         const $controller = this.$controller;
         this.queue(() => view.activate(initiator, $controller, flags, $controller.scope));
-        this.queue(() => this.swap(initiator, flags, this.value));
+        this.queue(() => this.swap(initiator, this.value));
         return this.promise;
     }
     detaching(initiator, parent, flags) {
@@ -9613,22 +9578,22 @@ exports.Switch = class Switch {
         this.view?.dispose();
         this.view = (void 0);
     }
-    valueChanged(_newValue, _oldValue, flags) {
+    valueChanged(_newValue, _oldValue) {
         if (!this.$controller.isActive) {
             return;
         }
-        this.queue(() => this.swap(null, flags, this.value));
+        this.queue(() => this.swap(null, this.value));
     }
-    caseChanged($case, flags) {
-        this.queue(() => this._handleCaseChange($case, flags));
+    caseChanged($case) {
+        this.queue(() => this._handleCaseChange($case));
     }
-    _handleCaseChange($case, flags) {
-        const isMatch = $case.isMatch(this.value, flags);
+    _handleCaseChange($case) {
+        const isMatch = $case.isMatch(this.value);
         const activeCases = this.activeCases;
         const numActiveCases = activeCases.length;
         if (!isMatch) {
             if (numActiveCases > 0 && activeCases[0].id === $case.id) {
-                return this._clearActiveCases(null, flags);
+                return this._clearActiveCases(null);
             }
             return;
         }
@@ -9649,16 +9614,16 @@ exports.Switch = class Switch {
                 fallThrough = c.fallThrough;
             }
         }
-        return kernel.onResolve(this._clearActiveCases(null, flags, newActiveCases), () => {
+        return kernel.onResolve(this._clearActiveCases(null, newActiveCases), () => {
             this.activeCases = newActiveCases;
-            return this._activateCases(null, flags);
+            return this._activateCases(null);
         });
     }
-    swap(initiator, flags, value) {
+    swap(initiator, value) {
         const newActiveCases = [];
         let fallThrough = false;
         for (const $case of this.cases) {
-            if (fallThrough || $case.isMatch(value, flags)) {
+            if (fallThrough || $case.isMatch(value)) {
                 newActiveCases.push($case);
                 fallThrough = $case.fallThrough;
             }
@@ -9671,16 +9636,16 @@ exports.Switch = class Switch {
             newActiveCases.push(defaultCase);
         }
         return kernel.onResolve(this.activeCases.length > 0
-            ? this._clearActiveCases(initiator, flags, newActiveCases)
+            ? this._clearActiveCases(initiator, newActiveCases)
             : void 0, () => {
             this.activeCases = newActiveCases;
             if (newActiveCases.length === 0) {
                 return;
             }
-            return this._activateCases(initiator, flags);
+            return this._activateCases(initiator);
         });
     }
-    _activateCases(initiator, flags) {
+    _activateCases(initiator) {
         const controller = this.$controller;
         if (!controller.isActive) {
             return;
@@ -9692,11 +9657,11 @@ exports.Switch = class Switch {
         }
         const scope = controller.scope;
         if (length === 1) {
-            return cases[0].activate(initiator, flags, scope);
+            return cases[0].activate(initiator, 0, scope);
         }
-        return kernel.resolveAll(...cases.map(($case) => $case.activate(initiator, flags, scope)));
+        return kernel.resolveAll(...cases.map(($case) => $case.activate(initiator, 0, scope)));
     }
-    _clearActiveCases(initiator, flags, newActiveCases = []) {
+    _clearActiveCases(initiator, newActiveCases = []) {
         const cases = this.activeCases;
         const numCases = cases.length;
         if (numCases === 0) {
@@ -9706,13 +9671,13 @@ exports.Switch = class Switch {
             const firstCase = cases[0];
             if (!newActiveCases.includes(firstCase)) {
                 cases.length = 0;
-                return firstCase.deactivate(initiator, flags);
+                return firstCase.deactivate(initiator, 0);
             }
             return;
         }
         return kernel.onResolve(kernel.resolveAll(...cases.reduce((acc, $case) => {
             if (!newActiveCases.includes($case)) {
-                acc.push($case.deactivate(initiator, flags));
+                acc.push($case.deactivate(initiator, 0));
             }
             return acc;
         }, [])), () => {
@@ -9770,29 +9735,29 @@ exports.Case = class Case {
     detaching(initiator, parent, flags) {
         return this.deactivate(initiator, flags);
     }
-    isMatch(value, flags) {
+    isMatch(value) {
         this._logger.debug('isMatch()');
         const $value = this.value;
         if (Array.isArray($value)) {
             if (this._observer === void 0) {
-                this._observer = this._observeCollection(flags, $value);
+                this._observer = this._observeCollection($value);
             }
             return $value.includes(value);
         }
         return $value === value;
     }
-    valueChanged(newValue, _oldValue, flags) {
+    valueChanged(newValue, _oldValue) {
         if (Array.isArray(newValue)) {
             this._observer?.unsubscribe(this);
-            this._observer = this._observeCollection(flags, newValue);
+            this._observer = this._observeCollection(newValue);
         }
         else if (this._observer !== void 0) {
             this._observer.unsubscribe(this);
         }
-        this.$switch.caseChanged(this, flags);
+        this.$switch.caseChanged(this);
     }
-    handleCollectionChange(_indexMap, flags) {
-        this.$switch.caseChanged(this, flags);
+    handleCollectionChange(_indexMap) {
+        this.$switch.caseChanged(this);
     }
     activate(initiator, flags, scope) {
         let view = this.view;
@@ -9819,7 +9784,7 @@ exports.Case = class Case {
     linkToSwitch(auSwitch) {
         auSwitch.cases.push(this);
     }
-    _observeCollection(flags, $value) {
+    _observeCollection($value) {
         const observer = this._locator.getArrayObserver($value);
         observer.subscribe(this);
         return observer;
@@ -10431,7 +10396,7 @@ class AuCompose {
                                 return kernel.onResolve(compositionCtrl?.deactivate(initiator), () => context);
                             }
                             else {
-                                return kernel.onResolve(result.controller.deactivate(result.controller, this.$controller, 4), () => {
+                                return kernel.onResolve(result.controller.deactivate(result.controller, this.$controller, 2), () => {
                                     result.controller.dispose();
                                     return context;
                                 });
@@ -10480,7 +10445,7 @@ class AuCompose {
         const compose = () => {
             if (vmDef !== null) {
                 const controller = Controller.$el(childCtn, comp, compositionHost, { projections: this._instruction.projections }, vmDef);
-                return new CompositionController(controller, (attachInitiator) => controller.activate(attachInitiator ?? controller, $controller, 2, $controller.scope.parentScope), (deactachInitiator) => kernel.onResolve(controller.deactivate(deactachInitiator ?? controller, $controller, 4), removeCompositionHost), (model) => comp.activate?.(model), context);
+                return new CompositionController(controller, (attachInitiator) => controller.activate(attachInitiator ?? controller, $controller, 1, $controller.scope.parentScope), (deactachInitiator) => kernel.onResolve(controller.deactivate(deactachInitiator ?? controller, $controller, 2), removeCompositionHost), (model) => comp.activate?.(model), context);
             }
             else {
                 const targetDef = CustomElementDefinition.create({
@@ -10498,7 +10463,7 @@ class AuCompose {
                 else {
                     controller.setHost(compositionHost);
                 }
-                return new CompositionController(controller, (attachInitiator) => controller.activate(attachInitiator ?? controller, $controller, 2, scope), (detachInitiator) => controller.deactivate(detachInitiator ?? controller, $controller, 4), (model) => comp.activate?.(model), context);
+                return new CompositionController(controller, (attachInitiator) => controller.activate(attachInitiator ?? controller, $controller, 1, scope), (detachInitiator) => controller.deactivate(detachInitiator ?? controller, $controller, 2), (model) => comp.activate?.(model), context);
             }
         };
         if ('activate' in comp) {
@@ -10948,7 +10913,7 @@ class Aurelia {
         ctn.registerResolver(IEventTarget, new kernel.InstanceProvider('IEventTarget', host));
         parentController = parentController ?? null;
         const view = Controller.$el(ctn, bc, host, null, CustomElementDefinition.create({ name: generateElementName(), template: host, enhance: true }));
-        return kernel.onResolve(view.activate(view, parentController, 2), () => view);
+        return kernel.onResolve(view.activate(view, parentController, 1), () => view);
     }
     async waitForIdle() {
         const platform = this.root.platform;
@@ -11098,7 +11063,7 @@ class DialogController {
             const cmp = this.cmp;
             return kernel.onResolve(cmp.activate?.(model), () => {
                 const ctrlr = this.controller = Controller.$el(container, cmp, contentHost, null, CustomElementDefinition.create(this.getDefinition(cmp) ?? { name: CustomElement.generateName(), template }));
-                return kernel.onResolve(ctrlr.activate(ctrlr, null, 2), () => {
+                return kernel.onResolve(ctrlr.activate(ctrlr, null, 1), () => {
                     dom.overlay.addEventListener(settings.mouseEvent ?? 'click', this);
                     return DialogOpenResult.create(false, this);
                 });
@@ -11125,7 +11090,7 @@ class DialogController {
                     }
                     return DialogCloseResult.create("abort");
                 }
-                return kernel.onResolve(cmp.deactivate?.(dialogResult), () => kernel.onResolve(controller.deactivate(controller, null, 4), () => {
+                return kernel.onResolve(cmp.deactivate?.(dialogResult), () => kernel.onResolve(controller.deactivate(controller, null, 2), () => {
                     dom.dispose();
                     dom.overlay.removeEventListener(mouseEvent ?? 'click', this);
                     if (!rejectOnCancel && status !== "error") {
@@ -11152,7 +11117,7 @@ class DialogController {
     }
     error(value) {
         const closeError = createDialogCloseError(value);
-        return new Promise(r => r(kernel.onResolve(this.cmp.deactivate?.(DialogCloseResult.create("error", closeError)), () => kernel.onResolve(this.controller.deactivate(this.controller, null, 4), () => {
+        return new Promise(r => r(kernel.onResolve(this.cmp.deactivate?.(DialogCloseResult.create("error", closeError)), () => kernel.onResolve(this.controller.deactivate(this.controller, null, 2), () => {
             this.dom.dispose();
             this._reject(closeError);
         }))));

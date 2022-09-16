@@ -124,7 +124,6 @@ class StateBinding {
         this.v = void 0;
         this.P = void 0;
         this.R = 0;
-        this.persistentFlags = 0;
         this.mode = x;
         this.$ = t;
         this.locator = i;
@@ -135,34 +134,34 @@ class StateBinding {
         this.target = h;
         this.targetProperty = r;
     }
-    updateTarget(t, i) {
-        const s = this.targetObserver;
-        const n = this.target;
-        const e = this.targetProperty;
-        const h = this.R++;
-        const r = () => h === this.R - 1;
+    updateTarget(t) {
+        const i = this.targetObserver;
+        const s = this.target;
+        const n = this.targetProperty;
+        const e = this.R++;
+        const h = () => e === this.R - 1;
         this.C();
         if (H(t)) {
             this.P = t.subscribe((t => {
-                if (r()) s.setValue(t, i, n, e);
+                if (h()) i.setValue(t, s, n);
             }));
             return;
         }
         if (t instanceof Promise) {
             void t.then((t => {
-                if (r()) s.setValue(t, i, n, e);
+                if (h()) i.setValue(t, s, n);
             }), (() => {}));
             return;
         }
-        s.setValue(t, i, n, e);
+        i.setValue(t, s, n);
     }
-    $bind(t, i) {
+    $bind(t) {
         if (this.isBound) return;
         this.isBound = true;
         this.targetObserver = this.oL.getAccessor(this.target, this.targetProperty);
-        this.$scope = j(this.A.getState(), i);
+        this.$scope = j(this.A.getState(), t);
         this.A.subscribe(this);
-        this.updateTarget(this.v = this.ast.evaluate(this.$scope, this, this.mode > E ? this : null), 0);
+        this.updateTarget(this.v = this.ast.evaluate(this.$scope, this, this.mode > E ? this : null));
     }
     $unbind() {
         if (!this.isBound) return;
@@ -174,24 +173,23 @@ class StateBinding {
         this.task = null;
         this.A.unsubscribe(this);
     }
-    handleChange(t, i, s) {
+    handleChange(t) {
         if (!this.isBound) return;
-        s |= this.persistentFlags;
-        const n = 1 !== this.$.state && (4 & this.targetObserver.type) > 0;
-        const e = this.obs;
-        e.version++;
+        const i = 1 !== this.$.state && (4 & this.targetObserver.type) > 0;
+        const s = this.obs;
+        s.version++;
         t = this.ast.evaluate(this.$scope, this, this.interceptor);
-        e.clear();
-        let h;
-        if (n) {
-            h = this.task;
+        s.clear();
+        let n;
+        if (i) {
+            n = this.task;
             this.task = this.taskQueue.queueTask((() => {
-                this.interceptor.updateTarget(t, s);
+                this.interceptor.updateTarget(t);
                 this.task = null;
             }), k);
-            h?.cancel();
-            h = null;
-        } else this.interceptor.updateTarget(t, s);
+            n?.cancel();
+            n = null;
+        } else this.interceptor.updateTarget(t);
     }
     handleStateChange(t) {
         const i = this.$scope;
@@ -205,11 +203,11 @@ class StateBinding {
         if (e) {
             h = this.task;
             this.task = this.taskQueue.queueTask((() => {
-                this.interceptor.updateTarget(n, 1);
+                this.interceptor.updateTarget(n);
                 this.task = null;
             }), k);
             h?.cancel();
-        } else this.interceptor.updateTarget(this.v, 0);
+        } else this.interceptor.updateTarget(this.v);
     }
     C() {
         if ("function" === typeof this.P) this.P(); else if (void 0 !== this.P) {
@@ -239,21 +237,21 @@ let L = class StateBindingBehavior extends a {
         this.A = t;
         this.T = i instanceof StateBinding;
     }
-    $bind(t, i) {
-        const s = this.binding;
-        const n = this.T ? i : j(this.A.getState(), i);
+    $bind(t) {
+        const i = this.binding;
+        const s = this.T ? t : j(this.A.getState(), t);
         if (!this.T) this.A.subscribe(this);
-        s.$bind(t, n);
+        i.$bind(s);
     }
-    $unbind(t) {
+    $unbind() {
         if (!this.T) this.A.unsubscribe(this);
-        this.binding.$unbind(t);
+        this.binding.$unbind();
     }
     handleStateChange(t) {
         const i = this.$scope;
         const s = i.overrideContext;
         i.bindingContext = s.bindingContext = s.$state = t;
-        this.binding.handleChange(void 0, void 0, 0);
+        this.binding.handleChange(void 0, void 0);
     }
 };
 
@@ -295,10 +293,10 @@ class StateDispatchBinding {
     handleEvent(t) {
         this.interceptor.callSource(t);
     }
-    $bind(t, i) {
+    $bind(t) {
         if (this.isBound) return;
         this.isBound = true;
-        this.$scope = j(this.A.getState(), i);
+        this.$scope = j(this.A.getState(), t);
         this.target.addEventListener(this.targetProperty, this);
         this.A.subscribe(this);
     }
@@ -395,7 +393,7 @@ class StateBindingInstruction {
 class DispatchBindingInstruction {
     constructor(t, i) {
         this.from = t;
-        this.expr = i;
+        this.ast = i;
         this.type = "sd";
     }
 }
@@ -423,7 +421,7 @@ let J = class DispatchBindingInstructionRenderer {
         this.j = i;
     }
     render(t, i, s) {
-        const n = K(this.ep, s.expr, 8);
+        const n = K(this.ep, s.ast, 8);
         const e = new StateDispatchBinding(t.container, n, i, s.from, this.j);
         t.addBinding(38963 === n.$kind ? b(e, n, t.container) : e);
     }
@@ -482,13 +480,13 @@ let U = class StateGetterBinding {
         }
         i[s] = t;
     }
-    $bind(t, i) {
+    $bind(t) {
         if (this.isBound) return;
-        const s = this.A.getState();
+        const i = this.A.getState();
         this.isBound = true;
-        this.$scope = j(s, i);
+        this.$scope = j(i, t);
         this.A.subscribe(this);
-        this.updateTarget(this.v = this.$get(s));
+        this.updateTarget(this.v = this.$get(i));
     }
     $unbind() {
         if (!this.isBound) return;

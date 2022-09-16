@@ -1,5 +1,4 @@
-import { LifecycleFlags } from '@aurelia/runtime';
-import { IPlatform, IAstBasedBinding, IBindingController } from '@aurelia/runtime-html';
+import { IPlatform, type IAstBasedBinding, type IBindingController } from '@aurelia/runtime-html';
 import i18next from 'i18next';
 import type { IContainer, IServiceLocator } from '@aurelia/kernel';
 import type { Scope, IsExpression, IExpressionParser, IObserverLocator, IObserverLocatorBasedConnectable } from '@aurelia/runtime';
@@ -20,7 +19,7 @@ export declare class TranslationBinding implements IObserverLocatorBasedConnecta
     locator: IServiceLocator;
     interceptor: this;
     isBound: boolean;
-    expr: IsExpression;
+    ast: IsExpression;
     private readonly i18n;
     private scope;
     private task;
@@ -36,9 +35,9 @@ export declare class TranslationBinding implements IObserverLocatorBasedConnecta
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, platform: IPlatform, target: INode);
     static create({ parser, observerLocator, context, controller, target, instruction, platform, isParameterContext, }: TranslationBindingCreationContext): void;
     private static getBinding;
-    $bind(flags: LifecycleFlags, scope: Scope): void;
-    $unbind(flags: LifecycleFlags): void;
-    handleChange(newValue: string | i18next.TOptions, _previousValue: string | i18next.TOptions, flags: LifecycleFlags): void;
+    $bind(scope: Scope): void;
+    $unbind(): void;
+    handleChange(newValue: string | i18next.TOptions, _previousValue: string | i18next.TOptions): void;
     handleLocaleChange(): void;
     useParameter(expr: IsExpression): void;
 }

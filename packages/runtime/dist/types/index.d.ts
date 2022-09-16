@@ -18,6 +18,7 @@ export { ProxyObservable, } from './observation/proxy-observation';
 export { SetterObserver, } from './observation/setter-observer';
 export { ISignaler, } from './observation/signaler';
 export { SubscriberRecord, subscriberCollection, } from './observation/subscriber-collection';
+export { batch, } from './observation/subscriber-batch';
 export { ConnectableSwitcher, } from './observation/connectable-switcher';
 export { LifecycleFlags, type AccessorOrObserver, type IBinding, AccessorType, type Collection, CollectionKind, DelegationStrategy, type IAccessor, type IBindingContext, type ICollectionChangeTracker, type ICollectionObserver, type IConnectable, type IArrayIndexObserver, type ICollectionSubscriber, type IndexMap, type IBatchable, type IObserver, type IObservable, type IOverrideContext, type InterceptorFunc, type ISubscribable, type ISubscriberCollection, type CollectionObserver, type ICollectionSubscriberCollection, type ICollectionSubscribable, type ISubscriber, type ISubscriberRecord, isIndexMap, copyIndexMap, cloneIndexMap, createIndexMap, ICoercionConfiguration, } from './observation';
 //# sourceMappingURL=index.d.ts.map

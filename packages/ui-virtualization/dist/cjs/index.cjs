@@ -148,7 +148,7 @@ class VirtualRepeat {
         if (0 === i) {
             for (c = 0; h > c; ++c) {
                 a = o[c];
-                void a.deactivate(e, e, 4);
+                void a.deactivate(e, e, 2);
                 a.nodes.remove();
             }
             o.length = 0;
@@ -158,7 +158,7 @@ class VirtualRepeat {
         if (h > l) {
             while (h > l) {
                 a = o[h - 1];
-                void a.deactivate(e, e, 4);
+                void a.deactivate(e, e, 2);
                 a.nodes.remove();
                 --h;
             }
@@ -167,7 +167,7 @@ class VirtualRepeat {
         if (h > i) {
             while (h > i) {
                 a = o[h - 1];
-                void a.deactivate(e, e, 4);
+                void a.deactivate(e, e, 2);
                 a.nodes.remove();
                 --h;
             }
@@ -199,7 +199,7 @@ class VirtualRepeat {
                 y.overrideContext.$index = m;
                 y.overrideContext.$length = i;
                 p(y.overrideContext);
-                void a.activate(e, e, 2, y);
+                void a.activate(e, e, 1, y);
             }
         }
         this.C.start(t);
@@ -299,7 +299,7 @@ class VirtualRepeat {
     getViews() {
         return this.views.slice(0);
     }
-    handleCollectionChange(t, s) {
+    handleCollectionChange(t) {
         this.itemsChanged(this.items);
     }
     handleInnerCollectionChange() {
@@ -349,8 +349,8 @@ class CollectionObservationMediator {
         this.repeat = t;
         this.key = s;
     }
-    handleCollectionChange(t, s) {
-        this.repeat[this.key](t, s);
+    handleCollectionChange(t) {
+        this.repeat[this.key](t);
     }
     start(t) {
         if (this.M === t) return;

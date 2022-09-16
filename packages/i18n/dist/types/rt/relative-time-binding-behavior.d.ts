@@ -1,7 +1,7 @@
-import { LifecycleFlags } from '@aurelia/runtime';
-import { BindingWithBehavior } from '../utils';
+import { type BindingBehaviorInstance } from '@aurelia/runtime';
+import { type BindingWithBehavior } from '../utils';
 import type { Scope } from '@aurelia/runtime';
-export declare class RelativeTimeBindingBehavior {
-    bind(flags: LifecycleFlags, _scope: Scope, binding: BindingWithBehavior): void;
+export declare class RelativeTimeBindingBehavior implements BindingBehaviorInstance {
+    bind(_scope: Scope, binding: BindingWithBehavior): void;
 }
 //# sourceMappingURL=relative-time-binding-behavior.d.ts.map

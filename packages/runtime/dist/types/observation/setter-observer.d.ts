@@ -1,4 +1,4 @@
-import { AccessorType, LifecycleFlags } from '../observation';
+import { AccessorType } from '../observation';
 import type { IIndexable } from '@aurelia/kernel';
 import type { IAccessor, InterceptorFunc, ISubscriber, ISubscriberCollection } from '../observation';
 import { FlushQueue, IFlushable, IWithFlushQueue } from './flush-queue';
@@ -15,7 +15,7 @@ export declare class SetterObserver implements IWithFlushQueue, IFlushable {
     private readonly _key;
     constructor(obj: IIndexable, key: string);
     getValue(): unknown;
-    setValue(newValue: unknown, flags: LifecycleFlags): void;
+    setValue(newValue: unknown): void;
     subscribe(subscriber: ISubscriber): void;
     flush(): void;
     start(): this;
@@ -28,7 +28,7 @@ export declare class SetterNotifier implements IAccessor, IWithFlushQueue, IFlus
     readonly queue: FlushQueue;
     constructor(obj: object, callbackKey: PropertyKey, set: InterceptorFunc | undefined, initialValue: unknown);
     getValue(): unknown;
-    setValue(value: unknown, flags: LifecycleFlags): void;
+    setValue(value: unknown): void;
     flush(): void;
 }
 //# sourceMappingURL=setter-observer.d.ts.map

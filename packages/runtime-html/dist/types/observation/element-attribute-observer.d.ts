@@ -1,4 +1,4 @@
-import { LifecycleFlags, AccessorType } from '@aurelia/runtime';
+import { AccessorType } from '@aurelia/runtime';
 import type { IObserver, ISubscriber, ISubscriberCollection, IFlushable, IWithFlushQueue, FlushQueue } from '@aurelia/runtime';
 export interface AttributeObserver extends IObserver, ISubscriber, ISubscriberCollection {
 }
@@ -12,7 +12,7 @@ export declare class AttributeObserver implements AttributeObserver, ElementMuta
     readonly queue: FlushQueue;
     constructor(obj: HTMLElement, prop: string, attr: string);
     getValue(): unknown;
-    setValue(value: unknown, flags: LifecycleFlags): void;
+    setValue(value: unknown): void;
     handleMutation(mutationRecords: MutationRecord[]): void;
     subscribe(subscriber: ISubscriber): void;
     unsubscribe(subscriber: ISubscriber): void;

@@ -44,8 +44,8 @@ function k(t, n) {
 }
 
 let E = class DateFormatBindingBehavior {
-    bind(t, n, i) {
-        k("df", i);
+    bind(t, n) {
+        k("df", n);
     }
 };
 
@@ -217,8 +217,8 @@ let D = class DateFormatValueConverter {
 D = M([ o("df"), A(0, V) ], D);
 
 let F = class NumberFormatBindingBehavior {
-    bind(t, n, i) {
-        k("nf", i);
+    bind(t, n) {
+        k("nf", n);
     }
 };
 
@@ -238,8 +238,8 @@ let j = class NumberFormatValueConverter {
 j = M([ o("nf"), A(0, V) ], j);
 
 let K = class RelativeTimeBindingBehavior {
-    bind(t, n, i) {
-        k("rt", i);
+    bind(t, n) {
+        k("rt", n);
     }
 };
 
@@ -259,11 +259,11 @@ let S = class RelativeTimeValueConverter {
 S = M([ o("rt"), A(0, V) ], S);
 
 let W = class TranslationBindingBehavior {
-    bind(t, n, i) {
-        const s = i.ast.expression;
-        if (!(s instanceof T)) {
-            const t = new T(s, "t", i.ast.args);
-            i.ast.expression = t;
+    bind(t, n) {
+        const i = n.ast.expression;
+        if (!(i instanceof T)) {
+            const t = new T(i, "t", n.ast.args);
+            n.ast.expression = t;
         }
     }
 };
@@ -311,7 +311,7 @@ class TranslationBinding {
         const l = "string" === typeof r.from ? t.parse(r.from, 8) : r.from;
         if (a) h.useParameter(l); else {
             const n = l instanceof y ? t.parse(l.value, 1) : void 0;
-            h.expr = n || l;
+            h.ast = n || l;
         }
     }
     static getBinding({observerLocator: t, context: n, controller: i, target: s, platform: e}) {
@@ -322,21 +322,21 @@ class TranslationBinding {
         }
         return r;
     }
-    $bind(t, n) {
+    $bind(t) {
         if (this.isBound) return;
-        if (!this.expr) throw new Error("key expression is missing");
-        this.scope = n;
-        this.I = this.expr instanceof C;
-        this.P = this.expr.evaluate(n, this, this);
+        if (!this.ast) throw new Error("key expression is missing");
+        this.scope = t;
+        this.I = this.ast instanceof C;
+        this.P = this.ast.evaluate(t, this, this);
         this.M();
-        this.parameter?.$bind(t, n);
-        this.A(t);
+        this.parameter?.$bind(t);
+        this.A();
         this.isBound = true;
     }
-    $unbind(t) {
+    $unbind() {
         if (!this.isBound) return;
-        if (this.expr.hasUnbind) this.expr.unbind(t, this.scope, this);
-        this.parameter?.$unbind(t);
+        if (this.ast.hasUnbind) this.ast.unbind(this.scope, this);
+        this.parameter?.$unbind();
         this.C.clear();
         if (null !== this.task) {
             this.task.cancel();
@@ -345,48 +345,48 @@ class TranslationBinding {
         this.scope = void 0;
         this.obs.clearAll();
     }
-    handleChange(t, n, i) {
+    handleChange(t, n) {
         this.obs.version++;
-        this.P = this.I ? this.expr.evaluate(this.scope, this, this) : t;
+        this.P = this.I ? this.ast.evaluate(this.scope, this, this) : t;
         this.obs.clear();
         this.M();
-        this.A(i);
+        this.A();
     }
     handleLocaleChange() {
-        this.A(0);
+        this.A();
     }
     useParameter(t) {
         if (null != this.parameter) throw new Error("This translation parameter has already been specified.");
-        this.parameter = new ParameterBinding(this, t, (t => this.A(t)));
+        this.parameter = new ParameterBinding(this, t, (() => this.A()));
     }
-    A(t) {
-        const n = this.i18n.evaluate(this.P, this.parameter?.value);
-        const i = Object.create(null);
-        const s = [];
-        const e = this.task;
+    A() {
+        const t = this.i18n.evaluate(this.P, this.parameter?.value);
+        const n = Object.create(null);
+        const i = [];
+        const s = this.task;
         this.C.clear();
-        for (const e of n) {
-            const n = e.value;
-            const r = this.L(e.attributes);
-            for (const e of r) if (this.R(e)) i[e] = n; else {
-                const i = h.for(this.target, U);
-                const r = i?.viewModel ? this.oL.getAccessor(i.viewModel, e) : this.oL.getAccessor(this.target, e);
-                const o = 1 !== this.T.state && (4 & r.type) > 0;
-                if (o) s.push(new AccessorUpdateTask(r, n, t, this.target, e)); else r.setValue(n, t, this.target, e);
-                this.C.add(r);
+        for (const s of t) {
+            const t = s.value;
+            const e = this.L(s.attributes);
+            for (const s of e) if (this.R(s)) n[s] = t; else {
+                const n = h.for(this.target, U);
+                const e = n?.viewModel ? this.oL.getAccessor(n.viewModel, s) : this.oL.getAccessor(this.target, s);
+                const r = 1 !== this.T.state && (4 & e.type) > 0;
+                if (r) i.push(new AccessorUpdateTask(e, t, this.target, s)); else e.setValue(t, this.target, s);
+                this.C.add(e);
             }
         }
-        let r = false;
-        if (Object.keys(i).length > 0) {
-            r = 1 !== this.T.state;
-            if (!r) this.N(i, t);
+        let e = false;
+        if (Object.keys(n).length > 0) {
+            e = 1 !== this.T.state;
+            if (!e) this.N(n);
         }
-        if (s.length > 0 || r) this.task = this.taskQueue.queueTask((() => {
+        if (i.length > 0 || e) this.task = this.taskQueue.queueTask((() => {
             this.task = null;
-            for (const t of s) t.run();
-            if (r) this.N(i, t);
+            for (const t of i) t.run();
+            if (e) this.N(n);
         }), G);
-        e?.cancel();
+        s?.cancel();
     }
     L(t) {
         if (0 === t.length) t = "IMG" === this.target.tagName ? [ "src" ] : [ "textContent" ];
@@ -399,14 +399,14 @@ class TranslationBinding {
     R(t) {
         return this.B.includes(t);
     }
-    N(t, n) {
-        const s = i(this.target.childNodes);
-        const e = [];
-        const r = "au-i18n";
-        for (const t of s) if (!Reflect.get(t, r)) e.push(t);
-        const o = this.$(t, r, e);
+    N(t) {
+        const n = i(this.target.childNodes);
+        const s = [];
+        const e = "au-i18n";
+        for (const t of n) if (!Reflect.get(t, e)) s.push(t);
+        const r = this.$(t, e, s);
         this.target.innerHTML = "";
-        for (const t of i(o.content.childNodes)) this.target.appendChild(t);
+        for (const t of i(r.content.childNodes)) this.target.appendChild(t);
     }
     $(t, n, i) {
         const s = this.platform.document.createElement("template");
@@ -435,45 +435,44 @@ class TranslationBinding {
 }
 
 class AccessorUpdateTask {
-    constructor(t, n, i, s, e) {
+    constructor(t, n, i, s) {
         this.accessor = t;
         this.v = n;
-        this.f = i;
-        this.el = s;
-        this.attr = e;
+        this.el = i;
+        this.attr = s;
     }
     run() {
-        this.accessor.setValue(this.v, this.f, this.el, this.attr);
+        this.accessor.setValue(this.v, this.el, this.attr);
     }
 }
 
 class ParameterBinding {
     constructor(t, n, i) {
         this.owner = t;
-        this.expr = n;
+        this.ast = n;
         this.updater = i;
         this.interceptor = this;
         this.isBound = false;
         this.oL = t.oL;
         this.locator = t.locator;
     }
-    handleChange(t, n, i) {
+    handleChange(t, n) {
         if (!this.isBound) return;
         this.obs.version++;
-        this.value = this.expr.evaluate(this.scope, this, this);
+        this.value = this.ast.evaluate(this.scope, this, this);
         this.obs.clear();
-        this.updater(i);
+        this.updater();
     }
-    $bind(t, n) {
+    $bind(t) {
         if (this.isBound) return;
-        this.scope = n;
-        if (this.expr.hasBind) this.expr.bind(t, n, this);
-        this.value = this.expr.evaluate(n, this, this);
+        this.scope = t;
+        if (this.ast.hasBind) this.ast.bind(t, this);
+        this.value = this.ast.evaluate(t, this, this);
         this.isBound = true;
     }
-    $unbind(t) {
+    $unbind() {
         if (!this.isBound) return;
-        if (this.expr.hasUnbind) this.expr.unbind(t, this.scope, this);
+        if (this.ast.hasUnbind) this.ast.unbind(this.scope, this);
         this.scope = void 0;
         this.obs.clearAll();
     }

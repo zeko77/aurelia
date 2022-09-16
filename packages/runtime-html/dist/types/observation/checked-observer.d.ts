@@ -1,8 +1,8 @@
-import { LifecycleFlags, SetterObserver, AccessorType } from '@aurelia/runtime';
+import { SetterObserver, AccessorType } from '@aurelia/runtime';
 import type { INode } from '../dom';
 import type { EventSubscriber } from './event-delegator';
 import type { ValueAttributeObserver } from './value-attribute-observer';
-import type { IndexMap, ISubscriber, ISubscriberCollection, IObserver, IObserverLocator, IFlushable, IWithFlushQueue, FlushQueue } from '@aurelia/runtime';
+import type { ISubscriber, ISubscriberCollection, IObserver, IObserverLocator, IFlushable, IWithFlushQueue, FlushQueue } from '@aurelia/runtime';
 export interface IInputElement extends HTMLInputElement {
     model?: unknown;
     $observers?: {
@@ -20,9 +20,9 @@ export declare class CheckedObserver implements IObserver, IFlushable, IWithFlus
     readonly queue: FlushQueue;
     constructor(obj: INode, _key: PropertyKey, handler: EventSubscriber, observerLocator: IObserverLocator);
     getValue(): unknown;
-    setValue(newValue: unknown, flags: LifecycleFlags): void;
-    handleCollectionChange(_indexMap: IndexMap, _flags: LifecycleFlags): void;
-    handleChange(_newValue: unknown, _previousValue: unknown, _flags: LifecycleFlags): void;
+    setValue(newValue: unknown): void;
+    handleCollectionChange(): void;
+    handleChange(_newValue: unknown, _previousValue: unknown): void;
     handleEvent(): void;
     start(): void;
     stop(): void;

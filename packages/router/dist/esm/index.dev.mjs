@@ -2403,7 +2403,7 @@ class Viewport extends Endpoint$1 {
             return;
         }
         const manualDispose = this.router.statefulHistory || (this.options.stateful ?? false);
-        return Runner.run(step, () => coordinator.addEndpointState(this, 'bound'), () => coordinator.waitForSyncState('bound'), (innerStep) => this.deactivate(innerStep, null, this.connectedController, manualDispose ? 0 : 16), () => manualDispose ? this.dispose() : void 0);
+        return Runner.run(step, () => coordinator.addEndpointState(this, 'bound'), () => coordinator.waitForSyncState('bound'), (innerStep) => this.deactivate(innerStep, null, this.connectedController, manualDispose ? 0 : 4), () => manualDispose ? this.dispose() : void 0);
     }
     activate(step, initiator, parent, flags, coordinator) {
         if (this.activeContent.componentInstance !== null) {
@@ -2851,6 +2851,17 @@ class RoutingInstruction {
     typeParameters(context) {
         return this.parameters.toSpecifiedParameters(context, this.component.type?.parameters ?? []);
     }
+    sameRoute(other) {
+        const thisRoute = this.route?.match;
+        const otherRoute = other.route?.match;
+        if (thisRoute == null || otherRoute == null) {
+            return false;
+        }
+        if (typeof thisRoute === 'string' || typeof otherRoute === 'string') {
+            return thisRoute === otherRoute;
+        }
+        return thisRoute.id === otherRoute.id;
+    }
     sameComponent(context, other, compareParameters = false, compareType = false) {
         if (compareParameters && !this.sameParameters(context, other, compareType)) {
             return false;
@@ -2929,8 +2940,15 @@ class RoutingInstruction {
     }
     isIn(context, searchIn, deep) {
         const matching = searchIn.filter(instruction => {
-            if (!instruction.sameComponent(context, this)) {
-                return false;
+            if (this.route != null || instruction.route != null) {
+                if (!instruction.sameRoute(this)) {
+                    return false;
+                }
+            }
+            else {
+                if (!instruction.sameComponent(context, this)) {
+                    return false;
+                }
             }
             const instructionType = instruction.component.type ?? this.component.type;
             const thisType = this.component.type ?? instruction.component.type;
@@ -5610,7 +5628,7 @@ let LoadCustomAttribute = class LoadCustomAttribute {
         this.router = router;
         this.linkHandler = linkHandler;
         this.ea = ea;
-        this.separateProperties = false;
+        this._separateProperties = false;
         this.hasHref = null;
         this.navigationEndHandler = (_navigation) => {
             void this.updateActive();
@@ -5619,7 +5637,7 @@ let LoadCustomAttribute = class LoadCustomAttribute {
     }
     binding() {
         if (this.value == null) {
-            this.separateProperties = true;
+            this._separateProperties = true;
         }
         this.element.addEventListener('click', this.linkHandler);
         this.updateValue();
@@ -5635,7 +5653,7 @@ let LoadCustomAttribute = class LoadCustomAttribute {
         void this.updateActive();
     }
     updateValue() {
-        if (this.separateProperties) {
+        if (this._separateProperties) {
             this.value = {
                 component: this.component,
                 parameters: this.parameters,
@@ -5648,9 +5666,9 @@ let LoadCustomAttribute = class LoadCustomAttribute {
         }
         if (!this.hasHref) {
             let value = this.value;
-            if (typeof this.value !== 'string') {
-                const instruction = RoutingInstruction.from(this.router, this.value).shift();
-                const found = this.findRoute(this.value);
+            if (typeof value !== 'string') {
+                const instruction = RoutingInstruction.from(this.router, value).shift();
+                const found = this._findRoute(value);
                 if (found.foundConfiguration) {
                     instruction.route = found.matching;
                 }
@@ -5665,18 +5683,14 @@ let LoadCustomAttribute = class LoadCustomAttribute {
     async updateActive() {
         const controller = CustomAttribute.for(this.element, 'load').parent;
         const routeValue = typeof this.value === 'string' ? { id: this.value, path: this.value } : this.value;
-        const found = this.findRoute(routeValue);
+        const found = this._findRoute(routeValue);
         const instructions = found.foundConfiguration
             ? found.instructions
             : getConsideredActiveInstructions(this.router, controller, this.element, this.value);
         const element = getLoadIndicator(this.element);
-        const unresolvedPromise = RoutingInstruction.resolve(instructions);
-        if (unresolvedPromise instanceof Promise) {
-            await unresolvedPromise;
-        }
         element.classList.toggle(this.activeClass, this.router.checkActive(instructions, { context: controller }));
     }
-    findRoute(value) {
+    _findRoute(value) {
         if (typeof value === 'string') {
             return new FoundRoute();
         }

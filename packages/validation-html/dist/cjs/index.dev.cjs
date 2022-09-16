@@ -494,12 +494,12 @@ exports.ValidateBindingBehavior = class ValidateBindingBehavior extends runtimeH
         }
         this._setPropertyBinding();
     }
-    updateSource(value, flags) {
+    updateSource(value) {
         if (this.interceptor !== this) {
-            this.interceptor.updateSource(value, flags);
+            this.interceptor.updateSource(value);
         }
         else {
-            this.propertyBinding.updateSource(value, flags);
+            this.propertyBinding.updateSource(value);
         }
         this.isDirty = true;
         const event = this.triggerEvent;
@@ -512,14 +512,14 @@ exports.ValidateBindingBehavior = class ValidateBindingBehavior extends runtimeH
             this.validateBinding();
         }
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         this.scope = scope;
-        this.binding.$bind(flags, scope);
+        this.binding.$bind(scope);
         this._setTarget();
-        const delta = this._processBindingExpressionArgs(flags);
+        const delta = this._processBindingExpressionArgs();
         this._processDelta(delta);
     }
-    $unbind(flags) {
+    $unbind() {
         this.task?.cancel();
         this.task = null;
         const event = this.triggerEvent;
@@ -528,15 +528,15 @@ exports.ValidateBindingBehavior = class ValidateBindingBehavior extends runtimeH
         }
         this.controller?.removeSubscriber(this);
         this.controller?.unregisterBinding(this.propertyBinding);
-        this.binding.$unbind(flags);
+        this.binding.$unbind();
     }
-    handleTriggerChange(newValue, _previousValue, _flags) {
+    handleTriggerChange(newValue, _previousValue) {
         this._processDelta(new ValidateArgumentsDelta(void 0, this._ensureTrigger(newValue), void 0));
     }
-    handleControllerChange(newValue, _previousValue, _flags) {
+    handleControllerChange(newValue, _previousValue) {
         this._processDelta(new ValidateArgumentsDelta(this._ensureController(newValue), void 0, void 0));
     }
-    handleRulesChange(newValue, _previousValue, _flags) {
+    handleRulesChange(newValue, _previousValue) {
         this._processDelta(new ValidateArgumentsDelta(void 0, void 0, this._ensureRules(newValue)));
     }
     handleValidationEvent(event) {
@@ -550,7 +550,7 @@ exports.ValidateBindingBehavior = class ValidateBindingBehavior extends runtimeH
             return;
         this.validatedOnce = event.addedResults.find((r) => r.result.propertyName === propertyName) !== void 0;
     }
-    _processBindingExpressionArgs(_flags) {
+    _processBindingExpressionArgs() {
         const scope = this.scope;
         let rules;
         let trigger;
@@ -703,8 +703,8 @@ class BindingMediator {
     $unbind() {
         throw new Error(`AUR0214: Method not implemented.`);
     }
-    handleChange(newValue, previousValue, flags) {
-        this.binding[this.key](newValue, previousValue, flags);
+    handleChange(newValue, previousValue) {
+        this.binding[this.key](newValue, previousValue);
     }
 }
 runtime.connectable()(BindingMediator);

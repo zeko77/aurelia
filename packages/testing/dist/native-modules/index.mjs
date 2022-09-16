@@ -2,7 +2,7 @@ import { noop as e, isArrayIndex as t, DI as n, Registration as i, kebabCase as 
 
 import { IObserverLocator as l, FlushQueue as u, IDirtyChecker as c, INodeObserverLocator as f, Scope as h, OverrideContext as d } from "../../../runtime/dist/native-modules/index.mjs";
 
-import { StandardConfiguration as p, IPlatform as m, ITemplateCompiler as g, CustomElement as b, CustomAttribute as v, Aurelia as y, valueConverter as $, bindable as x, customElement as w } from "../../../runtime-html/dist/native-modules/index.mjs";
+import { StandardConfiguration as p, IPlatform as m, ITemplateCompiler as g, CustomElement as b, CustomAttribute as v, Aurelia as $, valueConverter as y, bindable as x, customElement as w } from "../../../runtime-html/dist/native-modules/index.mjs";
 
 import { BrowserPlatform as k } from "../../../platform-browser/dist/native-modules/index.mjs";
 
@@ -128,11 +128,11 @@ function ve(e) {
     return e instanceof Number;
 }
 
-function ye(e) {
+function $e(e) {
     return e instanceof String;
 }
 
-function $e(e) {
+function ye(e) {
     return e instanceof Boolean;
 }
 
@@ -141,7 +141,7 @@ function xe(e) {
 }
 
 function we(e) {
-    return ve(e) || ye(e) || $e(e) || xe(e);
+    return ve(e) || $e(e) || ye(e) || xe(e);
 }
 
 function ke(e) {
@@ -450,8 +450,8 @@ function st(e, t) {
 
 function ot(e, t) {
     if (ve(e)) return ve(t) && L(Z(e), Z(t));
-    if (ye(e)) return ye(t) && te(e) === te(t);
-    if ($e(e)) return $e(t) && X(e) === X(t);
+    if ($e(e)) return $e(t) && te(e) === te(t);
+    if (ye(e)) return ye(t) && X(e) === X(t);
     return xe(t) && ee(e) === ee(t);
 }
 
@@ -678,7 +678,7 @@ function vt(e, t) {
     return lt(e, t, false);
 }
 
-function yt(e, t) {
+function $t(e, t) {
     return lt(e, t, true);
 }
 
@@ -778,12 +778,12 @@ class TestContext {
     }
 }
 
-let $t;
+let yt;
 
 let xt;
 
 function wt(e) {
-    $t = e;
+    yt = e;
     xt = i.instance(m, e);
 }
 
@@ -1365,7 +1365,7 @@ function vn(e, n, i, r, a, s) {
     return a;
 }
 
-function yn(e, t) {
+function $n(e, t) {
     const n = new Uint8Array(t);
     let i = _e(n.slice(0, Math.min(e.maxArrayLength, n.length)).map((e => e.toString(16))), " ");
     const r = n.length - e.maxArrayLength;
@@ -1373,7 +1373,7 @@ function yn(e, t) {
     return [ `${e.stylize("[Uint8Contents]", "special")}: <${i}>` ];
 }
 
-function $n(e, t, n) {
+function yn(e, t, n) {
     const i = t.length;
     const r = Math.min(Math.max(0, e.maxArrayLength), i);
     const a = i - r;
@@ -1562,7 +1562,7 @@ function qn(e, t, n, i) {
             u = [ `${"Array " === n ? "" : n}[`, "]" ];
             if (0 === t.length && 0 === r.length) return `${u[0]}]`;
             h = It;
-            l = $n;
+            l = yn;
         } else if (me(t)) {
             r = sn(t, e.showHidden);
             const n = rn(a, s, "Set");
@@ -1630,7 +1630,7 @@ function qn(e, t, n, i) {
         } else if (ce(t)) {
             const n = ue(t) ? "ArrayBuffer" : "SharedArrayBuffer";
             const o = rn(a, s, n);
-            if (void 0 === i) l = yn; else if (0 === r.length) return `${o}{ byteLength: ${mn(e.stylize, t.byteLength)} }`;
+            if (void 0 === i) l = $n; else if (0 === r.length) return `${o}{ byteLength: ${mn(e.stylize, t.byteLength)} }`;
             u[0] = `${o}{`;
             r.unshift("byteLength");
         } else if (Te(t)) {
@@ -1650,11 +1650,11 @@ function qn(e, t, n, i) {
             if (ve(t)) {
                 o = `[Number: ${an(Z(t), e)}]`;
                 n = "number";
-            } else if (ye(t)) {
+            } else if ($e(t)) {
                 o = `[String: ${an(te(t), e)}]`;
                 n = "string";
                 r = r.slice(t.length);
-            } else if ($e(t)) {
+            } else if (ye(t)) {
                 o = `[Boolean: ${an(X(t), e)}]`;
                 n = "boolean";
             } else {
@@ -1685,7 +1685,7 @@ function qn(e, t, n, i) {
     try {
         d = l(e, t, n, r, u);
         let i;
-        const a = null != $t?.Node && !(t instanceof $t.Node);
+        const a = null != yt?.Node && !(t instanceof yt.Node);
         for (f = 0; f < r.length; f++) {
             i = r[f];
             if ((a || "textContent" === i || "outerHTML" === i) && "$$calls" !== i) d.push(Mn(e, t, n, r[f], h));
@@ -1922,7 +1922,7 @@ class Comparison {
 }
 
 function Wn(e, t, n, i, r) {
-    if (!(n in e) || !yt(e[n], t[n])) {
+    if (!(n in e) || !$t(e[n], t[n])) {
         if (!i) {
             const n = new Comparison(e, r);
             const i = new Comparison(t, r, e);
@@ -2219,28 +2219,28 @@ function vi(e, t, n) {
     });
 }
 
-function yi(e, t, n) {
+function $i(e, t, n) {
     if (vt(e, t)) Hn({
         actual: e,
         expected: t,
         message: n,
         operator: "notDeepEqual",
-        stackStartFn: yi
-    });
-}
-
-function $i(e, t, n) {
-    if (!yt(e, t)) Hn({
-        actual: e,
-        expected: t,
-        message: n,
-        operator: "deepStrictEqual",
         stackStartFn: $i
     });
 }
 
+function yi(e, t, n) {
+    if (!$t(e, t)) Hn({
+        actual: e,
+        expected: t,
+        message: n,
+        operator: "deepStrictEqual",
+        stackStartFn: yi
+    });
+}
+
 function xi(e, t, n) {
-    if (yt(e, t)) Hn({
+    if ($t(e, t)) Hn({
         actual: e,
         expected: t,
         message: n,
@@ -2309,7 +2309,7 @@ function Ei(e, t) {
     });
 }
 
-function ji(e, t = $t.document) {
+function ji(e, t = yt.document) {
     return "string" === typeof e ? t.querySelector(e) : e;
 }
 
@@ -2351,7 +2351,7 @@ function Mi(e, t, n, i, r = true) {
 }
 
 function qi(e, t) {
-    const n = $t.window.getComputedStyle(e);
+    const n = yt.window.getComputedStyle(e);
     for (const [e, i] of Object.entries(t)) {
         const t = n[e];
         if (t !== i) return {
@@ -2472,8 +2472,8 @@ const Fi = T({
     lessThanOrEqualTo: gi,
     notEqual: bi,
     deepEqual: vi,
-    notDeepEqual: yi,
-    deepStrictEqual: $i,
+    notDeepEqual: $i,
+    deepStrictEqual: yi,
     notDeepStrictEqual: xi,
     strictEqual: wi,
     notStrictEqual: ki,
@@ -2484,7 +2484,7 @@ const Fi = T({
     isCustomElementType: Oi,
     isCustomAttributeType: Ei,
     strict: {
-        deepEqual: $i,
+        deepEqual: yi,
         notDeepEqual: xi,
         equal: wi,
         notEqual: ki
@@ -3582,7 +3582,7 @@ function* Wi(e) {
 }
 
 function _i(e, t = null, ...n) {
-    const i = $t.document;
+    const i = yt.document;
     const r = i.createElement(e);
     for (const e in t) if ("class" === e || "className" === e || "cls" === e) {
         let n = t[e];
@@ -3608,7 +3608,7 @@ const Yi = {
 };
 
 const Ki = function(e, t, ...n) {
-    const i = this || $t.document;
+    const i = this || yt.document;
     const a = i.createElement("let$" === e ? "let" : e);
     if (null != t) {
         let e;
@@ -3637,7 +3637,7 @@ const Ki = function(e, t, ...n) {
     const s = null != a.content ? a.content : a;
     for (const e of n) {
         if (null == e) continue;
-        if (Array.isArray(e)) for (const t of e) s.appendChild(t instanceof $t.Node ? t : i.createTextNode(`${t}`)); else s.appendChild(e instanceof $t.Node ? e : i.createTextNode(`${e}`));
+        if (Array.isArray(e)) for (const t of e) s.appendChild(t instanceof yt.Node ? t : i.createTextNode(`${t}`)); else s.appendChild(e instanceof yt.Node ? e : i.createTextNode(`${e}`));
     }
     return a;
 };
@@ -3660,7 +3660,7 @@ function Zi(e, t, n = [], i = true, r = TestContext.create()) {
     a.register(...n);
     const c = r.doc.body.appendChild(r.createElement("div"));
     const f = c.appendChild(r.createElement("app"));
-    const h = new y(a);
+    const h = new $(a);
     const d = "function" === typeof t ? t : null == t ? class {} : function e() {
         Object.setPrototypeOf(t, e.prototype);
         return t;
@@ -3677,13 +3677,13 @@ function Zi(e, t, n = [], i = true, r = TestContext.create()) {
     }, d);
     if (a.has(g, true)) throw new Error("Container of the context contains instance of the application root component. " + "Consider using a different class, or context as it will likely cause surprises in tests.");
     const v = a.get(g);
-    let $;
+    let y;
     if (i) try {
         h.app({
             host: f,
             component: v
         });
-        $ = h.start();
+        y = h.start();
     } catch (e) {
         try {
             const e = () => {
@@ -3723,17 +3723,27 @@ function Zi(e, t, n = [], i = true, r = TestContext.create()) {
     function E(e, t) {
         if (2 === arguments.length) {
             const n = S(e);
-            if (null === n) throw new Error(`No element found for selector "${e}" to compare innerHTML with "${t}"`);
+            if (null === n) throw new Error(`No element found for selector "${e}" to compare innerHTML against "${t}"`);
             Fi.strictEqual(n.innerHTML, t);
         } else Fi.strictEqual(f.innerHTML, e);
     }
     function j(e, t, n) {
         const i = S(e);
+        if (null === i) throw new Error(`No element found for selector "${e}" to compare attribute against "${n}"`);
+        Fi.strictEqual(i.getAttribute(t), n);
+    }
+    function A(e, t) {
+        const n = S(e);
+        if (null === n) throw new Error(`No element found for selector "${e}" to compare value against "${t}"`);
+        Fi.strictEqual(n.value, t);
+    }
+    function R(e, t, n) {
+        const i = S(e);
         if (null === i) throw new Error(`No element found for selector "${e}" to fire event "${t}"`);
         i.dispatchEvent(new r.CustomEvent(t, n));
     }
     [ "click", "change", "input", "scroll" ].forEach((e => {
-        Object.defineProperty(j, e, {
+        Object.defineProperty(R, e, {
             configurable: true,
             writable: true,
             value: (t, n) => {
@@ -3743,7 +3753,7 @@ function Zi(e, t, n = [], i = true, r = TestContext.create()) {
             }
         });
     }));
-    const A = (e, t) => {
+    const M = (e, t) => {
         const n = S(e);
         if (null === n) throw new Error(`No element found for selector "${e}" to scroll by "${JSON.stringify(t)}"`);
         n.scrollBy("number" === typeof t ? {
@@ -3751,12 +3761,12 @@ function Zi(e, t, n = [], i = true, r = TestContext.create()) {
         } : t);
         n.dispatchEvent(new Event("scroll"));
     };
-    const R = e => {
+    const q = e => {
         r.platform.domWriteQueue.flush(e);
     };
-    const M = new class Results {
+    const L = new class Results {
         constructor() {
-            this.startPromise = $;
+            this.startPromise = y;
             this.ctx = r;
             this.host = r.doc.firstElementChild;
             this.container = a;
@@ -3773,9 +3783,11 @@ function Zi(e, t, n = [], i = true, r = TestContext.create()) {
             this.queryBy = S;
             this.assertText = O;
             this.assertHtml = E;
-            this.trigger = j;
-            this.scrollBy = A;
-            this.flush = R;
+            this.assertAttr = j;
+            this.assertValue = A;
+            this.trigger = R;
+            this.scrollBy = M;
+            this.flush = q;
         }
         async start() {
             await h.app({
@@ -3799,12 +3811,12 @@ function Zi(e, t, n = [], i = true, r = TestContext.create()) {
             return x > 0;
         }
         get started() {
-            if ($ instanceof Promise) return Promise.resolve($).then((() => this));
+            if (y instanceof Promise) return Promise.resolve(y).then((() => this));
             return Promise.resolve(this);
         }
     };
-    Qi.publish("fixture:created", M);
-    return M;
+    Qi.publish("fixture:created", L);
+    return L;
 }
 
 class FixtureBuilder {
@@ -3848,17 +3860,17 @@ class MockBinding {
         this.trace("get", e);
         return null;
     }
-    updateTarget(e, t) {
-        this.trace("updateTarget", e, t);
+    updateTarget(e) {
+        this.trace("updateTarget", e);
     }
-    updateSource(e, t) {
-        this.trace("updateSource", e, t);
+    updateSource(e) {
+        this.trace("updateSource", e);
     }
-    handleChange(e, t, n) {
-        this.trace("handleChange", e, t, n);
+    handleChange(e, t) {
+        this.trace("handleChange", e, t);
     }
-    handleCollectionChange(e, t) {
-        this.trace("handleCollectionChange", e, t);
+    handleCollectionChange(e) {
+        this.trace("handleCollectionChange", e);
     }
     observe(e, t) {
         this.trace("observe", e, t);
@@ -3869,11 +3881,11 @@ class MockBinding {
     subscribeTo(e) {
         this.trace("subscribeTo", e);
     }
-    $bind(e, t) {
-        this.trace("$bind", e, t);
+    $bind(e) {
+        this.trace("$bind", e);
     }
-    $unbind(e) {
-        this.trace("$unbind", e);
+    $unbind() {
+        this.trace("$unbind");
     }
     trace(e, ...t) {
         this.calls.push([ e, ...t ]);
@@ -3887,11 +3899,11 @@ class MockBindingBehavior {
     constructor() {
         this.calls = [];
     }
-    bind(e, t, n, ...i) {
-        this.trace("bind", e, t, n, ...i);
+    bind(e, t, ...n) {
+        this.trace("bind", e, t, ...n);
     }
-    unbind(e, t, n, ...i) {
-        this.trace("unbind", e, t, n, ...i);
+    unbind(e, t, ...n) {
+        this.trace("unbind", e, t, ...n);
     }
     trace(e, ...t) {
         this.calls.push([ e, ...t ]);
@@ -3934,8 +3946,8 @@ class MockPropertySubscriber {
     constructor() {
         this.calls = [];
     }
-    handleChange(e, t, n) {
-        this.trace(`handleChange`, e, t, n);
+    handleChange(e, t) {
+        this.trace(`handleChange`, e, t);
     }
     trace(e, ...t) {
         this.calls.push([ e, ...t ]);
@@ -4087,11 +4099,10 @@ class MockBrowserHistoryLocation {
 }
 
 class ChangeSet {
-    constructor(e, t, n, i) {
+    constructor(e, t, n) {
         this.index = e;
-        this.flags = t;
-        this.O = n;
-        this.ov = i;
+        this.O = t;
+        this.ov = n;
     }
     get newValue() {
         return this.O;
@@ -4126,10 +4137,9 @@ class ProxyChangeSet {
 }
 
 class CollectionChangeSet {
-    constructor(e, t, n) {
+    constructor(e, t) {
         this.index = e;
-        this.flags = t;
-        this.j = n;
+        this.j = t;
     }
     get indexMap() {
         return this.j;
@@ -4147,15 +4157,15 @@ class SpySubscriber {
         this.q = 0;
     }
     get changes() {
-        if (void 0 === this.A) return a;
+        if (void 0 === this.A) return [];
         return this.A;
     }
     get proxyChanges() {
-        if (void 0 === this.R) return a;
+        if (void 0 === this.R) return [];
         return this.R;
     }
     get collectionChanges() {
-        if (void 0 === this.M) return a;
+        if (void 0 === this.M) return [];
         return this.M;
     }
     get hasChanges() {
@@ -4170,14 +4180,11 @@ class SpySubscriber {
     get callCount() {
         return this.q;
     }
-    handleChange(e, t, n) {
-        if (void 0 === this.A) this.A = [ new ChangeSet(this.q++, n, e, t) ]; else this.A.push(new ChangeSet(this.q++, n, e, t));
+    handleChange(e, t) {
+        if (void 0 === this.A) this.A = [ new ChangeSet(this.q++, e, t) ]; else this.A.push(new ChangeSet(this.q++, e, t));
     }
-    handleProxyChange(e, t, n, i) {
-        if (void 0 === this.R) this.R = [ new ProxyChangeSet(this.q++, i, e, t, n) ]; else this.R.push(new ProxyChangeSet(this.q++, i, e, t, n));
-    }
-    handleCollectionChange(e, t) {
-        if (void 0 === this.M) this.M = [ new CollectionChangeSet(this.q++, t, e) ]; else this.M.push(new CollectionChangeSet(this.q++, t, e));
+    handleCollectionChange(e) {
+        if (void 0 === this.M) this.M = [ new CollectionChangeSet(this.q++, e) ]; else this.M.push(new CollectionChangeSet(this.q++, e));
     }
     dispose() {
         if (void 0 !== this.A) {
@@ -4212,7 +4219,7 @@ let nr = class SortValueConverter {
     }
 };
 
-nr = tr([ $("sort") ], nr);
+nr = tr([ y("sort") ], nr);
 
 let ir = class JsonValueConverter {
     toView(e) {
@@ -4223,7 +4230,7 @@ let ir = class JsonValueConverter {
     }
 };
 
-ir = tr([ $("json") ], ir);
+ir = tr([ y("json") ], ir);
 
 let rr = class NameTag {};
 
@@ -4473,7 +4480,7 @@ function vr(e, t) {
     }
 }
 
-function yr(e) {
+function $r(e) {
     const t = e.prototype;
     const n = E(t);
     for (const e in n) {
@@ -4494,11 +4501,11 @@ function yr(e) {
     }
 }
 
-function $r(e) {
+function yr(e) {
     return function(t) {
         vr(t, e);
     };
 }
 
-export { Ni as CSS_PROPERTIES, Call, CallCollection, ChangeSet, CollectionChangeSet, ir as JsonValueConverter, MockBinding, MockBindingBehavior, MockBrowserHistoryLocation, MockContext, MockPropertySubscriber, MockServiceLocator, MockSignaler, MockTracingExpression, MockValueConverter, $t as PLATFORM, xt as PLATFORMRegistration, Pi as PSEUDO_ELEMENTS, ProxyChangeSet, nr as SortValueConverter, SpySubscriber, sr as TestConfiguration, TestContext, or as _, Fi as assert, kt as createContainer, Zi as createFixture, gr as createObserverLocator, br as createScopeForTest, et as createSpy, Ui as eachCartesianJoin, Vi as eachCartesianJoinAsync, Ii as eachCartesianJoinFactory, Un as ensureTaskQueuesEmpty, ii as fail, Wi as generateCartesianProduct, Bn as getVisibleText, Bi as globalAttributeNames, _i as h, Ki as hJsx, dr as htmlStringify, Tn as inspect, In as instructionTypeName, hr as jsonStringify, Xi as onFixtureCreated, mr as padLeft, pr as padRight, vr as recordCalls, wt as setPlatform, yr as stopRecordingCalls, fr as stringify, $r as trace, Ze as trimFull, Dn as verifyBindingInstructionsEqual, Fn as verifyEqual };
+export { Ni as CSS_PROPERTIES, Call, CallCollection, ChangeSet, CollectionChangeSet, ir as JsonValueConverter, MockBinding, MockBindingBehavior, MockBrowserHistoryLocation, MockContext, MockPropertySubscriber, MockServiceLocator, MockSignaler, MockTracingExpression, MockValueConverter, yt as PLATFORM, xt as PLATFORMRegistration, Pi as PSEUDO_ELEMENTS, ProxyChangeSet, nr as SortValueConverter, SpySubscriber, sr as TestConfiguration, TestContext, or as _, Fi as assert, kt as createContainer, Zi as createFixture, gr as createObserverLocator, br as createScopeForTest, et as createSpy, Ui as eachCartesianJoin, Vi as eachCartesianJoinAsync, Ii as eachCartesianJoinFactory, Un as ensureTaskQueuesEmpty, ii as fail, Wi as generateCartesianProduct, Bn as getVisibleText, Bi as globalAttributeNames, _i as h, Ki as hJsx, dr as htmlStringify, Tn as inspect, In as instructionTypeName, hr as jsonStringify, Xi as onFixtureCreated, mr as padLeft, pr as padRight, vr as recordCalls, wt as setPlatform, $r as stopRecordingCalls, fr as stringify, yr as trace, Ze as trimFull, Dn as verifyBindingInstructionsEqual, Fn as verifyEqual };
 

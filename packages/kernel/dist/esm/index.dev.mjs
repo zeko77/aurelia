@@ -183,9 +183,6 @@ function nextId(context) {
 function resetId(context) {
     ids[context] = 0;
 }
-function compareNumber(a, b) {
-    return a - b;
-}
 function mergeDistinct(arr1, arr2, slice) {
     if (arr1 === void 0 || arr1 === null || arr1 === emptyArray) {
         if (arr2 === void 0 || arr2 === null || arr2 === emptyArray) {
@@ -1949,5 +1946,5 @@ class EventAggregator {
     }
 }
 
-export { AnalyzedModule, ColorOptions, ConsoleSink, ContainerConfiguration, DI, DefaultLogEvent, DefaultLogEventFactory, DefaultLogger, DefaultResolver, EventAggregator, IContainer, IEventAggregator, ILogConfig, ILogEventFactory, ILogger, IModuleLoader, IPlatform, IServiceLocator, ISink, InstanceProvider, LogConfig, LogLevel, LoggerConfiguration, ModuleItem, Protocol, Registration, all, bound, camelCase, compareNumber, emptyArray, emptyObject, factory, firstDefined, format, fromAnnotationOrDefinitionOrTypeOrDefault, fromAnnotationOrTypeOrDefault, fromDefinitionOrDefault, getPrototypeChain, ignore, inject, isArrayIndex, isNativeFunction, isNumberOrBigInt, isStringOrDate, kebabCase, lazy, mergeArrays, mergeDistinct, mergeObjects, newInstanceForScope, newInstanceOf, nextId, noop, onResolve, optional, pascalCase, resetId, resolveAll, singleton, sink, toArray, transient };
+export { AnalyzedModule, ColorOptions, ConsoleSink, ContainerConfiguration, DI, DefaultLogEvent, DefaultLogEventFactory, DefaultLogger, DefaultResolver, EventAggregator, IContainer, IEventAggregator, ILogConfig, ILogEventFactory, ILogger, IModuleLoader, IPlatform, IServiceLocator, ISink, InstanceProvider, LogConfig, LogLevel, LoggerConfiguration, ModuleItem, Protocol, Registration, all, bound, camelCase, emptyArray, emptyObject, factory, firstDefined, format, fromAnnotationOrDefinitionOrTypeOrDefault, fromAnnotationOrTypeOrDefault, fromDefinitionOrDefault, getPrototypeChain, ignore, inject, isArrayIndex, isNativeFunction, isNumberOrBigInt, isStringOrDate, kebabCase, lazy, mergeArrays, mergeDistinct, mergeObjects, newInstanceForScope, newInstanceOf, nextId, noop, onResolve, optional, pascalCase, resetId, resolveAll, singleton, sink, toArray, transient };
 //# sourceMappingURL=index.dev.mjs.map

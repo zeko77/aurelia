@@ -1,4 +1,4 @@
-import { LifecycleFlags, AccessorType } from '@aurelia/runtime';
+import { AccessorType } from '@aurelia/runtime';
 import type { EventSubscriber } from './event-delegator';
 import type { INode } from '../dom';
 import type { ISubscriberCollection, ISubscriber, IObserver, IFlushable, IWithFlushQueue, FlushQueue } from '@aurelia/runtime';
@@ -13,7 +13,7 @@ export declare class ValueAttributeObserver implements IObserver, IWithFlushQueu
     readonly queue: FlushQueue;
     constructor(obj: INode, key: PropertyKey, handler: EventSubscriber);
     getValue(): unknown;
-    setValue(newValue: string | null, flags: LifecycleFlags): void;
+    setValue(newValue: string | null): void;
     handleEvent(): void;
     subscribe(subscriber: ISubscriber): void;
     unsubscribe(subscriber: ISubscriber): void;

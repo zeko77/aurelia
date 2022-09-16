@@ -10,19 +10,19 @@ const IActionHandler = kernel.DI.createInterface('IActionHandler');
 const IStore = kernel.DI.createInterface('IStore');
 const IState = kernel.DI.createInterface('IState');
 
-const reducerSymbol = '__reducer__';
+const actionHandlerSymbol = '__reducer__';
 const ActionHandler = Object.freeze({
     define(reducer) {
         function registry(state, action, ...params) {
             return reducer(state, action, ...params);
         }
-        registry[reducerSymbol] = true;
+        registry[actionHandlerSymbol] = true;
         registry.register = function (c) {
             kernel.Registration.instance(IActionHandler, reducer).register(c);
         };
         return registry;
     },
-    isType: (r) => typeof r === 'function' && reducerSymbol in r,
+    isType: (r) => typeof r === 'function' && actionHandlerSymbol in r,
 });
 
 class Store {
@@ -164,7 +164,6 @@ class StateBinding {
         this._value = void 0;
         this._sub = void 0;
         this._updateCount = 0;
-        this.persistentFlags = 0;
         this.mode = toView;
         this._controller = controller;
         this.locator = locator;
@@ -175,7 +174,7 @@ class StateBinding {
         this.target = target;
         this.targetProperty = prop;
     }
-    updateTarget(value, flags) {
+    updateTarget(value) {
         const targetAccessor = this.targetObserver;
         const target = this.target;
         const prop = this.targetProperty;
@@ -185,7 +184,7 @@ class StateBinding {
         if (isSubscribable(value)) {
             this._sub = value.subscribe($value => {
                 if (isCurrentValue()) {
-                    targetAccessor.setValue($value, flags, target, prop);
+                    targetAccessor.setValue($value, target, prop);
                 }
             });
             return;
@@ -193,14 +192,14 @@ class StateBinding {
         if (value instanceof Promise) {
             void value.then($value => {
                 if (isCurrentValue()) {
-                    targetAccessor.setValue($value, flags, target, prop);
+                    targetAccessor.setValue($value, target, prop);
                 }
             }, () => { });
             return;
         }
-        targetAccessor.setValue(value, flags, target, prop);
+        targetAccessor.setValue(value, target, prop);
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         if (this.isBound) {
             return;
         }
@@ -208,7 +207,7 @@ class StateBinding {
         this.targetObserver = this.oL.getAccessor(this.target, this.targetProperty);
         this.$scope = createStateBindingScope(this._store.getState(), scope);
         this._store.subscribe(this);
-        this.updateTarget(this._value = this.ast.evaluate(this.$scope, this, this.mode > oneTime ? this : null), 0);
+        this.updateTarget(this._value = this.ast.evaluate(this.$scope, this, this.mode > oneTime ? this : null));
     }
     $unbind() {
         if (!this.isBound) {
@@ -222,11 +221,10 @@ class StateBinding {
         this.task = null;
         this._store.unsubscribe(this);
     }
-    handleChange(newValue, previousValue, flags) {
+    handleChange(newValue) {
         if (!this.isBound) {
             return;
         }
-        flags |= this.persistentFlags;
         const shouldQueueFlush = this._controller.state !== 1 && (this.targetObserver.type & 4) > 0;
         const obsRecord = this.obs;
         obsRecord.version++;
@@ -236,14 +234,14 @@ class StateBinding {
         if (shouldQueueFlush) {
             task = this.task;
             this.task = this.taskQueue.queueTask(() => {
-                this.interceptor.updateTarget(newValue, flags);
+                this.interceptor.updateTarget(newValue);
                 this.task = null;
             }, updateTaskOpts);
             task?.cancel();
             task = null;
         }
         else {
-            this.interceptor.updateTarget(newValue, flags);
+            this.interceptor.updateTarget(newValue);
         }
     }
     handleStateChange(state) {
@@ -260,13 +258,13 @@ class StateBinding {
         if (shouldQueueFlush) {
             task = this.task;
             this.task = this.taskQueue.queueTask(() => {
-                this.interceptor.updateTarget(value, 1);
+                this.interceptor.updateTarget(value);
                 this.task = null;
             }, updateTaskOpts);
             task?.cancel();
         }
         else {
-            this.interceptor.updateTarget(this._value, 0);
+            this.interceptor.updateTarget(this._value);
         }
     }
     _unsub() {
@@ -296,25 +294,25 @@ exports.StateBindingBehavior = class StateBindingBehavior extends runtimeHtml.Bi
         this._store = store;
         this._isStateBinding = binding instanceof StateBinding;
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         const binding = this.binding;
         const $scope = this._isStateBinding ? scope : createStateBindingScope(this._store.getState(), scope);
         if (!this._isStateBinding) {
             this._store.subscribe(this);
         }
-        binding.$bind(flags, $scope);
+        binding.$bind($scope);
     }
-    $unbind(flags) {
+    $unbind() {
         if (!this._isStateBinding) {
             this._store.unsubscribe(this);
         }
-        this.binding.$unbind(flags);
+        this.binding.$unbind();
     }
     handleStateChange(state) {
         const $scope = this.$scope;
         const overrideContext = $scope.overrideContext;
         $scope.bindingContext = overrideContext.bindingContext = overrideContext.$state = state;
-        this.binding.handleChange(undefined, undefined, 0);
+        this.binding.handleChange(undefined, undefined);
     }
 };
 exports.StateBindingBehavior.inject = [IStore];
@@ -357,7 +355,7 @@ class StateDispatchBinding {
     handleEvent(e) {
         this.interceptor.callSource(e);
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         if (this.isBound) {
             return;
         }
@@ -453,9 +451,9 @@ class StateBindingInstruction {
     }
 }
 class DispatchBindingInstruction {
-    constructor(from, expr) {
+    constructor(from, ast) {
         this.from = from;
-        this.expr = expr;
+        this.ast = ast;
         this.type = 'sd';
     }
 }
@@ -481,7 +479,7 @@ exports.DispatchBindingInstructionRenderer = class DispatchBindingInstructionRen
         this._stateContainer = _stateContainer;
     }
     render(renderingCtrl, target, instruction) {
-        const expr = ensureExpression(this._exprParser, instruction.expr, 8);
+        const expr = ensureExpression(this._exprParser, instruction.ast, 8);
         const binding = new StateDispatchBinding(renderingCtrl.container, expr, target, instruction.from, this._stateContainer);
         renderingCtrl.addBinding(expr.$kind === 38963
             ? runtimeHtml.applyBindingBehavior(binding, expr, renderingCtrl.container)
@@ -556,7 +554,7 @@ let StateGetterBinding = class StateGetterBinding {
         }
         target[prop] = value;
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         if (this.isBound) {
             return;
         }

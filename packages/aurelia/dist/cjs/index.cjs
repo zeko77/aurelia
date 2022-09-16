@@ -298,6 +298,8 @@ exports.ISignaler = a.ISignaler;
 
 exports.LifecycleFlags = a.LifecycleFlags;
 
+exports.batch = a.batch;
+
 exports.observable = a.observable;
 
 exports.subscriberCollection = a.subscriberCollection;

@@ -25,11 +25,7 @@ export declare type ObservableSetter = PropertyDescriptor['set'] & {
     getObserver?(obj: unknown, requestor: IObserverLocator): IObserver;
 };
 export declare class ObserverLocator {
-    private readonly _dirtyChecker;
-    private readonly _nodeObserverLocator;
-    protected static readonly inject: (import("@aurelia/kernel").InterfaceSymbol<IDirtyChecker> | import("@aurelia/kernel").InterfaceSymbol<INodeObserverLocator>)[];
-    private readonly _adapters;
-    constructor(_dirtyChecker: IDirtyChecker, _nodeObserverLocator: INodeObserverLocator);
+    constructor(dirtyChecker: IDirtyChecker, nodeObserverLocator: INodeObserverLocator);
     addAdapter(adapter: IObjectObservationAdapter): void;
     getObserver(obj: object, key: PropertyKey): IObserver;
     getAccessor(obj: object, key: PropertyKey): AccessorOrObserver;

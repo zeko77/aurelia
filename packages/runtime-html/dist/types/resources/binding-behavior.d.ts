@@ -1,5 +1,5 @@
 import { Resolved, ResourceType } from '@aurelia/kernel';
-import { BindingBehaviorInstance, Collection, IndexMap, LifecycleFlags, ValueConverterInstance } from '@aurelia/runtime';
+import { BindingBehaviorInstance, Collection, IndexMap, ValueConverterInstance } from '@aurelia/runtime';
 import { BindingMode } from '../binding/interfaces-bindings';
 import type { Constructable, IContainer, IResourceKind, IServiceLocator, Key, PartialResourceDefinition, ResourceDefinition } from '@aurelia/kernel';
 import type { BindingBehaviorExpression, BindingObserverRecord, ForOfStatement, IConnectableBinding, IObserverLocator, IsBindingBehavior, Scope } from '@aurelia/runtime';
@@ -42,10 +42,10 @@ export declare class BindingBehaviorFactory<T extends Constructable = Constructa
     construct(binding: IInterceptableBinding, expr: BindingBehaviorExpression): IInterceptableBinding;
 }
 export declare type IInterceptableBinding = Exclude<IConnectableBinding, 'updateTarget' | 'updateSource' | 'callSource' | 'handleChange'> & {
-    updateTarget?(value: unknown, flags: LifecycleFlags): void;
-    updateSource?(value: unknown, flags: LifecycleFlags): void;
+    updateTarget?(value: unknown): void;
+    updateSource?(value: unknown): void;
     callSource?(args: object): unknown;
-    handleChange?(newValue: unknown, previousValue: unknown, flags: LifecycleFlags): void;
+    handleChange?(newValue: unknown, previousValue: unknown): void;
 };
 export interface BindingInterceptor extends IConnectableBinding {
 }
@@ -65,15 +65,15 @@ export declare class BindingInterceptor implements IInterceptableBinding {
     get(key: Key): Resolved<Key>;
     getConverter<T>(name: string): ValueConverterInstance<T> | undefined;
     getBehavior<T>(name: string): BindingBehaviorInstance<T> | undefined;
-    updateTarget(value: unknown, flags: LifecycleFlags): void;
-    updateSource(value: unknown, flags: LifecycleFlags): void;
+    updateTarget(value: unknown): void;
+    updateSource(value: unknown): void;
     callSource(args: object): unknown;
-    handleChange(newValue: unknown, previousValue: unknown, flags: LifecycleFlags): void;
-    handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void;
+    handleChange(newValue: unknown, previousValue: unknown): void;
+    handleCollectionChange(indexMap: IndexMap): void;
     observe(obj: object, key: string): void;
     observeCollection(observer: Collection): void;
-    $bind(flags: LifecycleFlags, scope: Scope): void;
-    $unbind(flags: LifecycleFlags): void;
+    $bind(scope: Scope): void;
+    $unbind(): void;
 }
 export declare const BindingBehavior: Readonly<BindingBehaviorKind>;
 //# sourceMappingURL=binding-behavior.d.ts.map

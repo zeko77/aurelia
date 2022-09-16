@@ -23,8 +23,8 @@ export declare class Switch implements ICustomAttributeViewModel {
     attaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void>;
     detaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void>;
     dispose(): void;
-    valueChanged(_newValue: boolean, _oldValue: boolean, flags: LifecycleFlags): void;
-    caseChanged($case: Case, flags: LifecycleFlags): void;
+    valueChanged(_newValue: boolean, _oldValue: boolean): void;
+    caseChanged($case: Case): void;
     private swap;
     private queue;
     accept(visitor: ControllerVisitor): void | true;
@@ -42,14 +42,13 @@ export declare class Case implements ICustomAttributeViewModel {
     /** @internal */ _location: IRenderLocation, logger: ILogger);
     link(controller: IHydratableController, _childController: ICustomAttributeController, _target: INode, _instruction: IInstruction): void;
     detaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void>;
-    isMatch(value: unknown, flags: LifecycleFlags): boolean;
-    valueChanged(newValue: unknown, _oldValue: unknown, flags: LifecycleFlags): void;
-    handleCollectionChange(_indexMap: IndexMap, flags: LifecycleFlags): void;
+    isMatch(value: unknown): boolean;
+    valueChanged(newValue: unknown, _oldValue: unknown): void;
+    handleCollectionChange(_indexMap: IndexMap): void;
     activate(initiator: IHydratedController | null, flags: LifecycleFlags, scope: Scope): void | Promise<void>;
     deactivate(initiator: IHydratedController | null, flags: LifecycleFlags): void | Promise<void>;
     dispose(): void;
     protected linkToSwitch(auSwitch: Switch): void;
-    private _observeCollection;
     accept(visitor: ControllerVisitor): void | true;
 }
 export declare class DefaultCase extends Case {

@@ -16,7 +16,7 @@ export { Platform, Task, TaskAbortError, TaskQueue, TaskQueuePriority, TaskStatu
 
 export { IRouteContext, IRouter, IRouterEvents, Route, RouteConfig, RouteNode, Router, RouterConfiguration, RouterOptions, RouterRegistration, route } from "../../../@aurelia/router-lite/dist/native-modules/index.mjs";
 
-export { CollectionKind, ComputedObserver, IObserverLocator, ISignaler, LifecycleFlags, observable, subscriberCollection } from "../../../@aurelia/runtime/dist/native-modules/index.mjs";
+export { CollectionKind, ComputedObserver, IObserverLocator, ISignaler, LifecycleFlags, batch, observable, subscriberCollection } from "../../../@aurelia/runtime/dist/native-modules/index.mjs";
 
 const n = l.getOrCreate(globalThis);
 
