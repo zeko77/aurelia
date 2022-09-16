@@ -1,5 +1,5 @@
-import { alias } from '@aurelia/runtime';
 import {
+  alias,
   bindable,
   customAttribute,
   INode,
@@ -360,7 +360,7 @@ describe('custom-attributes', function () {
           [
             /* normal change handler call count */1,
             /* all properties change handler call count */1,
-            /* corresponding count of arguments of all properties change handler */[4]
+            /* corresponding count of arguments of all properties change handler */[3]
           ],
           /* foo2: has only normal change handler */
           [
@@ -372,7 +372,7 @@ describe('custom-attributes', function () {
           [
             /* normal change handler call count */0,
             /* all properties change handler call count */1,
-            /* corresponding count of arguments of all properties change handler */[4]
+            /* corresponding count of arguments of all properties change handler */[3]
           ]
         ]
       }

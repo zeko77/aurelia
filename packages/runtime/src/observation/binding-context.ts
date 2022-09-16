@@ -1,10 +1,6 @@
-import { LifecycleFlags } from '../observation';
-
 import type { IIndexable } from '@aurelia/kernel';
 import type { IBinding, IBindingContext, IOverrideContext } from '../observation';
 import { hasOwnProp } from '../utilities-objects';
-
-const marker = Object.freeze({});
 
 export class BindingContext implements IBindingContext {
   [key: string]: unknown;
@@ -49,7 +45,7 @@ export class BindingContext implements IBindingContext {
     return new BindingContext(keyOrObj, value);
   }
 
-  public static get(scope: Scope, name: string, ancestor: number, flags: LifecycleFlags): IBindingContext | IOverrideContext | IBinding | undefined | null {
+  public static get(scope: Scope, name: string, ancestor: number): IBindingContext | IOverrideContext | IBinding | undefined | null {
     if (scope == null) {
       if (__DEV__)
         throw new Error(`AUR0203: Scope is ${scope}.`);
@@ -89,6 +85,7 @@ export class BindingContext implements IBindingContext {
       && overrideContext != null
       && !(name in overrideContext)
       && !(
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         overrideContext.bindingContext
         && name in overrideContext.bindingContext
       )
@@ -137,6 +134,7 @@ export class BindingContext implements IBindingContext {
     //   } while (currentScope != null);
     // }
 
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     return scope.bindingContext || scope.overrideContext;
   }
 }

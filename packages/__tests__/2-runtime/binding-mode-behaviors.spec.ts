@@ -3,8 +3,8 @@ import {
   IContainer,
   Registration,
 } from '@aurelia/kernel';
-import { BindingMode } from '@aurelia/runtime';
 import {
+  BindingMode,
   PropertyBinding,
   FromViewBindingBehavior,
   OneTimeBindingBehavior,
@@ -36,8 +36,17 @@ describe('2-runtime/binding-mode-behavior.spec.ts', function () {
         // eslint-disable-next-line mocha/no-hooks
         beforeEach(function () {
           sut = new Behavior();
-          binding = new PropertyBinding(undefined, undefined, undefined, initMode, undefined, container as any, {} as any);
-          sut.bind(undefined, undefined, binding);
+          binding = new PropertyBinding(
+            { state: 0 },
+            container as any,
+            {} as any,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            initMode,
+          );
+          sut.bind(undefined, binding);
         });
 
         it(`bind()   should apply  bindingMode ${mode}`, function () {
@@ -45,7 +54,7 @@ describe('2-runtime/binding-mode-behavior.spec.ts', function () {
         });
 
         it(`unbind() should revert bindingMode ${initMode}`, function () {
-          sut.unbind(undefined, undefined, binding);
+          sut.unbind(undefined, binding);
           assert.strictEqual(binding.mode, initMode, `binding.mode`);
         });
       });

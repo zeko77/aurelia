@@ -8,7 +8,7 @@ import { FoundRoute } from '../found-route';
 import { Endpoint, EndpointType } from '../endpoints/endpoint';
 import { Viewport } from '../endpoints/viewport';
 import { CustomElement } from '@aurelia/runtime-html';
-import { IRouter, IRouterConfiguration, Navigation } from '../index';
+import { IRouter, IRouterConfiguration, Navigation, Route } from '../index';
 import { EndpointHandle, InstructionEndpoint } from './instruction-endpoint';
 import { Separators } from '../router-options';
 import { IContainer } from '@aurelia/kernel';
@@ -69,7 +69,7 @@ export class RoutingInstruction {
   /**
    * The configured route, if any, that the routing instruction is part of.
    */
-  public route: FoundRoute | null = null;
+  public route: FoundRoute | string | null = null;
 
   /**
    * The instruction is the start/first instruction of a configured route.
@@ -93,6 +93,11 @@ export class RoutingInstruction {
    * in the string after the actual part for the instruction itself.
    */
   public unparsed: string | null = null;
+
+  /**
+   * Whether the routing instruction has been cancelled (aborted) for some reason
+   */
+  public cancelled: boolean = false;
 
   public constructor(
     component?: ComponentAppellation | Promise<ComponentAppellation>,
@@ -153,9 +158,10 @@ export class RoutingInstruction {
         instructions.push(RoutingInstruction.create(instruction) as RoutingInstruction);
       } else if (InstructionComponent.isDefinition(instruction)) {
         instructions.push(RoutingInstruction.create(instruction.Type) as RoutingInstruction);
-      } else if ('component' in instruction) {
+      } else if ('component' in instruction || 'id' in instruction) {
         const viewportComponent = instruction;
         const newInstruction = RoutingInstruction.create(viewportComponent.component, viewportComponent.viewport, viewportComponent.parameters) as RoutingInstruction;
+        newInstruction.route = instruction.id ?? null;
         if (viewportComponent.children !== void 0 && viewportComponent.children !== null) {
           newInstruction.nextScopeInstructions = RoutingInstruction.from(context, viewportComponent.children);
         }
@@ -226,6 +232,21 @@ export class RoutingInstruction {
         .map(instruction => instruction.stringify(context, excludeEndpoint, endpointContext))
         .filter(instruction => instruction.length > 0)
         .join(Separators.for(context).sibling);
+  }
+
+  /**
+   * Resolve a list of routing instructions, returning a promise that should be awaited if needed.
+   *
+   * @param instructions - The instructions to resolve
+   */
+  public static resolve(instructions: RoutingInstruction[]): void | Promise<void | ComponentAppellation[]> {
+    const resolvePromises = instructions
+      .filter(instr => instr.isUnresolved)
+      .map(instr => instr.resolve())
+      .filter(result => result instanceof Promise);
+    if (resolvePromises.length > 0) {
+      return Promise.all(resolvePromises) as Promise<void | ComponentAppellation[]>;
+    }
   }
 
   /**
@@ -373,6 +394,25 @@ export class RoutingInstruction {
   }
 
   /**
+   * Compare the routing instruction's route with the route of another routing
+   * instruction.
+   *
+   * @param other - The routing instruction to compare to
+   */
+  public sameRoute(other: RoutingInstruction): boolean {
+    const thisRoute = this.route?.match;
+    const otherRoute = other.route?.match;
+    if (thisRoute == null || otherRoute == null) {
+      return false;
+    }
+    if (typeof thisRoute === 'string' || typeof otherRoute === 'string') {
+      return thisRoute === otherRoute;
+    }
+
+    return (thisRoute as Route).id === (otherRoute as Route).id;
+  }
+
+  /**
    * Compare the routing instruction's component with the component of another routing
    * instruction. Compares on name unless `compareType` is `true`.
    *
@@ -450,26 +490,20 @@ export class RoutingInstruction {
         excludeCurrentComponent = true;
       }
     }
+
     const nextInstructions: RoutingInstruction[] | null = this.nextScopeInstructions;
     // Start with the scope modifier (if any)
     let stringified: string = this.scopeModifier;
-    // It's a configured route...
-    if (this.route !== null) {
-      // ...that's already added as part of a configuration, so skip to next scope!
-      if (!this.routeStart) {
-        return Array.isArray(nextInstructions)
-          ? RoutingInstruction.stringify(context, nextInstructions, excludeEndpoint, endpointContext)
-          : '';
-      }
-      // ...that's the first instruction of a route...
-      const path = this.route.matching;
-      // ...so add the route.
-      stringified += path.endsWith(seps.scope)
-        ? path.slice(0, -seps.scope.length)
-        : path;
-    } else { // Not (part of) a route so add it
-      stringified += this.stringifyShallow(context, excludeCurrentEndpoint, excludeCurrentComponent);
+
+    // It's a configured route that's already added as part of a configuration, so skip to next scope!
+    if (this.route instanceof FoundRoute && !this.routeStart) {
+      return Array.isArray(nextInstructions)
+        ? RoutingInstruction.stringify(context, nextInstructions, excludeEndpoint, endpointContext)
+        : '';
     }
+    const path = this.stringifyShallow(context, excludeCurrentEndpoint, excludeCurrentComponent);
+    stringified += path.endsWith(seps.scope) ? path.slice(0, -seps.scope.length) : path;
+
     // If any next scope/child instructions...
     if (Array.isArray(nextInstructions) && nextInstructions.length > 0) {
       // ...get them as string...
@@ -539,8 +573,16 @@ export class RoutingInstruction {
   public isIn(context: IRouterConfiguration | IRouter | IContainer, searchIn: RoutingInstruction[], deep: boolean): boolean {
     // Get all instructions with matching component.
     const matching = searchIn.filter(instruction => {
-      if (!instruction.sameComponent(context, this)) {
-        return false;
+      // Match either routes...
+      if (this.route != null || instruction.route != null) {
+        if (!instruction.sameRoute(this)) {
+          return false;
+        }
+      } else {
+        // ... or components
+        if (!instruction.sameComponent(context, this)) {
+          return false;
+        }
       }
       // Use own type if we have it, the other's type if not
       const instructionType = instruction.component.type ?? this.component.type;
@@ -586,7 +628,7 @@ export class RoutingInstruction {
    */
   public getTitle(navigation: Navigation): string {
     // If it's a configured route...
-    if (this.route !== null) {
+    if (this.route instanceof FoundRoute) {
       // ...get the configured route title.
       const routeTitle = this.route.match?.title;
       // If there's a configured title, use it. Otherwise fallback to
@@ -621,6 +663,16 @@ export class RoutingInstruction {
    * @param excludeComponent - Whether to exclude component names in the string
    */
   private stringifyShallow(context: IRouterConfiguration | IRouter | IContainer, excludeEndpoint: boolean = false, excludeComponent: boolean = false): string {
+    if (this.route != null) {
+      const path = this.route instanceof FoundRoute ? this.route.matching : this.route;
+      return path
+        .split('/')
+        .map(part => part.startsWith(':')
+          ? this.parameters.get(context, part.slice(1))
+          : part)
+        .join('/');
+    }
+
     const seps = Separators.for(context);
     // Start with component (unless excluded)
     let instructionString = !excludeComponent ? this.component.name ?? '' : '';

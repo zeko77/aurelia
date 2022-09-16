@@ -440,7 +440,7 @@ export class VirtualRepeat implements IScrollerSubscriber, IVirtualRepeater {
   /**
    * @internal
    */
-  public handleCollectionChange(_indexMap: IndexMap, _flags: LifecycleFlags): void {
+  public handleCollectionChange(_indexMap: IndexMap): void {
     this.itemsChanged(this.items);
     // const [start, end] = this.range;
     // const itemHeight = this.itemHeight;
@@ -451,7 +451,7 @@ export class VirtualRepeat implements IScrollerSubscriber, IVirtualRepeater {
     //   collectionSize - end
     // )
     // if (this.collectionStrategy.count() > 0) {
-    //   const deletion = indexMap.deletedItems;
+    //   const deletion = indexMap.deletedIndices;
     //   const hasDeletion = deletion.length > 0;
     //   if (hasDeletion) {
     //     const deletionIndex = deletion[0];
@@ -477,7 +477,7 @@ export class VirtualRepeat implements IScrollerSubscriber, IVirtualRepeater {
    * @internal
    */
   public handleInnerCollectionChange(): void {
-    const newItems = this.iterable.evaluate(LifecycleFlags.none, this.parent.scope, this._container, null) as Collection;
+    const newItems = this.iterable.evaluate(this.parent.scope, this._container, null) as Collection;
     const oldItems = this.items;
     this.items = newItems;
     if (newItems === oldItems) {
@@ -539,8 +539,8 @@ class CollectionObservationMediator {
     public key: 'handleCollectionChange' | 'handleInnerCollectionChange',
   ) {}
 
-  public handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void {
-    this.repeat[this.key](indexMap, flags);
+  public handleCollectionChange(indexMap: IndexMap): void {
+    this.repeat[this.key](indexMap);
   }
 
   public start(c?: Collection | null): void {

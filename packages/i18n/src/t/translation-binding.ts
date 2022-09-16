@@ -1,25 +1,27 @@
 import { toArray } from '@aurelia/kernel';
 import {
-  connectable,
   AccessorType,
   CustomExpression,
   ExpressionType,
-  LifecycleFlags,
   Interpolation,
+  connectable,
 } from '@aurelia/runtime';
 import {
   CustomElement,
   IPlatform,
+  type IAstBasedBinding,
+  type IBindingController,
+  State,
+  astEvaluator,
 } from '@aurelia/runtime-html';
 import i18next from 'i18next';
 import { I18N } from '../i18n';
 
-import type { ITask, QueueTaskOptions } from '@aurelia/platform';
+import type { ITask, QueueTaskOptions, TaskQueue } from '@aurelia/platform';
 import type { IContainer, IServiceLocator } from '@aurelia/kernel';
 import type {
   Scope,
   IsExpression,
-  IConnectableBinding,
   IExpressionParser,
   IObserverLocator,
   IObserverLocatorBasedConnectable,
@@ -50,7 +52,7 @@ interface ContentValue {
 
 const attributeAliases = new Map([['text', 'textContent'], ['html', 'innerHTML']]);
 
-export interface TranslationBinding extends IConnectableBinding { }
+export interface TranslationBinding extends IAstBasedBinding { }
 
 const forOpts = { optional: true } as const;
 const taskQueueOpts: QueueTaskOptions = {
@@ -61,7 +63,7 @@ const taskQueueOpts: QueueTaskOptions = {
 export class TranslationBinding implements IObserverLocatorBasedConnectable {
   public interceptor: this = this;
   public isBound: boolean = false;
-  public expr!: IsExpression;
+  public ast!: IsExpression;
   private readonly i18n: I18N;
   /** @internal */
   private readonly _contentAttributes: readonly string[] = contentAttributes;
@@ -75,24 +77,31 @@ export class TranslationBinding implements IObserverLocatorBasedConnectable {
 
   public target: HTMLElement;
   private readonly platform: IPlatform;
+  private readonly taskQueue: TaskQueue;
   private parameter: ParameterBinding | null = null;
   /**
    * A semi-private property used by connectable mixin
    */
   public readonly oL: IObserverLocator;
 
+  /** @internal */
+  private readonly _controller: IBindingController;
+
   public constructor(
-    target: INode,
-    observerLocator: IObserverLocator,
+    controller: IBindingController,
     public locator: IServiceLocator,
+    observerLocator: IObserverLocator,
     platform: IPlatform,
+    target: INode,
   ) {
+    this._controller = controller;
     this.target = target as HTMLElement;
     this.i18n = this.locator.get(I18N);
     this.platform = platform;
     this._targetAccessors = new Set<IAccessor>();
     this.oL = observerLocator;
     this.i18n.subscribeLocaleChange(this);
+    this.taskQueue = platform.domWriteQueue;
   }
 
   public static create({
@@ -113,7 +122,7 @@ export class TranslationBinding implements IObserverLocatorBasedConnectable {
       binding.useParameter(expr);
     } else {
       const interpolation = expr instanceof CustomExpression ? parser.parse(expr.value, ExpressionType.Interpolation) : undefined;
-      binding.expr = interpolation || expr;
+      binding.ast = interpolation || expr;
     }
   }
   private static getBinding({
@@ -125,36 +134,39 @@ export class TranslationBinding implements IObserverLocatorBasedConnectable {
   }: Omit<TranslationBindingCreationContext, 'parser' | 'instruction' | 'isParameterContext'>): TranslationBinding {
     let binding: TranslationBinding | null = controller.bindings && controller.bindings.find((b) => b instanceof TranslationBinding && b.target === target) as TranslationBinding;
     if (!binding) {
-      binding = new TranslationBinding(target, observerLocator, context, platform);
+      binding = new TranslationBinding(controller, context, observerLocator, platform, target);
       controller.addBinding(binding);
     }
     return binding;
   }
 
-  public $bind(flags: LifecycleFlags, scope: Scope): void {
+  public $bind(scope: Scope): void {
+    if (this.isBound) {
+      return;
+    }
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-    if (!this.expr) { throw new Error('key expression is missing'); }
+    if (!this.ast) { throw new Error('key expression is missing'); }
     this.scope = scope;
-    this._isInterpolation = this.expr instanceof Interpolation;
+    this._isInterpolation = this.ast instanceof Interpolation;
 
-    this._keyExpression = this.expr.evaluate(flags, scope, this.locator, this) as string;
+    this._keyExpression = this.ast.evaluate(scope, this, this) as string;
     this._ensureKeyExpression();
-    this.parameter?.$bind(flags, scope);
+    this.parameter?.$bind(scope);
 
-    this._updateTranslations(flags);
+    this._updateTranslations();
     this.isBound = true;
   }
 
-  public $unbind(flags: LifecycleFlags): void {
+  public $unbind(): void {
     if (!this.isBound) {
       return;
     }
 
-    if (this.expr.hasUnbind) {
-      this.expr.unbind(flags, this.scope, this);
+    if (this.ast.hasUnbind) {
+      this.ast.unbind(this.scope, this);
     }
 
-    this.parameter?.$unbind(flags);
+    this.parameter?.$unbind();
     this._targetAccessors.clear();
     if (this.task !== null) {
       this.task.cancel();
@@ -165,32 +177,32 @@ export class TranslationBinding implements IObserverLocatorBasedConnectable {
     this.obs.clearAll();
   }
 
-  public handleChange(newValue: string | i18next.TOptions, _previousValue: string | i18next.TOptions, flags: LifecycleFlags): void {
+  public handleChange(newValue: string | i18next.TOptions, _previousValue: string | i18next.TOptions): void {
     this.obs.version++;
     this._keyExpression = this._isInterpolation
-        ? this.expr.evaluate(flags, this.scope, this.locator, this) as string
+        ? this.ast.evaluate(this.scope, this, this) as string
         : newValue as string;
     this.obs.clear();
     this._ensureKeyExpression();
-    this._updateTranslations(flags);
+    this._updateTranslations();
   }
 
   public handleLocaleChange() {
     // todo:
     // no flag passed, so if a locale is updated during binding of a component
     // and the author wants to signal that locale change fromBind, then it's a bug
-    this._updateTranslations(LifecycleFlags.none);
+    this._updateTranslations();
   }
 
   public useParameter(expr: IsExpression) {
     if (this.parameter != null) {
       throw new Error('This translation parameter has already been specified.');
     }
-    this.parameter = new ParameterBinding(this, expr, (flags: LifecycleFlags) => this._updateTranslations(flags));
+    this.parameter = new ParameterBinding(this, expr, () => this._updateTranslations());
   }
 
   /** @internal */
-  private _updateTranslations(flags: LifecycleFlags) {
+  private _updateTranslations() {
     const results = this.i18n.evaluate(this._keyExpression!, this.parameter?.value);
     const content: ContentValue = Object.create(null);
     const accessorUpdateTasks: AccessorUpdateTask[] = [];
@@ -208,11 +220,11 @@ export class TranslationBinding implements IObserverLocatorBasedConnectable {
           const accessor = controller?.viewModel
             ? this.oL.getAccessor(controller.viewModel, attribute)
             : this.oL.getAccessor(this.target, attribute);
-          const shouldQueueUpdate = (flags & LifecycleFlags.fromBind) === 0 && (accessor.type & AccessorType.Layout) > 0;
+          const shouldQueueUpdate = this._controller.state !== State.activating && (accessor.type & AccessorType.Layout) > 0;
           if (shouldQueueUpdate) {
-            accessorUpdateTasks.push(new AccessorUpdateTask(accessor, value, flags, this.target, attribute));
+            accessorUpdateTasks.push(new AccessorUpdateTask(accessor, value, this.target, attribute));
           } else {
-            accessor.setValue(value, flags, this.target, attribute);
+            accessor.setValue(value, this.target, attribute);
           }
           this._targetAccessors.add(accessor);
         }
@@ -221,20 +233,20 @@ export class TranslationBinding implements IObserverLocatorBasedConnectable {
 
     let shouldQueueContent = false;
     if (Object.keys(content).length > 0) {
-      shouldQueueContent = (flags & LifecycleFlags.fromBind) === 0;
+      shouldQueueContent = this._controller.state !== State.activating;
       if (!shouldQueueContent) {
-        this._updateContent(content, flags);
+        this._updateContent(content);
       }
     }
 
     if (accessorUpdateTasks.length > 0 || shouldQueueContent) {
-      this.task = this.platform.domWriteQueue.queueTask(() => {
+      this.task = this.taskQueue.queueTask(() => {
         this.task = null;
         for (const updateTask of accessorUpdateTasks) {
           updateTask.run();
         }
         if (shouldQueueContent) {
-          this._updateContent(content, flags);
+          this._updateContent(content);
         }
       }, taskQueueOpts);
     }
@@ -263,7 +275,7 @@ export class TranslationBinding implements IObserverLocatorBasedConnectable {
   }
 
   /** @internal */
-  private _updateContent(content: ContentValue, _flags: LifecycleFlags) {
+  private _updateContent(content: ContentValue) {
     const children = toArray(this.target.childNodes);
     const fallBackContents = [];
     const marker = 'au-i18n';
@@ -333,17 +345,16 @@ class AccessorUpdateTask {
   public constructor(
     private readonly accessor: IAccessor,
     private readonly v: unknown,
-    private readonly f: LifecycleFlags,
     private readonly el: HTMLElement,
     private readonly attr: string
   ) {}
 
   public run(): void {
-    this.accessor.setValue(this.v, this.f, this.el, this.attr);
+    this.accessor.setValue(this.v, this.el, this.attr);
   }
 }
 
-interface ParameterBinding extends IConnectableBinding {}
+interface ParameterBinding extends IAstBasedBinding {}
 
 class ParameterBinding {
 
@@ -363,46 +374,46 @@ class ParameterBinding {
 
   public constructor(
     public readonly owner: TranslationBinding,
-    public readonly expr: IsExpression,
-    public readonly updater: (flags: LifecycleFlags) => void,
+    public readonly ast: IsExpression,
+    public readonly updater: () => void,
   ) {
     this.oL = owner.oL;
     this.locator = owner.locator;
   }
 
-  public handleChange(newValue: string | i18next.TOptions, _previousValue: string | i18next.TOptions, flags: LifecycleFlags): void {
+  public handleChange(_newValue: string | i18next.TOptions, _previousValue: string | i18next.TOptions): void {
     // todo(test): add an integration/e2e for this
     //             setup: put this inside an if and switch on/off that if
     if (!this.isBound) {
       return;
     }
     this.obs.version++;
-    this.value = this.expr.evaluate(flags, this.scope, this.locator, this) as i18next.TOptions;
+    this.value = this.ast.evaluate(this.scope, this, this) as i18next.TOptions;
     this.obs.clear();
-    this.updater(flags);
+    this.updater();
   }
 
-  public $bind(flags: LifecycleFlags, scope: Scope): void {
+  public $bind(scope: Scope): void {
     if (this.isBound) {
       return;
     }
     this.scope = scope;
 
-    if (this.expr.hasBind) {
-      this.expr.bind(flags, scope, this);
+    if (this.ast.hasBind) {
+      this.ast.bind(scope, this);
     }
 
-    this.value = this.expr.evaluate(flags, scope, this.locator, this) as i18next.TOptions;
+    this.value = this.ast.evaluate(scope, this, this) as i18next.TOptions;
     this.isBound = true;
   }
 
-  public $unbind(flags: LifecycleFlags) {
+  public $unbind() {
     if (!this.isBound) {
       return;
     }
 
-    if (this.expr.hasUnbind) {
-      this.expr.unbind(flags, this.scope, this);
+    if (this.ast.hasUnbind) {
+      this.ast.unbind(this.scope, this);
     }
 
     this.scope = (void 0)!;
@@ -411,4 +422,7 @@ class ParameterBinding {
 }
 
 connectable(TranslationBinding);
+astEvaluator(true)(TranslationBinding);
+
 connectable(ParameterBinding);
+astEvaluator(true)(ParameterBinding);

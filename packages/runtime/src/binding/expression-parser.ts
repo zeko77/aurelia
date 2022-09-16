@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 import {
   DI,
 } from '@aurelia/kernel';
@@ -830,7 +831,7 @@ export function parse(minPrecedence: Precedence, expressionType: ExpressionType)
     result = new BindingBehaviorExpression(result as IsBindingBehavior, name, args);
   }
   if ($currentToken !== Token.EOF) {
-    if (expressionType & ExpressionType.Interpolation) {
+    if ((expressionType & ExpressionType.Interpolation) > 0 && $currentToken === Token.CloseBrace) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return result as any;
     }
@@ -1065,6 +1066,7 @@ function parseCoverParenthesizedExpressionAndArrowParameterList(expressionType: 
         // ()     - only valid if followed directly by an arrow
         nextToken();
         break loop;
+      /* eslint-disable */
       case Token.OpenBrace:
         // ({     - may be a valid parenthesized expression
       case Token.OpenBracket:
@@ -1072,6 +1074,7 @@ function parseCoverParenthesizedExpressionAndArrowParameterList(expressionType: 
         nextToken();
         paramsState = ArrowFnParams.Destructuring;
         break;
+      /* eslint-enable */
       case Token.Comma:
         // (,     - never valid
         // (a,,   - never valid
@@ -1089,6 +1092,7 @@ function parseCoverParenthesizedExpressionAndArrowParameterList(expressionType: 
         break;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     switch ($currentToken as Token) {
       case Token.Comma:
         nextToken();

@@ -1,19 +1,17 @@
 import { DI, IServiceLocator, newInstanceForScope, newInstanceOf, Registration } from '@aurelia/kernel';
 import {
   ArrayObserver,
-  bindingBehavior,
   BindingBehaviorInstance,
-  BindingInterceptor,
-  BindingMediator,
   IBinding,
   IObserverLocator,
   Scope,
-  LifecycleFlags,
-  valueConverter,
 } from '@aurelia/runtime';
 import {
   bindable,
+  bindingBehavior,
   customAttribute,
+  BindingInterceptor,
+  valueConverter,
   CustomElement,
   customElement,
   IPlatform,
@@ -28,6 +26,7 @@ import {
   ValidationController,
   ValidationHtmlConfiguration,
   ValidationTrigger,
+  BindingMediator,
 } from '@aurelia/validation-html';
 import { createSpecFunction, TestExecutionContext, TestFunction, ToNumberValueConverter, $TestSetupContext } from '../util.js';
 import { Organization, Person } from '../validation/_test-resources.js';
@@ -225,24 +224,24 @@ describe('validation-html/validate-binding-behavior.spec.ts/validate-binding-beh
   }
   @bindingBehavior('interceptor')
   class InterceptorBindingBehavior extends BindingInterceptor {
-    public updateSource(value: unknown, flags: LifecycleFlags) {
+    public updateSource(value: unknown) {
       if (this.interceptor !== this) {
-        this.interceptor.updateSource(value, flags);
+        this.interceptor.updateSource(value);
       } else {
         let binding = this as BindingInterceptor;
         while (binding.binding !== void 0) {
           binding = binding.binding as BindingInterceptor;
         }
-        binding.updateSource(value, flags);
+        binding.updateSource(value);
       }
     }
   }
   @bindingBehavior('vanilla')
   class VanillaBindingBehavior implements BindingBehaviorInstance {
-    public bind(_flags: LifecycleFlags, _scope: Scope, _binding: IBinding): void {
+    public bind(_scope: Scope, _binding: IBinding): void {
       return;
     }
-    public unbind(_flags: LifecycleFlags, _scope: Scope, _binding: IBinding): void {
+    public unbind(_scope: Scope, _binding: IBinding): void {
       return;
     }
   }
@@ -325,7 +324,7 @@ describe('validation-html/validate-binding-behavior.spec.ts/validate-binding-beh
 
     const binding = bindings[0];
     assert.equal(binding.target, target);
-    assert.equal(binding.sourceExpression.expression.toString(), rawExpression);
+    assert.equal(binding.ast.expression.toString(), rawExpression);
   }
 
   async function assertEventHandler(target: HTMLElement, event: 'change' | 'blur' | 'focusout', callCount: number, platform: IPlatform, validateBindingSpy: ISpy, validateSpy: ISpy, ctx: TestContext) {
@@ -1122,7 +1121,7 @@ describe('validation-html/validate-binding-behavior.spec.ts/validate-binding-beh
       assert.equal(bindings.length, 1);
 
       const binding = bindings[0];
-      assert.equal(binding.sourceExpression.expression.toString(), 'org.employees');
+      assert.equal(binding.ast.expression.toString(), 'org.employees');
 
       assert.equal(controller.results.filter((r) => !r.valid && r.propertyName === 'employees').length, 0, 'error1');
       await controller.validate();
@@ -1156,7 +1155,7 @@ describe('validation-html/validate-binding-behavior.spec.ts/validate-binding-beh
       assert.equal(bindings.length, 1);
 
       const binding = bindings[0];
-      assert.equal(binding.sourceExpression.expression.toString(), 'org.employees');
+      assert.equal(binding.ast.expression.toString(), 'org.employees');
 
       assert.equal(controller.results.filter((r) => !r.valid && r.propertyName === 'employees').length, 0, 'error1');
       await controller.validate();
@@ -1189,9 +1188,9 @@ describe('validation-html/validate-binding-behavior.spec.ts/validate-binding-beh
       const bindings = Array.from((controller['bindings'] as Map<IBinding, any>).keys()) as BindingWithBehavior[];
       assert.equal(bindings.length, 2);
       assert.equal(bindings[0].target, target1);
-      assert.equal(bindings[0].sourceExpression.expression.toString(), 'obj.coll[(0)].a|toNumber');
+      assert.equal(bindings[0].ast.expression.toString(), 'obj.coll[(0)].a|toNumber');
       assert.equal(bindings[1].target, target2);
-      assert.equal(bindings[1].sourceExpression.expression.toString(), 'obj.coll[(1)].a|toNumber');
+      assert.equal(bindings[1].ast.expression.toString(), 'obj.coll[(1)].a|toNumber');
 
       assert.equal(controller.results.filter((r) => !r.valid && (r.propertyName === 'coll[0].a' || r.propertyName === 'coll[1].a')).length, 0, 'error1');
       await controller.validate();

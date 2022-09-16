@@ -1,12 +1,12 @@
 import { mergeArrays, firstDefined, Key } from '@aurelia/kernel';
-import { BindingMode, registerAliases } from '@aurelia/runtime';
 import { Bindable } from '../bindable';
 import { Watch } from '../watch';
 import { getRef } from '../dom';
 import { DefinitionType } from './resources-shared';
 import { appendResourceKey, defineMetadata, getAnnotationKeyFor, getOwnMetadata, getResourceKeyFor, hasOwnMetadata } from '../utilities-metadata';
 import { isFunction, isString } from '../utilities';
-import { aliasRegistration, transientRegistration } from '../utilities-di';
+import { aliasRegistration, registerAliases, transientRegistration } from '../utilities-di';
+import { BindingMode } from '../binding/interfaces-bindings';
 
 import type {
   Constructable,

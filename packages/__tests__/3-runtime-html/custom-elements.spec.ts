@@ -1,5 +1,4 @@
-import { BindingMode, ValueConverter } from '@aurelia/runtime';
-import { CustomElement } from '@aurelia/runtime-html';
+import { BindingMode, CustomElement, ValueConverter } from '@aurelia/runtime-html';
 import { assert, createFixture } from '@aurelia/testing';
 
 describe('3-runtime-html/custom-elements.spec.ts', function () {

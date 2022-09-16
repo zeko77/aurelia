@@ -1,5 +1,6 @@
-import { LifecycleFlags, bindingBehavior } from '@aurelia/runtime';
+import { type BindingBehaviorInstance } from '@aurelia/runtime';
 import { Listener } from '../../binding/listener';
+import { bindingBehavior } from '../binding-behavior';
 
 import type { Scope } from '@aurelia/runtime';
 
@@ -18,8 +19,9 @@ export type SelfableBinding = Listener & {
   selfEventCallSource: Listener['callSource'];
 };
 
-export class SelfBindingBehavior {
-  public bind(flags: LifecycleFlags, _scope: Scope, binding: SelfableBinding): void {
+export class SelfBindingBehavior implements BindingBehaviorInstance {
+  public bind(_scope: Scope, binding: SelfableBinding): void {
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (!binding.callSource || !binding.targetEvent) {
       if (__DEV__)
         throw new Error(`AUR0801: Self binding behavior only supports events.`);
@@ -31,7 +33,7 @@ export class SelfBindingBehavior {
     binding.callSource = handleSelfEvent;
   }
 
-  public unbind(flags: LifecycleFlags, _scope: Scope, binding: SelfableBinding): void {
+  public unbind(_scope: Scope, binding: SelfableBinding): void {
     binding.callSource = binding.selfEventCallSource;
     binding.selfEventCallSource = null!;
   }

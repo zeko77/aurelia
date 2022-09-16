@@ -16,6 +16,7 @@ import { EndpointMatcher } from './endpoint-matcher';
 import { EndpointContent, Navigation, Router, RoutingHook, ViewportCustomElement } from './index';
 import { IContainer } from '@aurelia/kernel';
 import { arrayRemove, arrayUnique } from './utilities/utils';
+import { Parameters } from './instructions/instruction-parameters';
 
 export type TransitionAction = 'skip' | 'reload' | 'swap' | '';
 
@@ -253,12 +254,9 @@ export class RoutingScope {
     // TODO: Used to have an early exit if no instructions. Restore it?
 
     // If there are any unresolved components (functions or promises), resolve into components
-    const resolvePromises = instructions
-      .filter(instr => instr.isUnresolved)
-      .map(instr => instr.resolve())
-      .filter(result => result instanceof Promise);
-    if (resolvePromises.length > 0) {
-      await Promise.all(resolvePromises);
+    const unresolvedPromise = RoutingInstruction.resolve(instructions);
+    if (unresolvedPromise instanceof Promise) {
+      await unresolvedPromise;
     }
 
     // If router options defaults to navigations being full state navigation (containing the
@@ -281,7 +279,7 @@ export class RoutingScope {
       addInstruction.scope = addInstruction.scope!.owningScope!;
     }
 
-    const allChangedEndpoints: IEndpoint[] = [];
+    let allChangedEndpoints: IEndpoint[] = [];
 
     // Match the instructions to available endpoints within, and with the help of, their scope
     // TODO(return): This needs to be updated
@@ -463,13 +461,19 @@ export class RoutingScope {
         }
       }
       // If there are any unresolved components (functions or promises) to be appended, resolve them
-      const resolvePromises = instructions
-        .filter(instr => instr.isUnresolved)
-        .map(instr => instr.resolve())
-        .filter(result => result instanceof Promise);
-      if (resolvePromises.length > 0) {
-        await Promise.all(resolvePromises);
+      const unresolvedPromise = RoutingInstruction.resolve(matchedInstructions);
+      if (unresolvedPromise instanceof Promise) {
+        await unresolvedPromise;
       }
+
+      // Remove cancelled endpoints from changed endpoints
+      earlierMatchedInstructions.filter(instruction => instruction.cancelled).forEach(instruction => {
+        const lastIndex = earlierMatchedInstructions.lastIndexOf(instruction);
+        const lastInstruction = earlierMatchedInstructions[lastIndex];
+        if (lastInstruction.cancelled) {
+          allChangedEndpoints = allChangedEndpoints.filter(endpoint => endpoint !== lastInstruction.endpoint.instance);
+        }
+      });
     } while (matchedInstructions.length > 0 || remainingInstructions.length > 0);
 
     return allChangedEndpoints;
@@ -546,8 +550,11 @@ export class RoutingScope {
       // As long as the sibling constraint (above) is in, this will only be at most one instruction
       if (nonClearInstructions.length > 0) {
         for (const instruction of nonClearInstructions) {
-          const foundRoute = this.findMatchingRoute(RoutingInstruction.stringify(router, nonClearInstructions));
-          if (foundRoute?.foundConfiguration ?? false) {
+          const idOrPath = typeof instruction.route === 'string'
+            ? instruction.route
+            : instruction.unparsed ?? RoutingInstruction.stringify(router, [instruction]);
+          const foundRoute = this.findMatchingRoute(idOrPath, instruction.parameters.parametersRecord ?? {});
+          if (foundRoute.foundConfiguration) {
             route = foundRoute!;
             route.instructions = [...clearInstructions, ...route.instructions];
             clearInstructions = [];
@@ -718,23 +725,23 @@ export class RoutingScope {
     return instructions;
   }
 
-  public canUnload(step: Step<boolean> | null): boolean | Promise<boolean> {
+  public canUnload(coordinator: NavigationCoordinator, step: Step<boolean> | null): boolean | Promise<boolean> {
     return Runner.run(step,
       (stepParallel: Step<boolean>) => {
         return Runner.runParallel(stepParallel,
           ...this.children.map(child => child.endpoint !== null
-            ? (childStep: Step<boolean>) => child.endpoint.canUnload(childStep)
-            : (childStep: Step<boolean>) => child.canUnload(childStep)
+            ? (childStep: Step<boolean>) => child.endpoint.canUnload(coordinator, childStep)
+            : (childStep: Step<boolean>) => child.canUnload(coordinator, childStep)
           ));
       },
       (step: Step<boolean>) => (step.previousValue as boolean[]).every(result => result)) as boolean | Promise<boolean>;
   }
 
-  public unload(step: Step<void> | null): Step<void> {
+  public unload(coordinator: NavigationCoordinator, step: Step<void> | null): Step<void> {
     return Runner.runParallel(step,
       ...this.children.map(child => child.endpoint !== null
-        ? (childStep: Step<void>) => child.endpoint.unload(childStep)
-        : (childStep: Step<void>) => child.unload(childStep)
+        ? (childStep: Step<void>) => child.endpoint.unload(coordinator, childStep)
+        : (childStep: Step<void>) => child.unload(coordinator, childStep)
       )) as Step<void>;
   }
 
@@ -751,28 +758,36 @@ export class RoutingScope {
     return matching;
   }
 
-  public findMatchingRoute(path: string): FoundRoute | null {
+  public findMatchingRoute(path: string, parameters: Parameters): FoundRoute {
+    let found: FoundRoute = new FoundRoute();
     if (this.isViewportScope && !this.passThroughScope) {
-      return this.findMatchingRouteInRoutes(path, this.endpoint.getRoutes());
-    }
-    if (this.isViewport) {
-      return this.findMatchingRouteInRoutes(path, this.endpoint.getRoutes());
-    }
-
-    // TODO: Match specified names here
-
-    for (const child of this.enabledChildren) {
-      const found = child.findMatchingRoute(path);
-      if (found !== null) {
-        return found;
+      found = this.findMatchingRouteInRoutes(path, this.endpoint.getRoutes(), parameters);
+    } else if (this.isViewport) {
+      found = this.findMatchingRouteInRoutes(path, this.endpoint.getRoutes(), parameters);
+    } else {
+      for (const child of this.enabledChildren) {
+        found = child.findMatchingRoute(path, parameters);
+        if (found.foundConfiguration) {
+          break;
+        }
       }
     }
-    return null;
+
+    if (found.foundConfiguration) {
+      return found;
+    }
+
+    if (this.parent != null) {
+      return this.parent.findMatchingRoute(path, parameters);
+    }
+
+    return found;
   }
 
-  private findMatchingRouteInRoutes(path: string, routes: Route[] | null): FoundRoute | null {
-    if (!Array.isArray(routes)) {
-      return null;
+  private findMatchingRouteInRoutes(path: string, routes: Route[], parameters: Parameters): FoundRoute {
+    const found = new FoundRoute();
+    if (routes.length === 0) {
+      return found;
     }
 
     routes = routes.map(route => this.ensureProperRoute(route));
@@ -796,7 +811,6 @@ export class RoutingScope {
       }
     }
 
-    const found = new FoundRoute();
     if (path.startsWith('/') || path.startsWith('+')) {
       path = path.slice(1);
     }
@@ -805,6 +819,18 @@ export class RoutingScope {
     let result = { params: {}, endpoint: {} } as any;
     if (idRoute != null) {
       result.endpoint = { route: { handler: idRoute } };
+      path = Array.isArray(idRoute.path) ? idRoute.path[0] : idRoute.path;
+      const segments = path.split('/').map(segment => {
+        if (segment.startsWith(':')) {
+          const name = segment.slice(1).replace(/\?$/, '');
+          const param = parameters[name];
+          result.params[name] = param;
+          return param;
+        } else {
+          return segment;
+        }
+      });
+      path = segments.join('/');
     } else {
       const recognizer = new RouteRecognizer();
 
@@ -826,7 +852,7 @@ export class RoutingScope {
         if ((found.remaining ?? '').length > 0) {
           redirectedTo += `/${found.remaining}`;
         }
-        return this.findMatchingRouteInRoutes(redirectedTo, routes);
+        return this.findMatchingRouteInRoutes(redirectedTo, routes, parameters);
       }
     }
     if (found.foundConfiguration) {

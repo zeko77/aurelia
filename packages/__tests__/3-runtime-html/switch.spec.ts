@@ -11,17 +11,15 @@ import {
   sink,
 } from '@aurelia/kernel';
 import {
-  bindingBehavior,
   BindingBehaviorInstance,
   IBinding,
   Scope,
-  LifecycleFlags,
-  valueConverter,
 } from '@aurelia/runtime';
 import {
   AuSlot,
   Case,
   Controller,
+  bindingBehavior,
   customElement,
   CustomElement,
   Repeat,
@@ -32,6 +30,7 @@ import {
   ICustomElementController,
   bindable,
   INode,
+  valueConverter,
 } from '@aurelia/runtime-html';
 import {
   assert,
@@ -323,10 +322,10 @@ describe('3-runtime-html/switch.spec.ts', function () {
 
   @bindingBehavior('noop')
   class NoopBindingBehavior implements BindingBehaviorInstance {
-    public bind(_flags: LifecycleFlags, _scope: Scope, _binding: IBinding): void {
+    public bind(_scope: Scope, _binding: IBinding): void {
       return;
     }
-    public unbind(_flags: LifecycleFlags, _scope: Scope, _binding: IBinding): void {
+    public unbind(_scope: Scope, _binding: IBinding): void {
       return;
     }
   }

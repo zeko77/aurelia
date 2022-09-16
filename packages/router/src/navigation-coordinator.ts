@@ -32,8 +32,8 @@ export type NavigationState =
   'guardedUnload' | // fulfilled when canUnload (if any) has been called
   'guardedLoad' | // fulfilled when canLoad (if any) has been called
   'guarded' | // fulfilled when check hooks canUnload and canLoad (if any) have been called
-  'unloaded' | // fulfilled when unload (if any) has been called
-  'loaded' | // fulfilled when load (if any) has been called
+  'unloaded' | // fulfilled when unloading (if any) has been called
+  'loaded' | // fulfilled when loading (if any) has been called
   'routed' | // fulfilled when initial routing hooks (if any) have been called
   'bound' | // fulfilled when bind has been called
   'swapped' |
@@ -196,14 +196,7 @@ export class NavigationCoordinator {
    * @param endpoint - The endpoint to add
    */
   public addEndpoint(endpoint: IEndpoint): Entity {
-    // If the endpoint already have an entity...
-    let entity = this.entities.find(e => e.endpoint === endpoint);
-    if (entity !== void 0) {
-      // ...use that.
-      return entity;
-    }
-
-    entity = new Entity(endpoint);
+    const entity = new Entity(endpoint);
     this.entities.push(entity);
     // A new entity might invalidate earlier reached states, so reset
     this.recheckSyncStates();
@@ -243,6 +236,17 @@ export class NavigationCoordinator {
       entity = this.addEndpoint(endpoint);
     }
     entity.step = step;
+  }
+
+  /**
+   * Get the Runner step controlling the transition for an endpoint.
+   *
+   * @param endpoint - The endpoint to get the step for
+   */
+  public getEndpointStep(endpoint: IEndpoint): Step<void> | null {
+    // Find the entity for the endpoint...
+    const entity = this.entities.find(e => e.endpoint === endpoint);
+    return entity?.step ?? null;
   }
 
   /**
@@ -377,7 +381,7 @@ export class NavigationCoordinator {
     this.cancelled = true;
     // TODO: Take care of disabling viewports when cancelling and stateful!
     this.entities.forEach(entity => {
-      const abort = entity.endpoint.cancelContentChange(this, entity.step?.current ?? null);
+      const abort = entity.endpoint.cancelContentChange(this);
       if (abort instanceof Promise) {
         abort.catch(error => { throw error; });
       }
@@ -429,7 +433,7 @@ export class NavigationCoordinator {
       arrayRemove(this.appendedInstructions, instr => instr === appendedInstruction);
 
       // Already matched (and processed) an instruction for this endpoint
-      const foundEarlierExisting = earlierMatchedInstructions.some(instr => instr.sameEndpoint(appendedInstruction, true));
+      const foundEarlierExisting = earlierMatchedInstructions.some(instr => !instr.cancelled && instr.sameEndpoint(appendedInstruction, true));
       // An already matched (but not processed) instruction for this endpoint
       const existingMatched = matchedInstructions.find(instr => instr.sameEndpoint(appendedInstruction, true));
       // An already found (but not matched or processed) instruction for this endpoint

@@ -99,13 +99,14 @@ export class StateBindingInstruction {
     const platform = context.get(IPlatform);
 
     const binding = new StateBinding(
+      renderingCtrl,
       renderingCtrl.container,
-      platform.domWriteQueue,
-      stateContainer,
       observerLocator,
+      platform.domWriteQueue,
       ensureExpression(parser, this.from, ExpressionType.IsFunction),
       target,
       this.to,
+      stateContainer,
     );
     renderingCtrl.addBinding(binding);
   }
@@ -115,7 +116,7 @@ export class DispatchBindingInstruction {
   public readonly type = 'sd';
   public constructor(
     public from: string,
-    public expr: string | IsBindingBehavior,
+    public ast: string | IsBindingBehavior,
   ) {}
 
   public render(
@@ -123,17 +124,16 @@ export class DispatchBindingInstruction {
     target: object,
   ): void {
     const context = renderingCtrl.container;
-
     const parser = context.get(IExpressionParser);
     const stateContainer = context.get(IStore);
 
-    const expr = ensureExpression(parser, this.expr, ExpressionType.IsProperty);
+    const expr = ensureExpression(parser, this.ast, ExpressionType.IsProperty);
     const binding = new StateDispatchBinding(
       context,
-      stateContainer,
       expr,
       target as HTMLElement,
-      this.from
+      this.from,
+      stateContainer,
     );
     renderingCtrl.addBinding(expr.$kind === ExpressionKind.BindingBehavior
       ? applyBindingBehavior(binding, expr, renderingCtrl.container)
