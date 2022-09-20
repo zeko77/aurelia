@@ -38,7 +38,6 @@ import type {
   BindingBehaviorInstance,
   IObservable,
   ForOfStatement,
-  DelegationStrategy,
 } from '@aurelia/runtime';
 import type { IHydratableController } from './templating/controller';
 import type { PartialCustomElementDefinition } from './resources/custom-element';
@@ -231,6 +230,12 @@ export class TextBindingInstruction {
      */
     public strict: boolean,
   ) {}
+}
+
+export const enum DelegationStrategy {
+  none      = 0,
+  capturing = 1,
+  bubbling  = 2,
 }
 
 export class ListenerBindingInstruction {
@@ -1031,38 +1036,20 @@ export class TextBindingRenderer implements IRenderer {
   }
 }
 
-export interface IListenerBehaviorOptions {
-  /**
-   * `true` if the expression specified in the template is meant to be treated as a handler
-   */
-  expAsHandler: boolean;
-}
-export const IListenerBehaviorOptions = DI.createInterface<IListenerBehaviorOptions>('IListenerBehaviorOptions', x => x.singleton(ListenerBehaviorOptions));
-
-class ListenerBehaviorOptions implements IListenerBehaviorOptions {
-  public expAsHandler = false;
-}
-
 @renderer(InstructionType.listenerBinding)
 /** @internal */
 export class ListenerBindingRenderer implements IRenderer {
-  /** @internal */ protected static inject = [IExpressionParser, IEventDelegator, IPlatform, IListenerBehaviorOptions];
+  /** @internal */ protected static inject = [IExpressionParser, IEventDelegator];
   /** @internal */ private readonly _exprParser: IExpressionParser;
   /** @internal */ private readonly _eventDelegator: IEventDelegator;
-  /** @internal */ private readonly _platform: IPlatform;
-  /** @internal */ private readonly _listenerBehaviorOptions: IListenerBehaviorOptions;
 
   public target!: InstructionType.listenerBinding;
   public constructor(
     parser: IExpressionParser,
     eventDelegator: IEventDelegator,
-    p: IPlatform,
-    listenerBehaviorOptions: IListenerBehaviorOptions,
   ) {
     this._exprParser = parser;
     this._eventDelegator = eventDelegator;
-    this._platform = p;
-    this._listenerBehaviorOptions = listenerBehaviorOptions;
   }
 
   public render(
@@ -1077,7 +1064,7 @@ export class ListenerBindingRenderer implements IRenderer {
       target,
       instruction.to,
       this._eventDelegator,
-      new ListenerOptions(instruction.preventDefault, instruction.strategy, this._listenerBehaviorOptions.expAsHandler),
+      new ListenerOptions(instruction.preventDefault, instruction.strategy),
     );
     renderingCtrl.addBinding(expr.$kind === ExpressionKind.BindingBehavior
       ? applyBindingBehavior(binding, expr, renderingCtrl.container)

@@ -1,10 +1,7 @@
-import {
-  DelegationStrategy,
-} from '@aurelia/runtime';
-
 import { IEventTarget } from '../dom';
 import { isFunction } from '../utilities';
 import { astEvaluator } from './binding-utils';
+import { DelegationStrategy } from '../renderer';
 
 import type { IDisposable, IIndexable, IServiceLocator } from '@aurelia/kernel';
 import type { IsBindingBehavior, Scope } from '@aurelia/runtime';
@@ -20,7 +17,6 @@ export class ListenerOptions {
   public constructor(
     public readonly prevent: boolean,
     public readonly strategy: DelegationStrategy,
-    public readonly expAsHandler: boolean,
   ) {}
 }
 
@@ -57,10 +53,7 @@ export class Listener implements IAstBasedBinding {
 
     delete overrideContext.$event;
 
-    if (this._options.expAsHandler) {
-      if (!isFunction(result)) {
-        throw new Error(`Handler of "${this.targetEvent}" event is not a function.`);
-      }
+    if (isFunction(result)) {
       result = result(event);
     }
 
