@@ -182,7 +182,7 @@ exports.ITemplateCompilerHooks = e.ITemplateCompilerHooks;
 
 exports.IWcElementRegistry = e.IWcElementRegistry;
 
-exports.IWorkTracker = e.IWorkTracker;
+exports.LifecycleFlags = e.LifecycleFlags;
 
 exports.LifecycleHooks = e.LifecycleHooks;
 
@@ -295,8 +295,6 @@ exports.ComputedObserver = a.ComputedObserver;
 exports.IObserverLocator = a.IObserverLocator;
 
 exports.ISignaler = a.ISignaler;
-
-exports.LifecycleFlags = a.LifecycleFlags;
 
 exports.batch = a.batch;
 

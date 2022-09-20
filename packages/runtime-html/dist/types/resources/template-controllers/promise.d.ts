@@ -1,13 +1,12 @@
 import { ILogger } from '@aurelia/kernel';
-import { LifecycleFlags, Scope } from '@aurelia/runtime';
+import { Scope } from '@aurelia/runtime';
 import { INode, IRenderLocation } from '../../dom';
 import { IPlatform } from '../../platform';
 import { IInstruction } from '../../renderer';
-import { ICustomAttributeController, ICustomAttributeViewModel, IHydratableController, IHydratedController, IHydratedParentController, ISyntheticView } from '../../templating/controller';
+import { LifecycleFlags, ICustomAttributeController, ICustomAttributeViewModel, IHydratableController, IHydratedController, IHydratedParentController, ISyntheticView } from '../../templating/controller';
 import { IViewFactory } from '../../templating/view';
 import { AttrSyntax } from '../attribute-pattern';
 export declare class PromiseTemplateController implements ICustomAttributeViewModel {
-    readonly id: number;
     readonly $controller: ICustomAttributeController<this>;
     private view;
     value: Promise<unknown>;
@@ -30,7 +29,6 @@ export declare class PromiseTemplateController implements ICustomAttributeViewMo
     dispose(): void;
 }
 export declare class PendingTemplateController implements ICustomAttributeViewModel {
-    readonly id: number;
     readonly $controller: ICustomAttributeController<this>;
     value: Promise<unknown>;
     view: ISyntheticView | undefined;
@@ -44,7 +42,6 @@ export declare class PendingTemplateController implements ICustomAttributeViewMo
     dispose(): void;
 }
 export declare class FulfilledTemplateController implements ICustomAttributeViewModel {
-    readonly id: number;
     readonly $controller: ICustomAttributeController<this>;
     value: unknown;
     view: ISyntheticView | undefined;
@@ -60,7 +57,6 @@ export declare class FulfilledTemplateController implements ICustomAttributeView
 export declare class RejectedTemplateController implements ICustomAttributeViewModel {
     private readonly _factory;
     private readonly _location;
-    readonly id: number;
     readonly $controller: ICustomAttributeController<this>;
     value: unknown;
     view: ISyntheticView | undefined;

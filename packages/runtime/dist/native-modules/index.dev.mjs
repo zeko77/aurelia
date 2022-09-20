@@ -1,5 +1,72 @@
-import { Protocol, DI, isNumberOrBigInt, isStringOrDate, emptyArray, isArrayIndex, IPlatform, ILogger } from '../../../kernel/dist/native-modules/index.mjs';
+import { Protocol, DI, emptyArray, isArrayIndex, IPlatform, ILogger } from '../../../kernel/dist/native-modules/index.mjs';
 import { Metadata } from '../../../metadata/dist/native-modules/index.mjs';
+
+class BindingContext {
+    constructor(key, value) {
+        if (key !== void 0) {
+            this[key] = value;
+        }
+    }
+}
+class Scope {
+    constructor(parentScope, bindingContext, overrideContext, isBoundary) {
+        this.parentScope = parentScope;
+        this.bindingContext = bindingContext;
+        this.overrideContext = overrideContext;
+        this.isBoundary = isBoundary;
+    }
+    static getContext(scope, name, ancestor) {
+        if (scope == null) {
+            throw nullScopeError();
+        }
+        let overrideContext = scope.overrideContext;
+        let currentScope = scope;
+        if (ancestor > 0) {
+            while (ancestor > 0) {
+                ancestor--;
+                currentScope = currentScope.parentScope;
+                if (currentScope == null) {
+                    return void 0;
+                }
+            }
+            overrideContext = currentScope.overrideContext;
+            return name in overrideContext ? overrideContext : currentScope.bindingContext;
+        }
+        while (currentScope != null
+            && !currentScope.isBoundary
+            && !(name in currentScope.overrideContext)
+            && !(name in currentScope.bindingContext)) {
+            currentScope = currentScope.parentScope;
+        }
+        if (currentScope == null) {
+            return scope.bindingContext;
+        }
+        overrideContext = currentScope.overrideContext;
+        return name in overrideContext ? overrideContext : currentScope.bindingContext;
+    }
+    static create(bc, oc, isBoundary) {
+        if (bc == null) {
+            throw nullContextError();
+        }
+        return new Scope(null, bc, oc == null ? new OverrideContext() : oc, isBoundary ?? false);
+    }
+    static fromParent(ps, bc) {
+        if (ps == null) {
+            throw nullScopeError();
+        }
+        return new Scope(ps, bc, new OverrideContext(), false);
+    }
+}
+const nullScopeError = () => {
+    return new Error(`AUR0203: scope is null/undefined.`)
+        ;
+};
+const nullContextError = () => {
+    return new Error('AUR0204: binding context is null/undefined')
+        ;
+};
+class OverrideContext {
+}
 
 const hasOwnProp = Object.prototype.hasOwnProperty;
 const def = Reflect.defineProperty;
@@ -20,94 +87,14 @@ function ensureProto(proto, key, defaultValue) {
         defineHiddenProp(proto, key, defaultValue);
     }
 }
+const safeString = String;
 const createLookup = () => Object.create(null);
-Metadata.getOwn;
+const getOwnMetadata = Metadata.getOwn;
 Metadata.hasOwn;
-Metadata.define;
+const defineMetadata = Metadata.define;
 Protocol.annotation.keyFor;
 Protocol.resource.keyFor;
 Protocol.resource.appendTo;
-
-class BindingContext {
-    constructor(keyOrObj, value) {
-        if (keyOrObj !== void 0) {
-            if (value !== void 0) {
-                this[keyOrObj] = value;
-            }
-            else {
-                for (const prop in keyOrObj) {
-                    if (hasOwnProp.call(keyOrObj, prop)) {
-                        this[prop] = keyOrObj[prop];
-                    }
-                }
-            }
-        }
-    }
-    static create(keyOrObj, value) {
-        return new BindingContext(keyOrObj, value);
-    }
-    static get(scope, name, ancestor) {
-        if (scope == null) {
-            throw new Error(`AUR0203: Scope is ${scope}.`);
-        }
-        let overrideContext = scope.overrideContext;
-        let currentScope = scope;
-        if (ancestor > 0) {
-            while (ancestor > 0) {
-                ancestor--;
-                currentScope = currentScope.parentScope;
-                if (currentScope?.overrideContext == null) {
-                    return void 0;
-                }
-            }
-            overrideContext = currentScope.overrideContext;
-            return name in overrideContext ? overrideContext : overrideContext.bindingContext;
-        }
-        while (!currentScope?.isBoundary
-            && overrideContext != null
-            && !(name in overrideContext)
-            && !(overrideContext.bindingContext
-                && name in overrideContext.bindingContext)) {
-            currentScope = currentScope.parentScope ?? null;
-            overrideContext = currentScope?.overrideContext ?? null;
-        }
-        if (overrideContext) {
-            return name in overrideContext ? overrideContext : overrideContext.bindingContext;
-        }
-        return scope.bindingContext || scope.overrideContext;
-    }
-}
-class Scope {
-    constructor(parentScope, bindingContext, overrideContext, isBoundary) {
-        this.parentScope = parentScope;
-        this.bindingContext = bindingContext;
-        this.overrideContext = overrideContext;
-        this.isBoundary = isBoundary;
-    }
-    static create(bc, oc, isBoundary) {
-        return new Scope(null, bc, oc == null ? OverrideContext.create(bc) : oc, isBoundary ?? false);
-    }
-    static fromOverride(oc) {
-        if (oc == null) {
-            throw new Error(`AUR0204: OverrideContext is ${oc}`);
-        }
-        return new Scope(null, oc.bindingContext, oc, false);
-    }
-    static fromParent(ps, bc) {
-        if (ps == null) {
-            throw new Error(`AUR0205: ParentScope is ${ps}`);
-        }
-        return new Scope(ps, bc, OverrideContext.create(bc), false);
-    }
-}
-class OverrideContext {
-    constructor(bindingContext) {
-        this.bindingContext = bindingContext;
-    }
-    static create(bc) {
-        return new OverrideContext(bc);
-    }
-}
 
 const ISignaler = DI.createInterface('ISignaler', x => x.singleton(Signaler));
 class Signaler {
@@ -141,45 +128,33 @@ class Signaler {
 
 var ExpressionKind;
 (function (ExpressionKind) {
-    ExpressionKind[ExpressionKind["CallsFunction"] = 128] = "CallsFunction";
-    ExpressionKind[ExpressionKind["HasAncestor"] = 256] = "HasAncestor";
-    ExpressionKind[ExpressionKind["IsPrimary"] = 512] = "IsPrimary";
-    ExpressionKind[ExpressionKind["IsLeftHandSide"] = 1024] = "IsLeftHandSide";
-    ExpressionKind[ExpressionKind["HasBind"] = 2048] = "HasBind";
-    ExpressionKind[ExpressionKind["HasUnbind"] = 4096] = "HasUnbind";
-    ExpressionKind[ExpressionKind["IsAssignable"] = 8192] = "IsAssignable";
-    ExpressionKind[ExpressionKind["IsLiteral"] = 16384] = "IsLiteral";
-    ExpressionKind[ExpressionKind["IsResource"] = 32768] = "IsResource";
-    ExpressionKind[ExpressionKind["IsForDeclaration"] = 65536] = "IsForDeclaration";
-    ExpressionKind[ExpressionKind["Type"] = 31] = "Type";
-    ExpressionKind[ExpressionKind["AccessThis"] = 1793] = "AccessThis";
-    ExpressionKind[ExpressionKind["AccessScope"] = 10082] = "AccessScope";
-    ExpressionKind[ExpressionKind["ArrayLiteral"] = 17955] = "ArrayLiteral";
-    ExpressionKind[ExpressionKind["ObjectLiteral"] = 17956] = "ObjectLiteral";
-    ExpressionKind[ExpressionKind["PrimitiveLiteral"] = 17925] = "PrimitiveLiteral";
-    ExpressionKind[ExpressionKind["Template"] = 17958] = "Template";
-    ExpressionKind[ExpressionKind["Unary"] = 39] = "Unary";
-    ExpressionKind[ExpressionKind["CallScope"] = 1448] = "CallScope";
-    ExpressionKind[ExpressionKind["CallMember"] = 1161] = "CallMember";
-    ExpressionKind[ExpressionKind["CallFunction"] = 1162] = "CallFunction";
-    ExpressionKind[ExpressionKind["AccessMember"] = 9323] = "AccessMember";
-    ExpressionKind[ExpressionKind["AccessKeyed"] = 9324] = "AccessKeyed";
-    ExpressionKind[ExpressionKind["TaggedTemplate"] = 1197] = "TaggedTemplate";
-    ExpressionKind[ExpressionKind["Binary"] = 46] = "Binary";
-    ExpressionKind[ExpressionKind["Conditional"] = 63] = "Conditional";
-    ExpressionKind[ExpressionKind["Assign"] = 8208] = "Assign";
-    ExpressionKind[ExpressionKind["ArrowFunction"] = 17] = "ArrowFunction";
-    ExpressionKind[ExpressionKind["ValueConverter"] = 36914] = "ValueConverter";
-    ExpressionKind[ExpressionKind["BindingBehavior"] = 38963] = "BindingBehavior";
-    ExpressionKind[ExpressionKind["HtmlLiteral"] = 52] = "HtmlLiteral";
-    ExpressionKind[ExpressionKind["ArrayBindingPattern"] = 65557] = "ArrayBindingPattern";
-    ExpressionKind[ExpressionKind["ObjectBindingPattern"] = 65558] = "ObjectBindingPattern";
-    ExpressionKind[ExpressionKind["BindingIdentifier"] = 65559] = "BindingIdentifier";
-    ExpressionKind[ExpressionKind["ForOfStatement"] = 6200] = "ForOfStatement";
-    ExpressionKind[ExpressionKind["Interpolation"] = 25] = "Interpolation";
-    ExpressionKind[ExpressionKind["ArrayDestructuring"] = 90138] = "ArrayDestructuring";
-    ExpressionKind[ExpressionKind["ObjectDestructuring"] = 106523] = "ObjectDestructuring";
-    ExpressionKind[ExpressionKind["DestructuringAssignmentLeaf"] = 139292] = "DestructuringAssignmentLeaf";
+    ExpressionKind[ExpressionKind["AccessThis"] = 0] = "AccessThis";
+    ExpressionKind[ExpressionKind["AccessScope"] = 1] = "AccessScope";
+    ExpressionKind[ExpressionKind["ArrayLiteral"] = 2] = "ArrayLiteral";
+    ExpressionKind[ExpressionKind["ObjectLiteral"] = 3] = "ObjectLiteral";
+    ExpressionKind[ExpressionKind["PrimitiveLiteral"] = 4] = "PrimitiveLiteral";
+    ExpressionKind[ExpressionKind["Template"] = 5] = "Template";
+    ExpressionKind[ExpressionKind["Unary"] = 6] = "Unary";
+    ExpressionKind[ExpressionKind["CallScope"] = 7] = "CallScope";
+    ExpressionKind[ExpressionKind["CallMember"] = 8] = "CallMember";
+    ExpressionKind[ExpressionKind["CallFunction"] = 9] = "CallFunction";
+    ExpressionKind[ExpressionKind["AccessMember"] = 10] = "AccessMember";
+    ExpressionKind[ExpressionKind["AccessKeyed"] = 11] = "AccessKeyed";
+    ExpressionKind[ExpressionKind["TaggedTemplate"] = 12] = "TaggedTemplate";
+    ExpressionKind[ExpressionKind["Binary"] = 13] = "Binary";
+    ExpressionKind[ExpressionKind["Conditional"] = 14] = "Conditional";
+    ExpressionKind[ExpressionKind["Assign"] = 15] = "Assign";
+    ExpressionKind[ExpressionKind["ArrowFunction"] = 16] = "ArrowFunction";
+    ExpressionKind[ExpressionKind["ValueConverter"] = 17] = "ValueConverter";
+    ExpressionKind[ExpressionKind["BindingBehavior"] = 18] = "BindingBehavior";
+    ExpressionKind[ExpressionKind["ArrayBindingPattern"] = 19] = "ArrayBindingPattern";
+    ExpressionKind[ExpressionKind["ObjectBindingPattern"] = 20] = "ObjectBindingPattern";
+    ExpressionKind[ExpressionKind["BindingIdentifier"] = 21] = "BindingIdentifier";
+    ExpressionKind[ExpressionKind["ForOfStatement"] = 22] = "ForOfStatement";
+    ExpressionKind[ExpressionKind["Interpolation"] = 23] = "Interpolation";
+    ExpressionKind[ExpressionKind["ArrayDestructuring"] = 24] = "ArrayDestructuring";
+    ExpressionKind[ExpressionKind["ObjectDestructuring"] = 25] = "ObjectDestructuring";
+    ExpressionKind[ExpressionKind["DestructuringAssignmentLeaf"] = 26] = "DestructuringAssignmentLeaf";
 })(ExpressionKind || (ExpressionKind = {}));
 class Unparser {
     constructor() {
@@ -402,7 +377,6 @@ class Unparser {
     visitBindingIdentifier(expr) {
         this.text += expr.name;
     }
-    visitHtmlLiteral(_expr) { throw new Error('visitHtmlLiteral'); }
     visitForOfStatement(expr) {
         expr.declaration.accept(this);
         this.text += ' of ';
@@ -421,7 +395,7 @@ class Unparser {
     }
     visitDestructuringAssignmentExpression(expr) {
         const $kind = expr.$kind;
-        const isObjDes = $kind === 106523;
+        const isObjDes = $kind === 25;
         this.text += isObjDes ? '{' : '[';
         const list = expr.list;
         const len = list.length;
@@ -430,11 +404,11 @@ class Unparser {
         for (i = 0; i < len; i++) {
             item = list[i];
             switch (item.$kind) {
-                case 139292:
+                case 26:
                     item.accept(this);
                     break;
-                case 90138:
-                case 106523: {
+                case 24:
+                case 25: {
                     const source = item.source;
                     if (source) {
                         source.accept(this);
@@ -487,7 +461,7 @@ class BindingBehaviorExpression {
         this.args = args;
         this._key = `_bb_${name}`;
     }
-    get $kind() { return 38963; }
+    get $kind() { return 18; }
     get hasBind() { return true; }
     get hasUnbind() { return true; }
     evaluate(s, e, c) {
@@ -542,7 +516,7 @@ class ValueConverterExpression {
         this.name = name;
         this.args = args;
     }
-    get $kind() { return 36914; }
+    get $kind() { return 17; }
     get hasBind() { return true; }
     get hasUnbind() { return true; }
     evaluate(s, e, c) {
@@ -612,7 +586,7 @@ class AssignExpression {
         this.target = target;
         this.value = value;
     }
-    get $kind() { return 8208; }
+    get $kind() { return 15; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(s, e, c) {
@@ -635,7 +609,7 @@ class ConditionalExpression {
         this.yes = yes;
         this.no = no;
     }
-    get $kind() { return 63; }
+    get $kind() { return 14; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(s, e, c) {
@@ -655,18 +629,16 @@ class AccessThisExpression {
     constructor(ancestor = 0) {
         this.ancestor = ancestor;
     }
-    get $kind() { return 1793; }
+    get $kind() { return 0; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(s, _e, _c) {
-        let oc = s.overrideContext;
         let currentScope = s;
         let i = this.ancestor;
-        while (i-- && oc) {
+        while (i-- && currentScope) {
             currentScope = currentScope.parentScope;
-            oc = currentScope?.overrideContext ?? null;
         }
-        return i < 1 && oc ? oc.bindingContext : void 0;
+        return i < 1 && currentScope ? currentScope.bindingContext : void 0;
     }
     assign(_s, _e, _obj) {
         return void 0;
@@ -685,11 +657,11 @@ class AccessScopeExpression {
         this.name = name;
         this.ancestor = ancestor;
     }
-    get $kind() { return 10082; }
+    get $kind() { return 1; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(s, e, c) {
-        const obj = BindingContext.get(s, this.name, this.ancestor);
+        const obj = Scope.getContext(s, this.name, this.ancestor);
         if (c !== null) {
             c.observe(obj, this.name);
         }
@@ -706,7 +678,7 @@ class AccessScopeExpression {
         if (this.name === '$host') {
             throw new Error(`AUR0106: Invalid assignment. $host is a reserved keyword.`);
         }
-        const obj = BindingContext.get(s, this.name, this.ancestor);
+        const obj = Scope.getContext(s, this.name, this.ancestor);
         if (obj instanceof Object) {
             if (obj.$observers?.[this.name] !== void 0) {
                 obj.$observers[this.name].setValue(val);
@@ -730,7 +702,7 @@ class AccessMemberExpression {
         this.name = name;
         this.optional = optional;
     }
-    get $kind() { return 9323; }
+    get $kind() { return 10; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(s, e, c) {
@@ -777,7 +749,7 @@ class AccessKeyedExpression {
         this.key = key;
         this.optional = optional;
     }
-    get $kind() { return 9324; }
+    get $kind() { return 11; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(s, e, c) {
@@ -810,12 +782,12 @@ class CallScopeExpression {
         this.ancestor = ancestor;
         this.optional = optional;
     }
-    get $kind() { return 1448; }
+    get $kind() { return 7; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(s, e, c) {
         const args = this.args.map(a => a.evaluate(s, e, c));
-        const context = BindingContext.get(s, this.name, this.ancestor);
+        const context = Scope.getContext(s, this.name, this.ancestor);
         const func = getFunction(e?.strictFnCall, context, this.name);
         if (func) {
             return func.apply(context, args);
@@ -832,7 +804,7 @@ class CallScopeExpression {
         return Unparser.unparse(this);
     }
 }
-const autoObserveArrayMethods = 'at map filter includes indexOf lastIndexOf findIndex find flat flatMap join reduce reduceRight slice every some'.split(' ');
+const autoObserveArrayMethods = 'at map filter includes indexOf lastIndexOf findIndex find flat flatMap join reduce reduceRight slice every some sort'.split(' ');
 class CallMemberExpression {
     constructor(object, name, args, optionalMember = false, optionalCall = false) {
         this.object = object;
@@ -841,7 +813,7 @@ class CallMemberExpression {
         this.optionalMember = optionalMember;
         this.optionalCall = optionalCall;
     }
-    get $kind() { return 1161; }
+    get $kind() { return 8; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(s, e, c) {
@@ -849,10 +821,11 @@ class CallMemberExpression {
         const args = this.args.map(a => a.evaluate(s, e, c));
         const func = getFunction(e?.strictFnCall, instance, this.name);
         if (func) {
+            const ret = func.apply(instance, args);
             if (isArray(instance) && autoObserveArrayMethods.includes(this.name)) {
                 c?.observeCollection(instance);
             }
-            return func.apply(instance, args);
+            return ret;
         }
         return void 0;
     }
@@ -872,7 +845,7 @@ class CallFunctionExpression {
         this.args = args;
         this.optional = optional;
     }
-    get $kind() { return 1162; }
+    get $kind() { return 9; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(s, e, c) {
@@ -901,7 +874,7 @@ class BinaryExpression {
         this.left = left;
         this.right = right;
     }
-    get $kind() { return 46; }
+    get $kind() { return 13; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(s, e, c) {
@@ -985,7 +958,7 @@ class UnaryExpression {
         this.operation = operation;
         this.expression = expression;
     }
-    get $kind() { return 39; }
+    get $kind() { return 6; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(s, e, c) {
@@ -1018,7 +991,7 @@ class PrimitiveLiteralExpression {
     constructor(value) {
         this.value = value;
     }
-    get $kind() { return 17925; }
+    get $kind() { return 4; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(_s, _e, _c) {
@@ -1039,39 +1012,11 @@ PrimitiveLiteralExpression.$null = new PrimitiveLiteralExpression(null);
 PrimitiveLiteralExpression.$true = new PrimitiveLiteralExpression(true);
 PrimitiveLiteralExpression.$false = new PrimitiveLiteralExpression(false);
 PrimitiveLiteralExpression.$empty = new PrimitiveLiteralExpression('');
-class HtmlLiteralExpression {
-    constructor(parts) {
-        this.parts = parts;
-    }
-    get $kind() { return 52; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, e, c) {
-        let result = '';
-        for (let i = 0; i < this.parts.length; ++i) {
-            const v = this.parts[i].evaluate(s, e, c);
-            if (v == null) {
-                continue;
-            }
-            result += v;
-        }
-        return result;
-    }
-    assign(_s, _e, _obj, _projection) {
-        return void 0;
-    }
-    accept(visitor) {
-        return visitor.visitHtmlLiteral(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
-    }
-}
 class ArrayLiteralExpression {
     constructor(elements) {
         this.elements = elements;
     }
-    get $kind() { return 17955; }
+    get $kind() { return 2; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(s, e, c) {
@@ -1093,7 +1038,7 @@ class ObjectLiteralExpression {
         this.keys = keys;
         this.values = values;
     }
-    get $kind() { return 17956; }
+    get $kind() { return 3; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(s, e, c) {
@@ -1119,13 +1064,13 @@ class TemplateExpression {
         this.cooked = cooked;
         this.expressions = expressions;
     }
-    get $kind() { return 17958; }
+    get $kind() { return 5; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(s, e, c) {
         let result = this.cooked[0];
         for (let i = 0; i < this.expressions.length; ++i) {
-            result += String(this.expressions[i].evaluate(s, e, c));
+            result += safeString(this.expressions[i].evaluate(s, e, c));
             result += this.cooked[i + 1];
         }
         return result;
@@ -1148,7 +1093,7 @@ class TaggedTemplateExpression {
         this.expressions = expressions;
         cooked.raw = raw;
     }
-    get $kind() { return 1197; }
+    get $kind() { return 12; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(s, e, c) {
@@ -1173,7 +1118,7 @@ class ArrayBindingPattern {
     constructor(elements) {
         this.elements = elements;
     }
-    get $kind() { return 65557; }
+    get $kind() { return 19; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(_s, _e, _c) {
@@ -1194,7 +1139,7 @@ class ObjectBindingPattern {
         this.keys = keys;
         this.values = values;
     }
-    get $kind() { return 65558; }
+    get $kind() { return 20; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(_s, _e, _c) {
@@ -1214,7 +1159,7 @@ class BindingIdentifier {
     constructor(name) {
         this.name = name;
     }
-    get $kind() { return 65559; }
+    get $kind() { return 21; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(_s, _e, _c) {
@@ -1232,7 +1177,7 @@ class ForOfStatement {
         this.declaration = declaration;
         this.iterable = iterable;
     }
-    get $kind() { return 6200; }
+    get $kind() { return 22; }
     get hasBind() { return true; }
     get hasUnbind() { return true; }
     evaluate(s, e, c) {
@@ -1265,7 +1210,7 @@ class Interpolation {
         this.isMulti = expressions.length > 1;
         this.firstExpression = expressions[0];
     }
-    get $kind() { return 25; }
+    get $kind() { return 23; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(s, e, c) {
@@ -1273,7 +1218,7 @@ class Interpolation {
             let result = this.parts[0];
             let i = 0;
             for (; i < this.expressions.length; ++i) {
-                result += String(this.expressions[i].evaluate(s, e, c));
+                result += safeString(this.expressions[i].evaluate(s, e, c));
                 result += this.parts[i + 1];
             }
             return result;
@@ -1312,11 +1257,11 @@ class DestructuringAssignmentExpression {
         for (i = 0; i < len; i++) {
             item = list[i];
             switch (item.$kind) {
-                case 139292:
+                case 26:
                     item.assign(s, l, value);
                     break;
-                case 90138:
-                case 106523: {
+                case 24:
+                case 25: {
                     if (typeof value !== 'object' || value === null) {
                         {
                             throw new Error(`AUR0112: Cannot use non-object value for destructuring assignment.`);
@@ -1345,7 +1290,7 @@ class DestructuringAssignmentSingleExpression {
         this.source = source;
         this.initializer = initializer;
     }
-    get $kind() { return 139292; }
+    get $kind() { return 26; }
     evaluate(_s, _e, _c) {
         return void 0;
     }
@@ -1376,7 +1321,7 @@ class DestructuringAssignmentRestExpression {
         this.target = target;
         this.indexOrProperties = indexOrProperties;
     }
-    get $kind() { return 139292; }
+    get $kind() { return 26; }
     evaluate(_s, _e, _c) {
         return void 0;
     }
@@ -1424,7 +1369,7 @@ class ArrowFunction {
         this.body = body;
         this.rest = rest;
     }
-    get $kind() { return 17; }
+    get $kind() { return 16; }
     get hasBind() { return false; }
     get hasUnbind() { return false; }
     evaluate(s, e, c) {
@@ -1466,30 +1411,27 @@ function getFunction(mustEvaluate, obj, name) {
     }
     throw new Error(`AUR0111: Expected '${name}' to be a function`);
 }
+function isNumberOrBigInt(value) {
+    switch (typeof value) {
+        case 'number':
+        case 'bigint':
+            return true;
+        default:
+            return false;
+    }
+}
+function isStringOrDate(value) {
+    switch (typeof value) {
+        case 'string':
+            return true;
+        case 'object':
+            return value instanceof Date;
+        default:
+            return false;
+    }
+}
 
 const ICoercionConfiguration = DI.createInterface('ICoercionConfiguration');
-var LifecycleFlags;
-(function (LifecycleFlags) {
-    LifecycleFlags[LifecycleFlags["none"] = 0] = "none";
-    LifecycleFlags[LifecycleFlags["fromBind"] = 1] = "fromBind";
-    LifecycleFlags[LifecycleFlags["fromUnbind"] = 2] = "fromUnbind";
-    LifecycleFlags[LifecycleFlags["dispose"] = 4] = "dispose";
-})(LifecycleFlags || (LifecycleFlags = {}));
-var SubscriberFlags;
-(function (SubscriberFlags) {
-    SubscriberFlags[SubscriberFlags["None"] = 0] = "None";
-    SubscriberFlags[SubscriberFlags["Subscriber0"] = 1] = "Subscriber0";
-    SubscriberFlags[SubscriberFlags["Subscriber1"] = 2] = "Subscriber1";
-    SubscriberFlags[SubscriberFlags["Subscriber2"] = 4] = "Subscriber2";
-    SubscriberFlags[SubscriberFlags["SubscribersRest"] = 8] = "SubscribersRest";
-    SubscriberFlags[SubscriberFlags["Any"] = 15] = "Any";
-})(SubscriberFlags || (SubscriberFlags = {}));
-var DelegationStrategy;
-(function (DelegationStrategy) {
-    DelegationStrategy[DelegationStrategy["none"] = 0] = "none";
-    DelegationStrategy[DelegationStrategy["capturing"] = 1] = "capturing";
-    DelegationStrategy[DelegationStrategy["bubbling"] = 2] = "bubbling";
-})(DelegationStrategy || (DelegationStrategy = {}));
 var CollectionKind;
 (function (CollectionKind) {
     CollectionKind[CollectionKind["indexed"] = 8] = "indexed";
@@ -1576,6 +1518,7 @@ function batch(fn) {
             let pair;
             let subs;
             let batchRecord;
+            let col;
             let indexMap;
             let hasChanges = false;
             let i;
@@ -1590,7 +1533,8 @@ function batch(fn) {
                     subs.notify(batchRecord[1], batchRecord[2]);
                 }
                 else {
-                    indexMap = batchRecord[1];
+                    col = batchRecord[1];
+                    indexMap = batchRecord[2];
                     hasChanges = false;
                     if (indexMap.deletedIndices.length > 0) {
                         hasChanges = true;
@@ -1604,7 +1548,7 @@ function batch(fn) {
                         }
                     }
                     if (hasChanges) {
-                        subs.notifyCollection(indexMap);
+                        subs.notifyCollection(col, indexMap);
                     }
                 }
             }
@@ -1614,9 +1558,9 @@ function batch(fn) {
         }
     }
 }
-function addCollectionBatch(subs, indexMap) {
+function addCollectionBatch(subs, collection, indexMap) {
     if (!currBatch.has(subs)) {
-        currBatch.set(subs, [2, indexMap]);
+        currBatch.set(subs, [2, collection, indexMap]);
     }
 }
 function addValueBatch(subs, newValue, oldValue) {
@@ -1767,7 +1711,7 @@ class SubscriberRecord {
             }
         }
     }
-    notifyCollection(indexMap) {
+    notifyCollection(collection, indexMap) {
         const sub0 = this.s0;
         const sub1 = this.s1;
         const sub2 = this.s2;
@@ -1776,13 +1720,13 @@ class SubscriberRecord {
             subs = subs.slice();
         }
         if (sub0 !== void 0) {
-            sub0.handleCollectionChange(indexMap);
+            sub0.handleCollectionChange(collection, indexMap);
         }
         if (sub1 !== void 0) {
-            sub1.handleCollectionChange(indexMap);
+            sub1.handleCollectionChange(collection, indexMap);
         }
         if (sub2 !== void 0) {
-            sub2.handleCollectionChange(indexMap);
+            sub2.handleCollectionChange(collection, indexMap);
         }
         if (subs !== void 0) {
             const ii = subs.length;
@@ -1791,7 +1735,7 @@ class SubscriberRecord {
             for (; i < ii; ++i) {
                 sub = subs[i];
                 if (sub !== void 0) {
-                    sub.handleCollectionChange(indexMap);
+                    sub.handleCollectionChange(collection, indexMap);
                 }
             }
         }
@@ -1806,6 +1750,15 @@ function addSubscriber(subscriber) {
 function removeSubscriber(subscriber) {
     return this.subs.remove(subscriber);
 }
+var SubFlags;
+(function (SubFlags) {
+    SubFlags[SubFlags["None"] = 0] = "None";
+    SubFlags[SubFlags["Sub0"] = 1] = "Sub0";
+    SubFlags[SubFlags["Sub1"] = 2] = "Sub1";
+    SubFlags[SubFlags["Sub2"] = 4] = "Sub2";
+    SubFlags[SubFlags["SubRest"] = 8] = "SubRest";
+    SubFlags[SubFlags["Any"] = 15] = "Any";
+})(SubFlags || (SubFlags = {}));
 
 function withFlushQueue(target) {
     return target == null ? queueableDeco : queueableDeco(target);
@@ -1814,6 +1767,7 @@ function queueableDeco(target) {
     const proto = target.prototype;
     def(proto, 'queue', { get: getFlushQueue });
 }
+const IFlushQueue = DI.createInterface('IFlushQueue', x => x.instance(FlushQueue.instance));
 class FlushQueue {
     constructor() {
         this._flushing = false;
@@ -1867,7 +1821,7 @@ class CollectionLengthObserver {
             this.queue.add(this);
         }
     }
-    handleCollectionChange(_) {
+    handleCollectionChange(_arr, _) {
         const oldValue = this._value;
         const value = this._obj.length;
         if ((this._value = value) !== oldValue) {
@@ -1893,7 +1847,7 @@ class CollectionSizeObserver {
     setValue() {
         throw new Error(`AUR02: Map/Set "size" is a readonly property`);
     }
-    handleCollectionChange(_) {
+    handleCollectionChange(_collection, _) {
         const oldValue = this._value;
         const value = this._obj.size;
         if ((this._value = value) !== oldValue) {
@@ -1928,7 +1882,14 @@ implementLengthObserver(CollectionLengthObserver);
 implementLengthObserver(CollectionSizeObserver);
 let oV$2 = void 0;
 
-const observerLookup$2 = new WeakMap();
+const lookupMetadataKey$2 = '__au_array_obs__';
+const observerLookup$2 = (() => {
+    let lookup = getOwnMetadata(lookupMetadataKey$2, Array);
+    if (lookup == null) {
+        defineMetadata(lookupMetadataKey$2, lookup = new WeakMap(), Array);
+    }
+    return lookup;
+})();
 function sortCompare(x, y) {
     if (x === y) {
         return 0;
@@ -2262,10 +2223,14 @@ for (const method of methods$2) {
     def(observe$3[method], 'observing', { value: true, writable: false, configurable: false, enumerable: false });
 }
 let enableArrayObservationCalled = false;
+const observationEnabledKey$2 = '__au_arr_on__';
 function enableArrayObservation() {
-    for (const method of methods$2) {
-        if (proto$2[method].observing !== true) {
-            defineHiddenProp(proto$2, method, observe$3[method]);
+    if (!(getOwnMetadata(observationEnabledKey$2, Array) ?? false)) {
+        defineMetadata(observationEnabledKey$2, true, Array);
+        for (const method of methods$2) {
+            if (proto$2[method].observing !== true) {
+                defineHiddenProp(proto$2, method, observe$3[method]);
+            }
         }
     }
 }
@@ -2293,12 +2258,13 @@ class ArrayObserver {
         const subs = this.subs;
         const indexMap = this.indexMap;
         if (batching) {
-            addCollectionBatch(subs, indexMap);
+            addCollectionBatch(subs, this.collection, indexMap);
             return;
         }
-        const length = this.collection.length;
+        const arr = this.collection;
+        const length = arr.length;
         this.indexMap = createIndexMap(length);
-        this.subs.notifyCollection(indexMap);
+        this.subs.notifyCollection(arr, indexMap);
     }
     getLengthObserver() {
         return this.lenObs ?? (this.lenObs = new CollectionLengthObserver(this));
@@ -2332,7 +2298,7 @@ class ArrayIndexObserver {
         arrayObserver.collection[index] = newValue;
         arrayObserver.notify();
     }
-    handleCollectionChange(indexMap) {
+    handleCollectionChange(_arr, indexMap) {
         const index = this.index;
         const noChange = indexMap[index] === index;
         if (noChange) {
@@ -2402,7 +2368,14 @@ function synchronizeIndices(items, indexMap) {
     }
 }
 
-const observerLookup$1 = new WeakMap();
+const lookupMetadataKey$1 = '__au_set_obs__';
+const observerLookup$1 = (() => {
+    let lookup = getOwnMetadata(lookupMetadataKey$1, Set);
+    if (lookup == null) {
+        defineMetadata(lookupMetadataKey$1, lookup = new WeakMap(), Set);
+    }
+    return lookup;
+})();
 const proto$1 = Set.prototype;
 const $add = proto$1.add;
 const $clear$1 = proto$1.clear;
@@ -2486,10 +2459,14 @@ for (const method of methods$1) {
     def(observe$2[method], 'observing', { value: true, writable: false, configurable: false, enumerable: false });
 }
 let enableSetObservationCalled = false;
+const observationEnabledKey$1 = '__au_set_on__';
 function enableSetObservation() {
-    for (const method of methods$1) {
-        if (proto$1[method].observing !== true) {
-            def(proto$1, method, { ...descriptorProps$1, value: observe$2[method] });
+    if (!(getOwnMetadata(observationEnabledKey$1, Set) ?? false)) {
+        defineMetadata(observationEnabledKey$1, true, Set);
+        for (const method of methods$1) {
+            if (proto$1[method].observing !== true) {
+                def(proto$1, method, { ...descriptorProps$1, value: observe$2[method] });
+            }
         }
     }
 }
@@ -2516,12 +2493,13 @@ class SetObserver {
         const subs = this.subs;
         const indexMap = this.indexMap;
         if (batching) {
-            addCollectionBatch(subs, indexMap);
+            addCollectionBatch(subs, this.collection, indexMap);
             return;
         }
-        const size = this.collection.size;
+        const set = this.collection;
+        const size = set.size;
         this.indexMap = createIndexMap(size);
-        this.subs.notifyCollection(indexMap);
+        this.subs.notifyCollection(set, indexMap);
     }
     getLengthObserver() {
         return this.lenObs ?? (this.lenObs = new CollectionSizeObserver(this));
@@ -2536,7 +2514,14 @@ function getSetObserver(observedSet) {
     return observer;
 }
 
-const observerLookup = new WeakMap();
+const lookupMetadataKey = '__au_map_obs__';
+const observerLookup = (() => {
+    let lookup = getOwnMetadata(lookupMetadataKey, Map);
+    if (lookup == null) {
+        defineMetadata(lookupMetadataKey, lookup = new WeakMap(), Map);
+    }
+    return lookup;
+})();
 const proto = Map.prototype;
 const $set = proto.set;
 const $clear = proto.clear;
@@ -2634,10 +2619,14 @@ for (const method of methods) {
     def(observe$1[method], 'observing', { value: true, writable: false, configurable: false, enumerable: false });
 }
 let enableMapObservationCalled = false;
+const observationEnabledKey = '__au_map_on__';
 function enableMapObservation() {
-    for (const method of methods) {
-        if (proto[method].observing !== true) {
-            def(proto, method, { ...descriptorProps, value: observe$1[method] });
+    if (!(getOwnMetadata(observationEnabledKey, Map) ?? false)) {
+        defineMetadata(observationEnabledKey, true, Map);
+        for (const method of methods) {
+            if (proto[method].observing !== true) {
+                def(proto, method, { ...descriptorProps, value: observe$1[method] });
+            }
         }
     }
 }
@@ -2664,12 +2653,13 @@ class MapObserver {
         const subs = this.subs;
         const indexMap = this.indexMap;
         if (batching) {
-            addCollectionBatch(subs, indexMap);
+            addCollectionBatch(subs, this.collection, indexMap);
             return;
         }
-        const size = this.collection.size;
+        const map = this.collection;
+        const size = map.size;
         this.indexMap = createIndexMap(size);
-        subs.notifyCollection(indexMap);
+        subs.notifyCollection(map, indexMap);
     }
     getLengthObserver() {
         return this.lenObs ?? (this.lenObs = new CollectionSizeObserver(this));
@@ -2726,8 +2716,8 @@ class BindingObserverRecord {
     handleChange(value, oldValue) {
         return this.b.interceptor.handleChange(value, oldValue);
     }
-    handleCollectionChange(indexMap) {
-        this.b.interceptor.handleCollectionChange(indexMap);
+    handleCollectionChange(collection, indexMap) {
+        this.b.interceptor.handleCollectionChange(collection, indexMap);
     }
     add(observer) {
         if (!this.o.has(observer)) {
@@ -3215,7 +3205,7 @@ function parse(minPrecedence, expressionType) {
         if ($currentToken === 10 || $currentToken === 11) {
             throw expectedIdentifier();
         }
-        if (result.$kind === 1793) {
+        if (result.$kind === 0) {
             switch ($currentToken) {
                 case 2162700:
                     $optional = true;
@@ -3280,10 +3270,10 @@ function parse(minPrecedence, expressionType) {
                 case 11:
                     throw expectedIdentifier();
                 case 2688007:
-                    if (result.$kind === 10082) {
+                    if (result.$kind === 1) {
                         result = new CallScopeExpression(result.name, parseArguments(), result.ancestor, false);
                     }
-                    else if (result.$kind === 9323) {
+                    else if (result.$kind === 10) {
                         result = new CallMemberExpression(result.object, result.name, parseArguments(), result.optional, false);
                     }
                     else {
@@ -3381,7 +3371,7 @@ function parse(minPrecedence, expressionType) {
 }
 function parseArrayDestructuring() {
     const items = [];
-    const dae = new DestructuringAssignmentExpression(90138, items, void 0, void 0);
+    const dae = new DestructuringAssignmentExpression(24, items, void 0, void 0);
     let target = '';
     let $continue = true;
     let index = 0;
@@ -3449,10 +3439,10 @@ function parseOptionalChainLHS(lhs) {
         return parseMemberExpressionLHS(lhs, true);
     }
     if ($currentToken === 2688007) {
-        if (lhs.$kind === 10082) {
+        if (lhs.$kind === 1) {
             return new CallScopeExpression(lhs.name, parseArguments(), lhs.ancestor, true);
         }
-        else if (lhs.$kind === 9323) {
+        else if (lhs.$kind === 10) {
             return new CallMemberExpression(lhs.object, lhs.name, parseArguments(), lhs.optional, true);
         }
         else {
@@ -3693,7 +3683,9 @@ function parseArrayLiteralExpression(expressionType) {
     }
 }
 function parseForOfStatement(result) {
-    if ((result.$kind & 65536) === 0) {
+    if ((result.$kind & (19
+        | 20
+        | 21)) === 0) {
         throw invalidLHSBindingIdentifierInForOf();
     }
     if ($currentToken !== 4204592) {
@@ -4823,7 +4815,7 @@ class DirtyChecker {
     }
     createProperty(obj, key) {
         if (DirtyCheckSettings.throw) {
-            throw new Error(`AUR0222: Property '${key}' is being dirty-checked.`);
+            throw new Error(`AUR0222: Property '${safeString(key)}' is being dirty-checked.`);
         }
         return new DirtyCheckProperty(this, obj, key);
     }
@@ -4855,7 +4847,7 @@ class DirtyCheckProperty {
         return this.obj[this.key];
     }
     setValue(_v) {
-        throw new Error(`Trying to set value for property ${this.key} in dirty checker`);
+        throw new Error(`Trying to set value for property ${safeString(this.key)} in dirty checker`);
     }
     isDirty() {
         return this._oldValue !== this.obj[this.key];
@@ -5013,9 +5005,11 @@ const propertyAccessor = new PropertyAccessor();
 const IObserverLocator = DI.createInterface('IObserverLocator', x => x.singleton(ObserverLocator));
 const INodeObserverLocator = DI
     .createInterface('INodeObserverLocator', x => x.cachedCallback(handler => {
-    handler.getAll(ILogger).forEach(logger => {
-        logger.error('Using default INodeObserverLocator implementation. Will not be able to observe nodes (HTML etc...).');
-    });
+    {
+        handler.getAll(ILogger).forEach(logger => {
+            logger.error('Using default INodeObserverLocator implementation. Will not be able to observe nodes (HTML etc...).');
+        });
+    }
     return new DefaultNodeObserverLocator();
 }));
 class DefaultNodeObserverLocator {
@@ -5039,8 +5033,21 @@ class ObserverLocator {
         this._adapters.push(adapter);
     }
     getObserver(obj, key) {
-        return obj.$observers?.[key]
-            ?? this._cache(obj, key, this.createObserver(obj, key));
+        if (obj == null) {
+            throw nullObjectError(key);
+        }
+        if (!(obj instanceof Object)) {
+            return new PrimitiveObserver(obj, key);
+        }
+        const lookup = getObserverLookup(obj);
+        let observer = lookup[key];
+        if (observer === void 0) {
+            observer = this.createObserver(obj, key);
+            if (!observer.doNotCache) {
+                lookup[key] = observer;
+            }
+        }
+        return observer;
     }
     getAccessor(obj, key) {
         const cached = obj.$observers?.[key];
@@ -5062,9 +5069,6 @@ class ObserverLocator {
         return getSetObserver(observedSet);
     }
     createObserver(obj, key) {
-        if (!(obj instanceof Object)) {
-            return new PrimitiveObserver(obj, key);
-        }
         if (this._nodeObserverLocator.handles(obj, key, this)) {
             return this._nodeObserverLocator.getObserver(obj, key, this);
         }
@@ -5114,10 +5118,10 @@ class ObserverLocator {
         }
         return new SetterObserver(obj, key);
     }
-    _getAdapterObserver(obj, propertyName, pd) {
+    _getAdapterObserver(obj, key, pd) {
         if (this._adapters.length > 0) {
             for (const adapter of this._adapters) {
-                const observer = adapter.getObserver(obj, propertyName, pd, this);
+                const observer = adapter.getObserver(obj, key, pd, this);
                 if (observer != null) {
                     return observer;
                 }
@@ -5125,19 +5129,9 @@ class ObserverLocator {
         }
         return null;
     }
-    _cache(obj, key, observer) {
-        if (observer.doNotCache === true) {
-            return observer;
-        }
-        if (obj.$observers === void 0) {
-            def(obj, '$observers', { value: { [key]: observer } });
-            return observer;
-        }
-        return obj.$observers[key] = observer;
-    }
 }
 ObserverLocator.inject = [IDirtyChecker, INodeObserverLocator];
-function getCollectionObserver(collection) {
+const getCollectionObserver = (collection) => {
     let obs;
     if (isArray(collection)) {
         obs = getArrayObserver(collection);
@@ -5149,9 +5143,21 @@ function getCollectionObserver(collection) {
         obs = getSetObserver(collection);
     }
     return obs;
-}
+};
 const getProto = Object.getPrototypeOf;
 const getOwnPropDesc = Object.getOwnPropertyDescriptor;
+const getObserverLookup = (instance) => {
+    let lookup = instance.$observers;
+    if (lookup === void 0) {
+        def(instance, '$observers', {
+            enumerable: false,
+            value: lookup = createLookup(),
+        });
+    }
+    return lookup;
+};
+const nullObjectError = (key) => new Error(`AUR0199: trying to observe property ${safeString(key)} on null/undefined`)
+    ;
 
 const IObservation = DI.createInterface('IObservation', x => x.singleton(Observation));
 class Observation {
@@ -5245,7 +5251,7 @@ function observable(targetOrConfig, key, descriptor) {
         if (key == null || key === '') {
             throw new Error(`AUR0224: Invalid usage, cannot determine property name for @observable`);
         }
-        const callback = config.callback || `${String(key)}Changed`;
+        const callback = config.callback || `${safeString(key)}Changed`;
         let initialValue = noValue;
         if (descriptor) {
             delete descriptor.value;
@@ -5289,5 +5295,5 @@ function getNotifier(obj, key, callbackKey, initialValue, set) {
     return notifier;
 }
 
-export { AccessKeyedExpression, AccessMemberExpression, AccessScopeExpression, AccessThisExpression, AccessorType, ArrayBindingPattern, ArrayIndexObserver, ArrayLiteralExpression, ArrayObserver, ArrowFunction, AssignExpression, BinaryExpression, BindingBehaviorExpression, BindingContext, BindingIdentifier, BindingObserverRecord, CallFunctionExpression, CallMemberExpression, CallScopeExpression, Char, CollectionKind, CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, ConditionalExpression, ConnectableSwitcher, CustomExpression, DelegationStrategy, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, DirtyCheckProperty, DirtyCheckSettings, ExpressionKind, ExpressionType, FlushQueue, ForOfStatement, HtmlLiteralExpression, ICoercionConfiguration, IDirtyChecker, IExpressionParser, INodeObserverLocator, IObservation, IObserverLocator, ISignaler, Interpolation, LifecycleFlags, MapObserver, ObjectBindingPattern, ObjectLiteralExpression, Observation, ObserverLocator, OverrideContext, PrimitiveLiteralExpression, PrimitiveObserver, PropertyAccessor, ProxyObservable, Scope, SetObserver, SetterObserver, SubscriberRecord, TaggedTemplateExpression, TemplateExpression, UnaryExpression, ValueConverterExpression, applyMutationsToIndices, batch, cloneIndexMap, connectable, copyIndexMap, createIndexMap, disableArrayObservation, disableMapObservation, disableSetObservation, enableArrayObservation, enableMapObservation, enableSetObservation, getCollectionObserver, isIndexMap, observable, parseExpression, subscriberCollection, synchronizeIndices, withFlushQueue };
+export { AccessKeyedExpression, AccessMemberExpression, AccessScopeExpression, AccessThisExpression, AccessorType, ArrayBindingPattern, ArrayIndexObserver, ArrayLiteralExpression, ArrayObserver, ArrowFunction, AssignExpression, BinaryExpression, BindingBehaviorExpression, BindingContext, BindingIdentifier, BindingObserverRecord, CallFunctionExpression, CallMemberExpression, CallScopeExpression, CollectionKind, CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, ConditionalExpression, ConnectableSwitcher, CustomExpression, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, DirtyCheckProperty, DirtyCheckSettings, ExpressionKind, ExpressionType, FlushQueue, ForOfStatement, ICoercionConfiguration, IDirtyChecker, IExpressionParser, IFlushQueue, INodeObserverLocator, IObservation, IObserverLocator, ISignaler, Interpolation, MapObserver, ObjectBindingPattern, ObjectLiteralExpression, Observation, ObserverLocator, PrimitiveLiteralExpression, PrimitiveObserver, PropertyAccessor, ProxyObservable, Scope, SetObserver, SetterObserver, SubscriberRecord, TaggedTemplateExpression, TemplateExpression, UnaryExpression, ValueConverterExpression, applyMutationsToIndices, batch, cloneIndexMap, connectable, copyIndexMap, createIndexMap, disableArrayObservation, disableMapObservation, disableSetObservation, enableArrayObservation, enableMapObservation, enableSetObservation, getCollectionObserver, getObserverLookup, isIndexMap, observable, parseExpression, subscriberCollection, synchronizeIndices, withFlushQueue };
 //# sourceMappingURL=index.dev.mjs.map

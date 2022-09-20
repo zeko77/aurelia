@@ -2895,11 +2895,7 @@ class RoutingScope {
             }
             const w = RoutingInstruction.resolve(f);
             if (w instanceof Promise) await w;
-            i.filter((t => t.cancelled)).forEach((t => {
-                const s = i.lastIndexOf(t);
-                const n = i[s];
-                if (n.cancelled) c = c.filter((t => t !== n.endpoint.instance));
-            }));
+            c = c.filter((t => !([ ...i ].reverse().find((i => i.endpoint.instance === t))?.cancelled ?? false)));
         } while (f.length > 0 || p.length > 0);
         return c;
     }
@@ -4507,7 +4503,7 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
 };
 
 e([ i.bindable({
-    mode: i.BindingMode.toView
+    mode: 2
 }) ], exports.LoadCustomAttribute.prototype, "value", void 0);
 
 e([ i.bindable ], exports.LoadCustomAttribute.prototype, "component", void 0);
@@ -4568,7 +4564,7 @@ exports.HrefCustomAttribute = class HrefCustomAttribute {
 };
 
 e([ i.bindable({
-    mode: i.BindingMode.toView
+    mode: 2
 }) ], exports.HrefCustomAttribute.prototype, "value", void 0);
 
 exports.HrefCustomAttribute = e([ i.customAttribute({
@@ -4579,7 +4575,7 @@ exports.HrefCustomAttribute = e([ i.customAttribute({
 exports.ConsideredActiveCustomAttribute = class ConsideredActiveCustomAttribute {};
 
 e([ i.bindable({
-    mode: i.BindingMode.toView
+    mode: 2
 }) ], exports.ConsideredActiveCustomAttribute.prototype, "value", void 0);
 
 exports.ConsideredActiveCustomAttribute = e([ i.customAttribute("considered-active") ], exports.ConsideredActiveCustomAttribute);

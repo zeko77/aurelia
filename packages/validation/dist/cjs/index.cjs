@@ -602,11 +602,11 @@ exports.ValidationMessageProvider = class ValidationMessageProvider {
     }
     parseMessage(e) {
         const t = this.parser.parse(e, 1);
-        if (25 === t?.$kind) {
+        if (23 === t?.$kind) {
             for (const s of t.expressions) {
                 const t = s.name;
                 if (w.has(t)) this.logger.warn(`Did you mean to use "$${t}" instead of "${t}" in this validation message template: "${e}"?`);
-                if (1793 === s.$kind || s.ancestor > 0) throw new Error("$parent is not permitted in validation message expressions.");
+                if (0 === s.$kind || s.ancestor > 0) throw new Error("$parent is not permitted in validation message expressions.");
             }
             return t;
         }
@@ -892,9 +892,6 @@ class Serializer {
     }
     visitBindingIdentifier(e) {
         return `{"$TYPE":"${y.BindingIdentifier}","name":"${e.name}"}`;
-    }
-    visitHtmlLiteral(e) {
-        throw new Error("visitHtmlLiteral");
     }
     visitForOfStatement(e) {
         return `{"$TYPE":"${y.ForOfStatement}","declaration":${e.declaration.accept(this)},"iterable":${e.iterable.accept(this)}}`;

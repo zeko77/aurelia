@@ -1,9 +1,7 @@
-import { LifecycleFlags } from '@aurelia/runtime';
 import { IRenderLocation } from '../../dom';
 import { IViewFactory } from '../../templating/view';
-import type { ISyntheticView, ICustomAttributeController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, ControllerVisitor } from '../../templating/controller';
+import type { ISyntheticView, ICustomAttributeController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, ControllerVisitor, LifecycleFlags } from '../../templating/controller';
 export declare class With implements ICustomAttributeViewModel {
-    readonly id: number;
     view: ISyntheticView;
     readonly $controller: ICustomAttributeController<this>;
     value?: object;

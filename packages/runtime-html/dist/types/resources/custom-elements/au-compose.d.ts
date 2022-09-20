@@ -1,9 +1,8 @@
 import { Constructable, IContainer } from '@aurelia/kernel';
-import { LifecycleFlags } from '@aurelia/runtime';
 import { IRenderLocation } from '../../dom';
 import { IPlatform } from '../../platform';
 import { HydrateElementInstruction } from '../../renderer';
-import { ICustomElementController, IHydratedController, ISyntheticView } from '../../templating/controller';
+import { LifecycleFlags, ICustomElementController, IHydratedController, ISyntheticView } from '../../templating/controller';
 /**
  * An optional interface describing the dialog activate convention.
  */

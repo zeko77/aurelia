@@ -1,4 +1,4 @@
-import { AccessorType, ICollectionSubscriberCollection } from '../observation';
+import { AccessorType, type ICollectionSubscriberCollection } from '../observation';
 import { CollectionSizeObserver } from './collection-length-observer';
 import type { ICollectionObserver, CollectionKind } from '../observation';
 export declare function enableSetObservation(): void;

@@ -8,9 +8,9 @@ const g = t.createInterface("IDomRenderer");
 
 const m = t.createInterface("IScrollerObsererLocator");
 
-const C = t.createInterface("ICollectionStrategyLocator");
+const w = t.createInterface("ICollectionStrategyLocator");
 
-function w(t) {
+function C(t) {
     let s = false;
     while (t instanceof i) t = t.expression;
     while (t instanceof r) {
@@ -83,7 +83,7 @@ class VirtualRepeat {
         this.scrollerObserver = null;
         const o = s.props[0];
         const l = o.from;
-        const c = this.iterable = w(l.iterable) ?? l.iterable;
+        const c = this.iterable = C(l.iterable) ?? l.iterable;
         const h = this.u = l.iterable !== c;
         this.C = new CollectionObservationMediator(this, h ? "handleInnerCollectionChange" : "handleCollectionChange");
         this.local = l.declaration.name;
@@ -94,7 +94,7 @@ class VirtualRepeat {
     }
     attaching() {
         const t = this.c;
-        const s = t.get(C);
+        const s = t.get(w);
         const e = this.collectionStrategy = s.getStrategy(this.items);
         const i = e.count();
         if (0 === i) return;
@@ -132,7 +132,7 @@ class VirtualRepeat {
     }
     itemsChanged(t) {
         const s = this.$controller;
-        const e = this.collectionStrategy = this.c.get(C).getStrategy(t);
+        const e = this.collectionStrategy = this.c.get(w).getStrategy(t);
         const i = e.count();
         const r = this.views;
         const l = 2 * this.minViewsRequired;
@@ -172,7 +172,7 @@ class VirtualRepeat {
         for (c = h; c < u; c++) r.push(this.f.create());
         const f = this.itemHeight;
         const d = this.local;
-        const {firstIndex: g, topCount: m, botCount: w} = this.measureBuffer(this.scrollerObserver.getValue(), r.length, i, f);
+        const {firstIndex: g, topCount: m, botCount: C} = this.measureBuffer(this.scrollerObserver.getValue(), r.length, i, f);
         let p = 0;
         let b;
         let v;
@@ -189,7 +189,7 @@ class VirtualRepeat {
                 y.overrideContext.$length = i;
             } else {
                 a.nodes.insertBefore(v.nodes.firstChild.nextSibling);
-                y = n.fromParent(s.scope, o.create(d, e.item(p)));
+                y = n.fromParent(s.scope, new o(d, e.item(p)));
                 y.overrideContext.$index = p;
                 y.overrideContext.$length = i;
                 T(y.overrideContext);
@@ -197,7 +197,7 @@ class VirtualRepeat {
             }
         }
         this.C.start(t);
-        this.dom.update(m * f, w * f);
+        this.dom.update(m * f, C * f);
     }
     calcRealScrollTop(t) {
         const s = t.scrollTop;
@@ -242,27 +242,27 @@ class VirtualRepeat {
         this.i = t;
         if (a === h) return;
         let m = null;
-        let C = null;
-        let w = 0;
+        let w = null;
+        let C = 0;
         let p = 0;
         let b = 0;
         let v = 0;
         if (g) for (v = 0; l > v; ++v) {
-            w = a + v;
-            C = n[v].scope;
-            C.bindingContext[e] = o.item(w);
-            C.overrideContext.$index = w;
-            C.overrideContext.$length = c;
+            C = a + v;
+            w = n[v].scope;
+            w.bindingContext[e] = o.item(C);
+            w.overrideContext.$index = C;
+            w.overrideContext.$length = c;
         } else if (d) {
             p = a - h;
             while (p > 0) {
                 m = n.shift();
-                w = n[n.length - 1].scope.overrideContext["$index"] + 1;
+                C = n[n.length - 1].scope.overrideContext["$index"] + 1;
                 n.push(m);
-                C = m.scope;
-                C.bindingContext[e] = o.item(w);
-                C.overrideContext.$index = w;
-                C.overrideContext.$length = c;
+                w = m.scope;
+                w.bindingContext[e] = o.item(C);
+                w.overrideContext.$index = C;
+                w.overrideContext.$length = c;
                 m.nodes.insertBefore(r.bottom);
                 ++b;
                 --p;
@@ -270,12 +270,12 @@ class VirtualRepeat {
         } else {
             p = h - a;
             while (p > 0) {
-                w = h - (b + 1);
+                C = h - (b + 1);
                 m = n.pop();
-                C = m.scope;
-                C.bindingContext[e] = o.item(w);
-                C.overrideContext.$index = w;
-                C.overrideContext.$length = c;
+                w = m.scope;
+                w.bindingContext[e] = o.item(C);
+                w.overrideContext.$index = C;
+                w.overrideContext.$length = c;
                 m.nodes.insertBefore(n[0].nodes.firstChild);
                 n.unshift(m);
                 ++b;
@@ -293,7 +293,7 @@ class VirtualRepeat {
     getViews() {
         return this.views.slice(0);
     }
-    handleCollectionChange(t) {
+    handleCollectionChange(t, s) {
         this.itemsChanged(this.items);
     }
     handleInnerCollectionChange() {
@@ -307,7 +307,7 @@ class VirtualRepeat {
         const s = this.$controller;
         const e = this.collectionStrategy;
         const i = s.scope;
-        const r = n.fromParent(i, o.create(this.local, e.first()));
+        const r = n.fromParent(i, new o(this.local, e.first()));
         r.overrideContext.$index = 0;
         r.overrideContext.$length = e.count();
         T(r.overrideContext);
@@ -343,8 +343,8 @@ class CollectionObservationMediator {
         this.repeat = t;
         this.key = s;
     }
-    handleCollectionChange(t) {
-        this.repeat[this.key](t);
+    handleCollectionChange(t, s) {
+        this.repeat[this.key](t, s);
     }
     start(t) {
         if (this.M === t) return;
@@ -422,7 +422,7 @@ function x() {
 
 class CollectionStrategyLocator {
     static register(t) {
-        return e.singleton(C, this).register(t);
+        return e.singleton(w, this).register(t);
     }
     getStrategy(t) {
         if (null == t) return new NullCollectionStrategy;
@@ -674,5 +674,5 @@ const B = {
     }
 };
 
-export { CollectionStrategyLocator, DefaultDomRenderer, B as DefaultVirtualRepeatConfiguration, C as ICollectionStrategyLocator, g as IDomRenderer, m as IScrollerObsererLocator, ScrollerObserver, ScrollerObserverLocator, VirtualRepeat };
+export { CollectionStrategyLocator, DefaultDomRenderer, B as DefaultVirtualRepeatConfiguration, w as ICollectionStrategyLocator, g as IDomRenderer, m as IScrollerObsererLocator, ScrollerObserver, ScrollerObserverLocator, VirtualRepeat };
 //# sourceMappingURL=index.mjs.map

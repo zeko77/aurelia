@@ -1,5 +1,5 @@
 import { DI, Registration, optional, all, ILogger, camelCase } from '../../../kernel/dist/native-modules/index.mjs';
-import { astEvaluator, BindingMode, bindingBehavior, BindingInterceptor, attributePattern, bindingCommand, renderer, AttrSyntax, IAttrMapper, IPlatform, applyBindingBehavior, lifecycleHooks, CustomElement, CustomAttribute, ILifecycleHooks } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { astEvaluator, bindingBehavior, BindingInterceptor, attributePattern, bindingCommand, renderer, AttrSyntax, IPlatform, applyBindingBehavior, lifecycleHooks, CustomElement, CustomAttribute, ILifecycleHooks } from '../../../runtime-html/dist/native-modules/index.mjs';
 import { Scope, connectable, IExpressionParser, IObserverLocator } from '../../../runtime/dist/native-modules/index.mjs';
 
 const IActionHandler = DI.createInterface('IActionHandler');
@@ -151,7 +151,6 @@ function isSubscribable$1(v) {
     return v instanceof Object && 'subscribe' in v;
 }
 
-const { toView, oneTime } = BindingMode;
 class StateBinding {
     constructor(controller, locator, observerLocator, taskQueue, ast, target, prop, store) {
         this.interceptor = this;
@@ -160,7 +159,7 @@ class StateBinding {
         this._value = void 0;
         this._sub = void 0;
         this._updateCount = 0;
-        this.mode = toView;
+        this.mode = 2;
         this._controller = controller;
         this.locator = locator;
         this.taskQueue = taskQueue;
@@ -203,7 +202,7 @@ class StateBinding {
         this.targetObserver = this.oL.getAccessor(this.target, this.targetProperty);
         this.$scope = createStateBindingScope(this._store.getState(), scope);
         this._store.subscribe(this);
-        this.updateTarget(this._value = this.ast.evaluate(this.$scope, this, this.mode > oneTime ? this : null));
+        this.updateTarget(this._value = this.ast.evaluate(this.$scope, this, this.mode > 1 ? this : null));
     }
     $unbind() {
         if (!this.isBound) {
@@ -244,7 +243,7 @@ class StateBinding {
         const $scope = this.$scope;
         const overrideContext = $scope.overrideContext;
         $scope.bindingContext = overrideContext.bindingContext = overrideContext.$state = state;
-        const value = this.ast.evaluate($scope, this, this.mode > oneTime ? this : null);
+        const value = this.ast.evaluate($scope, this, this.mode > 1 ? this : null);
         const shouldQueueFlush = this._controller.state !== 1 && (this.targetObserver.type & 4) > 0;
         if (value === this._value) {
             return;
@@ -400,17 +399,14 @@ DispatchAttributePattern = __decorate([
     attributePattern({ pattern: 'PART.dispatch', symbols: '.' })
 ], DispatchAttributePattern);
 let StateBindingCommand = class StateBindingCommand {
-    constructor(_attrMapper) {
-        this._attrMapper = _attrMapper;
-        this.type = 0;
-    }
+    get type() { return 0; }
     get name() { return 'state'; }
-    build(info) {
+    build(info, parser, attrMapper) {
         const attr = info.attr;
         let target = attr.target;
         let value = attr.rawValue;
         if (info.bindable == null) {
-            target = this._attrMapper.map(info.node, target)
+            target = attrMapper.map(info.node, target)
                 ?? camelCase(target);
         }
         else {
@@ -422,14 +418,11 @@ let StateBindingCommand = class StateBindingCommand {
         return new StateBindingInstruction(value, target);
     }
 };
-StateBindingCommand.inject = [IAttrMapper];
 StateBindingCommand = __decorate([
     bindingCommand('state')
 ], StateBindingCommand);
 let DispatchBindingCommand = class DispatchBindingCommand {
-    constructor() {
-        this.type = 1;
-    }
+    get type() { return 1; }
     get name() { return 'dispatch'; }
     build(info) {
         const attr = info.attr;
@@ -477,7 +470,7 @@ let DispatchBindingInstructionRenderer = class DispatchBindingInstructionRendere
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.ast, 8);
         const binding = new StateDispatchBinding(renderingCtrl.container, expr, target, instruction.from, this._stateContainer);
-        renderingCtrl.addBinding(expr.$kind === 38963
+        renderingCtrl.addBinding(expr.$kind === 18
             ? applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }

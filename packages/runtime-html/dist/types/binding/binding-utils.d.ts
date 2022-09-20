@@ -13,7 +13,7 @@ export declare class BindingTargetSubscriber implements ISubscriber {
     handleChange(value: unknown, _: unknown): void;
 }
 /**
- * Turns a class into AST evaluator, and optionally connectable
+ * Turns a class into AST evaluator
  *
  * @param strict - whether the evaluation of AST nodes will be in strict mode
  */

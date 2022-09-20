@@ -205,7 +205,7 @@ class VirtualRepeat {
             }
             else {
                 view.nodes.insertBefore(prevView.nodes.firstChild.nextSibling);
-                scope = Scope.fromParent(controller.scope, BindingContext.create(local, collectionStrategy.item(idx)));
+                scope = Scope.fromParent(controller.scope, new BindingContext(local, collectionStrategy.item(idx)));
                 scope.overrideContext.$index = idx;
                 scope.overrideContext.$length = itemCount;
                 enhanceOverrideContext(scope.overrideContext);
@@ -328,7 +328,7 @@ class VirtualRepeat {
     getViews() {
         return this.views.slice(0);
     }
-    handleCollectionChange(_indexMap) {
+    handleCollectionChange(_collection, _indexmap) {
         this.itemsChanged(this.items);
     }
     handleInnerCollectionChange() {
@@ -344,7 +344,7 @@ class VirtualRepeat {
         const repeatController = this.$controller;
         const collectionStrategy = this.collectionStrategy;
         const parentScope = repeatController.scope;
-        const itemScope = Scope.fromParent(parentScope, BindingContext.create(this.local, collectionStrategy.first()));
+        const itemScope = Scope.fromParent(parentScope, new BindingContext(this.local, collectionStrategy.first()));
         itemScope.overrideContext.$index = 0;
         itemScope.overrideContext.$length = collectionStrategy.count();
         enhanceOverrideContext(itemScope.overrideContext);
@@ -375,8 +375,8 @@ class CollectionObservationMediator {
         this.repeat = repeat;
         this.key = key;
     }
-    handleCollectionChange(indexMap) {
-        this.repeat[this.key](indexMap);
+    handleCollectionChange(collection, indexMap) {
+        this.repeat[this.key](collection, indexMap);
     }
     start(c) {
         if (this._collection === c) {

@@ -1,29 +1,11 @@
-import type { IIndexable } from '@aurelia/kernel';
 import type { IBinding, IBindingContext, IOverrideContext } from '../observation';
+/**
+ * A class for creating context in synthetic scope to keep the number of classes of context in scope small
+ */
 export declare class BindingContext implements IBindingContext {
-    [key: string]: unknown;
-    private constructor();
-    /**
-     * Create a new synthetic `BindingContext` for use in a `Scope`.
-     *
-     * @param obj - Optional. An existing object or `BindingContext` to (shallow) clone (own) properties from.
-     */
-    static create(obj?: IIndexable): BindingContext;
-    /**
-     * Create a new synthetic `BindingContext` for use in a `Scope`.
-     *
-     * @param key - The name of the only property to initialize this `BindingContext` with.
-     * @param value - The value of the only property to initialize this `BindingContext` with.
-     */
-    static create(key: string, value: unknown): BindingContext;
-    /**
-     * Create a new synthetic `BindingContext` for use in a `Scope`.
-     *
-     * This overload signature is simply the combined signatures of the other two, and can be used
-     * to keep strong typing in situations where the arguments are dynamic.
-     */
-    static create(keyOrObj?: string | IIndexable, value?: unknown): BindingContext;
-    static get(scope: Scope, name: string, ancestor: number): IBindingContext | IOverrideContext | IBinding | undefined | null;
+    [key: PropertyKey]: unknown;
+    constructor();
+    constructor(key: PropertyKey, value: unknown);
 }
 export declare class Scope {
     parentScope: Scope | null;
@@ -31,6 +13,7 @@ export declare class Scope {
     overrideContext: IOverrideContext;
     readonly isBoundary: boolean;
     private constructor();
+    static getContext(scope: Scope, name: string, ancestor: number): IBindingContext | IOverrideContext | IBinding | undefined | null;
     /**
      * Create a new `Scope` backed by the provided `BindingContext` and a new standalone `OverrideContext`.
      *
@@ -60,13 +43,6 @@ export declare class Scope {
      * @param oc - null. This overload is functionally equivalent to not passing this argument at all.
      */
     static create(bc: object, oc: null, isBoundary?: boolean): Scope;
-    static fromOverride(oc: IOverrideContext): Scope;
     static fromParent(ps: Scope | null, bc: object): Scope;
-}
-export declare class OverrideContext implements IOverrideContext {
-    [key: string]: unknown;
-    bindingContext: IBindingContext;
-    private constructor();
-    static create(bc: object): OverrideContext;
 }
 //# sourceMappingURL=binding-context.d.ts.map

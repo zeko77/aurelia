@@ -1,6 +1,6 @@
 import { DI, IServiceLocator, optional, Registration, noop } from '@aurelia/kernel';
 import { parsePropertyName, ValidationResult, ValidateInstruction, PropertyRule, IValidator, getDefaultValidationConfiguration, ValidationConfiguration } from '@aurelia/validation';
-import { IPlatform, bindable, INode, BindingMode, customAttribute, bindingBehavior, astEvaluator, BindingInterceptor, PropertyBinding, CustomElement } from '@aurelia/runtime-html';
+import { IPlatform, bindable, INode, customAttribute, bindingBehavior, astEvaluator, BindingInterceptor, PropertyBinding, CustomElement } from '@aurelia/runtime-html';
 import { IExpressionParser, connectable } from '@aurelia/runtime';
 
 /******************************************************************************
@@ -77,20 +77,20 @@ function getPropertyInfo(binding, info, _flags = 0) {
     let expression = binding.ast.expression;
     let toCachePropertyName = true;
     let propertyName = '';
-    while (expression !== void 0 && expression?.$kind !== 10082) {
+    while (expression !== void 0 && expression?.$kind !== 1) {
         let memberName;
         switch (expression.$kind) {
-            case 38963:
-            case 36914:
+            case 18:
+            case 17:
                 expression = expression.expression;
                 continue;
-            case 9323:
+            case 10:
                 memberName = expression.name;
                 break;
-            case 9324: {
+            case 11: {
                 const keyExpr = expression.key;
                 if (toCachePropertyName) {
-                    toCachePropertyName = keyExpr.$kind === 17925;
+                    toCachePropertyName = keyExpr.$kind === 4;
                 }
                 memberName = `[${keyExpr.evaluate(scope, binding, null).toString()}]`;
                 break;
@@ -450,7 +450,7 @@ __decorate([
     bindable
 ], ValidationErrorsCustomAttribute.prototype, "controller", void 0);
 __decorate([
-    bindable({ primary: true, mode: BindingMode.twoWay })
+    bindable({ primary: true, mode: 6 })
 ], ValidationErrorsCustomAttribute.prototype, "errors", void 0);
 ValidationErrorsCustomAttribute = __decorate([
     customAttribute('validation-errors'),

@@ -155,7 +155,6 @@ function isSubscribable$1(v) {
     return v instanceof Object && 'subscribe' in v;
 }
 
-const { toView, oneTime } = runtimeHtml.BindingMode;
 class StateBinding {
     constructor(controller, locator, observerLocator, taskQueue, ast, target, prop, store) {
         this.interceptor = this;
@@ -164,7 +163,7 @@ class StateBinding {
         this._value = void 0;
         this._sub = void 0;
         this._updateCount = 0;
-        this.mode = toView;
+        this.mode = 2;
         this._controller = controller;
         this.locator = locator;
         this.taskQueue = taskQueue;
@@ -207,7 +206,7 @@ class StateBinding {
         this.targetObserver = this.oL.getAccessor(this.target, this.targetProperty);
         this.$scope = createStateBindingScope(this._store.getState(), scope);
         this._store.subscribe(this);
-        this.updateTarget(this._value = this.ast.evaluate(this.$scope, this, this.mode > oneTime ? this : null));
+        this.updateTarget(this._value = this.ast.evaluate(this.$scope, this, this.mode > 1 ? this : null));
     }
     $unbind() {
         if (!this.isBound) {
@@ -248,7 +247,7 @@ class StateBinding {
         const $scope = this.$scope;
         const overrideContext = $scope.overrideContext;
         $scope.bindingContext = overrideContext.bindingContext = overrideContext.$state = state;
-        const value = this.ast.evaluate($scope, this, this.mode > oneTime ? this : null);
+        const value = this.ast.evaluate($scope, this, this.mode > 1 ? this : null);
         const shouldQueueFlush = this._controller.state !== 1 && (this.targetObserver.type & 4) > 0;
         if (value === this._value) {
             return;
@@ -404,17 +403,14 @@ exports.DispatchAttributePattern = __decorate([
     runtimeHtml.attributePattern({ pattern: 'PART.dispatch', symbols: '.' })
 ], exports.DispatchAttributePattern);
 exports.StateBindingCommand = class StateBindingCommand {
-    constructor(_attrMapper) {
-        this._attrMapper = _attrMapper;
-        this.type = 0;
-    }
+    get type() { return 0; }
     get name() { return 'state'; }
-    build(info) {
+    build(info, parser, attrMapper) {
         const attr = info.attr;
         let target = attr.target;
         let value = attr.rawValue;
         if (info.bindable == null) {
-            target = this._attrMapper.map(info.node, target)
+            target = attrMapper.map(info.node, target)
                 ?? kernel.camelCase(target);
         }
         else {
@@ -426,14 +422,11 @@ exports.StateBindingCommand = class StateBindingCommand {
         return new StateBindingInstruction(value, target);
     }
 };
-exports.StateBindingCommand.inject = [runtimeHtml.IAttrMapper];
 exports.StateBindingCommand = __decorate([
     runtimeHtml.bindingCommand('state')
 ], exports.StateBindingCommand);
 exports.DispatchBindingCommand = class DispatchBindingCommand {
-    constructor() {
-        this.type = 1;
-    }
+    get type() { return 1; }
     get name() { return 'dispatch'; }
     build(info) {
         const attr = info.attr;
@@ -481,7 +474,7 @@ exports.DispatchBindingInstructionRenderer = class DispatchBindingInstructionRen
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.ast, 8);
         const binding = new StateDispatchBinding(renderingCtrl.container, expr, target, instruction.from, this._stateContainer);
-        renderingCtrl.addBinding(expr.$kind === 38963
+        renderingCtrl.addBinding(expr.$kind === 18
             ? runtimeHtml.applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }

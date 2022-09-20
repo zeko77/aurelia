@@ -1,4 +1,4 @@
-import { Scope, LifecycleFlags } from '@aurelia/runtime';
+import { Scope } from '@aurelia/runtime';
 import { CustomElementDefinition } from '../resources/custom-element';
 import { CustomAttributeDefinition } from '../resources/custom-attribute';
 import type { IContainer, Writable, IDisposable } from '@aurelia/kernel';
@@ -11,6 +11,12 @@ import type { IViewFactory } from './view';
 import type { IInstruction } from '../renderer';
 import type { PartialCustomElementDefinition } from '../resources/custom-element';
 declare type BindingContext<C extends IViewModel> = Required<ICompileHooks> & Required<IActivationHooks<IHydratedController | null>> & C;
+export declare const enum LifecycleFlags {
+    none = 0,
+    fromBind = 1,
+    fromUnbind = 2,
+    dispose = 4
+}
 export declare const enum MountTarget {
     none = 0,
     host = 1,
@@ -37,7 +43,6 @@ export declare class Controller<C extends IViewModel = IViewModel> implements IC
      * For ShadowDOM elements, this will be the original declaring element, NOT the shadow root (the shadow root is stored on the `shadowRoot` property)
      */
     host: HTMLElement | null;
-    readonly id: number;
     head: IHydratedController | null;
     tail: IHydratedController | null;
     next: IHydratedController | null;

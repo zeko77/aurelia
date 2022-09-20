@@ -1,8 +1,7 @@
 import { IRenderLocation } from '../../dom';
 import { IHydrationContext } from '../../templating/controller';
 import { IRendering } from '../../templating/rendering';
-import type { LifecycleFlags } from '@aurelia/runtime';
-import type { ControllerVisitor, ICustomElementController, ICustomElementViewModel, IHydratedController, IHydratedParentController, ISyntheticView } from '../../templating/controller';
+import type { LifecycleFlags, ControllerVisitor, ICustomElementController, ICustomElementViewModel, IHydratedController, IHydratedParentController, ISyntheticView } from '../../templating/controller';
 import type { HydrateElementInstruction } from '../../renderer';
 export declare class AuSlot implements ICustomElementViewModel {
     readonly view: ISyntheticView;

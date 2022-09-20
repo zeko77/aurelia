@@ -3724,26 +3724,26 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
 };
 
 x([ s.bindable({
-    mode: s.BindingMode.toView,
+    mode: 2,
     primary: true,
     callback: "valueChanged"
 }) ], exports.LoadCustomAttribute.prototype, "route", void 0);
 
 x([ s.bindable({
-    mode: s.BindingMode.toView,
+    mode: 2,
     callback: "valueChanged"
 }) ], exports.LoadCustomAttribute.prototype, "params", void 0);
 
 x([ s.bindable({
-    mode: s.BindingMode.toView
+    mode: 2
 }) ], exports.LoadCustomAttribute.prototype, "attribute", void 0);
 
 x([ s.bindable({
-    mode: s.BindingMode.fromView
+    mode: 4
 }) ], exports.LoadCustomAttribute.prototype, "active", void 0);
 
 x([ s.bindable({
-    mode: s.BindingMode.toView,
+    mode: 2,
     callback: "valueChanged"
 }) ], exports.LoadCustomAttribute.prototype, "context", void 0);
 
@@ -3802,7 +3802,7 @@ exports.HrefCustomAttribute = class HrefCustomAttribute {
 };
 
 x([ s.bindable({
-    mode: s.BindingMode.toView
+    mode: 2
 }) ], exports.HrefCustomAttribute.prototype, "value", void 0);
 
 exports.HrefCustomAttribute = x([ s.customAttribute({

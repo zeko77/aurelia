@@ -1,4 +1,4 @@
-import { IHydratedController, IHydratedParentController } from '@aurelia/runtime-html';
+import { LifecycleFlags, IHydratedController, IHydratedParentController } from '@aurelia/runtime-html';
 import { ComponentAppellation, IRouteableComponent, LoadInstruction } from '../interfaces';
 import { IRouter } from '../router';
 import { ViewportContent } from './viewport-content';
@@ -10,7 +10,6 @@ import { Step } from '../utilities/runner';
 import { Route } from '../route';
 import { Endpoint, IConnectedCustomElement } from './endpoint';
 import { IViewportOptions, ViewportOptions } from './viewport-options';
-import { LifecycleFlags } from '@aurelia/runtime';
 /**
  * The viewport is an endpoint that encapsulates an au-viewport custom element
  * instance. It always has at least one viewport content -- the current and also

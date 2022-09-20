@@ -92,6 +92,12 @@ export interface IFixture<T> {
      */
     assertAttr(selector: string, name: string, value: string): void;
     /**
+     * Assert the attribute value of an element matching the given selector inside the application host equals to a given string.
+     *
+     * Will throw if there' more than one elements with matching selector
+     */
+    assertAttrNS(selector: string, namespace: string, name: string, value: string): void;
+    /**
      * Assert the value of an element matching the given selector inside the application host equals to a given value.
      *
      * Will throw if there' more than one elements with matching selector

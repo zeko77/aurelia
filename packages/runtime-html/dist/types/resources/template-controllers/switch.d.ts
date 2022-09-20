@@ -1,14 +1,13 @@
 import { ILogger } from '@aurelia/kernel';
-import { LifecycleFlags, IObserverLocator, IndexMap, Scope } from '@aurelia/runtime';
+import { IObserverLocator, Scope } from '@aurelia/runtime';
 import { IRenderLocation } from '../../dom';
 import { IViewFactory } from '../../templating/view';
-import type { ICustomAttributeController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, IHydratableController, ISyntheticView, ControllerVisitor } from '../../templating/controller';
+import type { LifecycleFlags, ICustomAttributeController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, IHydratableController, ISyntheticView, ControllerVisitor } from '../../templating/controller';
 import type { INode } from '../../dom';
 import type { IInstruction } from '../../renderer';
 export declare class Switch implements ICustomAttributeViewModel {
     private readonly _factory;
     private readonly _location;
-    readonly id: number;
     readonly $controller: ICustomAttributeController<this>;
     private view;
     value: unknown;
@@ -30,7 +29,6 @@ export declare class Switch implements ICustomAttributeViewModel {
     accept(visitor: ControllerVisitor): void | true;
 }
 export declare class Case implements ICustomAttributeViewModel {
-    readonly id: number;
     readonly $controller: ICustomAttributeController<this>;
     value: unknown;
     fallThrough: boolean;
@@ -44,7 +42,7 @@ export declare class Case implements ICustomAttributeViewModel {
     detaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void>;
     isMatch(value: unknown): boolean;
     valueChanged(newValue: unknown, _oldValue: unknown): void;
-    handleCollectionChange(_indexMap: IndexMap): void;
+    handleCollectionChange(): void;
     activate(initiator: IHydratedController | null, flags: LifecycleFlags, scope: Scope): void | Promise<void>;
     deactivate(initiator: IHydratedController | null, flags: LifecycleFlags): void | Promise<void>;
     dispose(): void;

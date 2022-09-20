@@ -2,7 +2,6 @@ import { camelCase, kebabCase } from '@aurelia/kernel';
 import * as path from 'path';
 import modifyCode from 'modify-code';
 import * as ts from 'typescript';
-import { BindingMode } from '@aurelia/runtime-html';
 import { parseFragment } from 'parse5';
 import * as fs from 'fs';
 
@@ -527,13 +526,13 @@ function toBindingMode(mode) {
     if (mode) {
         const normalizedMode = kebabCase(mode);
         if (normalizedMode === 'one-time')
-            return BindingMode.oneTime;
+            return 1;
         if (normalizedMode === 'one-way' || normalizedMode === 'to-view')
-            return BindingMode.toView;
+            return 2;
         if (normalizedMode === 'from-view')
-            return BindingMode.fromView;
+            return 4;
         if (normalizedMode === 'two-way')
-            return BindingMode.twoWay;
+            return 6;
     }
 }
 

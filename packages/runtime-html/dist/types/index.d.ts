@@ -1,4 +1,3 @@
-export { LifecycleFlags, } from '@aurelia/runtime';
 export { bindable, Bindable, BindableDefinition, type PartialBindableDefinition, coercer, } from './bindable';
 export { BindableObserver, } from './observation/bindable-observer';
 export { DebounceBindingBehaviorRegistration, OneTimeBindingBehaviorRegistration, ToViewBindingBehaviorRegistration, FromViewBindingBehaviorRegistration, SignalBindingBehaviorRegistration, ThrottleBindingBehaviorRegistration, TwoWayBindingBehaviorRegistration, } from './configuration';
@@ -8,7 +7,7 @@ export { DebounceBindingBehavior, } from './resources/binding-behaviors/debounce
 export { SignalBindingBehavior, } from './resources/binding-behaviors/signals';
 export { ThrottleBindingBehavior, } from './resources/binding-behaviors/throttle';
 export { Aurelia, IAurelia, type IEnhancementConfig, } from './aurelia';
-export { type ISinglePageApp, AppRoot, IAppRoot, IWorkTracker, } from './app-root';
+export { type ISinglePageApp, AppRoot, IAppRoot, } from './app-root';
 export { type TaskSlot, AppTask, IAppTask, type AppTaskCallback, type AppTaskCallbackNoArg, } from './app-task';
 export { AttrSyntax, IAttributeParser, attributePattern, type AttributePatternDefinition, IAttributePattern, AttributePattern, Interpretation, ISyntaxInterpreter, AtPrefixedTriggerAttributePattern, ColonPrefixedBindAttributePattern, DotSeparatedAttributePattern, RefAttributePattern, } from './resources/attribute-pattern';
 export { bindingCommand, type ICommandBuildInfo, BindingCommand, type BindingCommandInstance, BindingCommandDefinition, type BindingCommandKind, type BindingCommandType, CallBindingCommand, CommandType, DefaultBindingCommand, ForBindingCommand, FromViewBindingCommand, OneTimeBindingCommand, ToViewBindingCommand, TwoWayBindingCommand, TriggerBindingCommand, DelegateBindingCommand, CaptureBindingCommand, AttrBindingCommand, ClassBindingCommand, StyleBindingCommand, } from './resources/binding-command';
@@ -22,7 +21,7 @@ export { InterpolationBinding, InterpolationPartBinding, } from './binding/inter
 export { LetBinding, } from './binding/let-binding';
 export { PropertyBinding, } from './binding/property-binding';
 export { RefBinding, } from './binding/ref-binding';
-export { applyBindingBehavior, IRenderer, type IInstructionTypeClassifier, ITemplateCompiler, type ICompliationInstruction, renderer, CallBindingInstruction, HydrateAttributeInstruction, HydrateElementInstruction, HydrateTemplateController, InterpolationInstruction, IteratorBindingInstruction, LetBindingInstruction, HydrateLetElementInstruction, RefBindingInstruction, SetPropertyInstruction, AttributeBindingInstruction, IListenerBehaviorOptions, ListenerBindingInstruction, PropertyBindingInstruction, SetAttributeInstruction, SetClassAttributeInstruction, SetStyleAttributeInstruction, StylePropertyBindingInstruction, TextBindingInstruction, isInstruction, type InstructionTypeName, IInstruction, InstructionType, } from './renderer';
+export { applyBindingBehavior, IRenderer, type IInstructionTypeClassifier, ITemplateCompiler, type ICompliationInstruction, renderer, CallBindingInstruction, DelegationStrategy, HydrateAttributeInstruction, HydrateElementInstruction, HydrateTemplateController, InterpolationInstruction, IteratorBindingInstruction, LetBindingInstruction, HydrateLetElementInstruction, RefBindingInstruction, SetPropertyInstruction, AttributeBindingInstruction, ListenerBindingInstruction, PropertyBindingInstruction, SetAttributeInstruction, SetClassAttributeInstruction, SetStyleAttributeInstruction, StylePropertyBindingInstruction, TextBindingInstruction, isInstruction, type InstructionTypeName, IInstruction, InstructionType, } from './renderer';
 export { AttributeNSAccessor, } from './observation/attribute-ns-accessor';
 export { type IInputElement, CheckedObserver, } from './observation/checked-observer';
 export { ClassAttributeAccessor, } from './observation/class-attribute-accessor';
@@ -58,7 +57,7 @@ export { ITemplateElementFactory } from './template-element-factory';
 export { BindablesInfo, TemplateCompiler, ITemplateCompilerHooks, TemplateCompilerHooks, templateCompilerHooks, } from './template-compiler';
 export { allResources, } from './utilities-di';
 export { type PartialChildrenDefinition, ChildrenDefinition, Children, children, ChildrenObserver, } from './templating/children';
-export { Controller, isCustomElementController, isCustomElementViewModel, ViewModelKind, HooksDefinition, State, type ControllerVisitor, type IViewModel, IController, type IComponentController, type IContextualCustomElementController, type IControllerElementHydrationInstruction, type IHydratableController, IHydrationContext, type IDryCustomElementController, type ICustomAttributeController, type IHydratedController, type IHydratedComponentController, type IHydratedParentController, type ICompiledCustomElementController, type ICustomElementController, type ICustomElementViewModel, type ICustomAttributeViewModel, type IHydratedCustomElementViewModel, type IHydratedCustomAttributeViewModel, type ISyntheticView, } from './templating/controller';
+export { Controller, isCustomElementController, isCustomElementViewModel, ViewModelKind, HooksDefinition, State, LifecycleFlags, type ControllerVisitor, type IViewModel, IController, type IComponentController, type IContextualCustomElementController, type IControllerElementHydrationInstruction, type IHydratableController, IHydrationContext, type IDryCustomElementController, type ICustomAttributeController, type IHydratedController, type IHydratedComponentController, type IHydratedParentController, type ICompiledCustomElementController, type ICustomElementController, type ICustomElementViewModel, type ICustomAttributeViewModel, type IHydratedCustomElementViewModel, type IHydratedCustomAttributeViewModel, type ISyntheticView, } from './templating/controller';
 export { ILifecycleHooks, LifecycleHooksEntry, LifecycleHooksDefinition, type LifecycleHooksLookup, type LifecycleHook, LifecycleHooks, lifecycleHooks, } from './templating/lifecycle-hooks';
 export { IRendering, Rendering, } from './templating/rendering';
 export { ViewFactory, IViewFactory, IViewLocator, ViewLocator, view, Views, } from './templating/view';

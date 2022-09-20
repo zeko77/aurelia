@@ -1,7 +1,7 @@
 import { BindingMode } from './interfaces-bindings';
 import type { ITask, TaskQueue } from '@aurelia/platform';
 import type { IServiceLocator } from '@aurelia/kernel';
-import type { ICollectionSubscriber, IndexMap, Interpolation, IObserverLocator, IsExpression, IBinding, Scope } from '@aurelia/runtime';
+import type { ICollectionSubscriber, Interpolation, IObserverLocator, IsExpression, IBinding, Scope } from '@aurelia/runtime';
 import type { IPlatform } from '../platform';
 import type { IAstBasedBinding, IBindingController } from './interfaces-bindings';
 export interface InterpolationBinding extends IBinding {
@@ -48,7 +48,7 @@ export declare class InterpolationPartBinding implements IAstBasedBinding, IColl
     readonly oL: IObserverLocator;
     constructor(ast: IsExpression, target: object, targetProperty: string, locator: IServiceLocator, observerLocator: IObserverLocator, owner: InterpolationBinding);
     handleChange(newValue: unknown): void;
-    handleCollectionChange(_indexMap: IndexMap): void;
+    handleCollectionChange(): void;
     $bind(scope: Scope): void;
     $unbind(): void;
 }

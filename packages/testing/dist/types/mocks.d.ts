@@ -1,5 +1,6 @@
 import { Key } from '@aurelia/kernel';
-import { ExpressionKind, LifecycleFlags } from '@aurelia/runtime';
+import { ExpressionKind } from '@aurelia/runtime';
+import { LifecycleFlags } from '@aurelia/runtime-html';
 import type { IContainer, IDisposable, IIndexable, IServiceLocator } from '@aurelia/kernel';
 import type { Scope, IBinding, IConnectableBinding, IndexMap, IObserverLocator, ISignaler, BindingObserverRecord, Collection, ISubscribable, ICollectionSubscribable } from '@aurelia/runtime';
 export declare class MockBinding implements IConnectableBinding {
@@ -17,7 +18,7 @@ export declare class MockBinding implements IConnectableBinding {
     updateTarget(value: unknown): void;
     updateSource(value: unknown): void;
     handleChange(newValue: unknown, _previousValue: unknown): void;
-    handleCollectionChange(indexMap: IndexMap): void;
+    handleCollectionChange(collection: Collection, indexMap: IndexMap): void;
     observe(obj: IIndexable, propertyName: string): void;
     observeCollection(col: Collection): void;
     subscribeTo(subscribable: ISubscribable | ICollectionSubscribable): void;
@@ -58,6 +59,8 @@ export declare class MockPropertySubscriber {
 export declare class MockTracingExpression {
     inner: any;
     $kind: ExpressionKind;
+    hasBind: true;
+    hasUnbind: true;
     calls: [keyof MockTracingExpression, ...any[]][];
     constructor(inner: any);
     evaluate(...args: any[]): any;
@@ -142,7 +145,7 @@ export declare class SpySubscriber implements IDisposable {
     private _callCount;
     constructor();
     handleChange(newValue: any, oldValue: any): void;
-    handleCollectionChange(indexMap: IndexMap): void;
+    handleCollectionChange(collection: Collection, indexMap: IndexMap): void;
     dispose(): void;
 }
 //# sourceMappingURL=mocks.d.ts.map

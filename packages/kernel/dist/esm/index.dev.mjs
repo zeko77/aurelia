@@ -1,5 +1,6 @@
 import { Metadata, applyMetadataPolyfill, isObject } from '@aurelia/metadata';
 
+const toStringSafe = String;
 const getOwnMetadata = Metadata.getOwn;
 const hasOwnMetadata = Metadata.hasOwn;
 const defineMetadata = Metadata.define;
@@ -31,25 +32,6 @@ function isArrayIndex(value) {
             }
             return isNumericLookup[value] = true;
         }
-        default:
-            return false;
-    }
-}
-function isNumberOrBigInt(value) {
-    switch (typeof value) {
-        case 'number':
-        case 'bigint':
-            return true;
-        default:
-            return false;
-    }
-}
-function isStringOrDate(value) {
-    switch (typeof value) {
-        case 'string':
-            return true;
-        case 'object':
-            return value instanceof Date;
         default:
             return false;
     }
@@ -165,52 +147,13 @@ const kebabCase = (function () {
     };
 })();
 function toArray(input) {
-    const { length } = input;
+    const length = input.length;
     const arr = Array(length);
     let i = 0;
     for (; i < length; ++i) {
         arr[i] = input[i];
     }
     return arr;
-}
-const ids = {};
-function nextId(context) {
-    if (ids[context] === void 0) {
-        ids[context] = 0;
-    }
-    return ++ids[context];
-}
-function resetId(context) {
-    ids[context] = 0;
-}
-function mergeDistinct(arr1, arr2, slice) {
-    if (arr1 === void 0 || arr1 === null || arr1 === emptyArray) {
-        if (arr2 === void 0 || arr2 === null || arr2 === emptyArray) {
-            return emptyArray;
-        }
-        else {
-            return slice ? arr2.slice(0) : arr2;
-        }
-    }
-    else if (arr2 === void 0 || arr2 === null || arr2 === emptyArray) {
-        return slice ? arr1.slice(0) : arr1;
-    }
-    const lookup = {};
-    const arr3 = slice ? arr1.slice(0) : arr1;
-    let len1 = arr1.length;
-    let len2 = arr2.length;
-    while (len1-- > 0) {
-        lookup[arr1[len1]] = true;
-    }
-    let item;
-    while (len2-- > 0) {
-        item = arr2[len2];
-        if (lookup[item] === void 0) {
-            arr3.push(item);
-            lookup[item] = true;
-        }
-    }
-    return arr3;
 }
 function bound(target, key, descriptor) {
     return {
@@ -242,22 +185,6 @@ function mergeArrays(...arrays) {
             let j = 0;
             for (; j < arrayLen; ++j) {
                 result[k++] = array[j];
-            }
-        }
-    }
-    return result;
-}
-function mergeObjects(...objects) {
-    const result = {};
-    const objectsLen = objects.length;
-    let object;
-    let key;
-    let i = 0;
-    for (; objectsLen > i; ++i) {
-        object = objects[i];
-        if (object !== void 0) {
-            for (key in object) {
-                result[key] = object[key];
             }
         }
     }
@@ -472,31 +399,31 @@ function fromDefinitionOrDefault(name, def, getDefault) {
 
 applyMetadataPolyfill(Reflect, false, false);
 class ResolverBuilder {
-    constructor(container, key) {
-        this.container = container;
-        this.key = key;
+    constructor(_container, _key) {
+        this._container = _container;
+        this._key = _key;
     }
     instance(value) {
-        return this.registerResolver(0, value);
+        return this._registerResolver(0, value);
     }
     singleton(value) {
-        return this.registerResolver(1, value);
+        return this._registerResolver(1, value);
     }
     transient(value) {
-        return this.registerResolver(2, value);
+        return this._registerResolver(2, value);
     }
     callback(value) {
-        return this.registerResolver(3, value);
+        return this._registerResolver(3, value);
     }
     cachedCallback(value) {
-        return this.registerResolver(3, cacheCallbackResult(value));
+        return this._registerResolver(3, cacheCallbackResult(value));
     }
     aliasTo(destinationKey) {
-        return this.registerResolver(5, destinationKey);
+        return this._registerResolver(5, destinationKey);
     }
-    registerResolver(strategy, state) {
-        const { container, key } = this;
-        this.container = this.key = (void 0);
+    _registerResolver(strategy, state) {
+        const { _container: container, _key: key } = this;
+        this._container = this._key = (void 0);
         return container.registerResolver(key, new Resolver(key, strategy, state));
     }
 }
@@ -515,13 +442,13 @@ function cloneArrayWithPossibleProps(source) {
 }
 const DefaultResolver = {
     none(key) {
-        {
-            throw Error(`AUR0002: ${key.toString()} not registered, did you forget to add @singleton()?`);
-        }
+        throw noResolverForKeyError(key);
     },
     singleton(key) { return new Resolver(key, 1, key); },
     transient(key) { return new Resolver(key, 2, key); },
 };
+const noResolverForKeyError = (key) => new Error(`AUR0002: ${toStringSafe(key)} not registered, did you forget to add @singleton()?`)
+    ;
 class ContainerConfiguration {
     constructor(inheritParentResources, defaultResolver) {
         this.inheritParentResources = inheritParentResources;
@@ -564,13 +491,9 @@ const DI = {
         Interface.$isInterface = true;
         Interface.friendlyName = friendlyName == null ? '(anonymous)' : friendlyName;
         if (configure != null) {
-            Interface.register = function (container, key) {
-                return configure(new ResolverBuilder(container, key ?? Interface));
-            };
+            Interface.register = (container, key) => configure(new ResolverBuilder(container, key ?? Interface));
         }
-        Interface.toString = function toString() {
-            return `InterfaceSymbol<${Interface.friendlyName}>`;
-        };
+        Interface.toString = () => `InterfaceSymbol<${Interface.friendlyName}>`;
         return Interface;
     },
     inject(...dependencies) {
@@ -593,7 +516,8 @@ const DI = {
                 const fn = descriptor.value;
                 const annotationParamtypes = getOrCreateAnnotationParamTypes(fn);
                 let dep;
-                for (let i = 0; i < dependencies.length; ++i) {
+                let i = 0;
+                for (; i < dependencies.length; ++i) {
                     dep = dependencies[i];
                     if (dep !== void 0) {
                         annotationParamtypes[i] = dep;
@@ -603,7 +527,8 @@ const DI = {
             else {
                 const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
                 let dep;
-                for (let i = 0; i < dependencies.length; ++i) {
+                let i = 0;
+                for (; i < dependencies.length; ++i) {
                     dep = dependencies[i];
                     if (dep !== void 0) {
                         annotationParamtypes[i] = dep;
@@ -759,7 +684,7 @@ const factory = createResolver((key, handler, requestor) => {
 });
 const newInstanceForScope = createResolver((key, handler, requestor) => {
     const instance = createNewInstance(key, handler, requestor);
-    const instanceProvider = new InstanceProvider(String(key), instance);
+    const instanceProvider = new InstanceProvider(toStringSafe(key), instance);
     requestor.registerResolver(key, instanceProvider, true);
     return instance;
 });
@@ -777,65 +702,65 @@ var ResolverStrategy;
     ResolverStrategy[ResolverStrategy["alias"] = 5] = "alias";
 })(ResolverStrategy || (ResolverStrategy = {}));
 class Resolver {
-    constructor(key, strategy, state) {
-        this.key = key;
-        this.strategy = strategy;
-        this.state = state;
+    constructor(_key, _strategy, _state) {
+        this._key = _key;
+        this._strategy = _strategy;
+        this._state = _state;
         this.resolving = false;
     }
     get $isResolver() { return true; }
     register(container, key) {
-        return container.registerResolver(key || this.key, this);
+        return container.registerResolver(key || this._key, this);
     }
     resolve(handler, requestor) {
-        switch (this.strategy) {
+        switch (this._strategy) {
             case 0:
-                return this.state;
+                return this._state;
             case 1: {
                 if (this.resolving) {
-                    {
-                        throw new Error(`AUR0003: Cyclic dependency found: ${this.state.name}`);
-                    }
+                    throw cyclicDependencyError(this._state.name);
                 }
                 this.resolving = true;
-                this.state = handler.getFactory(this.state).construct(requestor);
-                this.strategy = 0;
+                this._state = handler.getFactory(this._state).construct(requestor);
+                this._strategy = 0;
                 this.resolving = false;
-                return this.state;
+                return this._state;
             }
             case 2: {
-                const factory = handler.getFactory(this.state);
+                const factory = handler.getFactory(this._state);
                 if (factory === null) {
-                    {
-                        throw new Error(`AUR0004: Resolver for ${String(this.key)} returned a null factory`);
-                    }
+                    throw nullFactoryError(this._key);
                 }
                 return factory.construct(requestor);
             }
             case 3:
-                return this.state(handler, requestor, this);
+                return this._state(handler, requestor, this);
             case 4:
-                return this.state[0].resolve(handler, requestor);
+                return this._state[0].resolve(handler, requestor);
             case 5:
-                return requestor.get(this.state);
+                return requestor.get(this._state);
             default:
-                {
-                    throw new Error(`AUR0005: Invalid resolver strategy specified: ${this.strategy}.`);
-                }
+                throw invalidResolverStrategyError(this._strategy);
         }
     }
     getFactory(container) {
-        switch (this.strategy) {
+        switch (this._strategy) {
             case 1:
             case 2:
-                return container.getFactory(this.state);
+                return container.getFactory(this._state);
             case 5:
-                return container.getResolver(this.state)?.getFactory?.(container) ?? null;
+                return container.getResolver(this._state)?.getFactory?.(container) ?? null;
             default:
                 return null;
         }
     }
 }
+const cyclicDependencyError = (name) => new Error(`AUR0003: Cyclic dependency found: ${name}`)
+    ;
+const nullFactoryError = (key) => new Error(`AUR0004: Resolver for ${toStringSafe(key)} returned a null factory`)
+    ;
+const invalidResolverStrategyError = (strategy) => new Error(`AUR0005: Invalid resolver strategy specified: ${strategy}.`)
+    ;
 function containerGetKey(d) {
     return this.get(d);
 }
@@ -952,9 +877,7 @@ class Container {
     }
     register(...params) {
         if (++this._registerDepth === 100) {
-            {
-                throw new Error(`AUR0006: Unable to autoregister dependency: [${params.map(String)}]`);
-            }
+            throw registrationError(params);
         }
         let current;
         let keys;
@@ -1017,15 +940,13 @@ class Container {
             resolvers.set(key, resolver);
             if (isResourceKey(key)) {
                 if (this.res[key] !== void 0) {
-                    {
-                        throw new Error(`AUR0007: Resource key "${key}" already registered`);
-                    }
+                    throw resourceExistError(key);
                 }
                 this.res[key] = resolver;
             }
         }
-        else if (result instanceof Resolver && result.strategy === 4) {
-            result.state.push(resolver);
+        else if (result instanceof Resolver && result._strategy === 4) {
+            result._state.push(resolver);
         }
         else {
             resolvers.set(key, new Resolver(key, 4, [result, resolver]));
@@ -1057,11 +978,12 @@ class Container {
         }
         let current = this;
         let resolver;
+        let handler;
         while (current != null) {
             resolver = current._resolvers.get(key);
             if (resolver == null) {
                 if (current.parent == null) {
-                    const handler = (isRegisterInRequester(key)) ? this : current;
+                    handler = (isRegisterInRequester(key)) ? this : current;
                     return autoRegister ? this._jitRegister(key, handler) : null;
                 }
                 current = current.parent;
@@ -1086,11 +1008,12 @@ class Container {
         }
         let current = this;
         let resolver;
+        let handler;
         while (current != null) {
             resolver = current._resolvers.get(key);
             if (resolver == null) {
                 if (current.parent == null) {
-                    const handler = (isRegisterInRequester(key)) ? this : current;
+                    handler = (isRegisterInRequester(key)) ? this : current;
                     resolver = this._jitRegister(key, handler);
                     return resolver.resolve(current, this);
                 }
@@ -1100,9 +1023,7 @@ class Container {
                 return resolver.resolve(current, this);
             }
         }
-        {
-            throw new Error(`AUR0008: Unable to resolve key: ${String(key)}`);
-        }
+        throw cantResolveKeyError(key);
     }
     getAll(key, searchAncestors = false) {
         validateKey(key);
@@ -1228,14 +1149,10 @@ class Container {
     }
     _jitRegister(keyAsValue, handler) {
         if (!isFunction(keyAsValue)) {
-            {
-                throw new Error(`AUR0009: Attempted to jitRegister something that is not a constructor: '${keyAsValue}'. Did you forget to register this resource?`);
-            }
+            throw jitRegisterNonFunctionError(keyAsValue);
         }
         if (InstrinsicTypeNames.has(keyAsValue.name)) {
-            {
-                throw new Error(`AUR0010: Attempted to jitRegister an intrinsic type: ${keyAsValue.name}. Did you forget to add @inject(Key)`);
-            }
+            throw jitInstrinsicTypeError(keyAsValue);
         }
         if (isRegistry(keyAsValue)) {
             const registrationResolver = keyAsValue.register(handler, keyAsValue);
@@ -1244,9 +1161,7 @@ class Container {
                 if (newResolver != null) {
                     return newResolver;
                 }
-                {
-                    throw new Error(`AUR0011: Invalid resolver returned from the static register method`);
-                }
+                throw invalidResolverFromRegisterError();
             }
             return registrationResolver;
         }
@@ -1265,14 +1180,10 @@ class Container {
             if (newResolver != null) {
                 return newResolver;
             }
-            {
-                throw new Error(`AUR0011: Invalid resolver returned from the static register method`);
-            }
+            throw invalidResolverFromRegisterError();
         }
         else if (keyAsValue.$isInterface) {
-            {
-                throw new Error(`AUR0012: Attempted to jitRegister an interface: ${keyAsValue.friendlyName}`);
-            }
+            throw jitInterfaceError(keyAsValue.friendlyName);
         }
         else {
             const resolver = this.config.defaultResolver(keyAsValue, handler);
@@ -1281,6 +1192,20 @@ class Container {
         }
     }
 }
+const registrationError = (deps) => new Error(`AUR0006: Unable to autoregister dependency: [${deps.map(toStringSafe)}]`)
+    ;
+const resourceExistError = (key) => new Error(`AUR0007: Resource key "${toStringSafe(key)}" already registered`)
+    ;
+const cantResolveKeyError = (key) => new Error(`AUR0008: Unable to resolve key: ${toStringSafe(key)}`)
+    ;
+const jitRegisterNonFunctionError = (keyAsValue) => new Error(`AUR0009: Attempted to jitRegister something that is not a constructor: '${toStringSafe(keyAsValue)}'. Did you forget to register this resource?`)
+    ;
+const jitInstrinsicTypeError = (keyAsValue) => new Error(`AUR0010: Attempted to jitRegister an intrinsic type: ${keyAsValue.name}. Did you forget to add @inject(Key)`)
+    ;
+const invalidResolverFromRegisterError = () => new Error(`AUR0011: Invalid resolver returned from the static register method`)
+    ;
+const jitInterfaceError = (name) => new Error(`AUR0012: Attempted to jitRegister an interface: ${name}`)
+    ;
 class ParameterizedRegistry {
     constructor(key, params) {
         this.key = key;
@@ -1351,9 +1276,7 @@ class InstanceProvider {
     get $isResolver() { return true; }
     resolve() {
         if (this._instance == null) {
-            {
-                throw new Error(`AUR0013: Cannot call resolve ${this._name} before calling prepare or after calling dispose.`);
-            }
+            throw noInstanceError(this._name);
         }
         return this._instance;
     }
@@ -1369,8 +1292,8 @@ function validateKey(key) {
     }
 }
 function buildAllResponse(resolver, handler, requestor) {
-    if (resolver instanceof Resolver && resolver.strategy === 4) {
-        const state = resolver.state;
+    if (resolver instanceof Resolver && resolver._strategy === 4) {
+        const state = resolver._state;
         let i = state.length;
         const results = new Array(i);
         while (i--) {
@@ -1379,6 +1302,11 @@ function buildAllResponse(resolver, handler, requestor) {
         return results;
     }
     return [resolver.resolve(handler, requestor)];
+}
+function noInstanceError(name) {
+    {
+        return new Error(`AUR0013: Cannot call resolve ${name} before calling prepare or after calling dispose.`);
+    }
 }
 function createNativeInvocationError(Type) {
     {
@@ -1946,5 +1874,5 @@ class EventAggregator {
     }
 }
 
-export { AnalyzedModule, ColorOptions, ConsoleSink, ContainerConfiguration, DI, DefaultLogEvent, DefaultLogEventFactory, DefaultLogger, DefaultResolver, EventAggregator, IContainer, IEventAggregator, ILogConfig, ILogEventFactory, ILogger, IModuleLoader, IPlatform, IServiceLocator, ISink, InstanceProvider, LogConfig, LogLevel, LoggerConfiguration, ModuleItem, Protocol, Registration, all, bound, camelCase, emptyArray, emptyObject, factory, firstDefined, format, fromAnnotationOrDefinitionOrTypeOrDefault, fromAnnotationOrTypeOrDefault, fromDefinitionOrDefault, getPrototypeChain, ignore, inject, isArrayIndex, isNativeFunction, isNumberOrBigInt, isStringOrDate, kebabCase, lazy, mergeArrays, mergeDistinct, mergeObjects, newInstanceForScope, newInstanceOf, nextId, noop, onResolve, optional, pascalCase, resetId, resolveAll, singleton, sink, toArray, transient };
+export { AnalyzedModule, ColorOptions, ConsoleSink, ContainerConfiguration, DI, DefaultLogEvent, DefaultLogEventFactory, DefaultLogger, DefaultResolver, EventAggregator, IContainer, IEventAggregator, ILogConfig, ILogEventFactory, ILogger, IModuleLoader, IPlatform, IServiceLocator, ISink, InstanceProvider, LogConfig, LogLevel, LoggerConfiguration, ModuleItem, Protocol, Registration, all, bound, camelCase, emptyArray, emptyObject, factory, firstDefined, format, fromAnnotationOrDefinitionOrTypeOrDefault, fromAnnotationOrTypeOrDefault, fromDefinitionOrDefault, getPrototypeChain, ignore, inject, isArrayIndex, isNativeFunction, kebabCase, lazy, mergeArrays, newInstanceForScope, newInstanceOf, noop, onResolve, optional, pascalCase, resolveAll, singleton, sink, toArray, transient };
 //# sourceMappingURL=index.dev.mjs.map

@@ -1,4 +1,4 @@
-import { DelegationStrategy } from '@aurelia/runtime';
+import { DelegationStrategy } from '../renderer';
 import type { IIndexable, IServiceLocator } from '@aurelia/kernel';
 import type { IsBindingBehavior, Scope } from '@aurelia/runtime';
 import type { IEventDelegator } from '../observation/event-delegator';
@@ -6,8 +6,7 @@ import type { IAstBasedBinding } from './interfaces-bindings';
 export declare class ListenerOptions {
     readonly prevent: boolean;
     readonly strategy: DelegationStrategy;
-    readonly expAsHandler: boolean;
-    constructor(prevent: boolean, strategy: DelegationStrategy, expAsHandler: boolean);
+    constructor(prevent: boolean, strategy: DelegationStrategy);
 }
 export interface Listener extends IAstBasedBinding {
 }

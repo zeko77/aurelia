@@ -11,7 +11,7 @@ import { IPlatform } from './platform';
 import { IRendering } from './templating/rendering';
 import { AttrSyntax } from './resources/attribute-pattern';
 import type { IServiceLocator, IContainer, Class, IRegistry } from '@aurelia/kernel';
-import type { Interpolation, IsBindingBehavior, ForOfStatement, DelegationStrategy } from '@aurelia/runtime';
+import type { Interpolation, IsBindingBehavior, ForOfStatement } from '@aurelia/runtime';
 import type { IHydratableController } from './templating/controller';
 import type { PartialCustomElementDefinition } from './resources/custom-element';
 export declare const enum InstructionType {
@@ -191,6 +191,11 @@ export declare class TextBindingInstruction {
      */
     strict: boolean);
 }
+export declare const enum DelegationStrategy {
+    none = 0,
+    capturing = 1,
+    bubbling = 2
+}
 export declare class ListenerBindingInstruction {
     from: string | IsBindingBehavior;
     to: string;
@@ -357,16 +362,9 @@ export declare class TextBindingRenderer implements IRenderer {
     constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator, p: IPlatform);
     render(renderingCtrl: IHydratableController, target: ChildNode, instruction: TextBindingInstruction): void;
 }
-export interface IListenerBehaviorOptions {
-    /**
-     * `true` if the expression specified in the template is meant to be treated as a handler
-     */
-    expAsHandler: boolean;
-}
-export declare const IListenerBehaviorOptions: import("@aurelia/kernel").InterfaceSymbol<IListenerBehaviorOptions>;
 export declare class ListenerBindingRenderer implements IRenderer {
     target: InstructionType.listenerBinding;
-    constructor(parser: IExpressionParser, eventDelegator: IEventDelegator, p: IPlatform, listenerBehaviorOptions: IListenerBehaviorOptions);
+    constructor(parser: IExpressionParser, eventDelegator: IEventDelegator);
     render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: ListenerBindingInstruction): void;
 }
 export declare class SetAttributeRenderer implements IRenderer {

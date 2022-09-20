@@ -77,22 +77,22 @@ function o(t, i, s = 0) {
     let n = t.ast.expression;
     let o = true;
     let a = "";
-    while (void 0 !== n && 10082 !== n?.$kind) {
+    while (void 0 !== n && 1 !== n?.$kind) {
         let i;
         switch (n.$kind) {
-          case 38963:
-          case 36914:
+          case 18:
+          case 17:
             n = n.expression;
             continue;
 
-          case 9323:
+          case 10:
             i = n.name;
             break;
 
-          case 9324:
+          case 11:
             {
                 const s = n.key;
-                if (o) o = 17925 === s.$kind;
+                if (o) o = 4 === s.$kind;
                 i = `[${s.evaluate(r, t, null).toString()}]`;
                 break;
             }
@@ -376,7 +376,7 @@ r([ s.bindable ], exports.ValidationErrorsCustomAttribute.prototype, "controller
 
 r([ s.bindable({
     primary: true,
-    mode: s.BindingMode.twoWay
+    mode: 6
 }) ], exports.ValidationErrorsCustomAttribute.prototype, "errors", void 0);
 
 exports.ValidationErrorsCustomAttribute = r([ s.customAttribute("validation-errors"), n(0, s.INode), n(1, t.optional(a)) ], exports.ValidationErrorsCustomAttribute);

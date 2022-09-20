@@ -1,6 +1,6 @@
 import { isObject, Metadata } from '../../../metadata/dist/native-modules/index.mjs';
 import { DI, IEventAggregator, ILogger, bound, onResolve, resolveAll, emptyObject, IContainer, isArrayIndex, Protocol, emptyArray, IModuleLoader, InstanceProvider, noop, Registration } from '../../../kernel/dist/native-modules/index.mjs';
-import { isCustomElementViewModel, IHistory, ILocation, IWindow, Controller, IPlatform, CustomElement, CustomElementDefinition, IController, IAppRoot, isCustomElementController, customElement, bindable, BindingMode, customAttribute, IEventTarget, INode, IEventDelegator, getRef, CustomAttribute, AppTask } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { isCustomElementViewModel, IHistory, ILocation, IWindow, Controller, IPlatform, CustomElement, CustomElementDefinition, IController, IAppRoot, isCustomElementController, customElement, bindable, customAttribute, IEventTarget, INode, IEventDelegator, getRef, CustomAttribute, AppTask } from '../../../runtime-html/dist/native-modules/index.mjs';
 import { RecognizedRoute, Endpoint, ConfigurableRoute, RouteRecognizer } from '../../../route-recognizer/dist/native-modules/index.mjs';
 
 class Batch {
@@ -4105,19 +4105,19 @@ let LoadCustomAttribute = class LoadCustomAttribute {
     }
 };
 __decorate([
-    bindable({ mode: BindingMode.toView, primary: true, callback: 'valueChanged' })
+    bindable({ mode: 2, primary: true, callback: 'valueChanged' })
 ], LoadCustomAttribute.prototype, "route", void 0);
 __decorate([
-    bindable({ mode: BindingMode.toView, callback: 'valueChanged' })
+    bindable({ mode: 2, callback: 'valueChanged' })
 ], LoadCustomAttribute.prototype, "params", void 0);
 __decorate([
-    bindable({ mode: BindingMode.toView })
+    bindable({ mode: 2 })
 ], LoadCustomAttribute.prototype, "attribute", void 0);
 __decorate([
-    bindable({ mode: BindingMode.fromView })
+    bindable({ mode: 4 })
 ], LoadCustomAttribute.prototype, "active", void 0);
 __decorate([
-    bindable({ mode: BindingMode.toView, callback: 'valueChanged' })
+    bindable({ mode: 2, callback: 'valueChanged' })
 ], LoadCustomAttribute.prototype, "context", void 0);
 LoadCustomAttribute = __decorate([
     customAttribute('load'),
@@ -4199,7 +4199,7 @@ let HrefCustomAttribute = class HrefCustomAttribute {
     }
 };
 __decorate([
-    bindable({ mode: BindingMode.toView })
+    bindable({ mode: 2 })
 ], HrefCustomAttribute.prototype, "value", void 0);
 HrefCustomAttribute = __decorate([
     customAttribute({ name: 'href', noMultiBindings: true }),

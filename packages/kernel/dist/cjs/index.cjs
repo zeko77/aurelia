@@ -6,38 +6,40 @@ Object.defineProperty(exports, "__esModule", {
 
 var t = require("@aurelia/metadata");
 
-const e = t.Metadata.getOwn;
+const e = String;
 
-const r = t.Metadata.hasOwn;
+const r = t.Metadata.getOwn;
 
-const n = t.Metadata.define;
+const n = t.Metadata.hasOwn;
+
+const s = t.Metadata.define;
 
 const i = t => "function" === typeof t;
 
-const s = t => "string" === typeof t;
+const o = t => "string" === typeof t;
 
-const o = () => Object.create(null);
+const u = () => Object.create(null);
 
-const u = {};
+const l = {};
 
-function l(t) {
+function c(t) {
     switch (typeof t) {
       case "number":
         return t >= 0 && (0 | t) === t;
 
       case "string":
         {
-            const e = u[t];
+            const e = l[t];
             if (void 0 !== e) return e;
             const r = t.length;
-            if (0 === r) return u[t] = false;
+            if (0 === r) return l[t] = false;
             let n = 0;
-            let i = 0;
-            for (;i < r; ++i) {
-                n = t.charCodeAt(i);
-                if (0 === i && 48 === n && r > 1 || n < 48 || n > 57) return u[t] = false;
+            let s = 0;
+            for (;s < r; ++s) {
+                n = t.charCodeAt(s);
+                if (0 === s && 48 === n && r > 1 || n < 48 || n > 57) return l[t] = false;
             }
-            return u[t] = true;
+            return l[t] = true;
         }
 
       default:
@@ -45,31 +47,7 @@ function l(t) {
     }
 }
 
-function c(t) {
-    switch (typeof t) {
-      case "number":
-      case "bigint":
-        return true;
-
-      default:
-        return false;
-    }
-}
-
-function f(t) {
-    switch (typeof t) {
-      case "string":
-        return true;
-
-      case "object":
-        return t instanceof Date;
-
-      default:
-        return false;
-    }
-}
-
-const a = function() {
+const f = function() {
     let t;
     (function(t) {
         t[t["none"] = 0] = "none";
@@ -77,7 +55,7 @@ const a = function() {
         t[t["upper"] = 2] = "upper";
         t[t["lower"] = 3] = "lower";
     })(t || (t = {}));
-    const e = Object.assign(o(), {
+    const e = Object.assign(u(), {
         0: true,
         1: true,
         2: true,
@@ -99,8 +77,8 @@ const a = function() {
     return function(t, e) {
         const n = t.length;
         if (0 === n) return t;
-        let i = false;
-        let s = "";
+        let s = false;
+        let i = "";
         let o;
         let u = "";
         let l = 0;
@@ -114,35 +92,35 @@ const a = function() {
             c = t.charAt(a + 1);
             f = r(c);
             if (0 === l) {
-                if (s.length > 0) i = true;
+                if (i.length > 0) s = true;
             } else {
-                if (!i && s.length > 0 && 2 === l) i = 3 === o || 3 === f;
-                s += e(u, i);
-                i = false;
+                if (!s && i.length > 0 && 2 === l) s = 3 === o || 3 === f;
+                i += e(u, s);
+                s = false;
             }
         }
-        return s;
+        return i;
     };
 }();
 
-const h = function() {
-    const t = o();
+const a = function() {
+    const t = u();
     function e(t, e) {
         return e ? t.toUpperCase() : t.toLowerCase();
     }
     return function(r) {
         let n = t[r];
-        if (void 0 === n) n = t[r] = a(r, e);
+        if (void 0 === n) n = t[r] = f(r, e);
         return n;
     };
 }();
 
-const d = function() {
-    const t = o();
+const h = function() {
+    const t = u();
     return function(e) {
         let r = t[e];
         if (void 0 === r) {
-            r = h(e);
+            r = a(e);
             if (r.length > 0) r = r[0].toUpperCase() + r.slice(1);
             t[e] = r;
         }
@@ -150,56 +128,27 @@ const d = function() {
     };
 }();
 
-const p = function() {
-    const t = o();
+const d = function() {
+    const t = u();
     function e(t, e) {
         return e ? `-${t.toLowerCase()}` : t.toLowerCase();
     }
     return function(r) {
         let n = t[r];
-        if (void 0 === n) n = t[r] = a(r, e);
+        if (void 0 === n) n = t[r] = f(r, e);
         return n;
     };
 }();
 
-function v(t) {
-    const {length: e} = t;
+function p(t) {
+    const e = t.length;
     const r = Array(e);
     let n = 0;
     for (;n < e; ++n) r[n] = t[n];
     return r;
 }
 
-const w = {};
-
-function g(t) {
-    if (void 0 === w[t]) w[t] = 0;
-    return ++w[t];
-}
-
-function x(t) {
-    w[t] = 0;
-}
-
-function R(t, e, r) {
-    if (void 0 === t || null === t || t === Et) if (void 0 === e || null === e || e === Et) return Et; else return r ? e.slice(0) : e; else if (void 0 === e || null === e || e === Et) return r ? t.slice(0) : t;
-    const n = {};
-    const i = r ? t.slice(0) : t;
-    let s = t.length;
-    let o = e.length;
-    while (s-- > 0) n[t[s]] = true;
-    let u;
-    while (o-- > 0) {
-        u = e[o];
-        if (void 0 === n[u]) {
-            i.push(u);
-            n[u] = true;
-        }
-    }
-    return i;
-}
-
-function y(t, e, r) {
+function v(t, e, r) {
     return {
         configurable: true,
         enumerable: r.enumerable,
@@ -216,38 +165,25 @@ function y(t, e, r) {
     };
 }
 
-function m(...t) {
+function w(...t) {
     const e = [];
     let r = 0;
     const n = t.length;
-    let i = 0;
-    let s;
+    let s = 0;
+    let i;
     let o = 0;
     for (;o < n; ++o) {
-        s = t[o];
-        if (void 0 !== s) {
-            i = s.length;
+        i = t[o];
+        if (void 0 !== i) {
+            s = i.length;
             let t = 0;
-            for (;t < i; ++t) e[r++] = s[t];
+            for (;t < s; ++t) e[r++] = i[t];
         }
     }
     return e;
 }
 
-function b(...t) {
-    const e = {};
-    const r = t.length;
-    let n;
-    let i;
-    let s = 0;
-    for (;r > s; ++s) {
-        n = t[s];
-        if (void 0 !== n) for (i in n) e[i] = n[i];
-    }
-    return e;
-}
-
-function $(...t) {
+function g(...t) {
     const e = t.length;
     let r;
     let n = 0;
@@ -258,149 +194,149 @@ function $(...t) {
     throw new Error(`No default value found`);
 }
 
-const C = function() {
+const x = function() {
     const t = Function.prototype;
     const e = Object.getPrototypeOf;
     const r = new WeakMap;
     let n = t;
-    let i = 0;
-    let s;
+    let s = 0;
+    let i;
     return function(o) {
-        s = r.get(o);
-        if (void 0 === s) {
-            r.set(o, s = [ n = o ]);
-            i = 0;
-            while ((n = e(n)) !== t) s[++i] = n;
+        i = r.get(o);
+        if (void 0 === i) {
+            r.set(o, i = [ n = o ]);
+            s = 0;
+            while ((n = e(n)) !== t) i[++s] = n;
         }
-        return s;
+        return i;
     };
 }();
 
-function E(...t) {
-    return Object.assign(o(), ...t);
+function R(...t) {
+    return Object.assign(u(), ...t);
 }
 
-const A = function() {
+const y = function() {
     const t = new WeakMap;
     let e = false;
     let r = "";
     let n = 0;
-    return function(i) {
-        e = t.get(i);
+    return function(s) {
+        e = t.get(s);
         if (void 0 === e) {
-            r = i.toString();
+            r = s.toString();
             n = r.length;
             e = n >= 29 && n <= 100 && 125 === r.charCodeAt(n - 1) && r.charCodeAt(n - 2) <= 32 && 93 === r.charCodeAt(n - 3) && 101 === r.charCodeAt(n - 4) && 100 === r.charCodeAt(n - 5) && 111 === r.charCodeAt(n - 6) && 99 === r.charCodeAt(n - 7) && 32 === r.charCodeAt(n - 8) && 101 === r.charCodeAt(n - 9) && 118 === r.charCodeAt(n - 10) && 105 === r.charCodeAt(n - 11) && 116 === r.charCodeAt(n - 12) && 97 === r.charCodeAt(n - 13) && 110 === r.charCodeAt(n - 14) && 88 === r.charCodeAt(n - 15);
-            t.set(i, e);
+            t.set(s, e);
         }
         return e;
     };
 }();
 
-function j(t, e) {
+function m(t, e) {
     if (t instanceof Promise) return t.then(e);
     return e(t);
 }
 
-function I(...t) {
+function b(...t) {
     let e;
     let r;
     let n;
-    let i = 0;
-    let s = t.length;
-    for (;i < s; ++i) {
-        e = t[i];
-        if ((e = t[i]) instanceof Promise) if (void 0 === r) r = e; else if (void 0 === n) n = [ r, e ]; else n.push(e);
+    let s = 0;
+    let i = t.length;
+    for (;s < i; ++s) {
+        e = t[s];
+        if ((e = t[s]) instanceof Promise) if (void 0 === r) r = e; else if (void 0 === n) n = [ r, e ]; else n.push(e);
     }
     if (void 0 === n) return r;
     return Promise.all(n);
 }
 
-const O = "au:annotation";
+const $ = "au:annotation";
 
-const M = (t, e) => {
-    if (void 0 === e) return `${O}:${t}`;
-    return `${O}:${t}:${e}`;
+const C = (t, e) => {
+    if (void 0 === e) return `${$}:${t}`;
+    return `${$}:${t}:${e}`;
 };
 
-const k = (t, r) => {
-    const i = e(O, t);
-    if (void 0 === i) n(O, [ r ], t); else i.push(r);
+const E = (t, e) => {
+    const n = r($, t);
+    if (void 0 === n) s($, [ e ], t); else n.push(e);
 };
 
-const F = Object.freeze({
+const A = Object.freeze({
     name: "au:annotation",
-    appendTo: k,
+    appendTo: E,
     set(t, e, r) {
-        n(M(e), r, t);
+        s(C(e), r, t);
     },
-    get: (t, r) => e(M(r), t),
+    get: (t, e) => r(C(e), t),
     getKeys(t) {
-        let r = e(O, t);
-        if (void 0 === r) n(O, r = [], t);
-        return r;
+        let e = r($, t);
+        if (void 0 === e) s($, e = [], t);
+        return e;
     },
-    isKey: t => t.startsWith(O),
-    keyFor: M
+    isKey: t => t.startsWith($),
+    keyFor: C
 });
 
-const L = "au:resource";
+const j = "au:resource";
 
-const U = Object.freeze({
-    name: L,
-    appendTo(t, r) {
-        const i = e(L, t);
-        if (void 0 === i) n(L, [ r ], t); else i.push(r);
+const I = Object.freeze({
+    name: j,
+    appendTo(t, e) {
+        const n = r(j, t);
+        if (void 0 === n) s(j, [ e ], t); else n.push(e);
     },
-    has: t => r(L, t),
+    has: t => n(j, t),
     getAll(t) {
-        const r = e(L, t);
-        if (void 0 === r) return Et; else return r.map((r => e(r, t)));
+        const e = r(j, t);
+        if (void 0 === e) return kt; else return e.map((e => r(e, t)));
     },
     getKeys(t) {
-        let r = e(L, t);
-        if (void 0 === r) n(L, r = [], t);
-        return r;
+        let e = r(j, t);
+        if (void 0 === e) s(j, e = [], t);
+        return e;
     },
-    isKey: t => t.startsWith(L),
+    isKey: t => t.startsWith(j),
     keyFor(t, e) {
-        if (void 0 === e) return `${L}:${t}`;
-        return `${L}:${t}:${e}`;
+        if (void 0 === e) return `${j}:${t}`;
+        return `${j}:${t}:${e}`;
     }
 });
 
-const S = {
-    annotation: F,
-    resource: U
+const O = {
+    annotation: A,
+    resource: I
 };
 
-const T = Object.prototype.hasOwnProperty;
+const M = Object.prototype.hasOwnProperty;
 
-function D(t, r, n, i) {
-    let s = e(M(t), n);
-    if (void 0 === s) {
-        s = r[t];
-        if (void 0 === s) {
-            s = n[t];
-            if (void 0 === s || !T.call(n, t)) return i();
-            return s;
-        }
-        return s;
-    }
-    return s;
-}
-
-function P(t, r, n) {
-    let i = e(M(t), r);
+function k(t, e, n, s) {
+    let i = r(C(t), n);
     if (void 0 === i) {
-        i = r[t];
-        if (void 0 === i || !T.call(r, t)) return n();
+        i = e[t];
+        if (void 0 === i) {
+            i = n[t];
+            if (void 0 === i || !M.call(n, t)) return s();
+            return i;
+        }
         return i;
     }
     return i;
 }
 
-function N(t, e, r) {
+function F(t, e, n) {
+    let s = r(C(t), e);
+    if (void 0 === s) {
+        s = e[t];
+        if (void 0 === s || !M.call(e, t)) return n();
+        return s;
+    }
+    return s;
+}
+
+function L(t, e, r) {
     const n = e[t];
     if (void 0 === n) return r();
     return n;
@@ -410,49 +346,49 @@ t.applyMetadataPolyfill(Reflect, false, false);
 
 class ResolverBuilder {
     constructor(t, e) {
-        this.container = t;
-        this.key = e;
+        this.c = t;
+        this.k = e;
     }
     instance(t) {
-        return this.registerResolver(0, t);
+        return this.t(0, t);
     }
     singleton(t) {
-        return this.registerResolver(1, t);
+        return this.t(1, t);
     }
     transient(t) {
-        return this.registerResolver(2, t);
+        return this.t(2, t);
     }
     callback(t) {
-        return this.registerResolver(3, t);
+        return this.t(3, t);
     }
     cachedCallback(t) {
-        return this.registerResolver(3, yt(t));
+        return this.t(3, Et(t));
     }
     aliasTo(t) {
-        return this.registerResolver(5, t);
+        return this.t(5, t);
     }
-    registerResolver(t, e) {
-        const {container: r, key: n} = this;
-        this.container = this.key = void 0;
+    t(t, e) {
+        const {c: r, k: n} = this;
+        this.c = this.k = void 0;
         return r.registerResolver(n, new Resolver(n, t, e));
     }
 }
 
-function W(t) {
+function U(t) {
     const e = t.slice();
     const r = Object.keys(t);
     const n = r.length;
-    let i;
-    for (let s = 0; s < n; ++s) {
-        i = r[s];
-        if (!l(i)) e[i] = t[i];
+    let s;
+    for (let i = 0; i < n; ++i) {
+        s = r[i];
+        if (!c(s)) e[s] = t[s];
     }
     return e;
 }
 
-const B = {
+const T = {
     none(t) {
-        throw Error(`AUR0002:${t.toString()}`);
+        throw P(t);
     },
     singleton(t) {
         return new Resolver(t, 1, t);
@@ -462,6 +398,8 @@ const B = {
     }
 };
 
+const P = t => new Error(`AUR0002:${e(t)}`);
+
 class ContainerConfiguration {
     constructor(t, e) {
         this.inheritParentResources = t;
@@ -469,82 +407,80 @@ class ContainerConfiguration {
     }
     static from(t) {
         if (void 0 === t || t === ContainerConfiguration.DEFAULT) return ContainerConfiguration.DEFAULT;
-        return new ContainerConfiguration(t.inheritParentResources ?? false, t.defaultResolver ?? B.singleton);
+        return new ContainerConfiguration(t.inheritParentResources ?? false, t.defaultResolver ?? T.singleton);
     }
 }
 
 ContainerConfiguration.DEFAULT = ContainerConfiguration.from({});
 
-const z = {
+const D = {
     createContainer(t) {
         return new Container(null, ContainerConfiguration.from(t));
     },
     getDesignParamtypes(t) {
-        return e("design:paramtypes", t);
+        return r("design:paramtypes", t);
     },
     getAnnotationParamtypes(t) {
-        const r = M("di:paramtypes");
-        return e(r, t);
+        const e = C("di:paramtypes");
+        return r(e, t);
     },
-    getOrCreateAnnotationParamTypes: _,
-    getDependencies: Q,
+    getOrCreateAnnotationParamTypes: N,
+    getDependencies: S,
     createInterface(t, e) {
         const r = i(t) ? t : e;
-        const n = s(t) ? t : void 0;
-        const o = function(t, e, r) {
-            if (null == t || void 0 !== new.target) throw new Error(`AUR0001:${o.friendlyName}`);
-            const n = _(t);
-            n[r] = o;
+        const n = o(t) ? t : void 0;
+        const s = function(t, e, r) {
+            if (null == t || void 0 !== new.target) throw new Error(`AUR0001:${s.friendlyName}`);
+            const n = N(t);
+            n[r] = s;
         };
-        o.$isInterface = true;
-        o.friendlyName = null == n ? "(anonymous)" : n;
-        if (null != r) o.register = function(t, e) {
-            return r(new ResolverBuilder(t, e ?? o));
-        };
-        o.toString = function t() {
-            return `InterfaceSymbol<${o.friendlyName}>`;
-        };
-        return o;
+        s.$isInterface = true;
+        s.friendlyName = null == n ? "(anonymous)" : n;
+        if (null != r) s.register = (t, e) => r(new ResolverBuilder(t, e ?? s));
+        s.toString = () => `InterfaceSymbol<${s.friendlyName}>`;
+        return s;
     },
     inject(...t) {
         return function(e, r, n) {
             if ("number" === typeof n) {
-                const r = _(e);
-                const i = t[0];
-                if (void 0 !== i) r[n] = i;
+                const r = N(e);
+                const s = t[0];
+                if (void 0 !== s) r[n] = s;
             } else if (r) {
-                const n = _(e.constructor);
-                const i = t[0];
-                if (void 0 !== i) n[r] = i;
+                const n = N(e.constructor);
+                const s = t[0];
+                if (void 0 !== s) n[r] = s;
             } else if (n) {
                 const e = n.value;
-                const r = _(e);
-                let i;
-                for (let e = 0; e < t.length; ++e) {
-                    i = t[e];
-                    if (void 0 !== i) r[e] = i;
+                const r = N(e);
+                let s;
+                let i = 0;
+                for (;i < t.length; ++i) {
+                    s = t[i];
+                    if (void 0 !== s) r[i] = s;
                 }
             } else {
-                const r = _(e);
+                const r = N(e);
                 let n;
-                for (let e = 0; e < t.length; ++e) {
-                    n = t[e];
-                    if (void 0 !== n) r[e] = n;
+                let s = 0;
+                for (;s < t.length; ++s) {
+                    n = t[s];
+                    if (void 0 !== n) r[s] = n;
                 }
             }
         };
     },
     transient(t) {
         t.register = function(e) {
-            const r = mt.transient(t, t);
+            const r = At.transient(t, t);
             return r.register(e, t);
         };
         t.registerInRequestor = false;
         return t;
     },
-    singleton(t, e = X) {
+    singleton(t, e = K) {
         t.register = function(e) {
-            const r = mt.singleton(t, t);
+            const r = At.singleton(t, t);
             return r.register(e, t);
         };
         t.registerInRequestor = e.scoped;
@@ -552,25 +488,25 @@ const z = {
     }
 };
 
-function Q(t) {
-    const r = M("di:dependencies");
-    let s = e(r, t);
-    if (void 0 === s) {
-        const e = t.inject;
-        if (void 0 === e) {
-            const e = z.getDesignParamtypes(t);
-            const r = z.getAnnotationParamtypes(t);
+function S(t) {
+    const e = C("di:dependencies");
+    let n = r(e, t);
+    if (void 0 === n) {
+        const r = t.inject;
+        if (void 0 === r) {
+            const e = D.getDesignParamtypes(t);
+            const r = D.getAnnotationParamtypes(t);
             if (void 0 === e) if (void 0 === r) {
                 const e = Object.getPrototypeOf(t);
-                if (i(e) && e !== Function.prototype) s = W(Q(e)); else s = [];
-            } else s = W(r); else if (void 0 === r) s = W(e); else {
-                s = W(e);
+                if (i(e) && e !== Function.prototype) n = U(S(e)); else n = [];
+            } else n = U(r); else if (void 0 === r) n = U(e); else {
+                n = U(e);
                 let t = r.length;
-                let n;
+                let s;
                 let i = 0;
                 for (;i < t; ++i) {
-                    n = r[i];
-                    if (void 0 !== n) s[i] = n;
+                    s = r[i];
+                    if (void 0 !== s) n[i] = s;
                 }
                 const o = Object.keys(r);
                 let u;
@@ -578,34 +514,34 @@ function Q(t) {
                 t = o.length;
                 for (i = 0; i < t; ++i) {
                     u = o[i];
-                    if (!l(u)) s[u] = r[u];
+                    if (!c(u)) n[u] = r[u];
                 }
             }
-        } else s = W(e);
-        n(r, s, t);
-        k(t, r);
+        } else n = U(r);
+        s(e, n, t);
+        E(t, e);
     }
-    return s;
+    return n;
 }
+
+function N(t) {
+    const e = C("di:paramtypes");
+    let n = r(e, t);
+    if (void 0 === n) {
+        s(e, n = [], t);
+        E(t, e);
+    }
+    return n;
+}
+
+const W = D.createInterface("IContainer");
+
+const B = W;
 
 function _(t) {
-    const r = M("di:paramtypes");
-    let i = e(r, t);
-    if (void 0 === i) {
-        n(r, i = [], t);
-        k(t, r);
-    }
-    return i;
-}
-
-const G = z.createInterface("IContainer");
-
-const K = G;
-
-function H(t) {
     return function(e) {
         const r = function(t, e, n) {
-            z.inject(r)(t, e, n);
+            D.inject(r)(t, e, n);
         };
         r.$isResolver = true;
         r.resolve = function(r, n) {
@@ -615,73 +551,73 @@ function H(t) {
     };
 }
 
-const q = z.inject;
+const z = D.inject;
 
-function V(t) {
-    return z.transient(t);
+function Q(t) {
+    return D.transient(t);
 }
 
-function J(t) {
-    return null == t ? V : V(t);
+function G(t) {
+    return null == t ? Q : Q(t);
 }
 
-const X = {
+const K = {
     scoped: false
 };
 
-function Y(t) {
-    if (i(t)) return z.singleton(t);
+function H(t) {
+    if (i(t)) return D.singleton(t);
     return function(e) {
-        return z.singleton(e, t);
+        return D.singleton(e, t);
     };
 }
 
-function Z(t) {
+function q(t) {
     return function(e, r) {
         r = !!r;
         const n = function(t, e, r) {
-            z.inject(n)(t, e, r);
+            D.inject(n)(t, e, r);
         };
         n.$isResolver = true;
-        n.resolve = function(n, i) {
-            return t(e, n, i, r);
+        n.resolve = function(n, s) {
+            return t(e, n, s, r);
         };
         return n;
     };
 }
 
-const tt = Z(((t, e, r, n) => r.getAll(t, n)));
+const V = q(((t, e, r, n) => r.getAll(t, n)));
 
-const et = H(((t, e, r) => () => r.get(t)));
+const J = _(((t, e, r) => () => r.get(t)));
 
-const rt = H(((t, e, r) => {
+const X = _(((t, e, r) => {
     if (r.has(t, true)) return r.get(t); else return;
 }));
 
-function nt(t, e, r) {
-    z.inject(nt)(t, e, r);
+function Y(t, e, r) {
+    D.inject(Y)(t, e, r);
 }
 
-nt.$isResolver = true;
+Y.$isResolver = true;
 
-nt.resolve = () => {};
+Y.resolve = () => {};
 
-const it = H(((t, e, r) => (...n) => e.getFactory(t).construct(r, n)));
+const Z = _(((t, e, r) => (...n) => e.getFactory(t).construct(r, n)));
 
-const st = H(((t, e, r) => {
-    const n = ut(t, e, r);
-    const i = new InstanceProvider(String(t), n);
-    r.registerResolver(t, i, true);
-    return n;
+const tt = _(((t, r, n) => {
+    const s = rt(t, r, n);
+    const i = new InstanceProvider(e(t), s);
+    n.registerResolver(t, i, true);
+    return s;
 }));
 
-const ot = H(((t, e, r) => ut(t, e, r)));
+const et = _(((t, e, r) => rt(t, e, r)));
 
-function ut(t, e, r) {
+function rt(t, e, r) {
     return e.getFactory(t).construct(r);
 }
 
-var lt;
+var nt;
 
 (function(t) {
     t[t["instance"] = 0] = "instance";
@@ -690,62 +626,62 @@ var lt;
     t[t["callback"] = 3] = "callback";
     t[t["array"] = 4] = "array";
     t[t["alias"] = 5] = "alias";
-})(lt || (lt = {}));
+})(nt || (nt = {}));
 
 class Resolver {
     constructor(t, e, r) {
-        this.key = t;
-        this.strategy = e;
-        this.state = r;
+        this.k = t;
+        this.i = e;
+        this._state = r;
         this.resolving = false;
     }
     get $isResolver() {
         return true;
     }
     register(t, e) {
-        return t.registerResolver(e || this.key, this);
+        return t.registerResolver(e || this.k, this);
     }
     resolve(t, e) {
-        switch (this.strategy) {
+        switch (this.i) {
           case 0:
-            return this.state;
+            return this._state;
 
           case 1:
-            if (this.resolving) throw new Error(`AUR0003:${this.state.name}`);
+            if (this.resolving) throw st(this._state.name);
             this.resolving = true;
-            this.state = t.getFactory(this.state).construct(e);
-            this.strategy = 0;
+            this._state = t.getFactory(this._state).construct(e);
+            this.i = 0;
             this.resolving = false;
-            return this.state;
+            return this._state;
 
           case 2:
             {
-                const r = t.getFactory(this.state);
-                if (null === r) throw new Error(`AUR0004:${String(this.key)}`);
+                const r = t.getFactory(this._state);
+                if (null === r) throw it(this.k);
                 return r.construct(e);
             }
 
           case 3:
-            return this.state(t, e, this);
+            return this._state(t, e, this);
 
           case 4:
-            return this.state[0].resolve(t, e);
+            return this._state[0].resolve(t, e);
 
           case 5:
-            return e.get(this.state);
+            return e.get(this._state);
 
           default:
-            throw new Error(`AUR0005:${this.strategy}`);
+            throw ot(this.i);
         }
     }
     getFactory(t) {
-        switch (this.strategy) {
+        switch (this.i) {
           case 1:
           case 2:
-            return t.getFactory(this.state);
+            return t.getFactory(this._state);
 
           case 5:
-            return t.getResolver(this.state)?.getFactory?.(t) ?? null;
+            return t.getResolver(this._state)?.getFactory?.(t) ?? null;
 
           default:
             return null;
@@ -753,11 +689,17 @@ class Resolver {
     }
 }
 
-function ct(t) {
+const st = t => new Error(`AUR0003:${t}`);
+
+const it = t => new Error(`AUR0004:${e(t)}`);
+
+const ot = t => new Error(`AUR0005:${t}`);
+
+function ut(t) {
     return this.get(t);
 }
 
-function ft(t, e) {
+function lt(t, e) {
     return e(t);
 }
 
@@ -769,117 +711,117 @@ class Factory {
     }
     construct(t, e) {
         let r;
-        if (void 0 === e) r = new this.Type(...this.dependencies.map(ct, t)); else r = new this.Type(...this.dependencies.map(ct, t), ...e);
+        if (void 0 === e) r = new this.Type(...this.dependencies.map(ut, t)); else r = new this.Type(...this.dependencies.map(ut, t), ...e);
         if (null == this.transformers) return r;
-        return this.transformers.reduce(ft, r);
+        return this.transformers.reduce(lt, r);
     }
     registerTransformer(t) {
         (this.transformers ?? (this.transformers = [])).push(t);
     }
 }
 
-const at = {
+const ct = {
     $isResolver: true,
     resolve(t, e) {
         return e;
     }
 };
 
-function ht(t) {
+function ft(t) {
     return i(t.register);
 }
 
+function at(t) {
+    return ft(t) && "boolean" === typeof t.registerInRequestor;
+}
+
+function ht(t) {
+    return at(t) && t.registerInRequestor;
+}
+
 function dt(t) {
-    return ht(t) && "boolean" === typeof t.registerInRequestor;
-}
-
-function pt(t) {
-    return dt(t) && t.registerInRequestor;
-}
-
-function vt(t) {
     return void 0 !== t.prototype;
 }
 
-function wt(t) {
-    return s(t) && t.indexOf(":") > 0;
+function pt(t) {
+    return o(t) && t.indexOf(":") > 0;
 }
 
-const gt = new Set([ "Array", "ArrayBuffer", "Boolean", "DataView", "Date", "Error", "EvalError", "Float32Array", "Float64Array", "Function", "Int8Array", "Int16Array", "Int32Array", "Map", "Number", "Object", "Promise", "RangeError", "ReferenceError", "RegExp", "Set", "SharedArrayBuffer", "String", "SyntaxError", "TypeError", "Uint8Array", "Uint8ClampedArray", "Uint16Array", "Uint32Array", "URIError", "WeakMap", "WeakSet" ]);
+const vt = new Set([ "Array", "ArrayBuffer", "Boolean", "DataView", "Date", "Error", "EvalError", "Float32Array", "Float64Array", "Function", "Int8Array", "Int16Array", "Int32Array", "Map", "Number", "Object", "Promise", "RangeError", "ReferenceError", "RegExp", "Set", "SharedArrayBuffer", "String", "SyntaxError", "TypeError", "Uint8Array", "Uint8ClampedArray", "Uint16Array", "Uint32Array", "URIError", "WeakMap", "WeakSet" ]);
 
-let xt = 0;
+let wt = 0;
 
 class Container {
     constructor(t, e) {
         this.parent = t;
         this.config = e;
-        this.id = ++xt;
-        this.t = 0;
-        this.i = new Map;
+        this.id = ++wt;
+        this.u = 0;
+        this.h = new Map;
         if (null === t) {
             this.root = this;
-            this.u = new Map;
-            this.h = new Map;
-            this.res = o();
+            this.R = new Map;
+            this.$ = new Map;
+            this.res = u();
         } else {
             this.root = t.root;
-            this.u = new Map;
-            this.h = t.h;
-            if (e.inheritParentResources) this.res = Object.assign(o(), t.res, this.root.res); else this.res = o();
+            this.R = new Map;
+            this.$ = t.$;
+            if (e.inheritParentResources) this.res = Object.assign(u(), t.res, this.root.res); else this.res = u();
         }
-        this.u.set(G, at);
+        this.R.set(W, ct);
     }
     get depth() {
         return null === this.parent ? 0 : this.parent.depth + 1;
     }
     register(...e) {
-        if (100 === ++this.t) throw new Error(`AUR0006:${e.map(String)}`);
+        if (100 === ++this.u) throw gt(e);
         let r;
         let n;
-        let i;
         let s;
+        let i;
         let o;
         let u = 0;
         let l = e.length;
         for (;u < l; ++u) {
             r = e[u];
             if (!t.isObject(r)) continue;
-            if (ht(r)) r.register(this); else if (S.resource.has(r)) {
-                const t = S.resource.getAll(r);
+            if (ft(r)) r.register(this); else if (O.resource.has(r)) {
+                const t = O.resource.getAll(r);
                 if (1 === t.length) t[0].register(this); else {
-                    s = 0;
+                    i = 0;
                     o = t.length;
-                    while (o > s) {
-                        t[s].register(this);
-                        ++s;
+                    while (o > i) {
+                        t[i].register(this);
+                        ++i;
                     }
                 }
-            } else if (vt(r)) mt.singleton(r, r).register(this); else {
+            } else if (dt(r)) At.singleton(r, r).register(this); else {
                 n = Object.keys(r);
-                s = 0;
+                i = 0;
                 o = n.length;
-                for (;s < o; ++s) {
-                    i = r[n[s]];
-                    if (!t.isObject(i)) continue;
-                    if (ht(i)) i.register(this); else this.register(i);
+                for (;i < o; ++i) {
+                    s = r[n[i]];
+                    if (!t.isObject(s)) continue;
+                    if (ft(s)) s.register(this); else this.register(s);
                 }
             }
         }
-        --this.t;
+        --this.u;
         return this;
     }
     registerResolver(t, e, r = false) {
-        bt(t);
-        const n = this.u;
-        const i = n.get(t);
-        if (null == i) {
+        jt(t);
+        const n = this.R;
+        const s = n.get(t);
+        if (null == s) {
             n.set(t, e);
-            if (wt(t)) {
-                if (void 0 !== this.res[t]) throw new Error(`AUR0007:${t}`);
+            if (pt(t)) {
+                if (void 0 !== this.res[t]) throw xt(t);
                 this.res[t] = e;
             }
-        } else if (i instanceof Resolver && 4 === i.strategy) i.state.push(e); else n.set(t, new Resolver(t, 4, [ i, e ]));
-        if (r) this.i.set(t, e);
+        } else if (s instanceof Resolver && 4 === s.i) s._state.push(e); else n.set(t, new Resolver(t, 4, [ s, e ]));
+        if (r) this.h.set(t, e);
         return e;
     }
     registerTransformer(t, e) {
@@ -894,16 +836,17 @@ class Container {
         return false;
     }
     getResolver(t, e = true) {
-        bt(t);
+        jt(t);
         if (void 0 !== t.resolve) return t;
         let r = this;
         let n;
+        let s;
         while (null != r) {
-            n = r.u.get(t);
+            n = r.R.get(t);
             if (null == n) {
                 if (null == r.parent) {
-                    const n = pt(t) ? this : r;
-                    return e ? this.R(t, n) : null;
+                    s = ht(t) ? this : r;
+                    return e ? this.C(t, s) : null;
                 }
                 r = r.parent;
             } else return n;
@@ -911,62 +854,63 @@ class Container {
         return null;
     }
     has(t, e = false) {
-        return this.u.has(t) ? true : e && null != this.parent ? this.parent.has(t, true) : false;
+        return this.R.has(t) ? true : e && null != this.parent ? this.parent.has(t, true) : false;
     }
     get(t) {
-        bt(t);
+        jt(t);
         if (t.$isResolver) return t.resolve(this, this);
         let e = this;
         let r;
+        let n;
         while (null != e) {
-            r = e.u.get(t);
+            r = e.R.get(t);
             if (null == r) {
                 if (null == e.parent) {
-                    const n = pt(t) ? this : e;
-                    r = this.R(t, n);
+                    n = ht(t) ? this : e;
+                    r = this.C(t, n);
                     return r.resolve(e, this);
                 }
                 e = e.parent;
             } else return r.resolve(e, this);
         }
-        throw new Error(`AUR0008:${String(t)}`);
+        throw Rt(t);
     }
     getAll(t, e = false) {
-        bt(t);
+        jt(t);
         const r = this;
         let n = r;
-        let i;
+        let s;
         if (e) {
-            let e = Et;
+            let e = kt;
             while (null != n) {
-                i = n.u.get(t);
-                if (null != i) e = e.concat($t(i, n, r));
+                s = n.R.get(t);
+                if (null != s) e = e.concat(It(s, n, r));
                 n = n.parent;
             }
             return e;
         } else while (null != n) {
-            i = n.u.get(t);
-            if (null == i) {
+            s = n.R.get(t);
+            if (null == s) {
                 n = n.parent;
-                if (null == n) return Et;
-            } else return $t(i, n, r);
+                if (null == n) return kt;
+            } else return It(s, n, r);
         }
-        return Et;
+        return kt;
     }
     invoke(t, e) {
-        if (A(t)) throw Ct(t);
-        if (void 0 === e) return new t(...Q(t).map(ct, this)); else return new t(...Q(t).map(ct, this), ...e);
+        if (y(t)) throw Mt(t);
+        if (void 0 === e) return new t(...S(t).map(ut, this)); else return new t(...S(t).map(ut, this), ...e);
     }
     getFactory(t) {
-        let e = this.h.get(t);
+        let e = this.$.get(t);
         if (void 0 === e) {
-            if (A(t)) throw Ct(t);
-            this.h.set(t, e = new Factory(t, Q(t)));
+            if (y(t)) throw Mt(t);
+            this.$.set(t, e = new Factory(t, S(t)));
         }
         return e;
     }
     registerFactory(t, e) {
-        this.h.set(t, e);
+        this.$.set(t, e);
     }
     createChild(t) {
         if (void 0 === t && this.config.inheritParentResources) {
@@ -979,8 +923,8 @@ class Container {
         return new Container(this, ContainerConfiguration.from(t ?? this.config));
     }
     disposeResolvers() {
-        const t = this.u;
-        const e = this.i;
+        const t = this.R;
+        const e = this.h;
         let r;
         let n;
         for ([n, r] of e.entries()) {
@@ -989,8 +933,8 @@ class Container {
         }
         e.clear();
     }
-    find(t, r) {
-        const n = t.keyFrom(r);
+    find(t, e) {
+        const n = t.keyFrom(e);
         let s = this.res[n];
         if (void 0 === s) {
             s = this.root.res[n];
@@ -998,9 +942,9 @@ class Container {
         }
         if (null === s) return null;
         if (i(s.getFactory)) {
-            const r = s.getFactory(this);
-            if (null === r || void 0 === r) return null;
-            const n = e(t.name, r.Type);
+            const e = s.getFactory(this);
+            if (null === e || void 0 === e) return null;
+            const n = r(t.name, e.Type);
             if (void 0 === n) return null;
             return n;
         }
@@ -1017,36 +961,50 @@ class Container {
         return n.resolve(this, this) ?? null;
     }
     dispose() {
-        if (this.i.size > 0) this.disposeResolvers();
-        this.u.clear();
+        if (this.h.size > 0) this.disposeResolvers();
+        this.R.clear();
     }
-    R(t, e) {
-        if (!i(t)) throw new Error(`AUR0009:${t}`);
-        if (gt.has(t.name)) throw new Error(`AUR0010:${t.name}`);
-        if (ht(t)) {
+    C(t, e) {
+        if (!i(t)) throw yt(t);
+        if (vt.has(t.name)) throw mt(t);
+        if (ft(t)) {
             const r = t.register(e, t);
             if (!(r instanceof Object) || null == r.resolve) {
-                const r = e.u.get(t);
+                const r = e.R.get(t);
                 if (null != r) return r;
-                throw new Error(`AUR0011`);
+                throw bt();
             }
             return r;
-        } else if (S.resource.has(t)) {
-            const r = S.resource.getAll(t);
+        } else if (O.resource.has(t)) {
+            const r = O.resource.getAll(t);
             if (1 === r.length) r[0].register(e); else {
                 const t = r.length;
                 for (let n = 0; n < t; ++n) r[n].register(e);
             }
-            const n = e.u.get(t);
+            const n = e.R.get(t);
             if (null != n) return n;
-            throw new Error(`AUR0011`);
-        } else if (t.$isInterface) throw new Error(`AUR0012:${t.friendlyName}`); else {
+            throw bt();
+        } else if (t.$isInterface) throw $t(t.friendlyName); else {
             const r = this.config.defaultResolver(t, e);
-            e.u.set(t, r);
+            e.R.set(t, r);
             return r;
         }
     }
 }
+
+const gt = t => new Error(`AUR0006:${t.map(e)}`);
+
+const xt = t => new Error(`AUR0007:${e(t)}`);
+
+const Rt = t => new Error(`AUR0008:${e(t)}`);
+
+const yt = t => new Error(`AUR0009:${e(t)}`);
+
+const mt = t => new Error(`AUR0010:${t.name}`);
+
+const bt = () => new Error(`AUR0011`);
+
+const $t = t => new Error(`AUR0012:${t}`);
 
 class ParameterizedRegistry {
     constructor(t, e) {
@@ -1061,20 +1019,20 @@ class ParameterizedRegistry {
     }
 }
 
-const Rt = new WeakMap;
+const Ct = new WeakMap;
 
-function yt(t) {
+function Et(t) {
     return function(e, r, n) {
-        let i = Rt.get(e);
-        if (void 0 === i) Rt.set(e, i = new WeakMap);
-        if (i.has(n)) return i.get(n);
-        const s = t(e, r, n);
-        i.set(n, s);
-        return s;
+        let s = Ct.get(e);
+        if (void 0 === s) Ct.set(e, s = new WeakMap);
+        if (s.has(n)) return s.get(n);
+        const i = t(e, r, n);
+        s.set(n, i);
+        return i;
     };
 }
 
-const mt = {
+const At = {
     instance(t, e) {
         return new Resolver(t, 0, e);
     },
@@ -1088,7 +1046,7 @@ const mt = {
         return new Resolver(t, 3, e);
     },
     cachedCallback(t, e) {
-        return new Resolver(t, 3, yt(e));
+        return new Resolver(t, 3, Et(e));
     },
     aliasTo(t, e) {
         return new Resolver(e, 5, t);
@@ -1100,62 +1058,66 @@ const mt = {
 
 class InstanceProvider {
     constructor(t, e) {
-        this.$ = null;
-        this.C = t;
-        if (void 0 !== e) this.$ = e;
+        this.A = null;
+        this.j = t;
+        if (void 0 !== e) this.A = e;
     }
     get friendlyName() {
-        return this.C;
+        return this.j;
     }
     prepare(t) {
-        this.$ = t;
+        this.A = t;
     }
     get $isResolver() {
         return true;
     }
     resolve() {
-        if (null == this.$) throw new Error(`AUR0013:${this.C}`);
-        return this.$;
+        if (null == this.A) throw Ot(this.j);
+        return this.A;
     }
     dispose() {
-        this.$ = null;
+        this.A = null;
     }
 }
 
-function bt(t) {
+function jt(t) {
     if (null === t || void 0 === t) throw new Error(`AUR0014`);
 }
 
-function $t(t, e, r) {
-    if (t instanceof Resolver && 4 === t.strategy) {
-        const n = t.state;
-        let i = n.length;
-        const s = new Array(i);
-        while (i--) s[i] = n[i].resolve(e, r);
-        return s;
+function It(t, e, r) {
+    if (t instanceof Resolver && 4 === t.i) {
+        const n = t._state;
+        let s = n.length;
+        const i = new Array(s);
+        while (s--) i[s] = n[s].resolve(e, r);
+        return i;
     }
     return [ t.resolve(e, r) ];
 }
 
-function Ct(t) {
+function Ot(t) {
+    return new Error(`AUR0013:${t}`);
+}
+
+function Mt(t) {
     return new Error(`AUR0015:${t.name}`);
 }
 
-const Et = Object.freeze([]);
+const kt = Object.freeze([]);
 
-const At = Object.freeze({});
+const Ft = Object.freeze({});
 
-function jt() {}
+function Lt() {}
 
-const It = z.createInterface("IPlatform");
+const Ut = D.createInterface("IPlatform");
 
-function Ot(t, e, r, n) {
-    var i = arguments.length, s = i < 3 ? e : null === n ? n = Object.getOwnPropertyDescriptor(e, r) : n, o;
-    if ("object" === typeof Reflect && "function" === typeof Reflect.decorate) s = Reflect.decorate(t, e, r, n); else for (var u = t.length - 1; u >= 0; u--) if (o = t[u]) s = (i < 3 ? o(s) : i > 3 ? o(e, r, s) : o(e, r)) || s;
-    return i > 3 && s && Object.defineProperty(e, r, s), s;
+function Tt(t, e, r, n) {
+    var s = arguments.length, i = s < 3 ? e : null === n ? n = Object.getOwnPropertyDescriptor(e, r) : n, o;
+    if ("object" === typeof Reflect && "function" === typeof Reflect.decorate) i = Reflect.decorate(t, e, r, n); else for (var u = t.length - 1; u >= 0; u--) if (o = t[u]) i = (s < 3 ? o(i) : s > 3 ? o(e, r, i) : o(e, r)) || i;
+    return s > 3 && i && Object.defineProperty(e, r, i), i;
 }
 
-function Mt(t, e) {
+function Pt(t, e) {
     return function(r, n) {
         e(r, n, t);
     };
@@ -1180,20 +1142,20 @@ exports.ColorOptions = void 0;
     t[t["colors"] = 1] = "colors";
 })(exports.ColorOptions || (exports.ColorOptions = {}));
 
-const kt = z.createInterface("ILogConfig", (t => t.instance(new LogConfig(0, 3))));
+const Dt = D.createInterface("ILogConfig", (t => t.instance(new LogConfig(0, 3))));
 
-const Ft = z.createInterface("ISink");
+const St = D.createInterface("ISink");
 
-const Lt = z.createInterface("ILogEventFactory", (t => t.singleton(exports.DefaultLogEventFactory)));
+const Nt = D.createInterface("ILogEventFactory", (t => t.singleton(exports.DefaultLogEventFactory)));
 
-const Ut = z.createInterface("ILogger", (t => t.singleton(exports.DefaultLogger)));
+const Wt = D.createInterface("ILogger", (t => t.singleton(exports.DefaultLogger)));
 
-const St = z.createInterface("ILogScope");
+const Bt = D.createInterface("ILogScope");
 
-const Tt = Object.freeze({
-    key: M("logger-sink-handles"),
+const _t = Object.freeze({
+    key: C("logger-sink-handles"),
     define(t, e) {
-        n(this.key, e.handles, t.prototype);
+        s(this.key, e.handles, t.prototype);
         return t;
     },
     getHandles(e) {
@@ -1201,13 +1163,13 @@ const Tt = Object.freeze({
     }
 });
 
-function Dt(t) {
+function zt(t) {
     return function(e) {
-        return Tt.define(e, t);
+        return _t.define(e, t);
     };
 }
 
-const Pt = E({
+const Qt = R({
     red(t) {
         return `[31m${t}[39m`;
     },
@@ -1241,8 +1203,8 @@ class LogConfig {
     }
 }
 
-const Nt = function() {
-    const t = [ E({
+const Gt = function() {
+    const t = [ R({
         TRC: "TRC",
         DBG: "DBG",
         INF: "INF",
@@ -1250,14 +1212,14 @@ const Nt = function() {
         ERR: "ERR",
         FTL: "FTL",
         QQQ: "???"
-    }), E({
-        TRC: Pt.grey("TRC"),
-        DBG: Pt.grey("DBG"),
-        INF: Pt.white("INF"),
-        WRN: Pt.yellow("WRN"),
-        ERR: Pt.red("ERR"),
-        FTL: Pt.red("FTL"),
-        QQQ: Pt.grey("???")
+    }), R({
+        TRC: Qt.grey("TRC"),
+        DBG: Qt.grey("DBG"),
+        INF: Qt.white("INF"),
+        WRN: Qt.yellow("WRN"),
+        ERR: Qt.red("ERR"),
+        FTL: Qt.red("FTL"),
+        QQQ: Qt.grey("???")
     }) ];
     return function(e, r) {
         if (e <= 0) return t[r].TRC;
@@ -1270,29 +1232,29 @@ const Nt = function() {
     };
 }();
 
-function Wt(t, e) {
+function Kt(t, e) {
     if (0 === e) return t.join(".");
-    return t.map(Pt.cyan).join(".");
+    return t.map(Qt.cyan).join(".");
 }
 
-function Bt(t, e) {
+function Ht(t, e) {
     if (0 === e) return new Date(t).toISOString();
-    return Pt.grey(new Date(t).toISOString());
+    return Qt.grey(new Date(t).toISOString());
 }
 
 class DefaultLogEvent {
-    constructor(t, e, r, n, i, s) {
+    constructor(t, e, r, n, s, i) {
         this.severity = t;
         this.message = e;
         this.optionalParams = r;
         this.scope = n;
-        this.colorOptions = i;
-        this.timestamp = s;
+        this.colorOptions = s;
+        this.timestamp = i;
     }
     toString() {
-        const {severity: t, message: e, scope: r, colorOptions: n, timestamp: i} = this;
-        if (0 === r.length) return `${Bt(i, n)} [${Nt(t, n)}] ${e}`;
-        return `${Bt(i, n)} [${Nt(t, n)} ${Wt(r, n)}] ${e}`;
+        const {severity: t, message: e, scope: r, colorOptions: n, timestamp: s} = this;
+        if (0 === r.length) return `${Ht(s, n)} [${Gt(t, n)}] ${e}`;
+        return `${Ht(s, n)} [${Gt(t, n)} ${Kt(r, n)}] ${e}`;
     }
 }
 
@@ -1305,7 +1267,7 @@ exports.DefaultLogEventFactory = class DefaultLogEventFactory {
     }
 };
 
-exports.DefaultLogEventFactory = Ot([ Mt(0, kt) ], exports.DefaultLogEventFactory);
+exports.DefaultLogEventFactory = Tt([ Pt(0, Dt) ], exports.DefaultLogEventFactory);
 
 exports.ConsoleSink = class ConsoleSink {
     constructor(t) {
@@ -1331,72 +1293,72 @@ exports.ConsoleSink = class ConsoleSink {
                 }
             } else {
                 let t = r.toString();
-                let i = 0;
-                while (t.includes("%s")) t = t.replace("%s", String(n[i++]));
+                let s = 0;
+                while (t.includes("%s")) t = t.replace("%s", String(n[s++]));
                 switch (r.severity) {
                   case 0:
                   case 1:
-                    return e.debug(t, ...n.slice(i));
+                    return e.debug(t, ...n.slice(s));
 
                   case 2:
-                    return e.info(t, ...n.slice(i));
+                    return e.info(t, ...n.slice(s));
 
                   case 3:
-                    return e.warn(t, ...n.slice(i));
+                    return e.warn(t, ...n.slice(s));
 
                   case 4:
                   case 5:
-                    return e.error(t, ...n.slice(i));
+                    return e.error(t, ...n.slice(s));
                 }
             }
         };
     }
     static register(t) {
-        mt.singleton(Ft, ConsoleSink).register(t);
+        At.singleton(St, ConsoleSink).register(t);
     }
 };
 
-exports.ConsoleSink = Ot([ Mt(0, It) ], exports.ConsoleSink);
+exports.ConsoleSink = Tt([ Pt(0, Ut) ], exports.ConsoleSink);
 
 exports.DefaultLogger = class DefaultLogger {
-    constructor(t, e, r, n = [], i = null) {
+    constructor(t, e, r, n = [], s = null) {
         this.config = t;
         this.factory = e;
         this.scope = n;
-        this.scopedLoggers = o();
-        let s;
-        let u;
+        this.scopedLoggers = u();
+        let i;
+        let o;
         let l;
         let c;
         let f;
         let a;
-        if (null === i) {
+        if (null === s) {
             this.root = this;
             this.parent = this;
-            s = this.traceSinks = [];
-            u = this.debugSinks = [];
+            i = this.traceSinks = [];
+            o = this.debugSinks = [];
             l = this.infoSinks = [];
             c = this.warnSinks = [];
             f = this.errorSinks = [];
             a = this.fatalSinks = [];
             for (const t of r) {
-                const e = Tt.getHandles(t);
-                if (e?.includes(0) ?? true) s.push(t);
-                if (e?.includes(1) ?? true) u.push(t);
+                const e = _t.getHandles(t);
+                if (e?.includes(0) ?? true) i.push(t);
+                if (e?.includes(1) ?? true) o.push(t);
                 if (e?.includes(2) ?? true) l.push(t);
                 if (e?.includes(3) ?? true) c.push(t);
                 if (e?.includes(4) ?? true) f.push(t);
                 if (e?.includes(5) ?? true) a.push(t);
             }
         } else {
-            this.root = i.root;
-            this.parent = i;
-            s = this.traceSinks = i.traceSinks;
-            u = this.debugSinks = i.debugSinks;
-            l = this.infoSinks = i.infoSinks;
-            c = this.warnSinks = i.warnSinks;
-            f = this.errorSinks = i.errorSinks;
-            a = this.fatalSinks = i.fatalSinks;
+            this.root = s.root;
+            this.parent = s;
+            i = this.traceSinks = s.traceSinks;
+            o = this.debugSinks = s.debugSinks;
+            l = this.infoSinks = s.infoSinks;
+            c = this.warnSinks = s.warnSinks;
+            f = this.errorSinks = s.errorSinks;
+            a = this.fatalSinks = s.fatalSinks;
         }
     }
     trace(t, ...e) {
@@ -1430,66 +1392,66 @@ exports.DefaultLogger = class DefaultLogger {
     }
 };
 
-Ot([ y ], exports.DefaultLogger.prototype, "trace", null);
+Tt([ v ], exports.DefaultLogger.prototype, "trace", null);
 
-Ot([ y ], exports.DefaultLogger.prototype, "debug", null);
+Tt([ v ], exports.DefaultLogger.prototype, "debug", null);
 
-Ot([ y ], exports.DefaultLogger.prototype, "info", null);
+Tt([ v ], exports.DefaultLogger.prototype, "info", null);
 
-Ot([ y ], exports.DefaultLogger.prototype, "warn", null);
+Tt([ v ], exports.DefaultLogger.prototype, "warn", null);
 
-Ot([ y ], exports.DefaultLogger.prototype, "error", null);
+Tt([ v ], exports.DefaultLogger.prototype, "error", null);
 
-Ot([ y ], exports.DefaultLogger.prototype, "fatal", null);
+Tt([ v ], exports.DefaultLogger.prototype, "fatal", null);
 
-exports.DefaultLogger = Ot([ Mt(0, kt), Mt(1, Lt), Mt(2, tt(Ft)), Mt(3, rt(St)), Mt(4, nt) ], exports.DefaultLogger);
+exports.DefaultLogger = Tt([ Pt(0, Dt), Pt(1, Nt), Pt(2, V(St)), Pt(3, X(Bt)), Pt(4, Y) ], exports.DefaultLogger);
 
-const zt = E({
+const qt = R({
     create({level: t = 3, colorOptions: e = 0, sinks: r = []} = {}) {
-        return E({
+        return R({
             register(n) {
-                n.register(mt.instance(kt, new LogConfig(e, t)));
-                for (const t of r) if (i(t)) n.register(mt.singleton(Ft, t)); else n.register(t);
+                n.register(At.instance(Dt, new LogConfig(e, t)));
+                for (const t of r) if (i(t)) n.register(At.singleton(St, t)); else n.register(t);
                 return n;
             }
         });
     }
 });
 
-const Qt = z.createInterface((t => t.singleton(ModuleLoader)));
+const Vt = D.createInterface((t => t.singleton(ModuleLoader)));
 
-function _t(t) {
+function Jt(t) {
     return t;
 }
 
 class ModuleTransformer {
     constructor(t) {
         this.$transform = t;
-        this.A = new Map;
-        this.j = new Map;
+        this.I = new Map;
+        this.O = new Map;
     }
     transform(t) {
-        if (t instanceof Promise) return this.I(t); else if ("object" === typeof t && null !== t) return this.O(t); else throw new Error(`Invalid input: ${String(t)}. Expected Promise or Object.`);
-    }
-    I(t) {
-        if (this.A.has(t)) return this.A.get(t);
-        const e = t.then((t => this.O(t)));
-        this.A.set(t, e);
-        void e.then((e => {
-            this.A.set(t, e);
-        }));
-        return e;
-    }
-    O(t) {
-        if (this.j.has(t)) return this.j.get(t);
-        const e = this.$transform(this.M(t));
-        this.j.set(t, e);
-        if (e instanceof Promise) void e.then((e => {
-            this.j.set(t, e);
-        }));
-        return e;
+        if (t instanceof Promise) return this.M(t); else if ("object" === typeof t && null !== t) return this.F(t); else throw new Error(`Invalid input: ${String(t)}. Expected Promise or Object.`);
     }
     M(t) {
+        if (this.I.has(t)) return this.I.get(t);
+        const e = t.then((t => this.F(t)));
+        this.I.set(t, e);
+        void e.then((e => {
+            this.I.set(t, e);
+        }));
+        return e;
+    }
+    F(t) {
+        if (this.O.has(t)) return this.O.get(t);
+        const e = this.$transform(this.L(t));
+        this.O.set(t, e);
+        if (e instanceof Promise) void e.then((e => {
+            this.O.set(t, e);
+        }));
+        return e;
+    }
+    L(t) {
         if (null == t) throw new Error(`Invalid input: ${String(t)}. Expected Object.`);
         if ("object" !== typeof t) return new AnalyzedModule(t, []);
         let e;
@@ -1503,13 +1465,13 @@ class ModuleTransformer {
                 if (null === e) continue;
                 r = i(e.register);
                 n = false;
-                s = Et;
+                s = kt;
                 break;
 
               case "function":
                 r = i(e.register);
                 n = void 0 !== e.prototype;
-                s = S.resource.getAll(e);
+                s = O.resource.getAll(e);
                 break;
 
               default:
@@ -1525,7 +1487,7 @@ class ModuleLoader {
     constructor() {
         this.transformers = new Map;
     }
-    load(t, e = _t) {
+    load(t, e = Jt) {
         const r = this.transformers;
         let n = r.get(e);
         if (void 0 === n) r.set(e, n = new ModuleTransformer(e));
@@ -1544,12 +1506,12 @@ class AnalyzedModule {
 }
 
 class ModuleItem {
-    constructor(t, e, r, n, i) {
+    constructor(t, e, r, n, s) {
         this.key = t;
         this.value = e;
         this.isRegistry = r;
         this.isConstructable = n;
-        this.definitions = i;
+        this.definitions = s;
     }
 }
 
@@ -1563,7 +1525,7 @@ class Handler {
     }
 }
 
-const Gt = z.createInterface("IEventAggregator", (t => t.singleton(EventAggregator)));
+const Xt = D.createInterface("IEventAggregator", (t => t.singleton(EventAggregator)));
 
 class EventAggregator {
     constructor() {
@@ -1572,7 +1534,7 @@ class EventAggregator {
     }
     publish(t, e) {
         if (!t) throw new Error(`Invalid channel name or instance: ${t}.`);
-        if (s(t)) {
+        if (o(t)) {
             let r = this.eventLookup[t];
             if (void 0 !== r) {
                 r = r.slice();
@@ -1589,7 +1551,7 @@ class EventAggregator {
         if (!t) throw new Error(`Invalid channel name or type: ${t}.`);
         let r;
         let n;
-        if (s(t)) {
+        if (o(t)) {
             if (void 0 === this.eventLookup[t]) this.eventLookup[t] = [];
             r = e;
             n = this.eventLookup[t];
@@ -1618,113 +1580,101 @@ exports.AnalyzedModule = AnalyzedModule;
 
 exports.ContainerConfiguration = ContainerConfiguration;
 
-exports.DI = z;
+exports.DI = D;
 
 exports.DefaultLogEvent = DefaultLogEvent;
 
-exports.DefaultResolver = B;
+exports.DefaultResolver = T;
 
 exports.EventAggregator = EventAggregator;
 
-exports.IContainer = G;
+exports.IContainer = W;
 
-exports.IEventAggregator = Gt;
+exports.IEventAggregator = Xt;
 
-exports.ILogConfig = kt;
+exports.ILogConfig = Dt;
 
-exports.ILogEventFactory = Lt;
+exports.ILogEventFactory = Nt;
 
-exports.ILogger = Ut;
+exports.ILogger = Wt;
 
-exports.IModuleLoader = Qt;
+exports.IModuleLoader = Vt;
 
-exports.IPlatform = It;
+exports.IPlatform = Ut;
 
-exports.IServiceLocator = K;
+exports.IServiceLocator = B;
 
-exports.ISink = Ft;
+exports.ISink = St;
 
 exports.InstanceProvider = InstanceProvider;
 
 exports.LogConfig = LogConfig;
 
-exports.LoggerConfiguration = zt;
+exports.LoggerConfiguration = qt;
 
 exports.ModuleItem = ModuleItem;
 
-exports.Protocol = S;
+exports.Protocol = O;
 
-exports.Registration = mt;
+exports.Registration = At;
 
-exports.all = tt;
+exports.all = V;
 
-exports.bound = y;
+exports.bound = v;
 
-exports.camelCase = h;
+exports.camelCase = a;
 
-exports.emptyArray = Et;
+exports.emptyArray = kt;
 
-exports.emptyObject = At;
+exports.emptyObject = Ft;
 
-exports.factory = it;
+exports.factory = Z;
 
-exports.firstDefined = $;
+exports.firstDefined = g;
 
-exports.format = Pt;
+exports.format = Qt;
 
-exports.fromAnnotationOrDefinitionOrTypeOrDefault = D;
+exports.fromAnnotationOrDefinitionOrTypeOrDefault = k;
 
-exports.fromAnnotationOrTypeOrDefault = P;
+exports.fromAnnotationOrTypeOrDefault = F;
 
-exports.fromDefinitionOrDefault = N;
+exports.fromDefinitionOrDefault = L;
 
-exports.getPrototypeChain = C;
+exports.getPrototypeChain = x;
 
-exports.ignore = nt;
+exports.ignore = Y;
 
-exports.inject = q;
+exports.inject = z;
 
-exports.isArrayIndex = l;
+exports.isArrayIndex = c;
 
-exports.isNativeFunction = A;
+exports.isNativeFunction = y;
 
-exports.isNumberOrBigInt = c;
+exports.kebabCase = d;
 
-exports.isStringOrDate = f;
+exports.lazy = J;
 
-exports.kebabCase = p;
+exports.mergeArrays = w;
 
-exports.lazy = et;
+exports.newInstanceForScope = tt;
 
-exports.mergeArrays = m;
+exports.newInstanceOf = et;
 
-exports.mergeDistinct = R;
+exports.noop = Lt;
 
-exports.mergeObjects = b;
+exports.onResolve = m;
 
-exports.newInstanceForScope = st;
+exports.optional = X;
 
-exports.newInstanceOf = ot;
+exports.pascalCase = h;
 
-exports.nextId = g;
+exports.resolveAll = b;
 
-exports.noop = jt;
+exports.singleton = H;
 
-exports.onResolve = j;
+exports.sink = zt;
 
-exports.optional = rt;
+exports.toArray = p;
 
-exports.pascalCase = d;
-
-exports.resetId = x;
-
-exports.resolveAll = I;
-
-exports.singleton = Y;
-
-exports.sink = Dt;
-
-exports.toArray = v;
-
-exports.transient = J;
+exports.transient = G;
 //# sourceMappingURL=index.cjs.map

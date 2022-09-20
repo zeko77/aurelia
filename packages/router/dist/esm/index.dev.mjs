@@ -1,5 +1,5 @@
 import { Protocol, IEventAggregator, IContainer, DI, Registration } from '@aurelia/kernel';
-import { CustomElement, isCustomElementViewModel, Controller, IPlatform, IWindow, IHistory, ILocation, IAppRoot, CustomAttribute, customElement, bindable, INode, IInstruction, IController, BindingMode, customAttribute, AppTask } from '@aurelia/runtime-html';
+import { CustomElement, isCustomElementViewModel, Controller, IPlatform, IWindow, IHistory, ILocation, IAppRoot, CustomAttribute, customElement, bindable, INode, IInstruction, IController, customAttribute, AppTask } from '@aurelia/runtime-html';
 import { Metadata } from '@aurelia/metadata';
 import { RouteRecognizer as RouteRecognizer$1, ConfigurableRoute as ConfigurableRoute$1, RecognizedRoute as RecognizedRoute$1, Endpoint as Endpoint$2 } from '@aurelia/route-recognizer';
 
@@ -3720,13 +3720,10 @@ class RoutingScope {
             if (unresolvedPromise instanceof Promise) {
                 await unresolvedPromise;
             }
-            earlierMatchedInstructions.filter(instruction => instruction.cancelled).forEach(instruction => {
-                const lastIndex = earlierMatchedInstructions.lastIndexOf(instruction);
-                const lastInstruction = earlierMatchedInstructions[lastIndex];
-                if (lastInstruction.cancelled) {
-                    allChangedEndpoints = allChangedEndpoints.filter(endpoint => endpoint !== lastInstruction.endpoint.instance);
-                }
-            });
+            allChangedEndpoints = allChangedEndpoints.filter(endpoint => !([...earlierMatchedInstructions]
+                .reverse()
+                .find(instruction => instruction.endpoint.instance === endpoint)
+                ?.cancelled ?? false));
         } while (matchedInstructions.length > 0 || remainingInstructions.length > 0);
         return allChangedEndpoints;
     }
@@ -5706,7 +5703,7 @@ let LoadCustomAttribute = class LoadCustomAttribute {
     }
 };
 __decorate([
-    bindable({ mode: BindingMode.toView })
+    bindable({ mode: 2 })
 ], LoadCustomAttribute.prototype, "value", void 0);
 __decorate([
     bindable
@@ -5773,7 +5770,7 @@ let HrefCustomAttribute = class HrefCustomAttribute {
     }
 };
 __decorate([
-    bindable({ mode: BindingMode.toView })
+    bindable({ mode: 2 })
 ], HrefCustomAttribute.prototype, "value", void 0);
 HrefCustomAttribute = __decorate([
     customAttribute({
@@ -5789,7 +5786,7 @@ HrefCustomAttribute = __decorate([
 let ConsideredActiveCustomAttribute = class ConsideredActiveCustomAttribute {
 };
 __decorate([
-    bindable({ mode: BindingMode.toView })
+    bindable({ mode: 2 })
 ], ConsideredActiveCustomAttribute.prototype, "value", void 0);
 ConsideredActiveCustomAttribute = __decorate([
     customAttribute('considered-active')

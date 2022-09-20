@@ -1,5 +1,4 @@
-import { LifecycleFlags } from '@aurelia/runtime';
-import { ICustomElementController, IHydratedController, ICustomElementViewModel, ILifecycleHooks } from '@aurelia/runtime-html';
+import { LifecycleFlags, ICustomElementController, IHydratedController, ICustomElementViewModel, ILifecycleHooks } from '@aurelia/runtime-html';
 import { RouteDefinition } from './route-definition';
 import { RouteNode } from './route-tree';
 import { IRouteContext } from './route-context';

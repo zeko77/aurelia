@@ -5,11 +5,9 @@ import type { ICustomAttributeController, ICustomAttributeViewModel } from '../.
  * Focus attribute for element focus binding
  */
 export declare class Focus implements ICustomAttributeViewModel {
-    private readonly _element;
-    private readonly _platform;
     readonly $controller: ICustomAttributeController<this>;
     value: unknown;
-    constructor(_element: INode<HTMLElement>, _platform: IPlatform);
+    constructor(element: INode<HTMLElement>, platform: IPlatform);
     binding(): void;
     /**
      * Invoked everytime the bound value changes.

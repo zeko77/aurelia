@@ -3,7 +3,7 @@ import { State } from '../templating/controller';
 /**
  * Mode of a binding to operate
  */
-export declare enum BindingMode {
+export declare const enum BindingMode {
     oneTime = 1,
     toView = 2,
     fromView = 4,

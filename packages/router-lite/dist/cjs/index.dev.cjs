@@ -4109,19 +4109,19 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
     }
 };
 __decorate([
-    runtimeHtml.bindable({ mode: runtimeHtml.BindingMode.toView, primary: true, callback: 'valueChanged' })
+    runtimeHtml.bindable({ mode: 2, primary: true, callback: 'valueChanged' })
 ], exports.LoadCustomAttribute.prototype, "route", void 0);
 __decorate([
-    runtimeHtml.bindable({ mode: runtimeHtml.BindingMode.toView, callback: 'valueChanged' })
+    runtimeHtml.bindable({ mode: 2, callback: 'valueChanged' })
 ], exports.LoadCustomAttribute.prototype, "params", void 0);
 __decorate([
-    runtimeHtml.bindable({ mode: runtimeHtml.BindingMode.toView })
+    runtimeHtml.bindable({ mode: 2 })
 ], exports.LoadCustomAttribute.prototype, "attribute", void 0);
 __decorate([
-    runtimeHtml.bindable({ mode: runtimeHtml.BindingMode.fromView })
+    runtimeHtml.bindable({ mode: 4 })
 ], exports.LoadCustomAttribute.prototype, "active", void 0);
 __decorate([
-    runtimeHtml.bindable({ mode: runtimeHtml.BindingMode.toView, callback: 'valueChanged' })
+    runtimeHtml.bindable({ mode: 2, callback: 'valueChanged' })
 ], exports.LoadCustomAttribute.prototype, "context", void 0);
 exports.LoadCustomAttribute = __decorate([
     runtimeHtml.customAttribute('load'),
@@ -4203,7 +4203,7 @@ exports.HrefCustomAttribute = class HrefCustomAttribute {
     }
 };
 __decorate([
-    runtimeHtml.bindable({ mode: runtimeHtml.BindingMode.toView })
+    runtimeHtml.bindable({ mode: 2 })
 ], exports.HrefCustomAttribute.prototype, "value", void 0);
 exports.HrefCustomAttribute = __decorate([
     runtimeHtml.customAttribute({ name: 'href', noMultiBindings: true }),

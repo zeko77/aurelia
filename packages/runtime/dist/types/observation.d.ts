@@ -18,30 +18,16 @@ export interface ICoercionConfiguration {
     coerceNullish: boolean;
 }
 export declare type InterceptorFunc<TInput = unknown, TOutput = unknown> = (value: TInput, coercionConfig: ICoercionConfiguration | null) => TOutput;
-export declare const enum LifecycleFlags {
-    none = 0,
-    fromBind = 1,
-    fromUnbind = 2,
-    dispose = 4
-}
 export interface IConnectable {
     observe(obj: object, key: PropertyKey): void;
     observeCollection(obj: Collection): void;
     subscribeTo(subscribable: ISubscribable | ICollectionSubscribable): void;
 }
-export declare enum DelegationStrategy {
-    none = 0,
-    capturing = 1,
-    bubbling = 2
-}
-export interface IBatchable {
-    flushBatch(flags: LifecycleFlags): void;
-}
 export interface ISubscriber<TValue = unknown> {
     handleChange(newValue: TValue, previousValue: TValue): void;
 }
 export interface ICollectionSubscriber {
-    handleCollectionChange(indexMap: IndexMap): void;
+    handleCollectionChange(collection: Collection, indexMap: IndexMap): void;
 }
 export interface ISubscribable {
     subscribe(subscriber: ISubscriber): void;
@@ -62,7 +48,7 @@ export interface ISubscriberRecord<T extends ISubscriber | ICollectionSubscriber
     remove(subscriber: T): boolean;
     any(): boolean;
     notify(value: unknown, oldValue: unknown): void;
-    notifyCollection(indexMap: IndexMap): void;
+    notifyCollection(collection: Collection, indexMap: IndexMap): void;
 }
 /**
  * An internal interface describing the implementation of a ISubscribable of Aurelia that supports batching
@@ -71,7 +57,6 @@ export interface ISubscriberRecord<T extends ISubscriber | ICollectionSubscriber
  * The `subscriberCollection` import can be used as either a decorator, or a function call.
  */
 export interface ISubscriberCollection extends ISubscribable {
-    [key: number]: LifecycleFlags;
     /**
      * The backing subscriber record for all subscriber methods of this collection
      */
@@ -84,7 +69,6 @@ export interface ISubscriberCollection extends ISubscribable {
  * The `subscriberCollection` import can be used as either a decorator, or a function call.
  */
 export interface ICollectionSubscriberCollection extends ICollectionSubscribable {
-    [key: number]: LifecycleFlags;
     /**
      * The backing subscriber record for all subscriber methods of this collection
      */
@@ -127,6 +111,7 @@ export interface IAccessor<TValue = unknown> {
  * An interface describing a standard contract of an observer in Aurelia binding & observation system
  */
 export interface IObserver extends IAccessor, ISubscribable {
+    doNotCache?: boolean;
 }
 export declare type AccessorOrObserver = (IAccessor | IObserver) & {
     doNotCache?: boolean;
@@ -148,9 +133,6 @@ export declare function copyIndexMap<T = unknown>(existing: number[] & {
 export declare function createIndexMap(length?: number): IndexMap;
 export declare function cloneIndexMap(indexMap: IndexMap): IndexMap;
 export declare function isIndexMap(value: unknown): value is IndexMap;
-export interface IArrayIndexObserver extends IObserver {
-    owner: ICollectionObserver<CollectionKind.array>;
-}
 /**
  * Describes a type that specifically tracks changes in a collection (map, set or array)
  */
@@ -169,11 +151,10 @@ export interface ICollectionObserver<T extends CollectionKind> extends ICollecti
 }
 export declare type CollectionObserver = ICollectionObserver<CollectionKind>;
 export interface IBindingContext {
-    [key: string]: any;
+    [key: PropertyKey]: any;
 }
 export interface IOverrideContext {
-    [key: string]: unknown;
-    readonly bindingContext: IBindingContext;
+    [key: PropertyKey]: any;
 }
 export declare type IObservable<T = IIndexable> = T & {
     $observers?: IIndexable<{}, AccessorOrObserver>;

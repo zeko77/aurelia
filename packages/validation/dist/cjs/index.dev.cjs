@@ -610,13 +610,13 @@ exports.ValidationMessageProvider = class ValidationMessageProvider {
     }
     parseMessage(message) {
         const parsed = this.parser.parse(message, 1);
-        if (parsed?.$kind === 25) {
+        if (parsed?.$kind === 23) {
             for (const expr of parsed.expressions) {
                 const name = expr.name;
                 if (contextualProperties.has(name)) {
                     this.logger.warn(`Did you mean to use "$${name}" instead of "${name}" in this validation message template: "${message}"?`);
                 }
-                if (expr.$kind === 1793 || expr.ancestor > 0) {
+                if (expr.$kind === 0 || expr.ancestor > 0) {
                     throw new Error('$parent is not permitted in validation message expressions.');
                 }
             }
@@ -877,7 +877,6 @@ class Serializer {
     visitBindingIdentifier(expr) {
         return `{"$TYPE":"${ASTExpressionTypes.BindingIdentifier}","name":"${expr.name}"}`;
     }
-    visitHtmlLiteral(_expr) { throw new Error('visitHtmlLiteral'); }
     visitForOfStatement(expr) {
         return `{"$TYPE":"${ASTExpressionTypes.ForOfStatement}","declaration":${expr.declaration.accept(this)},"iterable":${expr.iterable.accept(this)}}`;
     }

@@ -1,4 +1,3 @@
-import { IndexMap } from '@aurelia/runtime';
 import { BindingMode } from './interfaces-bindings';
 import type { TaskQueue } from '@aurelia/platform';
 import type { IServiceLocator } from '@aurelia/kernel';
@@ -22,7 +21,7 @@ export declare class PropertyBinding implements IAstBasedBinding {
     updateTarget(value: unknown): void;
     updateSource(value: unknown): void;
     handleChange(newValue: unknown, _previousValue: unknown): void;
-    handleCollectionChange(_indexMap: IndexMap): void;
+    handleCollectionChange(_collection: unknown): void;
     $bind(scope: Scope): void;
     $unbind(): void;
 }

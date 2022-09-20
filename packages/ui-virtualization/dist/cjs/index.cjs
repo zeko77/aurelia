@@ -178,7 +178,7 @@ class VirtualRepeat {
         for (c = h; c < u; c++) o.push(this.f.create());
         const f = this.itemHeight;
         const d = this.local;
-        const {firstIndex: g, topCount: C, botCount: w} = this.measureBuffer(this.scrollerObserver.getValue(), o.length, i, f);
+        const {firstIndex: g, topCount: w, botCount: C} = this.measureBuffer(this.scrollerObserver.getValue(), o.length, i, f);
         let m = 0;
         let v;
         let b;
@@ -195,7 +195,7 @@ class VirtualRepeat {
                 y.overrideContext.$length = i;
             } else {
                 a.nodes.insertBefore(b.nodes.firstChild.nextSibling);
-                y = s.Scope.fromParent(e.scope, s.BindingContext.create(d, r.item(m)));
+                y = s.Scope.fromParent(e.scope, new s.BindingContext(d, r.item(m)));
                 y.overrideContext.$index = m;
                 y.overrideContext.$length = i;
                 p(y.overrideContext);
@@ -203,7 +203,7 @@ class VirtualRepeat {
             }
         }
         this.C.start(t);
-        this.dom.update(C * f, w * f);
+        this.dom.update(w * f, C * f);
     }
     calcRealScrollTop(t) {
         const s = t.scrollTop;
@@ -248,27 +248,27 @@ class VirtualRepeat {
         this.i = t;
         if (a === h) return;
         let p = null;
-        let C = null;
-        let w = 0;
+        let w = null;
+        let C = 0;
         let m = 0;
         let v = 0;
         let b = 0;
         if (g) for (b = 0; l > b; ++b) {
-            w = a + b;
-            C = n[b].scope;
-            C.bindingContext[e] = o.item(w);
-            C.overrideContext.$index = w;
-            C.overrideContext.$length = c;
+            C = a + b;
+            w = n[b].scope;
+            w.bindingContext[e] = o.item(C);
+            w.overrideContext.$index = C;
+            w.overrideContext.$length = c;
         } else if (d) {
             m = a - h;
             while (m > 0) {
                 p = n.shift();
-                w = n[n.length - 1].scope.overrideContext["$index"] + 1;
+                C = n[n.length - 1].scope.overrideContext["$index"] + 1;
                 n.push(p);
-                C = p.scope;
-                C.bindingContext[e] = o.item(w);
-                C.overrideContext.$index = w;
-                C.overrideContext.$length = c;
+                w = p.scope;
+                w.bindingContext[e] = o.item(C);
+                w.overrideContext.$index = C;
+                w.overrideContext.$length = c;
                 p.nodes.insertBefore(i.bottom);
                 ++v;
                 --m;
@@ -276,12 +276,12 @@ class VirtualRepeat {
         } else {
             m = h - a;
             while (m > 0) {
-                w = h - (v + 1);
+                C = h - (v + 1);
                 p = n.pop();
-                C = p.scope;
-                C.bindingContext[e] = o.item(w);
-                C.overrideContext.$index = w;
-                C.overrideContext.$length = c;
+                w = p.scope;
+                w.bindingContext[e] = o.item(C);
+                w.overrideContext.$index = C;
+                w.overrideContext.$length = c;
                 p.nodes.insertBefore(n[0].nodes.firstChild);
                 n.unshift(p);
                 ++v;
@@ -299,7 +299,7 @@ class VirtualRepeat {
     getViews() {
         return this.views.slice(0);
     }
-    handleCollectionChange(t) {
+    handleCollectionChange(t, s) {
         this.itemsChanged(this.items);
     }
     handleInnerCollectionChange() {
@@ -313,7 +313,7 @@ class VirtualRepeat {
         const e = this.$controller;
         const r = this.collectionStrategy;
         const i = e.scope;
-        const n = s.Scope.fromParent(i, s.BindingContext.create(this.local, r.first()));
+        const n = s.Scope.fromParent(i, new s.BindingContext(this.local, r.first()));
         n.overrideContext.$index = 0;
         n.overrideContext.$length = r.count();
         p(n.overrideContext);
@@ -349,8 +349,8 @@ class CollectionObservationMediator {
         this.repeat = t;
         this.key = s;
     }
-    handleCollectionChange(t) {
-        this.repeat[this.key](t);
+    handleCollectionChange(t, s) {
+        this.repeat[this.key](t, s);
     }
     start(t) {
         if (this.M === t) return;
@@ -390,15 +390,15 @@ function p(t) {
     const s = t;
     if (g.has(s)) return;
     Object.defineProperties(s, {
-        $first: C(v),
-        $last: C(b),
-        $middle: C(y),
-        $even: C(w),
-        $odd: C(m)
+        $first: w(v),
+        $last: w(b),
+        $middle: w(y),
+        $even: w(C),
+        $odd: w(m)
     });
 }
 
-function C(t) {
+function w(t) {
     return {
         configurable: true,
         enumerable: true,
@@ -406,7 +406,7 @@ function C(t) {
     };
 }
 
-function w() {
+function C() {
     return this.$index % 2 === 0;
 }
 

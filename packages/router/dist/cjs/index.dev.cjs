@@ -3724,13 +3724,10 @@ class RoutingScope {
             if (unresolvedPromise instanceof Promise) {
                 await unresolvedPromise;
             }
-            earlierMatchedInstructions.filter(instruction => instruction.cancelled).forEach(instruction => {
-                const lastIndex = earlierMatchedInstructions.lastIndexOf(instruction);
-                const lastInstruction = earlierMatchedInstructions[lastIndex];
-                if (lastInstruction.cancelled) {
-                    allChangedEndpoints = allChangedEndpoints.filter(endpoint => endpoint !== lastInstruction.endpoint.instance);
-                }
-            });
+            allChangedEndpoints = allChangedEndpoints.filter(endpoint => !([...earlierMatchedInstructions]
+                .reverse()
+                .find(instruction => instruction.endpoint.instance === endpoint)
+                ?.cancelled ?? false));
         } while (matchedInstructions.length > 0 || remainingInstructions.length > 0);
         return allChangedEndpoints;
     }
@@ -5710,7 +5707,7 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
     }
 };
 __decorate([
-    runtimeHtml.bindable({ mode: runtimeHtml.BindingMode.toView })
+    runtimeHtml.bindable({ mode: 2 })
 ], exports.LoadCustomAttribute.prototype, "value", void 0);
 __decorate([
     runtimeHtml.bindable
@@ -5777,7 +5774,7 @@ exports.HrefCustomAttribute = class HrefCustomAttribute {
     }
 };
 __decorate([
-    runtimeHtml.bindable({ mode: runtimeHtml.BindingMode.toView })
+    runtimeHtml.bindable({ mode: 2 })
 ], exports.HrefCustomAttribute.prototype, "value", void 0);
 exports.HrefCustomAttribute = __decorate([
     runtimeHtml.customAttribute({
@@ -5793,7 +5790,7 @@ exports.HrefCustomAttribute = __decorate([
 exports.ConsideredActiveCustomAttribute = class ConsideredActiveCustomAttribute {
 };
 __decorate([
-    runtimeHtml.bindable({ mode: runtimeHtml.BindingMode.toView })
+    runtimeHtml.bindable({ mode: 2 })
 ], exports.ConsideredActiveCustomAttribute.prototype, "value", void 0);
 exports.ConsideredActiveCustomAttribute = __decorate([
     runtimeHtml.customAttribute('considered-active')

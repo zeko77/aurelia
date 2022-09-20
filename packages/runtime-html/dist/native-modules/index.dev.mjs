@@ -1,7 +1,6 @@
-import { subscriberCollection, withFlushQueue, connectable, ConnectableSwitcher, ProxyObservable, Scope, ICoercionConfiguration, IObserverLocator, IExpressionParser, AccessScopeExpression, DelegationStrategy, BindingBehaviorExpression, PrimitiveLiteralExpression, ISignaler, PropertyAccessor, INodeObserverLocator, SetterObserver, IDirtyChecker, applyMutationsToIndices, getCollectionObserver as getCollectionObserver$1, synchronizeIndices, BindingContext } from '../../../runtime/dist/native-modules/index.mjs';
-export { LifecycleFlags } from '../../../runtime/dist/native-modules/index.mjs';
-import { Protocol, getPrototypeChain, firstDefined, kebabCase, noop, Registration, DI, emptyArray, all, IPlatform as IPlatform$1, mergeArrays, fromAnnotationOrDefinitionOrTypeOrDefault, fromDefinitionOrDefault, pascalCase, fromAnnotationOrTypeOrDefault, IContainer, nextId, optional, InstanceProvider, ILogger, resolveAll, onResolve, camelCase, toArray, emptyObject, IServiceLocator, transient } from '../../../kernel/dist/native-modules/index.mjs';
+import { Protocol, getPrototypeChain, firstDefined, kebabCase, noop, Registration, DI, emptyArray, all, mergeArrays, fromAnnotationOrDefinitionOrTypeOrDefault, fromDefinitionOrDefault, pascalCase, fromAnnotationOrTypeOrDefault, IPlatform as IPlatform$1, IContainer, optional, InstanceProvider, ILogger, resolveAll, onResolve, camelCase, toArray, emptyObject, IServiceLocator, transient } from '../../../kernel/dist/native-modules/index.mjs';
 import { Metadata, isObject } from '../../../metadata/dist/native-modules/index.mjs';
+import { subscriberCollection, withFlushQueue, connectable, ConnectableSwitcher, ProxyObservable, Scope, ICoercionConfiguration, IObserverLocator, IExpressionParser, AccessScopeExpression, BindingBehaviorExpression, PrimitiveLiteralExpression, ISignaler, PropertyAccessor, INodeObserverLocator, SetterObserver, IDirtyChecker, applyMutationsToIndices, getCollectionObserver as getCollectionObserver$1, synchronizeIndices, BindingContext } from '../../../runtime/dist/native-modules/index.mjs';
 import { TaskAbortError } from '../../../platform/dist/native-modules/index.mjs';
 import { BrowserPlatform } from '../../../platform-browser/dist/native-modules/index.mjs';
 
@@ -31,22 +30,13 @@ function __param(paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 }
 
-var BindingMode;
-(function (BindingMode) {
-    BindingMode[BindingMode["oneTime"] = 1] = "oneTime";
-    BindingMode[BindingMode["toView"] = 2] = "toView";
-    BindingMode[BindingMode["fromView"] = 4] = "fromView";
-    BindingMode[BindingMode["twoWay"] = 6] = "twoWay";
-    BindingMode[BindingMode["default"] = 8] = "default";
-})(BindingMode || (BindingMode = {}));
-
 const getOwnMetadata = Metadata.getOwn;
 const hasOwnMetadata = Metadata.hasOwn;
 const defineMetadata = Metadata.define;
-const { annotation, resource } = Protocol;
+const { annotation, resource: resource$1 } = Protocol;
 const getAnnotationKeyFor = annotation.keyFor;
-const getResourceKeyFor = resource.keyFor;
-const appendResourceKey = resource.appendTo;
+const getResourceKeyFor = resource$1.keyFor;
+const appendResourceKey = resource$1.appendTo;
 const appendAnnotationKey = annotation.appendTo;
 const getAllAnnotations = annotation.getKeys;
 
@@ -209,7 +199,7 @@ class BindableDefinition {
         this.set = set;
     }
     static create(prop, target, def = {}) {
-        return new BindableDefinition(firstDefined(def.attribute, kebabCase(prop)), firstDefined(def.callback, `${prop}Changed`), firstDefined(def.mode, BindingMode.toView), firstDefined(def.primary, false), firstDefined(def.property, prop), firstDefined(def.set, getInterceptor(prop, target, def)));
+        return new BindableDefinition(firstDefined(def.attribute, kebabCase(prop)), firstDefined(def.callback, `${prop}Changed`), firstDefined(def.mode, 2), firstDefined(def.primary, false), firstDefined(def.property, prop), firstDefined(def.set, getInterceptor(prop, target, def)));
     }
 }
 function coercer(target, property, _descriptor) {
@@ -346,6 +336,21 @@ subscriberCollection(BindableObserver);
 withFlushQueue(BindableObserver);
 let oV$4 = void 0;
 
+const resource = function (key) {
+    function Resolver(target, property, descriptor) {
+        DI.inject(Resolver)(target, property, descriptor);
+    }
+    Resolver.$isResolver = true;
+    Resolver.resolve = function (handler, requestor) {
+        if (requestor.root === requestor) {
+            return requestor.get(key);
+        }
+        return requestor.has(key, false)
+            ? requestor.get(key)
+            : requestor.root.get(key);
+    };
+    return Resolver;
+};
 const allResources = function (key) {
     function Resolver(target, property, descriptor) {
         DI.inject(Resolver)(target, property, descriptor);
@@ -846,364 +851,6 @@ SpreadAttributePattern = __decorate([
     attributePattern({ pattern: '...$attrs', symbols: '' })
 ], SpreadAttributePattern);
 
-const IPlatform = IPlatform$1;
-
-const ISVGAnalyzer = DI.createInterface('ISVGAnalyzer', x => x.singleton(NoopSVGAnalyzer));
-class NoopSVGAnalyzer {
-    isStandardSvgAttribute(_node, _attributeName) {
-        return false;
-    }
-}
-function o(keys) {
-    const lookup = createLookup();
-    let key;
-    for (key of keys) {
-        lookup[key] = true;
-    }
-    return lookup;
-}
-class SVGAnalyzer {
-    constructor(platform) {
-        this._svgElements = Object.assign(createLookup(), {
-            'a': o(['class', 'externalResourcesRequired', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'target', 'transform', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space']),
-            'altGlyph': o(['class', 'dx', 'dy', 'externalResourcesRequired', 'format', 'glyphRef', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'rotate', 'style', 'systemLanguage', 'x', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'altglyph': createLookup(),
-            'altGlyphDef': o(['id', 'xml:base', 'xml:lang', 'xml:space']),
-            'altglyphdef': createLookup(),
-            'altGlyphItem': o(['id', 'xml:base', 'xml:lang', 'xml:space']),
-            'altglyphitem': createLookup(),
-            'animate': o(['accumulate', 'additive', 'attributeName', 'attributeType', 'begin', 'by', 'calcMode', 'dur', 'end', 'externalResourcesRequired', 'fill', 'from', 'id', 'keySplines', 'keyTimes', 'max', 'min', 'onbegin', 'onend', 'onload', 'onrepeat', 'repeatCount', 'repeatDur', 'requiredExtensions', 'requiredFeatures', 'restart', 'systemLanguage', 'to', 'values', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space']),
-            'animateColor': o(['accumulate', 'additive', 'attributeName', 'attributeType', 'begin', 'by', 'calcMode', 'dur', 'end', 'externalResourcesRequired', 'fill', 'from', 'id', 'keySplines', 'keyTimes', 'max', 'min', 'onbegin', 'onend', 'onload', 'onrepeat', 'repeatCount', 'repeatDur', 'requiredExtensions', 'requiredFeatures', 'restart', 'systemLanguage', 'to', 'values', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space']),
-            'animateMotion': o(['accumulate', 'additive', 'begin', 'by', 'calcMode', 'dur', 'end', 'externalResourcesRequired', 'fill', 'from', 'id', 'keyPoints', 'keySplines', 'keyTimes', 'max', 'min', 'onbegin', 'onend', 'onload', 'onrepeat', 'origin', 'path', 'repeatCount', 'repeatDur', 'requiredExtensions', 'requiredFeatures', 'restart', 'rotate', 'systemLanguage', 'to', 'values', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space']),
-            'animateTransform': o(['accumulate', 'additive', 'attributeName', 'attributeType', 'begin', 'by', 'calcMode', 'dur', 'end', 'externalResourcesRequired', 'fill', 'from', 'id', 'keySplines', 'keyTimes', 'max', 'min', 'onbegin', 'onend', 'onload', 'onrepeat', 'repeatCount', 'repeatDur', 'requiredExtensions', 'requiredFeatures', 'restart', 'systemLanguage', 'to', 'type', 'values', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space']),
-            'circle': o(['class', 'cx', 'cy', 'externalResourcesRequired', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'r', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'transform', 'xml:base', 'xml:lang', 'xml:space']),
-            'clipPath': o(['class', 'clipPathUnits', 'externalResourcesRequired', 'id', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'transform', 'xml:base', 'xml:lang', 'xml:space']),
-            'color-profile': o(['id', 'local', 'name', 'rendering-intent', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space']),
-            'cursor': o(['externalResourcesRequired', 'id', 'requiredExtensions', 'requiredFeatures', 'systemLanguage', 'x', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'defs': o(['class', 'externalResourcesRequired', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'transform', 'xml:base', 'xml:lang', 'xml:space']),
-            'desc': o(['class', 'id', 'style', 'xml:base', 'xml:lang', 'xml:space']),
-            'ellipse': o(['class', 'cx', 'cy', 'externalResourcesRequired', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'rx', 'ry', 'style', 'systemLanguage', 'transform', 'xml:base', 'xml:lang', 'xml:space']),
-            'feBlend': o(['class', 'height', 'id', 'in', 'in2', 'mode', 'result', 'style', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'feColorMatrix': o(['class', 'height', 'id', 'in', 'result', 'style', 'type', 'values', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'feComponentTransfer': o(['class', 'height', 'id', 'in', 'result', 'style', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'feComposite': o(['class', 'height', 'id', 'in', 'in2', 'k1', 'k2', 'k3', 'k4', 'operator', 'result', 'style', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'feConvolveMatrix': o(['bias', 'class', 'divisor', 'edgeMode', 'height', 'id', 'in', 'kernelMatrix', 'kernelUnitLength', 'order', 'preserveAlpha', 'result', 'style', 'targetX', 'targetY', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'feDiffuseLighting': o(['class', 'diffuseConstant', 'height', 'id', 'in', 'kernelUnitLength', 'result', 'style', 'surfaceScale', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'feDisplacementMap': o(['class', 'height', 'id', 'in', 'in2', 'result', 'scale', 'style', 'width', 'x', 'xChannelSelector', 'xml:base', 'xml:lang', 'xml:space', 'y', 'yChannelSelector']),
-            'feDistantLight': o(['azimuth', 'elevation', 'id', 'xml:base', 'xml:lang', 'xml:space']),
-            'feFlood': o(['class', 'height', 'id', 'result', 'style', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'feFuncA': o(['amplitude', 'exponent', 'id', 'intercept', 'offset', 'slope', 'tableValues', 'type', 'xml:base', 'xml:lang', 'xml:space']),
-            'feFuncB': o(['amplitude', 'exponent', 'id', 'intercept', 'offset', 'slope', 'tableValues', 'type', 'xml:base', 'xml:lang', 'xml:space']),
-            'feFuncG': o(['amplitude', 'exponent', 'id', 'intercept', 'offset', 'slope', 'tableValues', 'type', 'xml:base', 'xml:lang', 'xml:space']),
-            'feFuncR': o(['amplitude', 'exponent', 'id', 'intercept', 'offset', 'slope', 'tableValues', 'type', 'xml:base', 'xml:lang', 'xml:space']),
-            'feGaussianBlur': o(['class', 'height', 'id', 'in', 'result', 'stdDeviation', 'style', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'feImage': o(['class', 'externalResourcesRequired', 'height', 'id', 'preserveAspectRatio', 'result', 'style', 'width', 'x', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'feMerge': o(['class', 'height', 'id', 'result', 'style', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'feMergeNode': o(['id', 'xml:base', 'xml:lang', 'xml:space']),
-            'feMorphology': o(['class', 'height', 'id', 'in', 'operator', 'radius', 'result', 'style', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'feOffset': o(['class', 'dx', 'dy', 'height', 'id', 'in', 'result', 'style', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'fePointLight': o(['id', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y', 'z']),
-            'feSpecularLighting': o(['class', 'height', 'id', 'in', 'kernelUnitLength', 'result', 'specularConstant', 'specularExponent', 'style', 'surfaceScale', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'feSpotLight': o(['id', 'limitingConeAngle', 'pointsAtX', 'pointsAtY', 'pointsAtZ', 'specularExponent', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y', 'z']),
-            'feTile': o(['class', 'height', 'id', 'in', 'result', 'style', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'feTurbulence': o(['baseFrequency', 'class', 'height', 'id', 'numOctaves', 'result', 'seed', 'stitchTiles', 'style', 'type', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'filter': o(['class', 'externalResourcesRequired', 'filterRes', 'filterUnits', 'height', 'id', 'primitiveUnits', 'style', 'width', 'x', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'font': o(['class', 'externalResourcesRequired', 'horiz-adv-x', 'horiz-origin-x', 'horiz-origin-y', 'id', 'style', 'vert-adv-y', 'vert-origin-x', 'vert-origin-y', 'xml:base', 'xml:lang', 'xml:space']),
-            'font-face': o(['accent-height', 'alphabetic', 'ascent', 'bbox', 'cap-height', 'descent', 'font-family', 'font-size', 'font-stretch', 'font-style', 'font-variant', 'font-weight', 'hanging', 'id', 'ideographic', 'mathematical', 'overline-position', 'overline-thickness', 'panose-1', 'slope', 'stemh', 'stemv', 'strikethrough-position', 'strikethrough-thickness', 'underline-position', 'underline-thickness', 'unicode-range', 'units-per-em', 'v-alphabetic', 'v-hanging', 'v-ideographic', 'v-mathematical', 'widths', 'x-height', 'xml:base', 'xml:lang', 'xml:space']),
-            'font-face-format': o(['id', 'string', 'xml:base', 'xml:lang', 'xml:space']),
-            'font-face-name': o(['id', 'name', 'xml:base', 'xml:lang', 'xml:space']),
-            'font-face-src': o(['id', 'xml:base', 'xml:lang', 'xml:space']),
-            'font-face-uri': o(['id', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space']),
-            'foreignObject': o(['class', 'externalResourcesRequired', 'height', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'transform', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'g': o(['class', 'externalResourcesRequired', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'transform', 'xml:base', 'xml:lang', 'xml:space']),
-            'glyph': o(['arabic-form', 'class', 'd', 'glyph-name', 'horiz-adv-x', 'id', 'lang', 'orientation', 'style', 'unicode', 'vert-adv-y', 'vert-origin-x', 'vert-origin-y', 'xml:base', 'xml:lang', 'xml:space']),
-            'glyphRef': o(['class', 'dx', 'dy', 'format', 'glyphRef', 'id', 'style', 'x', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'glyphref': createLookup(),
-            'hkern': o(['g1', 'g2', 'id', 'k', 'u1', 'u2', 'xml:base', 'xml:lang', 'xml:space']),
-            'image': o(['class', 'externalResourcesRequired', 'height', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'preserveAspectRatio', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'transform', 'width', 'x', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'line': o(['class', 'externalResourcesRequired', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'transform', 'x1', 'x2', 'xml:base', 'xml:lang', 'xml:space', 'y1', 'y2']),
-            'linearGradient': o(['class', 'externalResourcesRequired', 'gradientTransform', 'gradientUnits', 'id', 'spreadMethod', 'style', 'x1', 'x2', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space', 'y1', 'y2']),
-            'marker': o(['class', 'externalResourcesRequired', 'id', 'markerHeight', 'markerUnits', 'markerWidth', 'orient', 'preserveAspectRatio', 'refX', 'refY', 'style', 'viewBox', 'xml:base', 'xml:lang', 'xml:space']),
-            'mask': o(['class', 'externalResourcesRequired', 'height', 'id', 'maskContentUnits', 'maskUnits', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'metadata': o(['id', 'xml:base', 'xml:lang', 'xml:space']),
-            'missing-glyph': o(['class', 'd', 'horiz-adv-x', 'id', 'style', 'vert-adv-y', 'vert-origin-x', 'vert-origin-y', 'xml:base', 'xml:lang', 'xml:space']),
-            'mpath': o(['externalResourcesRequired', 'id', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space']),
-            'path': o(['class', 'd', 'externalResourcesRequired', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'pathLength', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'transform', 'xml:base', 'xml:lang', 'xml:space']),
-            'pattern': o(['class', 'externalResourcesRequired', 'height', 'id', 'patternContentUnits', 'patternTransform', 'patternUnits', 'preserveAspectRatio', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'viewBox', 'width', 'x', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'polygon': o(['class', 'externalResourcesRequired', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'points', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'transform', 'xml:base', 'xml:lang', 'xml:space']),
-            'polyline': o(['class', 'externalResourcesRequired', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'points', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'transform', 'xml:base', 'xml:lang', 'xml:space']),
-            'radialGradient': o(['class', 'cx', 'cy', 'externalResourcesRequired', 'fx', 'fy', 'gradientTransform', 'gradientUnits', 'id', 'r', 'spreadMethod', 'style', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space']),
-            'rect': o(['class', 'externalResourcesRequired', 'height', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'rx', 'ry', 'style', 'systemLanguage', 'transform', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'script': o(['externalResourcesRequired', 'id', 'type', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space']),
-            'set': o(['attributeName', 'attributeType', 'begin', 'dur', 'end', 'externalResourcesRequired', 'fill', 'id', 'max', 'min', 'onbegin', 'onend', 'onload', 'onrepeat', 'repeatCount', 'repeatDur', 'requiredExtensions', 'requiredFeatures', 'restart', 'systemLanguage', 'to', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space']),
-            'stop': o(['class', 'id', 'offset', 'style', 'xml:base', 'xml:lang', 'xml:space']),
-            'style': o(['id', 'media', 'title', 'type', 'xml:base', 'xml:lang', 'xml:space']),
-            'svg': o(['baseProfile', 'class', 'contentScriptType', 'contentStyleType', 'externalResourcesRequired', 'height', 'id', 'onabort', 'onactivate', 'onclick', 'onerror', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'onresize', 'onscroll', 'onunload', 'onzoom', 'preserveAspectRatio', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'version', 'viewBox', 'width', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y', 'zoomAndPan']),
-            'switch': o(['class', 'externalResourcesRequired', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'transform', 'xml:base', 'xml:lang', 'xml:space']),
-            'symbol': o(['class', 'externalResourcesRequired', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'preserveAspectRatio', 'style', 'viewBox', 'xml:base', 'xml:lang', 'xml:space']),
-            'text': o(['class', 'dx', 'dy', 'externalResourcesRequired', 'id', 'lengthAdjust', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'rotate', 'style', 'systemLanguage', 'textLength', 'transform', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'textPath': o(['class', 'externalResourcesRequired', 'id', 'lengthAdjust', 'method', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'spacing', 'startOffset', 'style', 'systemLanguage', 'textLength', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space']),
-            'title': o(['class', 'id', 'style', 'xml:base', 'xml:lang', 'xml:space']),
-            'tref': o(['class', 'dx', 'dy', 'externalResourcesRequired', 'id', 'lengthAdjust', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'rotate', 'style', 'systemLanguage', 'textLength', 'x', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'tspan': o(['class', 'dx', 'dy', 'externalResourcesRequired', 'id', 'lengthAdjust', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'rotate', 'style', 'systemLanguage', 'textLength', 'x', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'use': o(['class', 'externalResourcesRequired', 'height', 'id', 'onactivate', 'onclick', 'onfocusin', 'onfocusout', 'onload', 'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'requiredExtensions', 'requiredFeatures', 'style', 'systemLanguage', 'transform', 'width', 'x', 'xlink:actuate', 'xlink:arcrole', 'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type', 'xml:base', 'xml:lang', 'xml:space', 'y']),
-            'view': o(['externalResourcesRequired', 'id', 'preserveAspectRatio', 'viewBox', 'viewTarget', 'xml:base', 'xml:lang', 'xml:space', 'zoomAndPan']),
-            'vkern': o(['g1', 'g2', 'id', 'k', 'u1', 'u2', 'xml:base', 'xml:lang', 'xml:space']),
-        });
-        this._svgPresentationElements = o([
-            'a',
-            'altGlyph',
-            'animate',
-            'animateColor',
-            'circle',
-            'clipPath',
-            'defs',
-            'ellipse',
-            'feBlend',
-            'feColorMatrix',
-            'feComponentTransfer',
-            'feComposite',
-            'feConvolveMatrix',
-            'feDiffuseLighting',
-            'feDisplacementMap',
-            'feFlood',
-            'feGaussianBlur',
-            'feImage',
-            'feMerge',
-            'feMorphology',
-            'feOffset',
-            'feSpecularLighting',
-            'feTile',
-            'feTurbulence',
-            'filter',
-            'font',
-            'foreignObject',
-            'g',
-            'glyph',
-            'glyphRef',
-            'image',
-            'line',
-            'linearGradient',
-            'marker',
-            'mask',
-            'missing-glyph',
-            'path',
-            'pattern',
-            'polygon',
-            'polyline',
-            'radialGradient',
-            'rect',
-            'stop',
-            'svg',
-            'switch',
-            'symbol',
-            'text',
-            'textPath',
-            'tref',
-            'tspan',
-            'use',
-        ]);
-        this._svgPresentationAttributes = o([
-            'alignment-baseline',
-            'baseline-shift',
-            'clip-path',
-            'clip-rule',
-            'clip',
-            'color-interpolation-filters',
-            'color-interpolation',
-            'color-profile',
-            'color-rendering',
-            'color',
-            'cursor',
-            'direction',
-            'display',
-            'dominant-baseline',
-            'enable-background',
-            'fill-opacity',
-            'fill-rule',
-            'fill',
-            'filter',
-            'flood-color',
-            'flood-opacity',
-            'font-family',
-            'font-size-adjust',
-            'font-size',
-            'font-stretch',
-            'font-style',
-            'font-variant',
-            'font-weight',
-            'glyph-orientation-horizontal',
-            'glyph-orientation-vertical',
-            'image-rendering',
-            'kerning',
-            'letter-spacing',
-            'lighting-color',
-            'marker-end',
-            'marker-mid',
-            'marker-start',
-            'mask',
-            'opacity',
-            'overflow',
-            'pointer-events',
-            'shape-rendering',
-            'stop-color',
-            'stop-opacity',
-            'stroke-dasharray',
-            'stroke-dashoffset',
-            'stroke-linecap',
-            'stroke-linejoin',
-            'stroke-miterlimit',
-            'stroke-opacity',
-            'stroke-width',
-            'stroke',
-            'text-anchor',
-            'text-decoration',
-            'text-rendering',
-            'unicode-bidi',
-            'visibility',
-            'word-spacing',
-            'writing-mode',
-        ]);
-        this.SVGElement = platform.globalThis.SVGElement;
-        const div = platform.document.createElement('div');
-        div.innerHTML = '<svg><altGlyph /></svg>';
-        if (div.firstElementChild.nodeName === 'altglyph') {
-            const svg = this._svgElements;
-            let tmp = svg.altGlyph;
-            svg.altGlyph = svg.altglyph;
-            svg.altglyph = tmp;
-            tmp = svg.altGlyphDef;
-            svg.altGlyphDef = svg.altglyphdef;
-            svg.altglyphdef = tmp;
-            tmp = svg.altGlyphItem;
-            svg.altGlyphItem = svg.altglyphitem;
-            svg.altglyphitem = tmp;
-            tmp = svg.glyphRef;
-            svg.glyphRef = svg.glyphref;
-            svg.glyphref = tmp;
-        }
-    }
-    static register(container) {
-        return singletonRegistration(ISVGAnalyzer, this).register(container);
-    }
-    isStandardSvgAttribute(node, attributeName) {
-        if (!(node instanceof this.SVGElement)) {
-            return false;
-        }
-        return (this._svgPresentationElements[node.nodeName] === true && this._svgPresentationAttributes[attributeName] === true ||
-            this._svgElements[node.nodeName]?.[attributeName] === true);
-    }
-}
-SVGAnalyzer.inject = [IPlatform];
-
-const IAttrMapper = DI
-    .createInterface('IAttrMapper', x => x.singleton(AttrMapper));
-class AttrMapper {
-    constructor(svg) {
-        this.svg = svg;
-        this.fns = [];
-        this._tagAttrMap = createLookup();
-        this._globalAttrMap = createLookup();
-        this.useMapping({
-            LABEL: { for: 'htmlFor' },
-            IMG: { usemap: 'useMap' },
-            INPUT: {
-                maxlength: 'maxLength',
-                minlength: 'minLength',
-                formaction: 'formAction',
-                formenctype: 'formEncType',
-                formmethod: 'formMethod',
-                formnovalidate: 'formNoValidate',
-                formtarget: 'formTarget',
-                inputmode: 'inputMode',
-            },
-            TEXTAREA: { maxlength: 'maxLength' },
-            TD: { rowspan: 'rowSpan', colspan: 'colSpan' },
-            TH: { rowspan: 'rowSpan', colspan: 'colSpan' },
-        });
-        this.useGlobalMapping({
-            accesskey: 'accessKey',
-            contenteditable: 'contentEditable',
-            tabindex: 'tabIndex',
-            textcontent: 'textContent',
-            innerhtml: 'innerHTML',
-            scrolltop: 'scrollTop',
-            scrollleft: 'scrollLeft',
-            readonly: 'readOnly',
-        });
-    }
-    static get inject() { return [ISVGAnalyzer]; }
-    useMapping(config) {
-        var _a;
-        let newAttrMapping;
-        let targetAttrMapping;
-        let tagName;
-        let attr;
-        for (tagName in config) {
-            newAttrMapping = config[tagName];
-            targetAttrMapping = (_a = this._tagAttrMap)[tagName] ?? (_a[tagName] = createLookup());
-            for (attr in newAttrMapping) {
-                if (targetAttrMapping[attr] !== void 0) {
-                    throw createMappedError(attr, tagName);
-                }
-                targetAttrMapping[attr] = newAttrMapping[attr];
-            }
-        }
-    }
-    useGlobalMapping(config) {
-        const mapper = this._globalAttrMap;
-        for (const attr in config) {
-            if (mapper[attr] !== void 0) {
-                throw createMappedError(attr, '*');
-            }
-            mapper[attr] = config[attr];
-        }
-    }
-    useTwoWay(fn) {
-        this.fns.push(fn);
-    }
-    isTwoWay(node, attrName) {
-        return shouldDefaultToTwoWay(node, attrName)
-            || this.fns.length > 0 && this.fns.some(fn => fn(node, attrName));
-    }
-    map(node, attr) {
-        return this._tagAttrMap[node.nodeName]?.[attr]
-            ?? this._globalAttrMap[attr]
-            ?? (isDataAttribute(node, attr, this.svg)
-                ? attr
-                : null);
-    }
-}
-function shouldDefaultToTwoWay(element, attr) {
-    switch (element.nodeName) {
-        case 'INPUT':
-            switch (element.type) {
-                case 'checkbox':
-                case 'radio':
-                    return attr === 'checked';
-                default:
-                    return attr === 'value' || attr === 'files' || attr === 'value-as-number' || attr === 'value-as-date';
-            }
-        case 'TEXTAREA':
-        case 'SELECT':
-            return attr === 'value';
-        default:
-            switch (attr) {
-                case 'textcontent':
-                case 'innerhtml':
-                    return element.hasAttribute('contenteditable');
-                case 'scrolltop':
-                case 'scrollleft':
-                    return true;
-                default:
-                    return false;
-            }
-    }
-}
-function createMappedError(attr, tagName) {
-    return new Error(`Attribute ${attr} has been already registered for ${tagName === '*' ? 'all elements' : `<${tagName}/>`}`);
-}
-
 var BindingBehaviorStrategy;
 (function (BindingBehaviorStrategy) {
     BindingBehaviorStrategy[BindingBehaviorStrategy["singleton"] = 1] = "singleton";
@@ -1305,8 +952,8 @@ class BindingInterceptor {
     handleChange(newValue, previousValue) {
         this.binding.handleChange(newValue, previousValue);
     }
-    handleCollectionChange(indexMap) {
-        this.binding.handleCollectionChange(indexMap);
+    handleCollectionChange(collection, indexMap) {
+        this.binding.handleCollectionChange(collection, indexMap);
     }
     observe(obj, key) {
         this.binding.observe(obj, key);
@@ -1443,12 +1090,25 @@ function astEvaluator(strict, strictFnCall = true) {
             return this.locator.get(key);
         });
         defineHiddenProp(proto, 'getConverter', function (name) {
-            return this.locator.get(ValueConverter.keyFrom(name));
+            const key = ValueConverter.keyFrom(name);
+            let resourceLookup = resourceLookupCache.get(this);
+            if (resourceLookup == null) {
+                resourceLookupCache.set(this, resourceLookup = new ResourceLookup());
+            }
+            return resourceLookup[key] ?? (resourceLookup[key] = this.locator.get(resource(key)));
         });
         defineHiddenProp(proto, 'getBehavior', function (name) {
-            return this.locator.get(BindingBehavior.keyFrom(name));
+            const key = BindingBehavior.keyFrom(name);
+            let resourceLookup = resourceLookupCache.get(this);
+            if (resourceLookup == null) {
+                resourceLookupCache.set(this, resourceLookup = new ResourceLookup());
+            }
+            return resourceLookup[key] ?? (resourceLookup[key] = this.locator.get(resource(key)));
         });
     };
+}
+const resourceLookupCache = new WeakMap();
+class ResourceLookup {
 }
 
 class CallBinding {
@@ -1626,8 +1286,6 @@ function invokeHandleMutation(s) {
 }
 let oV$3 = void 0;
 
-const { oneTime: oneTime$1, toView: toView$2, fromView: fromView$1 } = BindingMode;
-const toViewOrOneTime$1 = toView$2 | oneTime$1;
 const taskOptions = {
     reusable: false,
     preempt: true,
@@ -1668,8 +1326,8 @@ class AttributeBinding {
         const shouldQueueFlush = this._controller.state !== 1 && (targetObserver.type & 4) > 0;
         let shouldConnect = false;
         let task;
-        if (ast.$kind !== 10082 || this.obs.count > 1) {
-            shouldConnect = (mode & oneTime$1) === 0;
+        if (ast.$kind !== 1 || this.obs.count > 1) {
+            shouldConnect = (mode & 1) === 0;
             if (shouldConnect) {
                 this.obs.version++;
             }
@@ -1713,11 +1371,11 @@ class AttributeBinding {
         const $mode = this.mode;
         const interceptor = this.interceptor;
         let shouldConnect = false;
-        if ($mode & toViewOrOneTime$1) {
-            shouldConnect = ($mode & toView$2) > 0;
+        if ($mode & (2 | 1)) {
+            shouldConnect = ($mode & 2) > 0;
             interceptor.updateTarget(this.value = ast.evaluate(scope, this, shouldConnect ? interceptor : null));
         }
-        if ($mode & fromView$1) {
+        if ($mode & 4) {
             targetObserver.subscribe(this.targetSubscriber ?? (this.targetSubscriber = new BindingTargetSubscriber(interceptor)));
         }
         this.isBound = true;
@@ -1743,7 +1401,6 @@ class AttributeBinding {
 connectable(AttributeBinding);
 astEvaluator(true)(AttributeBinding);
 
-const { toView: toView$1 } = BindingMode;
 const queueTaskOptions = {
     reusable: false,
     preempt: true,
@@ -1844,7 +1501,7 @@ class InterpolationPartBinding {
         this.locator = locator;
         this.owner = owner;
         this.interceptor = this;
-        this.mode = BindingMode.toView;
+        this.mode = 2;
         this.value = '';
         this.task = null;
         this.isBound = false;
@@ -1856,10 +1513,10 @@ class InterpolationPartBinding {
         }
         const ast = this.ast;
         const obsRecord = this.obs;
-        const canOptimize = ast.$kind === 10082 && obsRecord.count === 1;
+        const canOptimize = ast.$kind === 1 && obsRecord.count === 1;
         let shouldConnect = false;
         if (!canOptimize) {
-            shouldConnect = (this.mode & toView$1) > 0;
+            shouldConnect = (this.mode & 2) > 0;
             if (shouldConnect) {
                 obsRecord.version++;
             }
@@ -1876,7 +1533,7 @@ class InterpolationPartBinding {
             this.owner.updateTarget(newValue);
         }
     }
-    handleCollectionChange(_indexMap) {
+    handleCollectionChange() {
         this.owner.updateTarget(void 0);
     }
     $bind(scope) {
@@ -1891,7 +1548,7 @@ class InterpolationPartBinding {
         if (this.ast.hasBind) {
             this.ast.bind(scope, this.interceptor);
         }
-        this.value = this.ast.evaluate(scope, this, (this.mode & toView$1) > 0 ? this.interceptor : null);
+        this.value = this.ast.evaluate(scope, this, (this.mode & 2) > 0 ? this.interceptor : null);
         if (this.value instanceof Array) {
             this.observeCollection(this.value);
         }
@@ -1919,7 +1576,7 @@ class ContentBinding {
         this.target = target;
         this.strict = strict;
         this.interceptor = this;
-        this.mode = BindingMode.toView;
+        this.mode = 2;
         this.value = '';
         this.task = null;
         this.isBound = false;
@@ -1948,10 +1605,10 @@ class ContentBinding {
         }
         const ast = this.ast;
         const obsRecord = this.obs;
-        const canOptimize = ast.$kind === 10082 && obsRecord.count === 1;
+        const canOptimize = ast.$kind === 1 && obsRecord.count === 1;
         let shouldConnect = false;
         if (!canOptimize) {
-            shouldConnect = (this.mode & toView$1) > 0;
+            shouldConnect = (this.mode & 2) > 0;
             if (shouldConnect) {
                 obsRecord.version++;
             }
@@ -1978,7 +1635,7 @@ class ContentBinding {
             return;
         }
         this.obs.version++;
-        const v = this.value = this.ast.evaluate(this.$scope, this, (this.mode & toView$1) > 0 ? this.interceptor : null);
+        const v = this.value = this.ast.evaluate(this.$scope, this, (this.mode & 2) > 0 ? this.interceptor : null);
         this.obs.clear();
         if (v instanceof Array) {
             this.observeCollection(v);
@@ -2003,7 +1660,7 @@ class ContentBinding {
         if (this.ast.hasBind) {
             this.ast.bind(scope, this.interceptor);
         }
-        const v = this.value = this.ast.evaluate(scope, this, (this.mode & toView$1) > 0 ? this.interceptor : null);
+        const v = this.value = this.ast.evaluate(scope, this, (this.mode & 2) > 0 ? this.interceptor : null);
         if (v instanceof Array) {
             this.observeCollection(v);
         }
@@ -2108,8 +1765,6 @@ class LetBinding {
 connectable(LetBinding);
 astEvaluator(true)(LetBinding);
 
-const { oneTime, toView, fromView } = BindingMode;
-const toViewOrOneTime = toView | oneTime;
 const updateTaskOpts = {
     reusable: false,
     preempt: true,
@@ -2144,8 +1799,8 @@ class PropertyBinding {
         const shouldQueueFlush = this._controller.state !== 1 && (this.targetObserver.type & 4) > 0;
         const obsRecord = this.obs;
         let shouldConnect = false;
-        if (this.ast.$kind !== 10082 || obsRecord.count > 1) {
-            shouldConnect = this.mode > oneTime;
+        if (this.ast.$kind !== 1 || obsRecord.count > 1) {
+            shouldConnect = this.mode > 1;
             if (shouldConnect) {
                 obsRecord.version++;
             }
@@ -2167,7 +1822,7 @@ class PropertyBinding {
             this.interceptor.updateTarget(newValue);
         }
     }
-    handleCollectionChange(_indexMap) {
+    handleCollectionChange(_collection) {
         if (!this.isBound) {
             return;
         }
@@ -2204,7 +1859,7 @@ class PropertyBinding {
         const $mode = this.mode;
         let targetObserver = this.targetObserver;
         if (!targetObserver) {
-            if ($mode & fromView) {
+            if ($mode & 4) {
                 targetObserver = observerLocator.getObserver(this.target, this.targetProperty);
             }
             else {
@@ -2214,11 +1869,11 @@ class PropertyBinding {
         }
         ast = this.ast;
         const interceptor = this.interceptor;
-        const shouldConnect = ($mode & toView) > 0;
-        if ($mode & toViewOrOneTime) {
+        const shouldConnect = ($mode & 2) > 0;
+        if ($mode & (2 | 1)) {
             interceptor.updateTarget(ast.evaluate(scope, this, shouldConnect ? interceptor : null));
         }
-        if ($mode & fromView) {
+        if ($mode & 4) {
             targetObserver.subscribe(this.targetSubscriber ?? (this.targetSubscriber = new BindingTargetSubscriber(interceptor)));
             if (!shouldConnect) {
                 interceptor.updateSource(targetObserver.getValue(this.target, this.targetProperty));
@@ -2364,7 +2019,6 @@ const Children = Object.freeze({
     keyFrom: (name) => `${baseName}:${name}`,
     from(...childrenObserverLists) {
         const childrenObservers = {};
-        const isArray = Array.isArray;
         function addName(name) {
             childrenObservers[name] = ChildrenDefinition.create(name);
         }
@@ -2536,7 +2190,7 @@ class CustomAttributeDefinition {
             name = nameOrDef.name;
             def = nameOrDef;
         }
-        return new CustomAttributeDefinition(Type, firstDefined(getAttributeAnnotation(Type, 'name'), name), mergeArrays(getAttributeAnnotation(Type, 'aliases'), def.aliases, Type.aliases), getAttributeKeyFrom(name), firstDefined(getAttributeAnnotation(Type, 'defaultBindingMode'), def.defaultBindingMode, Type.defaultBindingMode, BindingMode.toView), firstDefined(getAttributeAnnotation(Type, 'isTemplateController'), def.isTemplateController, Type.isTemplateController, false), Bindable.from(Type, ...Bindable.getAll(Type), getAttributeAnnotation(Type, 'bindables'), Type.bindables, def.bindables), firstDefined(getAttributeAnnotation(Type, 'noMultiBindings'), def.noMultiBindings, Type.noMultiBindings, false), mergeArrays(Watch.getAnnotation(Type), Type.watches), mergeArrays(getAttributeAnnotation(Type, 'dependencies'), def.dependencies, Type.dependencies));
+        return new CustomAttributeDefinition(Type, firstDefined(getAttributeAnnotation(Type, 'name'), name), mergeArrays(getAttributeAnnotation(Type, 'aliases'), def.aliases, Type.aliases), getAttributeKeyFrom(name), firstDefined(getAttributeAnnotation(Type, 'defaultBindingMode'), def.defaultBindingMode, Type.defaultBindingMode, 2), firstDefined(getAttributeAnnotation(Type, 'isTemplateController'), def.isTemplateController, Type.isTemplateController, false), Bindable.from(Type, ...Bindable.getAll(Type), getAttributeAnnotation(Type, 'bindables'), Type.bindables, def.bindables), firstDefined(getAttributeAnnotation(Type, 'noMultiBindings'), def.noMultiBindings, Type.noMultiBindings, false), mergeArrays(Watch.getAnnotation(Type), Type.watches), mergeArrays(getAttributeAnnotation(Type, 'dependencies'), def.dependencies, Type.dependencies));
     }
     register(container) {
         const { Type, key, aliases } = this;
@@ -2914,6 +2568,8 @@ function capture(targetOrFilter) {
     };
 }
 
+const IPlatform = IPlatform$1;
+
 class ClassAttributeAccessor {
     constructor(obj) {
         this.obj = obj;
@@ -3225,7 +2881,7 @@ class ExpressionWatcher {
         const expr = this.expression;
         const obj = this.obj;
         const oldValue = this.value;
-        const canOptimize = expr.$kind === 10082 && this.obs.count === 1;
+        const canOptimize = expr.$kind === 1 && this.obs.count === 1;
         if (!canOptimize) {
             this.obs.version++;
             value = expr.evaluate(this.scope, this, this);
@@ -3573,16 +3229,16 @@ class Rendering {
     constructor(container) {
         this._compilationCache = new WeakMap();
         this._fragmentCache = new WeakMap();
-        this._p = (this._ctn = container.root).get(IPlatform);
-        this._empty = new FragmentNodeSequence(this._p, this._p.document.createDocumentFragment());
+        this._platform = (this._ctn = container.root).get(IPlatform);
+        this._empty = new FragmentNodeSequence(this._platform, this._platform.document.createDocumentFragment());
     }
     get renderers() {
-        return this.rs == null
-            ? (this.rs = this._ctn.getAll(IRenderer, false).reduce((all, r) => {
+        return this._renderers == null
+            ? (this._renderers = this._ctn.getAll(IRenderer, false).reduce((all, r) => {
                 all[r.target] = r;
                 return all;
             }, createLookup()))
-            : this.rs;
+            : this._renderers;
     }
     compile(definition, container, compilationInstruction) {
         if (definition.needsCompile !== false) {
@@ -3604,7 +3260,7 @@ class Rendering {
     }
     createNodes(definition) {
         if (definition.enhance === true) {
-            return new FragmentNodeSequence(this._p, definition.template);
+            return new FragmentNodeSequence(this._platform, definition.template);
         }
         let fragment;
         const cache = this._fragmentCache;
@@ -3612,7 +3268,7 @@ class Rendering {
             fragment = cache.get(definition);
         }
         else {
-            const p = this._p;
+            const p = this._platform;
             const doc = p.document;
             const template = definition.template;
             let tpl;
@@ -3638,7 +3294,7 @@ class Rendering {
         }
         return fragment == null
             ? this._empty
-            : new FragmentNodeSequence(this._p, fragment.cloneNode(true));
+            : new FragmentNodeSequence(this._platform, fragment.cloneNode(true));
     }
     render(controller, targets, definition, host) {
         const rows = definition.instructions;
@@ -3667,7 +3323,7 @@ class Rendering {
                 ++i;
             }
         }
-        if (host !== void 0 && host !== null) {
+        if (host != null) {
             row = definition.surrogates;
             if ((jj = row.length) > 0) {
                 j = 0;
@@ -3682,6 +3338,13 @@ class Rendering {
 }
 Rendering.inject = [IContainer];
 
+var LifecycleFlags;
+(function (LifecycleFlags) {
+    LifecycleFlags[LifecycleFlags["none"] = 0] = "none";
+    LifecycleFlags[LifecycleFlags["fromBind"] = 1] = "fromBind";
+    LifecycleFlags[LifecycleFlags["fromUnbind"] = 2] = "fromUnbind";
+    LifecycleFlags[LifecycleFlags["dispose"] = 4] = "dispose";
+})(LifecycleFlags || (LifecycleFlags = {}));
 var MountTarget;
 (function (MountTarget) {
     MountTarget[MountTarget["none"] = 0] = "none";
@@ -3699,7 +3362,6 @@ class Controller {
         this.viewFactory = viewFactory;
         this.viewModel = viewModel;
         this.host = host;
-        this.id = nextId('au$component');
         this.head = null;
         this.tail = null;
         this.next = null;
@@ -4697,42 +4359,6 @@ let _reject;
 let _retPromise;
 
 const IAppRoot = DI.createInterface('IAppRoot');
-const IWorkTracker = DI.createInterface('IWorkTracker', x => x.singleton(WorkTracker));
-class WorkTracker {
-    constructor(logger) {
-        this._stack = 0;
-        this._promise = null;
-        this._resolve = null;
-        this._logger = logger.scopeTo('WorkTracker');
-    }
-    start() {
-        this._logger.trace(`start(stack:${this._stack})`);
-        ++this._stack;
-    }
-    finish() {
-        this._logger.trace(`finish(stack:${this._stack})`);
-        if (--this._stack === 0) {
-            const resolve = this._resolve;
-            if (resolve !== null) {
-                this._resolve = this._promise = null;
-                resolve();
-            }
-        }
-    }
-    wait() {
-        this._logger.trace(`wait(stack:${this._stack})`);
-        if (this._promise === null) {
-            if (this._stack === 0) {
-                return Promise.resolve();
-            }
-            this._promise = new Promise(resolve => {
-                this._resolve = resolve;
-            });
-        }
-        return this._promise;
-    }
-}
-WorkTracker.inject = [ILogger];
 class AppRoot {
     constructor(config, platform, container, rootProvider) {
         this.config = config;
@@ -4741,7 +4367,6 @@ class AppRoot {
         this.controller = (void 0);
         this._hydratePromise = void 0;
         this.host = config.host;
-        this.work = container.get(IWorkTracker);
         rootProvider.prepare(this);
         container.registerResolver(platform.HTMLElement, container.registerResolver(platform.Element, container.registerResolver(INode, new InstanceProvider('ElementResolver', config.host))));
         this._hydratePromise = onResolve(this._runAppTasks('creating'), () => {
@@ -5035,14 +4660,13 @@ const ILocation = DI.createInterface('ILocation', x => x.callback(handler => han
 const IHistory = DI.createInterface('IHistory', x => x.callback(handler => handler.get(IWindow).history));
 
 const addListenerOptions = {
-    [DelegationStrategy.capturing]: { capture: true },
-    [DelegationStrategy.bubbling]: { capture: false },
+    [1]: { capture: true },
+    [2]: { capture: false },
 };
 class ListenerOptions {
-    constructor(prevent, strategy, expAsHandler) {
+    constructor(prevent, strategy) {
         this.prevent = prevent;
         this.strategy = strategy;
-        this.expAsHandler = expAsHandler;
     }
 }
 class Listener {
@@ -5062,10 +4686,7 @@ class Listener {
         overrideContext.$event = event;
         let result = this.ast.evaluate(this.$scope, this, null);
         delete overrideContext.$event;
-        if (this._options.expAsHandler) {
-            if (!isFunction(result)) {
-                throw new Error(`Handler of "${this.targetEvent}" event is not a function.`);
-            }
+        if (isFunction(result)) {
             result = result(event);
         }
         if (result !== true && this._options.prevent) {
@@ -5088,7 +4709,7 @@ class Listener {
         if (ast.hasBind) {
             ast.bind(scope, this.interceptor);
         }
-        if (this._options.strategy === DelegationStrategy.none) {
+        if (this._options.strategy === 0) {
             this.target.addEventListener(this.targetEvent, this);
         }
         else {
@@ -5104,7 +4725,7 @@ class Listener {
             this.ast.unbind(this.$scope, this.interceptor);
         }
         this.$scope = null;
-        if (this._options.strategy === DelegationStrategy.none) {
+        if (this._options.strategy === 0) {
             this.target.removeEventListener(this.targetEvent, this);
         }
         else {
@@ -5379,6 +5000,12 @@ class TextBindingInstruction {
     }
     get type() { return "ha"; }
 }
+var DelegationStrategy;
+(function (DelegationStrategy) {
+    DelegationStrategy[DelegationStrategy["none"] = 0] = "none";
+    DelegationStrategy[DelegationStrategy["capturing"] = 1] = "capturing";
+    DelegationStrategy[DelegationStrategy["bubbling"] = 2] = "bubbling";
+})(DelegationStrategy || (DelegationStrategy = {}));
 class ListenerBindingInstruction {
     constructor(from, to, preventDefault, strategy) {
         this.from = from;
@@ -5641,7 +5268,7 @@ let LetElementRenderer = class LetElementRenderer {
             childInstruction = childInstructions[i];
             expr = ensureExpression(this._exprParser, childInstruction.from, 8);
             binding = new LetBinding(container, this._observerLocator, expr, childInstruction.to, toBindingContext);
-            renderingCtrl.addBinding(expr.$kind === 38963
+            renderingCtrl.addBinding(expr.$kind === 18
                 ? applyBindingBehavior(binding, expr, container)
                 : binding);
             ++i;
@@ -5660,7 +5287,7 @@ let CallBindingRenderer = class CallBindingRenderer {
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.from, 8 | 4);
         const binding = new CallBinding(renderingCtrl.container, this._observerLocator, expr, getTarget(target), instruction.to);
-        renderingCtrl.addBinding(expr.$kind === 38963
+        renderingCtrl.addBinding(expr.$kind === 18
             ? applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }
@@ -5676,7 +5303,7 @@ let RefBindingRenderer = class RefBindingRenderer {
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.from, 8);
         const binding = new RefBinding(renderingCtrl.container, expr, getRefTarget(target, instruction.to));
-        renderingCtrl.addBinding(expr.$kind === 38963
+        renderingCtrl.addBinding(expr.$kind === 18
             ? applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }
@@ -5694,14 +5321,14 @@ let InterpolationBindingRenderer = class InterpolationBindingRenderer {
     render(renderingCtrl, target, instruction) {
         const container = renderingCtrl.container;
         const expr = ensureExpression(this._exprParser, instruction.from, 1);
-        const binding = new InterpolationBinding(renderingCtrl, container, this._observerLocator, this._platform.domWriteQueue, expr, getTarget(target), instruction.to, BindingMode.toView);
+        const binding = new InterpolationBinding(renderingCtrl, container, this._observerLocator, this._platform.domWriteQueue, expr, getTarget(target), instruction.to, 2);
         const partBindings = binding.partBindings;
         const ii = partBindings.length;
         let i = 0;
         let partBinding;
         for (; ii > i; ++i) {
             partBinding = partBindings[i];
-            if (partBinding.ast.$kind === 38963) {
+            if (partBinding.ast.$kind === 18) {
                 partBindings[i] = applyBindingBehavior(partBinding, partBinding.ast, container);
             }
         }
@@ -5721,7 +5348,7 @@ let PropertyBindingRenderer = class PropertyBindingRenderer {
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.from, 8);
         const binding = new PropertyBinding(renderingCtrl, renderingCtrl.container, this._observerLocator, this._platform.domWriteQueue, expr, getTarget(target), instruction.to, instruction.mode);
-        renderingCtrl.addBinding(expr.$kind === 38963
+        renderingCtrl.addBinding(expr.$kind === 18
             ? applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }
@@ -5738,8 +5365,8 @@ let IteratorBindingRenderer = class IteratorBindingRenderer {
     }
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.from, 2);
-        const binding = new PropertyBinding(renderingCtrl, renderingCtrl.container, this._observerLocator, this._platform.domWriteQueue, expr, getTarget(target), instruction.to, BindingMode.toView);
-        renderingCtrl.addBinding(expr.iterable.$kind === 38963
+        const binding = new PropertyBinding(renderingCtrl, renderingCtrl.container, this._observerLocator, this._platform.domWriteQueue, expr, getTarget(target), instruction.to, 2);
+        renderingCtrl.addBinding(expr.iterable.$kind === 18
             ? applyBindingBehavior(binding, expr.iterable, renderingCtrl.container)
             : binding);
     }
@@ -5790,7 +5417,7 @@ let TextBindingRenderer = class TextBindingRenderer {
         for (; ii > i; ++i) {
             part = dynamicParts[i];
             binding = new ContentBinding(renderingCtrl, container, this._observerLocator, this._platform.domWriteQueue, this._platform, part, parent.insertBefore(doc.createTextNode(''), next), instruction.strict);
-            renderingCtrl.addBinding(part.$kind === 38963
+            renderingCtrl.addBinding(part.$kind === 18
                 ? applyBindingBehavior(binding, part, container)
                 : binding);
             text = staticParts[i + 1];
@@ -5807,28 +5434,20 @@ TextBindingRenderer.inject = [IExpressionParser, IObserverLocator, IPlatform];
 TextBindingRenderer = __decorate([
     renderer("ha")
 ], TextBindingRenderer);
-const IListenerBehaviorOptions = DI.createInterface('IListenerBehaviorOptions', x => x.singleton(ListenerBehaviorOptions));
-class ListenerBehaviorOptions {
-    constructor() {
-        this.expAsHandler = false;
-    }
-}
 let ListenerBindingRenderer = class ListenerBindingRenderer {
-    constructor(parser, eventDelegator, p, listenerBehaviorOptions) {
+    constructor(parser, eventDelegator) {
         this._exprParser = parser;
         this._eventDelegator = eventDelegator;
-        this._platform = p;
-        this._listenerBehaviorOptions = listenerBehaviorOptions;
     }
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.from, 4);
-        const binding = new Listener(renderingCtrl.container, expr, target, instruction.to, this._eventDelegator, new ListenerOptions(instruction.preventDefault, instruction.strategy, this._listenerBehaviorOptions.expAsHandler));
-        renderingCtrl.addBinding(expr.$kind === 38963
+        const binding = new Listener(renderingCtrl.container, expr, target, instruction.to, this._eventDelegator, new ListenerOptions(instruction.preventDefault, instruction.strategy));
+        renderingCtrl.addBinding(expr.$kind === 18
             ? applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }
 };
-ListenerBindingRenderer.inject = [IExpressionParser, IEventDelegator, IPlatform, IListenerBehaviorOptions];
+ListenerBindingRenderer.inject = [IExpressionParser, IEventDelegator];
 ListenerBindingRenderer = __decorate([
     renderer("hb")
 ], ListenerBindingRenderer);
@@ -5864,8 +5483,8 @@ let StylePropertyBindingRenderer = class StylePropertyBindingRenderer {
     }
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.from, 8);
-        const binding = new PropertyBinding(renderingCtrl, renderingCtrl.container, this._observerLocator, this._platform.domWriteQueue, expr, target.style, instruction.to, BindingMode.toView);
-        renderingCtrl.addBinding(expr.$kind === 38963
+        const binding = new PropertyBinding(renderingCtrl, renderingCtrl.container, this._observerLocator, this._platform.domWriteQueue, expr, target.style, instruction.to, 2);
+        renderingCtrl.addBinding(expr.$kind === 18
             ? applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }
@@ -5882,8 +5501,8 @@ let AttributeBindingRenderer = class AttributeBindingRenderer {
     }
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.from, 8);
-        const binding = new AttributeBinding(renderingCtrl, renderingCtrl.container, this._observerLocator, this._platform.domWriteQueue, expr, target, instruction.attr, instruction.to, BindingMode.toView);
-        renderingCtrl.addBinding(expr.$kind === 38963
+        const binding = new AttributeBinding(renderingCtrl, renderingCtrl.container, this._observerLocator, this._platform.domWriteQueue, expr, target, instruction.attr, instruction.to, 2);
+        renderingCtrl.addBinding(expr.$kind === 18
             ? applyBindingBehavior(binding, expr, renderingCtrl.container)
             : binding);
     }
@@ -6125,18 +5744,14 @@ const BindingCommand = Object.freeze({
     getAnnotation: getCommandAnnotation,
 });
 let OneTimeBindingCommand = class OneTimeBindingCommand {
-    constructor(m, xp) {
-        this.type = 0;
-        this._attrMapper = m;
-        this._exprParser = xp;
-    }
+    get type() { return 0; }
     get name() { return 'one-time'; }
-    build(info) {
+    build(info, exprParser, attrMapper) {
         const attr = info.attr;
         let target = attr.target;
         let value = info.attr.rawValue;
         if (info.bindable == null) {
-            target = this._attrMapper.map(info.node, target)
+            target = attrMapper.map(info.node, target)
                 ?? camelCase(target);
         }
         else {
@@ -6145,26 +5760,21 @@ let OneTimeBindingCommand = class OneTimeBindingCommand {
             }
             target = info.bindable.property;
         }
-        return new PropertyBindingInstruction(this._exprParser.parse(value, 8), target, BindingMode.oneTime);
+        return new PropertyBindingInstruction(exprParser.parse(value, 8), target, 1);
     }
 };
-OneTimeBindingCommand.inject = [IAttrMapper, IExpressionParser];
 OneTimeBindingCommand = __decorate([
     bindingCommand('one-time')
 ], OneTimeBindingCommand);
 let ToViewBindingCommand = class ToViewBindingCommand {
-    constructor(attrMapper, exprParser) {
-        this.type = 0;
-        this._attrMapper = attrMapper;
-        this._exprParser = exprParser;
-    }
+    get type() { return 0; }
     get name() { return 'to-view'; }
-    build(info) {
+    build(info, exprParser, attrMapper) {
         const attr = info.attr;
         let target = attr.target;
         let value = info.attr.rawValue;
         if (info.bindable == null) {
-            target = this._attrMapper.map(info.node, target)
+            target = attrMapper.map(info.node, target)
                 ?? camelCase(target);
         }
         else {
@@ -6173,26 +5783,21 @@ let ToViewBindingCommand = class ToViewBindingCommand {
             }
             target = info.bindable.property;
         }
-        return new PropertyBindingInstruction(this._exprParser.parse(value, 8), target, BindingMode.toView);
+        return new PropertyBindingInstruction(exprParser.parse(value, 8), target, 2);
     }
 };
-ToViewBindingCommand.inject = [IAttrMapper, IExpressionParser];
 ToViewBindingCommand = __decorate([
     bindingCommand('to-view')
 ], ToViewBindingCommand);
 let FromViewBindingCommand = class FromViewBindingCommand {
-    constructor(m, xp) {
-        this.type = 0;
-        this._attrMapper = m;
-        this._exprParser = xp;
-    }
+    get type() { return 0; }
     get name() { return 'from-view'; }
-    build(info) {
+    build(info, exprParser, attrMapper) {
         const attr = info.attr;
         let target = attr.target;
         let value = attr.rawValue;
         if (info.bindable == null) {
-            target = this._attrMapper.map(info.node, target)
+            target = attrMapper.map(info.node, target)
                 ?? camelCase(target);
         }
         else {
@@ -6201,26 +5806,21 @@ let FromViewBindingCommand = class FromViewBindingCommand {
             }
             target = info.bindable.property;
         }
-        return new PropertyBindingInstruction(this._exprParser.parse(value, 8), target, BindingMode.fromView);
+        return new PropertyBindingInstruction(exprParser.parse(value, 8), target, 4);
     }
 };
-FromViewBindingCommand.inject = [IAttrMapper, IExpressionParser];
 FromViewBindingCommand = __decorate([
     bindingCommand('from-view')
 ], FromViewBindingCommand);
 let TwoWayBindingCommand = class TwoWayBindingCommand {
-    constructor(m, xp) {
-        this.type = 0;
-        this._attrMapper = m;
-        this._exprParser = xp;
-    }
+    get type() { return 0; }
     get name() { return 'two-way'; }
-    build(info) {
+    build(info, exprParser, attrMapper) {
         const attr = info.attr;
         let target = attr.target;
         let value = attr.rawValue;
         if (info.bindable == null) {
-            target = this._attrMapper.map(info.node, target)
+            target = attrMapper.map(info.node, target)
                 ?? camelCase(target);
         }
         else {
@@ -6229,21 +5829,16 @@ let TwoWayBindingCommand = class TwoWayBindingCommand {
             }
             target = info.bindable.property;
         }
-        return new PropertyBindingInstruction(this._exprParser.parse(value, 8), target, BindingMode.twoWay);
+        return new PropertyBindingInstruction(exprParser.parse(value, 8), target, 6);
     }
 };
-TwoWayBindingCommand.inject = [IAttrMapper, IExpressionParser];
 TwoWayBindingCommand = __decorate([
     bindingCommand('two-way')
 ], TwoWayBindingCommand);
 let DefaultBindingCommand = class DefaultBindingCommand {
-    constructor(m, xp) {
-        this.type = 0;
-        this._attrMapper = m;
-        this._exprParser = xp;
-    }
+    get type() { return 0; }
     get name() { return 'bind'; }
-    build(info) {
+    build(info, exprParser, attrMapper) {
         const attr = info.attr;
         const bindable = info.bindable;
         let defaultMode;
@@ -6251,8 +5846,8 @@ let DefaultBindingCommand = class DefaultBindingCommand {
         let target = attr.target;
         let value = attr.rawValue;
         if (bindable == null) {
-            mode = this._attrMapper.isTwoWay(info.node, target) ? BindingMode.twoWay : BindingMode.toView;
-            target = this._attrMapper.map(info.node, target)
+            mode = attrMapper.isTwoWay(info.node, target) ? 6 : 2;
+            target = attrMapper.map(info.node, target)
                 ?? camelCase(target);
         }
         else {
@@ -6260,156 +5855,117 @@ let DefaultBindingCommand = class DefaultBindingCommand {
                 value = camelCase(target);
             }
             defaultMode = info.def.defaultBindingMode;
-            mode = bindable.mode === BindingMode.default || bindable.mode == null
-                ? defaultMode == null || defaultMode === BindingMode.default
-                    ? BindingMode.toView
+            mode = bindable.mode === 8 || bindable.mode == null
+                ? defaultMode == null || defaultMode === 8
+                    ? 2
                     : defaultMode
                 : bindable.mode;
             target = bindable.property;
         }
-        return new PropertyBindingInstruction(this._exprParser.parse(value, 8), target, mode);
+        return new PropertyBindingInstruction(exprParser.parse(value, 8), target, mode);
     }
 };
-DefaultBindingCommand.inject = [IAttrMapper, IExpressionParser];
 DefaultBindingCommand = __decorate([
     bindingCommand('bind')
 ], DefaultBindingCommand);
 let CallBindingCommand = class CallBindingCommand {
-    constructor(xp) {
-        this.type = 0;
-        this._exprParser = xp;
-    }
+    get type() { return 0; }
     get name() { return 'call'; }
-    build(info) {
+    build(info, exprParser) {
         const target = info.bindable === null
             ? camelCase(info.attr.target)
             : info.bindable.property;
-        return new CallBindingInstruction(this._exprParser.parse(info.attr.rawValue, (8 | 4)), target);
+        return new CallBindingInstruction(exprParser.parse(info.attr.rawValue, (8 | 4)), target);
     }
 };
-CallBindingCommand.inject = [IExpressionParser];
 CallBindingCommand = __decorate([
     bindingCommand('call')
 ], CallBindingCommand);
 let ForBindingCommand = class ForBindingCommand {
-    constructor(xp) {
-        this.type = 0;
-        this._exprParser = xp;
-    }
+    get type() { return 0; }
     get name() { return 'for'; }
-    build(info) {
+    build(info, exprParser) {
         const target = info.bindable === null
             ? camelCase(info.attr.target)
             : info.bindable.property;
-        return new IteratorBindingInstruction(this._exprParser.parse(info.attr.rawValue, 2), target);
+        return new IteratorBindingInstruction(exprParser.parse(info.attr.rawValue, 2), target);
     }
 };
-ForBindingCommand.inject = [IExpressionParser];
 ForBindingCommand = __decorate([
     bindingCommand('for')
 ], ForBindingCommand);
 let TriggerBindingCommand = class TriggerBindingCommand {
-    constructor(xp) {
-        this.type = 1;
-        this._exprParser = xp;
-    }
+    get type() { return 1; }
     get name() { return 'trigger'; }
-    build(info) {
-        return new ListenerBindingInstruction(this._exprParser.parse(info.attr.rawValue, 4), info.attr.target, true, DelegationStrategy.none);
+    build(info, exprParser) {
+        return new ListenerBindingInstruction(exprParser.parse(info.attr.rawValue, 4), info.attr.target, true, 0);
     }
 };
-TriggerBindingCommand.inject = [IExpressionParser];
 TriggerBindingCommand = __decorate([
     bindingCommand('trigger')
 ], TriggerBindingCommand);
 let DelegateBindingCommand = class DelegateBindingCommand {
-    constructor(xp) {
-        this.type = 1;
-        this._exprParser = xp;
-    }
+    get type() { return 1; }
     get name() { return 'delegate'; }
-    build(info) {
-        return new ListenerBindingInstruction(this._exprParser.parse(info.attr.rawValue, 4), info.attr.target, false, DelegationStrategy.bubbling);
+    build(info, exprParser) {
+        return new ListenerBindingInstruction(exprParser.parse(info.attr.rawValue, 4), info.attr.target, false, 2);
     }
 };
-DelegateBindingCommand.inject = [IExpressionParser];
 DelegateBindingCommand = __decorate([
     bindingCommand('delegate')
 ], DelegateBindingCommand);
 let CaptureBindingCommand = class CaptureBindingCommand {
-    constructor(xp) {
-        this.type = 1;
-        this._exprParser = xp;
-    }
+    get type() { return 1; }
     get name() { return 'capture'; }
-    build(info) {
-        return new ListenerBindingInstruction(this._exprParser.parse(info.attr.rawValue, 4), info.attr.target, false, DelegationStrategy.capturing);
+    build(info, exprParser) {
+        return new ListenerBindingInstruction(exprParser.parse(info.attr.rawValue, 4), info.attr.target, false, 1);
     }
 };
-CaptureBindingCommand.inject = [IExpressionParser];
 CaptureBindingCommand = __decorate([
     bindingCommand('capture')
 ], CaptureBindingCommand);
 let AttrBindingCommand = class AttrBindingCommand {
-    constructor(xp) {
-        this.type = 1;
-        this._exprParser = xp;
-    }
+    get type() { return 1; }
     get name() { return 'attr'; }
-    build(info) {
-        return new AttributeBindingInstruction(info.attr.target, this._exprParser.parse(info.attr.rawValue, 8), info.attr.target);
+    build(info, exprParser) {
+        return new AttributeBindingInstruction(info.attr.target, exprParser.parse(info.attr.rawValue, 8), info.attr.target);
     }
 };
-AttrBindingCommand.inject = [IExpressionParser];
 AttrBindingCommand = __decorate([
     bindingCommand('attr')
 ], AttrBindingCommand);
 let StyleBindingCommand = class StyleBindingCommand {
-    constructor(xp) {
-        this.type = 1;
-        this._exprParser = xp;
-    }
+    get type() { return 1; }
     get name() { return 'style'; }
-    build(info) {
-        return new AttributeBindingInstruction('style', this._exprParser.parse(info.attr.rawValue, 8), info.attr.target);
+    build(info, exprParser) {
+        return new AttributeBindingInstruction('style', exprParser.parse(info.attr.rawValue, 8), info.attr.target);
     }
 };
-StyleBindingCommand.inject = [IExpressionParser];
 StyleBindingCommand = __decorate([
     bindingCommand('style')
 ], StyleBindingCommand);
 let ClassBindingCommand = class ClassBindingCommand {
-    constructor(xp) {
-        this.type = 1;
-        this._exprParser = xp;
-    }
+    get type() { return 1; }
     get name() { return 'class'; }
-    build(info) {
-        return new AttributeBindingInstruction('class', this._exprParser.parse(info.attr.rawValue, 8), info.attr.target);
+    build(info, exprParser) {
+        return new AttributeBindingInstruction('class', exprParser.parse(info.attr.rawValue, 8), info.attr.target);
     }
 };
-ClassBindingCommand.inject = [IExpressionParser];
 ClassBindingCommand = __decorate([
     bindingCommand('class')
 ], ClassBindingCommand);
 let RefBindingCommand = class RefBindingCommand {
-    constructor(xp) {
-        this.type = 1;
-        this._exprParser = xp;
-    }
+    get type() { return 1; }
     get name() { return 'ref'; }
-    build(info) {
-        return new RefBindingInstruction(this._exprParser.parse(info.attr.rawValue, 8), info.attr.target);
+    build(info, exprParser) {
+        return new RefBindingInstruction(exprParser.parse(info.attr.rawValue, 8), info.attr.target);
     }
 };
-RefBindingCommand.inject = [IExpressionParser];
 RefBindingCommand = __decorate([
     bindingCommand('ref')
 ], RefBindingCommand);
 let SpreadBindingCommand = class SpreadBindingCommand {
-    constructor() {
-        this.type = 1;
-    }
+    get type() { return 1; }
     get name() { return '...$attrs'; }
     build(_info) {
         return new SpreadBindingInstruction();
@@ -6418,6 +5974,251 @@ let SpreadBindingCommand = class SpreadBindingCommand {
 SpreadBindingCommand = __decorate([
     bindingCommand('...$attrs')
 ], SpreadBindingCommand);
+
+const ISVGAnalyzer = DI.createInterface('ISVGAnalyzer', x => x.singleton(NoopSVGAnalyzer));
+const o = (keys) => {
+    const lookup = createLookup();
+    keys = isString(keys) ? keys.split(' ') : keys;
+    let key;
+    for (key of keys) {
+        lookup[key] = true;
+    }
+    return lookup;
+};
+class NoopSVGAnalyzer {
+    isStandardSvgAttribute(_node, _attributeName) {
+        return false;
+    }
+}
+class SVGAnalyzer {
+    constructor(platform) {
+        this._svgElements = Object.assign(createLookup(), {
+            'a': o('class externalResourcesRequired id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup requiredExtensions requiredFeatures style systemLanguage target transform xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space'),
+            'altGlyph': o('class dx dy externalResourcesRequired format glyphRef id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup requiredExtensions requiredFeatures rotate style systemLanguage x xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space y'),
+            'altglyph': createLookup(),
+            'altGlyphDef': o('id xml:base xml:lang xml:space'),
+            'altglyphdef': createLookup(),
+            'altGlyphItem': o('id xml:base xml:lang xml:space'),
+            'altglyphitem': createLookup(),
+            'animate': o('accumulate additive attributeName attributeType begin by calcMode dur end externalResourcesRequired fill from id keySplines keyTimes max min onbegin onend onload onrepeat repeatCount repeatDur requiredExtensions requiredFeatures restart systemLanguage to values xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space'),
+            'animateColor': o('accumulate additive attributeName attributeType begin by calcMode dur end externalResourcesRequired fill from id keySplines keyTimes max min onbegin onend onload onrepeat repeatCount repeatDur requiredExtensions requiredFeatures restart systemLanguage to values xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space'),
+            'animateMotion': o('accumulate additive begin by calcMode dur end externalResourcesRequired fill from id keyPoints keySplines keyTimes max min onbegin onend onload onrepeat origin path repeatCount repeatDur requiredExtensions requiredFeatures restart rotate systemLanguage to values xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space'),
+            'animateTransform': o('accumulate additive attributeName attributeType begin by calcMode dur end externalResourcesRequired fill from id keySplines keyTimes max min onbegin onend onload onrepeat repeatCount repeatDur requiredExtensions requiredFeatures restart systemLanguage to type values xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space'),
+            'circle': o('class cx cy externalResourcesRequired id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup r requiredExtensions requiredFeatures style systemLanguage transform xml:base xml:lang xml:space'),
+            'clipPath': o('class clipPathUnits externalResourcesRequired id requiredExtensions requiredFeatures style systemLanguage transform xml:base xml:lang xml:space'),
+            'color-profile': o('id local name rendering-intent xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space'),
+            'cursor': o('externalResourcesRequired id requiredExtensions requiredFeatures systemLanguage x xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space y'),
+            'defs': o('class externalResourcesRequired id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup requiredExtensions requiredFeatures style systemLanguage transform xml:base xml:lang xml:space'),
+            'desc': o('class id style xml:base xml:lang xml:space'),
+            'ellipse': o('class cx cy externalResourcesRequired id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup requiredExtensions requiredFeatures rx ry style systemLanguage transform xml:base xml:lang xml:space'),
+            'feBlend': o('class height id in in2 mode result style width x xml:base xml:lang xml:space y'),
+            'feColorMatrix': o('class height id in result style type values width x xml:base xml:lang xml:space y'),
+            'feComponentTransfer': o('class height id in result style width x xml:base xml:lang xml:space y'),
+            'feComposite': o('class height id in in2 k1 k2 k3 k4 operator result style width x xml:base xml:lang xml:space y'),
+            'feConvolveMatrix': o('bias class divisor edgeMode height id in kernelMatrix kernelUnitLength order preserveAlpha result style targetX targetY width x xml:base xml:lang xml:space y'),
+            'feDiffuseLighting': o('class diffuseConstant height id in kernelUnitLength result style surfaceScale width x xml:base xml:lang xml:space y'),
+            'feDisplacementMap': o('class height id in in2 result scale style width x xChannelSelector xml:base xml:lang xml:space y yChannelSelector'),
+            'feDistantLight': o('azimuth elevation id xml:base xml:lang xml:space'),
+            'feFlood': o('class height id result style width x xml:base xml:lang xml:space y'),
+            'feFuncA': o('amplitude exponent id intercept offset slope tableValues type xml:base xml:lang xml:space'),
+            'feFuncB': o('amplitude exponent id intercept offset slope tableValues type xml:base xml:lang xml:space'),
+            'feFuncG': o('amplitude exponent id intercept offset slope tableValues type xml:base xml:lang xml:space'),
+            'feFuncR': o('amplitude exponent id intercept offset slope tableValues type xml:base xml:lang xml:space'),
+            'feGaussianBlur': o('class height id in result stdDeviation style width x xml:base xml:lang xml:space y'),
+            'feImage': o('class externalResourcesRequired height id preserveAspectRatio result style width x xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space y'),
+            'feMerge': o('class height id result style width x xml:base xml:lang xml:space y'),
+            'feMergeNode': o('id xml:base xml:lang xml:space'),
+            'feMorphology': o('class height id in operator radius result style width x xml:base xml:lang xml:space y'),
+            'feOffset': o('class dx dy height id in result style width x xml:base xml:lang xml:space y'),
+            'fePointLight': o('id x xml:base xml:lang xml:space y z'),
+            'feSpecularLighting': o('class height id in kernelUnitLength result specularConstant specularExponent style surfaceScale width x xml:base xml:lang xml:space y'),
+            'feSpotLight': o('id limitingConeAngle pointsAtX pointsAtY pointsAtZ specularExponent x xml:base xml:lang xml:space y z'),
+            'feTile': o('class height id in result style width x xml:base xml:lang xml:space y'),
+            'feTurbulence': o('baseFrequency class height id numOctaves result seed stitchTiles style type width x xml:base xml:lang xml:space y'),
+            'filter': o('class externalResourcesRequired filterRes filterUnits height id primitiveUnits style width x xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space y'),
+            'font': o('class externalResourcesRequired horiz-adv-x horiz-origin-x horiz-origin-y id style vert-adv-y vert-origin-x vert-origin-y xml:base xml:lang xml:space'),
+            'font-face': o('accent-height alphabetic ascent bbox cap-height descent font-family font-size font-stretch font-style font-variant font-weight hanging id ideographic mathematical overline-position overline-thickness panose-1 slope stemh stemv strikethrough-position strikethrough-thickness underline-position underline-thickness unicode-range units-per-em v-alphabetic v-hanging v-ideographic v-mathematical widths x-height xml:base xml:lang xml:space'),
+            'font-face-format': o('id string xml:base xml:lang xml:space'),
+            'font-face-name': o('id name xml:base xml:lang xml:space'),
+            'font-face-src': o('id xml:base xml:lang xml:space'),
+            'font-face-uri': o('id xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space'),
+            'foreignObject': o('class externalResourcesRequired height id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup requiredExtensions requiredFeatures style systemLanguage transform width x xml:base xml:lang xml:space y'),
+            'g': o('class externalResourcesRequired id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup requiredExtensions requiredFeatures style systemLanguage transform xml:base xml:lang xml:space'),
+            'glyph': o('arabic-form class d glyph-name horiz-adv-x id lang orientation style unicode vert-adv-y vert-origin-x vert-origin-y xml:base xml:lang xml:space'),
+            'glyphRef': o('class dx dy format glyphRef id style x xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space y'),
+            'glyphref': createLookup(),
+            'hkern': o('g1 g2 id k u1 u2 xml:base xml:lang xml:space'),
+            'image': o('class externalResourcesRequired height id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup preserveAspectRatio requiredExtensions requiredFeatures style systemLanguage transform width x xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space y'),
+            'line': o('class externalResourcesRequired id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup requiredExtensions requiredFeatures style systemLanguage transform x1 x2 xml:base xml:lang xml:space y1 y2'),
+            'linearGradient': o('class externalResourcesRequired gradientTransform gradientUnits id spreadMethod style x1 x2 xlink:arcrole xlink:href xlink:role xlink:title xlink:type xml:base xml:lang xml:space y1 y2'),
+            'marker': o('class externalResourcesRequired id markerHeight markerUnits markerWidth orient preserveAspectRatio refX refY style viewBox xml:base xml:lang xml:space'),
+            'mask': o('class externalResourcesRequired height id maskContentUnits maskUnits requiredExtensions requiredFeatures style systemLanguage width x xml:base xml:lang xml:space y'),
+            'metadata': o('id xml:base xml:lang xml:space'),
+            'missing-glyph': o('class d horiz-adv-x id style vert-adv-y vert-origin-x vert-origin-y xml:base xml:lang xml:space'),
+            'mpath': o('externalResourcesRequired id xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space'),
+            'path': o('class d externalResourcesRequired id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup pathLength requiredExtensions requiredFeatures style systemLanguage transform xml:base xml:lang xml:space'),
+            'pattern': o('class externalResourcesRequired height id patternContentUnits patternTransform patternUnits preserveAspectRatio requiredExtensions requiredFeatures style systemLanguage viewBox width x xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space y'),
+            'polygon': o('class externalResourcesRequired id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup points requiredExtensions requiredFeatures style systemLanguage transform xml:base xml:lang xml:space'),
+            'polyline': o('class externalResourcesRequired id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup points requiredExtensions requiredFeatures style systemLanguage transform xml:base xml:lang xml:space'),
+            'radialGradient': o('class cx cy externalResourcesRequired fx fy gradientTransform gradientUnits id r spreadMethod style xlink:arcrole xlink:href xlink:role xlink:title xlink:type xml:base xml:lang xml:space'),
+            'rect': o('class externalResourcesRequired height id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup requiredExtensions requiredFeatures rx ry style systemLanguage transform width x xml:base xml:lang xml:space y'),
+            'script': o('externalResourcesRequired id type xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space'),
+            'set': o('attributeName attributeType begin dur end externalResourcesRequired fill id max min onbegin onend onload onrepeat repeatCount repeatDur requiredExtensions requiredFeatures restart systemLanguage to xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space'),
+            'stop': o('class id offset style xml:base xml:lang xml:space'),
+            'style': o('id media title type xml:base xml:lang xml:space'),
+            'svg': o('baseProfile class contentScriptType contentStyleType externalResourcesRequired height id onabort onactivate onclick onerror onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup onresize onscroll onunload onzoom preserveAspectRatio requiredExtensions requiredFeatures style systemLanguage version viewBox width x xml:base xml:lang xml:space y zoomAndPan'),
+            'switch': o('class externalResourcesRequired id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup requiredExtensions requiredFeatures style systemLanguage transform xml:base xml:lang xml:space'),
+            'symbol': o('class externalResourcesRequired id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup preserveAspectRatio style viewBox xml:base xml:lang xml:space'),
+            'text': o('class dx dy externalResourcesRequired id lengthAdjust onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup requiredExtensions requiredFeatures rotate style systemLanguage textLength transform x xml:base xml:lang xml:space y'),
+            'textPath': o('class externalResourcesRequired id lengthAdjust method onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup requiredExtensions requiredFeatures spacing startOffset style systemLanguage textLength xlink:arcrole xlink:href xlink:role xlink:title xlink:type xml:base xml:lang xml:space'),
+            'title': o('class id style xml:base xml:lang xml:space'),
+            'tref': o('class dx dy externalResourcesRequired id lengthAdjust onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup requiredExtensions requiredFeatures rotate style systemLanguage textLength x xlink:arcrole xlink:href xlink:role xlink:title xlink:type xml:base xml:lang xml:space y'),
+            'tspan': o('class dx dy externalResourcesRequired id lengthAdjust onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup requiredExtensions requiredFeatures rotate style systemLanguage textLength x xml:base xml:lang xml:space y'),
+            'use': o('class externalResourcesRequired height id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup requiredExtensions requiredFeatures style systemLanguage transform width x xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space y'),
+            'view': o('externalResourcesRequired id preserveAspectRatio viewBox viewTarget xml:base xml:lang xml:space zoomAndPan'),
+            'vkern': o('g1 g2 id k u1 u2 xml:base xml:lang xml:space'),
+        });
+        this._svgPresentationElements = o('a altGlyph animate animateColor circle clipPath defs ellipse feBlend feColorMatrix feComponentTransfer feComposite feConvolveMatrix feDiffuseLighting feDisplacementMap feFlood feGaussianBlur feImage feMerge feMorphology feOffset feSpecularLighting feTile feTurbulence filter font foreignObject g glyph glyphRef image line linearGradient marker mask missing-glyph path pattern polygon polyline radialGradient rect stop svg switch symbol text textPath tref tspan use');
+        this._svgPresentationAttributes = o('alignment-baseline baseline-shift clip-path clip-rule clip color-interpolation-filters color-interpolation color-profile color-rendering color cursor direction display dominant-baseline enable-background fill-opacity fill-rule fill filter flood-color flood-opacity font-family font-size-adjust font-size font-stretch font-style font-variant font-weight glyph-orientation-horizontal glyph-orientation-vertical image-rendering kerning letter-spacing lighting-color marker-end marker-mid marker-start mask opacity overflow pointer-events shape-rendering stop-color stop-opacity stroke-dasharray stroke-dashoffset stroke-linecap stroke-linejoin stroke-miterlimit stroke-opacity stroke-width stroke text-anchor text-decoration text-rendering unicode-bidi visibility word-spacing writing-mode');
+        this.SVGElement = platform.globalThis.SVGElement;
+        const div = platform.document.createElement('div');
+        div.innerHTML = '<svg><altGlyph /></svg>';
+        if (div.firstElementChild.nodeName === 'altglyph') {
+            const svg = this._svgElements;
+            let tmp = svg.altGlyph;
+            svg.altGlyph = svg.altglyph;
+            svg.altglyph = tmp;
+            tmp = svg.altGlyphDef;
+            svg.altGlyphDef = svg.altglyphdef;
+            svg.altglyphdef = tmp;
+            tmp = svg.altGlyphItem;
+            svg.altGlyphItem = svg.altglyphitem;
+            svg.altglyphitem = tmp;
+            tmp = svg.glyphRef;
+            svg.glyphRef = svg.glyphref;
+            svg.glyphref = tmp;
+        }
+    }
+    static register(container) {
+        return singletonRegistration(ISVGAnalyzer, this).register(container);
+    }
+    isStandardSvgAttribute(node, attributeName) {
+        if (!(node instanceof this.SVGElement)) {
+            return false;
+        }
+        return (this._svgPresentationElements[node.nodeName] === true && this._svgPresentationAttributes[attributeName] === true ||
+            this._svgElements[node.nodeName]?.[attributeName] === true);
+    }
+}
+SVGAnalyzer.inject = [IPlatform];
+
+const IAttrMapper = DI
+    .createInterface('IAttrMapper', x => x.singleton(AttrMapper));
+class AttrMapper {
+    constructor(svg) {
+        this.svg = svg;
+        this.fns = [];
+        this._tagAttrMap = createLookup();
+        this._globalAttrMap = createLookup();
+        this.useMapping({
+            LABEL: { for: 'htmlFor' },
+            IMG: { usemap: 'useMap' },
+            INPUT: {
+                maxlength: 'maxLength',
+                minlength: 'minLength',
+                formaction: 'formAction',
+                formenctype: 'formEncType',
+                formmethod: 'formMethod',
+                formnovalidate: 'formNoValidate',
+                formtarget: 'formTarget',
+                inputmode: 'inputMode',
+            },
+            TEXTAREA: { maxlength: 'maxLength' },
+            TD: { rowspan: 'rowSpan', colspan: 'colSpan' },
+            TH: { rowspan: 'rowSpan', colspan: 'colSpan' },
+        });
+        this.useGlobalMapping({
+            accesskey: 'accessKey',
+            contenteditable: 'contentEditable',
+            tabindex: 'tabIndex',
+            textcontent: 'textContent',
+            innerhtml: 'innerHTML',
+            scrolltop: 'scrollTop',
+            scrollleft: 'scrollLeft',
+            readonly: 'readOnly',
+        });
+    }
+    static get inject() { return [ISVGAnalyzer]; }
+    useMapping(config) {
+        var _a;
+        let newAttrMapping;
+        let targetAttrMapping;
+        let tagName;
+        let attr;
+        for (tagName in config) {
+            newAttrMapping = config[tagName];
+            targetAttrMapping = (_a = this._tagAttrMap)[tagName] ?? (_a[tagName] = createLookup());
+            for (attr in newAttrMapping) {
+                if (targetAttrMapping[attr] !== void 0) {
+                    throw createMappedError(attr, tagName);
+                }
+                targetAttrMapping[attr] = newAttrMapping[attr];
+            }
+        }
+    }
+    useGlobalMapping(config) {
+        const mapper = this._globalAttrMap;
+        for (const attr in config) {
+            if (mapper[attr] !== void 0) {
+                throw createMappedError(attr, '*');
+            }
+            mapper[attr] = config[attr];
+        }
+    }
+    useTwoWay(fn) {
+        this.fns.push(fn);
+    }
+    isTwoWay(node, attrName) {
+        return shouldDefaultToTwoWay(node, attrName)
+            || this.fns.length > 0 && this.fns.some(fn => fn(node, attrName));
+    }
+    map(node, attr) {
+        return this._tagAttrMap[node.nodeName]?.[attr]
+            ?? this._globalAttrMap[attr]
+            ?? (isDataAttribute(node, attr, this.svg)
+                ? attr
+                : null);
+    }
+}
+function shouldDefaultToTwoWay(element, attr) {
+    switch (element.nodeName) {
+        case 'INPUT':
+            switch (element.type) {
+                case 'checkbox':
+                case 'radio':
+                    return attr === 'checked';
+                default:
+                    return attr === 'value' || attr === 'files' || attr === 'value-as-number' || attr === 'value-as-date';
+            }
+        case 'TEXTAREA':
+        case 'SELECT':
+            return attr === 'value';
+        default:
+            switch (attr) {
+                case 'textcontent':
+                case 'innerhtml':
+                    return element.hasAttribute('contenteditable');
+                case 'scrolltop':
+                case 'scrollleft':
+                    return true;
+                default:
+                    return false;
+            }
+    }
+}
+function createMappedError(attr, tagName) {
+    return new Error(`Attribute ${attr} has been already registered for ${tagName === '*' ? 'all elements' : `<${tagName}/>`}`);
+}
 
 const ITemplateElementFactory = DI.createInterface('ITemplateElementFactory', x => x.singleton(TemplateElementFactory));
 const markupCache = {};
@@ -6536,7 +6337,7 @@ class TemplateCompiler {
                 commandBuildInfo.attr = attrSyntax;
                 commandBuildInfo.bindable = null;
                 commandBuildInfo.def = null;
-                instructions.push(bindingCommand.build(commandBuildInfo));
+                instructions.push(bindingCommand.build(commandBuildInfo, context._exprParser, context._attrMapper));
                 continue;
             }
             attrDef = context._findAttr(attrTarget);
@@ -6566,7 +6367,7 @@ class TemplateCompiler {
                         commandBuildInfo.attr = attrSyntax;
                         commandBuildInfo.bindable = primaryBindable;
                         commandBuildInfo.def = attrDef;
-                        attrBindableInstructions = [bindingCommand.build(commandBuildInfo)];
+                        attrBindableInstructions = [bindingCommand.build(commandBuildInfo, context._exprParser, context._attrMapper)];
                     }
                 }
                 (attrInstructions ?? (attrInstructions = [])).push(new HydrateAttributeInstruction(this.resolveResources ? attrDef : attrDef.name, attrDef.aliases != null && attrDef.aliases.includes(attrTarget) ? attrTarget : void 0, attrBindableInstructions));
@@ -6610,7 +6411,7 @@ class TemplateCompiler {
                         commandBuildInfo.attr = attrSyntax;
                         commandBuildInfo.bindable = bindable;
                         commandBuildInfo.def = elDef;
-                        instructions.push(new SpreadElementPropBindingInstruction(bindingCommand.build(commandBuildInfo)));
+                        instructions.push(new SpreadElementPropBindingInstruction(bindingCommand.build(commandBuildInfo, context._exprParser, context._attrMapper)));
                         continue;
                     }
                 }
@@ -6618,7 +6419,7 @@ class TemplateCompiler {
                 commandBuildInfo.attr = attrSyntax;
                 commandBuildInfo.bindable = null;
                 commandBuildInfo.def = null;
-                instructions.push(bindingCommand.build(commandBuildInfo));
+                instructions.push(bindingCommand.build(commandBuildInfo, context._exprParser, context._attrMapper));
             }
         }
         resetCommandBuildInfo();
@@ -6663,7 +6464,7 @@ class TemplateCompiler {
                 commandBuildInfo.attr = attrSyntax;
                 commandBuildInfo.bindable = null;
                 commandBuildInfo.def = null;
-                instructions.push(bindingCommand.build(commandBuildInfo));
+                instructions.push(bindingCommand.build(commandBuildInfo, context._exprParser, context._attrMapper));
                 continue;
             }
             attrDef = context._findAttr(realAttrTarget);
@@ -6693,7 +6494,7 @@ class TemplateCompiler {
                         commandBuildInfo.attr = attrSyntax;
                         commandBuildInfo.bindable = primaryBindable;
                         commandBuildInfo.def = attrDef;
-                        attrBindableInstructions = [bindingCommand.build(commandBuildInfo)];
+                        attrBindableInstructions = [bindingCommand.build(commandBuildInfo, context._exprParser, context._attrMapper)];
                     }
                 }
                 el.removeAttribute(attrName);
@@ -6728,7 +6529,7 @@ class TemplateCompiler {
                 commandBuildInfo.attr = attrSyntax;
                 commandBuildInfo.bindable = null;
                 commandBuildInfo.def = null;
-                instructions.push(bindingCommand.build(commandBuildInfo));
+                instructions.push(bindingCommand.build(commandBuildInfo, context._exprParser, context._attrMapper));
             }
         }
         resetCommandBuildInfo();
@@ -6907,7 +6708,7 @@ class TemplateCompiler {
                 commandBuildInfo.attr = attrSyntax;
                 commandBuildInfo.bindable = null;
                 commandBuildInfo.def = null;
-                (plainAttrInstructions ?? (plainAttrInstructions = [])).push(bindingCommand.build(commandBuildInfo));
+                (plainAttrInstructions ?? (plainAttrInstructions = [])).push(bindingCommand.build(commandBuildInfo, context._exprParser, context._attrMapper));
                 removeAttr();
                 continue;
             }
@@ -6935,7 +6736,7 @@ class TemplateCompiler {
                         commandBuildInfo.attr = attrSyntax;
                         commandBuildInfo.bindable = primaryBindable;
                         commandBuildInfo.def = attrDef;
-                        attrBindableInstructions = [bindingCommand.build(commandBuildInfo)];
+                        attrBindableInstructions = [bindingCommand.build(commandBuildInfo, context._exprParser, context._attrMapper)];
                     }
                 }
                 removeAttr();
@@ -6976,7 +6777,7 @@ class TemplateCompiler {
                     commandBuildInfo.attr = attrSyntax;
                     commandBuildInfo.bindable = bindable;
                     commandBuildInfo.def = elDef;
-                    (elBindableInstructions ?? (elBindableInstructions = [])).push(bindingCommand.build(commandBuildInfo));
+                    (elBindableInstructions ?? (elBindableInstructions = [])).push(bindingCommand.build(commandBuildInfo, context._exprParser, context._attrMapper));
                     continue;
                 }
             }
@@ -6984,7 +6785,7 @@ class TemplateCompiler {
             commandBuildInfo.attr = attrSyntax;
             commandBuildInfo.bindable = null;
             commandBuildInfo.def = null;
-            (plainAttrInstructions ?? (plainAttrInstructions = [])).push(bindingCommand.build(commandBuildInfo));
+            (plainAttrInstructions ?? (plainAttrInstructions = [])).push(bindingCommand.build(commandBuildInfo, context._exprParser, context._attrMapper));
         }
         resetCommandBuildInfo();
         if (this._shouldReorderAttrs(el) && plainAttrInstructions != null && plainAttrInstructions.length > 1) {
@@ -7306,7 +7107,7 @@ class TemplateCompiler {
                     commandBuildInfo.attr = attrSyntax;
                     commandBuildInfo.bindable = bindable;
                     commandBuildInfo.def = attrDef;
-                    instructions.push(command.build(commandBuildInfo));
+                    instructions.push(command.build(commandBuildInfo, context._exprParser, context._attrMapper));
                 }
                 while (i < valueLength && attrRawValue.charCodeAt(++i) <= 32)
                     ;
@@ -7543,9 +7344,9 @@ class BindablesInfo {
             const attrs = createLookup();
             const defaultBindingMode = isAttr
                 ? def.defaultBindingMode === void 0
-                    ? BindingMode.default
+                    ? 8
                     : def.defaultBindingMode
-                : BindingMode.default;
+                : 8;
             let bindable;
             let prop;
             let hasPrimary = false;
@@ -7603,16 +7404,16 @@ function processTemplateName(localTemplate, localTemplateNames) {
 function getBindingMode(bindable) {
     switch (bindable.getAttribute("mode")) {
         case 'oneTime':
-            return BindingMode.oneTime;
+            return 1;
         case 'toView':
-            return BindingMode.toView;
+            return 2;
         case 'fromView':
-            return BindingMode.fromView;
+            return 4;
         case 'twoWay':
-            return BindingMode.twoWay;
+            return 6;
         case 'default':
         default:
-            return BindingMode.default;
+            return 8;
     }
 }
 const ITemplateCompilerHooks = DI.createInterface('ITemplateCompilerHooks');
@@ -7647,6 +7448,15 @@ const templateCompilerHooks = (target) => {
 };
 const DEFAULT_SLOT_NAME = 'default';
 const AU_SLOT = 'au-slot';
+var Char;
+(function (Char) {
+    Char[Char["Space"] = 32] = "Space";
+    Char[Char["Dollar"] = 36] = "Dollar";
+    Char[Char["Semicolon"] = 59] = "Semicolon";
+    Char[Char["Backslash"] = 92] = "Backslash";
+    Char[Char["OpenBrace"] = 123] = "OpenBrace";
+    Char[Char["Colon"] = 58] = "Colon";
+})(Char || (Char = {}));
 
 const originalModesMap = new Map();
 class BindingModeBehavior {
@@ -7664,22 +7474,22 @@ class BindingModeBehavior {
 }
 class OneTimeBindingBehavior extends BindingModeBehavior {
     constructor() {
-        super(BindingMode.oneTime);
+        super(1);
     }
 }
 class ToViewBindingBehavior extends BindingModeBehavior {
     constructor() {
-        super(BindingMode.toView);
+        super(2);
     }
 }
 class FromViewBindingBehavior extends BindingModeBehavior {
     constructor() {
-        super(BindingMode.fromView);
+        super(4);
     }
 }
 class TwoWayBindingBehavior extends BindingModeBehavior {
     constructor() {
-        super(BindingMode.twoWay);
+        super(6);
     }
 }
 bindingBehavior('oneTime')(OneTimeBindingBehavior);
@@ -8691,7 +8501,7 @@ class UpdateTriggerBindingBehavior {
         if (events.length === 0) {
             throw new Error(`AUR0802: The updateTrigger binding behavior requires at least one event name argument: eg <input value.bind="firstName & updateTrigger:'blur'">`);
         }
-        if (binding.mode !== BindingMode.twoWay && binding.mode !== BindingMode.fromView) {
+        if (binding.mode !== 6 && binding.mode !== 4) {
             throw new Error(`AUR0803: The updateTrigger binding behavior can only be applied to two-way/ from-view bindings.`);
         }
         const targetObserver = this.oL.getObserver(binding.target, binding.targetProperty);
@@ -8717,10 +8527,10 @@ UpdateTriggerBindingBehavior.inject = [IObserverLocator];
 bindingBehavior('updateTrigger')(UpdateTriggerBindingBehavior);
 
 class Focus {
-    constructor(_element, _platform) {
-        this._element = _element;
-        this._platform = _platform;
+    constructor(element, platform) {
         this._needsApply = false;
+        this._element = element;
+        this._platform = platform;
     }
     binding() {
         this.valueChanged();
@@ -8771,7 +8581,7 @@ class Focus {
 }
 Focus.inject = [INode, IPlatform];
 __decorate([
-    bindable({ mode: BindingMode.twoWay })
+    bindable({ mode: 6 })
 ], Focus.prototype, "value", void 0);
 customAttribute('focus')(Focus);
 
@@ -8831,7 +8641,6 @@ customAttribute('show')(Show);
 
 class Portal {
     constructor(factory, originalLoc, p) {
-        this.id = nextId('au$component');
         this.strict = false;
         this._platform = p;
         this._currentTarget = p.document.createElement('div');
@@ -8983,11 +8792,7 @@ __decorate([
 templateController('portal')(Portal);
 
 class If {
-    constructor(ifFactory, location, work) {
-        this.ifFactory = ifFactory;
-        this.location = location;
-        this.work = work;
-        this.id = nextId('au$component');
+    constructor(ifFactory, location) {
         this.elseFactory = void 0;
         this.elseView = void 0;
         this.ifView = void 0;
@@ -8997,6 +8802,8 @@ class If {
         this.pending = void 0;
         this._wantsDeactivate = false;
         this._swapId = 0;
+        this._ifFactory = ifFactory;
+        this._location = location;
     }
     attaching(initiator, parent, f) {
         let view;
@@ -9011,7 +8818,7 @@ class If {
             if (this.value) {
                 view = (this.view = this.ifView = this.cache && this.ifView != null
                     ? this.ifView
-                    : this.ifFactory.create());
+                    : this._ifFactory.create());
             }
             else {
                 view = (this.view = this.elseView = this.cache && this.elseView != null
@@ -9021,7 +8828,7 @@ class If {
             if (view == null) {
                 return;
             }
-            view.setLocation(this.location);
+            view.setLocation(this._location);
             this.pending = onResolve(view.activate(initiator, ctrl, f, ctrl.scope), () => {
                 if (isCurrent()) {
                     this.pending = void 0;
@@ -9046,20 +8853,19 @@ class If {
         if (newValue === oldValue) {
             return;
         }
-        this.work.start();
         const currView = this.view;
         const ctrl = this.$controller;
         const swapId = this._swapId++;
         const isCurrent = () => !this._wantsDeactivate && this._swapId === swapId + 1;
         let view;
-        return onResolve(onResolve(this.pending, () => this.pending = onResolve(currView?.deactivate(currView, ctrl, f), () => {
+        return onResolve(this.pending, () => this.pending = onResolve(currView?.deactivate(currView, ctrl, f), () => {
             if (!isCurrent()) {
                 return;
             }
             if (newValue) {
                 view = (this.view = this.ifView = this.cache && this.ifView != null
                     ? this.ifView
-                    : this.ifFactory.create());
+                    : this._ifFactory.create());
             }
             else {
                 view = (this.view = this.elseView = this.cache && this.elseView != null
@@ -9069,13 +8875,13 @@ class If {
             if (view == null) {
                 return;
             }
-            view.setLocation(this.location);
+            view.setLocation(this._location);
             return onResolve(view.activate(view, ctrl, f, ctrl.scope), () => {
                 if (isCurrent()) {
                     this.pending = void 0;
                 }
             });
-        })), () => this.work.finish());
+        }));
     }
     dispose() {
         this.ifView?.dispose();
@@ -9091,7 +8897,7 @@ class If {
         }
     }
 }
-If.inject = [IViewFactory, IRenderLocation, IWorkTracker];
+If.inject = [IViewFactory, IRenderLocation];
 __decorate([
     bindable
 ], If.prototype, "value", void 0);
@@ -9103,17 +8909,16 @@ __decorate([
 templateController('if')(If);
 class Else {
     constructor(factory) {
-        this.factory = factory;
-        this.id = nextId('au$component');
+        this._factory = factory;
     }
     link(controller, _childController, _target, _instruction) {
         const children = controller.children;
         const ifBehavior = children[children.length - 1];
         if (ifBehavior instanceof If) {
-            ifBehavior.elseFactory = this.factory;
+            ifBehavior.elseFactory = this._factory;
         }
         else if (ifBehavior.viewModel instanceof If) {
-            ifBehavior.viewModel.elseFactory = this.factory;
+            ifBehavior.viewModel.elseFactory = this._factory;
         }
         else {
             throw new Error(`AUR0810: Unsupported If behavior`);
@@ -9127,15 +8932,11 @@ function dispose(disposable) {
     disposable.dispose();
 }
 const wrappedExprs = [
-    38963,
-    36914,
+    18,
+    17,
 ];
 class Repeat {
-    constructor(_location, _parent, _factory) {
-        this._location = _location;
-        this._parent = _parent;
-        this._factory = _factory;
-        this.id = nextId('au$component');
+    constructor(location, parent, factory) {
         this.views = [];
         this.key = void 0;
         this._observer = void 0;
@@ -9144,6 +8945,9 @@ class Repeat {
         this._innerItemsExpression = null;
         this._normalizedItems = void 0;
         this._hasDestructuredLocal = false;
+        this._location = location;
+        this._parent = parent;
+        this._factory = factory;
     }
     binding(_initiator, _parent, _flags) {
         const bindings = this._parent.bindings;
@@ -9167,7 +8971,7 @@ class Repeat {
         }
         this._refreshCollectionObserver();
         const dec = forOf.declaration;
-        if (!(this._hasDestructuredLocal = dec.$kind === 90138 || dec.$kind === 106523)) {
+        if (!(this._hasDestructuredLocal = dec.$kind === 24 || dec.$kind === 25)) {
             this.local = dec.evaluate(this.$controller.scope, binding, null);
         }
     }
@@ -9193,8 +8997,8 @@ class Repeat {
             ret.catch(rethrow);
         }
     }
-    handleCollectionChange(indexMap) {
-        const { $controller } = this;
+    handleCollectionChange(collection, indexMap) {
+        const $controller = this.$controller;
         if (!$controller.isActive) {
             return;
         }
@@ -9256,7 +9060,7 @@ class Repeat {
     }
     _normalizeToArray() {
         const items = this.items;
-        if (items instanceof Array) {
+        if (isArray(items)) {
             this._normalizedItems = items;
             return;
         }
@@ -9280,10 +9084,10 @@ class Repeat {
             view = views[i] = factory.create().setLocation(location);
             view.nodes.unlink();
             if (this._hasDestructuredLocal) {
-                forOf.declaration.assign(viewScope = Scope.fromParent(parentScope, BindingContext.create()), this._forOfBinding, item);
+                forOf.declaration.assign(viewScope = Scope.fromParent(parentScope, new BindingContext()), this._forOfBinding, item);
             }
             else {
-                viewScope = Scope.fromParent(parentScope, BindingContext.create(local, item));
+                viewScope = Scope.fromParent(parentScope, new BindingContext(local, item));
             }
             setContextualProperties(viewScope.overrideContext, i, newLen);
             ret = view.activate(initiator ?? view, $controller, 0, viewScope);
@@ -9361,7 +9165,7 @@ class Repeat {
             }
         }
         if (views.length !== mapLen) {
-            throw new Error(`AUR0814: viewsLen=${views.length}, mapLen=${mapLen}`);
+            throw mismatchedLengthError(views.length, mapLen);
         }
         const parentScope = $controller.scope;
         const newLen = indexMap.length;
@@ -9377,10 +9181,10 @@ class Repeat {
             view.nodes.link(next?.nodes ?? location);
             if (indexMap[i] === -2) {
                 if (this._hasDestructuredLocal) {
-                    this.forOf.declaration.assign(viewScope = Scope.fromParent(parentScope, BindingContext.create()), this._forOfBinding, normalizedItems[i]);
+                    this.forOf.declaration.assign(viewScope = Scope.fromParent(parentScope, new BindingContext()), this._forOfBinding, normalizedItems[i]);
                 }
                 else {
-                    viewScope = Scope.fromParent(parentScope, BindingContext.create(local, normalizedItems[i]));
+                    viewScope = Scope.fromParent(parentScope, new BindingContext(local, normalizedItems[i]));
                 }
                 setContextualProperties(viewScope.overrideContext, i, newLen);
                 view.setLocation(location);
@@ -9486,6 +9290,8 @@ function longestIncreasingSubsequence(indexMap) {
         prevIndices[i] = 0;
     return result;
 }
+const mismatchedLengthError = (viewCount, itemCount) => new Error(`AUR0814: viewsLen=${viewCount}, mapLen=${itemCount}`)
+    ;
 const setContextualProperties = (oc, index, length) => {
     const isFirst = index === 0;
     const isLast = index === length - 1;
@@ -9551,8 +9357,6 @@ const $number = (result, func) => {
 
 class With {
     constructor(factory, location) {
-        this.id = nextId('au$component');
-        this.id = nextId('au$component');
         this.view = factory.create().setLocation(location);
     }
     valueChanged(newValue, _oldValue, _flags) {
@@ -9595,7 +9399,6 @@ let Switch = class Switch {
     constructor(_factory, _location) {
         this._factory = _factory;
         this._location = _location;
-        this.id = nextId('au$component');
         this.cases = [];
         this.activeCases = [];
         this.promise = void 0;
@@ -9753,12 +9556,13 @@ Switch = __decorate([
     __param(0, IViewFactory),
     __param(1, IRenderLocation)
 ], Switch);
+let caseId = 0;
 let Case = class Case {
     constructor(_factory, _locator, _location, logger) {
         this._factory = _factory;
         this._locator = _locator;
         this._location = _location;
-        this.id = nextId('au$component');
+        this.id = ++caseId;
         this.fallThrough = false;
         this.view = void 0;
         this._debug = logger.config.level <= 1;
@@ -9781,7 +9585,7 @@ let Case = class Case {
     isMatch(value) {
         this._logger.debug('isMatch()');
         const $value = this.value;
-        if (Array.isArray($value)) {
+        if (isArray($value)) {
             if (this._observer === void 0) {
                 this._observer = this._observeCollection($value);
             }
@@ -9790,7 +9594,7 @@ let Case = class Case {
         return $value === value;
     }
     valueChanged(newValue, _oldValue) {
-        if (Array.isArray(newValue)) {
+        if (isArray(newValue)) {
             this._observer?.unsubscribe(this);
             this._observer = this._observeCollection(newValue);
         }
@@ -9799,7 +9603,7 @@ let Case = class Case {
         }
         this.$switch.caseChanged(this);
     }
-    handleCollectionChange(_indexMap) {
+    handleCollectionChange() {
         this.$switch.caseChanged(this);
     }
     activate(initiator, flags, scope) {
@@ -9852,7 +9656,7 @@ __decorate([
                 default: return !!v;
             }
         },
-        mode: BindingMode.oneTime
+        mode: 1
     })
 ], Case.prototype, "fallThrough", void 0);
 Case = __decorate([
@@ -9875,7 +9679,6 @@ let PromiseTemplateController = class PromiseTemplateController {
         this._factory = _factory;
         this._location = _location;
         this._platform = _platform;
-        this.id = nextId('au$component');
         this.preSettledTask = null;
         this.postSettledTask = null;
         this.logger = logger.scopeTo('promise.resolve');
@@ -9975,7 +9778,6 @@ let PendingTemplateController = class PendingTemplateController {
     constructor(_factory, _location) {
         this._factory = _factory;
         this._location = _location;
-        this.id = nextId('au$component');
         this.view = void 0;
     }
     link(controller, _childController, _target, _instruction) {
@@ -10007,7 +9809,7 @@ let PendingTemplateController = class PendingTemplateController {
     }
 };
 __decorate([
-    bindable({ mode: BindingMode.toView })
+    bindable({ mode: 2 })
 ], PendingTemplateController.prototype, "value", void 0);
 PendingTemplateController = __decorate([
     templateController('pending'),
@@ -10018,7 +9820,6 @@ let FulfilledTemplateController = class FulfilledTemplateController {
     constructor(_factory, _location) {
         this._factory = _factory;
         this._location = _location;
-        this.id = nextId('au$component');
         this.view = void 0;
     }
     link(controller, _childController, _target, _instruction) {
@@ -10051,7 +9852,7 @@ let FulfilledTemplateController = class FulfilledTemplateController {
     }
 };
 __decorate([
-    bindable({ mode: BindingMode.fromView })
+    bindable({ mode: 4 })
 ], FulfilledTemplateController.prototype, "value", void 0);
 FulfilledTemplateController = __decorate([
     templateController('then'),
@@ -10062,7 +9863,6 @@ let RejectedTemplateController = class RejectedTemplateController {
     constructor(_factory, _location) {
         this._factory = _factory;
         this._location = _location;
-        this.id = nextId('au$component');
         this.view = void 0;
     }
     link(controller, _childController, _target, _instruction) {
@@ -10095,7 +9895,7 @@ let RejectedTemplateController = class RejectedTemplateController {
     }
 };
 __decorate([
-    bindable({ mode: BindingMode.fromView })
+    bindable({ mode: 4 })
 ], RejectedTemplateController.prototype, "value", void 0);
 RejectedTemplateController = __decorate([
     templateController('catch'),
@@ -10269,7 +10069,6 @@ class AuRender {
         this._instruction = _instruction;
         this._hdrContext = _hdrContext;
         this._rendering = _rendering;
-        this.id = nextId('au$component');
         this.component = void 0;
         this.composing = false;
         this.view = void 0;
@@ -10372,7 +10171,7 @@ __decorate([
     bindable
 ], AuRender.prototype, "component", void 0);
 __decorate([
-    bindable({ mode: BindingMode.fromView })
+    bindable({ mode: 4 })
 ], AuRender.prototype, "composing", void 0);
 customElement({ name: 'au-render', template: null, containerless: true, capture: true })(AuRender);
 function isController(subject) {
@@ -11029,6 +10828,15 @@ class Aurelia {
     }
 }
 
+var BindingMode;
+(function (BindingMode) {
+    BindingMode[BindingMode["oneTime"] = 1] = "oneTime";
+    BindingMode[BindingMode["toView"] = 2] = "toView";
+    BindingMode[BindingMode["fromView"] = 4] = "fromView";
+    BindingMode[BindingMode["twoWay"] = 6] = "twoWay";
+    BindingMode[BindingMode["default"] = 8] = "default";
+})(BindingMode || (BindingMode = {}));
+
 var DefinitionType;
 (function (DefinitionType) {
     DefinitionType[DefinitionType["Element"] = 1] = "Element";
@@ -11503,5 +11311,5 @@ class WcCustomElementRegistry {
 }
 WcCustomElementRegistry.inject = [IContainer, IPlatform, IRendering];
 
-export { AdoptedStyleSheetsStyles, AppRoot, AppTask, AtPrefixedTriggerAttributePattern, AtPrefixedTriggerAttributePatternRegistration, AttrBindingBehavior, AttrBindingBehaviorRegistration, AttrBindingCommand, AttrBindingCommandRegistration, AttrSyntax, AttributeBinding, AttributeBindingInstruction, AttributeBindingRendererRegistration, AttributeNSAccessor, AttributePattern, AuCompose, AuRender, AuRenderRegistration, AuSlot, AuSlotsInfo, Aurelia, Bindable, BindableDefinition, BindableObserver, BindablesInfo, BindingBehavior, BindingBehaviorDefinition, BindingBehaviorFactory, BindingBehaviorStrategy, BindingCommand, BindingCommandDefinition, BindingInterceptor, BindingMode, BindingModeBehavior, CSSModulesProcessorRegistry, CallBinding, CallBindingCommand, CallBindingCommandRegistration, CallBindingInstruction, CallBindingRendererRegistration, CaptureBindingCommand, CaptureBindingCommandRegistration, Case, CheckedObserver, Children, ChildrenDefinition, ChildrenObserver, ClassAttributeAccessor, ClassBindingCommand, ClassBindingCommandRegistration, ColonPrefixedBindAttributePattern, ColonPrefixedBindAttributePatternRegistration, CommandType, ComputedWatcher, Controller, CustomAttribute, CustomAttributeDefinition, CustomAttributeRendererRegistration, CustomElement, CustomElementDefinition, CustomElementRendererRegistration, DataAttributeAccessor, DebounceBindingBehavior, DebounceBindingBehaviorRegistration, DefaultBindingCommand, DefaultBindingCommandRegistration, DefaultBindingLanguage, DefaultBindingSyntax, DefaultCase, DefaultComponents, DefaultDialogDom, DefaultDialogDomRenderer, DefaultDialogGlobalSettings, DefaultRenderers, DefaultResources, DefinitionType, DelegateBindingCommand, DelegateBindingCommandRegistration, DialogCloseResult, DialogConfiguration, DialogController, DialogDeactivationStatuses, DialogDefaultConfiguration, DialogOpenResult, DialogService, DotSeparatedAttributePattern, DotSeparatedAttributePatternRegistration, Else, ElseRegistration, EventDelegator, EventSubscriber, ExpressionWatcher, Focus, ForBindingCommand, ForBindingCommandRegistration, FragmentNodeSequence, FromViewBindingBehavior, FromViewBindingBehaviorRegistration, FromViewBindingCommand, FromViewBindingCommandRegistration, FulfilledTemplateController, HooksDefinition, HydrateAttributeInstruction, HydrateElementInstruction, HydrateLetElementInstruction, HydrateTemplateController, IAppRoot, IAppTask, IAttrMapper, IAttributeParser, IAttributePattern, IAuSlotsInfo, IAurelia, IController, IDialogController, IDialogDom, IDialogDomRenderer, IDialogGlobalSettings, IDialogService, IEventDelegator, IEventTarget, IHistory, IHydrationContext, IInstruction, ILifecycleHooks, IListenerBehaviorOptions, ILocation, INode, INodeObserverLocatorRegistration, IPlatform, IProjections, IRenderLocation, IRenderer, IRendering, ISVGAnalyzer, ISanitizer, IShadowDOMGlobalStyles, IShadowDOMStyles, ISyntaxInterpreter, ITemplateCompiler, ITemplateCompilerHooks, ITemplateCompilerRegistration, ITemplateElementFactory, IViewFactory, IViewLocator, IWcElementRegistry, IWindow, IWorkTracker, If, IfRegistration, InstructionType, InterpolationBinding, InterpolationBindingRendererRegistration, InterpolationInstruction, InterpolationPartBinding, Interpretation, IteratorBindingInstruction, IteratorBindingRendererRegistration, LetBinding, LetBindingInstruction, LetElementRendererRegistration, LifecycleHooks, LifecycleHooksDefinition, LifecycleHooksEntry, Listener, ListenerBindingInstruction, ListenerBindingRendererRegistration, NodeObserverConfig, NodeObserverLocator, NodeType, NoopSVGAnalyzer, OneTimeBindingBehavior, OneTimeBindingBehaviorRegistration, OneTimeBindingCommand, OneTimeBindingCommandRegistration, PendingTemplateController, Portal, PromiseTemplateController, PropertyBinding, PropertyBindingInstruction, PropertyBindingRendererRegistration, RefAttributePattern, RefAttributePatternRegistration, RefBinding, RefBindingCommandRegistration, RefBindingInstruction, RefBindingRendererRegistration, RejectedTemplateController, RenderPlan, Rendering, Repeat, RepeatRegistration, SVGAnalyzer, SVGAnalyzerRegistration, SanitizeValueConverter, SanitizeValueConverterRegistration, SelectValueObserver, SelfBindingBehavior, SelfBindingBehaviorRegistration, SetAttributeInstruction, SetAttributeRendererRegistration, SetClassAttributeInstruction, SetClassAttributeRendererRegistration, SetPropertyInstruction, SetPropertyRendererRegistration, SetStyleAttributeInstruction, SetStyleAttributeRendererRegistration, ShadowDOMRegistry, ShortHandBindingSyntax, SignalBindingBehavior, SignalBindingBehaviorRegistration, StandardConfiguration, State, StyleAttributeAccessor, StyleBindingCommand, StyleBindingCommandRegistration, StyleConfiguration, StyleElementStyles, StylePropertyBindingInstruction, StylePropertyBindingRendererRegistration, Switch, TemplateCompiler, TemplateCompilerHooks, TemplateControllerRendererRegistration, TextBindingInstruction, TextBindingRendererRegistration, ThrottleBindingBehavior, ThrottleBindingBehaviorRegistration, ToViewBindingBehavior, ToViewBindingBehaviorRegistration, ToViewBindingCommand, ToViewBindingCommandRegistration, TriggerBindingCommand, TriggerBindingCommandRegistration, TwoWayBindingBehavior, TwoWayBindingBehaviorRegistration, TwoWayBindingCommand, TwoWayBindingCommandRegistration, UpdateTriggerBindingBehavior, UpdateTriggerBindingBehaviorRegistration, ValueAttributeObserver, ValueConverter, ValueConverterDefinition, ViewFactory, ViewLocator, ViewModelKind, ViewValueConverter, ViewValueConverterRegistration, Views, Watch, WcCustomElementRegistry, With, WithRegistration, alias, allResources, applyBindingBehavior, astEvaluator, attributePattern, bindable, bindingBehavior, bindingCommand, capture, children, coercer, containerless, convertToRenderLocation, createElement, cssModules, customAttribute, customElement, getEffectiveParentNode, getRef, isCustomElementController, isCustomElementViewModel, isInstruction, isRenderLocation, lifecycleHooks, processContent, registerAliases, renderer, setEffectiveParentNode, setRef, shadowCSS, strict, templateCompilerHooks, templateController, useShadowDOM, valueConverter, view, watch };
+export { AdoptedStyleSheetsStyles, AppRoot, AppTask, AtPrefixedTriggerAttributePattern, AtPrefixedTriggerAttributePatternRegistration, AttrBindingBehavior, AttrBindingBehaviorRegistration, AttrBindingCommand, AttrBindingCommandRegistration, AttrSyntax, AttributeBinding, AttributeBindingInstruction, AttributeBindingRendererRegistration, AttributeNSAccessor, AttributePattern, AuCompose, AuRender, AuRenderRegistration, AuSlot, AuSlotsInfo, Aurelia, Bindable, BindableDefinition, BindableObserver, BindablesInfo, BindingBehavior, BindingBehaviorDefinition, BindingBehaviorFactory, BindingBehaviorStrategy, BindingCommand, BindingCommandDefinition, BindingInterceptor, BindingMode, BindingModeBehavior, CSSModulesProcessorRegistry, CallBinding, CallBindingCommand, CallBindingCommandRegistration, CallBindingInstruction, CallBindingRendererRegistration, CaptureBindingCommand, CaptureBindingCommandRegistration, Case, CheckedObserver, Children, ChildrenDefinition, ChildrenObserver, ClassAttributeAccessor, ClassBindingCommand, ClassBindingCommandRegistration, ColonPrefixedBindAttributePattern, ColonPrefixedBindAttributePatternRegistration, CommandType, ComputedWatcher, Controller, CustomAttribute, CustomAttributeDefinition, CustomAttributeRendererRegistration, CustomElement, CustomElementDefinition, CustomElementRendererRegistration, DataAttributeAccessor, DebounceBindingBehavior, DebounceBindingBehaviorRegistration, DefaultBindingCommand, DefaultBindingCommandRegistration, DefaultBindingLanguage, DefaultBindingSyntax, DefaultCase, DefaultComponents, DefaultDialogDom, DefaultDialogDomRenderer, DefaultDialogGlobalSettings, DefaultRenderers, DefaultResources, DefinitionType, DelegateBindingCommand, DelegateBindingCommandRegistration, DelegationStrategy, DialogCloseResult, DialogConfiguration, DialogController, DialogDeactivationStatuses, DialogDefaultConfiguration, DialogOpenResult, DialogService, DotSeparatedAttributePattern, DotSeparatedAttributePatternRegistration, Else, ElseRegistration, EventDelegator, EventSubscriber, ExpressionWatcher, Focus, ForBindingCommand, ForBindingCommandRegistration, FragmentNodeSequence, FromViewBindingBehavior, FromViewBindingBehaviorRegistration, FromViewBindingCommand, FromViewBindingCommandRegistration, FulfilledTemplateController, HooksDefinition, HydrateAttributeInstruction, HydrateElementInstruction, HydrateLetElementInstruction, HydrateTemplateController, IAppRoot, IAppTask, IAttrMapper, IAttributeParser, IAttributePattern, IAuSlotsInfo, IAurelia, IController, IDialogController, IDialogDom, IDialogDomRenderer, IDialogGlobalSettings, IDialogService, IEventDelegator, IEventTarget, IHistory, IHydrationContext, IInstruction, ILifecycleHooks, ILocation, INode, INodeObserverLocatorRegistration, IPlatform, IProjections, IRenderLocation, IRenderer, IRendering, ISVGAnalyzer, ISanitizer, IShadowDOMGlobalStyles, IShadowDOMStyles, ISyntaxInterpreter, ITemplateCompiler, ITemplateCompilerHooks, ITemplateCompilerRegistration, ITemplateElementFactory, IViewFactory, IViewLocator, IWcElementRegistry, IWindow, If, IfRegistration, InstructionType, InterpolationBinding, InterpolationBindingRendererRegistration, InterpolationInstruction, InterpolationPartBinding, Interpretation, IteratorBindingInstruction, IteratorBindingRendererRegistration, LetBinding, LetBindingInstruction, LetElementRendererRegistration, LifecycleFlags, LifecycleHooks, LifecycleHooksDefinition, LifecycleHooksEntry, Listener, ListenerBindingInstruction, ListenerBindingRendererRegistration, NodeObserverConfig, NodeObserverLocator, NodeType, NoopSVGAnalyzer, OneTimeBindingBehavior, OneTimeBindingBehaviorRegistration, OneTimeBindingCommand, OneTimeBindingCommandRegistration, PendingTemplateController, Portal, PromiseTemplateController, PropertyBinding, PropertyBindingInstruction, PropertyBindingRendererRegistration, RefAttributePattern, RefAttributePatternRegistration, RefBinding, RefBindingCommandRegistration, RefBindingInstruction, RefBindingRendererRegistration, RejectedTemplateController, RenderPlan, Rendering, Repeat, RepeatRegistration, SVGAnalyzer, SVGAnalyzerRegistration, SanitizeValueConverter, SanitizeValueConverterRegistration, SelectValueObserver, SelfBindingBehavior, SelfBindingBehaviorRegistration, SetAttributeInstruction, SetAttributeRendererRegistration, SetClassAttributeInstruction, SetClassAttributeRendererRegistration, SetPropertyInstruction, SetPropertyRendererRegistration, SetStyleAttributeInstruction, SetStyleAttributeRendererRegistration, ShadowDOMRegistry, ShortHandBindingSyntax, SignalBindingBehavior, SignalBindingBehaviorRegistration, StandardConfiguration, State, StyleAttributeAccessor, StyleBindingCommand, StyleBindingCommandRegistration, StyleConfiguration, StyleElementStyles, StylePropertyBindingInstruction, StylePropertyBindingRendererRegistration, Switch, TemplateCompiler, TemplateCompilerHooks, TemplateControllerRendererRegistration, TextBindingInstruction, TextBindingRendererRegistration, ThrottleBindingBehavior, ThrottleBindingBehaviorRegistration, ToViewBindingBehavior, ToViewBindingBehaviorRegistration, ToViewBindingCommand, ToViewBindingCommandRegistration, TriggerBindingCommand, TriggerBindingCommandRegistration, TwoWayBindingBehavior, TwoWayBindingBehaviorRegistration, TwoWayBindingCommand, TwoWayBindingCommandRegistration, UpdateTriggerBindingBehavior, UpdateTriggerBindingBehaviorRegistration, ValueAttributeObserver, ValueConverter, ValueConverterDefinition, ViewFactory, ViewLocator, ViewModelKind, ViewValueConverter, ViewValueConverterRegistration, Views, Watch, WcCustomElementRegistry, With, WithRegistration, alias, allResources, applyBindingBehavior, astEvaluator, attributePattern, bindable, bindingBehavior, bindingCommand, capture, children, coercer, containerless, convertToRenderLocation, createElement, cssModules, customAttribute, customElement, getEffectiveParentNode, getRef, isCustomElementController, isCustomElementViewModel, isInstruction, isRenderLocation, lifecycleHooks, processContent, registerAliases, renderer, setEffectiveParentNode, setRef, shadowCSS, strict, templateCompilerHooks, templateController, useShadowDOM, valueConverter, view, watch };
 //# sourceMappingURL=index.dev.mjs.map

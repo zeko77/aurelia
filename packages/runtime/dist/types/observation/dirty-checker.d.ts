@@ -1,8 +1,8 @@
 import { IPlatform } from '@aurelia/kernel';
-import { AccessorType, IObserver, ISubscriberCollection } from '../observation';
+import { AccessorType, type IObserver, type ISubscriberCollection } from '../observation';
+import { FlushQueue, type IFlushable, type IWithFlushQueue } from './flush-queue';
 import type { IIndexable } from '@aurelia/kernel';
 import type { IObservable, ISubscriber } from '../observation';
-import { FlushQueue, IFlushable, IWithFlushQueue } from './flush-queue';
 export interface IDirtyChecker extends DirtyChecker {
 }
 export declare const IDirtyChecker: import("@aurelia/kernel").InterfaceSymbol<IDirtyChecker>;
@@ -41,7 +41,7 @@ export declare class DirtyChecker implements IWithFlushQueue {
     private _task;
     private _elapsedFrames;
     constructor(p: IPlatform);
-    createProperty(obj: object, key: string): DirtyCheckProperty;
+    createProperty(obj: object, key: PropertyKey): DirtyCheckProperty;
     addProperty(property: DirtyCheckProperty): void;
     removeProperty(property: DirtyCheckProperty): void;
     private readonly check;

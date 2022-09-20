@@ -16,8 +16,7 @@ export declare class TranslationBindingInstruction {
 export declare class TranslationBindingCommand implements BindingCommandInstance {
     readonly type: CommandType.None;
     get name(): string;
-    constructor(m: IAttrMapper);
-    build(info: ICommandBuildInfo): TranslationBindingInstruction;
+    build(info: ICommandBuildInfo, parser: IExpressionParser, attrMapper: IAttrMapper): TranslationBindingInstruction;
 }
 export declare class TranslationBindingRenderer implements IRenderer {
     target: typeof TranslationInstructionType;
@@ -39,8 +38,7 @@ export declare class TranslationBindBindingInstruction {
 export declare class TranslationBindBindingCommand implements BindingCommandInstance {
     readonly type: CommandType.None;
     get name(): string;
-    constructor(attrMapper: IAttrMapper, exprParser: IExpressionParser);
-    build(info: ICommandBuildInfo): TranslationBindingInstruction;
+    build(info: ICommandBuildInfo, exprParser: IExpressionParser, attrMapper: IAttrMapper): TranslationBindingInstruction;
 }
 export declare class TranslationBindBindingRenderer implements IRenderer {
     private readonly parser;

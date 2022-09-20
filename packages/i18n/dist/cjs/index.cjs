@@ -300,10 +300,10 @@ class TranslationBinding {
         this.locator = s;
         this.interceptor = this;
         this.isBound = false;
-        this.B = d;
+        this.T = d;
         this.task = null;
         this.parameter = null;
-        this.T = t;
+        this.B = t;
         this.target = e;
         this.i18n = this.locator.get(f);
         this.platform = i;
@@ -383,14 +383,14 @@ class TranslationBinding {
             for (const e of r) if (this.R(e)) n[e] = t; else {
                 const n = s.CustomElement.for(this.target, g);
                 const r = n?.viewModel ? this.oL.getAccessor(n.viewModel, e) : this.oL.getAccessor(this.target, e);
-                const o = 1 !== this.T.state && (4 & r.type) > 0;
+                const o = 1 !== this.B.state && (4 & r.type) > 0;
                 if (o) i.push(new AccessorUpdateTask(r, t, this.target, e)); else r.setValue(t, this.target, e);
                 this.C.add(r);
             }
         }
         let r = false;
         if (Object.keys(n).length > 0) {
-            r = 1 !== this.T.state;
+            r = 1 !== this.B.state;
             if (!r) this._(n);
         }
         if (i.length > 0 || r) this.task = this.taskQueue.queueTask((() => {
@@ -409,7 +409,7 @@ class TranslationBinding {
         return t;
     }
     R(t) {
-        return this.B.includes(t);
+        return this.T.includes(t);
     }
     _(s) {
         const n = t.toArray(this.target.childNodes);
@@ -500,48 +500,44 @@ s.astEvaluator(true)(ParameterBinding);
 
 const b = "tpt";
 
-const B = "t-params.bind";
+const T = "t-params.bind";
 
 exports.TranslationParametersAttributePattern = class TranslationParametersAttributePattern {
-    [B](t, n, i) {
-        return new s.AttrSyntax(t, n, "", B);
+    [T](t, n, i) {
+        return new s.AttrSyntax(t, n, "", T);
     }
 };
 
 exports.TranslationParametersAttributePattern = o([ s.attributePattern({
-    pattern: B,
+    pattern: T,
     symbols: ""
 }) ], exports.TranslationParametersAttributePattern);
 
 class TranslationParametersBindingInstruction {
-    constructor(t, n) {
+    constructor(t, s) {
         this.from = t;
-        this.to = n;
+        this.to = s;
         this.type = b;
-        this.mode = s.BindingMode.toView;
+        this.mode = 2;
     }
 }
 
 exports.TranslationParametersBindingCommand = class TranslationParametersBindingCommand {
-    constructor(t, s) {
+    constructor() {
         this.type = 0;
-        this.m = t;
-        this.ep = s;
     }
     get name() {
-        return B;
+        return T;
     }
-    build(s) {
-        const n = s.attr;
-        let i = n.target;
-        if (null == s.bindable) i = this.m.map(s.node, i) ?? t.camelCase(i); else i = s.bindable.property;
-        return new TranslationParametersBindingInstruction(this.ep.parse(n.rawValue, 8), i);
+    build(s, n, i) {
+        const e = s.attr;
+        let r = e.target;
+        if (null == s.bindable) r = i.map(s.node, r) ?? t.camelCase(r); else r = s.bindable.property;
+        return new TranslationParametersBindingInstruction(n.parse(e.rawValue, 8), r);
     }
 };
 
-exports.TranslationParametersBindingCommand.inject = [ s.IAttrMapper, n.IExpressionParser ];
-
-exports.TranslationParametersBindingCommand = o([ s.bindingCommand(B) ], exports.TranslationParametersBindingCommand);
+exports.TranslationParametersBindingCommand = o([ s.bindingCommand(T) ], exports.TranslationParametersBindingCommand);
 
 exports.TranslationParametersBindingRenderer = class TranslationParametersBindingRenderer {
     constructor(t, s, n) {
@@ -567,7 +563,7 @@ exports.TranslationParametersBindingRenderer.inject = [ n.IExpressionParser, n.I
 
 exports.TranslationParametersBindingRenderer = o([ s.renderer(b) ], exports.TranslationParametersBindingRenderer);
 
-const T = "tt";
+const B = "tt";
 
 class TranslationAttributePattern {
     static registerAlias(t) {
@@ -578,30 +574,27 @@ class TranslationAttributePattern {
 }
 
 class TranslationBindingInstruction {
-    constructor(t, n) {
+    constructor(t, s) {
         this.from = t;
-        this.to = n;
-        this.type = T;
-        this.mode = s.BindingMode.toView;
+        this.to = s;
+        this.type = B;
+        this.mode = 2;
     }
 }
 
 class TranslationBindingCommand {
-    constructor(t) {
+    constructor() {
         this.type = 0;
-        this.m = t;
     }
     get name() {
         return "t";
     }
-    build(s) {
-        let i;
-        if (null == s.bindable) i = this.m.map(s.node, s.attr.target) ?? t.camelCase(s.attr.target); else i = s.bindable.property;
-        return new TranslationBindingInstruction(new n.CustomExpression(s.attr.rawValue), i);
+    build(s, i, e) {
+        let r;
+        if (null == s.bindable) r = e.map(s.node, s.attr.target) ?? t.camelCase(s.attr.target); else r = s.bindable.property;
+        return new TranslationBindingInstruction(new n.CustomExpression(s.attr.rawValue), r);
     }
 }
-
-TranslationBindingCommand.inject = [ s.IAttrMapper ];
 
 exports.TranslationBindingRenderer = class TranslationBindingRenderer {
     constructor(t, s, n) {
@@ -624,7 +617,7 @@ exports.TranslationBindingRenderer = class TranslationBindingRenderer {
 
 exports.TranslationBindingRenderer.inject = [ n.IExpressionParser, n.IObserverLocator, s.IPlatform ];
 
-exports.TranslationBindingRenderer = o([ s.renderer(T) ], exports.TranslationBindingRenderer);
+exports.TranslationBindingRenderer = o([ s.renderer(B) ], exports.TranslationBindingRenderer);
 
 const v = "tbt";
 
@@ -638,31 +631,27 @@ class TranslationBindAttributePattern {
 }
 
 class TranslationBindBindingInstruction {
-    constructor(t, n) {
+    constructor(t, s) {
         this.from = t;
-        this.to = n;
+        this.to = s;
         this.type = v;
-        this.mode = s.BindingMode.toView;
+        this.mode = 2;
     }
 }
 
 class TranslationBindBindingCommand {
-    constructor(t, s) {
+    constructor() {
         this.type = 0;
-        this.m = t;
-        this.ep = s;
     }
     get name() {
         return "t-bind";
     }
-    build(s) {
-        let n;
-        if (null == s.bindable) n = this.m.map(s.node, s.attr.target) ?? t.camelCase(s.attr.target); else n = s.bindable.property;
-        return new TranslationBindBindingInstruction(this.ep.parse(s.attr.rawValue, 8), n);
+    build(s, n, i) {
+        let e;
+        if (null == s.bindable) e = i.map(s.node, s.attr.target) ?? t.camelCase(s.attr.target); else e = s.bindable.property;
+        return new TranslationBindBindingInstruction(n.parse(s.attr.rawValue, 8), e);
     }
 }
-
-TranslationBindBindingCommand.inject = [ s.IAttrMapper, n.IExpressionParser ];
 
 exports.TranslationBindBindingRenderer = class TranslationBindBindingRenderer {
     constructor(t, s, n) {
@@ -785,7 +774,7 @@ exports.TranslationBindingCommand = TranslationBindingCommand;
 
 exports.TranslationBindingInstruction = TranslationBindingInstruction;
 
-exports.TranslationInstructionType = T;
+exports.TranslationInstructionType = B;
 
 exports.TranslationParametersBindingInstruction = TranslationParametersBindingInstruction;
 

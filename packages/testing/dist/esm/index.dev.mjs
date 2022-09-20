@@ -1,5 +1,5 @@
 import { noop, isArrayIndex, DI, Registration, kebabCase, emptyArray, EventAggregator, ILogger } from '@aurelia/kernel';
-import { IObserverLocator, FlushQueue, IDirtyChecker, INodeObserverLocator, Scope, OverrideContext } from '@aurelia/runtime';
+import { IObserverLocator, FlushQueue, IDirtyChecker, INodeObserverLocator, Scope } from '@aurelia/runtime';
 import { StandardConfiguration, IPlatform, ITemplateCompiler, CustomElement, CustomAttribute, Aurelia, valueConverter, bindable, customElement } from '@aurelia/runtime-html';
 import { BrowserPlatform } from '@aurelia/platform-browser';
 import { Metadata } from '@aurelia/metadata';
@@ -917,6 +917,108 @@ function createContainer(...registries) {
     return DI.createContainer().register(PLATFORMRegistration, ...registries);
 }
 
+var Char;
+(function (Char) {
+    Char[Char["Null"] = 0] = "Null";
+    Char[Char["Backspace"] = 8] = "Backspace";
+    Char[Char["Tab"] = 9] = "Tab";
+    Char[Char["LineFeed"] = 10] = "LineFeed";
+    Char[Char["VerticalTab"] = 11] = "VerticalTab";
+    Char[Char["FormFeed"] = 12] = "FormFeed";
+    Char[Char["CarriageReturn"] = 13] = "CarriageReturn";
+    Char[Char["Space"] = 32] = "Space";
+    Char[Char["Exclamation"] = 33] = "Exclamation";
+    Char[Char["DoubleQuote"] = 34] = "DoubleQuote";
+    Char[Char["Dollar"] = 36] = "Dollar";
+    Char[Char["Percent"] = 37] = "Percent";
+    Char[Char["Ampersand"] = 38] = "Ampersand";
+    Char[Char["SingleQuote"] = 39] = "SingleQuote";
+    Char[Char["OpenParen"] = 40] = "OpenParen";
+    Char[Char["CloseParen"] = 41] = "CloseParen";
+    Char[Char["Asterisk"] = 42] = "Asterisk";
+    Char[Char["Plus"] = 43] = "Plus";
+    Char[Char["Comma"] = 44] = "Comma";
+    Char[Char["Minus"] = 45] = "Minus";
+    Char[Char["Dot"] = 46] = "Dot";
+    Char[Char["Slash"] = 47] = "Slash";
+    Char[Char["Semicolon"] = 59] = "Semicolon";
+    Char[Char["Backtick"] = 96] = "Backtick";
+    Char[Char["OpenBracket"] = 91] = "OpenBracket";
+    Char[Char["Backslash"] = 92] = "Backslash";
+    Char[Char["CloseBracket"] = 93] = "CloseBracket";
+    Char[Char["Caret"] = 94] = "Caret";
+    Char[Char["Underscore"] = 95] = "Underscore";
+    Char[Char["OpenBrace"] = 123] = "OpenBrace";
+    Char[Char["Bar"] = 124] = "Bar";
+    Char[Char["CloseBrace"] = 125] = "CloseBrace";
+    Char[Char["Colon"] = 58] = "Colon";
+    Char[Char["LessThan"] = 60] = "LessThan";
+    Char[Char["Equals"] = 61] = "Equals";
+    Char[Char["GreaterThan"] = 62] = "GreaterThan";
+    Char[Char["Question"] = 63] = "Question";
+    Char[Char["Zero"] = 48] = "Zero";
+    Char[Char["One"] = 49] = "One";
+    Char[Char["Two"] = 50] = "Two";
+    Char[Char["Three"] = 51] = "Three";
+    Char[Char["Four"] = 52] = "Four";
+    Char[Char["Five"] = 53] = "Five";
+    Char[Char["Six"] = 54] = "Six";
+    Char[Char["Seven"] = 55] = "Seven";
+    Char[Char["Eight"] = 56] = "Eight";
+    Char[Char["Nine"] = 57] = "Nine";
+    Char[Char["UpperA"] = 65] = "UpperA";
+    Char[Char["UpperB"] = 66] = "UpperB";
+    Char[Char["UpperC"] = 67] = "UpperC";
+    Char[Char["UpperD"] = 68] = "UpperD";
+    Char[Char["UpperE"] = 69] = "UpperE";
+    Char[Char["UpperF"] = 70] = "UpperF";
+    Char[Char["UpperG"] = 71] = "UpperG";
+    Char[Char["UpperH"] = 72] = "UpperH";
+    Char[Char["UpperI"] = 73] = "UpperI";
+    Char[Char["UpperJ"] = 74] = "UpperJ";
+    Char[Char["UpperK"] = 75] = "UpperK";
+    Char[Char["UpperL"] = 76] = "UpperL";
+    Char[Char["UpperM"] = 77] = "UpperM";
+    Char[Char["UpperN"] = 78] = "UpperN";
+    Char[Char["UpperO"] = 79] = "UpperO";
+    Char[Char["UpperP"] = 80] = "UpperP";
+    Char[Char["UpperQ"] = 81] = "UpperQ";
+    Char[Char["UpperR"] = 82] = "UpperR";
+    Char[Char["UpperS"] = 83] = "UpperS";
+    Char[Char["UpperT"] = 84] = "UpperT";
+    Char[Char["UpperU"] = 85] = "UpperU";
+    Char[Char["UpperV"] = 86] = "UpperV";
+    Char[Char["UpperW"] = 87] = "UpperW";
+    Char[Char["UpperX"] = 88] = "UpperX";
+    Char[Char["UpperY"] = 89] = "UpperY";
+    Char[Char["UpperZ"] = 90] = "UpperZ";
+    Char[Char["LowerA"] = 97] = "LowerA";
+    Char[Char["LowerB"] = 98] = "LowerB";
+    Char[Char["LowerC"] = 99] = "LowerC";
+    Char[Char["LowerD"] = 100] = "LowerD";
+    Char[Char["LowerE"] = 101] = "LowerE";
+    Char[Char["LowerF"] = 102] = "LowerF";
+    Char[Char["LowerG"] = 103] = "LowerG";
+    Char[Char["LowerH"] = 104] = "LowerH";
+    Char[Char["LowerI"] = 105] = "LowerI";
+    Char[Char["LowerJ"] = 106] = "LowerJ";
+    Char[Char["LowerK"] = 107] = "LowerK";
+    Char[Char["LowerL"] = 108] = "LowerL";
+    Char[Char["LowerM"] = 109] = "LowerM";
+    Char[Char["LowerN"] = 110] = "LowerN";
+    Char[Char["LowerO"] = 111] = "LowerO";
+    Char[Char["LowerP"] = 112] = "LowerP";
+    Char[Char["LowerQ"] = 113] = "LowerQ";
+    Char[Char["LowerR"] = 114] = "LowerR";
+    Char[Char["LowerS"] = 115] = "LowerS";
+    Char[Char["LowerT"] = 116] = "LowerT";
+    Char[Char["LowerU"] = 117] = "LowerU";
+    Char[Char["LowerV"] = 118] = "LowerV";
+    Char[Char["LowerW"] = 119] = "LowerW";
+    Char[Char["LowerX"] = 120] = "LowerX";
+    Char[Char["LowerY"] = 121] = "LowerY";
+    Char[Char["LowerZ"] = 122] = "LowerZ";
+})(Char || (Char = {}));
 let maxStack_ErrorName;
 let maxStack_ErrorMessage;
 function isStackOverflowError(err) {
@@ -1763,7 +1865,7 @@ function formatPromise(ctx, value, recurseTimes) {
 function formatProperty(ctx, value, recurseTimes, key, type) {
     switch (key) {
         case '$controller':
-            return `$controller: { id: ${value.$controller.id} } (omitted for brevity)`;
+            return `$controller: { id: ${value.$controller.name} } (omitted for brevity)`;
         case 'overrideContext':
             return 'overrideContext: (omitted for brevity)';
     }
@@ -7481,8 +7583,9 @@ const onFixtureCreated = (callback) => {
     });
 };
 function createFixture(template, $class, registrations = [], autoStart = true, ctx = TestContext.create()) {
-    const { container, platform, observerLocator } = ctx;
+    const { container } = ctx;
     container.register(...registrations);
+    const { platform, observerLocator } = ctx;
     const root = ctx.doc.body.appendChild(ctx.createElement('div'));
     const host = root.appendChild(ctx.createElement('app'));
     const au = new Aurelia(container);
@@ -7586,9 +7689,16 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
     function assertAttr(selector, name, value) {
         const el = queryBy(selector);
         if (el === null) {
-            throw new Error(`No element found for selector "${selector}" to compare attribute against "${value}"`);
+            throw new Error(`No element found for selector "${selector}" to compare attribute "${name}" against "${value}"`);
         }
         assert.strictEqual(el.getAttribute(name), value);
+    }
+    function assertAttrNS(selector, namespace, name, value) {
+        const el = queryBy(selector);
+        if (el === null) {
+            throw new Error(`No element found for selector "${selector}" to compare attribute "${name}" against "${value}"`);
+        }
+        assert.strictEqual(el.getAttributeNS(namespace, name), value);
     }
     function assertValue(selector, value) {
         const el = queryBy(selector);
@@ -7644,6 +7754,7 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             this.assertText = assertText;
             this.assertHtml = assertHtml;
             this.assertAttr = assertAttr;
+            this.assertAttrNS = assertAttrNS;
             this.assertValue = assertValue;
             this.trigger = trigger;
             this.scrollBy = scrollBy;
@@ -7730,8 +7841,8 @@ class MockBinding {
     handleChange(newValue, _previousValue) {
         this.trace('handleChange', newValue, _previousValue);
     }
-    handleCollectionChange(indexMap) {
-        this.trace('handleCollectionChange', indexMap);
+    handleCollectionChange(collection, indexMap) {
+        this.trace('handleCollectionChange', collection, indexMap);
     }
     observe(obj, propertyName) {
         this.trace('observe', obj, propertyName);
@@ -7813,7 +7924,9 @@ class MockPropertySubscriber {
 class MockTracingExpression {
     constructor(inner) {
         this.inner = inner;
-        this.$kind = 2048 | 4096;
+        this.$kind = 18;
+        this.hasBind = true;
+        this.hasUnbind = true;
         this.calls = [];
     }
     evaluate(...args) {
@@ -8061,7 +8174,7 @@ class SpySubscriber {
             this._changes.push(new ChangeSet(this._callCount++, newValue, oldValue));
         }
     }
-    handleCollectionChange(indexMap) {
+    handleCollectionChange(collection, indexMap) {
         if (this._collectionChanges === void 0) {
             this._collectionChanges = [new CollectionChangeSet(this._callCount++, indexMap)];
         }
@@ -8326,7 +8439,7 @@ function createObserverLocator(containerOrLifecycle) {
 function createScopeForTest(bindingContext = {}, parentBindingContext, isBoundary) {
     return parentBindingContext
         ? Scope.fromParent(Scope.create(parentBindingContext), bindingContext)
-        : Scope.create(bindingContext, OverrideContext.create(bindingContext), isBoundary);
+        : Scope.create(bindingContext, null, isBoundary);
 }
 
 class Call {

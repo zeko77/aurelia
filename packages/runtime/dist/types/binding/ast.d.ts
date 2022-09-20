@@ -1,48 +1,36 @@
 import { type IBinding } from '../observation';
 import { Scope } from '../observation/binding-context';
-import { IConnectableBinding } from './connectable';
-import type { IServiceLocator, ResourceDefinition } from '@aurelia/kernel';
+import { type IConnectableBinding } from './connectable';
+import type { IServiceLocator } from '@aurelia/kernel';
 import type { IBindingContext, IOverrideContext, IConnectable } from '../observation';
 export declare const enum ExpressionKind {
-    CallsFunction = 128,
-    HasAncestor = 256,
-    IsPrimary = 512,
-    IsLeftHandSide = 1024,
-    HasBind = 2048,
-    HasUnbind = 4096,
-    IsAssignable = 8192,
-    IsLiteral = 16384,
-    IsResource = 32768,
-    IsForDeclaration = 65536,
-    Type = 31,
-    AccessThis = 1793,
-    AccessScope = 10082,
-    ArrayLiteral = 17955,
-    ObjectLiteral = 17956,
-    PrimitiveLiteral = 17925,
-    Template = 17958,
-    Unary = 39,
-    CallScope = 1448,
-    CallMember = 1161,
-    CallFunction = 1162,
-    AccessMember = 9323,
-    AccessKeyed = 9324,
-    TaggedTemplate = 1197,
-    Binary = 46,
-    Conditional = 63,
-    Assign = 8208,
-    ArrowFunction = 17,
-    ValueConverter = 36914,
-    BindingBehavior = 38963,
-    HtmlLiteral = 52,
-    ArrayBindingPattern = 65557,
-    ObjectBindingPattern = 65558,
-    BindingIdentifier = 65559,
-    ForOfStatement = 6200,
-    Interpolation = 25,
-    ArrayDestructuring = 90138,
-    ObjectDestructuring = 106523,
-    DestructuringAssignmentLeaf = 139292
+    AccessThis = 0,
+    AccessScope = 1,
+    ArrayLiteral = 2,
+    ObjectLiteral = 3,
+    PrimitiveLiteral = 4,
+    Template = 5,
+    Unary = 6,
+    CallScope = 7,
+    CallMember = 8,
+    CallFunction = 9,
+    AccessMember = 10,
+    AccessKeyed = 11,
+    TaggedTemplate = 12,
+    Binary = 13,
+    Conditional = 14,
+    Assign = 15,
+    ArrowFunction = 16,
+    ValueConverter = 17,
+    BindingBehavior = 18,
+    ArrayBindingPattern = 19,
+    ObjectBindingPattern = 20,
+    BindingIdentifier = 21,
+    ForOfStatement = 22,
+    Interpolation = 23,
+    ArrayDestructuring = 24,
+    ObjectDestructuring = 25,
+    DestructuringAssignmentLeaf = 26
 }
 export declare type UnaryOperator = 'void' | 'typeof' | '!' | '-' | '+';
 export declare type BinaryOperator = '??' | '&&' | '||' | '==' | '===' | '!=' | '!==' | 'instanceof' | 'in' | '+' | '-' | '*' | '/' | '%' | '<' | '>' | '<=' | '>=';
@@ -58,7 +46,7 @@ export declare type IsBindingBehavior = IsValueConverter | BindingBehaviorExpres
 export declare type IsAssignable = AccessScopeExpression | AccessKeyedExpression | AccessMemberExpression | AssignExpression;
 export declare type IsExpression = IsBindingBehavior | Interpolation;
 export declare type BindingIdentifierOrPattern = BindingIdentifier | ArrayBindingPattern | ObjectBindingPattern;
-export declare type IsExpressionOrStatement = IsExpression | ForOfStatement | BindingIdentifierOrPattern | HtmlLiteralExpression | DestructuringAssignmentExpression | DestructuringAssignmentSingleExpression | DestructuringAssignmentRestExpression;
+export declare type IsExpressionOrStatement = IsExpression | ForOfStatement | BindingIdentifierOrPattern | DestructuringAssignmentExpression | DestructuringAssignmentSingleExpression | DestructuringAssignmentRestExpression;
 export declare type AnyBindingExpression = Interpolation | ForOfStatement | IsBindingBehavior;
 export interface IExpressionHydrator {
     hydrate(jsonExpr: any): any;
@@ -80,7 +68,6 @@ export interface IVisitor<T = unknown> {
     visitCallScope(expr: CallScopeExpression): T;
     visitConditional(expr: ConditionalExpression): T;
     visitForOfStatement(expr: ForOfStatement): T;
-    visitHtmlLiteral(expr: HtmlLiteralExpression): T;
     visitInterpolation(expr: Interpolation): T;
     visitObjectBindingPattern(expr: ObjectBindingPattern): T;
     visitObjectLiteral(expr: ObjectLiteralExpression): T;
@@ -118,7 +105,6 @@ export declare class Unparser implements IVisitor<void> {
     visitArrayBindingPattern(expr: ArrayBindingPattern): void;
     visitObjectBindingPattern(expr: ObjectBindingPattern): void;
     visitBindingIdentifier(expr: BindingIdentifier): void;
-    visitHtmlLiteral(_expr: HtmlLiteralExpression): void;
     visitForOfStatement(expr: ForOfStatement): void;
     visitInterpolation(expr: Interpolation): void;
     visitDestructuringAssignmentExpression(expr: DestructuringAssignmentExpression): void;
@@ -342,17 +328,6 @@ export declare class PrimitiveLiteralExpression<TValue extends null | undefined 
     constructor(value: TValue);
     evaluate(_s: Scope, _e: IAstEvaluator | null, _c: IConnectable | null): TValue;
     assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
-    accept<T>(visitor: IVisitor<T>): T;
-    toString(): string;
-}
-export declare class HtmlLiteralExpression {
-    readonly parts: readonly HtmlLiteralExpression[];
-    get $kind(): ExpressionKind.HtmlLiteral;
-    get hasBind(): false;
-    get hasUnbind(): false;
-    constructor(parts: readonly HtmlLiteralExpression[]);
-    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): string;
-    assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown, _projection?: ResourceDefinition): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
