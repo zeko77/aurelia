@@ -14,7 +14,7 @@ export declare class LetBinding implements IAstBasedBinding {
     task: ITask | null;
     target: (IObservable & IIndexable) | null;
     constructor(locator: IServiceLocator, observerLocator: IObserverLocator, ast: IsExpression, targetProperty: string, toBindingContext?: boolean);
-    handleChange(newValue: unknown): void;
+    handleChange(): void;
     handleCollectionChange(): void;
     $bind(scope: Scope): void;
     $unbind(): void;

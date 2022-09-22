@@ -2,7 +2,7 @@ import { type IBinding } from '../observation';
 import { Scope } from '../observation/binding-context';
 import { type IConnectableBinding } from './connectable';
 import type { IServiceLocator } from '@aurelia/kernel';
-import type { IBindingContext, IOverrideContext, IConnectable } from '../observation';
+import type { IBindingContext, IConnectable } from '../observation';
 export declare const enum ExpressionKind {
     AccessThis = 0,
     AccessScope = 1,
@@ -118,6 +118,8 @@ export declare class Unparser implements IVisitor<void> {
 export interface IAstEvaluator {
     /** describe whether the evaluator wants to evaluate in strict mode */
     strict?: boolean;
+    /** describe whether the evaluator wants a bound function to be returned, in case the returned value is a function */
+    boundFn?: boolean;
     /** describe whether the evaluator wants to evaluate the function call in strict mode */
     strictFnCall?: boolean;
     /** Allow an AST to retrieve a service that it needs */
@@ -217,7 +219,7 @@ export declare class AccessScopeExpression {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(name: string, ancestor?: number);
-    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): IBindingContext | IOverrideContext;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
     assign(s: Scope, _e: IAstEvaluator | null, val: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;

@@ -1,6 +1,5 @@
 import { IPlatform } from '@aurelia/kernel';
 import { AccessorType, type IObserver, type ISubscriberCollection } from '../observation';
-import { FlushQueue, type IFlushable, type IWithFlushQueue } from './flush-queue';
 import type { IIndexable } from '@aurelia/kernel';
 import type { IObservable, ISubscriber } from '../observation';
 export interface IDirtyChecker extends DirtyChecker {
@@ -34,9 +33,8 @@ export declare const DirtyCheckSettings: {
      */
     resetToDefault(): void;
 };
-export declare class DirtyChecker implements IWithFlushQueue {
+export declare class DirtyChecker {
     private readonly p;
-    readonly queue: FlushQueue;
     private readonly tracked;
     private _task;
     private _elapsedFrames;
@@ -48,7 +46,7 @@ export declare class DirtyChecker implements IWithFlushQueue {
 }
 export interface DirtyCheckProperty extends IObserver, ISubscriberCollection {
 }
-export declare class DirtyCheckProperty implements DirtyCheckProperty, IFlushable {
+export declare class DirtyCheckProperty implements DirtyCheckProperty {
     obj: IObservable & IIndexable;
     key: string;
     type: AccessorType;

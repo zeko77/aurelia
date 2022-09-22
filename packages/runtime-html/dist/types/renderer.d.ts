@@ -381,10 +381,7 @@ export declare class SetStyleAttributeRenderer implements IRenderer {
 }
 export declare class StylePropertyBindingRenderer implements IRenderer {
     target: InstructionType.stylePropertyBinding;
-    constructor(
-    /** @internal */ _exprParser: IExpressionParser, 
-    /** @internal */ _observerLocator: IObserverLocator, 
-    /** @internal */ _platform: IPlatform);
+    constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator, platform: IPlatform);
     render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: StylePropertyBindingInstruction): void;
 }
 export declare class AttributeBindingRenderer implements IRenderer {

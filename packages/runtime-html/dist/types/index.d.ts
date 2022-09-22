@@ -13,7 +13,7 @@ export { AttrSyntax, IAttributeParser, attributePattern, type AttributePatternDe
 export { bindingCommand, type ICommandBuildInfo, BindingCommand, type BindingCommandInstance, BindingCommandDefinition, type BindingCommandKind, type BindingCommandType, CallBindingCommand, CommandType, DefaultBindingCommand, ForBindingCommand, FromViewBindingCommand, OneTimeBindingCommand, ToViewBindingCommand, TwoWayBindingCommand, TriggerBindingCommand, DelegateBindingCommand, CaptureBindingCommand, AttrBindingCommand, ClassBindingCommand, StyleBindingCommand, } from './resources/binding-command';
 export { IAttrMapper, type IsTwoWayPredicate, } from './attribute-mapper';
 export { BindingMode, IAstBasedBinding, IBindingController, } from './binding/interfaces-bindings';
-export { astEvaluator, } from './binding/binding-utils';
+export { IFlushQueue, FlushQueue, IFlushable, astEvaluator, } from './binding/binding-utils';
 export { Listener, } from './binding/listener';
 export { AttributeBinding, } from './binding/attribute';
 export { CallBinding, } from './binding/call-binding';

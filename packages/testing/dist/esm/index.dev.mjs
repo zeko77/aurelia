@@ -1,5 +1,5 @@
 import { noop, isArrayIndex, DI, Registration, kebabCase, emptyArray, EventAggregator, ILogger } from '@aurelia/kernel';
-import { IObserverLocator, FlushQueue, IDirtyChecker, INodeObserverLocator, Scope } from '@aurelia/runtime';
+import { IObserverLocator, IDirtyChecker, INodeObserverLocator, Scope } from '@aurelia/runtime';
 import { StandardConfiguration, IPlatform, ITemplateCompiler, CustomElement, CustomAttribute, Aurelia, valueConverter, bindable, customElement } from '@aurelia/runtime-html';
 import { BrowserPlatform } from '@aurelia/platform-browser';
 import { Metadata } from '@aurelia/metadata';
@@ -7632,7 +7632,6 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
                     void ret.then(dispose);
                 else
                     dispose();
-                FlushQueue.instance.clear();
             }
             catch {
                 console.warn('(!) corrupted fixture state, should isolate the failing test and restart the run'

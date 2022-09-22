@@ -31,6 +31,7 @@ export declare class ViewportAgent {
     private nextNode;
     private currTransition;
     private prevTransition;
+    private _cancellationPromise;
     constructor(viewport: IViewport, hostController: ICustomElementController, ctx: IRouteContext);
     static for(viewport: IViewport, ctx: IRouteContext): ViewportAgent;
     activateFromViewport(initiator: IHydratedController, parent: IHydratedController, flags: LifecycleFlags): void | Promise<void>;

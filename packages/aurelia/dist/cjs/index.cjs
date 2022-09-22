@@ -146,6 +146,8 @@ exports.DialogOpenResult = e.DialogOpenResult;
 
 exports.DialogService = e.DialogService;
 
+exports.FlushQueue = e.FlushQueue;
+
 exports.IAppRoot = e.IAppRoot;
 
 exports.IAttrMapper = e.IAttrMapper;
@@ -167,6 +169,8 @@ exports.IDialogGlobalSettings = e.IDialogGlobalSettings;
 exports.IDialogService = e.IDialogService;
 
 exports.IEventTarget = e.IEventTarget;
+
+exports.IFlushQueue = e.IFlushQueue;
 
 exports.ILifecycleHooks = e.ILifecycleHooks;
 

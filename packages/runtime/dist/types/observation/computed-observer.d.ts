@@ -2,14 +2,12 @@ import { AccessorType, IObserver } from '../observation';
 import type { ISubscriber, ICollectionSubscriber, ISubscriberCollection, IConnectable } from '../observation';
 import type { IConnectableBinding } from '../binding/connectable';
 import type { IObserverLocator } from './observer-locator';
-import type { FlushQueue, IFlushable, IWithFlushQueue } from './flush-queue';
 export interface ComputedObserver extends IConnectableBinding, ISubscriberCollection {
 }
-export declare class ComputedObserver implements IObserver, IConnectableBinding, ISubscriber, ICollectionSubscriber, ISubscriberCollection, IWithFlushQueue, IFlushable {
+export declare class ComputedObserver implements IObserver, IConnectableBinding, ISubscriber, ICollectionSubscriber, ISubscriberCollection {
     static create(obj: object, key: PropertyKey, descriptor: PropertyDescriptor, observerLocator: IObserverLocator, useProxy: boolean): ComputedObserver;
     interceptor: this;
     type: AccessorType;
-    readonly queue: FlushQueue;
     /**
      * The getter this observer is wrapping
      */
@@ -29,7 +27,6 @@ export declare class ComputedObserver implements IObserver, IConnectableBinding,
     handleCollectionChange(): void;
     subscribe(subscriber: ISubscriber): void;
     unsubscribe(subscriber: ISubscriber): void;
-    flush(): void;
     private run;
     private compute;
 }

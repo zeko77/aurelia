@@ -7636,7 +7636,6 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
                     void ret.then(dispose);
                 else
                     dispose();
-                runtime.FlushQueue.instance.clear();
             }
             catch {
                 console.warn('(!) corrupted fixture state, should isolate the failing test and restart the run'

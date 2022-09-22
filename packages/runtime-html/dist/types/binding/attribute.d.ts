@@ -35,7 +35,8 @@ export declare class AttributeBinding implements IAstBasedBinding {
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, taskQueue: TaskQueue, ast: IsBindingBehavior | ForOfStatement, target: INode, targetAttribute: string, targetProperty: string, mode: BindingMode);
     updateTarget(value: unknown): void;
     updateSource(value: unknown): void;
-    handleChange(newValue: unknown, _previousValue: unknown): void;
+    handleChange(): void;
+    handleCollectionChange(): void;
     $bind(scope: Scope): void;
     $unbind(): void;
 }

@@ -291,6 +291,7 @@ class TranslationBinding {
         this.T = S;
         this.task = null;
         this.parameter = null;
+        this.boundFn = false;
         this.B = t;
         this.target = e;
         this.i18n = this.locator.get($);
@@ -453,6 +454,7 @@ class ParameterBinding {
         this.updater = i;
         this.interceptor = this;
         this.isBound = false;
+        this.boundFn = false;
         this.oL = t.oL;
         this.locator = t.locator;
     }

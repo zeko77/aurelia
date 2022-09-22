@@ -137,8 +137,10 @@ export declare class Transition {
     readonly reject: ((err: unknown) => void) | null;
     guardsResult: boolean | ViewportInstructionTree;
     error: unknown;
+    private _erredWithUnknownRoute;
+    get erredWithUnknownRoute(): boolean;
     private constructor();
-    static create(input: Omit<Transition, 'run' | 'handleError'>): Transition;
+    static create(input: Omit<Transition, 'run' | 'handleError' | 'erredWithUnknownRoute'>): Transition;
     run<T>(cb: () => T, next: (value: UnwrapPromise<T>) => void): void;
     handleError(err: unknown): void;
     toString(): string;

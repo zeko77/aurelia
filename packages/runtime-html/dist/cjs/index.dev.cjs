@@ -304,7 +304,7 @@ class BindableObserver {
                     this._cbAll.call(this._obj, this._key, newValue, currentValue);
                 }
             }
-            this.queue.add(this);
+            this.subs.notify(this._value, this._oldValue);
         }
         else {
             this._obj[this._key] = newValue;
@@ -320,11 +320,6 @@ class BindableObserver {
         }
         this.subs.add(subscriber);
     }
-    flush() {
-        oV$4 = this._oldValue;
-        this._oldValue = this._value;
-        this.subs.notify(this._value, oV$4);
-    }
     _createGetterSetter() {
         Reflect.defineProperty(this._obj, this._key, {
             enumerable: true,
@@ -337,8 +332,6 @@ class BindableObserver {
     }
 }
 runtime.subscriberCollection(BindableObserver);
-runtime.withFlushQueue(BindableObserver);
-let oV$4 = void 0;
 
 const resource = function (key) {
     function Resolver(target, property, descriptor) {
@@ -972,7 +965,7 @@ class BindingInterceptor {
         this.binding.$unbind();
     }
 }
-const interceptableProperties = ['isBound', '$scope', 'obs', 'ast', 'locator', 'oL'];
+const interceptableProperties = ['isBound', '$scope', 'obs', 'ast', 'locator', 'oL', 'boundFn'];
 interceptableProperties.forEach(prop => {
     def(BindingInterceptor.prototype, prop, {
         enumerable: false,
@@ -1073,13 +1066,19 @@ const ValueConverter = Object.freeze({
 });
 
 class BindingTargetSubscriber {
-    constructor(b) {
+    constructor(b, flushQueue) {
+        this._value = void 0;
         this.b = b;
+        this._flushQueue = flushQueue;
+    }
+    flush() {
+        this.b.updateSource(this._value);
     }
     handleChange(value, _) {
         const b = this.b;
         if (value !== b.ast.evaluate(b.$scope, b, null)) {
-            b.updateSource(value);
+            this._value = value;
+            this._flushQueue.add(this);
         }
     }
 }
@@ -1114,6 +1113,37 @@ function astEvaluator(strict, strictFnCall = true) {
 const resourceLookupCache = new WeakMap();
 class ResourceLookup {
 }
+const IFlushQueue = kernel.DI.createInterface('IFlushQueue', x => x.singleton(FlushQueue));
+class FlushQueue {
+    constructor() {
+        this._flushing = false;
+        this._items = new Set();
+    }
+    get count() {
+        return this._items.size;
+    }
+    add(flushable) {
+        this._items.add(flushable);
+        if (this._flushing) {
+            return;
+        }
+        this._flushing = true;
+        try {
+            this._items.forEach(flushItem);
+        }
+        finally {
+            this._flushing = false;
+        }
+    }
+    clear() {
+        this._items.clear();
+        this._flushing = false;
+    }
+}
+function flushItem(item, _, items) {
+    items.delete(item);
+    item.flush();
+}
 
 class CallBinding {
     constructor(locator, observerLocator, ast, target, targetProperty) {
@@ -1123,6 +1153,7 @@ class CallBinding {
         this.targetProperty = targetProperty;
         this.interceptor = this;
         this.isBound = false;
+        this.boundFn = false;
         this.targetObserver = observerLocator.getAccessor(target, targetProperty);
     }
     callSource(args) {
@@ -1239,7 +1270,7 @@ class AttributeObserver {
                 this._oldValue = this._value;
                 this._value = newValue;
                 this._hasChanges = false;
-                this.queue.add(this);
+                this._flush();
             }
         }
     }
@@ -1254,14 +1285,13 @@ class AttributeObserver {
             stopObservation(this._obj, this);
         }
     }
-    flush() {
+    _flush() {
         oV$3 = this._oldValue;
         this._oldValue = this._value;
         this.subs.notify(this._value, oV$3);
     }
 }
 runtime.subscriberCollection(AttributeObserver);
-runtime.withFlushQueue(AttributeObserver);
 const startObservation = ($MutationObserver, element, subscriber) => {
     if (element.$eMObs === undefined) {
         element.$eMObs = new Set();
@@ -1308,6 +1338,7 @@ class AttributeBinding {
         this.task = null;
         this.targetSubscriber = null;
         this.value = void 0;
+        this.boundFn = false;
         this._controller = controller;
         this.target = target;
         this.oL = observerLocator;
@@ -1318,7 +1349,7 @@ class AttributeBinding {
     updateSource(value) {
         this.ast.assign(this.$scope, this, value);
     }
-    handleChange(newValue, _previousValue) {
+    handleChange() {
         if (!this.isBound) {
             return;
         }
@@ -1330,15 +1361,13 @@ class AttributeBinding {
         const shouldQueueFlush = this._controller.state !== 1 && (targetObserver.type & 4) > 0;
         let shouldConnect = false;
         let task;
-        if (ast.$kind !== 1 || this.obs.count > 1) {
-            shouldConnect = (mode & 1) === 0;
-            if (shouldConnect) {
-                this.obs.version++;
-            }
-            newValue = ast.evaluate($scope, this, interceptor);
-            if (shouldConnect) {
-                this.obs.clear();
-            }
+        shouldConnect = (mode & 1) === 0;
+        if (shouldConnect) {
+            this.obs.version++;
+        }
+        const newValue = ast.evaluate($scope, this, interceptor);
+        if (shouldConnect) {
+            this.obs.clear();
         }
         if (newValue !== this.value) {
             this.value = newValue;
@@ -1354,6 +1383,9 @@ class AttributeBinding {
                 interceptor.updateTarget(newValue);
             }
         }
+    }
+    handleCollectionChange() {
+        this.handleChange();
     }
     $bind(scope) {
         if (this.isBound) {
@@ -1380,7 +1412,7 @@ class AttributeBinding {
             interceptor.updateTarget(this.value = ast.evaluate(scope, this, shouldConnect ? interceptor : null));
         }
         if ($mode & 4) {
-            targetObserver.subscribe(this.targetSubscriber ?? (this.targetSubscriber = new BindingTargetSubscriber(interceptor)));
+            targetObserver.subscribe(this.targetSubscriber ?? (this.targetSubscriber = new BindingTargetSubscriber(interceptor, this.locator.get(IFlushQueue))));
         }
         this.isBound = true;
     }
@@ -1432,7 +1464,10 @@ class InterpolationBinding {
             partBindings[i] = new InterpolationPartBinding(expressions[i], target, targetProperty, locator, observerLocator, this);
         }
     }
-    updateTarget(_value) {
+    _handlePartChange() {
+        this.updateTarget();
+    }
+    updateTarget() {
         const partBindings = this.partBindings;
         const staticParts = this.ast.parts;
         const ii = partBindings.length;
@@ -1478,7 +1513,7 @@ class InterpolationBinding {
         for (; ii > i; ++i) {
             partBindings[i].$bind(scope);
         }
-        this.updateTarget(void 0);
+        this.updateTarget();
     }
     $unbind() {
         if (!this.isBound) {
@@ -1509,36 +1544,34 @@ class InterpolationPartBinding {
         this.value = '';
         this.task = null;
         this.isBound = false;
+        this.boundFn = false;
         this.oL = observerLocator;
     }
-    handleChange(newValue) {
+    handleChange() {
         if (!this.isBound) {
             return;
         }
         const ast = this.ast;
         const obsRecord = this.obs;
-        const canOptimize = ast.$kind === 1 && obsRecord.count === 1;
         let shouldConnect = false;
-        if (!canOptimize) {
-            shouldConnect = (this.mode & 2) > 0;
-            if (shouldConnect) {
-                obsRecord.version++;
-            }
-            newValue = ast.evaluate(this.$scope, this, shouldConnect ? this.interceptor : null);
-            if (shouldConnect) {
-                obsRecord.clear();
-            }
+        shouldConnect = (this.mode & 2) > 0;
+        if (shouldConnect) {
+            obsRecord.version++;
+        }
+        const newValue = ast.evaluate(this.$scope, this, shouldConnect ? this.interceptor : null);
+        if (shouldConnect) {
+            obsRecord.clear();
         }
         if (newValue != this.value) {
             this.value = newValue;
             if (newValue instanceof Array) {
                 this.observeCollection(newValue);
             }
-            this.owner.updateTarget(newValue);
+            this.owner._handlePartChange();
         }
     }
     handleCollectionChange() {
-        this.owner.updateTarget(void 0);
+        this.handleChange();
     }
     $bind(scope) {
         if (this.isBound) {
@@ -1584,6 +1617,7 @@ class ContentBinding {
         this.value = '';
         this.task = null;
         this.isBound = false;
+        this.boundFn = false;
         this._controller = controller;
         this.oL = observerLocator;
     }
@@ -1603,23 +1637,17 @@ class ContentBinding {
             target.textContent = String(value);
         }
     }
-    handleChange(newValue) {
+    handleChange() {
         if (!this.isBound) {
             return;
         }
-        const ast = this.ast;
-        const obsRecord = this.obs;
-        const canOptimize = ast.$kind === 1 && obsRecord.count === 1;
-        let shouldConnect = false;
-        if (!canOptimize) {
-            shouldConnect = (this.mode & 2) > 0;
-            if (shouldConnect) {
-                obsRecord.version++;
-            }
-            newValue = ast.evaluate(this.$scope, this, shouldConnect ? this.interceptor : null);
-            if (shouldConnect) {
-                obsRecord.clear();
-            }
+        const shouldConnect = (this.mode & 2) > 0;
+        if (shouldConnect) {
+            this.obs.version++;
+        }
+        const newValue = this.ast.evaluate(this.$scope, this, shouldConnect ? this.interceptor : null);
+        if (shouldConnect) {
+            this.obs.clear();
         }
         if (newValue === this.value) {
             this.task?.cancel();
@@ -1641,7 +1669,7 @@ class ContentBinding {
         this.obs.version++;
         const v = this.value = this.ast.evaluate(this.$scope, this, (this.mode & 2) > 0 ? this.interceptor : null);
         this.obs.clear();
-        if (v instanceof Array) {
+        if (isArray(v)) {
             this.observeCollection(v);
         }
         const shouldQueueFlush = this._controller.state !== 1;
@@ -1665,7 +1693,7 @@ class ContentBinding {
             this.ast.bind(scope, this.interceptor);
         }
         const v = this.value = this.ast.evaluate(scope, this, (this.mode & 2) > 0 ? this.interceptor : null);
-        if (v instanceof Array) {
+        if (isArray(v)) {
             this.observeCollection(v);
         }
         this.updateTarget(v);
@@ -1705,24 +1733,11 @@ class LetBinding {
         this.$scope = void 0;
         this.task = null;
         this.target = null;
+        this.boundFn = false;
         this.oL = observerLocator;
         this._toBindingContext = toBindingContext;
     }
-    handleChange(newValue) {
-        if (!this.isBound) {
-            return;
-        }
-        const target = this.target;
-        const targetProperty = this.targetProperty;
-        const previousValue = target[targetProperty];
-        this.obs.version++;
-        newValue = this.ast.evaluate(this.$scope, this, this.interceptor);
-        this.obs.clear();
-        if (newValue !== previousValue) {
-            target[targetProperty] = newValue;
-        }
-    }
-    handleCollectionChange() {
+    handleChange() {
         if (!this.isBound) {
             return;
         }
@@ -1736,6 +1751,9 @@ class LetBinding {
             target[targetProperty] = newValue;
         }
     }
+    handleCollectionChange() {
+        this.handleChange();
+    }
     $bind(scope) {
         if (this.isBound) {
             if (this.$scope === scope) {
@@ -1745,9 +1763,8 @@ class LetBinding {
         }
         this.$scope = scope;
         this.target = (this._toBindingContext ? scope.bindingContext : scope.overrideContext);
-        const ast = this.ast;
-        if (ast.hasBind) {
-            ast.bind(scope, this.interceptor);
+        if (this.ast.hasBind) {
+            this.ast.bind(scope, this.interceptor);
         }
         this.target[this.targetProperty]
             = this.ast.evaluate(scope, this, this.interceptor);
@@ -1757,9 +1774,8 @@ class LetBinding {
         if (!this.isBound) {
             return;
         }
-        const ast = this.ast;
-        if (ast.hasUnbind) {
-            ast.unbind(this.$scope, this.interceptor);
+        if (this.ast.hasUnbind) {
+            this.ast.unbind(this.$scope, this.interceptor);
         }
         this.$scope = void 0;
         this.obs.clearAll();
@@ -1786,6 +1802,7 @@ class PropertyBinding {
         this.targetObserver = void 0;
         this.task = null;
         this.targetSubscriber = null;
+        this.boundFn = false;
         this._controller = controller;
         this._taskQueue = taskQueue;
         this.oL = observerLocator;
@@ -1796,22 +1813,20 @@ class PropertyBinding {
     updateSource(value) {
         this.ast.assign(this.$scope, this, value);
     }
-    handleChange(newValue, _previousValue) {
+    handleChange() {
         if (!this.isBound) {
             return;
         }
         const shouldQueueFlush = this._controller.state !== 1 && (this.targetObserver.type & 4) > 0;
         const obsRecord = this.obs;
         let shouldConnect = false;
-        if (this.ast.$kind !== 1 || obsRecord.count > 1) {
-            shouldConnect = this.mode > 1;
-            if (shouldConnect) {
-                obsRecord.version++;
-            }
-            newValue = this.ast.evaluate(this.$scope, this, this.interceptor);
-            if (shouldConnect) {
-                obsRecord.clear();
-            }
+        shouldConnect = this.mode > 1;
+        if (shouldConnect) {
+            obsRecord.version++;
+        }
+        const newValue = this.ast.evaluate(this.$scope, this, this.interceptor);
+        if (shouldConnect) {
+            obsRecord.clear();
         }
         if (shouldQueueFlush) {
             task = this.task;
@@ -1826,26 +1841,8 @@ class PropertyBinding {
             this.interceptor.updateTarget(newValue);
         }
     }
-    handleCollectionChange(_collection) {
-        if (!this.isBound) {
-            return;
-        }
-        const shouldQueueFlush = this._controller.state !== 1 && (this.targetObserver.type & 4) > 0;
-        this.obs.version++;
-        const newValue = this.ast.evaluate(this.$scope, this, this.interceptor);
-        this.obs.clear();
-        if (shouldQueueFlush) {
-            task = this.task;
-            this.task = this._taskQueue.queueTask(() => {
-                this.interceptor.updateTarget(newValue);
-                this.task = null;
-            }, updateTaskOpts);
-            task?.cancel();
-            task = null;
-        }
-        else {
-            this.interceptor.updateTarget(newValue);
-        }
+    handleCollectionChange() {
+        this.handleChange();
     }
     $bind(scope) {
         if (this.isBound) {
@@ -1878,7 +1875,7 @@ class PropertyBinding {
             interceptor.updateTarget(ast.evaluate(scope, this, shouldConnect ? interceptor : null));
         }
         if ($mode & 4) {
-            targetObserver.subscribe(this.targetSubscriber ?? (this.targetSubscriber = new BindingTargetSubscriber(interceptor)));
+            targetObserver.subscribe(this.targetSubscriber ?? (this.targetSubscriber = new BindingTargetSubscriber(interceptor, this.locator.get(IFlushQueue))));
             if (!shouldConnect) {
                 interceptor.updateSource(targetObserver.getValue(this.target, this.targetProperty));
             }
@@ -2879,6 +2876,7 @@ class ExpressionWatcher {
         this.callback = callback;
         this.interceptor = this;
         this.isBound = false;
+        this.boundFn = false;
         this.obj = scope.bindingContext;
     }
     handleChange(value) {
@@ -4683,6 +4681,7 @@ class Listener {
         this.interceptor = this;
         this.isBound = false;
         this.handler = null;
+        this.boundFn = true;
         this._options = options;
     }
     callSource(event) {
@@ -5480,10 +5479,10 @@ SetStyleAttributeRenderer = __decorate([
     renderer("hg")
 ], SetStyleAttributeRenderer);
 let StylePropertyBindingRenderer = class StylePropertyBindingRenderer {
-    constructor(_exprParser, _observerLocator, _platform) {
-        this._exprParser = _exprParser;
-        this._observerLocator = _observerLocator;
-        this._platform = _platform;
+    constructor(exprParser, observerLocator, platform) {
+        this._exprParser = exprParser;
+        this._observerLocator = observerLocator;
+        this._platform = platform;
     }
     render(renderingCtrl, target, instruction) {
         const expr = ensureExpression(this._exprParser, instruction.from, 8);
@@ -7505,12 +7504,12 @@ const defaultDelay$1 = 200;
 class DebounceBindingBehavior extends BindingInterceptor {
     constructor(binding, expr) {
         super(binding, expr);
-        this.opts = { delay: defaultDelay$1 };
-        this.firstArg = null;
-        this.task = null;
-        this.taskQueue = binding.get(kernel.IPlatform).taskQueue;
+        this._opts = { delay: defaultDelay$1 };
+        this._firstArg = null;
+        this._task = null;
+        this._taskQueue = binding.get(kernel.IPlatform).taskQueue;
         if (expr.args.length > 0) {
-            this.firstArg = expr.args[0];
+            this._firstArg = expr.args[0];
         }
     }
     callSource(args) {
@@ -7518,9 +7517,9 @@ class DebounceBindingBehavior extends BindingInterceptor {
         return void 0;
     }
     handleChange(newValue, oldValue) {
-        if (this.task !== null) {
-            this.task.cancel();
-            this.task = null;
+        if (this._task !== null) {
+            this._task.cancel();
+            this._task = null;
         }
         this.binding.handleChange(newValue, oldValue);
     }
@@ -7528,23 +7527,23 @@ class DebounceBindingBehavior extends BindingInterceptor {
         this.queueTask(() => this.binding.updateSource(newValue));
     }
     queueTask(callback) {
-        const task = this.task;
-        this.task = this.taskQueue.queueTask(() => {
-            this.task = null;
+        const task = this._task;
+        this._task = this._taskQueue.queueTask(() => {
+            this._task = null;
             return callback();
-        }, this.opts);
+        }, this._opts);
         task?.cancel();
     }
     $bind(scope) {
-        if (this.firstArg !== null) {
-            const delay = Number(this.firstArg.evaluate(scope, this, null));
-            this.opts.delay = isNaN(delay) ? defaultDelay$1 : delay;
+        if (this._firstArg !== null) {
+            const delay = Number(this._firstArg.evaluate(scope, this, null));
+            this._opts.delay = isNaN(delay) ? defaultDelay$1 : delay;
         }
         this.binding.$bind(scope);
     }
     $unbind() {
-        this.task?.cancel();
-        this.task = null;
+        this._task?.cancel();
+        this._task = null;
         this.binding.$unbind();
     }
 }
@@ -7584,15 +7583,15 @@ const defaultDelay = 200;
 class ThrottleBindingBehavior extends BindingInterceptor {
     constructor(binding, expr) {
         super(binding, expr);
-        this.opts = { delay: defaultDelay };
-        this.firstArg = null;
-        this.task = null;
-        this.lastCall = 0;
-        this.delay = 0;
+        this._opts = { delay: defaultDelay };
+        this._firstArg = null;
+        this._task = null;
+        this._lastCall = 0;
+        this._delay = 0;
         this._platform = binding.get(kernel.IPlatform);
         this._taskQueue = this._platform.taskQueue;
         if (expr.args.length > 0) {
-            this.firstArg = expr.args[0];
+            this._firstArg = expr.args[0];
         }
     }
     callSource(args) {
@@ -7600,10 +7599,10 @@ class ThrottleBindingBehavior extends BindingInterceptor {
         return void 0;
     }
     handleChange(newValue, oldValue) {
-        if (this.task !== null) {
-            this.task.cancel();
-            this.task = null;
-            this.lastCall = this._platform.performanceNow();
+        if (this._task !== null) {
+            this._task.cancel();
+            this._task = null;
+            this._lastCall = this._platform.performanceNow();
         }
         this.binding.handleChange(newValue, oldValue);
     }
@@ -7611,35 +7610,35 @@ class ThrottleBindingBehavior extends BindingInterceptor {
         this._queueTask(() => this.binding.updateSource(newValue));
     }
     _queueTask(callback) {
-        const opts = this.opts;
+        const opts = this._opts;
         const platform = this._platform;
-        const nextDelay = this.lastCall + opts.delay - platform.performanceNow();
+        const nextDelay = this._lastCall + opts.delay - platform.performanceNow();
         if (nextDelay > 0) {
-            const task = this.task;
+            const task = this._task;
             opts.delay = nextDelay;
-            this.task = this._taskQueue.queueTask(() => {
-                this.lastCall = platform.performanceNow();
-                this.task = null;
-                opts.delay = this.delay;
+            this._task = this._taskQueue.queueTask(() => {
+                this._lastCall = platform.performanceNow();
+                this._task = null;
+                opts.delay = this._delay;
                 callback();
             }, opts);
             task?.cancel();
         }
         else {
-            this.lastCall = platform.performanceNow();
+            this._lastCall = platform.performanceNow();
             callback();
         }
     }
     $bind(scope) {
-        if (this.firstArg !== null) {
-            const delay = Number(this.firstArg.evaluate(scope, this, null));
-            this.opts.delay = this.delay = isNaN(delay) ? defaultDelay : delay;
+        if (this._firstArg !== null) {
+            const delay = Number(this._firstArg.evaluate(scope, this, null));
+            this._opts.delay = this._delay = isNaN(delay) ? defaultDelay : delay;
         }
-        this.binding.$bind(scope);
+        super.$bind(scope);
     }
     $unbind() {
-        this.task?.cancel();
-        this.task = null;
+        this._task?.cancel();
+        this._task = null;
         super.$unbind();
     }
 }
@@ -7743,7 +7742,7 @@ class CheckedObserver {
         this._oldValue = currentValue;
         this._observe();
         this._synchronizeElement();
-        this.queue.add(this);
+        this._flush();
     }
     handleCollectionChange() {
         this._synchronizeElement();
@@ -7844,7 +7843,7 @@ class CheckedObserver {
             return;
         }
         this._value = currentValue;
-        this.queue.add(this);
+        this._flush();
     }
     start() {
         this.handler.subscribe(this._obj, this);
@@ -7866,7 +7865,7 @@ class CheckedObserver {
             this.stop();
         }
     }
-    flush() {
+    _flush() {
         oV$2 = this._oldValue;
         this._oldValue = this._value;
         this.subs.notify(this._value, oV$2);
@@ -7882,7 +7881,6 @@ class CheckedObserver {
     }
 }
 runtime.subscriberCollection(CheckedObserver);
-runtime.withFlushQueue(CheckedObserver);
 let oV$2 = void 0;
 
 const childObserverOptions = {
@@ -8032,14 +8030,14 @@ class SelectValueObserver {
     handleEvent() {
         const shouldNotify = this.syncValue();
         if (shouldNotify) {
-            this.queue.add(this);
+            this._flush();
         }
     }
     _handleNodeChange(_records) {
         this.syncOptions();
         const shouldNotify = this.syncValue();
         if (shouldNotify) {
-            this.queue.add(this);
+            this._flush();
         }
     }
     subscribe(subscriber) {
@@ -8054,14 +8052,13 @@ class SelectValueObserver {
             this._stop();
         }
     }
-    flush() {
+    _flush() {
         oV$1 = this._oldValue;
         this._oldValue = this._value;
         this.subs.notify(this._value, oV$1);
     }
 }
 runtime.subscriberCollection(SelectValueObserver);
-runtime.withFlushQueue(SelectValueObserver);
 function getSelectedOptions(options) {
     const selection = [];
     if (options.length === 0) {
@@ -8249,7 +8246,7 @@ class ValueAttributeObserver {
         if (this._hasChanges) {
             this._hasChanges = false;
             this._obj[this._key] = this._value ?? this.handler.config.default;
-            this.queue.add(this);
+            this._flush();
         }
     }
     handleEvent() {
@@ -8257,7 +8254,7 @@ class ValueAttributeObserver {
         this._value = this._obj[this._key];
         if (this._oldValue !== this._value) {
             this._hasChanges = false;
-            this.queue.add(this);
+            this._flush();
         }
     }
     subscribe(subscriber) {
@@ -8271,14 +8268,13 @@ class ValueAttributeObserver {
             this.handler.dispose();
         }
     }
-    flush() {
+    _flush() {
         oV = this._oldValue;
         this._oldValue = this._value;
         this.subs.notify(this._value, oV);
     }
 }
 runtime.subscriberCollection(ValueAttributeObserver);
-runtime.withFlushQueue(ValueAttributeObserver);
 let oV = void 0;
 
 const xlinkNS = 'http://www.w3.org/1999/xlink';
@@ -8415,8 +8411,9 @@ class NodeObserverLocator {
             case 'minLength':
             case 'maxLength':
             case 'placeholder':
-            case 'type':
             case 'size':
+            case 'pattern':
+            case 'title':
                 return attrAccessor;
             default: {
                 const nsProps = nsAttributes[key];
@@ -11391,6 +11388,7 @@ exports.ElseRegistration = ElseRegistration;
 exports.EventDelegator = EventDelegator;
 exports.EventSubscriber = EventSubscriber;
 exports.ExpressionWatcher = ExpressionWatcher;
+exports.FlushQueue = FlushQueue;
 exports.Focus = Focus;
 exports.ForBindingCommandRegistration = ForBindingCommandRegistration;
 exports.FragmentNodeSequence = FragmentNodeSequence;
@@ -11417,6 +11415,7 @@ exports.IDialogGlobalSettings = IDialogGlobalSettings;
 exports.IDialogService = IDialogService;
 exports.IEventDelegator = IEventDelegator;
 exports.IEventTarget = IEventTarget;
+exports.IFlushQueue = IFlushQueue;
 exports.IHistory = IHistory;
 exports.IHydrationContext = IHydrationContext;
 exports.IInstruction = IInstruction;

@@ -3765,175 +3765,174 @@ const Ri = e => Ai.subscribe("fixture:created", (t => {
     }
 }));
 
-function qi(i, s, o = [], a = true, l = TestContext.create()) {
-    const {container: u} = l;
-    u.register(...o);
-    const {platform: c, observerLocator: f} = l;
-    const h = l.doc.body.appendChild(l.createElement("div"));
-    const d = h.appendChild(l.createElement("app"));
-    const p = new n.Aurelia(u);
-    const m = "function" === typeof s ? s : null == s ? class {} : function e() {
-        Object.setPrototypeOf(s, e.prototype);
-        return s;
+function qi(t, i, s = [], o = true, a = TestContext.create()) {
+    const {container: l} = a;
+    l.register(...s);
+    const {platform: u, observerLocator: c} = a;
+    const f = a.doc.body.appendChild(a.createElement("div"));
+    const h = f.appendChild(a.createElement("app"));
+    const d = new n.Aurelia(l);
+    const p = "function" === typeof i ? i : null == i ? class {} : function e() {
+        Object.setPrototypeOf(i, e.prototype);
+        return i;
     };
-    const g = [ "aliases", "bindables", "cache", "capture", "childrenObservers", "containerless", "dependencies", "enhance" ];
-    if (m !== s && null != s) g.forEach((e => {
-        r.Metadata.define(e, n.CustomElement.getAnnotation(s, e), m);
+    const m = [ "aliases", "bindables", "cache", "capture", "childrenObservers", "containerless", "dependencies", "enhance" ];
+    if (p !== i && null != i) m.forEach((e => {
+        r.Metadata.define(e, n.CustomElement.getAnnotation(i, e), p);
     }));
-    const b = n.CustomElement.isType(m) ? n.CustomElement.getDefinition(m) : {};
-    const v = n.CustomElement.define({
-        ...b,
+    const g = n.CustomElement.isType(p) ? n.CustomElement.getDefinition(p) : {};
+    const b = n.CustomElement.define({
+        ...g,
         name: "app",
-        template: i
-    }, m);
-    if (u.has(v, true)) throw new Error("Container of the context contains instance of the application root component. " + "Consider using a different class, or context as it will likely cause surprises in tests.");
-    const x = u.get(v);
-    let $;
-    if (a) try {
-        p.app({
-            host: d,
-            component: x
+        template: t
+    }, p);
+    if (l.has(b, true)) throw new Error("Container of the context contains instance of the application root component. " + "Consider using a different class, or context as it will likely cause surprises in tests.");
+    const v = l.get(b);
+    let x;
+    if (o) try {
+        d.app({
+            host: h,
+            component: v
         });
-        $ = p.start();
+        x = d.start();
     } catch (e) {
         try {
             const e = () => {
-                h.remove();
-                p.dispose();
+                f.remove();
+                d.dispose();
             };
-            const n = p.stop();
-            if (n instanceof Promise) void n.then(e); else e();
-            t.FlushQueue.instance.clear();
+            const t = d.stop();
+            if (t instanceof Promise) void t.then(e); else e();
         } catch {
             console.warn("(!) corrupted fixture state, should isolate the failing test and restart the run" + "as it is likely that this failing fixture creation will pollute others.");
         }
         throw e;
     }
-    let y = 0;
-    const w = e => {
-        const t = d.querySelectorAll(e);
+    let $ = 0;
+    const y = e => {
+        const t = h.querySelectorAll(e);
         if (t.length > 1) throw new Error(`There is more than 1 element with selector "${e}": ${t.length} found`);
         if (0 === t.length) throw new Error(`No element found for selector: "${e}"`);
         return t[0];
     };
-    function k(e) {
-        return Array.from(d.querySelectorAll(e));
+    function w(e) {
+        return Array.from(h.querySelectorAll(e));
     }
-    function C(e) {
-        const t = d.querySelectorAll(e);
+    function k(e) {
+        const t = h.querySelectorAll(e);
         if (t.length > 1) throw new Error(`There is more than 1 element with selector "${e}": ${t.length} found`);
         return 0 === t.length ? null : t[0];
     }
-    function S(e, t) {
+    function C(e, t) {
         if (2 === arguments.length) {
-            const n = C(e);
+            const n = k(e);
             if (null === n) throw new Error(`No element found for selector "${e}" to compare text content with "${t}"`);
             mi.strictEqual(n.textContent, t);
-        } else mi.strictEqual(d.textContent, e);
+        } else mi.strictEqual(h.textContent, e);
     }
-    function O(e, t) {
+    function S(e, t) {
         if (2 === arguments.length) {
-            const n = C(e);
+            const n = k(e);
             if (null === n) throw new Error(`No element found for selector "${e}" to compare innerHTML against "${t}"`);
             mi.strictEqual(n.innerHTML, t);
-        } else mi.strictEqual(d.innerHTML, e);
+        } else mi.strictEqual(h.innerHTML, e);
     }
-    function E(e, t, n) {
-        const i = C(e);
+    function O(e, t, n) {
+        const i = k(e);
         if (null === i) throw new Error(`No element found for selector "${e}" to compare attribute "${t}" against "${n}"`);
         mi.strictEqual(i.getAttribute(t), n);
     }
-    function j(e, t, n, i) {
-        const r = C(e);
+    function E(e, t, n, i) {
+        const r = k(e);
         if (null === r) throw new Error(`No element found for selector "${e}" to compare attribute "${n}" against "${i}"`);
         mi.strictEqual(r.getAttributeNS(t, n), i);
     }
-    function L(e, t) {
-        const n = C(e);
+    function j(e, t) {
+        const n = k(e);
         if (null === n) throw new Error(`No element found for selector "${e}" to compare value against "${t}"`);
         mi.strictEqual(n.value, t);
     }
-    function A(e, t, n) {
-        const i = C(e);
+    function L(e, t, n) {
+        const i = k(e);
         if (null === i) throw new Error(`No element found for selector "${e}" to fire event "${t}"`);
-        i.dispatchEvent(new l.CustomEvent(t, n));
+        i.dispatchEvent(new a.CustomEvent(t, n));
     }
     [ "click", "change", "input", "scroll" ].forEach((e => {
-        Object.defineProperty(A, e, {
+        Object.defineProperty(L, e, {
             configurable: true,
             writable: true,
             value: (t, n) => {
-                const i = C(t);
+                const i = k(t);
                 if (null === i) throw new Error(`No element found for selector "${t}" to fire event "${e}"`);
-                i.dispatchEvent(new l.CustomEvent(e, n));
+                i.dispatchEvent(new a.CustomEvent(e, n));
             }
         });
     }));
-    const R = (e, t) => {
-        const n = C(e);
+    const A = (e, t) => {
+        const n = k(e);
         if (null === n) throw new Error(`No element found for selector "${e}" to scroll by "${JSON.stringify(t)}"`);
         n.scrollBy("number" === typeof t ? {
             top: t
         } : t);
         n.dispatchEvent(new Event("scroll"));
     };
-    const q = e => {
-        l.platform.domWriteQueue.flush(e);
+    const R = e => {
+        a.platform.domWriteQueue.flush(e);
     };
-    const M = new class Results {
+    const q = new class Results {
         constructor() {
-            this.startPromise = $;
-            this.ctx = l;
-            this.host = l.doc.firstElementChild;
-            this.container = u;
-            this.platform = c;
-            this.testHost = h;
-            this.appHost = d;
-            this.au = p;
-            this.component = x;
-            this.observerLocator = f;
-            this.logger = u.get(e.ILogger);
-            this.hJsx = Li.bind(l.doc);
-            this.getBy = w;
-            this.getAllBy = k;
-            this.queryBy = C;
-            this.assertText = S;
-            this.assertHtml = O;
-            this.assertAttr = E;
-            this.assertAttrNS = j;
-            this.assertValue = L;
-            this.trigger = A;
-            this.scrollBy = R;
-            this.flush = q;
+            this.startPromise = x;
+            this.ctx = a;
+            this.host = a.doc.firstElementChild;
+            this.container = l;
+            this.platform = u;
+            this.testHost = f;
+            this.appHost = h;
+            this.au = d;
+            this.component = v;
+            this.observerLocator = c;
+            this.logger = l.get(e.ILogger);
+            this.hJsx = Li.bind(a.doc);
+            this.getBy = y;
+            this.getAllBy = w;
+            this.queryBy = k;
+            this.assertText = C;
+            this.assertHtml = S;
+            this.assertAttr = O;
+            this.assertAttrNS = E;
+            this.assertValue = j;
+            this.trigger = L;
+            this.scrollBy = A;
+            this.flush = R;
         }
         async start() {
-            await p.app({
-                host: d,
-                component: x
+            await d.app({
+                host: h,
+                component: v
             }).start();
         }
         tearDown() {
-            if (2 === ++y) {
+            if (2 === ++$) {
                 console.log("(!) Fixture has already been torn down");
                 return;
             }
             const e = () => {
-                h.remove();
-                p.dispose();
+                f.remove();
+                d.dispose();
             };
-            const t = p.stop();
+            const t = d.stop();
             if (t instanceof Promise) return t.then(e); else return e();
         }
         get torn() {
-            return y > 0;
+            return $ > 0;
         }
         get started() {
-            if ($ instanceof Promise) return Promise.resolve($).then((() => this));
+            if (x instanceof Promise) return Promise.resolve(x).then((() => this));
             return Promise.resolve(this);
         }
     };
-    Ai.publish("fixture:created", M);
-    return M;
+    Ai.publish("fixture:created", q);
+    return q;
 }
 
 class FixtureBuilder {

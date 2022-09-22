@@ -25,6 +25,6 @@ export declare class StateBinding implements IAstBasedBinding, IStoreSubscriber<
     $bind(scope: Scope): void;
     $unbind(): void;
     handleChange(newValue: unknown): void;
-    handleStateChange(state: object): void;
+    handleStateChange(): void;
 }
 //# sourceMappingURL=state-binding.d.ts.map

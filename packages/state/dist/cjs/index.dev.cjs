@@ -10,7 +10,7 @@ const IActionHandler = kernel.DI.createInterface('IActionHandler');
 const IStore = kernel.DI.createInterface('IStore');
 const IState = kernel.DI.createInterface('IState');
 
-const actionHandlerSymbol = '__reducer__';
+const actionHandlerSymbol = '__au_ah__';
 const ActionHandler = Object.freeze({
     define(reducer) {
         function registry(state, action, ...params) {
@@ -163,6 +163,7 @@ class StateBinding {
         this._value = void 0;
         this._sub = void 0;
         this._updateCount = 0;
+        this.boundFn = false;
         this.mode = 2;
         this._controller = controller;
         this.locator = locator;
@@ -243,7 +244,11 @@ class StateBinding {
             this.interceptor.updateTarget(newValue);
         }
     }
-    handleStateChange(state) {
+    handleStateChange() {
+        if (!this.isBound) {
+            return;
+        }
+        const state = this._store.getState();
         const $scope = this.$scope;
         const overrideContext = $scope.overrideContext;
         $scope.bindingContext = overrideContext.bindingContext = overrideContext.$state = state;
@@ -335,6 +340,7 @@ class StateDispatchBinding {
     constructor(locator, expr, target, prop, store) {
         this.interceptor = this;
         this.isBound = false;
+        this.boundFn = false;
         this.locator = locator;
         this._store = store;
         this.ast = expr;

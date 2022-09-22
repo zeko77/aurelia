@@ -3,18 +3,19 @@ import { IObserverLocator } from '@aurelia/runtime';
 import { Aurelia, IPlatform, type ICustomElementViewModel } from '@aurelia/runtime-html';
 import { TestContext } from './test-context';
 export declare const onFixtureCreated: <T>(callback: (fixture: IFixture<T>) => unknown) => import("@aurelia/kernel").IDisposable;
-export declare function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>(template: string | Node, $class?: T, registrations?: unknown[], autoStart?: boolean, ctx?: TestContext): IFixture<ICustomElementViewModel & K>;
+export declare type ObjectType<T> = T extends Constructable<infer U> ? U : T;
+export declare function createFixture<T extends object>(template: string | Node, $class?: T, registrations?: unknown[], autoStart?: boolean, ctx?: TestContext): IFixture<ICustomElementViewModel & ObjectType<T>>;
 export declare namespace createFixture {
     var html: <T = Record<PropertyKey, any>>(html: string | TemplateStringsArray, ...values: TemplateValues<T>[]) => CreateBuilder<T, "component" | "deps">;
-    var component: <T>(component: T) => {
+    var component: <T, K extends ObjectType<T>>(component: T) => {
         html: {
-            (html: string): CreateBuilder<T, "deps">;
-            (html: TemplateStringsArray, ...values: TemplateValues<T>[]): CreateBuilder<T, "deps">;
+            (html: string): CreateBuilder<K, "deps">;
+            (html: TemplateStringsArray, ...values: TemplateValues<K>[]): CreateBuilder<K, "deps">;
         };
         deps: (...args: unknown[]) => {
             html: {
-                (html: string): CreateBuilder<T, never>;
-                (html: TemplateStringsArray, ...values: TemplateValues<T>[]): CreateBuilder<T, never>;
+                (html: string): CreateBuilder<K, never>;
+                (html: TemplateStringsArray, ...values: TemplateValues<K>[]): CreateBuilder<K, never>;
             };
         };
     };

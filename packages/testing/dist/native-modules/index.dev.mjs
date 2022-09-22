@@ -1,5 +1,5 @@
 import { noop, isArrayIndex, DI, Registration, kebabCase, emptyArray, EventAggregator, ILogger } from '../../../kernel/dist/native-modules/index.mjs';
-import { IObserverLocator, FlushQueue, IDirtyChecker, INodeObserverLocator, Scope } from '../../../runtime/dist/native-modules/index.mjs';
+import { IObserverLocator, IDirtyChecker, INodeObserverLocator, Scope } from '../../../runtime/dist/native-modules/index.mjs';
 import { StandardConfiguration, IPlatform, ITemplateCompiler, CustomElement, CustomAttribute, Aurelia, valueConverter, bindable, customElement } from '../../../runtime-html/dist/native-modules/index.mjs';
 import { BrowserPlatform } from '../../../platform-browser/dist/native-modules/index.mjs';
 import { Metadata } from '../../../metadata/dist/native-modules/index.mjs';
@@ -7632,7 +7632,6 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
                     void ret.then(dispose);
                 else
                     dispose();
-                FlushQueue.instance.clear();
             }
             catch {
                 console.warn('(!) corrupted fixture state, should isolate the failing test and restart the run'

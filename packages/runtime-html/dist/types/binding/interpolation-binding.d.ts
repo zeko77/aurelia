@@ -24,7 +24,7 @@ export declare class InterpolationBinding implements IBinding {
      */
     readonly oL: IObserverLocator;
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, taskQueue: TaskQueue, ast: Interpolation, target: object, targetProperty: string, mode: BindingMode);
-    updateTarget(_value: unknown): void;
+    updateTarget(): void;
     $bind(scope: Scope): void;
     $unbind(): void;
 }
@@ -47,7 +47,7 @@ export declare class InterpolationPartBinding implements IAstBasedBinding, IColl
      */
     readonly oL: IObserverLocator;
     constructor(ast: IsExpression, target: object, targetProperty: string, locator: IServiceLocator, observerLocator: IObserverLocator, owner: InterpolationBinding);
-    handleChange(newValue: unknown): void;
+    handleChange(): void;
     handleCollectionChange(): void;
     $bind(scope: Scope): void;
     $unbind(): void;
@@ -76,7 +76,7 @@ export declare class ContentBinding implements IAstBasedBinding, ICollectionSubs
     readonly oL: IObserverLocator;
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, taskQueue: TaskQueue, p: IPlatform, ast: IsExpression, target: Text, strict: boolean);
     updateTarget(value: unknown): void;
-    handleChange(newValue: unknown): void;
+    handleChange(): void;
     handleCollectionChange(): void;
     $bind(scope: Scope): void;
     $unbind(): void;

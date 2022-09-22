@@ -1061,6 +1061,7 @@ class ViewportAgent {
         this.nextNode = null;
         this.currTransition = null;
         this.prevTransition = null;
+        this._cancellationPromise = null;
         this.logger = ctx.container.get(kernel.ILogger).scopeTo(`ViewportAgent<${ctx.friendlyPath}>`);
         this.logger.trace(`constructor()`);
     }
@@ -1177,42 +1178,44 @@ class ViewportAgent {
             return;
         }
         b.push();
-        Batch.start(b1 => {
-            this.logger.trace(`canUnload() - invoking on children at %s`, this);
-            for (const node of this.currNode.children) {
-                node.context.vpa.canUnload(tr, b1);
-            }
-        }).continueWith(b1 => {
-            switch (this.currState) {
-                case 4096:
-                    this.logger.trace(`canUnload() - invoking on existing component at %s`, this);
-                    switch (this.$plan) {
-                        case 'none':
-                            this.currState = 1024;
-                            return;
-                        case 'invoke-lifecycles':
-                        case 'replace':
-                            this.currState = 2048;
-                            b1.push();
-                            Batch.start(b2 => {
-                                this.logger.trace(`canUnload() - finished invoking on children, now invoking on own component at %s`, this);
-                                this.curCA.canUnload(tr, this.nextNode, b2);
-                            }).continueWith(() => {
-                                this.logger.trace(`canUnload() - finished at %s`, this);
+        void kernel.onResolve(this._cancellationPromise, () => {
+            Batch.start(b1 => {
+                this.logger.trace(`canUnload() - invoking on children at %s`, this);
+                for (const node of this.currNode.children) {
+                    node.context.vpa.canUnload(tr, b1);
+                }
+            }).continueWith(b1 => {
+                switch (this.currState) {
+                    case 4096:
+                        this.logger.trace(`canUnload() - invoking on existing component at %s`, this);
+                        switch (this.$plan) {
+                            case 'none':
                                 this.currState = 1024;
-                                b1.pop();
-                            }).start();
-                            return;
-                    }
-                case 8192:
-                    this.logger.trace(`canUnload() - nothing to unload at %s`, this);
-                    return;
-                default:
-                    tr.handleError(new Error(`Unexpected state at canUnload of ${this}`));
-            }
-        }).continueWith(() => {
-            b.pop();
-        }).start();
+                                return;
+                            case 'invoke-lifecycles':
+                            case 'replace':
+                                this.currState = 2048;
+                                b1.push();
+                                Batch.start(b2 => {
+                                    this.logger.trace(`canUnload() - finished invoking on children, now invoking on own component at %s`, this);
+                                    this.curCA.canUnload(tr, this.nextNode, b2);
+                                }).continueWith(() => {
+                                    this.logger.trace(`canUnload() - finished at %s`, this);
+                                    this.currState = 1024;
+                                    b1.pop();
+                                }).start();
+                                return;
+                        }
+                    case 8192:
+                        this.logger.trace(`canUnload() - nothing to unload at %s`, this);
+                        return;
+                    default:
+                        tr.handleError(new Error(`Unexpected state at canUnload of ${this}`));
+                }
+            }).continueWith(() => {
+                b.pop();
+            }).start();
+        });
     }
     canLoad(tr, b) {
         if (this.currTransition === null) {
@@ -1614,6 +1617,12 @@ class ViewportAgent {
             case 1024:
                 this.currState = 4096;
                 break;
+            case 512:
+            case 128:
+                this.currState = 8192;
+                this.curCA = null;
+                this.currTransition = null;
+                break;
         }
         switch (this.nextState) {
             case 64:
@@ -1623,6 +1632,20 @@ class ViewportAgent {
                 this.nextNode = null;
                 this.nextState = 64;
                 break;
+            case 4:
+            case 1: {
+                this._cancellationPromise = kernel.onResolve(this.nextCA?.deactivate(null, this.hostController, 0), () => {
+                    this.nextCA?.dispose();
+                    this.$plan = 'replace';
+                    this.nextState = 64;
+                    this.nextCA = null;
+                    this.nextNode = null;
+                    this.prevTransition = null;
+                    this.currTransition = null;
+                    this._cancellationPromise = null;
+                });
+                break;
+            }
         }
     }
     endTransition() {
@@ -1641,6 +1664,7 @@ class ViewportAgent {
             switch (this.nextState) {
                 case 64:
                     switch (this.currState) {
+                        case 8192:
                         case 128:
                             this.logger.trace(`endTransition() - setting currState to State.nextIsEmpty at %s`, this);
                             this.currState = 8192;
@@ -1705,9 +1729,8 @@ function ensureGuardsResultIsTrue(vpa, tr) {
     }
 }
 function ensureTransitionHasNotErrored(tr) {
-    if (tr.error !== void 0) {
+    if (tr.error !== void 0 && !tr.erredWithUnknownRoute)
         throw tr.error;
-    }
 }
 var State;
 (function (State) {
@@ -1949,17 +1972,10 @@ function updateNode(log, vit, ctx, node) {
     }
     if (node.context === ctx) {
         node.clearChildren();
-        return kernel.onResolve(kernel.resolveAll(...vit.children.map(vi => {
-            return createAndAppendNodes(log, node, vi);
-        })), () => {
-            return kernel.resolveAll(...ctx.getAvailableViewportAgents('dynamic').map(vpa => {
-                const defaultInstruction = ViewportInstruction.create({
-                    component: vpa.viewport.default,
-                    viewport: vpa.viewport.name,
-                });
-                return createAndAppendNodes(log, node, defaultInstruction);
-            }));
-        });
+        return kernel.onResolve(kernel.resolveAll(...vit.children.map(vi => createAndAppendNodes(log, node, vi))), () => kernel.resolveAll(...ctx.getAvailableViewportAgents('dynamic').map(vpa => {
+            const vp = vpa.viewport;
+            return createAndAppendNodes(log, node, ViewportInstruction.create({ component: vp.default, viewport: vp.name, }));
+        })));
     }
     return kernel.resolveAll(...node.children.map(child => {
         return updateNode(log, vit, ctx, child);
@@ -2017,11 +2033,72 @@ function createAndAppendNodes(log, node, vi) {
                     }));
                 default: {
                     log.trace(`createAndAppendNodes invoking createNode`);
-                    const childNode = createNode(log, node, vi);
-                    if (childNode === null) {
-                        return;
+                    const ctx = node.context;
+                    const originalInstruction = vi.clone();
+                    let rr = vi.recognizedRoute;
+                    if (rr !== null)
+                        return appendNode(log, node, createConfiguredNode(log, node, vi, rr, originalInstruction));
+                    if (vi.children.length === 0) {
+                        const result = ctx.generateViewportInstruction(vi);
+                        if (result !== null) {
+                            node.tree.queryParams = mergeURLSearchParams(node.tree.queryParams, result.query, true);
+                            const newVi = result.vi;
+                            newVi.children.push(...vi.children);
+                            return appendNode(log, node, createConfiguredNode(log, node, newVi, newVi.recognizedRoute, vi));
+                        }
                     }
-                    return appendNode(log, node, childNode);
+                    let collapse = 0;
+                    let path = vi.component.value;
+                    let cur = vi;
+                    while (cur.children.length === 1) {
+                        cur = cur.children[0];
+                        if (cur.component.type === 0) {
+                            ++collapse;
+                            path = `${path}/${cur.component.value}`;
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    rr = ctx.recognize(path);
+                    log.trace('createNode recognized route: %s', rr);
+                    const residue = rr?.residue ?? null;
+                    log.trace('createNode residue:', residue);
+                    const noResidue = residue === null;
+                    if (rr === null || residue === path) {
+                        const name = vi.component.value;
+                        if (name === '')
+                            return;
+                        let vp = vi.viewport;
+                        if (vp === null || vp.length === 0)
+                            vp = defaultViewportName;
+                        const vpa = ctx.getFallbackViewportAgent('dynamic', vp);
+                        const fallback = vpa !== null ? vpa.viewport.fallback : ctx.definition.fallback;
+                        if (fallback === null)
+                            throw new UnknownRouteError(`Neither the route '${name}' matched any configured route at '${ctx.friendlyPath}' nor a fallback is configured for the viewport '${vp}' - did you forget to add '${name}' to the routes list of the route decorator of '${ctx.component.name}'?`);
+                        log.trace(`Fallback is set to '${fallback}'. Looking for a recognized route.`);
+                        const rd = ctx.childRoutes.find(x => x.id === fallback);
+                        if (rd !== void 0)
+                            return appendNode(log, node, createFallbackNode(log, rd, node, vi));
+                        log.trace(`No route definition for the fallback '${fallback}' is found; trying to recognize the route.`);
+                        const rr = ctx.recognize(fallback, true);
+                        if (rr !== null)
+                            return appendNode(log, node, createConfiguredNode(log, node, vi, rr, null));
+                        log.trace(`The fallback '${fallback}' is not recognized as a route; treating as custom element name.`);
+                        return appendNode(log, node, createFallbackNode(log, RouteDefinition.resolve(fallback, ctx.definition, null, ctx), node, vi));
+                    }
+                    rr.residue = null;
+                    vi.component.value = noResidue
+                        ? path
+                        : path.slice(0, -(residue.length + 1));
+                    for (let i = 0; i < collapse; ++i) {
+                        const child = vi.children[0];
+                        if (residue?.startsWith(child.component.value) ?? false)
+                            break;
+                        vi.children = child.children;
+                    }
+                    log.trace('createNode after adjustment vi:%s', vi);
+                    return appendNode(log, node, createConfiguredNode(log, node, vi, rr, originalInstruction));
                 }
             }
         case 4:
@@ -2031,79 +2108,9 @@ function createAndAppendNodes(log, node, vi) {
             const { vi: newVi, query } = rc.generateViewportInstruction({ component: rd, params: vi.params ?? kernel.emptyObject });
             node.tree.queryParams = mergeURLSearchParams(node.tree.queryParams, query, true);
             newVi.children.push(...vi.children);
-            const childNode = createConfiguredNode(log, node, newVi, newVi.recognizedRoute, vi);
-            return appendNode(log, node, childNode);
+            return appendNode(log, node, createConfiguredNode(log, node, newVi, newVi.recognizedRoute, vi));
         }
     }
-}
-function createNode(log, node, vi) {
-    const ctx = node.context;
-    const originalInstruction = vi.clone();
-    let rr = vi.recognizedRoute;
-    if (rr !== null)
-        return createConfiguredNode(log, node, vi, rr, originalInstruction);
-    if (vi.children.length === 0) {
-        const result = ctx.generateViewportInstruction(vi);
-        if (result !== null) {
-            node.tree.queryParams = mergeURLSearchParams(node.tree.queryParams, result.query, true);
-            const newVi = result.vi;
-            newVi.children.push(...vi.children);
-            return createConfiguredNode(log, node, newVi, newVi.recognizedRoute, vi);
-        }
-    }
-    let collapse = 0;
-    let path = vi.component.value;
-    let cur = vi;
-    while (cur.children.length === 1) {
-        cur = cur.children[0];
-        if (cur.component.type === 0) {
-            ++collapse;
-            path = `${path}/${cur.component.value}`;
-        }
-        else {
-            break;
-        }
-    }
-    rr = ctx.recognize(path);
-    log.trace('createNode recognized route: %s', rr);
-    const residue = rr?.residue ?? null;
-    log.trace('createNode residue:', residue);
-    const noResidue = residue === null;
-    if (rr === null || residue === path) {
-        const name = vi.component.value;
-        if (name === '') {
-            return null;
-        }
-        let vp = vi.viewport;
-        if (vp === null || vp.length === 0)
-            vp = defaultViewportName;
-        const vpa = ctx.getFallbackViewportAgent('dynamic', vp);
-        const fallback = vpa !== null ? vpa.viewport.fallback : ctx.definition.fallback;
-        if (fallback === null)
-            throw new Error(`Neither the route '${name}' matched any configured route at '${ctx.friendlyPath}' nor a fallback is configured for the viewport '${vp}' - did you forget to add '${name}' to the routes list of the route decorator of '${ctx.component.name}'?`);
-        log.trace(`Fallback is set to '${fallback}'. Looking for a recognized route.`);
-        const rd = ctx.childRoutes.find(x => x.id === fallback);
-        if (rd !== void 0)
-            return createFallbackNode(log, rd, node, vi);
-        log.trace(`No route definition for the fallback '${fallback}' is found; trying to recognize the route.`);
-        const rr = ctx.recognize(fallback, true);
-        if (rr !== null)
-            return createConfiguredNode(log, node, vi, rr, null);
-        log.trace(`The fallback '${fallback}' is not recognized as a route; treating as custom element name.`);
-        return createFallbackNode(log, RouteDefinition.resolve(fallback, ctx.definition, null, ctx), node, vi);
-    }
-    rr.residue = null;
-    vi.component.value = noResidue
-        ? path
-        : path.slice(0, -(residue.length + 1));
-    for (let i = 0; i < collapse; ++i) {
-        const child = vi.children[0];
-        if (residue?.startsWith(child.component.value) ?? false)
-            break;
-        vi.children = child.children;
-    }
-    log.trace('createNode after adjustment vi:%s', vi);
-    return createConfiguredNode(log, node, vi, rr, originalInstruction);
 }
 function createConfiguredNode(log, node, vi, rr, originalVi, route = rr.route.endpoint.route) {
     const ctx = node.context;
@@ -2222,7 +2229,7 @@ function createConfiguredNode(log, node, vi, rr, originalVi, route = rr.route.en
         const newPath = newSegs.filter(Boolean).join('/');
         const redirRR = ctx.recognize(newPath);
         if (redirRR === null)
-            throw new Error(`'${newPath}' did not match any configured route or registered component name at '${ctx.friendlyPath}' - did you forget to add '${newPath}' to the routes list of the route decorator of '${ctx.component.name}'?`);
+            throw new UnknownRouteError(`'${newPath}' did not match any configured route or registered component name at '${ctx.friendlyPath}' - did you forget to add '${newPath}' to the routes list of the route decorator of '${ctx.component.name}'?`);
         return createConfiguredNode(log, node, vi, rr, originalVi, redirRR.route.endpoint.route);
     });
 }
@@ -2309,6 +2316,8 @@ class NavigationOptions extends RouterOptions {
         return `NO(${super.stringifyProperties()})`;
     }
 }
+class UnknownRouteError extends Error {
+}
 class Transition {
     constructor(id, prevInstructions, instructions, finalInstructions, instructionsChanged, trigger, options, managedState, previousRouteTree, routeTree, promise, resolve, reject, guardsResult, error) {
         this.id = id;
@@ -2326,7 +2335,9 @@ class Transition {
         this.reject = reject;
         this.guardsResult = guardsResult;
         this.error = error;
+        this._erredWithUnknownRoute = false;
     }
+    get erredWithUnknownRoute() { return this._erredWithUnknownRoute; }
     static create(input) {
         return new Transition(input.id, input.prevInstructions, input.instructions, input.finalInstructions, input.instructionsChanged, input.trigger, input.options, input.managedState, input.previousRouteTree, input.routeTree, input.promise, input.resolve, input.reject, input.guardsResult, void 0);
     }
@@ -2350,6 +2361,7 @@ class Transition {
         }
     }
     handleError(err) {
+        this._erredWithUnknownRoute = err instanceof UnknownRouteError;
         this.reject(this.error = err);
     }
     toString() {
@@ -2506,7 +2518,7 @@ exports.Router = class Router {
         let resolve = (void 0);
         let reject = (void 0);
         let promise;
-        if (failedTr === null) {
+        if (failedTr === null || failedTr.erredWithUnknownRoute) {
             promise = new Promise(function ($resolve, $reject) { resolve = $resolve; reject = $reject; });
         }
         else {
@@ -2545,14 +2557,19 @@ exports.Router = class Router {
             logger.debug(`Transition succeeded: %s`, nextTr);
             return ret;
         }).catch(err => {
-            logger.error(`Navigation failed: %s`, nextTr, err);
-            this._isNavigating = false;
-            const $nextTr = this.nextTr;
-            if ($nextTr !== null) {
-                $nextTr.previousRouteTree = nextTr.previousRouteTree;
+            logger.error(`Transition %s failed: %s`, nextTr, err);
+            if (nextTr.erredWithUnknownRoute) {
+                this.cancelNavigation(nextTr);
             }
             else {
-                this._routeTree = nextTr.previousRouteTree;
+                this._isNavigating = false;
+                const $nextTr = this.nextTr;
+                if ($nextTr !== null) {
+                    $nextTr.previousRouteTree = nextTr.previousRouteTree;
+                }
+                else {
+                    this._routeTree = nextTr.previousRouteTree;
+                }
             }
             throw err;
         });
@@ -2696,13 +2713,15 @@ exports.Router = class Router {
         this.instructions = tr.prevInstructions;
         this._routeTree = tr.previousRouteTree;
         this._isNavigating = false;
-        this.events.publish(new NavigationCancelEvent(tr.id, tr.instructions, `guardsResult is ${tr.guardsResult}`));
-        if (tr.guardsResult === false) {
+        const guardsResult = tr.guardsResult;
+        this.events.publish(new NavigationCancelEvent(tr.id, tr.instructions, `guardsResult is ${guardsResult}`));
+        if (guardsResult === false) {
             tr.resolve(false);
             this.runNextTransition();
         }
         else {
-            void kernel.onResolve(this.enqueue(tr.guardsResult, 'api', tr.managedState, tr), () => {
+            const instructions = tr.erredWithUnknownRoute ? tr.prevInstructions : guardsResult;
+            void kernel.onResolve(this.enqueue(instructions, 'api', tr.managedState, tr), () => {
                 this.logger.trace(`cancelNavigation(tr:%s) - finished redirect`, tr);
             });
         }
@@ -3515,21 +3534,18 @@ class RouteContext {
             else {
                 const routeDef = RouteDefinition.resolve(child, definition, null, this);
                 if (routeDef instanceof Promise) {
-                    if (isPartialChildRouteConfig(child) && child.path != null) {
-                        for (const path of ensureArrayOfStrings(child.path)) {
-                            this.$addRoute(path, child.caseSensitive ?? false, routeDef);
-                        }
-                        const idx = this.childRoutes.length;
-                        const p = routeDef.then(resolvedRouteDef => {
-                            return this.childRoutes[idx] = resolvedRouteDef;
-                        });
-                        this.childRoutes.push(p);
-                        navModel.addRoute(p);
-                        allPromises.push(p.then(kernel.noop));
-                    }
-                    else {
+                    if (!isPartialChildRouteConfig(child) || child.path == null)
                         throw new Error(`Invalid route config. When the component property is a lazy import, the path must be specified.`);
+                    for (const path of ensureArrayOfStrings(child.path)) {
+                        this.$addRoute(path, child.caseSensitive ?? false, routeDef);
                     }
+                    const idx = this.childRoutes.length;
+                    const p = routeDef.then(resolvedRouteDef => {
+                        return this.childRoutes[idx] = resolvedRouteDef;
+                    });
+                    this.childRoutes.push(p);
+                    navModel.addRoute(p);
+                    allPromises.push(p.then(kernel.noop));
                 }
                 else {
                     for (const path of routeDef.path) {

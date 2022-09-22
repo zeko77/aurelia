@@ -2,7 +2,7 @@ import { SetterObserver, AccessorType } from '@aurelia/runtime';
 import type { INode } from '../dom';
 import type { EventSubscriber } from './event-delegator';
 import type { ValueAttributeObserver } from './value-attribute-observer';
-import type { ISubscriber, ISubscriberCollection, IObserver, IObserverLocator, IFlushable, IWithFlushQueue, FlushQueue } from '@aurelia/runtime';
+import type { ISubscriber, ISubscriberCollection, IObserver, IObserverLocator } from '@aurelia/runtime';
 export interface IInputElement extends HTMLInputElement {
     model?: unknown;
     $observers?: {
@@ -14,10 +14,9 @@ export interface IInputElement extends HTMLInputElement {
 declare function defaultMatcher(a: unknown, b: unknown): boolean;
 export interface CheckedObserver extends ISubscriberCollection {
 }
-export declare class CheckedObserver implements IObserver, IFlushable, IWithFlushQueue {
+export declare class CheckedObserver implements IObserver {
     readonly handler: EventSubscriber;
     type: AccessorType;
-    readonly queue: FlushQueue;
     constructor(obj: INode, _key: PropertyKey, handler: EventSubscriber, observerLocator: IObserverLocator);
     getValue(): unknown;
     setValue(newValue: unknown): void;
@@ -28,7 +27,6 @@ export declare class CheckedObserver implements IObserver, IFlushable, IWithFlus
     stop(): void;
     subscribe(subscriber: ISubscriber): void;
     unsubscribe(subscriber: ISubscriber): void;
-    flush(): void;
 }
 export {};
 //# sourceMappingURL=checked-observer.d.ts.map

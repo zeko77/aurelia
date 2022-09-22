@@ -324,6 +324,7 @@ class TranslationBinding {
         this._contentAttributes = contentAttributes;
         this.task = null;
         this.parameter = null;
+        this.boundFn = false;
         this._controller = controller;
         this.target = target;
         this.i18n = this.locator.get(I18N);
@@ -531,6 +532,7 @@ class ParameterBinding {
         this.updater = updater;
         this.interceptor = this;
         this.isBound = false;
+        this.boundFn = false;
         this.oL = owner.oL;
         this.locator = owner.locator;
     }

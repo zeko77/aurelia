@@ -674,9 +674,15 @@ class AccessScopeExpression {
             throw new Error(`AUR0105: Unable to find $host context. Did you forget [au-slot] attribute?`);
         }
         if (e?.strict) {
-            return evaluatedValue;
+            return e?.boundFn && isFunction(evaluatedValue)
+                ? evaluatedValue.bind(obj)
+                : evaluatedValue;
         }
-        return evaluatedValue == null ? '' : evaluatedValue;
+        return evaluatedValue == null
+            ? ''
+            : e?.boundFn && isFunction(evaluatedValue)
+                ? evaluatedValue.bind(obj)
+                : evaluatedValue;
     }
     assign(s, _e, val) {
         if (this.name === '$host') {
@@ -711,6 +717,7 @@ class AccessMemberExpression {
     get hasUnbind() { return false; }
     evaluate(s, e, c) {
         const instance = this.object.evaluate(s, e, c);
+        let ret;
         if (e?.strict) {
             if (instance == null) {
                 return instance;
@@ -718,12 +725,23 @@ class AccessMemberExpression {
             if (c !== null) {
                 c.observe(instance, this.name);
             }
-            return instance[this.name];
+            ret = instance[this.name];
+            if (e?.boundFn && isFunction(ret)) {
+                return ret.bind(instance);
+            }
+            return ret;
         }
         if (c !== null && instance instanceof Object) {
             c.observe(instance, this.name);
         }
-        return instance ? instance[this.name] : '';
+        if (instance) {
+            ret = instance[this.name];
+            if (e?.boundFn && isFunction(ret)) {
+                return ret.bind(instance);
+            }
+            return ret;
+        }
+        return '';
     }
     assign(s, e, val) {
         const obj = this.object.evaluate(s, e, null);
@@ -1764,54 +1782,11 @@ var SubFlags;
     SubFlags[SubFlags["Any"] = 15] = "Any";
 })(SubFlags || (SubFlags = {}));
 
-function withFlushQueue(target) {
-    return target == null ? queueableDeco : queueableDeco(target);
-}
-function queueableDeco(target) {
-    const proto = target.prototype;
-    def(proto, 'queue', { get: getFlushQueue });
-}
-const IFlushQueue = kernel.DI.createInterface('IFlushQueue', x => x.instance(FlushQueue.instance));
-class FlushQueue {
-    constructor() {
-        this._flushing = false;
-        this._items = new Set();
-    }
-    get count() {
-        return this._items.size;
-    }
-    add(callable) {
-        this._items.add(callable);
-        if (this._flushing) {
-            return;
-        }
-        this._flushing = true;
-        try {
-            this._items.forEach(flushItem);
-        }
-        finally {
-            this._flushing = false;
-        }
-    }
-    clear() {
-        this._items.clear();
-        this._flushing = false;
-    }
-}
-FlushQueue.instance = new FlushQueue();
-function getFlushQueue() {
-    return FlushQueue.instance;
-}
-function flushItem(item, _, items) {
-    items.delete(item);
-    item.flush();
-}
-
 class CollectionLengthObserver {
     constructor(owner) {
         this.owner = owner;
         this.type = 18;
-        this._value = this._oldvalue = (this._obj = owner.collection).length;
+        this._value = (this._obj = owner.collection).length;
     }
     getValue() {
         return this._obj.length;
@@ -1821,28 +1796,21 @@ class CollectionLengthObserver {
         if (newValue !== currentValue && kernel.isArrayIndex(newValue)) {
             this._obj.length = newValue;
             this._value = newValue;
-            this._oldvalue = currentValue;
-            this.queue.add(this);
+            this.subs.notify(newValue, currentValue);
         }
     }
     handleCollectionChange(_arr, _) {
         const oldValue = this._value;
         const value = this._obj.length;
         if ((this._value = value) !== oldValue) {
-            this._oldvalue = oldValue;
-            this.queue.add(this);
+            this.subs.notify(this._value, oldValue);
         }
-    }
-    flush() {
-        oV$2 = this._oldvalue;
-        this._oldvalue = this._value;
-        this.subs.notify(this._value, oV$2);
     }
 }
 class CollectionSizeObserver {
     constructor(owner) {
         this.owner = owner;
-        this._value = this._oldvalue = (this._obj = owner.collection).size;
+        this._value = (this._obj = owner.collection).size;
         this.type = this._obj instanceof Map ? 66 : 34;
     }
     getValue() {
@@ -1855,21 +1823,14 @@ class CollectionSizeObserver {
         const oldValue = this._value;
         const value = this._obj.size;
         if ((this._value = value) !== oldValue) {
-            this._oldvalue = oldValue;
-            this.queue.add(this);
+            this.subs.notify(this._value, oldValue);
         }
-    }
-    flush() {
-        oV$2 = this._oldvalue;
-        this._oldvalue = this._value;
-        this.subs.notify(this._value, oV$2);
     }
 }
 function implementLengthObserver(klass) {
     const proto = klass.prototype;
     ensureProto(proto, 'subscribe', subscribe);
     ensureProto(proto, 'unsubscribe', unsubscribe);
-    withFlushQueue(klass);
     subscriberCollection(klass);
 }
 function subscribe(subscriber) {
@@ -1884,7 +1845,6 @@ function unsubscribe(subscriber) {
 }
 implementLengthObserver(CollectionLengthObserver);
 implementLengthObserver(CollectionSizeObserver);
-let oV$2 = void 0;
 
 const lookupMetadataKey$2 = '__au_array_obs__';
 const observerLookup$2 = (() => {
@@ -4741,11 +4701,6 @@ class ComputedObserver {
             this.obs.clearAll();
         }
     }
-    flush() {
-        oV$1 = this._oldValue;
-        this._oldValue = this._value;
-        this.subs.notify(this._value, oV$1);
-    }
     run() {
         if (this._isRunning) {
             return;
@@ -4755,7 +4710,9 @@ class ComputedObserver {
         this._isDirty = false;
         if (!Object.is(newValue, oldValue)) {
             this._oldValue = oldValue;
-            this.queue.add(this);
+            oV$1 = this._oldValue;
+            this._oldValue = this._value;
+            this.subs.notify(this._value, oV$1);
         }
     }
     compute() {
@@ -4774,7 +4731,6 @@ class ComputedObserver {
 }
 connectable(ComputedObserver);
 subscriberCollection(ComputedObserver);
-withFlushQueue(ComputedObserver);
 let oV$1 = void 0;
 
 const IDirtyChecker = kernel.DI.createInterface('IDirtyChecker', x => x.singleton(DirtyChecker));
@@ -4812,7 +4768,7 @@ class DirtyChecker {
             for (; i < len; ++i) {
                 current = tracked[i];
                 if (current.isDirty()) {
-                    this.queue.add(current);
+                    current.flush();
                 }
             }
         };
@@ -4838,7 +4794,6 @@ class DirtyChecker {
     }
 }
 DirtyChecker.inject = [kernel.IPlatform];
-withFlushQueue(DirtyChecker);
 class DirtyCheckProperty {
     constructor(dirtyChecker, obj, key) {
         this.obj = obj;
@@ -4903,12 +4858,10 @@ class PropertyAccessor {
     }
 }
 
-let oV = void 0;
 class SetterObserver {
     constructor(obj, key) {
         this.type = 1;
         this._value = void 0;
-        this._oldValue = void 0;
         this._observing = false;
         this._obj = obj;
         this._key = key;
@@ -4921,9 +4874,9 @@ class SetterObserver {
             if (Object.is(newValue, this._value)) {
                 return;
             }
-            this._oldValue = this._value;
+            oV = this._value;
             this._value = newValue;
-            this.queue.add(this);
+            this.subs.notify(newValue, oV);
         }
         else {
             this._obj[this._key] = newValue;
@@ -4934,11 +4887,6 @@ class SetterObserver {
             this.start();
         }
         this.subs.add(subscriber);
-    }
-    flush() {
-        oV = this._oldValue;
-        this._oldValue = this._value;
-        this.subs.notify(this._value, oV);
     }
     start() {
         if (this._observing === false) {
@@ -4991,19 +4939,15 @@ class SetterNotifier {
             this._oldValue = this._value;
             this._value = value;
             this.cb?.call(this._obj, this._value, this._oldValue);
-            this.queue.add(this);
+            oV = this._oldValue;
+            this._oldValue = this._value;
+            this.subs.notify(this._value, oV);
         }
-    }
-    flush() {
-        oV = this._oldValue;
-        this._oldValue = this._value;
-        this.subs.notify(this._value, oV);
     }
 }
 subscriberCollection(SetterObserver);
 subscriberCollection(SetterNotifier);
-withFlushQueue(SetterObserver);
-withFlushQueue(SetterNotifier);
+let oV = void 0;
 
 const propertyAccessor = new PropertyAccessor();
 const IObserverLocator = kernel.DI.createInterface('IObserverLocator', x => x.singleton(ObserverLocator));
@@ -5328,12 +5272,10 @@ exports.DestructuringAssignmentRestExpression = DestructuringAssignmentRestExpre
 exports.DestructuringAssignmentSingleExpression = DestructuringAssignmentSingleExpression;
 exports.DirtyCheckProperty = DirtyCheckProperty;
 exports.DirtyCheckSettings = DirtyCheckSettings;
-exports.FlushQueue = FlushQueue;
 exports.ForOfStatement = ForOfStatement;
 exports.ICoercionConfiguration = ICoercionConfiguration;
 exports.IDirtyChecker = IDirtyChecker;
 exports.IExpressionParser = IExpressionParser;
-exports.IFlushQueue = IFlushQueue;
 exports.INodeObserverLocator = INodeObserverLocator;
 exports.IObservation = IObservation;
 exports.IObserverLocator = IObserverLocator;
@@ -5375,5 +5317,4 @@ exports.observable = observable;
 exports.parseExpression = parseExpression;
 exports.subscriberCollection = subscriberCollection;
 exports.synchronizeIndices = synchronizeIndices;
-exports.withFlushQueue = withFlushQueue;
 //# sourceMappingURL=index.dev.cjs.map

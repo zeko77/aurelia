@@ -10,7 +10,7 @@ const P = t.createInterface("IStore");
 
 const D = t.createInterface("IState");
 
-const R = "__reducer__";
+const R = "__au_ah__";
 
 const $ = Object.freeze({
     define(t) {
@@ -108,9 +108,9 @@ function C(t, i) {
     return n;
 }
 
-const j = (t, i, s) => Reflect.defineProperty(t.prototype, i, s);
+const _ = (t, i, s) => Reflect.defineProperty(t.prototype, i, s);
 
-function T(t) {
+function j(t) {
     return t instanceof Object && "subscribe" in t;
 }
 
@@ -122,6 +122,7 @@ class StateBinding {
         this.v = void 0;
         this.P = void 0;
         this.R = 0;
+        this.boundFn = false;
         this.mode = 2;
         this.$ = t;
         this.locator = i;
@@ -139,7 +140,7 @@ class StateBinding {
         const e = this.R++;
         const h = () => e === this.R - 1;
         this.C();
-        if (_(t)) {
+        if (T(t)) {
             this.P = t.subscribe((t => {
                 if (h()) i.setValue(t, s, n);
             }));
@@ -189,7 +190,9 @@ class StateBinding {
             n = null;
         } else this.interceptor.updateTarget(t);
     }
-    handleStateChange(t) {
+    handleStateChange() {
+        if (!this.isBound) return;
+        const t = this.A.getState();
         const i = this.$scope;
         const s = i.overrideContext;
         i.bindingContext = s.bindingContext = s.$state = t;
@@ -216,7 +219,7 @@ class StateBinding {
     }
 }
 
-function _(t) {
+function T(t) {
     return t instanceof Object && "subscribe" in t;
 }
 
@@ -233,16 +236,16 @@ let x = class StateBindingBehavior extends c {
     constructor(t, i, s) {
         super(i, s);
         this.A = t;
-        this.j = i instanceof StateBinding;
+        this._ = i instanceof StateBinding;
     }
     $bind(t) {
         const i = this.binding;
-        const s = this.j ? t : C(this.A.getState(), t);
-        if (!this.j) this.A.subscribe(this);
+        const s = this._ ? t : C(this.A.getState(), t);
+        if (!this._) this.A.subscribe(this);
         i.$bind(s);
     }
     $unbind() {
-        if (!this.j) this.A.unsubscribe(this);
+        if (!this._) this.A.unsubscribe(this);
         this.binding.$unbind();
     }
     handleStateChange(t) {
@@ -258,7 +261,7 @@ x.inject = [ P ];
 x = A([ o("state") ], x);
 
 [ "target", "targetProperty" ].forEach((t => {
-    j(x, t, {
+    _(x, t, {
         enumerable: false,
         configurable: true,
         get() {
@@ -274,6 +277,7 @@ class StateDispatchBinding {
     constructor(t, i, s, n, e) {
         this.interceptor = this;
         this.isBound = false;
+        this.boundFn = false;
         this.locator = t;
         this.A = e;
         this.ast = i;
@@ -397,11 +401,11 @@ let G = class StateBindingInstructionRenderer {
     constructor(t, i, s, n) {
         this.ep = t;
         this.oL = i;
-        this.T = s;
+        this.j = s;
         this.p = n;
     }
     render(t, i, s) {
-        const n = new StateBinding(t, t.container, this.oL, this.p.domWriteQueue, z(this.ep, s.from, 4), i, s.to, this.T);
+        const n = new StateBinding(t, t.container, this.oL, this.p.domWriteQueue, z(this.ep, s.from, 4), i, s.to, this.j);
         t.addBinding(n);
     }
 };
@@ -413,11 +417,11 @@ G = A([ l("sb") ], G);
 let q = class DispatchBindingInstructionRenderer {
     constructor(t, i) {
         this.ep = t;
-        this.T = i;
+        this.j = i;
     }
     render(t, i, s) {
         const n = z(this.ep, s.ast, 8);
-        const e = new StateDispatchBinding(t.container, n, i, s.from, this.T);
+        const e = new StateDispatchBinding(t.container, n, i, s.from, this.j);
         t.addBinding(18 === n.$kind ? g(e, n, t.container) : e);
     }
 };
@@ -461,7 +465,7 @@ let M = class StateGetterBinding {
         const n = this.R++;
         const e = () => n === this.R - 1;
         this.C();
-        if (T(t)) {
+        if (j(t)) {
             this.P = t.subscribe((t => {
                 if (e()) i[s] = t;
             }));
