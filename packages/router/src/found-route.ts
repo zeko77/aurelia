@@ -8,7 +8,9 @@ import { Route } from './route';
 import { RoutingInstruction } from './instructions/routing-instruction';
 
 /**
- * @internal - Used when founding route/instructions
+ * Used when founding route/instructions
+ *
+ * @internal
  */
 export class FoundRoute {
   public constructor(
@@ -24,7 +26,7 @@ export class FoundRoute {
     return this.match !== null;
   }
   public get foundInstructions(): boolean {
-    return this.instructions.length > 0;
+    return this.instructions.some(instruction => !instruction.component.none);
   }
   public get hasRemaining(): boolean {
     return this.instructions.some(instruction => instruction.hasNextScopeInstructions);

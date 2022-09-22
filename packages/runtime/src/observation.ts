@@ -1,15 +1,17 @@
 import { DI, IIndexable, IServiceLocator } from '@aurelia/kernel';
+import { isArray } from './utilities-objects';
+
 import type { Scope } from './observation/binding-context';
 import type { CollectionLengthObserver, CollectionSizeObserver } from './observation/collection-length-observer';
-import { isArray } from './utilities-objects';
 
 export interface IBinding {
   interceptor: this;
   readonly locator: IServiceLocator;
   readonly $scope?: Scope;
   readonly isBound: boolean;
-  $bind(flags: LifecycleFlags, scope: Scope): void;
-  $unbind(flags: LifecycleFlags): void;
+  $bind(scope: Scope): void;
+  $unbind(): void;
+  get: IServiceLocator['get'];
 }
 
 export const ICoercionConfiguration = DI.createInterface<ICoercionConfiguration>('ICoercionConfiguration');
@@ -22,68 +24,18 @@ export interface ICoercionConfiguration {
 
 export type InterceptorFunc<TInput = unknown, TOutput = unknown> = (value: TInput, coercionConfig: ICoercionConfiguration | null) => TOutput;
 
-/*
-* Note: the oneTime binding now has a non-zero value for 2 reasons:
-*  - plays nicer with bitwise operations (more consistent code, more explicit settings)
-*  - allows for potentially having something like BindingMode.oneTime | BindingMode.fromView, where an initial value is set once to the view but updates from the view also propagate back to the view model
-*
-* Furthermore, the "default" mode would be for simple ".bind" expressions to make it explicit for our logic that the default is being used.
-* This essentially adds extra information which binding could use to do smarter things and allows bindingBehaviors that add a mode instead of simply overwriting it
-*/
-export enum BindingMode {
-  oneTime  = 0b0001,
-  toView   = 0b0010,
-  fromView = 0b0100,
-  twoWay   = 0b0110,
-  default  = 0b1000
-}
-
-export const enum LifecycleFlags {
-  none                          = 0b0000_000_00_0,
-  // Bitmask for flags that need to be stored on a binding during $bind for mutation
-  // callbacks outside of $bind
-  persistentBindingFlags        = 0b0_01_00_00_1,
-  noFlush                       = 0b0_01_00_00_0,
-  bindingStrategy               = 0b0_00_00_00_1,
-  isStrictBindingStrategy       = 0b0_00_00_00_1,
-  fromBind                      = 0b0_00_00_01_0,
-  fromUnbind                    = 0b0_00_00_10_0,
-  mustEvaluate                  = 0b0_00_01_00_0,
-  dispose                       = 0b0_00_10_00_0,
-}
-
 export interface IConnectable {
   observe(obj: object, key: PropertyKey): void;
   observeCollection(obj: Collection): void;
   subscribeTo(subscribable: ISubscribable | ICollectionSubscribable): void;
 }
 
-/** @internal */
-export const enum SubscriberFlags {
-  None            = 0,
-  Subscriber0     = 0b0001,
-  Subscriber1     = 0b0010,
-  Subscriber2     = 0b0100,
-  SubscribersRest = 0b1000,
-  Any             = 0b1111,
-}
-
-export enum DelegationStrategy {
-  none      = 0,
-  capturing = 1,
-  bubbling  = 2,
-}
-
-export interface IBatchable {
-  flushBatch(flags: LifecycleFlags): void;
-}
-
 export interface ISubscriber<TValue = unknown> {
-  handleChange(newValue: TValue, previousValue: TValue, flags: LifecycleFlags): void;
+  handleChange(newValue: TValue, previousValue: TValue): void;
 }
 
 export interface ICollectionSubscriber {
-  handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void;
+  handleCollectionChange(collection: Collection, indexMap: IndexMap): void;
 }
 
 export interface ISubscribable {
@@ -106,8 +58,8 @@ export interface ISubscriberRecord<T extends ISubscriber | ICollectionSubscriber
   has(subscriber: T): boolean;
   remove(subscriber: T): boolean;
   any(): boolean;
-  notify(value: unknown, oldValue: unknown, flags: LifecycleFlags): void;
-  notifyCollection(indexMap: IndexMap, flags: LifecycleFlags): void;
+  notify(value: unknown, oldValue: unknown): void;
+  notifyCollection(collection: Collection, indexMap: IndexMap): void;
 }
 
 /**
@@ -117,7 +69,6 @@ export interface ISubscriberRecord<T extends ISubscriber | ICollectionSubscriber
  * The `subscriberCollection` import can be used as either a decorator, or a function call.
  */
 export interface ISubscriberCollection extends ISubscribable {
-  [key: number]: LifecycleFlags;
   /**
    * The backing subscriber record for all subscriber methods of this collection
    */
@@ -131,7 +82,6 @@ export interface ISubscriberCollection extends ISubscribable {
  * The `subscriberCollection` import can be used as either a decorator, or a function call.
  */
 export interface ICollectionSubscriberCollection extends ICollectionSubscribable {
-  [key: number]: LifecycleFlags;
   /**
    * The backing subscriber record for all subscriber methods of this collection
    */
@@ -210,13 +160,15 @@ export const enum AccessorType {
 export interface IAccessor<TValue = unknown> {
   type: AccessorType;
   getValue(obj?: object, key?: PropertyKey): TValue;
-  setValue(newValue: TValue, flags: LifecycleFlags, obj?: object, key?: PropertyKey): void;
+  setValue(newValue: TValue, obj?: object, key?: PropertyKey): void;
 }
 
 /**
  * An interface describing a standard contract of an observer in Aurelia binding & observation system
  */
-export interface IObserver extends IAccessor, ISubscribable {}
+export interface IObserver extends IAccessor, ISubscribable {
+  doNotCache?: boolean;
+}
 
 export type AccessorOrObserver = (IAccessor | IObserver) & {
   doNotCache?: boolean;
@@ -225,16 +177,18 @@ export type AccessorOrObserver = (IAccessor | IObserver) & {
 /**
  * An array of indices, where the index of an element represents the index to map FROM, and the numeric value of the element itself represents the index to map TO
  *
- * The deletedItems property contains the items (in case of an array) or keys (in case of map or set) that have been deleted.
+ * The deletedIndices property contains the items (in case of an array) or keys (in case of map or set) that have been deleted.
  */
-export type IndexMap = number[] & {
-  deletedItems: number[];
+ export type IndexMap<T = unknown> = number[] & {
+  deletedIndices: number[];
+  deletedItems: T[];
   isIndexMap: true;
 };
 
-export function copyIndexMap(
-  existing: number[] & { deletedItems?: number[] },
-  deletedItems?: number[],
+export function copyIndexMap<T = unknown>(
+  existing: number[] & { deletedIndices?: number[]; deletedItems?: T[] },
+  deletedIndices?: number[],
+  deletedItems?: T[],
 ): IndexMap {
   const { length } = existing;
   const arr = Array(length) as IndexMap;
@@ -242,6 +196,13 @@ export function copyIndexMap(
   while (i < length) {
     arr[i] = existing[i];
     ++i;
+  }
+  if (deletedIndices !== void 0) {
+    arr.deletedIndices = deletedIndices.slice(0);
+  } else if (existing.deletedIndices !== void 0) {
+    arr.deletedIndices = existing.deletedIndices.slice(0);
+  } else {
+    arr.deletedIndices = [];
   }
   if (deletedItems !== void 0) {
     arr.deletedItems = deletedItems.slice(0);
@@ -260,6 +221,7 @@ export function createIndexMap(length: number = 0): IndexMap {
   while (i < length) {
     arr[i] = i++;
   }
+  arr.deletedIndices = [];
   arr.deletedItems = [];
   arr.isIndexMap = true;
   return arr;
@@ -267,6 +229,7 @@ export function createIndexMap(length: number = 0): IndexMap {
 
 export function cloneIndexMap(indexMap: IndexMap): IndexMap {
   const clone = indexMap.slice() as IndexMap;
+  clone.deletedIndices = indexMap.deletedIndices.slice();
   clone.deletedItems = indexMap.deletedItems.slice();
   clone.isIndexMap = true;
   return clone;
@@ -275,11 +238,6 @@ export function cloneIndexMap(indexMap: IndexMap): IndexMap {
 export function isIndexMap(value: unknown): value is IndexMap {
   return isArray(value) && (value as IndexMap).isIndexMap === true;
 }
-
-export interface IArrayIndexObserver extends IObserver {
-  owner: ICollectionObserver<CollectionKind.array>;
-}
-
 /**
  * Describes a type that specifically tracks changes in a collection (map, set or array)
  */
@@ -303,13 +261,12 @@ export type CollectionObserver = ICollectionObserver<CollectionKind>;
 
 export interface IBindingContext {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  [key: PropertyKey]: any;
 }
 
 export interface IOverrideContext {
-  [key: string]: unknown;
-
-  readonly bindingContext: IBindingContext;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: PropertyKey]: any;
 }
 
 export type IObservable<T = IIndexable> = T & {

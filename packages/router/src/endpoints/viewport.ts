@@ -1,5 +1,5 @@
 import { IContainer } from '@aurelia/kernel';
-import { CustomElement, IHydratedController, IHydratedParentController, ICustomElementController } from '@aurelia/runtime-html';
+import { LifecycleFlags, CustomElement, IHydratedController, IHydratedParentController, ICustomElementController } from '@aurelia/runtime-html';
 import { ComponentAppellation, IRouteableComponent, ReloadBehavior, RouteableComponentType, LoadInstruction } from '../interfaces';
 import { IRouter } from '../router';
 import { arrayRemove } from '../utilities/utils';
@@ -13,7 +13,6 @@ import { Routes } from '../decorators/routes';
 import { Route } from '../route';
 import { Endpoint, IConnectedCustomElement } from './endpoint';
 import { IViewportOptions, ViewportOptions } from './viewport-options';
-import { LifecycleFlags } from '@aurelia/runtime';
 
 /**
  * The viewport is an endpoint that encapsulates an au-viewport custom element
@@ -182,6 +181,13 @@ export class Viewport extends Endpoint {
   }
 
   /**
+   * The content for a specific navigation (or coordinator)
+   */
+  public getNavigationContent(navigation: NavigationCoordinator | Navigation): ViewportContent | null {
+    return super.getNavigationContent(navigation) as ViewportContent | null;
+  }
+
+  /**
    * The parent viewport.
    */
   public get parentViewport(): Viewport | null {
@@ -249,7 +255,7 @@ export class Viewport extends Endpoint {
     instruction.endpoint.set(this);
     this.clear = instruction.isClear(this.router);
 
-    const content = this.contents[this.contents.length - 1];
+    const content = this.getContent();
     // Can have a (resolved) type or a string (to be resolved later)
     const nextContent = new ViewportContent(this.router, this, this.owningScope, this.scope.hasScope, !this.clear ? instruction : void 0, navigation, this.connectedCE ?? null);
     this.contents.push(nextContent);
@@ -353,7 +359,9 @@ export class Viewport extends Endpoint {
       }
     }
 
-    const parentDefaultRoute = (this.scope.parent?.endpoint.getRoutes() ?? []).filter(route => route.path === '').length > 0;
+    const parentDefaultRoute = (this.scope.parent?.endpoint.getRoutes() ?? [])
+      .filter(route => (Array.isArray(route.path) ? route.path : [route.path]).includes(''))
+      .length > 0;
     if (this.getContent().componentInstance === null && this.getNextContent()?.componentInstance == null && (this.options.default || parentDefaultRoute)) {
       const instructions = RoutingInstruction.parse(this.router, this.options.default ?? '');
       if (instructions.length === 0 && parentDefaultRoute) {
@@ -451,7 +459,7 @@ export class Viewport extends Endpoint {
     const guardSteps = [
       (step: Step<boolean>) => {
         if (this.isActiveNavigation(coordinator)) {
-          return this.canUnload(step);
+          return this.canUnload(coordinator, step);
         }
       },
 
@@ -463,7 +471,7 @@ export class Viewport extends Endpoint {
           } else {
             if (this.router.isRestrictedNavigation) { // Create the component early if restricted navigation
               const routerOptions = this.router.configuration.options;
-              this.getNextContent()!.createComponent(
+              this.getNavigationContent(coordinator)!.createComponent(
                 this.connectedCE!,
                 this.options.fallback || routerOptions.fallback,
                 this.options.fallbackAction || routerOptions.fallbackAction);
@@ -477,23 +485,42 @@ export class Viewport extends Endpoint {
 
       (step: Step<boolean>) => {
         if (this.isActiveNavigation(coordinator)) {
-          return this.canLoad(step) as boolean | LoadInstruction | LoadInstruction[];
+          return this.canLoad(coordinator, step) as boolean | LoadInstruction | LoadInstruction[];
         }
       },
 
       (step: Step) => {
         if (this.isActiveNavigation(coordinator)) {
-          const canLoadResult = step.previousValue as boolean | LoadInstruction | LoadInstruction[];
+          let canLoadResult = step.previousValue as boolean | LoadInstruction | LoadInstruction[];
           if (typeof canLoadResult === 'boolean') { // canLoadResult: boolean | LoadInstruction | LoadInstruction[],
             if (!canLoadResult) {
               step.cancel();
               coordinator.cancel();
+              this.getNavigationContent(coordinator)!.instruction.nextScopeInstructions = null;
               return;
             }
           } else { // Denied and (probably) redirected
+            this.getNavigationContent(coordinator)!.instruction.nextScopeInstructions = null;
+            if (typeof canLoadResult === 'string') {
+              const scope = this.scope;
+              const options = this.router.configuration.options;
+              let instructions = RoutingInstruction.parse(this.router, canLoadResult);
+              const foundRoute = scope.parent?.findInstructions(instructions, options.useDirectRouting, options.useConfiguredRoutes);
+              if (foundRoute?.foundConfiguration || foundRoute?.foundInstructions) {
+                instructions = foundRoute.instructions;
+              }
+              for (const instruction of instructions) {
+                instruction.endpoint.set(this);
+                instruction.scope = scope.owningScope;
+              }
+              canLoadResult = instructions;
+            }
             return Runner.run(step,
-              () => this.router.load(canLoadResult, { append: true }),
               (innerStep: Step<void>) => this.cancelContentChange(coordinator, innerStep),
+              (innerStep: Step<void>) => {
+                void this.router.load(canLoadResult, { append: true });
+                return innerStep.exit();
+              },
             );
           }
         }
@@ -502,12 +529,12 @@ export class Viewport extends Endpoint {
       },
     ];
 
-    // The transition routing hooks, unload and load
+    // The transition routing hooks, unloading and loading
     const routingSteps = [
       () => coordinator.waitForSyncState('guarded', this),
       (step: Step<void>) => {
         if (this.isActiveNavigation(coordinator)) {
-          return this.unload(step);
+          return this.unload(coordinator, step);
         }
       },
       () => coordinator.addEndpointState(this, 'unloaded'),
@@ -516,7 +543,7 @@ export class Viewport extends Endpoint {
       () => actingParentViewport !== null ? coordinator.waitForEndpointState(actingParentViewport, 'loaded') : void 0,
       (step: Step<void>) => {
         if (this.isActiveNavigation(coordinator)) {
-          return this.load(step);
+          return this.load(coordinator, step);
         }
       },
       () => coordinator.addEndpointState(this, 'loaded'),
@@ -591,16 +618,16 @@ export class Viewport extends Endpoint {
    *
    * @param step - The previous step in this transition Run
    */
-  public canUnload(step: Step<boolean> | null): boolean | Promise<boolean> {
+  public canUnload(coordinator: NavigationCoordinator, step: Step<boolean> | null): boolean | Promise<boolean> {
     return Runner.run(step,
       (innerStep: Step<boolean>) => {
-        return this.getContent().connectedScope.canUnload(innerStep);
+        return this.getContent().connectedScope.canUnload(coordinator, innerStep);
       },
       (innerStep: Step<boolean>) => {
         if (!(innerStep.previousValue as boolean)) { // canUnloadChildren
           return false;
         }
-        return this.getContent().canUnload(this.getNextContent()?.navigation ?? null);
+        return this.getContent().canUnload(coordinator.navigation);
       },
     ) as boolean | Promise<boolean>;
   }
@@ -610,7 +637,7 @@ export class Viewport extends Endpoint {
    *
    * @param step - The previous step in this transition Run
    */
-  public canLoad(step: Step<boolean>): boolean | LoadInstruction | LoadInstruction[] | Promise<boolean | LoadInstruction | LoadInstruction[]> {
+  public canLoad(coordinator: NavigationCoordinator, step: Step<boolean>): boolean | LoadInstruction | LoadInstruction[] | Promise<boolean | LoadInstruction | LoadInstruction[]> {
     if (this.clear) {
       return true;
     }
@@ -619,12 +646,13 @@ export class Viewport extends Endpoint {
       () => this.waitForConnected(),
       () => {
         const routerOptions = this.router.configuration.options;
-        this.getNextContent()!.createComponent(
+        const navigationContent = this.getNavigationContent(coordinator)!;
+        navigationContent.createComponent(
           this.connectedCE!,
           this.options.fallback || routerOptions.fallback,
           this.options.fallbackAction || routerOptions.fallbackAction);
 
-        return this.getNextContent()!.canLoad();
+        return navigationContent.canLoad();
       },
     ) as boolean | LoadInstruction | LoadInstruction[] | Promise<boolean | LoadInstruction | LoadInstruction[]>;
   }
@@ -634,12 +662,12 @@ export class Viewport extends Endpoint {
    *
    * @param step - The previous step in this transition Run
    */
-  public load(step: Step<void>): Step<void> | void {
+  public load(coordinator: NavigationCoordinator, step: Step<void>): Step<void> | void {
     if (this.clear) {
       return;
     }
 
-    return this.getNextContent()!.load(step);
+    return this.getNavigationContent(coordinator)!.load(step);
   }
 
   /**
@@ -740,10 +768,10 @@ export class Viewport extends Endpoint {
    *
    * @param step - The previous step in this transition Run
    */
-  public unload(step: Step<void> | null): void | Step<void> {
+  public unload(coordinator: NavigationCoordinator, step: Step<void> | null): void | Step<void> {
     return Runner.run(step,
-      (unloadStep: Step<void>) => this.getContent().connectedScope.unload(unloadStep),
-      () => this.getContent().componentInstance != null ? this.getContent().unload(this.getNextContent()?.navigation ?? null) : void 0,
+      (unloadStep: Step<void>) => this.getContent().connectedScope.unload(coordinator, unloadStep),
+      () => this.getContent().componentInstance != null ? this.getContent().unload(coordinator.navigation ?? null) : void 0,
     ) as Step<void>;
   }
 
@@ -835,21 +863,29 @@ export class Viewport extends Endpoint {
    *
    * @param step - The previous step in this transition Run
    */
-  public cancelContentChange(coordinator: NavigationCoordinator, step: Step<void> | null): void | Step<void> {
+  public cancelContentChange(coordinator: NavigationCoordinator, noExitStep: Step<void> | null = null): void | Step<void> {
+    // First cancel content change in all children
+    [...new Set(this.scope.children.map(scope => scope.endpoint))].forEach(child => child.cancelContentChange(coordinator, noExitStep));
+
     const nextContentIndex = this.contents.findIndex(content => content.navigation === coordinator.navigation);
+    if (nextContentIndex < 0) {
+      return;
+    }
+
+    const step = coordinator.getEndpointStep(this)?.current ?? null;
     const nextContent = this.contents[nextContentIndex];
     const previousContent = this.contents[nextContentIndex - 1];
 
+    nextContent.instruction.cancelled = true;
+
     return Runner.run(step,
       (innerStep: Step<void>) => {
-        if (nextContent != null) {
-          return nextContent.freeContent(
-            innerStep,
-            this.connectedCE,
-            nextContent.navigation,
-            this.historyCache,
-            this.router.statefulHistory || this.options.stateful);
-        }
+        return nextContent.freeContent(
+          innerStep,
+          this.connectedCE,
+          nextContent.navigation,
+          this.historyCache,
+          this.router.statefulHistory || this.options.stateful);
       },
       () => {
         if (this.previousViewportState) {
@@ -872,7 +908,12 @@ export class Viewport extends Endpoint {
 
         arrayRemove(this.coordinators, (coord => coord === coordinator));
       },
-      () => step?.exit()) as Step<void>;
+      () => {
+        if (step !== noExitStep) {
+          return step?.exit();
+        }
+      }
+    ) as Step<void>;
   }
 
   /**
@@ -945,17 +986,17 @@ export class Viewport extends Endpoint {
   /**
    * Get any configured routes in the relevant content's component type.
    */
-  public getRoutes(): Route[] | null {
+  public getRoutes(): Route[] {
+    const routes = [];
     let componentType = this.getComponentType();
-    if (componentType === null) {
-      return null;
-    }
-    componentType = componentType.constructor === componentType.constructor.constructor
-      ? componentType
-      : componentType.constructor as RouteableComponentType;
+    if (componentType != null) {
+      componentType = componentType.constructor === componentType.constructor.constructor
+        ? componentType
+        : componentType.constructor as RouteableComponentType;
 
-    const routes: Route[] = Routes.getConfiguration(componentType);
-    return Array.isArray(routes) ? routes : null;
+      routes.push(...(Routes.getConfiguration(componentType) ?? []));
+    }
+    return routes;
   }
 
   /**

@@ -4,8 +4,6 @@ import {
 } from '@aurelia/kernel';
 import {
   BindingMode,
-} from '@aurelia/runtime';
-import {
   Aurelia,
   Controller,
   CustomElement,
@@ -23,7 +21,7 @@ import {
   TestFunction,
 } from '../util.js';
 
-describe('runtime-html.integration', function () {
+describe('3-runtime-html/integration.spec.ts', function () {
 
   async function runTest<TApp>(
     testFunction: TestFunction<IntegrationTestExecutionContext<TApp>>,
@@ -91,6 +89,7 @@ describe('runtime-html.integration', function () {
       public readonly component: Class<TApp>,
       public readonly registrations: any[] = [],
       public readonly verify: (ctx: IntegrationTestExecutionContext<TApp>) => void | Promise<void>,
+      public readonly only = false,
     ) { }
   }
 
@@ -221,7 +220,7 @@ describe('runtime-html.integration', function () {
 
           assert.strictEqual(childVm.value, 42);
           assert.strictEqual(app.value, 42);
-        }
+        },
       );
     }
     {
@@ -524,7 +523,7 @@ describe('runtime-html.integration', function () {
   }
 
   for (const data of getTestData()) {
-    $it(data.name, async function (ctx: IntegrationTestExecutionContext<any>) {
+    (data.only ? $it.only : $it)(data.name, async function (ctx: IntegrationTestExecutionContext<any>) {
       await data.verify(ctx);
     }, data);
   }

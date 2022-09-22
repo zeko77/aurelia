@@ -16,6 +16,7 @@ import {
   BindingCommandInstance,
   IAttributePattern,
   IPlatform,
+  IAttrMapper,
 } from '@aurelia/runtime-html';
 import { assert, PLATFORM, TestContext } from '@aurelia/testing';
 
@@ -43,23 +44,27 @@ describe('TranslationParametersBindingCommand', function () {
   function createFixture() {
     const container = DI.createContainer();
     container.register(TranslationParametersBindingCommand);
-    return container.get<BindingCommandInstance>(BindingCommand.keyFrom(`t-params.bind`));
+    return {
+      sut: container.get<BindingCommandInstance>(BindingCommand.keyFrom(`t-params.bind`)),
+      parser: container.get(IExpressionParser),
+      mapper: container.get(IAttrMapper),
+    };
   }
 
   it('registers the `t-params.bind` command', function () {
-    const sut = createFixture();
+    const { sut } = createFixture();
     assert.instanceOf(sut, TranslationParametersBindingCommand);
   });
 
   it('compiles the binding to a TranslationParametersBindingInstruction', function () {
-    const sut = createFixture();
+    const { sut, parser, mapper } = createFixture();
     const syntax: AttrSyntax = { command: 't-params.bind', rawName: 't-params.bind', rawValue: '{foo: "bar"}', target: '' };
     const actual = sut.build({
       node: { nodeName: 'abc' } as unknown as Element,
       attr: syntax,
       bindable: null,
       def: null,
-    });
+    }, parser, mapper);
 
     assert.instanceOf(actual, TranslationParametersBindingInstruction);
   });
@@ -100,7 +105,7 @@ describe('TranslationParametersBindingRenderer', function () {
     const sut: IRenderer = new TranslationParametersBindingRenderer(container.get(IExpressionParser), container.get(IObserverLocator), container.get(IPlatform));
     const expressionParser = container.get(IExpressionParser);
     const targetElement = PLATFORM.document.createElement('span');
-    const binding = new TranslationBinding(targetElement, container.get(IObserverLocator), container, container.get(IPlatform));
+    const binding = new TranslationBinding({ state: 0 }, container, container.get(IObserverLocator), container.get(IPlatform), targetElement);
     const hydratable = ({ container, bindings: [binding] } as unknown as IHydratableController);
     const paramExpr = expressionParser.parse('{foo: "bar"}', ExpressionType.IsProperty);
     const callBindingInstruction: CallBindingInstruction = { from: paramExpr } as unknown as CallBindingInstruction;
@@ -111,6 +116,6 @@ describe('TranslationParametersBindingRenderer', function () {
       callBindingInstruction,
     );
 
-    assert.equal(binding['parameter'].expr, paramExpr);
+    assert.equal(binding['parameter'].ast, paramExpr);
   });
 });

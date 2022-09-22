@@ -1,6 +1,6 @@
 import { Constructable, EventAggregator, IContainer, ILogger } from '@aurelia/kernel';
 import { Metadata } from '@aurelia/metadata';
-import { FlushQueue, IObserverLocator } from '@aurelia/runtime';
+import { IObserverLocator } from '@aurelia/runtime';
 import { CustomElement, Aurelia, IPlatform, type ICustomElementViewModel, CustomElementDefinition } from '@aurelia/runtime-html';
 import { assert } from './assert';
 import { hJsx } from './h';
@@ -18,16 +18,24 @@ export const onFixtureCreated = <T>(callback: (fixture: IFixture<T>) => unknown)
   });
 };
 
+export type ObjectType<T> = T extends Constructable<infer U> ? U : T;
+
 // eslint-disable-next-line max-lines-per-function
-export function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>(
+export function createFixture<T extends object>(
   template: string | Node,
   $class?: T,
   registrations: unknown[] = [],
   autoStart: boolean = true,
   ctx: TestContext = TestContext.create(),
-): IFixture<ICustomElementViewModel & K> {
-  const { container, platform, observerLocator } = ctx;
+): IFixture<ICustomElementViewModel & ObjectType<T>> {
+  type K = ObjectType<T>;
+  const { container } = ctx;
   container.register(...registrations);
+
+  // platform and observer locator have side effect when accessed on ctx
+  // they will trigger default registration of interfaces if there's been no registration before it
+  // hence evaluate platform + observer locator only after we have registered all the dependencies
+  const { platform, observerLocator } = ctx;
   const root = ctx.doc.body.appendChild(ctx.createElement('div'));
   const host = root.appendChild(ctx.createElement('app'));
   const au = new Aurelia(container);
@@ -79,7 +87,6 @@ export function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>
           void ret.then(dispose);
         else
           dispose();
-        FlushQueue.instance.clear();
       } catch {
         console.warn('(!) corrupted fixture state, should isolate the failing test and restart the run'
           + 'as it is likely that this failing fixture creation will pollute others.');
@@ -126,12 +133,33 @@ export function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>
     if (arguments.length === 2) {
       const el = queryBy(selector);
       if (el === null) {
-        throw new Error(`No element found for selector "${selector}" to compare innerHTML with "${html}"`);
+        throw new Error(`No element found for selector "${selector}" to compare innerHTML against "${html}"`);
       }
       assert.strictEqual(el.innerHTML, html);
     } else {
       assert.strictEqual(host.innerHTML, selector);
     }
+  }
+  function assertAttr(selector: string, name: string, value: string | null) {
+    const el = queryBy(selector);
+    if (el === null) {
+      throw new Error(`No element found for selector "${selector}" to compare attribute "${name}" against "${value}"`);
+    }
+    assert.strictEqual(el.getAttribute(name), value);
+  }
+  function assertAttrNS(selector: string, namespace: string, name: string, value: string | null) {
+    const el = queryBy(selector);
+    if (el === null) {
+      throw new Error(`No element found for selector "${selector}" to compare attribute "${name}" against "${value}"`);
+    }
+    assert.strictEqual(el.getAttributeNS(namespace, name), value);
+  }
+  function assertValue(selector: string, value: string | null) {
+    const el = queryBy(selector);
+    if (el === null) {
+      throw new Error(`No element found for selector "${selector}" to compare value against "${value}"`);
+    }
+    assert.strictEqual((el as any).value, value);
   }
   function trigger(selector: string, event: string, init?: CustomEventInit): void {
     const el = queryBy(selector);
@@ -216,6 +244,9 @@ export function createFixture<T, K = (T extends Constructable<infer U> ? U : T)>
     public queryBy = queryBy;
     public assertText = assertText;
     public assertHtml = assertHtml;
+    public assertAttr = assertAttr;
+    public assertAttrNS = assertAttrNS;
+    public assertValue = assertValue;
     public trigger = trigger as ITrigger;
     public scrollBy = scrollBy;
     public flush = flush;
@@ -283,6 +314,24 @@ export interface IFixture<T> {
    * Will throw if there' more than one elements with matching selector
    */
   assertHtml(selector: string, html: string): void;
+  /**
+   * Assert the attribute value of an element matching the given selector inside the application host equals to a given string.
+   *
+   * Will throw if there' more than one elements with matching selector
+   */
+  assertAttr(selector: string, name: string, value: string): void;
+  /**
+   * Assert the attribute value of an element matching the given selector inside the application host equals to a given string.
+   *
+   * Will throw if there' more than one elements with matching selector
+   */
+  assertAttrNS(selector: string, namespace: string, name: string, value: string): void;
+  /**
+   * Assert the value of an element matching the given selector inside the application host equals to a given value.
+   *
+   * Will throw if there' more than one elements with matching selector
+   */
+  assertValue(selector: string, value: unknown): void;
 
   hJsx(name: string, attrs: Record<string, string> | null, ...children: (Node | string | (Node | string)[])[]): HTMLElement;
 
@@ -367,11 +416,16 @@ function brokenProcessFastTemplate(html: TemplateStringsArray, ..._args: unknown
 }
 
 createFixture.html = <T = Record<PropertyKey, any>>(html: string | TemplateStringsArray, ...values: TemplateValues<T>[]) => new FixtureBuilder<T>().html(html, ...values) ;
-createFixture.component = <T>(component: T) => new FixtureBuilder<T>().component(component);
+createFixture.component = <T, K extends ObjectType<T>>(component: T) => new FixtureBuilder<K>().component(component as K);
 createFixture.deps = <T = Record<PropertyKey, any>>(...deps: unknown[]) => new FixtureBuilder<T>().deps(...deps);
 
 /* eslint-disable */
 function testBuilderTypings() {
+  type Expect<T extends true> = T;
+  type Equal<A, B> =
+    (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2)
+      ? true
+      : false;
   type IsType<A, B> = A extends B ? B extends A ? 1 : never : never;
 
   // @ts-expect-error
@@ -384,6 +438,14 @@ function testBuilderTypings() {
 
   const a3 = createFixture.component({}).deps().html``.build();
   const A3: IsType<typeof a3, IFixture<{}>> = 1;
+
+  const ac1 = createFixture.component({ a: 1 }).deps().html``.build();
+  const AC1: IsType<typeof ac1, IFixture<{ a: number }>> = 1;
+
+  const ac2 = createFixture.component(class Abc { a = 1 }).deps().html``.build();
+  const ac21: IsType<typeof ac2.component, { a: number }> = 1;
+  const AC2: IsType<typeof ac2, IFixture<{ a: number }>> = 1;
+  type AC3 = Expect<Equal<typeof ac2, IFixture<{ a: number }>>>;
 
   const a4 = createFixture.html``.build();
   const A4: IsType<typeof a4, IFixture<{}>> = 1;
@@ -402,5 +464,11 @@ function testBuilderTypings() {
 
   const a8 = createFixture.deps().component({}).html``.build();
   const A8: IsType<typeof a8, IFixture<{}>> = 1;
+
+  const { component } = createFixture(
+    'abc',
+    { a: [1, 2] }
+  );
+  const C1: IsType<{ a: number[] }, typeof component> = 1;
 }
 /* eslint-enable */

@@ -1,15 +1,25 @@
-import { createIndexMap, AccessorType, LifecycleFlags, ICollectionSubscriberCollection } from '../observation';
+import { createIndexMap, AccessorType, type ICollectionSubscriberCollection } from '../observation';
 import { CollectionSizeObserver } from './collection-length-observer';
 import { subscriberCollection } from './subscriber-collection';
-import { def } from '../utilities-objects';
+import { def, defineMetadata, getOwnMetadata } from '../utilities-objects';
+import { batching, addCollectionBatch } from './subscriber-batch';
 
 import type {
   ICollectionObserver,
   CollectionKind,
 } from '../observation';
 
-const observerLookup = new WeakMap<Set<unknown>, SetObserver>();
+// multiple applications of Aurelia wouldn't have different observers for the same Set object
+const lookupMetadataKey = '__au_set_obs__';
+const observerLookup = (() => {
+  let lookup: WeakMap<Set<unknown>, SetObserver> = getOwnMetadata(lookupMetadataKey, Set);
+  if (lookup == null) {
+    defineMetadata(lookupMetadataKey, lookup = new WeakMap<Set<unknown>, SetObserver>(), Set);
+  }
+  return lookup;
+})();
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const proto = Set.prototype as { [K in keyof Set<any>]: Set<any>[K] & { observing?: boolean } };
 
 const $add = proto.add;
@@ -51,9 +61,10 @@ const observe = {
       const indexMap = o.indexMap;
       let i = 0;
       // deepscan-disable-next-line
-      for (const _ of this.keys()) {
+      for (const key of this.keys()) {
         if (indexMap[i] > -1) {
-          indexMap.deletedItems.push(indexMap[i]);
+          indexMap.deletedIndices.push(indexMap[i]);
+          indexMap.deletedItems.push(key);
         }
         i++;
       }
@@ -78,7 +89,8 @@ const observe = {
     for (const entry of this.keys()) {
       if (entry === value) {
         if (indexMap[i] > -1) {
-          indexMap.deletedItems.push(indexMap[i]);
+          indexMap.deletedIndices.push(indexMap[i]);
+          indexMap.deletedItems.push(entry);
         }
         indexMap.splice(i, 1);
         const deleteResult = $delete.call(this, value);
@@ -105,10 +117,15 @@ for (const method of methods) {
 
 let enableSetObservationCalled = false;
 
+const observationEnabledKey = '__au_set_on__';
 export function enableSetObservation(): void {
-  for (const method of methods) {
-    if (proto[method].observing !== true) {
-      def(proto, method, { ...descriptorProps, value: observe[method] });
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+  if (!(getOwnMetadata(observationEnabledKey, Set) ?? false)) {
+    defineMetadata(observationEnabledKey, true, Set);
+    for (const method of methods) {
+      if (proto[method].observing !== true) {
+        def(proto, method, { ...descriptorProps, value: observe[method] });
+      }
     }
   }
 }
@@ -142,11 +159,18 @@ export class SetObserver {
   }
 
   public notify(): void {
+    const subs = this.subs;
     const indexMap = this.indexMap;
-    const size = this.collection.size;
+    if (batching) {
+      addCollectionBatch(subs, this.collection, indexMap);
+      return;
+    }
+
+    const set = this.collection;
+    const size = set.size;
 
     this.indexMap = createIndexMap(size);
-    this.subs.notifyCollection(indexMap, LifecycleFlags.none);
+    this.subs.notifyCollection(set, indexMap);
   }
 
   public getLengthObserver(): CollectionSizeObserver {

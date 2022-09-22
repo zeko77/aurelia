@@ -5,12 +5,14 @@ import {
   createObserverLocator,
   createScopeForTest,
 } from '@aurelia/testing';
-import { Interpolation, ConditionalExpression, AccessScopeExpression, BindingMode, LifecycleFlags, ValueConverter } from '@aurelia/runtime';
+import { Interpolation, ConditionalExpression, AccessScopeExpression } from '@aurelia/runtime';
 import {
+  BindingMode,
   CustomElement,
   InterpolationBinding,
   SVGAnalyzerRegistration,
   IPlatform,
+  ValueConverter,
 } from '@aurelia/runtime-html';
 
 type CaseType = {
@@ -148,7 +150,7 @@ describe('3-runtime/interpolation.spec.ts -- [UNIT]interpolation', function () {
 
       changeFnc: (val) => {
         val.splice(1, 1);
-        return val;  // Array observation no worky
+        return val;
       }, app: class { public value = [0, 1, 2]; },
       interpolation: `$\{value}`,
       it: 'Array prints comma delimited values and observes splice correctly'
@@ -290,13 +292,14 @@ describe('3-runtime/interpolation.spec.ts -- [UNIT]interpolation', function () {
       );
       const target = { value: '' };
       const binding = new InterpolationBinding(
+        { state: 0 },
+        container,
         observerLocator,
+        {} as any,
         interpolation,
         target,
         'value',
         BindingMode.toView,
-        container,
-        {} as any,
       );
       const source = { checked: false, yesMsg: 'yes', noMsg: 'no' };
 
@@ -315,7 +318,7 @@ describe('3-runtime/interpolation.spec.ts -- [UNIT]interpolation', function () {
           return handleChange.apply(this, args);
         };
       })(binding.partBindings[0].handleChange);
-      binding.$bind(LifecycleFlags.fromBind, createScopeForTest(source));
+      binding.$bind(createScopeForTest(source));
 
       assert.strictEqual(target.value, 'no');
       assert.deepStrictEqual(
@@ -373,13 +376,14 @@ describe('3-runtime/interpolation.spec.ts -- [UNIT]interpolation', function () {
       );
       const target = { value: '' };
       const binding = new InterpolationBinding(
+        { state: 0 },
+        container,
         observerLocator,
+        {} as any,
         interpolation,
         target,
         'value',
         BindingMode.toView,
-        container,
-        {} as any,
       );
       const source = {
         checked1: false,
@@ -412,7 +416,7 @@ describe('3-runtime/interpolation.spec.ts -- [UNIT]interpolation', function () {
           return handleChange.apply(this, args);
         };
       })(binding.partBindings[1].handleChange);
-      binding.$bind(LifecycleFlags.fromBind, createScopeForTest(source));
+      binding.$bind(createScopeForTest(source));
 
       assert.strictEqual(target.value, 'no1--no2');
       assert.deepStrictEqual(

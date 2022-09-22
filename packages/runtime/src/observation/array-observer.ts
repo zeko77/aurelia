@@ -1,10 +1,10 @@
 import {
   createIndexMap,
-  LifecycleFlags,
   AccessorType,
-  ISubscriberCollection,
-  ICollectionSubscriberCollection,
+  type ISubscriberCollection,
+  type ICollectionSubscriberCollection,
   cloneIndexMap,
+  type IObserver,
 } from '../observation';
 import {
   CollectionLengthObserver,
@@ -12,17 +12,25 @@ import {
 import {
   subscriberCollection,
 } from './subscriber-collection';
+import { def, defineHiddenProp, defineMetadata, getOwnMetadata, isFunction } from '../utilities-objects';
+import { addCollectionBatch, batching } from './subscriber-batch';
 
 import type {
   CollectionKind,
   ICollectionObserver,
-  IArrayIndexObserver,
   IndexMap,
   ISubscriber,
 } from '../observation';
-import { def, defineHiddenProp, isFunction } from '../utilities-objects';
 
-const observerLookup = new WeakMap<unknown[], ArrayObserver>();
+// multiple applications of Aurelia wouldn't have different observers for the same Array object
+const lookupMetadataKey = '__au_array_obs__';
+const observerLookup = (() => {
+  let lookup: WeakMap<unknown[], ArrayObserver> = getOwnMetadata(lookupMetadataKey, Array);
+  if (lookup == null) {
+    defineMetadata(lookupMetadataKey, lookup = new WeakMap<unknown[], ArrayObserver>(), Array);
+  }
+  return lookup;
+})();
 
 // https://tc39.github.io/ecma262/#sec-sortcompare
 function sortCompare(x: unknown, y: unknown): number {
@@ -219,7 +227,8 @@ const observe = {
     // only mark indices as deleted if they actually existed in the original array
     const index = indexMap.length - 1;
     if (indexMap[index] > -1) {
-      indexMap.deletedItems.push(indexMap[index]);
+      indexMap.deletedIndices.push(indexMap[index]);
+      indexMap.deletedItems.push(element);
     }
     $pop.call(indexMap);
     o.notify();
@@ -235,7 +244,8 @@ const observe = {
     const element = $shift.call(this);
     // only mark indices as deleted if they actually existed in the original array
     if (indexMap[0] > -1) {
-      indexMap.deletedItems.push(indexMap[0]);
+      indexMap.deletedIndices.push(indexMap[0]);
+      indexMap.deletedItems.push(element);
     }
     $shift.call(indexMap);
     o.notify();
@@ -259,8 +269,10 @@ const observe = {
       let i = actualStart;
       const to = i + actualDeleteCount;
       while (i < to) {
+        // only mark indices as deleted if they actually existed in the original array
         if (indexMap[i] > -1) {
-          indexMap.deletedItems.push(indexMap[i]);
+          indexMap.deletedIndices.push(indexMap[i]);
+          indexMap.deletedItems.push(this[i]);
         }
         i++;
       }
@@ -348,10 +360,15 @@ for (const method of methods) {
 
 let enableArrayObservationCalled = false;
 
+const observationEnabledKey = '__au_arr_on__';
 export function enableArrayObservation(): void {
-  for (const method of methods) {
-    if (proto[method].observing !== true) {
-      defineHiddenProp(proto, method, observe[method]);
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+  if (!(getOwnMetadata(observationEnabledKey, Array) ?? false)) {
+    defineMetadata(observationEnabledKey, true, Array);
+    for (const method of methods) {
+      if (proto[method].observing !== true) {
+        defineHiddenProp(proto, method, observe[method]);
+      }
     }
   }
 }
@@ -389,11 +406,18 @@ export class ArrayObserver {
   }
 
   public notify(): void {
+    const subs = this.subs;
     const indexMap = this.indexMap;
-    const length = this.collection.length;
+    if (batching) {
+      addCollectionBatch(subs, this.collection, indexMap);
+      return;
+    }
+
+    const arr = this.collection;
+    const length = arr.length;
 
     this.indexMap = createIndexMap(length);
-    this.subs.notifyCollection(indexMap, LifecycleFlags.none);
+    this.subs.notifyCollection(arr, indexMap);
   }
 
   public getLengthObserver(): CollectionLengthObserver {
@@ -405,6 +429,10 @@ export class ArrayObserver {
     // so just create once, and add/remove instead
     return this.indexObservers[index] ??= new ArrayIndexObserver(this, index);
   }
+}
+
+export interface IArrayIndexObserver extends IObserver {
+  owner: ICollectionObserver<CollectionKind.array>;
 }
 
 export interface ArrayIndexObserver extends IArrayIndexObserver, ISubscriberCollection {}
@@ -425,8 +453,7 @@ export class ArrayIndexObserver implements IArrayIndexObserver {
     return this.owner.collection[this.index];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public setValue(newValue: unknown, flag: LifecycleFlags): void {
+  public setValue(newValue: unknown): void {
     if (newValue === this.getValue()) {
       return;
     }
@@ -435,7 +462,7 @@ export class ArrayIndexObserver implements IArrayIndexObserver {
     const indexMap = arrayObserver.indexMap;
 
     if (indexMap[index] > -1) {
-      indexMap.deletedItems.push(indexMap[index]);
+      indexMap.deletedIndices.push(indexMap[index]);
     }
     indexMap[index] = -2;
     // do not need to update current value here
@@ -447,7 +474,7 @@ export class ArrayIndexObserver implements IArrayIndexObserver {
   /**
    * From interface `ICollectionSubscriber`
    */
-  public handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void {
+  public handleCollectionChange(_arr: unknown[], indexMap: IndexMap): void {
     const index = this.index;
     const noChange = indexMap[index] === index;
     if (noChange) {
@@ -457,7 +484,7 @@ export class ArrayIndexObserver implements IArrayIndexObserver {
     const currValue = this.value = this.getValue();
     // hmm
     if (prevValue !== currValue) {
-      this.subs.notify(currValue, prevValue, flags);
+      this.subs.notify(currValue, prevValue);
     }
   }
 
@@ -486,6 +513,12 @@ export function getArrayObserver(array: unknown[]): ArrayObserver {
 }
 
 /**
+ * A compare function to pass to `Array.prototype.sort` for sorting numbers.
+ * This is needed for numeric sort, since the default sorts them as strings.
+ */
+const compareNumber = (a: number, b: number): number => a - b;
+
+/**
  * Applies offsets to the non-negative indices in the IndexMap
  * based on added and deleted items relative to those indices.
  *
@@ -497,9 +530,16 @@ export function applyMutationsToIndices(indexMap: IndexMap): IndexMap {
   let j = 0;
   let i = 0;
   const $indexMap = cloneIndexMap(indexMap);
+
+  // during a batch, items could be deleted in a non-linear order with multiple splices
+  if ($indexMap.deletedIndices.length > 1) {
+    // TODO: also synchronize deletedItems when we need them
+    $indexMap.deletedIndices.sort(compareNumber);
+  }
+
   const len = $indexMap.length;
   for (; i < len; ++i) {
-    while ($indexMap.deletedItems[j] <= i - offset) {
+    while ($indexMap.deletedIndices[j] <= i - offset) {
       ++j;
       --offset;
     }

@@ -3,33 +3,29 @@ import { IDisposable, type IServiceLocator, type Writable } from '@aurelia/kerne
 import { ITask, QueueTaskOptions, TaskQueue } from '@aurelia/platform';
 import {
   AccessorType,
-  BindingMode,
-  connectable, LifecycleFlags,
+  connectable,
   Scope,
   type IAccessor,
-  type IConnectableBinding,
   type IObserverLocator, type IOverrideContext, type IsBindingBehavior
 } from '@aurelia/runtime';
+import { BindingMode, type IBindingController, type IAstBasedBinding, State, astEvaluator } from '@aurelia/runtime-html';
 import {
   IStore,
   type IStoreSubscriber
 } from './interfaces';
 import { createStateBindingScope } from './state-utilities';
 
-const { toView, oneTime } = BindingMode;
-
 /**
  * A binding that handles the connection of the global state to a property of a target object
  */
-export interface StateBinding extends IConnectableBinding { }
-@connectable()
-export class StateBinding implements IConnectableBinding, IStoreSubscriber<object> {
+export interface StateBinding extends IAstBasedBinding { }
+export class StateBinding implements IAstBasedBinding, IStoreSubscriber<object> {
   public readonly oL: IObserverLocator;
   public interceptor: this = this;
   public locator: IServiceLocator;
   public $scope?: Scope | undefined;
   public isBound: boolean = false;
-  public sourceExpression: IsBindingBehavior;
+  public ast: IsBindingBehavior;
   private readonly target: object;
   private readonly targetProperty: PropertyKey;
   private task: ITask | null = null;
@@ -40,29 +36,35 @@ export class StateBinding implements IConnectableBinding, IStoreSubscriber<objec
   /** @internal */ private _value: unknown = void 0;
   /** @internal */ private _sub?: IDisposable | Unsubscribable | (() => void) = void 0;
   /** @internal */ private _updateCount = 0;
+  /** @internal */ private readonly _controller: IBindingController;
 
-  public persistentFlags: LifecycleFlags = LifecycleFlags.none;
-  public mode: BindingMode = toView;
+  // see Listener binding for explanation
+  /** @internal */
+  public readonly boundFn = false;
+
+  public mode: BindingMode = BindingMode.toView;
 
   public constructor(
+    controller: IBindingController,
     locator: IServiceLocator,
-    taskQueue: TaskQueue,
-    store: IStore<object>,
     observerLocator: IObserverLocator,
-    expr: IsBindingBehavior,
+    taskQueue: TaskQueue,
+    ast: IsBindingBehavior,
     target: object,
     prop: PropertyKey,
+    store: IStore<object>,
   ) {
+    this._controller = controller;
     this.locator = locator;
     this.taskQueue = taskQueue;
     this._store = store;
     this.oL = observerLocator;
-    this.sourceExpression = expr;
+    this.ast = ast;
     this.target = target;
     this.targetProperty = prop;
   }
 
-  public updateTarget(value: unknown, flags: LifecycleFlags) {
+  public updateTarget(value: unknown) {
     const targetAccessor = this.targetObserver;
     const target = this.target;
     const prop = this.targetProperty;
@@ -73,7 +75,7 @@ export class StateBinding implements IConnectableBinding, IStoreSubscriber<objec
     if (isSubscribable(value)) {
       this._sub = value.subscribe($value => {
         if (isCurrentValue()) {
-          targetAccessor.setValue($value, flags, target, prop);
+          targetAccessor.setValue($value, target, prop);
         }
       });
       return;
@@ -82,16 +84,16 @@ export class StateBinding implements IConnectableBinding, IStoreSubscriber<objec
     if (value instanceof Promise) {
       void value.then($value => {
         if (isCurrentValue()) {
-          targetAccessor.setValue($value, flags, target, prop);
+          targetAccessor.setValue($value, target, prop);
         }
       }, () => {/* todo: don't ignore */});
       return;
     }
 
-    targetAccessor.setValue(value, flags, target, prop);
+    targetAccessor.setValue(value, target, prop);
   }
 
-  public $bind(flags: LifecycleFlags, scope: Scope): void {
+  public $bind(scope: Scope): void {
     if (this.isBound) {
       return;
     }
@@ -99,12 +101,10 @@ export class StateBinding implements IConnectableBinding, IStoreSubscriber<objec
     this.targetObserver = this.oL.getAccessor(this.target, this.targetProperty);
     this.$scope = createStateBindingScope(this._store.getState(), scope);
     this._store.subscribe(this);
-    this.updateTarget(this._value = this.sourceExpression.evaluate(
-      LifecycleFlags.isStrictBindingStrategy,
+    this.updateTarget(this._value = this.ast.evaluate(
       this.$scope,
-      this.locator,
-      this.mode > oneTime ? this : null),
-      LifecycleFlags.none
+      this,
+      this.mode > BindingMode.oneTime ? this : null),
     );
   }
 
@@ -122,21 +122,19 @@ export class StateBinding implements IConnectableBinding, IStoreSubscriber<objec
     this._store.unsubscribe(this);
   }
 
-  public handleChange(newValue: unknown, previousValue: unknown, flags: LifecycleFlags): void {
+  public handleChange(newValue: unknown): void {
     if (!this.isBound) {
       return;
     }
-
-    flags |= this.persistentFlags;
 
     // Alpha: during bind a simple strategy for bind is always flush immediately
     // todo:
     //  (1). determine whether this should be the behavior
     //  (2). if not, then fix tests to reflect the changes/platform to properly yield all with aurelia.start()
-    const shouldQueueFlush = (flags & LifecycleFlags.fromBind) === 0 && (this.targetObserver.type & AccessorType.Layout) > 0;
+    const shouldQueueFlush = this._controller.state !== State.activating && (this.targetObserver.type & AccessorType.Layout) > 0;
     const obsRecord = this.obs;
     obsRecord.version++;
-    newValue = this.sourceExpression.evaluate(flags, this.$scope!, this.locator, this.interceptor);
+    newValue = this.ast.evaluate(this.$scope!, this, this.interceptor);
     obsRecord.clear();
 
     let task: ITask | null;
@@ -144,27 +142,30 @@ export class StateBinding implements IConnectableBinding, IStoreSubscriber<objec
       // Queue the new one before canceling the old one, to prevent early yield
       task = this.task;
       this.task = this.taskQueue.queueTask(() => {
-        this.interceptor.updateTarget(newValue, flags);
+        this.interceptor.updateTarget(newValue);
         this.task = null;
       }, updateTaskOpts);
       task?.cancel();
       task = null;
     } else {
-      this.interceptor.updateTarget(newValue, flags);
+      this.interceptor.updateTarget(newValue);
     }
   }
 
-  public handleStateChange(state: object): void {
+  public handleStateChange(): void {
+    if (!this.isBound) {
+      return;
+    }
+    const state = this._store.getState();
     const $scope = this.$scope!;
     const overrideContext = $scope.overrideContext as Writable<IOverrideContext>;
     $scope.bindingContext = overrideContext.bindingContext = overrideContext.$state = state;
-    const value = this.sourceExpression.evaluate(
-      LifecycleFlags.isStrictBindingStrategy,
+    const value = this.ast.evaluate(
       $scope,
-      this.locator,
-      this.mode > oneTime ? this : null
+      this,
+      this.mode > BindingMode.oneTime ? this : null
     );
-    const shouldQueueFlush = (this.targetObserver.type & AccessorType.Layout) > 0;
+    const shouldQueueFlush = this._controller.state !== State.activating && (this.targetObserver.type & AccessorType.Layout) > 0;
 
     if (value === this._value) {
       return;
@@ -175,12 +176,12 @@ export class StateBinding implements IConnectableBinding, IStoreSubscriber<objec
       // Queue the new one before canceling the old one, to prevent early yield
       task = this.task;
       this.task = this.taskQueue.queueTask(() => {
-        this.interceptor.updateTarget(value, LifecycleFlags.isStrictBindingStrategy);
+        this.interceptor.updateTarget(value);
         this.task = null;
       }, updateTaskOpts);
       task?.cancel();
     } else {
-      this.interceptor.updateTarget(this._value, LifecycleFlags.none);
+      this.interceptor.updateTarget(this._value);
     }
   }
 
@@ -212,3 +213,6 @@ const updateTaskOpts: QueueTaskOptions = {
   reusable: false,
   preempt: true,
 };
+
+connectable(StateBinding);
+astEvaluator(true)(StateBinding);

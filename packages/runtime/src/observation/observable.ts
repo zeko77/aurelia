@@ -1,6 +1,6 @@
-import { IObserver, LifecycleFlags } from '../observation';
+import { IObserver } from '../observation';
 import { SetterNotifier } from './setter-observer';
-import { def } from '../utilities-objects';
+import { safeString, def } from '../utilities-objects';
 import { currentConnectable } from './connectable-switcher';
 
 import type { Constructable, IIndexable } from '@aurelia/kernel';
@@ -103,7 +103,7 @@ export function observable(
 
     // determine callback name based on config or convention.
     // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing, @typescript-eslint/strict-boolean-expressions
-    const callback = config.callback || `${String(key)}Changed`;
+    const callback = config.callback || `${safeString(key)}Changed`;
     let initialValue = noValue;
     if (descriptor) {
       // we're adding a getter and setter which means the property descriptor
@@ -129,7 +129,7 @@ export function observable(
       return notifier.getValue();
     };
     descriptor.set = function s(/* @observable */this: SetterObserverOwningObject, newValue: unknown) {
-      getNotifier(this, key!, callback, initialValue, $set).setValue(newValue, LifecycleFlags.none);
+      getNotifier(this, key!, callback, initialValue, $set).setValue(newValue);
     };
     (descriptor.get as ObservableGetter).getObserver = function gO(/* @observable */obj: SetterObserverOwningObject) {
       return getNotifier(obj, key!, callback, initialValue, $set);

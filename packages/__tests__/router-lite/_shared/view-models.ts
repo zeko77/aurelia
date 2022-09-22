@@ -1,6 +1,5 @@
 import { Writable } from '@aurelia/kernel';
-import { LifecycleFlags } from '@aurelia/runtime';
-import { ICustomElementController, IHydratedController, IHydratedParentController } from '@aurelia/runtime-html';
+import { LifecycleFlags, ICustomElementController, IHydratedController, IHydratedParentController } from '@aurelia/runtime-html';
 import { Params, RouteNode, NavigationInstruction, IRouteViewModel } from '@aurelia/router-lite';
 import { IHookInvocationAggregator } from './hook-invocation-tracker.js';
 import { IHookSpec, hookSpecsMap } from './hook-spec.js';
@@ -18,9 +17,9 @@ export interface ITestRouteViewModel extends IRouteViewModel {
   unbinding(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void>;
 
   canLoad(params: Params, next: RouteNode, current: RouteNode | null): boolean | NavigationInstruction | NavigationInstruction[] | Promise<boolean | NavigationInstruction | NavigationInstruction[]>;
-  load(params: Params, next: RouteNode, current: RouteNode | null): void | Promise<void>;
+  loading(params: Params, next: RouteNode, current: RouteNode | null): void | Promise<void>;
   canUnload(next: RouteNode | null, current: RouteNode): boolean | Promise<boolean>;
-  unload(next: RouteNode | null, current: RouteNode): void | Promise<void>;
+  unloading(next: RouteNode | null, current: RouteNode): void | Promise<void>;
 }
 
 export class HookSpecs {
@@ -40,9 +39,9 @@ export class HookSpecs {
     public readonly $dispose: IHookSpec<'dispose'>,
 
     public readonly canLoad: IHookSpec<'canLoad'>,
-    public readonly load: IHookSpec<'load'>,
+    public readonly loading: IHookSpec<'loading'>,
     public readonly canUnload: IHookSpec<'canUnload'>,
-    public readonly unload: IHookSpec<'unload'>,
+    public readonly unloading: IHookSpec<'unloading'>,
   ) {}
 
   public static create(
@@ -61,9 +60,9 @@ export class HookSpecs {
       hookSpecsMap.dispose,
 
       input.canLoad || hookSpecsMap.canLoad.sync,
-      input.load || hookSpecsMap.load.sync,
+      input.loading || hookSpecsMap.loading.sync,
       input.canUnload || hookSpecsMap.canUnload.sync,
-      input.unload || hookSpecsMap.unload.sync,
+      input.unloading || hookSpecsMap.unloading.sync,
     );
   }
 
@@ -81,9 +80,9 @@ export class HookSpecs {
     $this.$dispose = void 0;
 
     $this.canLoad = void 0;
-    $this.load = void 0;
+    $this.loading = void 0;
     $this.canUnload = void 0;
-    $this.unload = void 0;
+    $this.unloading = void 0;
   }
 
   public toString(exclude?: string): string {
@@ -108,9 +107,9 @@ const hookNames = [
   'unbinding',
 
   'canLoad',
-  'load',
+  'loading',
   'canUnload',
-  'unload',
+  'unloading',
 ] as const;
 
 export abstract class TestRouteViewModelBase implements ITestRouteViewModel {
@@ -232,16 +231,16 @@ export abstract class TestRouteViewModelBase implements ITestRouteViewModel {
     );
   }
 
-  public load(
+  public loading(
     params: Params,
     next: RouteNode,
     current: RouteNode | null,
   ): void | Promise<void> {
-    return this.specs.load.invoke(
+    return this.specs.loading.invoke(
       this,
       () => {
-        this.hia.load.notify(this.name);
-        return this.$load(params, next, current);
+        this.hia.loading.notify(this.name);
+        return this.$loading(params, next, current);
       },
     );
   }
@@ -259,15 +258,15 @@ export abstract class TestRouteViewModelBase implements ITestRouteViewModel {
     );
   }
 
-  public unload(
+  public unloading(
     next: RouteNode | null,
     current: RouteNode,
   ): void | Promise<void> {
-    return this.specs.unload.invoke(
+    return this.specs.unloading.invoke(
       this,
       () => {
-        this.hia.unload.notify(this.name);
-        return this.$unload(next, current);
+        this.hia.unloading.notify(this.name);
+        return this.$unloading(next, current);
       },
     );
   }
@@ -327,7 +326,7 @@ export abstract class TestRouteViewModelBase implements ITestRouteViewModel {
     return true;
   }
 
-  protected $load(
+  protected $loading(
     _params: Params,
     _next: RouteNode,
     _current: RouteNode | null,
@@ -342,7 +341,7 @@ export abstract class TestRouteViewModelBase implements ITestRouteViewModel {
     return true;
   }
 
-  protected $unload(
+  protected $unloading(
     _next: RouteNode | null,
     _current: RouteNode,
   ): void | Promise<void> {

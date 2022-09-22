@@ -1,13 +1,10 @@
-import { LifecycleFlags, subscriberCollection, AccessorType, withFlushQueue } from '@aurelia/runtime';
+import { subscriberCollection, AccessorType } from '@aurelia/runtime';
 import { isString } from '../utilities';
 
 import type {
   IObserver,
   ISubscriber,
   ISubscriberCollection,
-  IFlushable,
-  IWithFlushQueue,
-  FlushQueue,
 } from '@aurelia/runtime';
 
 export interface AttributeObserver extends
@@ -20,11 +17,10 @@ export interface AttributeObserver extends
  * Has different strategy for class/style and normal attributes
  * TODO: handle SVG/attributes with namespace
  */
-export class AttributeObserver implements AttributeObserver, ElementMutationSubscriber, IWithFlushQueue, IFlushable {
+export class AttributeObserver implements AttributeObserver, ElementMutationSubscriber {
   // layout is not certain, depends on the attribute being flushed to owner element
   // but for simple start, always treat as such
   public type: AccessorType = AccessorType.Node | AccessorType.Observer | AccessorType.Layout;
-  public readonly queue!: FlushQueue;
 
   /** @internal */
   private readonly _obj: HTMLElement;
@@ -44,9 +40,6 @@ export class AttributeObserver implements AttributeObserver, ElementMutationSubs
   /** @internal */
   private readonly _attr: string;
 
-  /** @internal */
-  private f: LifecycleFlags = LifecycleFlags.none;
-
   public constructor(
     obj: HTMLElement,
     // todo: rename to attr and sub-attr
@@ -64,12 +57,10 @@ export class AttributeObserver implements AttributeObserver, ElementMutationSubs
     return this._value;
   }
 
-  public setValue(value: unknown, flags: LifecycleFlags): void {
+  public setValue(value: unknown): void {
     this._value = value;
     this._hasChanges = value !== this._oldValue;
-    if ((flags & LifecycleFlags.noFlush) === 0) {
-      this._flushChanges();
-    }
+    this._flushChanges();
   }
 
   /** @internal */
@@ -145,8 +136,7 @@ export class AttributeObserver implements AttributeObserver, ElementMutationSubs
         this._oldValue = this._value;
         this._value = newValue;
         this._hasChanges = false;
-        this.f = LifecycleFlags.none;
-        this.queue.add(this);
+        this._flush();
       }
     }
   }
@@ -164,15 +154,15 @@ export class AttributeObserver implements AttributeObserver, ElementMutationSubs
     }
   }
 
-  public flush(): void {
+  /** @internal */
+  private _flush(): void {
     oV = this._oldValue;
     this._oldValue = this._value;
-    this.subs.notify(this._value, oV, this.f);
+    this.subs.notify(this._value, oV);
   }
 }
 
 subscriberCollection(AttributeObserver);
-withFlushQueue(AttributeObserver);
 
 interface IHtmlElement extends HTMLElement {
   $mObs: MutationObserver;

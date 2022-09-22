@@ -199,15 +199,8 @@ export {
   kebabCase,
   pascalCase,
   toArray,
-  // nextId,
-  // resetId,
-  // compareNumber,
-  // mergeDistinct,
-  // isNumberOrBigInt,
-  // isStringOrDate,
   bound,
   // mergeArrays,
-  // mergeObjects,
   // firstDefined,
   // getPrototypeChain,
 } from '@aurelia/kernel';
@@ -233,6 +226,7 @@ export {
 
 export {
   CollectionKind,
+  batch,
   // CallFunctionExpression,
   // connects,
   // observes,
@@ -261,7 +255,6 @@ export {
   // BinaryExpression,
   // UnaryExpression,
   // PrimitiveLiteralExpression,
-  // HtmlLiteralExpression,
   // ArrayLiteralExpression,
   // ObjectLiteralExpression,
   // TemplateExpression,
@@ -309,7 +302,6 @@ export {
   // ICallScopeExpression,
   // IConditionalExpression,
   // ForOfStatement,
-  // IHtmlLiteralExpression,
   // Interpolation,
   // IObjectBindingPattern,
   // IObjectLiteralExpression,
@@ -375,8 +367,6 @@ export {
 
   subscriberCollection,
 
-  bindingBehavior,
-  BindingBehavior,
   type BindingBehaviorInstance,
   // PartialBindingBehaviorDefinition,
   // BindingBehaviorKind,
@@ -414,13 +404,8 @@ export {
   // IRendererRegistration,
   // RuntimeConfiguration,
 
-  alias,
-  registerAliases,
-
-  BindingMode,
   // ExpressionKind,
   // Hooks,
-  LifecycleFlags,
   // State,
 
   // CallBindingInstruction,
@@ -453,19 +438,18 @@ export {
   // ICollectionObserver,
   // ICollectionSubscriber,
 
-  ValueConverter,
   // ValueConverterDefinition,
   // PartialValueConverterDefinition,
   // ValueConverterKind,
   // ValueConverterDecorator,
   type ValueConverterInstance,
   // ValueConverterType,
-  valueConverter,
   type IndexMap,
 
 } from '@aurelia/runtime';
 
 export {
+  LifecycleFlags,
   // PartialBindingBehaviorDefinition,
   // BindingBehaviorKind,
   // BindingBehaviorDecorator,
@@ -528,6 +512,8 @@ export {
   // TaskStatus,
   // QueueTaskTargetOptions,
 
+  BindingMode,
+
   bindable,
   type PartialBindableDefinition,
   // BindableDefinition,
@@ -552,7 +538,6 @@ export {
   // IDOMInitializer,
   // ISinglePageApp,
   IAppRoot,
-  IWorkTracker,
 
   // IfRegistration,
   // ElseRegistration,
@@ -633,6 +618,10 @@ export {
   // ICollectionObserver,
   // ICollectionSubscriber,
 
+  IFlushQueue,
+  FlushQueue,
+  IFlushable,
+
   renderer,
 
   // DefaultBindingLanguage as JitDefaultBindingLanguage,
@@ -641,7 +630,6 @@ export {
 
   // Access,
   // Precedence,
-  // Char,
   // These exports are temporary until we have a proper way to unit test them
 
   // parseExpression,
@@ -770,6 +758,15 @@ export {
   // DotSeparatedAttributePattern,
   // RefAttributePattern,
 
+  alias,
+  registerAliases,
+
+  bindingBehavior,
+  BindingBehavior,
+
+  valueConverter,
+  ValueConverter,
+
   bindingCommand,
   // BindingCommand,
   type BindingCommandInstance,
@@ -838,7 +835,6 @@ export {
   // IInstruction,
   // InstructionType,
   // IAttributeBindingInstruction,
-  // IListenerBindingInstruction,
   // ISetAttributeInstruction,
   // isInstruction,
   // IStylePropertyBindingInstruction,

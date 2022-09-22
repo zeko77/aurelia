@@ -1,15 +1,11 @@
-import {
-  DelegationStrategy,
-  LifecycleFlags,
-} from '@aurelia/runtime';
-
 import { IEventTarget } from '../dom';
 import { isFunction } from '../utilities';
+import { astEvaluator } from './binding-utils';
+import { DelegationStrategy } from '../renderer';
 
 import type { IDisposable, IIndexable, IServiceLocator } from '@aurelia/kernel';
 import type { IsBindingBehavior, Scope } from '@aurelia/runtime';
 import type { IEventDelegator } from '../observation/event-delegator';
-import type { IPlatform } from '../platform';
 import type { IAstBasedBinding } from './interfaces-bindings';
 
 const addListenerOptions = {
@@ -21,7 +17,6 @@ export class ListenerOptions {
   public constructor(
     public readonly prevent: boolean,
     public readonly strategy: DelegationStrategy,
-    public readonly expAsHandler: boolean,
   ) {}
 }
 
@@ -39,13 +34,20 @@ export class Listener implements IAstBasedBinding {
   /** @internal */
   private readonly _options: ListenerOptions;
 
+  /**
+   * Indicates if this binding evaluates an ast and get a function, that function should be bound
+   * to the instance it is on
+   *
+   * @internal
+   */
+  public readonly boundFn = true;
+
   public constructor(
-    public platform: IPlatform,
-    public targetEvent: string,
-    public sourceExpression: IsBindingBehavior,
-    public target: Node,
-    public eventDelegator: IEventDelegator,
     public locator: IServiceLocator,
+    public ast: IsBindingBehavior,
+    public target: Node,
+    public targetEvent: string,
+    public eventDelegator: IEventDelegator,
     options: ListenerOptions,
   ) {
     this._options = options;
@@ -55,14 +57,11 @@ export class Listener implements IAstBasedBinding {
     const overrideContext = this.$scope.overrideContext;
     overrideContext.$event = event;
 
-    let result = this.sourceExpression.evaluate(LifecycleFlags.mustEvaluate, this.$scope, this.locator, null);
+    let result = this.ast.evaluate(this.$scope, this, null);
 
     delete overrideContext.$event;
 
-    if (this._options.expAsHandler) {
-      if (!isFunction(result)) {
-        throw new Error(`Handler of "${this.targetEvent}" event is not a function.`);
-      }
+    if (isFunction(result)) {
       result = result(event);
     }
 
@@ -77,20 +76,20 @@ export class Listener implements IAstBasedBinding {
     this.interceptor.callSource(event);
   }
 
-  public $bind(flags: LifecycleFlags, scope: Scope): void {
+  public $bind(scope: Scope): void {
     if (this.isBound) {
       if (this.$scope === scope) {
         return;
       }
 
-      this.interceptor.$unbind(flags | LifecycleFlags.fromBind);
+      this.interceptor.$unbind();
     }
 
     this.$scope = scope;
 
-    const sourceExpression = this.sourceExpression;
-    if (sourceExpression.hasBind) {
-      sourceExpression.bind(flags, scope, this.interceptor);
+    const ast = this.ast;
+    if (ast.hasBind) {
+      ast.bind(scope, this.interceptor);
     }
 
     if (this._options.strategy === DelegationStrategy.none) {
@@ -109,14 +108,13 @@ export class Listener implements IAstBasedBinding {
     this.isBound = true;
   }
 
-  public $unbind(flags: LifecycleFlags): void {
+  public $unbind(): void {
     if (!this.isBound) {
       return;
     }
 
-    const sourceExpression = this.sourceExpression;
-    if (sourceExpression.hasUnbind) {
-      sourceExpression.unbind(flags, this.$scope, this.interceptor);
+    if (this.ast.hasUnbind) {
+      this.ast.unbind(this.$scope, this.interceptor);
     }
 
     this.$scope = null!;
@@ -137,7 +135,9 @@ export class Listener implements IAstBasedBinding {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public handleChange(newValue: unknown, previousValue: unknown, flags: LifecycleFlags): void {
+  public handleChange(newValue: unknown, previousValue: unknown): void {
     return;
   }
 }
+
+astEvaluator(true, true)(Listener);

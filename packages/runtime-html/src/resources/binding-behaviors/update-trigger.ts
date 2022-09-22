@@ -1,13 +1,15 @@
-import { BindingMode, IObserverLocator, LifecycleFlags, bindingBehavior } from '@aurelia/runtime';
+import { type BindingBehaviorInstance, IObserverLocator } from '@aurelia/runtime';
+import { BindingMode } from '../../binding/interfaces-bindings';
 import { EventSubscriber } from '../../observation/event-delegator';
 import { NodeObserverConfig } from '../../observation/observer-locator';
+import { bindingBehavior } from '../binding-behavior';
 
 import type { Writable } from '@aurelia/kernel';
 import type { Scope } from '@aurelia/runtime';
+import type { PropertyBinding } from '../../binding/property-binding';
 import type { CheckedObserver } from '../../observation/checked-observer';
 import type { SelectValueObserver } from '../../observation/select-value-observer';
 import type { ValueAttributeObserver } from '../../observation/value-attribute-observer';
-import type { PropertyBinding } from '../../binding/property-binding';
 
 export type UpdateTriggerableObserver = (
   (ValueAttributeObserver & Required<ValueAttributeObserver>) |
@@ -21,7 +23,7 @@ export type UpdateTriggerableBinding = PropertyBinding & {
   targetObserver: UpdateTriggerableObserver;
 };
 
-export class UpdateTriggerBindingBehavior {
+export class UpdateTriggerBindingBehavior implements BindingBehaviorInstance {
   public static inject = [IObserverLocator];
   private readonly oL: IObserverLocator;
   public constructor(
@@ -30,7 +32,7 @@ export class UpdateTriggerBindingBehavior {
     this.oL = observerLocator;
   }
 
-  public bind(flags: LifecycleFlags, _scope: Scope, binding: UpdateTriggerableBinding, ...events: string[]): void {
+  public bind(_scope: Scope, binding: UpdateTriggerableBinding, ...events: string[]): void {
     if (events.length === 0) {
       if (__DEV__)
         throw new Error(`AUR0802: The updateTrigger binding behavior requires at least one event name argument: eg <input value.bind="firstName & updateTrigger:'blur'">`);
@@ -69,7 +71,7 @@ export class UpdateTriggerBindingBehavior {
     }));
   }
 
-  public unbind(flags: LifecycleFlags, _scope: Scope, binding: UpdateTriggerableBinding): void {
+  public unbind(_scope: Scope, binding: UpdateTriggerableBinding): void {
     // restore the state of the binding.
     binding.targetObserver.handler.dispose();
     (binding.targetObserver as Writable<typeof binding.targetObserver>).handler = binding.targetObserver.originalHandler!;

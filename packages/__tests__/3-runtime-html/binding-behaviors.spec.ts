@@ -1,5 +1,7 @@
-import { bindingBehavior, alias, BindingBehaviorInstance, LifecycleFlags, Scope, IBinding } from '@aurelia/runtime';
+import { BindingBehaviorInstance, Scope, IBinding } from '@aurelia/runtime';
 import {
+  bindingBehavior,
+  alias,
   bindable,
   customAttribute,
   INode,
@@ -7,7 +9,7 @@ import {
 } from '@aurelia/runtime-html';
 import { assert, createFixture } from '@aurelia/testing';
 
-describe('binding-behaviors', function () {
+describe('3-runtime-html/binding-behaviors.spec.ts', function () {
   // custom elements
   describe('01. Aliases', function () {
 
@@ -21,10 +23,10 @@ describe('binding-behaviors', function () {
     @bindingBehavior({ name: 'woot1', aliases: ['woot13'] })
     @alias(...['woot11', 'woot12'])
     class WootBehavior implements BindingBehaviorInstance {
-      public bind(_flags: LifecycleFlags, _scope: Scope, binding: PropertyBinding, func: (param: string) => void): void {
+      public bind(_scope: Scope, binding: PropertyBinding, func: (param: string) => void): void {
         func(binding.target[binding.targetProperty]);
       }
-      public unbind(_flags: LifecycleFlags, _scope: Scope, _binding: IBinding, _func: () => void): void {
+      public unbind(_scope: Scope, _binding: IBinding, _func: () => void): void {
         return;
       }
     }
@@ -32,10 +34,10 @@ describe('binding-behaviors', function () {
     @bindingBehavior({ name: 'woot2', aliases: ['woot23'] })
     @alias('woot21', 'woot22')
     class WootBehavior2 implements BindingBehaviorInstance {
-      public bind(_flags: LifecycleFlags, _scope: Scope, binding: PropertyBinding, _func: (param: string) => void, func2: (param: string) => void): void {
+      public bind(_scope: Scope, binding: PropertyBinding, _func: (param: string) => void, func2: (param: string) => void): void {
         func2(binding.target[binding.targetProperty]);
       }
-      public unbind(_flags: LifecycleFlags, _scope: Scope, _binding: IBinding): void {
+      public unbind(_scope: Scope, _binding: IBinding): void {
         return;
       }
     }
@@ -65,52 +67,44 @@ describe('binding-behaviors', function () {
     }
 
     const resources: any[] = [WootBehavior, WootBehavior2, FooAttr4, FooAttr5];
-    it('Simple spread Alias doesn\'t break def alias works on binding behavior', async function () {
+    it('Simple spread Alias doesn\'t break def alias works on binding behavior', function () {
       const options = createFixture('<template> <div foo53.bind="value & woot13:method"></div> </template>', app, resources);
       assert.strictEqual(options.appHost.firstElementChild.getAttribute('test'), 'wOOt1');
-      await options.tearDown();
     });
 
-    it('Simple spread Alias (1st position) works on binding behavior', async function () {
+    it('Simple spread Alias (1st position) works on binding behavior', function () {
       const options = createFixture('<template> <div foo51.bind="value & woot11:method"></div> </template>', app, resources);
       assert.strictEqual(options.appHost.firstElementChild.getAttribute('test'), 'wOOt1');
-      await options.tearDown();
     });
 
-    it('Simple spread Alias (2nd position) works on binding behavior', async function () {
+    it('Simple spread Alias (2nd position) works on binding behavior', function () {
       const options = createFixture('<template> <div foo52.bind="value & woot12:method:method"></div> </template>', app, resources);
       assert.strictEqual(options.appHost.firstElementChild.getAttribute('test'), 'wOOt1');
-      await options.tearDown();
     });
 
-    it('Simple spread Alias doesn\'t break original binding behavior', async function () {
+    it('Simple spread Alias doesn\'t break original binding behavior', function () {
       const options = createFixture('<template> <div foo5.bind="value & woot2:method:method"></div> </template>', app, resources);
       assert.strictEqual(options.appHost.firstElementChild.getAttribute('test'), 'wOOt1');
-      await options.tearDown();
     });
 
-    it('Simple Alias doesn\'t break def alias works on binding behavior', async function () {
+    it('Simple Alias doesn\'t break def alias works on binding behavior', function () {
       const options = createFixture('<template> <div foo43.bind="value & woot23:method:method"></div> </template>', app, resources);
       assert.strictEqual(options.appHost.firstElementChild.getAttribute('test'), 'wOOt1');
-      await options.tearDown();
     });
 
-    it('Simple Alias (1st position) works on binding behavior', async function () {
+    it('Simple Alias (1st position) works on binding behavior', function () {
       const options = createFixture('<template> <div foo41.bind="value & woot21:method:method"></div> </template>', app, resources);
       assert.strictEqual(options.appHost.firstElementChild.getAttribute('test'), 'wOOt1');
-      await options.tearDown();
     });
 
-    it('Simple Alias (2nd position) works on binding behavior', async function () {
+    it('Simple Alias (2nd position) works on binding behavior', function () {
       const options = createFixture('<template> <div foo42.bind="value & woot22:method:method"></div> </template>', app, resources);
       assert.strictEqual(options.appHost.firstElementChild.getAttribute('test'), 'wOOt1');
-      await options.tearDown();
     });
 
-    it('Simple Alias doesn\'t break original binding behavior', async function () {
+    it('Simple Alias doesn\'t break original binding behavior', function () {
       const options = createFixture('<template> <div foo4.bind="value & woot2:method:method"></div> </template>', app, resources);
       assert.strictEqual(options.appHost.firstElementChild.getAttribute('test'), 'wOOt1');
-      await options.tearDown();
     });
 
   });

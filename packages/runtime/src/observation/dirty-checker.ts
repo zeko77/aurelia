@@ -1,11 +1,11 @@
 import { DI, IPlatform } from '@aurelia/kernel';
-import { AccessorType, IObserver, ISubscriberCollection, LifecycleFlags } from '../observation';
+import { AccessorType, type IObserver, type ISubscriberCollection } from '../observation';
 import { subscriberCollection } from './subscriber-collection';
+import { safeString } from '../utilities-objects';
 
 import type { ITask, QueueTaskOptions } from '@aurelia/platform';
 import type { IIndexable } from '@aurelia/kernel';
 import type { IObservable, ISubscriber } from '../observation';
-import { FlushQueue, IFlushable, IWithFlushQueue, withFlushQueue } from './flush-queue';
 
 export interface IDirtyChecker extends DirtyChecker {}
 export const IDirtyChecker = DI.createInterface<IDirtyChecker>('IDirtyChecker', x => x.singleton(DirtyChecker));
@@ -47,12 +47,11 @@ const queueTaskOpts: QueueTaskOptions = {
   persistent: true,
 };
 
-export class DirtyChecker implements IWithFlushQueue {
+export class DirtyChecker {
   /**
    * @internal
    */
   public static inject = [IPlatform];
-  public readonly queue!: FlushQueue;
   private readonly tracked: DirtyCheckProperty[] = [];
 
   private _task: ITask | null = null;
@@ -62,14 +61,14 @@ export class DirtyChecker implements IWithFlushQueue {
     private readonly p: IPlatform,
   ) {}
 
-  public createProperty(obj: object, key: string): DirtyCheckProperty {
+  public createProperty(obj: object, key: PropertyKey): DirtyCheckProperty {
     if (DirtyCheckSettings.throw) {
       if (__DEV__)
-        throw new Error(`AUR0222: Property '${key}' is being dirty-checked.`);
+        throw new Error(`AUR0222: Property '${safeString(key)}' is being dirty-checked.`);
       else
-        throw new Error(`AUR0222:${key}`);
+        throw new Error(`AUR0222:${safeString(key)}`);
     }
-    return new DirtyCheckProperty(this, obj as IIndexable, key);
+    return new DirtyCheckProperty(this, obj as IIndexable, key as string);
   }
 
   public addProperty(property: DirtyCheckProperty): void {
@@ -103,17 +102,15 @@ export class DirtyChecker implements IWithFlushQueue {
     for (; i < len; ++i) {
       current = tracked[i];
       if (current.isDirty()) {
-        this.queue.add(current);
+        current.flush();
       }
     }
   };
 }
 
-withFlushQueue(DirtyChecker);
-
 export interface DirtyCheckProperty extends IObserver, ISubscriberCollection { }
 
-export class DirtyCheckProperty implements DirtyCheckProperty, IFlushable {
+export class DirtyCheckProperty implements DirtyCheckProperty {
   public type: AccessorType = AccessorType.None;
 
   /** @internal */
@@ -133,10 +130,10 @@ export class DirtyCheckProperty implements DirtyCheckProperty, IFlushable {
     return this.obj[this.key];
   }
 
-  public setValue(v: unknown, f: LifecycleFlags) {
+  public setValue(_v: unknown) {
     // todo: this should be allowed, probably
     // but the construction of dirty checker should throw instead
-    throw new Error(`Trying to set value for property ${this.key} in dirty checker`);
+    throw new Error(`Trying to set value for property ${safeString(this.key)} in dirty checker`);
   }
 
   public isDirty(): boolean {
@@ -148,7 +145,7 @@ export class DirtyCheckProperty implements DirtyCheckProperty, IFlushable {
     const newValue = this.getValue();
 
     this._oldValue = newValue;
-    this.subs.notify(newValue, oldValue, LifecycleFlags.none);
+    this.subs.notify(newValue, oldValue);
   }
 
   public subscribe(subscriber: ISubscriber): void {

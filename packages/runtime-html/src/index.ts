@@ -1,11 +1,4 @@
 export {
-  // todo: only exception for now for hmr, remove
-  LifecycleFlags,
-  // todo: only exception for convention, remove
-  valueConverter,
-  bindingBehavior,
-} from '@aurelia/runtime';
-export {
   bindable,
   Bindable,
   BindableDefinition,
@@ -28,21 +21,35 @@ export {
 } from './configuration';
 
 export {
+  bindingBehavior,
+  BindingBehavior,
+  BindingBehaviorDefinition,
+  type PartialBindingBehaviorDefinition,
+  type BindingBehaviorKind,
+  type BindingBehaviorDecorator,
+  type BindingBehaviorType,
+  BindingInterceptor,
+  BindingBehaviorFactory,
+  BindingBehaviorStrategy,
+  type IInterceptableBinding,
+} from './resources/binding-behavior';
+
+export {
   BindingModeBehavior,
   OneTimeBindingBehavior,
   ToViewBindingBehavior,
   FromViewBindingBehavior,
   TwoWayBindingBehavior,
-} from './binding-behaviors/binding-mode';
+} from './resources/binding-behaviors/binding-mode';
 export {
   DebounceBindingBehavior,
-} from './binding-behaviors/debounce';
+} from './resources/binding-behaviors/debounce';
 export {
   SignalBindingBehavior,
-} from './binding-behaviors/signals';
+} from './resources/binding-behaviors/signals';
 export {
   ThrottleBindingBehavior,
-} from './binding-behaviors/throttle';
+} from './resources/binding-behaviors/throttle';
 
 export {
   Aurelia,
@@ -53,7 +60,6 @@ export {
   type ISinglePageApp,
   AppRoot,
   IAppRoot,
-  IWorkTracker,
 } from './app-root';
 export {
   type TaskSlot,
@@ -104,6 +110,17 @@ export {
   type IsTwoWayPredicate,
 } from './attribute-mapper';
 export {
+  BindingMode,
+  IAstBasedBinding,
+  IBindingController,
+} from './binding/interfaces-bindings';
+export {
+  IFlushQueue,
+  FlushQueue,
+  IFlushable,
+  astEvaluator,
+} from './binding/binding-utils';
+export {
   Listener,
 } from './binding/listener';
 export {
@@ -134,6 +151,7 @@ export {
   type ICompliationInstruction,
   renderer,
   CallBindingInstruction,
+  DelegationStrategy,
   HydrateAttributeInstruction,
   HydrateElementInstruction,
   HydrateTemplateController,
@@ -144,7 +162,6 @@ export {
   RefBindingInstruction,
   SetPropertyInstruction,
   AttributeBindingInstruction,
-  IListenerBehaviorOptions,
   ListenerBindingInstruction,
   PropertyBindingInstruction,
   SetAttributeInstruction,
@@ -289,6 +306,17 @@ export {
   AuCompose,
   type IDynamicComponentActivate,
 } from './resources/custom-elements/au-compose';
+
+export {
+  ValueConverter,
+  ValueConverterDefinition,
+  type PartialValueConverterDefinition,
+  type ValueConverterKind,
+  type ValueConverterDecorator,
+  type ValueConverterType,
+  valueConverter,
+} from './resources/value-converter';
+
 export {
   ISanitizer,
   SanitizeValueConverter,
@@ -398,6 +426,8 @@ export {
   isCustomElementViewModel,
   ViewModelKind,
   HooksDefinition,
+  State,
+  LifecycleFlags,
   type ControllerVisitor,
   type IViewModel,
   IController,
@@ -491,6 +521,11 @@ export {
   ComputedWatcher,
   ExpressionWatcher,
 } from './templating/watchers';
+
+export {
+  alias,
+  registerAliases,
+} from './utilities-di';
 
 export {
   // configurations

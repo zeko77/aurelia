@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 import {
   DI,
 } from '@aurelia/kernel';
@@ -90,9 +91,13 @@ export class ExpressionParser {
     }
   }
 
+  /** @internal */
   private $parse(expression: string, expressionType: ExpressionType.IsIterator): ForOfStatement;
+  /** @internal */
   private $parse(expression: string, expressionType: ExpressionType.Interpolation): Interpolation;
+  /** @internal */
   private $parse(expression: string, expressionType: Exclude<ExpressionType, ExpressionType.IsIterator | ExpressionType.Interpolation>): IsBindingBehavior;
+  /** @internal */
   private $parse(expression: string, expressionType: ExpressionType): AnyBindingExpression {
     $input = expression;
     $index = 0;
@@ -108,7 +113,7 @@ export class ExpressionParser {
   }
 }
 
-export const enum Char {
+const enum Char {
   Null           = 0x00,
   Backspace      = 0x08,
   Tab            = 0x09,
@@ -830,7 +835,7 @@ export function parse(minPrecedence: Precedence, expressionType: ExpressionType)
     result = new BindingBehaviorExpression(result as IsBindingBehavior, name, args);
   }
   if ($currentToken !== Token.EOF) {
-    if (expressionType & ExpressionType.Interpolation) {
+    if ((expressionType & ExpressionType.Interpolation) > 0 && $currentToken === Token.CloseBrace) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return result as any;
     }
@@ -1065,6 +1070,7 @@ function parseCoverParenthesizedExpressionAndArrowParameterList(expressionType: 
         // ()     - only valid if followed directly by an arrow
         nextToken();
         break loop;
+      /* eslint-disable */
       case Token.OpenBrace:
         // ({     - may be a valid parenthesized expression
       case Token.OpenBracket:
@@ -1072,6 +1078,7 @@ function parseCoverParenthesizedExpressionAndArrowParameterList(expressionType: 
         nextToken();
         paramsState = ArrowFnParams.Destructuring;
         break;
+      /* eslint-enable */
       case Token.Comma:
         // (,     - never valid
         // (a,,   - never valid
@@ -1089,6 +1096,7 @@ function parseCoverParenthesizedExpressionAndArrowParameterList(expressionType: 
         break;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     switch ($currentToken as Token) {
       case Token.Comma:
         nextToken();
@@ -1237,7 +1245,11 @@ function parseArrayLiteralExpression(expressionType: ExpressionType): ArrayBindi
 }
 
 function parseForOfStatement(result: BindingIdentifierOrPattern): ForOfStatement {
-  if ((result.$kind & ExpressionKind.IsForDeclaration) === 0) {
+  if ((result.$kind & (
+    ExpressionKind.ArrayBindingPattern
+    | ExpressionKind.ObjectBindingPattern
+    | ExpressionKind.BindingIdentifier
+  )) === 0) {
     throw invalidLHSBindingIdentifierInForOf();
   }
   if ($currentToken !== Token.OfKeyword) {

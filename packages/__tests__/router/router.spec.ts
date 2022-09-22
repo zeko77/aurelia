@@ -58,7 +58,7 @@ describe('Router', function () {
       //   console.log('canLoad', 'closest viewport', this.router.getClosestViewport(this));
       //   return true;
       // }
-      public load(params) {
+      public loading(params) {
         // console.log('load', 'closest viewport', this.router.getClosestViewport(this));
         if (params.id) { this.id = params.id; }
         if (params.name) { this.name = params.name; }
@@ -70,7 +70,7 @@ describe('Router', function () {
     const Baz = CustomElement.define({ name: 'baz', template: `<template>Viewport: baz Parameter id: [\${id}] <au-viewport name="baz"></au-viewport></template>` }, class {
       public static parameters = ['id'];
       public id = 'no id';
-      public load(params) { if (params.id) { this.id = params.id; } }
+      public loading(params) { if (params.id) { this.id = params.id; } }
     });
     const Qux = CustomElement.define({ name: 'qux', template: '<template>Viewport: qux<au-viewport name="qux"></au-viewport></template>' }, class {
       public canLoad() { return true; }
@@ -82,8 +82,8 @@ describe('Router', function () {
           return true;
         }
       }
-      public load() { return true; }
-      public unload() { return true; }
+      public loading() { return true; }
+      public unloading() { return true; }
     });
     const Quux = CustomElement.define({ name: 'quux', template: '<template>Viewport: quux<au-viewport name="quux" scope></au-viewport></template>' });
     const Corge = CustomElement.define({ name: 'corge', template: '<template>Viewport: corge<au-viewport name="corge" used-by="baz"></au-viewport>Viewport: dummy<au-viewport name="dummy"></au-viewport></template>' });
@@ -122,7 +122,7 @@ describe('Router', function () {
         public param: number;
         public entry: number = 0;
         public reloadBehavior: string = plughReloadBehavior;
-        public load(params) {
+        public loading(params) {
           console.log('plugh.load', this.entry, this.reloadBehavior, plughReloadBehavior);
           this.param = +params[0];
           this.entry++;
@@ -153,6 +153,45 @@ describe('Router', function () {
     }
 
     return { au, container, platform, host, router, ctx, tearDown };
+  }
+
+  async function $setup(config?, dependencies: any[] = [], routes: IRoute[] = [], stateSpy?) {
+    const ctx = TestContext.create();
+
+    const { container, platform } = ctx;
+
+    const App = CustomElement.define({
+      name: 'app',
+      template: '<au-viewport name="app"></au-viewport>',
+      dependencies
+    }, class {
+      public static routes: IRoute[] = routes;
+    });
+
+    const host = ctx.doc.createElement('div');
+    ctx.doc.body.appendChild(host as any);
+
+    const au = new Aurelia(container)
+      .register(
+        RouterConfiguration.customize(config ?? {}),
+        App)
+      .app({ host: host, component: App });
+
+    const router = getModifiedRouter(container);
+    const { _pushState, _replaceState } = spyNavigationStates(router, stateSpy);
+
+    await au.start();
+
+    async function $teardown() {
+      unspyNavigationStates(router, _pushState, _replaceState);
+      RouterConfiguration.customize();
+      await au.stop(true);
+      ctx.doc.body.removeChild(host);
+
+      au.dispose();
+    }
+
+    return { ctx, container, platform, host, au, router, $teardown, App };
   }
 
   it('can be created', async function () {
@@ -446,7 +485,7 @@ describe('Router', function () {
       public static parameters = ['id', 'name'];
       public id = 'no id';
       public name = 'no name';
-      public load(params) {
+      public loading(params) {
         if (params.id) { this.id = params.id; }
         if (params.name) { this.name = params.name; }
       }
@@ -1238,7 +1277,7 @@ describe('Router', function () {
           dependencies.push(CustomElement.define({ name, template }, class {
             public static parameters = ['id'];
             public param: string;
-            public load(params) {
+            public loading(params) {
               if (params.id !== void 0) {
                 this.param = params.id;
               }
@@ -1330,45 +1369,7 @@ describe('Router', function () {
   });
 
   describe('can use configuration', function () {
-    this.timeout(30000);
-
-    async function $setup(config?, dependencies: any[] = [], routes: IRoute[] = [], stateSpy?) {
-      const ctx = TestContext.create();
-
-      const { container, platform } = ctx;
-
-      const App = CustomElement.define({
-        name: 'app',
-        template: '<au-viewport></au-viewport>',
-        dependencies
-      }, class {
-        public static routes: IRoute[] = routes;
-      });
-
-      const host = ctx.doc.createElement('div');
-      ctx.doc.body.appendChild(host as any);
-
-      const au = new Aurelia(container)
-        .register(
-          RouterConfiguration.customize(config ?? {}),
-          App)
-        .app({ host: host, component: App });
-
-      const router = getModifiedRouter(container);
-      const { _pushState, _replaceState } = spyNavigationStates(router, stateSpy);
-
-      await au.start();
-
-      async function $teardown() {
-        unspyNavigationStates(router, _pushState, _replaceState);
-        await au.stop(true);
-        ctx.doc.body.removeChild(host);
-
-        au.dispose();
-      }
-
-      return { ctx, container, platform, host, au, router, $teardown, App };
-    }
+    this.timeout(5000);
 
     function $removeViewport(instructions) {
       if (Array.isArray(instructions)) {
@@ -1398,7 +1399,7 @@ describe('Router', function () {
         { path: 'grandchild-config', instructions: [{ component: 'grandchild', viewport: 'child' }], title: 'GrandchildConfig' },
       ];
       public param: string;
-      public load(params) {
+      public loading(params) {
         if (params.id !== void 0) {
           this.param = params.id;
         }
@@ -1411,7 +1412,7 @@ describe('Router', function () {
       public static parameters = ['id'];
       public static title = (vm) => vm.param !== void 0 ? vm.param : 'Child2';
       public param: string;
-      public load(params) {
+      public loading(params) {
         if (params.id !== void 0) {
           this.param = params.id;
         }
@@ -1599,56 +1600,7 @@ describe('Router', function () {
   });
 
   describe('can use title configuration', function () {
-    this.timeout(30000);
-
-    async function $setup(config?, dependencies: any[] = [], routes: IRoute[] = [], stateSpy?) {
-      const ctx = TestContext.create();
-
-      const { container, platform } = ctx;
-
-      const App = CustomElement.define({
-        name: 'app',
-        template: '<au-viewport></au-viewport>',
-        dependencies
-      }, class {
-        public static routes: IRoute[] = routes;
-      });
-
-      const host = ctx.doc.createElement('div');
-      ctx.doc.body.appendChild(host as any);
-
-      const au = new Aurelia(container)
-        .register(
-          RouterConfiguration.customize(config ?? {}),
-          App)
-        .app({ host: host, component: App });
-
-      const router = getModifiedRouter(container);
-      const { _pushState, _replaceState } = spyNavigationStates(router, stateSpy);
-
-      await au.start();
-
-      async function $teardown() {
-        unspyNavigationStates(router, _pushState, _replaceState);
-        RouterConfiguration.customize();
-        await au.stop(true);
-        ctx.doc.body.removeChild(host);
-
-        au.dispose();
-      }
-
-      return { ctx, container, platform, host, au, router, $teardown, App };
-    }
-
-    function $removeViewport(instructions) {
-      for (const instruction of instructions) {
-        instruction.viewport = null;
-        instruction.viewportName = null;
-        if (Array.isArray(instruction.nextScopeInstructions)) {
-          $removeViewport(instruction.nextScopeInstructions);
-        }
-      }
-    }
+    this.timeout(5000);
 
     const Parent = CustomElement.define({ name: 'my-parent', template: '!my-parent!<au-viewport name="parent"></au-viewport>' }, class {
       public static title: string = 'TheParent';
@@ -1664,7 +1616,7 @@ describe('Router', function () {
     const Child = CustomElement.define({ name: 'my-child', template: `!my-child\${param ? ":" + param : ""}!<au-viewport name="child"></au-viewport>` }, class {
       public static title = (vm) => `TheChild${vm.param !== void 0 ? `(${vm.param})` : ''}`;
       public param: string;
-      public load(params) {
+      public loading(params) {
         if (params.id !== void 0) {
           this.param = params.id;
         }
@@ -1674,7 +1626,7 @@ describe('Router', function () {
       public static parameters: string[] = ['id'];
       public static title = (vm) => `TheChild2${vm.param !== void 0 ? `(${vm.param})` : ''}`;
       public param: string;
-      public load(params) {
+      public loading(params) {
         if (params.id !== void 0) {
           this.param = params.id;
         }
@@ -1820,54 +1772,16 @@ describe('Router', function () {
   });
 
   describe('can use lifecycleHooks', function () {
-    this.timeout(30000);
-
-    async function $setup(config?, dependencies: any[] = [], routes: IRoute[] = [], stateSpy?) {
-      const ctx = TestContext.create();
-
-      const { container, platform } = ctx;
-
-      const App = CustomElement.define({
-        name: 'app',
-        template: '<au-viewport name="app"></au-viewport>',
-        dependencies
-      }, class {
-        public static routes: IRoute[] = routes;
-      });
-
-      const host = ctx.doc.createElement('div');
-      ctx.doc.body.appendChild(host as any);
-
-      const au = new Aurelia(container)
-        .register(
-          RouterConfiguration.customize(config ?? {}),
-          App)
-        .app({ host: host, component: App });
-
-      const router = getModifiedRouter(container);
-      const { _pushState, _replaceState } = spyNavigationStates(router, stateSpy);
-
-      await au.start();
-
-      async function $teardown() {
-        unspyNavigationStates(router, _pushState, _replaceState);
-        await au.stop(true);
-        ctx.doc.body.removeChild(host);
-
-        au.dispose();
-      }
-
-      return { ctx, container, platform, host, au, router, $teardown, App };
-    }
+    this.timeout(5000);
 
     const calledHooks = [];
     @lifecycleHooks()
     class Hooks {
       public name = 'Hooks';
       public canLoad(vm) { calledHooks.push(`${this.name}:${vm.name}:canLoad`); return true; }
-      public load(vm) { calledHooks.push(`${this.name}:${vm.name}:load`); }
+      public loading(vm) { calledHooks.push(`${this.name}:${vm.name}:load`); }
       public canUnload(vm) { calledHooks.push(`${this.name}:${vm.name}:canUnload`); return true; }
-      public unload(vm) { calledHooks.push(`${this.name}:${vm.name}:unload`); }
+      public unloading(vm) { calledHooks.push(`${this.name}:${vm.name}:unload`); }
 
       // TODO: Put these in once core supports them
       // public binding(vm) { calledHooks.push(`${this.name}:${vm.name}:binding`); }
@@ -1901,56 +1815,256 @@ describe('Router', function () {
     });
   });
 
-  describe('can use viewport scope', function () {
+  describe('can redirect', function () {
     this.timeout(30000);
 
-    async function $setup(config?, dependencies: any[] = [], routes: IRoute[] = [], stateSpy?) {
-      const ctx = TestContext.create();
+    const routes = [
+      { path: 'route-zero', component: 'zero' },
+      { path: 'route-one', component: 'one' },
+      { path: 'route-two', component: 'two' },
+      { id: 'zero-id', path: 'route-zero-id', component: 'zero' },
+    ];
 
-      const { container, platform } = ctx;
+    const Zero = CustomElement.define({ name: 'zero', template: '!zero!' });
+    const One = CustomElement.define({ name: 'one', template: '!one!<au-viewport name="one-vp"></au-viewport>' });
+    const Two = CustomElement.define({ name: 'two', template: '!two!', }, class { public canLoad() { return 'route-zero'; } });
+    const Three = CustomElement.define({ name: 'three', template: '!three!', }, class { public canLoad() { return 'zero'; } });
+    const Four = CustomElement.define({ name: 'four', template: '!four!', }, class { public canLoad() { return 'zero-id'; } });
 
-      const App = CustomElement.define({
-        name: 'app',
-        template: '<au-viewport name="app"></au-viewport>',
-        dependencies
-      }, class {
-        public static routes: IRoute[] = routes;
+    const tests = [
+      { load: '/route-two', result: '!zero!', path: '/route-zero', },
+      { load: '/route-one/route-two', result: '!one!!zero!', path: '/route-one/route-zero', },
+      { load: '/route-one/route-one/route-two', result: '!one!!one!!zero!', path: '/route-one/route-one/route-zero', },
+
+      { load: '/route-two/route-one', result: '!zero!', path: '/route-zero', },
+      { load: '/route-one/route-two/route-one', result: '!one!!zero!', path: '/route-one/route-zero', },
+      { load: '/route-one/route-one/route-two/route-one', result: '!one!!one!!zero!', path: '/route-one/route-one/route-zero', },
+
+      { load: '/three', result: '!zero!', path: '/zero', },
+      { load: '/route-one/three', result: '!one!!zero!', path: '/route-one/zero', },
+      { load: '/route-one/route-one/three', result: '!one!!one!!zero!', path: '/route-one/route-one/zero', },
+
+      { load: '/three/route-one', result: '!zero!', path: '/zero', },
+      { load: '/route-one/three/route-one', result: '!one!!zero!', path: '/route-one/zero', },
+      { load: '/route-one/route-one/three/route-one', result: '!one!!one!!zero!', path: '/route-one/route-one/zero', },
+
+      { load: '/route-two', result: '!zero!', path: '/route-zero', },
+      { load: '/one/route-two', result: '!one!!zero!', path: '/one/route-zero', },
+      { load: '/one/one/route-two', result: '!one!!one!!zero!', path: '/one/one/route-zero', },
+
+      { load: '/route-two/one', result: '!zero!', path: '/route-zero', },
+      { load: '/one/route-two/one', result: '!one!!zero!', path: '/one/route-zero', },
+      { load: '/one/one/route-two/one', result: '!one!!one!!zero!', path: '/one/one/route-zero', },
+
+      { load: '/three', result: '!zero!', path: '/zero', },
+      { load: '/one/three', result: '!one!!zero!', path: '/one/zero', },
+      { load: '/one/one/three', result: '!one!!one!!zero!', path: '/one/one/zero', },
+
+      { load: '/three/one', result: '!zero!', path: '/zero', },
+      { load: '/one/three/one', result: '!one!!zero!', path: '/one/zero', },
+      { load: '/one/one/three/one', result: '!one!!one!!zero!', path: '/one/one/zero', },
+
+      { load: '/four', result: '!zero!', path: '/route-zero-id', },
+      { load: '/route-one/four', result: '!one!!zero!', path: '/route-one/route-zero-id', },
+      { load: '/route-one/one/four', result: '!one!!one!!zero!', path: '/route-one/one/route-zero-id', },
+
+      { load: '/four/one', result: '!zero!', path: '/route-zero-id', },
+      { load: '/route-one/four/one', result: '!one!!zero!', path: '/route-one/route-zero-id', },
+      { load: '/route-one/one/four/one', result: '!one!!one!!zero!', path: '/route-one/one/route-zero-id', },
+    ];
+
+    let locationPath: string;
+    const locationCallback = (type, data, title, path) => {
+      locationPath = path.replace('#', '');
+    };
+
+    for (const test of tests) {
+      it(`to route in canLoad (${test.load})`, async function () {
+        const { platform, host, router, $teardown } = await $setup({}, [Zero, One, Two, Three, Four], routes, locationCallback);
+
+        await $load(test.load, router, platform);
+        await platform.domWriteQueue.yield();
+        assert.strictEqual(host.textContent, test.result, test.load);
+        assert.strictEqual(locationPath, test.path, `${test.load} path`);
+
+        await $load('-', router, platform);
+        await platform.domWriteQueue.yield();
+        assert.strictEqual(host.textContent, '', `${test.load} -`);
+        assert.strictEqual(locationPath, '/', `${test.load} - path`);
+
+        await $load(test.load, router, platform);
+        await platform.domWriteQueue.yield();
+        assert.strictEqual(host.textContent, test.result, test.load);
+        assert.strictEqual(locationPath, test.path, `${test.load} path`);
+
+        await $teardown();
       });
-
-      const host = ctx.doc.createElement('div');
-      ctx.doc.body.appendChild(host as any);
-
-      const au = new Aurelia(container)
-        .register(
-          RouterConfiguration.customize(config ?? {}),
-          App)
-        .app({ host: host, component: App });
-
-      const router = getModifiedRouter(container);
-      const { _pushState, _replaceState } = spyNavigationStates(router, stateSpy);
-
-      await au.start();
-
-      async function $teardown() {
-        unspyNavigationStates(router, _pushState, _replaceState);
-        await au.stop(true);
-        ctx.doc.body.removeChild(host);
-
-        au.dispose();
-      }
-
-      return { ctx, container, platform, host, au, router, $teardown, App };
     }
+  });
 
-    function $removeViewport(instructions) {
-      for (const instruction of instructions) {
-        instruction.viewport = null;
-        instruction.viewportName = null;
-        if (Array.isArray(instruction.nextScopeInstructions)) {
-          $removeViewport(instruction.nextScopeInstructions);
+  describe('can activate links', function () {
+    this.timeout(30000);
+
+    const routes = [
+      { id: 'route-one', path: 'route-one', component: 'one-route' },
+      { id: 'route-two', path: 'route-two/:id', component: 'two-route' },
+      { id: 'zero-id', path: 'route-zero-id', component: 'zero' },
+    ];
+
+    const Nav = CustomElement.define({
+      name: 'nav', template: `
+      <style>.active { background-color: gold; }</style>
+
+      <a load="one">one</a>
+      <a load="two(123)">two(123)</a>
+      <a load="two(456)">two(456)</a>
+      <a load="route-one">route-one</a>
+      <a load="route-two/123">route-two/123</a>
+      <a load="route-two/456">route-two/456</a>
+
+      <au-viewport name="nav-vp"></au-viewport>
+    `,
+    });
+
+    const NavBind = CustomElement.define({
+      name: 'nav-bind', template: `
+      <style>.active { background-color: gold; }</style>
+
+      <a load.bind="{ component: 'one' }">bind: { component: 'one' }</a>
+      <a load.bind="{ component: 'two', parameters: { id: 123 }}">bind: { component: 'two', parameters: { id: 123 }}</a>
+      <a load.bind="{ component: 'two', parameters: { id: 456 }}">bind: { component: 'two', parameters: { id: 456 }}</a>
+      <a load.bind="{ id: 'route-one' }">bind: { id: 'route-one' }</a>
+      <a load.bind="{ id: 'route-two', parameters: { id: 123 }}">bind: { id: 'route-two', parameters: { id: 123 }}</a>
+      <a load.bind="{ id: 'route-two', parameters: { id: 456 }}">bind: { id: 'route-two', parameters: { id: 456 }}</a>
+
+      <au-viewport name="nav-vp"></au-viewport>
+    `,
+    });
+
+    const NavAttributes = CustomElement.define({
+      name: 'nav-attributes', template: `
+      <style>.active { background-color: gold; }</style>
+
+      <a load="component: one">attributes: component: one</a>
+      <a load="component: two; parameters.bind: { id: 123 };">attributes: component: two; parameters.bind: { id: 123 };</a>
+      <a load="component: two; parameters.bind: { id: 456 };">attributes: component: two; parameters.bind: { id: 456 };</a>
+      <a load="id: route-one">attributes: { id: route-one }</a>
+      <a load="id: route-two; parameters.bind: { id: 123 };">attributes: id: route-two; parameters.bind: { id: 123 };</a>
+      <a load="id: route-two; parameters.bind: { id: 456 };">attributes: id: route-two; parameters.bind: { id: 456 };</a>
+
+      <au-viewport name="nav-vp"></au-viewport>
+    `,
+    });
+
+    const One = CustomElement.define({ name: 'one', template: '!one!' });
+    const Two = CustomElement.define({ name: 'two', template: '!two${id}!' }, class {
+      public static parameters = ['id'];
+      public id: string;
+      public loading(params) { if (params.id != null) { this.id = `:${params.id}`; } }
+    });
+    const OneRoute = CustomElement.define({ name: 'one-route', template: '!one-route!' });
+    const TwoRoute = CustomElement.define({ name: 'two-route', template: '!two-route${id}!' }, class {
+      public static parameters = ['id'];
+      public id: string;
+      public loading(params) { if (params.id != null) { this.id = `:${params.id}`; } }
+    });
+
+    const tests = [
+      { load: 'one', result: '!one!', },
+      { load: 'two(123)', result: '!two:123!', },
+      { load: 'two(456)', result: '!two:456!', },
+      { load: 'route-one', result: '!one-route!', },
+      { load: 'route-two/123', result: '!two-route:123!', },
+      { load: 'route-two/456', result: '!two-route:456!', },
+    ];
+
+    for (let i = 0; i < tests.length; i++) {
+      const test = tests[i];
+      it(`for "${test.load}"`, async function () {
+        const { platform, host, router, $teardown } = await $setup({}, [Nav, One, Two, OneRoute, TwoRoute], routes);
+
+        await $load('/nav', router, platform);
+        await platform.domWriteQueue.yield();
+
+        const links = host.getElementsByTagName('A') as unknown as HTMLElement[];
+        const link = links[i];
+        link.click();
+        await platform.domWriteQueue.yield();
+
+        assert.includes(host.textContent, test.result, test.load);
+        for (const l of links) {
+          assert.strictEqual(l.classList.contains('active'), l === link, `${l.innerText}: ${l.classList.contains('active')}`);
         }
-      }
+
+        await $teardown();
+      });
     }
+
+    const bindTests = [
+      { load: 'bind: one', result: '!one!', },
+      { load: 'bind: two(123)', result: '!two:123!', },
+      { load: 'bind: two(456)', result: '!two:456!', },
+      { load: 'bind: route-one', result: '!one-route!', },
+      { load: 'bind: route-two/123', result: '!two-route:123!', },
+      { load: 'bind: route-two/456', result: '!two-route:456!', },
+    ];
+
+    for (let i = 0; i < bindTests.length; i++) {
+      const test = bindTests[i];
+      it(`for "${test.load}"`, async function () {
+        const { platform, host, router, $teardown } = await $setup({}, [NavBind, One, Two, OneRoute, TwoRoute], routes);
+
+        await $load('/nav-bind', router, platform);
+        await platform.domWriteQueue.yield();
+
+        const links = host.getElementsByTagName('A') as unknown as HTMLElement[];
+        const link = links[i];
+        link.click();
+        await platform.domWriteQueue.yield();
+
+        assert.includes(host.textContent, test.result, test.load);
+        for (const l of links) {
+          assert.strictEqual(l.classList.contains('active'), l === link, `${l.innerText}: ${l.classList.contains('active')}`);
+        }
+
+        await $teardown();
+      });
+    }
+
+    const attributesTests = [
+      { load: 'attributes: one', result: '!one!', },
+      { load: 'attributes: two(123)', result: '!two:123!', },
+      { load: 'attributes: two(456)', result: '!two:456!', },
+      { load: 'attributes: route-one', result: '!one-route!', },
+      { load: 'attributes: route-two/123', result: '!two-route:123!', },
+      { load: 'attributes: route-two/456', result: '!two-route:456!', },
+    ];
+
+    for (let i = 0; i < attributesTests.length; i++) {
+      const test = attributesTests[i];
+      it(`for "${test.load}"`, async function () {
+        const { platform, host, router, $teardown } = await $setup({}, [NavAttributes, One, Two, OneRoute, TwoRoute], routes);
+
+        await $load('/nav-attributes', router, platform);
+        await platform.domWriteQueue.yield();
+
+        const links = host.getElementsByTagName('A') as unknown as HTMLElement[];
+        const link = links[i];
+        link.click();
+        await platform.domWriteQueue.yield();
+
+        assert.includes(host.textContent, test.result, test.load);
+        for (const l of links) {
+          assert.strictEqual(l.classList.contains('active'), l === link, `${l.innerText}: ${l.classList.contains('active')}`);
+        }
+
+        await $teardown();
+      });
+    }
+  });
+
+  describe('can use viewport scope', function () {
+    this.timeout(5000);
 
     const part = '<au-viewport-scope><a load="my-one">One</a><a load="my-two">Two</a>:<au-viewport default="my-zero"></au-viewport></au-viewport-scope>';
     const Siblings = CustomElement.define({ name: 'my-siblings', template: `!my-siblings!${part}|${part}` }, class { });

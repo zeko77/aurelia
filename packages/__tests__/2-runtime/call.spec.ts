@@ -2,10 +2,8 @@ import {
   AccessScopeExpression,
   BindingBehaviorExpression,
   CallScopeExpression,
-  ExpressionKind,
   IsBindingBehavior,
   Scope,
-  LifecycleFlags as LF,
   SetterObserver
 } from '@aurelia/runtime';
 import {
@@ -21,10 +19,16 @@ import {
 
 // eslint-disable-next-line mocha/no-skipped-tests
 describe.skip('CallBinding', function () {
-  function createFixture(sourceExpression: IsBindingBehavior, target: any, targetProperty: string) {
+  function createFixture(ast: IsBindingBehavior, target: any, targetProperty: string) {
     const container = createContainer(); // Note: used to be RuntimeConfiguration.createContainer, needs deps
     const observerLocator = createObserverLocator(container);
-    const sut = new CallBinding(sourceExpression as any, target, targetProperty, observerLocator, container);
+    const sut = new CallBinding(
+      container,
+      observerLocator,
+      ast as any,
+      target,
+      targetProperty,
+    );
 
     return { sut, container, observerLocator };
   }
@@ -62,19 +66,17 @@ describe.skip('CallBinding', function () {
       it(`$bind() target=${$1} prop=${$2} expr=${$3} scope=${$4} renewScope=${$5}`, function () {
         // - Arrange -
         const { sut, observerLocator } = createFixture(expr, target, prop);
-        const flags = LF.none;
         const targetObserver = observerLocator.getObserver(target, prop);
 
         // massSpy(scope.bindingContext, 'theFunc');
         // massSpy(sut, 'callSource');
         // massSpy(targetObserver, 'setValue', 'getValue');
         // massSpy(expr, 'evaluate', 'assign', 'connect');
-        (expr as any).$kind |= ExpressionKind.HasBind | ExpressionKind.HasUnbind;
         // expr['bind'] = spy();
         // expr['unbind'] = spy();
 
         // - Act -
-        sut.$bind(flags, scope);
+        sut.$bind(scope);
 
         // - Assert -
         // double check we have the correct target observer
@@ -104,7 +106,7 @@ describe.skip('CallBinding', function () {
         // massReset(expr);
 
         // - Act -
-        sut.$bind(flags, scope);
+        sut.$bind(scope);
 
         // - Assert -
         assert.instanceOf(sut.targetObserver, SetterObserver, `sut.targetObserver`);
@@ -158,19 +160,17 @@ describe.skip('CallBinding', function () {
       it(`$bind() target=${$1} prop=${$2} expr=${$3} scope=${$4}`, function () {
         // - Arrange -
         const { sut, observerLocator } = createFixture(expr, target, prop);
-        const flags = LF.none;
         const targetObserver = observerLocator.getObserver(target, prop);
 
         // massSpy(scope.bindingContext, 'theFunc');
         // massSpy(sut, 'callSource');
         // massSpy(targetObserver, 'setValue', 'getValue');
         // massSpy(expr, 'evaluate', 'assign', 'connect');
-        (expr as any).$kind |= ExpressionKind.HasBind | ExpressionKind.HasUnbind;
         // expr['bind'] = spy();
         // expr['unbind'] = spy();
 
         // - Act -
-        sut.$bind(flags, scope);
+        sut.$bind(scope);
 
         // - Assert -
         // double check we have the correct target observer
@@ -196,7 +196,7 @@ describe.skip('CallBinding', function () {
         // massReset(expr);
 
         // - Act -
-        sut.$unbind(flags);
+        sut.$unbind();
 
         // - Assert -
         assert.instanceOf(sut.targetObserver, SetterObserver, `sut.targetObserver`);
@@ -214,7 +214,7 @@ describe.skip('CallBinding', function () {
         // massReset(expr);
 
         // - Act -
-        sut.$unbind(flags);
+        sut.$unbind();
 
         // - Assert -
         assert.instanceOf(sut.targetObserver, SetterObserver, `sut.targetObserver`);
@@ -262,7 +262,6 @@ describe.skip('CallBinding', function () {
       it(`$bind() target=${$1} prop=${$2} args=${$3} expr=${$4} scope=${$5}`, function () {
         // - Arrange -
         const { sut, observerLocator } = createFixture(expr, target, prop);
-        const flags = LF.none;
         const targetObserver = observerLocator.getObserver(target, prop);
 
         // massSpy(scope.bindingContext, 'theFunc');
@@ -271,7 +270,7 @@ describe.skip('CallBinding', function () {
         // massSpy(expr, 'evaluate', 'assign', 'connect');
 
         // - Act -
-        sut.$bind(flags, scope);
+        sut.$bind(scope);
 
         // - Assert -
         // double check we have the correct target observer
@@ -308,7 +307,7 @@ describe.skip('CallBinding', function () {
         // massRestore(expr);
 
         // - Act -
-        sut.$unbind(flags);
+        sut.$unbind();
 
         // - Assert -
         assert.strictEqual(target[prop], null, `target[prop]`);

@@ -1,4 +1,4 @@
-import { BindingMode } from '@aurelia/runtime';
+import { BindingMode } from '../../binding/interfaces-bindings';
 import { INode } from '../../dom';
 import { IPlatform } from '../../platform';
 import { customAttribute } from '../custom-attribute';
@@ -22,11 +22,16 @@ export class Focus implements ICustomAttributeViewModel {
    * @internal
    */
   private _needsApply: boolean = false;
+  /** @internal */ private readonly _element: INode<HTMLElement>;
+  /** @internal */ private readonly _platform: IPlatform;
 
   public constructor(
-    private readonly _element: INode<HTMLElement>,
-    private readonly _platform: IPlatform,
-  ) {}
+    element: INode<HTMLElement>,
+    platform: IPlatform,
+  ) {
+    this._element = element;
+    this._platform = platform;
+  }
 
   public binding(): void {
     this.valueChanged();
@@ -102,8 +107,10 @@ export class Focus implements ICustomAttributeViewModel {
     const el = this._element;
     const isFocused = this._isElFocused;
     const shouldFocus = this.value;
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     if (shouldFocus && !isFocused) {
       el.focus();
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     } else if (!shouldFocus && isFocused) {
       el.blur();
     }

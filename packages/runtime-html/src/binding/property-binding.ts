@@ -1,5 +1,7 @@
-import { AccessorType, BindingMode, connectable, ExpressionKind, IndexMap, LifecycleFlags } from '@aurelia/runtime';
-import { BindingTargetSubscriber } from './binding-utils';
+import { AccessorType, connectable } from '@aurelia/runtime';
+import { IFlushQueue, astEvaluator, BindingTargetSubscriber } from './binding-utils';
+import { State } from '../templating/controller';
+import { BindingMode } from './interfaces-bindings';
 
 import type { ITask, QueueTaskOptions, TaskQueue } from '@aurelia/platform';
 import type { IServiceLocator } from '@aurelia/kernel';
@@ -11,13 +13,8 @@ import type {
   IsBindingBehavior,
   Scope,
 } from '@aurelia/runtime';
-import type { IAstBasedBinding } from './interfaces-bindings';
+import type { IAstBasedBinding, IBindingController } from './interfaces-bindings';
 
-// BindingMode is not a const enum (and therefore not inlined), so assigning them to a variable to save a member accessor is a minor perf tweak
-const { oneTime, toView, fromView } = BindingMode;
-
-// pre-combining flags for bitwise checks is a minor perf tweak
-const toViewOrOneTime = toView | oneTime;
 const updateTaskOpts: QueueTaskOptions = {
   reusable: false,
   preempt: true,
@@ -33,8 +30,6 @@ export class PropertyBinding implements IAstBasedBinding {
 
   public targetObserver?: AccessorOrObserver = void 0;
 
-  public persistentFlags: LifecycleFlags = LifecycleFlags.none;
-
   private task: ITask | null = null;
   private targetSubscriber: BindingTargetSubscriber | null = null;
 
@@ -45,118 +40,96 @@ export class PropertyBinding implements IAstBasedBinding {
    */
   public readonly oL: IObserverLocator;
 
+  /** @internal */
+  private readonly _controller: IBindingController;
+
+  /** @internal */
+  private readonly _taskQueue: TaskQueue;
+
+  // see Listener binding for explanation
+  /** @internal */
+  public readonly boundFn = false;
+
   public constructor(
-    public sourceExpression: IsBindingBehavior | ForOfStatement,
+    controller: IBindingController,
+    public locator: IServiceLocator,
+    observerLocator: IObserverLocator,
+    taskQueue: TaskQueue,
+    public ast: IsBindingBehavior | ForOfStatement,
     public target: object,
     public targetProperty: string,
     public mode: BindingMode,
-    observerLocator: IObserverLocator,
-    public locator: IServiceLocator,
-    private readonly taskQueue: TaskQueue,
   ) {
+    this._controller = controller;
+    this._taskQueue = taskQueue;
     this.oL = observerLocator;
   }
 
-  public updateTarget(value: unknown, flags: LifecycleFlags): void {
-    flags |= this.persistentFlags;
-    this.targetObserver!.setValue(value, flags, this.target, this.targetProperty);
+  public updateTarget(value: unknown): void {
+    this.targetObserver!.setValue(value, this.target, this.targetProperty);
   }
 
-  public updateSource(value: unknown, flags: LifecycleFlags): void {
-    flags |= this.persistentFlags;
-    this.sourceExpression.assign(flags, this.$scope!, this.locator, value);
+  public updateSource(value: unknown): void {
+    this.ast.assign(this.$scope!, this, value);
   }
 
-  public handleChange(newValue: unknown, _previousValue: unknown, flags: LifecycleFlags): void {
+  public handleChange(): void {
     if (!this.isBound) {
       return;
     }
 
-    flags |= this.persistentFlags;
-
-    // Alpha: during bind a simple strategy for bind is always flush immediately
-    // todo:
-    //  (1). determine whether this should be the behavior
-    //  (2). if not, then fix tests to reflect the changes/platform to properly yield all with aurelia.start()
-    const shouldQueueFlush = (flags & LifecycleFlags.fromBind) === 0 && (this.targetObserver!.type & AccessorType.Layout) > 0;
+    const shouldQueueFlush = this._controller.state !== State.activating && (this.targetObserver!.type & AccessorType.Layout) > 0;
     const obsRecord = this.obs;
     let shouldConnect: boolean = false;
 
-    // if the only observable is an AccessScope then we can assume the passed-in newValue is the correct and latest value
-    if (this.sourceExpression.$kind !== ExpressionKind.AccessScope || obsRecord.count > 1) {
-      // todo: in VC expressions, from view also requires connect
-      shouldConnect = this.mode > oneTime;
-      if (shouldConnect) {
-        obsRecord.version++;
-      }
-      newValue = this.sourceExpression.evaluate(flags, this.$scope!, this.locator, this.interceptor);
-      if (shouldConnect) {
-        obsRecord.clear();
-      }
+    shouldConnect = this.mode > BindingMode.oneTime;
+    if (shouldConnect) {
+      obsRecord.version++;
+    }
+    const newValue = this.ast.evaluate(this.$scope!, this, this.interceptor);
+    if (shouldConnect) {
+      obsRecord.clear();
     }
 
     if (shouldQueueFlush) {
       // Queue the new one before canceling the old one, to prevent early yield
       task = this.task;
-      this.task = this.taskQueue.queueTask(() => {
-        this.interceptor.updateTarget(newValue, flags);
+      this.task = this._taskQueue.queueTask(() => {
+        this.interceptor.updateTarget(newValue);
         this.task = null;
       }, updateTaskOpts);
       task?.cancel();
       task = null;
     } else {
-      this.interceptor.updateTarget(newValue, flags);
+      this.interceptor.updateTarget(newValue);
     }
   }
 
-  public handleCollectionChange(_indexMap: IndexMap, flags: LifecycleFlags): void {
-    if (!this.isBound) {
-      return;
-    }
-    const shouldQueueFlush = (flags & LifecycleFlags.fromBind) === 0 && (this.targetObserver!.type & AccessorType.Layout) > 0;
-    this.obs.version++;
-    const newValue = this.sourceExpression.evaluate(flags, this.$scope!, this.locator, this.interceptor);
-    this.obs.clear();
-    if (shouldQueueFlush) {
-      // Queue the new one before canceling the old one, to prevent early yield
-      task = this.task;
-      this.task = this.taskQueue.queueTask(() => {
-        this.interceptor.updateTarget(newValue, flags);
-        this.task = null;
-      }, updateTaskOpts);
-      task?.cancel();
-      task = null;
-    } else {
-      this.interceptor.updateTarget(newValue, flags);
-    }
+  // todo: based off collection and handle update accordingly instead off always start
+  public handleCollectionChange(): void {
+    this.handleChange();
   }
 
-  public $bind(flags: LifecycleFlags, scope: Scope): void {
+  public $bind(scope: Scope): void {
     if (this.isBound) {
       if (this.$scope === scope) {
         return;
       }
-      this.interceptor.$unbind(flags | LifecycleFlags.fromBind);
+      this.interceptor.$unbind();
     }
-    // Force property binding to always be strict
-    flags |= LifecycleFlags.isStrictBindingStrategy;
-
-    // Store flags which we can only receive during $bind and need to pass on
-    // to the AST during evaluate/connect/assign
-    this.persistentFlags = flags & LifecycleFlags.persistentBindingFlags;
 
     this.$scope = scope;
 
-    let sourceExpression = this.sourceExpression;
-    if (sourceExpression.hasBind) {
-      sourceExpression.bind(flags, scope, this.interceptor);
+    let ast = this.ast;
+    if (ast.hasBind) {
+      ast.bind(scope, this.interceptor);
     }
 
     const observerLocator = this.oL;
     const $mode = this.mode;
     let targetObserver = this.targetObserver;
     if (!targetObserver) {
-      if ($mode & fromView) {
+      if ($mode & BindingMode.fromView) {
         targetObserver = observerLocator.getObserver(this.target, this.targetProperty);
       } else {
         targetObserver = observerLocator.getAccessor(this.target, this.targetProperty);
@@ -164,37 +137,35 @@ export class PropertyBinding implements IAstBasedBinding {
       this.targetObserver = targetObserver;
     }
 
-    // during bind, binding behavior might have changed sourceExpression
+    // during bind, binding behavior might have changed ast
     // deepscan-disable-next-line
-    sourceExpression = this.sourceExpression;
+    ast = this.ast;
     const interceptor = this.interceptor;
-    const shouldConnect = ($mode & toView) > 0;
+    const shouldConnect = ($mode & BindingMode.toView) > 0;
 
-    if ($mode & toViewOrOneTime) {
+    if ($mode & (BindingMode.toView | BindingMode.oneTime)) {
       interceptor.updateTarget(
-        sourceExpression.evaluate(flags, scope, this.locator, shouldConnect ? interceptor : null),
-        flags,
+        ast.evaluate(scope, this, shouldConnect ? interceptor : null),
       );
     }
-    if ($mode & fromView) {
-      (targetObserver as IObserver).subscribe(this.targetSubscriber ??= new BindingTargetSubscriber(interceptor));
+
+    if ($mode & BindingMode.fromView) {
+      (targetObserver as IObserver).subscribe(this.targetSubscriber ??= new BindingTargetSubscriber(interceptor, this.locator.get(IFlushQueue)));
       if (!shouldConnect) {
-        interceptor.updateSource(targetObserver.getValue(this.target, this.targetProperty), flags);
+        interceptor.updateSource(targetObserver.getValue(this.target, this.targetProperty));
       }
     }
 
     this.isBound = true;
   }
 
-  public $unbind(flags: LifecycleFlags): void {
+  public $unbind(): void {
     if (!this.isBound) {
       return;
     }
 
-    this.persistentFlags = LifecycleFlags.none;
-
-    if (this.sourceExpression.hasUnbind) {
-      this.sourceExpression.unbind(flags, this.$scope!, this.interceptor);
+    if (this.ast.hasUnbind) {
+      this.ast.unbind(this.$scope!, this.interceptor);
     }
 
     this.$scope = void 0;
@@ -214,5 +185,6 @@ export class PropertyBinding implements IAstBasedBinding {
 }
 
 connectable(PropertyBinding);
+astEvaluator(true, false)(PropertyBinding);
 
 let task: ITask | null = null;

@@ -30,6 +30,7 @@ import {
   IAttributePattern,
   CallBindingInstruction,
   IPlatform,
+  IAttrMapper,
 } from '@aurelia/runtime-html';
 import { assert, PLATFORM, createContainer } from '@aurelia/testing';
 
@@ -109,7 +110,7 @@ describe('TranslationBindingCommand', function () {
       attr: syntax,
       bindable: null,
       def: null,
-    });
+    }, null, { map: (_, name) => name } as any);
 
     assert.instanceOf(actual, TranslationBindingInstruction);
   });
@@ -149,7 +150,7 @@ describe('TranslationBindingRenderer', function () {
     const sut: IRenderer = new TranslationBindingRenderer(container.get(IExpressionParser), {} as unknown as IObserverLocator, container.get(IPlatform));
     const expressionParser = container.get(IExpressionParser);
     const targetElement = PLATFORM.document.createElement('span');
-    const binding = new TranslationBinding(targetElement, {} as unknown as IObserverLocator, container, container.get(IPlatform));
+    const binding = new TranslationBinding({ state: 0 }, container, {} as unknown as IObserverLocator, container.get(IPlatform), targetElement);
     const controller = ({ container, bindings: [binding], addBinding(binding) { (controller.bindings as unknown as IBinding[]).push(binding); } } as unknown as IHydratableController);
 
     const from = expressionParser.parse('simple.key', ExpressionType.IsCustom);
@@ -160,7 +161,7 @@ describe('TranslationBindingRenderer', function () {
       callBindingInstruction,
     );
 
-    assert.equal(binding.expr, from);
+    assert.equal(binding.ast, from);
   });
 });
 
@@ -219,19 +220,17 @@ describe('TranslationBindBindingCommand', function () {
     if (!aliases.includes('t.bind')) {
       aliases.push('t.bind');
     }
-    return aliases.reduce(
-      (acc: TranslationBindBindingCommand[], alias) => {
-        acc.push(
-          container.get<TranslationBindBindingCommand>(BindingCommand.keyFrom(alias)),
-        );
-        return acc;
-      },
-      []);
+    return {
+      container,
+      parser: container.get(IExpressionParser),
+      mapper: container.get(IAttrMapper),
+      suts: aliases.map(alias => container.get<TranslationBindBindingCommand>(BindingCommand.keyFrom(alias)))
+    };
   }
 
   it('registers alias commands when provided', function () {
     const aliases = ['t', 'i18n'];
-    const suts = createFixture(aliases);
+    const { suts} = createFixture(aliases);
 
     assert.equal(suts.length, aliases.length);
     assert.equal(
@@ -240,14 +239,14 @@ describe('TranslationBindBindingCommand', function () {
   });
 
   it('compiles the binding to a TranslationBindBindingInstruction', function () {
-    const [sut] = createFixture();
+    const { parser, mapper, suts: [sut] } = createFixture();
     const syntax: AttrSyntax = { command: 't.bind', rawName: 't.bind', rawValue: 'obj.key', target: 'bind' };
     const actual = sut.build({
       node: { nodeName: 'abc' } as unknown as Element,
       attr: syntax,
       bindable: null,
       def: null,
-    });
+    }, parser, mapper);
 
     assert.instanceOf(actual, TranslationBindBindingInstruction);
   });
@@ -306,7 +305,7 @@ describe('TranslationBindBindingRenderer', function () {
     const sut: IRenderer = new TranslationBindBindingRenderer(container.get(IExpressionParser), {} as unknown as IObserverLocator, container.get(IPlatform));
     const expressionParser = container.get(IExpressionParser);
     const targetElement = PLATFORM.document.createElement('span');
-    const binding = new TranslationBinding(targetElement, {} as unknown as IObserverLocator, container, container.get(IPlatform));
+    const binding = new TranslationBinding({ state: 0 }, container, {} as unknown as IObserverLocator, container.get(IPlatform), targetElement);
     const controller = ({ container, bindings: [binding], addBinding(binding) { (controller.bindings as unknown as IBinding[]).push(binding); } } as unknown as IHydratableController);
 
     const from = expressionParser.parse('simple.key', ExpressionType.IsProperty);
@@ -317,6 +316,6 @@ describe('TranslationBindBindingRenderer', function () {
       callBindingInstruction,
     );
 
-    assert.equal(binding.expr, from);
+    assert.equal(binding.ast, from);
   });
 });

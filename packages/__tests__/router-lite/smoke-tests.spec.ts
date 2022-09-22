@@ -1,10 +1,9 @@
 import { LogLevel, Constructable, kebabCase, ILogConfig, Registration, noop, IModule } from '@aurelia/kernel';
 import { assert, MockBrowserHistoryLocation, TestContext } from '@aurelia/testing';
 import { RouterConfiguration, IRouter, NavigationInstruction, IRouteContext, RouteNode, Params, route, INavigationModel, IRouterOptions, IRouteViewModel, IRouteConfig, RouteDefinition } from '@aurelia/router-lite';
-import { Aurelia, customElement, CustomElement, ICustomElementViewModel, IHistory, IHydratedController, ILocation, INode, IPlatform, IWindow, StandardConfiguration, watch } from '@aurelia/runtime-html';
+import { LifecycleFlags, Aurelia, valueConverter, customElement, CustomElement, ICustomElementViewModel, IHistory, IHydratedController, ILocation, INode, IPlatform, IWindow, StandardConfiguration, watch } from '@aurelia/runtime-html';
 
 import { TestRouterConfiguration } from './_shared/configuration.js';
-import { LifecycleFlags, valueConverter } from '@aurelia/runtime';
 
 function vp(count: number): string {
   return '<au-viewport></au-viewport>'.repeat(count);
@@ -1101,13 +1100,13 @@ describe('router (smoke tests)', function () {
     const b2Params: Params[] = [];
     @customElement({ name: 'b1', template: null })
     class B1 {
-      public load(params: Params) {
+      public loading(params: Params) {
         b1Params.push(params);
       }
     }
     @customElement({ name: 'b2', template: null })
     class B2 {
-      public load(params: Params) {
+      public loading(params: Params) {
         b2Params.push(params);
       }
     }
@@ -1122,7 +1121,7 @@ describe('router (smoke tests)', function () {
       dependencies: [B1],
     })
     class A1 {
-      public load(params: Params) {
+      public loading(params: Params) {
         a1Params.push(params);
       }
     }
@@ -1137,7 +1136,7 @@ describe('router (smoke tests)', function () {
       dependencies: [B2],
     })
     class A2 {
-      public load(params: Params) {
+      public loading(params: Params) {
         a2Params.push(params);
       }
     }
@@ -1214,7 +1213,7 @@ describe('router (smoke tests)', function () {
       template: '',
     })
     class A1 implements IRouteViewModel {
-      public load(params: Params, next: RouteNode) {
+      public loading(params: Params, next: RouteNode) {
         a1Params.push(params);
         a1Query.push(Array.from(next.queryParams.entries()));
       }
@@ -1225,7 +1224,7 @@ describe('router (smoke tests)', function () {
       template: '',
     })
     class A2 implements IRouteViewModel {
-      public load(params: Params, next: RouteNode) {
+      public loading(params: Params, next: RouteNode) {
         a2Params.push(params);
         a2Query.push(Array.from(next.queryParams.entries()));
       }
@@ -1357,7 +1356,7 @@ describe('router (smoke tests)', function () {
       public params!: Params;
       public query!: Readonly<URLSearchParams>;
 
-      public load(params: Params, next: RouteNode) {
+      public loading(params: Params, next: RouteNode) {
         this.params = params;
         this.query = next.queryParams;
       }
@@ -2088,7 +2087,7 @@ describe('router (smoke tests)', function () {
           assert.deepStrictEqual(this.paramsLog.get(key), expected, message);
           this.paramsLog.clear();
         }
-        public load(params: Params, next: RouteNode, _: RouteNode): void | Promise<void> {
+        public loading(params: Params, next: RouteNode, _: RouteNode): void | Promise<void> {
           BaseRouteViewModel.paramsLog.set(this.constructor.name.toLowerCase(), [params, next.queryParams]);
         }
       }
@@ -2203,7 +2202,7 @@ describe('router (smoke tests)', function () {
           assert.deepStrictEqual(paramsLog, new Map(expected), message);
           paramsLog.clear();
         }
-        public load(params: Params, next: RouteNode, _: RouteNode): void | Promise<void> {
+        public loading(params: Params, next: RouteNode, _: RouteNode): void | Promise<void> {
           BaseRouteViewModel.paramsLog.set(this.constructor.name.toLowerCase(), [params, next.queryParams]);
         }
       }
@@ -2309,7 +2308,7 @@ describe('router (smoke tests)', function () {
           assert.deepStrictEqual(paramsLog, new Map(expected), message);
           paramsLog.clear();
         }
-        public load(params: Params, next: RouteNode, _: RouteNode): void | Promise<void> {
+        public loading(params: Params, next: RouteNode, _: RouteNode): void | Promise<void> {
           BaseRouteViewModel.paramsLog.set(this.constructor.name.toLowerCase(), [params, next.queryParams]);
         }
       }

@@ -1,5 +1,6 @@
-import { LifecycleFlags, Scope, Interpolation, AccessScopeExpression, ForOfStatement, BindingIdentifier, BindingContext } from '@aurelia/runtime';
+import { Scope, Interpolation, AccessScopeExpression, ForOfStatement, BindingIdentifier, BindingContext } from '@aurelia/runtime';
 import {
+  LifecycleFlags,
   Repeat,
   Controller,
   CustomElementDefinition,
@@ -555,7 +556,7 @@ describe(`Repeat`, function () {
         const binding: PropertyBinding = {
           target: null,
           targetProperty: 'items',
-          sourceExpression: new ForOfStatement(new BindingIdentifier('item'), new AccessScopeExpression('items'))
+          ast: new ForOfStatement(new BindingIdentifier('item'), new AccessScopeExpression('items'))
         } as any;
         const hydratable: IHydratableController = {
           bindings: [binding]
@@ -565,7 +566,7 @@ describe(`Repeat`, function () {
         binding.target = sut as any;
 
         // -- Round 1 --
-        const scope = Scope.create(BindingContext.create());
+        const scope = Scope.create(new BindingContext());
 
         sut.items = items;
         const expectedText1 = sut.items ? sut.items.join('') : '';
