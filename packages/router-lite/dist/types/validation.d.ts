@@ -1,10 +1,6 @@
 import { PartialCustomElementDefinition } from '@aurelia/runtime-html';
-import { IChildRouteConfig, IRedirectRouteConfig, Routeable } from './route';
+import { IChildRouteConfig, IRedirectRouteConfig } from './route';
 import { IViewportInstruction, RouteableComponent } from './instructions';
-/**
- * @returns `true` if the given `value` is an non-null, non-undefined, and non-CustomElement object.
- */
-export declare function isNotNullishOrTypeOrViewModel(value: RouteableComponent | IChildRouteConfig | null | undefined): value is PartialCustomElementDefinition | IChildRouteConfig;
 export declare function isPartialCustomElementDefinition(value: RouteableComponent | IChildRouteConfig | null | undefined): value is PartialCustomElementDefinition;
 export declare function isPartialChildRouteConfig(value: RouteableComponent | IChildRouteConfig | IRedirectRouteConfig | null | undefined): value is IChildRouteConfig;
 export declare function isPartialRedirectRouteConfig(value: RouteableComponent | IChildRouteConfig | IRedirectRouteConfig | null | undefined): value is IRedirectRouteConfig;
@@ -17,7 +13,5 @@ export declare function expectType(expected: string, prop: string, value: unknow
  * This property is checked for in `validateComponent`.
  */
 export declare function validateRouteConfig(config: Partial<IChildRouteConfig> | null | undefined, parentPath: string): void;
-export declare function validateRedirectRouteConfig(config: Partial<IRedirectRouteConfig> | null | undefined, parentPath: string): void;
-export declare function validateComponent(component: Routeable | null | undefined, parentPath: string): void;
 export declare function shallowEquals<T>(a: T, b: T): boolean;
 //# sourceMappingURL=validation.d.ts.map

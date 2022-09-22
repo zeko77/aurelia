@@ -1,4 +1,4 @@
-import { LifecycleFlags, AccessorType } from '@aurelia/runtime';
+import { AccessorType } from '@aurelia/runtime';
 import type { IAccessor } from '@aurelia/runtime';
 export declare class StyleAttributeAccessor implements IAccessor {
     readonly obj: HTMLElement;
@@ -8,8 +8,8 @@ export declare class StyleAttributeAccessor implements IAccessor {
     version: number;
     constructor(obj: HTMLElement);
     getValue(): string;
-    setValue(newValue: unknown, flags: LifecycleFlags): void;
+    setValue(newValue: unknown): void;
     setProperty(style: string, value: string): void;
-    bind(_flags: LifecycleFlags): void;
+    bind(): void;
 }
 //# sourceMappingURL=style-attribute-accessor.d.ts.map

@@ -1,5 +1,4 @@
-import { LifecycleFlags } from '@aurelia/runtime';
-import { IHydratedController, ICustomElementController } from '@aurelia/runtime-html';
+import { LifecycleFlags, IHydratedController, ICustomElementController } from '@aurelia/runtime-html';
 import { IViewport } from './resources/viewport';
 import { RouteNode } from './route-tree';
 import { IRouteContext } from './route-context';
@@ -32,6 +31,7 @@ export declare class ViewportAgent {
     private nextNode;
     private currTransition;
     private prevTransition;
+    private _cancellationPromise;
     constructor(viewport: IViewport, hostController: ICustomElementController, ctx: IRouteContext);
     static for(viewport: IViewport, ctx: IRouteContext): ViewportAgent;
     activateFromViewport(initiator: IHydratedController, parent: IHydratedController, flags: LifecycleFlags): void | Promise<void>;
@@ -40,8 +40,8 @@ export declare class ViewportAgent {
     isAvailable(resolution: ResolutionMode): boolean;
     canUnload(tr: Transition, b: Batch): void;
     canLoad(tr: Transition, b: Batch): void;
-    unload(tr: Transition, b: Batch): void;
-    load(tr: Transition, b: Batch): void;
+    unloading(tr: Transition, b: Batch): void;
+    loading(tr: Transition, b: Batch): void;
     deactivate(initiator: IHydratedController | null, tr: Transition, b: Batch): void;
     activate(initiator: IHydratedController | null, tr: Transition, b: Batch): void;
     swap(tr: Transition, b: Batch): void;

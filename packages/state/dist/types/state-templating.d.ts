@@ -8,14 +8,12 @@ export declare class DispatchAttributePattern {
     'PART.dispatch'(rawName: string, rawValue: string, parts: string[]): AttrSyntax;
 }
 export declare class StateBindingCommand implements BindingCommandInstance {
-    readonly type: CommandType;
+    get type(): CommandType;
     get name(): string;
-    constructor(
-    /** @internal */ _attrMapper: IAttrMapper);
-    build(info: ICommandBuildInfo): IInstruction;
+    build(info: ICommandBuildInfo, parser: IExpressionParser, attrMapper: IAttrMapper): IInstruction;
 }
 export declare class DispatchBindingCommand implements BindingCommandInstance {
-    readonly type: CommandType;
+    get type(): CommandType;
     get name(): string;
     build(info: ICommandBuildInfo): IInstruction;
 }
@@ -27,9 +25,9 @@ export declare class StateBindingInstruction {
 }
 export declare class DispatchBindingInstruction {
     from: string;
-    expr: string | IsBindingBehavior;
+    ast: string | IsBindingBehavior;
     readonly type = "sd";
-    constructor(from: string, expr: string | IsBindingBehavior);
+    constructor(from: string, ast: string | IsBindingBehavior);
 }
 export declare class StateBindingInstructionRenderer implements IRenderer {
     readonly target: 'sb';

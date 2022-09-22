@@ -6,6 +6,6 @@ export { type IModule, IModuleLoader, AnalyzedModule, ModuleItem, } from './modu
 export { noop, emptyArray, emptyObject, } from './platform';
 export { type IResourceKind, type PartialResourceDefinition, Protocol, type ResourceDefinition, type ResourceType, fromAnnotationOrDefinitionOrTypeOrDefault, fromAnnotationOrTypeOrDefault, fromDefinitionOrDefault, } from './resource';
 export { EventAggregator, IEventAggregator, } from './eventaggregator';
-export { isArrayIndex, camelCase, kebabCase, pascalCase, toArray, nextId, resetId, compareNumber, mergeDistinct, isNumberOrBigInt, isStringOrDate, bound, mergeArrays, mergeObjects, firstDefined, getPrototypeChain, isNativeFunction, onResolve, resolveAll, } from './functions';
+export { isArrayIndex, camelCase, kebabCase, pascalCase, toArray, bound, mergeArrays, firstDefined, getPrototypeChain, isNativeFunction, onResolve, resolveAll, } from './functions';
 export { type AnyFunction, type FunctionPropNames, type MaybePromise, } from './utilities';
 //# sourceMappingURL=index.d.ts.map

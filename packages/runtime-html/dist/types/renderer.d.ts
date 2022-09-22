@@ -1,5 +1,7 @@
-import { BindingMode, IExpressionParser, IObserverLocator } from '@aurelia/runtime';
+import { IExpressionParser, IObserverLocator } from '@aurelia/runtime';
+import { BindingMode } from './binding/interfaces-bindings';
 import { IEventDelegator } from './observation/event-delegator';
+import { IInterceptableBinding } from './resources/binding-behavior';
 import { CustomElementDefinition } from './resources/custom-element';
 import { IProjections } from './resources/slot-injectables';
 import { CustomAttributeDefinition } from './resources/custom-attribute';
@@ -9,7 +11,7 @@ import { IPlatform } from './platform';
 import { IRendering } from './templating/rendering';
 import { AttrSyntax } from './resources/attribute-pattern';
 import type { IServiceLocator, IContainer, Class, IRegistry } from '@aurelia/kernel';
-import type { Interpolation, IsBindingBehavior, IInterceptableBinding, ForOfStatement, DelegationStrategy } from '@aurelia/runtime';
+import type { Interpolation, IsBindingBehavior, ForOfStatement } from '@aurelia/runtime';
 import type { IHydratableController } from './templating/controller';
 import type { PartialCustomElementDefinition } from './resources/custom-element';
 export declare const enum InstructionType {
@@ -189,6 +191,11 @@ export declare class TextBindingInstruction {
      */
     strict: boolean);
 }
+export declare const enum DelegationStrategy {
+    none = 0,
+    capturing = 1,
+    bubbling = 2
+}
 export declare class ListenerBindingInstruction {
     from: string | IsBindingBehavior;
     to: string;
@@ -355,16 +362,9 @@ export declare class TextBindingRenderer implements IRenderer {
     constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator, p: IPlatform);
     render(renderingCtrl: IHydratableController, target: ChildNode, instruction: TextBindingInstruction): void;
 }
-export interface IListenerBehaviorOptions {
-    /**
-     * `true` if the expression specified in the template is meant to be treated as a handler
-     */
-    expAsHandler: boolean;
-}
-export declare const IListenerBehaviorOptions: import("@aurelia/kernel").InterfaceSymbol<IListenerBehaviorOptions>;
 export declare class ListenerBindingRenderer implements IRenderer {
     target: InstructionType.listenerBinding;
-    constructor(parser: IExpressionParser, eventDelegator: IEventDelegator, p: IPlatform, listenerBehaviorOptions: IListenerBehaviorOptions);
+    constructor(parser: IExpressionParser, eventDelegator: IEventDelegator);
     render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: ListenerBindingInstruction): void;
 }
 export declare class SetAttributeRenderer implements IRenderer {
@@ -381,15 +381,13 @@ export declare class SetStyleAttributeRenderer implements IRenderer {
 }
 export declare class StylePropertyBindingRenderer implements IRenderer {
     target: InstructionType.stylePropertyBinding;
-    constructor(
-    /** @internal */ _exprParser: IExpressionParser, 
-    /** @internal */ _observerLocator: IObserverLocator, 
-    /** @internal */ _platform: IPlatform);
+    constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator, platform: IPlatform);
     render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: StylePropertyBindingInstruction): void;
 }
 export declare class AttributeBindingRenderer implements IRenderer {
     target: InstructionType.attributeBinding;
     constructor(
+    /** @internal */ _platform: IPlatform, 
     /** @internal */ _exprParser: IExpressionParser, 
     /** @internal */ _observerLocator: IObserverLocator);
     render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: AttributeBindingInstruction): void;

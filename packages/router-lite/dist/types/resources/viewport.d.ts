@@ -1,6 +1,5 @@
 import { ILogger } from '@aurelia/kernel';
-import { LifecycleFlags } from '@aurelia/runtime';
-import { ICustomElementViewModel, IHydratedController, ICompiledCustomElementController } from '@aurelia/runtime-html';
+import { LifecycleFlags, ICustomElementViewModel, IHydratedController, ICompiledCustomElementController } from '@aurelia/runtime-html';
 import { IRouteContext } from '../route-context';
 export interface IViewport {
     readonly name: string;

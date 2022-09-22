@@ -1,5 +1,5 @@
-import type { Class, IServiceLocator } from '@aurelia/kernel';
-import type { IConnectable, ISubscribable, ISubscriber, IBinding, ICollectionSubscriber, IndexMap, ICollectionSubscribable, LifecycleFlags } from '../observation';
+import type { Class } from '@aurelia/kernel';
+import type { IConnectable, ISubscribable, ISubscriber, IBinding, Collection, ICollectionSubscriber, IndexMap, ICollectionSubscribable } from '../observation';
 import type { IObserverLocator } from '../observation/observer-locator';
 export interface IObserverLocatorBasedConnectable extends IBinding, ISubscriber, ICollectionSubscriber {
     oL: IObserverLocator;
@@ -21,8 +21,8 @@ export declare class BindingObserverRecord implements ISubscriber, ICollectionSu
     version: number;
     count: number;
     constructor(b: IConnectableBinding);
-    handleChange(value: unknown, oldValue: unknown, flags: LifecycleFlags): unknown;
-    handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void;
+    handleChange(value: unknown, oldValue: unknown): unknown;
+    handleCollectionChange(collection: Collection, indexMap: IndexMap): void;
     /**
      * Add, and subscribe to a given observer
      */
@@ -39,21 +39,5 @@ declare type DecoratedConnectable<TProto, TClass> = Class<TProto & Connectable, 
 declare function connectableDecorator<TProto, TClass>(target: DecoratableConnectable<TProto, TClass>): DecoratedConnectable<TProto, TClass>;
 export declare function connectable(): typeof connectableDecorator;
 export declare function connectable<TProto, TClass>(target: DecoratableConnectable<TProto, TClass>): DecoratedConnectable<TProto, TClass>;
-export declare type MediatedBinding<K extends string> = {
-    [key in K]: (newValue: unknown, previousValue: unknown, flags: LifecycleFlags) => void;
-};
-export interface BindingMediator<K extends string> extends IConnectableBinding {
-}
-export declare class BindingMediator<K extends string> implements IConnectableBinding {
-    readonly key: K;
-    readonly binding: MediatedBinding<K>;
-    oL: IObserverLocator;
-    locator: IServiceLocator;
-    interceptor: this;
-    constructor(key: K, binding: MediatedBinding<K>, oL: IObserverLocator, locator: IServiceLocator);
-    $bind(): void;
-    $unbind(): void;
-    handleChange(newValue: unknown, previousValue: unknown, flags: LifecycleFlags): void;
-}
 export {};
 //# sourceMappingURL=connectable.d.ts.map

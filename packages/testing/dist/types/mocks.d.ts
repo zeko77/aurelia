@@ -1,4 +1,6 @@
-import { ExpressionKind, LifecycleFlags } from '@aurelia/runtime';
+import { Key } from '@aurelia/kernel';
+import { ExpressionKind } from '@aurelia/runtime';
+import { LifecycleFlags } from '@aurelia/runtime-html';
 import type { IContainer, IDisposable, IIndexable, IServiceLocator } from '@aurelia/kernel';
 import type { Scope, IBinding, IConnectableBinding, IndexMap, IObserverLocator, ISignaler, BindingObserverRecord, Collection, ISubscribable, ICollectionSubscribable } from '@aurelia/runtime';
 export declare class MockBinding implements IConnectableBinding {
@@ -12,22 +14,23 @@ export declare class MockBinding implements IConnectableBinding {
     value: unknown;
     obs: BindingObserverRecord;
     calls: [keyof MockBinding, ...any[]][];
-    updateTarget(value: unknown, flags: LifecycleFlags): void;
-    updateSource(value: unknown, flags: LifecycleFlags): void;
-    handleChange(newValue: unknown, _previousValue: unknown, flags: LifecycleFlags): void;
-    handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void;
+    get(key: Key): never;
+    updateTarget(value: unknown): void;
+    updateSource(value: unknown): void;
+    handleChange(newValue: unknown, _previousValue: unknown): void;
+    handleCollectionChange(collection: Collection, indexMap: IndexMap): void;
     observe(obj: IIndexable, propertyName: string): void;
     observeCollection(col: Collection): void;
     subscribeTo(subscribable: ISubscribable | ICollectionSubscribable): void;
-    $bind(flags: LifecycleFlags, scope: Scope): void;
-    $unbind(flags: LifecycleFlags): void;
+    $bind(scope: Scope): void;
+    $unbind(): void;
     trace(fnName: keyof MockBinding, ...args: any[]): void;
     dispose(): void;
 }
 export declare class MockBindingBehavior {
     calls: [keyof MockBindingBehavior, ...any[]][];
-    bind(flags: LifecycleFlags, scope: Scope, binding: IBinding, ...rest: any[]): void;
-    unbind(flags: LifecycleFlags, scope: Scope, binding: IBinding, ...rest: any[]): void;
+    bind(scope: Scope, binding: IBinding, ...rest: any[]): void;
+    unbind(scope: Scope, binding: IBinding, ...rest: any[]): void;
     trace(fnName: keyof MockBindingBehavior, ...args: any[]): void;
 }
 export interface MockServiceLocator extends IContainer {
@@ -50,12 +53,14 @@ export declare class MockSignaler {
 }
 export declare class MockPropertySubscriber {
     calls: [keyof MockPropertySubscriber, ...any[]][];
-    handleChange(newValue: any, previousValue: any, flags: LifecycleFlags): void;
+    handleChange(newValue: any, previousValue: any): void;
     trace(fnName: keyof MockPropertySubscriber, ...args: any[]): void;
 }
 export declare class MockTracingExpression {
     inner: any;
     $kind: ExpressionKind;
+    hasBind: true;
+    hasUnbind: true;
     calls: [keyof MockTracingExpression, ...any[]][];
     constructor(inner: any);
     evaluate(...args: any[]): any;
@@ -101,12 +106,11 @@ export declare class MockBrowserHistoryLocation {
 }
 export declare class ChangeSet implements IDisposable {
     readonly index: number;
-    readonly flags: LifecycleFlags;
     get newValue(): any;
     get oldValue(): any;
     private _newValue;
     private _oldValue;
-    constructor(index: number, flags: LifecycleFlags, newValue: any, oldValue: any);
+    constructor(index: number, newValue: any, oldValue: any);
     dispose(): void;
 }
 export declare class ProxyChangeSet implements IDisposable {
@@ -122,10 +126,9 @@ export declare class ProxyChangeSet implements IDisposable {
 }
 export declare class CollectionChangeSet implements IDisposable {
     readonly index: number;
-    readonly flags: LifecycleFlags;
     get indexMap(): IndexMap;
     private _indexMap;
-    constructor(index: number, flags: LifecycleFlags, indexMap: IndexMap);
+    constructor(index: number, indexMap: IndexMap);
     dispose(): void;
 }
 export declare class SpySubscriber implements IDisposable {
@@ -141,9 +144,8 @@ export declare class SpySubscriber implements IDisposable {
     private _collectionChanges?;
     private _callCount;
     constructor();
-    handleChange(newValue: any, oldValue: any, flags: LifecycleFlags): void;
-    handleProxyChange(key: PropertyKey, newValue: any, oldValue: any, flags: LifecycleFlags): void;
-    handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void;
+    handleChange(newValue: any, oldValue: any): void;
+    handleCollectionChange(collection: Collection, indexMap: IndexMap): void;
     dispose(): void;
 }
 //# sourceMappingURL=mocks.d.ts.map

@@ -1,10 +1,10 @@
-import { IExpressionParser, IObserverLocator, BindingMode, type IsBindingBehavior } from '@aurelia/runtime';
-import { CommandType, IHydratableController, IRenderer, AttrSyntax, IPlatform, IAttrMapper, ICommandBuildInfo } from '@aurelia/runtime-html';
+import { IExpressionParser, IObserverLocator, type IsBindingBehavior } from '@aurelia/runtime';
+import { BindingMode, CommandType, IHydratableController, IRenderer, AttrSyntax, IPlatform, IAttrMapper, ICommandBuildInfo } from '@aurelia/runtime-html';
 import type { CallBindingInstruction, BindingCommandInstance } from '@aurelia/runtime-html';
 export declare const TranslationParametersInstructionType = "tpt";
 declare const attribute = "t-params.bind";
 export declare class TranslationParametersAttributePattern {
-    [attribute](rawName: string, rawValue: string, parts: string[]): AttrSyntax;
+    [attribute](rawName: string, rawValue: string, _parts: string[]): AttrSyntax;
 }
 export declare class TranslationParametersBindingInstruction {
     from: IsBindingBehavior;
@@ -16,8 +16,7 @@ export declare class TranslationParametersBindingInstruction {
 export declare class TranslationParametersBindingCommand implements BindingCommandInstance {
     readonly type: CommandType.None;
     get name(): string;
-    constructor(m: IAttrMapper, xp: IExpressionParser);
-    build(info: ICommandBuildInfo): TranslationParametersBindingInstruction;
+    build(info: ICommandBuildInfo, exprParser: IExpressionParser, attrMapper: IAttrMapper): TranslationParametersBindingInstruction;
 }
 export declare class TranslationParametersBindingRenderer implements IRenderer {
     target: typeof TranslationParametersInstructionType;

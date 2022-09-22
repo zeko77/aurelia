@@ -33,7 +33,7 @@ export declare type ICommandBuildInfo = IPlainAttrCommandInfo | IBindableCommand
 export declare type BindingCommandInstance<T extends {} = {}> = {
     type: CommandType;
     name: string;
-    build(info: ICommandBuildInfo): IInstruction;
+    build(info: ICommandBuildInfo, parser: IExpressionParser, mapper: IAttrMapper): IInstruction;
 } & T;
 export declare type BindingCommandType<T extends Constructable = Constructable> = ResourceType<T, BindingCommandInstance, PartialBindingCommandDefinition>;
 export declare type BindingCommandKind = IResourceKind<BindingCommandType, BindingCommandDefinition> & {
@@ -57,103 +57,89 @@ export declare class BindingCommandDefinition<T extends Constructable = Construc
 }
 export declare const BindingCommand: Readonly<BindingCommandKind>;
 export declare class OneTimeBindingCommand implements BindingCommandInstance {
-    readonly type: CommandType.None;
+    get type(): CommandType.None;
     get name(): string;
-    constructor(m: IAttrMapper, xp: IExpressionParser);
-    build(info: ICommandBuildInfo): PropertyBindingInstruction;
+    build(info: ICommandBuildInfo, exprParser: IExpressionParser, attrMapper: IAttrMapper): PropertyBindingInstruction;
 }
 export declare class ToViewBindingCommand implements BindingCommandInstance {
-    readonly type: CommandType.None;
+    get type(): CommandType.None;
     get name(): string;
-    constructor(attrMapper: IAttrMapper, exprParser: IExpressionParser);
-    build(info: ICommandBuildInfo): PropertyBindingInstruction;
+    build(info: ICommandBuildInfo, exprParser: IExpressionParser, attrMapper: IAttrMapper): PropertyBindingInstruction;
 }
 export declare class FromViewBindingCommand implements BindingCommandInstance {
-    readonly type: CommandType.None;
+    get type(): CommandType.None;
     get name(): string;
-    constructor(m: IAttrMapper, xp: IExpressionParser);
-    build(info: ICommandBuildInfo): PropertyBindingInstruction;
+    build(info: ICommandBuildInfo, exprParser: IExpressionParser, attrMapper: IAttrMapper): PropertyBindingInstruction;
 }
 export declare class TwoWayBindingCommand implements BindingCommandInstance {
-    readonly type: CommandType.None;
+    get type(): CommandType.None;
     get name(): string;
-    constructor(m: IAttrMapper, xp: IExpressionParser);
-    build(info: ICommandBuildInfo): PropertyBindingInstruction;
+    build(info: ICommandBuildInfo, exprParser: IExpressionParser, attrMapper: IAttrMapper): PropertyBindingInstruction;
 }
 export declare class DefaultBindingCommand implements BindingCommandInstance {
-    readonly type: CommandType.None;
+    get type(): CommandType.None;
     get name(): string;
-    constructor(m: IAttrMapper, xp: IExpressionParser);
-    build(info: ICommandBuildInfo): PropertyBindingInstruction;
+    build(info: ICommandBuildInfo, exprParser: IExpressionParser, attrMapper: IAttrMapper): PropertyBindingInstruction;
 }
 export declare class CallBindingCommand implements BindingCommandInstance {
-    readonly type: CommandType.None;
+    get type(): CommandType.None;
     get name(): string;
-    constructor(xp: IExpressionParser);
-    build(info: ICommandBuildInfo): IInstruction;
+    build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 export declare class ForBindingCommand implements BindingCommandInstance {
-    readonly type: CommandType.None;
+    get type(): CommandType.None;
     get name(): string;
-    constructor(xp: IExpressionParser);
-    build(info: ICommandBuildInfo): IInstruction;
+    build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 export declare class TriggerBindingCommand implements BindingCommandInstance {
-    readonly type: CommandType.IgnoreAttr;
+    get type(): CommandType.IgnoreAttr;
     get name(): string;
-    constructor(xp: IExpressionParser);
-    build(info: ICommandBuildInfo): IInstruction;
+    build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 export declare class DelegateBindingCommand implements BindingCommandInstance {
-    readonly type: CommandType.IgnoreAttr;
+    get type(): CommandType.IgnoreAttr;
     get name(): string;
-    constructor(xp: IExpressionParser);
-    build(info: ICommandBuildInfo): IInstruction;
+    build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 export declare class CaptureBindingCommand implements BindingCommandInstance {
-    readonly type: CommandType.IgnoreAttr;
+    get type(): CommandType.IgnoreAttr;
     get name(): string;
-    constructor(xp: IExpressionParser);
-    build(info: ICommandBuildInfo): IInstruction;
+    build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 /**
  * Attr binding command. Compile attr with binding symbol with command `attr` to `AttributeBindingInstruction`
  */
 export declare class AttrBindingCommand implements BindingCommandInstance {
-    readonly type: CommandType.IgnoreAttr;
+    get type(): CommandType.IgnoreAttr;
     get name(): string;
-    constructor(xp: IExpressionParser);
-    build(info: ICommandBuildInfo): IInstruction;
+    build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 /**
  * Style binding command. Compile attr with binding symbol with command `style` to `AttributeBindingInstruction`
  */
 export declare class StyleBindingCommand implements BindingCommandInstance {
-    readonly type: CommandType.IgnoreAttr;
+    get type(): CommandType.IgnoreAttr;
     get name(): string;
-    constructor(xp: IExpressionParser);
-    build(info: ICommandBuildInfo): IInstruction;
+    build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 /**
  * Class binding command. Compile attr with binding symbol with command `class` to `AttributeBindingInstruction`
  */
 export declare class ClassBindingCommand implements BindingCommandInstance {
-    readonly type: CommandType.IgnoreAttr;
+    get type(): CommandType.IgnoreAttr;
     get name(): string;
-    constructor(xp: IExpressionParser);
-    build(info: ICommandBuildInfo): IInstruction;
+    build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 /**
  * Binding command to refer different targets (element, custom element/attribute view models, controller) attached to an element
  */
 export declare class RefBindingCommand implements BindingCommandInstance {
-    readonly type: CommandType.IgnoreAttr;
+    get type(): CommandType.IgnoreAttr;
     get name(): string;
-    constructor(xp: IExpressionParser);
-    build(info: ICommandBuildInfo): IInstruction;
+    build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 export declare class SpreadBindingCommand implements BindingCommandInstance {
-    readonly type: CommandType;
+    get type(): CommandType.IgnoreAttr;
     get name(): string;
     build(_info: ICommandBuildInfo): IInstruction;
 }

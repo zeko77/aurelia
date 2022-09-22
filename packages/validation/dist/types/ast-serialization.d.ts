@@ -28,7 +28,6 @@ export declare class Serializer implements AST.IVisitor<string> {
     visitArrayBindingPattern(expr: AST.ArrayBindingPattern): string;
     visitObjectBindingPattern(expr: AST.ObjectBindingPattern): string;
     visitBindingIdentifier(expr: AST.BindingIdentifier): string;
-    visitHtmlLiteral(_expr: AST.HtmlLiteralExpression): string;
     visitForOfStatement(expr: AST.ForOfStatement): string;
     visitInterpolation(expr: AST.Interpolation): string;
     visitDestructuringAssignmentExpression(expr: AST.DestructuringAssignmentExpression): string;

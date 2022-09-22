@@ -7,9 +7,9 @@ import { BehaviorSubject as n, Subscription as o, Observable as c } from "rxjs";
 import { skip as a, take as h, delay as u } from "rxjs/operators";
 
 function f(t, e) {
-    if (!w(t)) throw Error("Provided state is not of type StateHistory");
+    if (!y(t)) throw Error("Provided state is not of type StateHistory");
     if (e > 0) return d(t, e - 1);
-    if (e < 0) return l(t, t.past.length + e);
+    if (e < 0) return p(t, t.past.length + e);
     return t;
 }
 
@@ -26,7 +26,7 @@ function d(t, e) {
     };
 }
 
-function l(t, e) {
+function p(t, e) {
     if (e < 0 || e >= t.past.length) return t;
     const {past: r, future: i, present: s} = t;
     const n = r.slice(0, e);
@@ -39,7 +39,7 @@ function l(t, e) {
     };
 }
 
-function p(t, e) {
+function l(t, e) {
     return {
         ...t,
         past: [ ...t.past, t.present ],
@@ -48,31 +48,31 @@ function p(t, e) {
     };
 }
 
-function v(t, e) {
-    if (w(t)) {
+function w(t, e) {
+    if (y(t)) {
         if (t.past.length > e) t.past = t.past.slice(t.past.length - e);
         if (t.future.length > e) t.future = t.future.slice(0, e);
     }
     return t;
 }
 
-function w(t) {
+function y(t) {
     return "undefined" !== typeof t.present && "undefined" !== typeof t.future && "undefined" !== typeof t.past && Array.isArray(t.future) && Array.isArray(t.past);
 }
 
-function y(t, e, r, i) {
+function g(t, e, r, i) {
     var s = arguments.length, n = s < 3 ? e : null === i ? i = Object.getOwnPropertyDescriptor(e, r) : i, o;
     if ("object" === typeof Reflect && "function" === typeof Reflect.decorate) n = Reflect.decorate(t, e, r, i); else for (var c = t.length - 1; c >= 0; c--) if (o = t[c]) n = (s < 3 ? o(n) : s > 3 ? o(e, r, n) : o(e, r)) || n;
     return s > 3 && n && Object.defineProperty(e, r, n), n;
 }
 
-function g(t, e) {
+function m(t, e) {
     return function(r, i) {
         e(r, i, t);
     };
 }
 
-const m = "aurelia-store-state";
+const v = "aurelia-store-state";
 
 var E;
 
@@ -83,14 +83,14 @@ var E;
 
 function T(e, r, i) {
     const s = j.container.get(t).console;
-    const n = void 0 !== (null === i || void 0 === i ? void 0 : i.logType) && void 0 !== s[i.logType] ? i.logType : "log";
+    const n = void 0 !== i?.logType && void 0 !== s[i.logType] ? i.logType : "log";
     s[n]("New state: ", e);
 }
 
 function A(t, e, r) {
     const s = j.container.get(i).localStorage;
     if (void 0 !== s) {
-        const e = void 0 !== (null === r || void 0 === r ? void 0 : r.key) ? r.key : m;
+        const e = void 0 !== r?.key ? r.key : v;
         s.setItem(e, JSON.stringify(t));
     }
 }
@@ -98,11 +98,11 @@ function A(t, e, r) {
 function D(t, e) {
     const r = j.container.get(i).localStorage;
     if (void 0 === r) return t;
-    const s = r.getItem(void 0 === e ? m : e);
+    const s = r.getItem(void 0 === e ? v : e);
     if (null === s || "" === s) return t;
     try {
         return JSON.parse(s);
-    } catch (t) {}
+    } catch {}
     return t;
 }
 
@@ -117,8 +117,7 @@ var R;
 })(R || (R = {}));
 
 function S(t, e, r) {
-    var i;
-    if ((null === (i = t.logDefinitions) || void 0 === i ? void 0 : i.hasOwnProperty(e)) && t.logDefinitions[e] && Object.values(R).includes(t.logDefinitions[e])) return t.logDefinitions[e];
+    if (t.logDefinitions?.hasOwnProperty(e) && t.logDefinitions[e] && Object.values(R).includes(t.logDefinitions[e])) return t.logDefinitions[e];
     return r;
 }
 
@@ -147,7 +146,6 @@ class ReducerNoStateError extends Error {}
 
 let O = class Store {
     constructor(t, e, r, i) {
-        var s, o, c, a;
         this.initialState = t;
         this.logger = e;
         this.t = r;
@@ -155,12 +153,12 @@ let O = class Store {
         this.actions = new Map;
         this.middlewares = new Map;
         this.dispatchQueue = [];
-        this.options = null !== i && void 0 !== i ? i : {};
-        const h = true === (null === (o = null === (s = this.options) || void 0 === s ? void 0 : s.history) || void 0 === o ? void 0 : o.undoable);
+        this.options = i ?? {};
+        const s = true === this.options?.history?.undoable;
         this._state = new n(t);
         this.state = this._state.asObservable();
-        if (true !== (null === (a = null === (c = this.options) || void 0 === c ? void 0 : c.devToolsOptions) || void 0 === a ? void 0 : a.disable)) this.setupDevTools();
-        if (h) this.registerHistoryMethods();
+        if (true !== this.options?.devToolsOptions?.disable) this.setupDevTools();
+        if (s) this.registerHistoryMethods();
     }
     registerMiddleware(t, e, r) {
         this.middlewares.set(t, {
@@ -245,65 +243,64 @@ let O = class Store {
         }
     }
     async internalDispatch(t) {
-        var e;
-        const r = t.find((t => !this.actions.has(t.reducer)));
-        if (r) throw new UnregisteredActionError(r.reducer);
+        const e = t.find((t => !this.actions.has(t.reducer)));
+        if (e) throw new UnregisteredActionError(e.reducer);
         j.container.get(i).performance.mark("dispatch-start");
-        const s = t.map((t => ({
+        const r = t.map((t => ({
             type: this.actions.get(t.reducer).type,
             params: t.params,
             reducer: t.reducer
         })));
-        const n = {
-            name: s.map((t => t.type)).join("->"),
-            params: s.reduce(((t, e) => t.concat(e.params)), []),
-            pipedActions: s.map((t => ({
+        const s = {
+            name: r.map((t => t.type)).join("->"),
+            params: r.reduce(((t, e) => t.concat(e.params)), []),
+            pipedActions: r.map((t => ({
                 name: t.type,
                 params: t.params
             })))
         };
-        if (this.options.logDispatchedActions) this.logger[S(this.options, "dispatchedActions", R.info)](`Dispatching: ${n.name}`);
-        const o = await this.executeMiddlewares(this._state.getValue(), E.Before, n);
-        if (false === o) {
+        if (this.options.logDispatchedActions) this.logger[S(this.options, "dispatchedActions", R.info)](`Dispatching: ${s.name}`);
+        const n = await this.executeMiddlewares(this._state.getValue(), E.Before, s);
+        if (false === n) {
             j.container.get(i).performance.clearMarks();
             j.container.get(i).performance.clearMeasures();
             return;
         }
-        let c = o;
-        for (const t of s) {
-            c = await t.reducer(c, ...t.params);
-            if (false === c) {
+        let o = n;
+        for (const t of r) {
+            o = await t.reducer(o, ...t.params);
+            if (false === o) {
                 j.container.get(i).performance.clearMarks();
                 j.container.get(i).performance.clearMeasures();
                 return;
             }
             j.container.get(i).performance.mark(`dispatch-after-reducer-${t.type}`);
-            if (!c && "object" !== typeof c) throw new ReducerNoStateError("The reducer has to return a new state");
+            if (!o && "object" !== typeof o) throw new ReducerNoStateError("The reducer has to return a new state");
         }
-        let a = await this.executeMiddlewares(c, E.After, n);
-        if (false === a) {
+        let c = await this.executeMiddlewares(o, E.After, s);
+        if (false === c) {
             j.container.get(i).performance.clearMarks();
             j.container.get(i).performance.clearMeasures();
             return;
         }
-        if (w(a) && (null === (e = this.options.history) || void 0 === e ? void 0 : e.limit)) a = v(a, this.options.history.limit);
-        this._state.next(a);
+        if (y(c) && this.options.history?.limit) c = w(c, this.options.history.limit);
+        this._state.next(c);
         j.container.get(i).performance.mark("dispatch-end");
         if (this.options.measurePerformance === b.StartEnd) {
             j.container.get(i).performance.measure("startEndDispatchDuration", "dispatch-start", "dispatch-end");
             const t = j.container.get(i).performance.getEntriesByName("startEndDispatchDuration");
-            this.logger[S(this.options, "performanceLog", R.info)](`Total duration ${t[0].duration} of dispatched action ${n.name}:`, t);
+            this.logger[S(this.options, "performanceLog", R.info)](`Total duration ${t[0].duration} of dispatched action ${s.name}:`, t);
         } else if (this.options.measurePerformance === b.All) {
             const t = j.container.get(i).performance.getEntriesByType("mark");
             const e = t[t.length - 1].startTime - t[0].startTime;
-            this.logger[S(this.options, "performanceLog", R.info)](`Total duration ${e} of dispatched action ${n.name}:`, t);
+            this.logger[S(this.options, "performanceLog", R.info)](`Total duration ${e} of dispatched action ${s.name}:`, t);
         }
         j.container.get(i).performance.clearMarks();
         j.container.get(i).performance.clearMeasures();
         this.updateDevToolsState({
-            type: n.name,
-            params: n.params
-        }, a);
+            type: s.name,
+            params: s.params
+        }, c);
     }
     executeMiddlewares(t, e, r) {
         return Array.from(this.middlewares).filter((t => t[1].placement === e)).reduce((async (t, s, n) => {
@@ -326,17 +323,15 @@ let O = class Store {
             this.devTools = this.t.__REDUX_DEVTOOLS_EXTENSION__.connect(this.options.devToolsOptions);
             this.devTools.init(this.initialState);
             this.devTools.subscribe((t => {
-                var e, r;
                 this.logger[S(this.options, "devToolsStatus", R.debug)](`DevTools sent change ${t.type}`);
                 if ("ACTION" === t.type && void 0 !== t.payload) {
-                    const i = Array.from(this.actions).find((function([e]) {
-                        var r;
-                        return e.name === (null === (r = t.payload) || void 0 === r ? void 0 : r.name);
+                    const e = Array.from(this.actions).find((function([e]) {
+                        return e.name === t.payload?.name;
                     }));
-                    const s = null !== (r = this.lookupAction(null === (e = t.payload) || void 0 === e ? void 0 : e.name)) && void 0 !== r ? r : null === i || void 0 === i ? void 0 : i[0];
-                    if (!s) throw new DevToolsRemoteDispatchError("Tried to remotely dispatch an unregistered action");
+                    const r = this.lookupAction(t.payload?.name) ?? e?.[0];
+                    if (!r) throw new DevToolsRemoteDispatchError("Tried to remotely dispatch an unregistered action");
                     if (!t.payload.args || t.payload.args.length < 1) throw new DevToolsRemoteDispatchError("No action arguments provided");
-                    this.dispatch(s, ...t.payload.args.slice(1).map((t => JSON.parse(t)))).catch((() => {
+                    this.dispatch(r, ...t.payload.args.slice(1).map((t => JSON.parse(t)))).catch((() => {
                         throw new DevToolsRemoteDispatchError("Issue when trying to dispatch an action through devtools");
                     }));
                     return;
@@ -375,7 +370,7 @@ let O = class Store {
     }
 };
 
-O = y([ g(1, e), g(2, i) ], O);
+O = g([ m(1, e), m(2, i) ], O);
 
 function M(t) {
     const e = j.container.get(O);
@@ -433,18 +428,15 @@ function x(t) {
         };
         return Object.entries({
             ...t ? e.selector : r
-        }).map((([r, i]) => {
-            var s, n;
-            return {
-                targets: e.target && t ? [ e.target, r ] : [ r ],
-                selector: i,
-                changeHandlers: {
-                    [null !== (s = e.onChanged) && void 0 !== s ? s : ""]: 1,
-                    [`${null !== (n = e.target) && void 0 !== n ? n : r}Changed`]: e.target ? 0 : 1,
-                    propertyChanged: 0
-                }
-            };
-        }));
+        }).map((([r, i]) => ({
+            targets: e.target && t ? [ e.target, r ] : [ r ],
+            selector: i,
+            changeHandlers: {
+                [e.onChanged ?? ""]: 1,
+                [`${e.target ?? r}Changed`]: e.target ? 0 : 1,
+                propertyChanged: 0
+            }
+        })));
     }
     return function(e) {
         const n = "object" === typeof t && t.setup ? e.prototype[t.setup] : e.prototype.binding;
@@ -484,23 +476,22 @@ const C = {
         return this;
     },
     register(t) {
-        var s;
         j.container = t;
-        const n = Reflect.get(this, "state");
-        const o = Reflect.get(this, "options");
-        const c = t.get(e);
-        const a = t.get(i);
-        if (!n) throw new Error("initialState must be provided via withInitialState builder method");
-        let h = n;
-        if ((null === (s = null === o || void 0 === o ? void 0 : o.history) || void 0 === s ? void 0 : s.undoable) && !w(n)) h = {
+        const s = Reflect.get(this, "state");
+        const n = Reflect.get(this, "options");
+        const o = t.get(e);
+        const c = t.get(i);
+        if (!s) throw new Error("initialState must be provided via withInitialState builder method");
+        let a = s;
+        if (n?.history?.undoable && !y(s)) a = {
             past: [],
-            present: n,
+            present: s,
             future: []
         };
-        r.instance(O, new O(h, c, a, o)).register(t);
+        r.instance(O, new O(a, o, c, n)).register(t);
         return t;
     }
 };
 
-export { ActionRegistrationError, m as DEFAULT_LOCAL_STORAGE_KEY, DevToolsRemoteDispatchError, R as LogLevel, E as MiddlewarePlacement, b as PerformanceMeasurement, ReducerNoStateError, j as STORE, O as Store, C as StoreConfiguration, UnregisteredActionError, v as applyLimits, x as connectTo, M as dispatchify, N as executeSteps, S as getLogType, w as isStateHistory, f as jump, A as localStorageMiddleware, T as logMiddleware, p as nextStateHistory, D as rehydrateFromLocalStorage };
+export { ActionRegistrationError, v as DEFAULT_LOCAL_STORAGE_KEY, DevToolsRemoteDispatchError, R as LogLevel, E as MiddlewarePlacement, b as PerformanceMeasurement, ReducerNoStateError, j as STORE, O as Store, C as StoreConfiguration, UnregisteredActionError, w as applyLimits, x as connectTo, M as dispatchify, N as executeSteps, S as getLogType, y as isStateHistory, f as jump, A as localStorageMiddleware, T as logMiddleware, l as nextStateHistory, D as rehydrateFromLocalStorage };
 

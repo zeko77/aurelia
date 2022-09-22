@@ -31,9 +31,9 @@ export declare type TitleFunction = (viewModel: IRouteableComponent, instruction
 export interface IRouteableComponent extends ICustomElementViewModel {
     reloadBehavior?: ReloadBehavior;
     canLoad?(parameters: Parameters, instruction: RoutingInstruction, navigation: Navigation): boolean | LoadInstruction | LoadInstruction[] | Promise<boolean | LoadInstruction | LoadInstruction[]>;
-    load?(parameters: Parameters, instruction: RoutingInstruction, navigation: Navigation): void | Promise<void>;
+    loading?(parameters: Parameters, instruction: RoutingInstruction, navigation: Navigation): void | Promise<void>;
     canUnload?(instruction: RoutingInstruction, navigation: Navigation | null): boolean | Promise<boolean>;
-    unload?(instruction: RoutingInstruction, navigation: Navigation | null): void | Promise<void>;
+    unloading?(instruction: RoutingInstruction, navigation: Navigation | null): void | Promise<void>;
     readonly $controller?: ICustomElementController<this>;
 }
 export declare const enum ReloadBehavior {
@@ -48,6 +48,7 @@ export interface IRoutingInstruction {
     parameters?: ComponentParameters;
     children?: LoadInstruction[];
     options?: ILoadOptions;
+    id?: string;
 }
 export interface IComponentAndOrViewportOrNothing {
     component?: ComponentAppellation;

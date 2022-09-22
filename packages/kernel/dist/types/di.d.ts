@@ -53,16 +53,15 @@ export interface IContainer extends IServiceLocator, IDisposable {
     create<TType extends ResourceType, TDef extends ResourceDefinition>(kind: IResourceKind<TType, TDef>, name: string): InstanceType<TType> | null;
 }
 export declare class ResolverBuilder<K> {
-    private container;
-    private key;
-    constructor(container: IContainer, key: Key);
+    constructor(
+    /** @internal */ _container: IContainer, 
+    /** @internal */ _key: Key);
     instance(value: K): IResolver<K>;
     singleton(value: Constructable): IResolver<K>;
     transient(value: Constructable): IResolver<K>;
     callback(value: ResolveCallback<K>): IResolver<K>;
     cachedCallback(value: ResolveCallback<K>): IResolver<K>;
     aliasTo(destinationKey: Key): IResolver<K>;
-    private registerResolver;
 }
 export declare type RegisterSelf<T extends Constructable> = {
     register(container: IContainer): IResolver<InstanceType<T>>;

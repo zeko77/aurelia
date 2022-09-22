@@ -1,10 +1,10 @@
-import { IContainer, IFactory, Constructable, Transformer, Key, IServiceLocator } from '@aurelia/kernel';
-import { BindingBehaviorExpression, IExpressionParser, LifecycleFlags } from '@aurelia/runtime';
-import { PropertyAccessor, PropertyRule, ValidationResult, IValidator, ValidateInstruction, IValidateable } from '@aurelia/validation';
+import { IServiceLocator, type IContainer, type IFactory, type Constructable, type Transformer, type Key } from '@aurelia/kernel';
+import { BindingBehaviorExpression, IExpressionParser } from '@aurelia/runtime';
+import { LifecycleFlags, IPlatform, PropertyBinding } from '@aurelia/runtime-html';
+import { PropertyAccessor, PropertyRule, ValidationResult, IValidator, ValidateInstruction, type IValidateable } from '@aurelia/validation';
 import type { Scope } from '@aurelia/runtime';
-import { IPlatform, PropertyBinding } from '@aurelia/runtime-html';
 export declare type BindingWithBehavior = PropertyBinding & {
-    sourceExpression: BindingBehaviorExpression;
+    ast: BindingBehaviorExpression;
     target: Element | object;
 };
 export declare const enum ValidateEventKind {
@@ -80,7 +80,7 @@ declare class PropertyInfo {
     propertyName: string;
     constructor(object: any, propertyName: string);
 }
-export declare function getPropertyInfo(binding: BindingWithBehavior, info: BindingInfo, flags?: LifecycleFlags): PropertyInfo | undefined;
+export declare function getPropertyInfo(binding: BindingWithBehavior, info: BindingInfo, _flags?: LifecycleFlags): PropertyInfo | undefined;
 /**
  * Orchestrates validation.
  * Manages a set of bindings, subscribers and objects.
@@ -125,6 +125,7 @@ export interface IValidationController {
     /**
      * Validates and notifies the subscribers with the result.
      *
+     * @template TObject
      * @param {ValidateInstruction<TObject>} [instruction] - If omitted, then all the registered objects and bindings will be validated.
      */
     validate<TObject extends IValidateable>(instruction?: ValidateInstruction<TObject>): Promise<ControllerValidateResult>;

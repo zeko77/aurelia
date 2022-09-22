@@ -1,48 +1,36 @@
-import { LifecycleFlags as LF } from '../observation';
+import { type IBinding } from '../observation';
 import { Scope } from '../observation/binding-context';
-import { IConnectableBinding } from './connectable';
-import type { IServiceLocator, ResourceDefinition } from '@aurelia/kernel';
-import type { Collection, IBindingContext, IOverrideContext, IConnectable } from '../observation';
+import { type IConnectableBinding } from './connectable';
+import type { IServiceLocator } from '@aurelia/kernel';
+import type { IBindingContext, IConnectable } from '../observation';
 export declare const enum ExpressionKind {
-    CallsFunction = 128,
-    HasAncestor = 256,
-    IsPrimary = 512,
-    IsLeftHandSide = 1024,
-    HasBind = 2048,
-    HasUnbind = 4096,
-    IsAssignable = 8192,
-    IsLiteral = 16384,
-    IsResource = 32768,
-    IsForDeclaration = 65536,
-    Type = 31,
-    AccessThis = 1793,
-    AccessScope = 10082,
-    ArrayLiteral = 17955,
-    ObjectLiteral = 17956,
-    PrimitiveLiteral = 17925,
-    Template = 17958,
-    Unary = 39,
-    CallScope = 1448,
-    CallMember = 1161,
-    CallFunction = 1162,
-    AccessMember = 9323,
-    AccessKeyed = 9324,
-    TaggedTemplate = 1197,
-    Binary = 46,
-    Conditional = 63,
-    Assign = 8208,
-    ArrowFunction = 17,
-    ValueConverter = 36914,
-    BindingBehavior = 38963,
-    HtmlLiteral = 52,
-    ArrayBindingPattern = 65557,
-    ObjectBindingPattern = 65558,
-    BindingIdentifier = 65559,
-    ForOfStatement = 6200,
-    Interpolation = 25,
-    ArrayDestructuring = 90138,
-    ObjectDestructuring = 106523,
-    DestructuringAssignmentLeaf = 139292
+    AccessThis = 0,
+    AccessScope = 1,
+    ArrayLiteral = 2,
+    ObjectLiteral = 3,
+    PrimitiveLiteral = 4,
+    Template = 5,
+    Unary = 6,
+    CallScope = 7,
+    CallMember = 8,
+    CallFunction = 9,
+    AccessMember = 10,
+    AccessKeyed = 11,
+    TaggedTemplate = 12,
+    Binary = 13,
+    Conditional = 14,
+    Assign = 15,
+    ArrowFunction = 16,
+    ValueConverter = 17,
+    BindingBehavior = 18,
+    ArrayBindingPattern = 19,
+    ObjectBindingPattern = 20,
+    BindingIdentifier = 21,
+    ForOfStatement = 22,
+    Interpolation = 23,
+    ArrayDestructuring = 24,
+    ObjectDestructuring = 25,
+    DestructuringAssignmentLeaf = 26
 }
 export declare type UnaryOperator = 'void' | 'typeof' | '!' | '-' | '+';
 export declare type BinaryOperator = '??' | '&&' | '||' | '==' | '===' | '!=' | '!==' | 'instanceof' | 'in' | '+' | '-' | '*' | '/' | '%' | '<' | '>' | '<=' | '>=';
@@ -58,7 +46,7 @@ export declare type IsBindingBehavior = IsValueConverter | BindingBehaviorExpres
 export declare type IsAssignable = AccessScopeExpression | AccessKeyedExpression | AccessMemberExpression | AssignExpression;
 export declare type IsExpression = IsBindingBehavior | Interpolation;
 export declare type BindingIdentifierOrPattern = BindingIdentifier | ArrayBindingPattern | ObjectBindingPattern;
-export declare type IsExpressionOrStatement = IsExpression | ForOfStatement | BindingIdentifierOrPattern | HtmlLiteralExpression | DestructuringAssignmentExpression | DestructuringAssignmentSingleExpression | DestructuringAssignmentRestExpression;
+export declare type IsExpressionOrStatement = IsExpression | ForOfStatement | BindingIdentifierOrPattern | DestructuringAssignmentExpression | DestructuringAssignmentSingleExpression | DestructuringAssignmentRestExpression;
 export declare type AnyBindingExpression = Interpolation | ForOfStatement | IsBindingBehavior;
 export interface IExpressionHydrator {
     hydrate(jsonExpr: any): any;
@@ -80,7 +68,6 @@ export interface IVisitor<T = unknown> {
     visitCallScope(expr: CallScopeExpression): T;
     visitConditional(expr: ConditionalExpression): T;
     visitForOfStatement(expr: ForOfStatement): T;
-    visitHtmlLiteral(expr: HtmlLiteralExpression): T;
     visitInterpolation(expr: Interpolation): T;
     visitObjectBindingPattern(expr: ObjectBindingPattern): T;
     visitObjectLiteral(expr: ObjectLiteralExpression): T;
@@ -118,7 +105,6 @@ export declare class Unparser implements IVisitor<void> {
     visitArrayBindingPattern(expr: ArrayBindingPattern): void;
     visitObjectBindingPattern(expr: ObjectBindingPattern): void;
     visitBindingIdentifier(expr: BindingIdentifier): void;
-    visitHtmlLiteral(_expr: HtmlLiteralExpression): void;
     visitForOfStatement(expr: ForOfStatement): void;
     visitInterpolation(expr: Interpolation): void;
     visitDestructuringAssignmentExpression(expr: DestructuringAssignmentExpression): void;
@@ -126,11 +112,33 @@ export declare class Unparser implements IVisitor<void> {
     visitDestructuringAssignmentRestExpression(expr: DestructuringAssignmentRestExpression): void;
     private writeArgs;
 }
+/**
+ * An interface describing the object that can evaluate Aurelia AST
+ */
+export interface IAstEvaluator {
+    /** describe whether the evaluator wants to evaluate in strict mode */
+    strict?: boolean;
+    /** describe whether the evaluator wants a bound function to be returned, in case the returned value is a function */
+    boundFn?: boolean;
+    /** describe whether the evaluator wants to evaluate the function call in strict mode */
+    strictFnCall?: boolean;
+    /** Allow an AST to retrieve a service that it needs */
+    get?: IServiceLocator['get'];
+    /** Allow an AST to retrieve a value converter that it needs */
+    getConverter?<T>(name: string): ValueConverterInstance<T> | undefined;
+    /** Allow an AST to retrieve a binding behavior that it needs */
+    getBehavior?<T>(name: string): BindingBehaviorInstance<T> | undefined;
+}
 export declare class CustomExpression {
     readonly value: string;
     constructor(value: string);
-    evaluate(_f: LF, _s: Scope, _l: IServiceLocator, _c: IConnectable | null): string;
+    evaluate(_s: Scope, _e: IAstEvaluator | null, _c: IConnectable | null): string;
 }
+export declare type BindingBehaviorInstance<T extends {} = {}> = {
+    type?: 'instance' | 'factory';
+    bind?(scope: Scope, binding: IBinding, ...args: T[]): void;
+    unbind?(scope: Scope, binding: IBinding, ...args: T[]): void;
+} & T;
 export declare class BindingBehaviorExpression {
     readonly expression: IsBindingBehavior;
     readonly name: string;
@@ -138,27 +146,31 @@ export declare class BindingBehaviorExpression {
     get $kind(): ExpressionKind.BindingBehavior;
     get hasBind(): true;
     get hasUnbind(): true;
-    readonly behaviorKey: string;
     constructor(expression: IsBindingBehavior, name: string, args: readonly IsAssign[]);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
-    assign(f: LF, s: Scope, l: IServiceLocator, val: unknown): unknown;
-    bind(f: LF, s: Scope, b: IConnectableBinding): void;
-    unbind(f: LF, s: Scope, b: IConnectableBinding): void;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
+    assign(s: Scope, e: IAstEvaluator | null, val: unknown): unknown;
+    bind(s: Scope, b: IAstEvaluator & IConnectableBinding): void;
+    unbind(s: Scope, b: IAstEvaluator & IConnectableBinding): void;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
+export declare type ValueConverterInstance<T extends {} = {}> = {
+    signals?: string[];
+    toView(input: unknown, ...args: unknown[]): unknown;
+    fromView?(input: unknown, ...args: unknown[]): unknown;
+} & T;
 export declare class ValueConverterExpression {
     readonly expression: IsValueConverter;
     readonly name: string;
     readonly args: readonly IsAssign[];
     get $kind(): ExpressionKind.ValueConverter;
-    readonly converterKey: string;
-    get hasBind(): false;
+    get hasBind(): true;
     get hasUnbind(): true;
     constructor(expression: IsValueConverter, name: string, args: readonly IsAssign[]);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
-    assign(f: LF, s: Scope, l: IServiceLocator, val: unknown): unknown;
-    unbind(_f: LF, _s: Scope, b: IConnectableBinding): void;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
+    assign(s: Scope, e: IAstEvaluator | null, val: unknown): unknown;
+    bind(s: Scope, b: IAstEvaluator & IConnectableBinding): void;
+    unbind(_s: Scope, b: IAstEvaluator & IConnectableBinding): void;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -169,8 +181,8 @@ export declare class AssignExpression {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(target: IsAssignable, value: IsAssign);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
-    assign(f: LF, s: Scope, l: IServiceLocator, val: unknown): unknown;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
+    assign(s: Scope, e: IAstEvaluator | null, val: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -182,8 +194,8 @@ export declare class ConditionalExpression {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(condition: IsBinary, yes: IsAssign, no: IsAssign);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
+    assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -195,8 +207,8 @@ export declare class AccessThisExpression {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(ancestor?: number);
-    evaluate(_f: LF, s: Scope, _l: IServiceLocator, _c: IConnectable | null): IBindingContext | undefined;
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
+    evaluate(s: Scope, _e: IAstEvaluator | null, _c: IConnectable | null): IBindingContext | undefined;
+    assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -207,8 +219,8 @@ export declare class AccessScopeExpression {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(name: string, ancestor?: number);
-    evaluate(f: LF, s: Scope, _l: IServiceLocator, c: IConnectable | null): IBindingContext | IOverrideContext;
-    assign(f: LF, s: Scope, _l: IServiceLocator, val: unknown): unknown;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
+    assign(s: Scope, _e: IAstEvaluator | null, val: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -220,8 +232,8 @@ export declare class AccessMemberExpression {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(object: IsLeftHandSide, name: string, optional?: boolean);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
-    assign(f: LF, s: Scope, l: IServiceLocator, val: unknown): unknown;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
+    assign(s: Scope, e: IAstEvaluator | null, val: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -233,8 +245,8 @@ export declare class AccessKeyedExpression {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(object: IsLeftHandSide, key: IsAssign, optional?: boolean);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
-    assign(f: LF, s: Scope, l: IServiceLocator, val: unknown): unknown;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
+    assign(s: Scope, e: IAstEvaluator | null, val: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -247,8 +259,8 @@ export declare class CallScopeExpression {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(name: string, args: readonly IsAssign[], ancestor?: number, optional?: boolean);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
+    assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -262,8 +274,8 @@ export declare class CallMemberExpression {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(object: IsLeftHandSide, name: string, args: readonly IsAssign[], optionalMember?: boolean, optionalCall?: boolean);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
+    assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -275,8 +287,8 @@ export declare class CallFunctionExpression {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(func: IsLeftHandSide, args: readonly IsAssign[], optional?: boolean);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
+    assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -288,8 +300,8 @@ export declare class BinaryExpression {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(operation: BinaryOperator, left: IsBinary, right: IsBinary);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
+    assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -300,8 +312,8 @@ export declare class UnaryExpression {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(operation: UnaryOperator, expression: IsLeftHandSide);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
+    assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -316,19 +328,8 @@ export declare class PrimitiveLiteralExpression<TValue extends null | undefined 
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(value: TValue);
-    evaluate(_f: LF, _s: Scope, _l: IServiceLocator, _c: IConnectable | null): TValue;
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
-    accept<T>(visitor: IVisitor<T>): T;
-    toString(): string;
-}
-export declare class HtmlLiteralExpression {
-    readonly parts: readonly HtmlLiteralExpression[];
-    get $kind(): ExpressionKind.HtmlLiteral;
-    get hasBind(): false;
-    get hasUnbind(): false;
-    constructor(parts: readonly HtmlLiteralExpression[]);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): string;
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown, _projection?: ResourceDefinition): unknown;
+    evaluate(_s: Scope, _e: IAstEvaluator | null, _c: IConnectable | null): TValue;
+    assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -339,8 +340,8 @@ export declare class ArrayLiteralExpression {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(elements: readonly IsAssign[]);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): readonly unknown[];
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): readonly unknown[];
+    assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -352,8 +353,8 @@ export declare class ObjectLiteralExpression {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(keys: readonly (number | string)[], values: readonly IsAssign[]);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): Record<string, unknown>;
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): Record<string, unknown>;
+    assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -365,8 +366,8 @@ export declare class TemplateExpression {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(cooked: readonly string[], expressions?: readonly IsAssign[]);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): string;
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): string;
+    assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -382,8 +383,8 @@ export declare class TaggedTemplateExpression {
     constructor(cooked: readonly string[] & {
         raw?: readonly string[];
     }, raw: readonly string[], func: IsLeftHandSide, expressions?: readonly IsAssign[]);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): string;
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): string;
+    assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -393,8 +394,8 @@ export declare class ArrayBindingPattern {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(elements: readonly IsAssign[]);
-    evaluate(_f: LF, _s: Scope, _l: IServiceLocator, _c: IConnectable | null): unknown;
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
+    evaluate(_s: Scope, _e: IAstEvaluator | null, _c: IConnectable | null): unknown;
+    assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -405,8 +406,8 @@ export declare class ObjectBindingPattern {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(keys: readonly (string | number)[], values: readonly IsAssign[]);
-    evaluate(_f: LF, _s: Scope, _l: IServiceLocator, _c: IConnectable | null): unknown;
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
+    evaluate(_s: Scope, _e: IAstEvaluator | null, _c: IConnectable | null): unknown;
+    assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -416,7 +417,7 @@ export declare class BindingIdentifier {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(name: string);
-    evaluate(_f: LF, _s: Scope, _l: IServiceLocator | null, _c: IConnectable | null): string;
+    evaluate(_s: Scope, _e: IAstEvaluator | null, _c: IConnectable | null): string;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -424,15 +425,13 @@ export declare class ForOfStatement {
     readonly declaration: BindingIdentifierOrPattern | DestructuringAssignmentExpression;
     readonly iterable: IsBindingBehavior;
     get $kind(): ExpressionKind.ForOfStatement;
-    get hasBind(): false;
-    get hasUnbind(): false;
+    get hasBind(): true;
+    get hasUnbind(): true;
     constructor(declaration: BindingIdentifierOrPattern | DestructuringAssignmentExpression, iterable: IsBindingBehavior);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
-    count(_f: LF, result: Collection | number | null | undefined): number;
-    iterate(f: LF, result: Collection | number | null | undefined, func: (arr: Collection, index: number, item: unknown) => void): void;
-    bind(f: LF, s: Scope, b: IConnectableBinding): void;
-    unbind(f: LF, s: Scope, b: IConnectableBinding): void;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
+    assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
+    bind(s: Scope, b: IConnectableBinding): void;
+    unbind(s: Scope, b: IConnectableBinding): void;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -445,8 +444,8 @@ export declare class Interpolation {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(parts: readonly string[], expressions?: readonly IsBindingBehavior[]);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): string;
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _obj: unknown): unknown;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): string;
+    assign(_s: Scope, _e: IAstEvaluator | null, _obj: unknown): unknown;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -459,8 +458,8 @@ export declare class DestructuringAssignmentExpression {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor($kind: ExpressionKind.ArrayDestructuring | ExpressionKind.ObjectDestructuring, list: readonly (DestructuringAssignmentExpression | DestructuringAssignmentSingleExpression | DestructuringAssignmentRestExpression)[], source: AccessMemberExpression | AccessKeyedExpression | undefined, initializer: IsBindingBehavior | undefined);
-    evaluate(_f: LF, _s: Scope, _l: IServiceLocator, _c: IConnectable | null): undefined;
-    assign(f: LF, s: Scope, l: IServiceLocator, value: unknown): void;
+    evaluate(_s: Scope, _e: IAstEvaluator | null, _c: IConnectable | null): undefined;
+    assign(s: Scope, l: IAstEvaluator, value: unknown): void;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -471,8 +470,8 @@ export declare class DestructuringAssignmentSingleExpression {
     readonly initializer: IsBindingBehavior | undefined;
     get $kind(): ExpressionKind.DestructuringAssignmentLeaf;
     constructor(target: AccessMemberExpression, source: AccessMemberExpression | AccessKeyedExpression, initializer: IsBindingBehavior | undefined);
-    evaluate(_f: LF, _s: Scope, _l: IServiceLocator, _c: IConnectable | null): undefined;
-    assign(f: LF, s: Scope, l: IServiceLocator, value: unknown): void;
+    evaluate(_s: Scope, _e: IAstEvaluator | null, _c: IConnectable | null): undefined;
+    assign(s: Scope, l: IAstEvaluator, value: unknown): void;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -482,8 +481,8 @@ export declare class DestructuringAssignmentRestExpression {
     readonly indexOrProperties: string[] | number;
     get $kind(): ExpressionKind.DestructuringAssignmentLeaf;
     constructor(target: AccessMemberExpression, indexOrProperties: string[] | number);
-    evaluate(_f: LF, _s: Scope, _l: IServiceLocator, _c: IConnectable | null): undefined;
-    assign(f: LF, s: Scope, l: IServiceLocator, value: unknown): void;
+    evaluate(_s: Scope, _e: IAstEvaluator | null, _c: IConnectable | null): undefined;
+    assign(s: Scope, l: IAstEvaluator, value: unknown): void;
     accept<T>(_visitor: IVisitor<T>): T;
     toString(): string;
 }
@@ -495,8 +494,8 @@ export declare class ArrowFunction {
     get hasBind(): false;
     get hasUnbind(): false;
     constructor(args: BindingIdentifier[], body: IsAssign, rest?: boolean);
-    evaluate(f: LF, s: Scope, l: IServiceLocator, c: IConnectable | null): unknown;
-    assign(_f: LF, _s: Scope, _l: IServiceLocator, _value: unknown): void;
+    evaluate(s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;
+    assign(_s: Scope, _e: IAstEvaluator | null, _value: unknown): void;
     accept<T>(visitor: IVisitor<T>): T;
     toString(): string;
 }

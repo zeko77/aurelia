@@ -1,25 +1,21 @@
-import { Collection, ForOfStatement, IndexMap, LifecycleFlags as LF } from '@aurelia/runtime';
+import { type Collection, ForOfStatement, type IndexMap } from '@aurelia/runtime';
 import { IRenderLocation } from '../../dom';
 import { IViewFactory } from '../../templating/view';
-import type { ISyntheticView, ICustomAttributeController, IHydratableController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, ControllerVisitor } from '../../templating/controller';
+import type { LifecycleFlags, ISyntheticView, ICustomAttributeController, IHydratableController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, ControllerVisitor } from '../../templating/controller';
 declare type Items<C extends Collection = unknown[]> = C | undefined;
 export declare class Repeat<C extends Collection = unknown[]> implements ICustomAttributeViewModel {
-    readonly id: number;
     views: ISyntheticView[];
     key?: string;
     forOf: ForOfStatement;
     local: string;
     readonly $controller: ICustomAttributeController<this>;
     items: Items<C>;
-    constructor(
-    /** @internal */ _location: IRenderLocation, 
-    /** @internal */ _parent: IHydratableController, 
-    /** @internal */ _factory: IViewFactory);
-    binding(initiator: IHydratedController, parent: IHydratedParentController, flags: LF): void | Promise<void>;
-    attaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LF): void | Promise<void>;
-    detaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LF): void | Promise<void>;
-    itemsChanged(flags: LF): void;
-    handleCollectionChange(indexMap: IndexMap | undefined, flags: LF): void;
+    constructor(location: IRenderLocation, parent: IHydratableController, factory: IViewFactory);
+    binding(_initiator: IHydratedController, _parent: IHydratedParentController, _flags: LifecycleFlags): void | Promise<void>;
+    attaching(initiator: IHydratedController, _parent: IHydratedParentController, _flags: LifecycleFlags): void | Promise<void>;
+    detaching(initiator: IHydratedController, _parent: IHydratedParentController, _flags: LifecycleFlags): void | Promise<void>;
+    itemsChanged(): void;
+    handleCollectionChange(collection: Collection, indexMap: IndexMap | undefined): void;
     dispose(): void;
     accept(visitor: ControllerVisitor): void | true;
 }

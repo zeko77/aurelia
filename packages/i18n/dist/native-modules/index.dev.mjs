@@ -1,6 +1,6 @@
 import { DI, IEventAggregator, toArray, camelCase, Registration } from '../../../kernel/dist/native-modules/index.mjs';
-import { CustomElement, attributePattern, bindingCommand, renderer, AttrSyntax, IAttrMapper, IPlatform, AttributePattern, BindingCommand, AppTask } from '../../../runtime-html/dist/native-modules/index.mjs';
-import { ValueConverterExpression, bindingBehavior, ISignaler, valueConverter, connectable, CustomExpression, Interpolation, BindingMode, IExpressionParser, IObserverLocator } from '../../../runtime/dist/native-modules/index.mjs';
+import { bindingBehavior, valueConverter, astEvaluator, CustomElement, attributePattern, bindingCommand, renderer, AttrSyntax, IPlatform, AttributePattern, BindingCommand, AppTask } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { ValueConverterExpression, ISignaler, connectable, CustomExpression, Interpolation, IExpressionParser, IObserverLocator } from '../../../runtime/dist/native-modules/index.mjs';
 import i18next from 'i18next';
 
 /******************************************************************************
@@ -43,15 +43,15 @@ var ValueConverters;
     ValueConverters["relativeTimeValueConverterName"] = "rt";
 })(ValueConverters || (ValueConverters = {}));
 function createIntlFormatValueConverterExpression(name, binding) {
-    const expression = binding.sourceExpression.expression;
+    const expression = binding.ast.expression;
     if (!(expression instanceof ValueConverterExpression)) {
-        const vcExpression = new ValueConverterExpression(expression, name, binding.sourceExpression.args);
-        binding.sourceExpression.expression = vcExpression;
+        const vcExpression = new ValueConverterExpression(expression, name, binding.ast.args);
+        binding.ast.expression = vcExpression;
     }
 }
 
 let DateFormatBindingBehavior = class DateFormatBindingBehavior {
-    bind(flags, _scope, binding) {
+    bind(_scope, binding) {
         createIntlFormatValueConverterExpression("df", binding);
     }
 };
@@ -245,7 +245,7 @@ DateFormatValueConverter = __decorate([
 ], DateFormatValueConverter);
 
 let NumberFormatBindingBehavior = class NumberFormatBindingBehavior {
-    bind(flags, _scope, binding) {
+    bind(_scope, binding) {
         createIntlFormatValueConverterExpression("nf", binding);
     }
 };
@@ -271,7 +271,7 @@ NumberFormatValueConverter = __decorate([
 ], NumberFormatValueConverter);
 
 let RelativeTimeBindingBehavior = class RelativeTimeBindingBehavior {
-    bind(flags, _scope, binding) {
+    bind(_scope, binding) {
         createIntlFormatValueConverterExpression("rt", binding);
     }
 };
@@ -297,11 +297,11 @@ RelativeTimeValueConverter = __decorate([
 ], RelativeTimeValueConverter);
 
 let TranslationBindingBehavior = class TranslationBindingBehavior {
-    bind(flags, _scope, binding) {
-        const expression = binding.sourceExpression.expression;
+    bind(_scope, binding) {
+        const expression = binding.ast.expression;
         if (!(expression instanceof ValueConverterExpression)) {
-            const vcExpression = new ValueConverterExpression(expression, "t", binding.sourceExpression.args);
-            binding.sourceExpression.expression = vcExpression;
+            const vcExpression = new ValueConverterExpression(expression, "t", binding.ast.args);
+            binding.ast.expression = vcExpression;
         }
     }
 };
@@ -317,19 +317,22 @@ const taskQueueOpts = {
     preempt: true,
 };
 class TranslationBinding {
-    constructor(target, observerLocator, locator, platform) {
+    constructor(controller, locator, observerLocator, platform, target) {
         this.locator = locator;
         this.interceptor = this;
         this.isBound = false;
         this._contentAttributes = contentAttributes;
         this.task = null;
         this.parameter = null;
+        this.boundFn = false;
+        this._controller = controller;
         this.target = target;
         this.i18n = this.locator.get(I18N);
         this.platform = platform;
         this._targetAccessors = new Set();
         this.oL = observerLocator;
         this.i18n.subscribeLocaleChange(this);
+        this.taskQueue = platform.domWriteQueue;
     }
     static create({ parser, observerLocator, context, controller, target, instruction, platform, isParameterContext, }) {
         const binding = this.getBinding({ observerLocator, context, controller, target, platform });
@@ -341,39 +344,40 @@ class TranslationBinding {
         }
         else {
             const interpolation = expr instanceof CustomExpression ? parser.parse(expr.value, 1) : undefined;
-            binding.expr = interpolation || expr;
+            binding.ast = interpolation || expr;
         }
     }
     static getBinding({ observerLocator, context, controller, target, platform, }) {
         let binding = controller.bindings && controller.bindings.find((b) => b instanceof TranslationBinding && b.target === target);
         if (!binding) {
-            binding = new TranslationBinding(target, observerLocator, context, platform);
+            binding = new TranslationBinding(controller, context, observerLocator, platform, target);
             controller.addBinding(binding);
         }
         return binding;
     }
-    $bind(flags, scope) {
-        var _a;
-        if (!this.expr) {
+    $bind(scope) {
+        if (this.isBound) {
+            return;
+        }
+        if (!this.ast) {
             throw new Error('key expression is missing');
         }
         this.scope = scope;
-        this._isInterpolation = this.expr instanceof Interpolation;
-        this._keyExpression = this.expr.evaluate(flags, scope, this.locator, this);
+        this._isInterpolation = this.ast instanceof Interpolation;
+        this._keyExpression = this.ast.evaluate(scope, this, this);
         this._ensureKeyExpression();
-        (_a = this.parameter) === null || _a === void 0 ? void 0 : _a.$bind(flags, scope);
-        this._updateTranslations(flags);
+        this.parameter?.$bind(scope);
+        this._updateTranslations();
         this.isBound = true;
     }
-    $unbind(flags) {
-        var _a;
+    $unbind() {
         if (!this.isBound) {
             return;
         }
-        if (this.expr.hasUnbind) {
-            this.expr.unbind(flags, this.scope, this);
+        if (this.ast.hasUnbind) {
+            this.ast.unbind(this.scope, this);
         }
-        (_a = this.parameter) === null || _a === void 0 ? void 0 : _a.$unbind(flags);
+        this.parameter?.$unbind();
         this._targetAccessors.clear();
         if (this.task !== null) {
             this.task.cancel();
@@ -382,27 +386,26 @@ class TranslationBinding {
         this.scope = (void 0);
         this.obs.clearAll();
     }
-    handleChange(newValue, _previousValue, flags) {
+    handleChange(newValue, _previousValue) {
         this.obs.version++;
         this._keyExpression = this._isInterpolation
-            ? this.expr.evaluate(flags, this.scope, this.locator, this)
+            ? this.ast.evaluate(this.scope, this, this)
             : newValue;
         this.obs.clear();
         this._ensureKeyExpression();
-        this._updateTranslations(flags);
+        this._updateTranslations();
     }
     handleLocaleChange() {
-        this._updateTranslations(0);
+        this._updateTranslations();
     }
     useParameter(expr) {
         if (this.parameter != null) {
             throw new Error('This translation parameter has already been specified.');
         }
-        this.parameter = new ParameterBinding(this, expr, (flags) => this._updateTranslations(flags));
+        this.parameter = new ParameterBinding(this, expr, () => this._updateTranslations());
     }
-    _updateTranslations(flags) {
-        var _a;
-        const results = this.i18n.evaluate(this._keyExpression, (_a = this.parameter) === null || _a === void 0 ? void 0 : _a.value);
+    _updateTranslations() {
+        const results = this.i18n.evaluate(this._keyExpression, this.parameter?.value);
         const content = Object.create(null);
         const accessorUpdateTasks = [];
         const task = this.task;
@@ -416,15 +419,15 @@ class TranslationBinding {
                 }
                 else {
                     const controller = CustomElement.for(this.target, forOpts);
-                    const accessor = (controller === null || controller === void 0 ? void 0 : controller.viewModel)
+                    const accessor = controller?.viewModel
                         ? this.oL.getAccessor(controller.viewModel, attribute)
                         : this.oL.getAccessor(this.target, attribute);
-                    const shouldQueueUpdate = (flags & 2) === 0 && (accessor.type & 4) > 0;
+                    const shouldQueueUpdate = this._controller.state !== 1 && (accessor.type & 4) > 0;
                     if (shouldQueueUpdate) {
-                        accessorUpdateTasks.push(new AccessorUpdateTask(accessor, value, flags, this.target, attribute));
+                        accessorUpdateTasks.push(new AccessorUpdateTask(accessor, value, this.target, attribute));
                     }
                     else {
-                        accessor.setValue(value, flags, this.target, attribute);
+                        accessor.setValue(value, this.target, attribute);
                     }
                     this._targetAccessors.add(accessor);
                 }
@@ -432,23 +435,23 @@ class TranslationBinding {
         }
         let shouldQueueContent = false;
         if (Object.keys(content).length > 0) {
-            shouldQueueContent = (flags & 2) === 0;
+            shouldQueueContent = this._controller.state !== 1;
             if (!shouldQueueContent) {
-                this._updateContent(content, flags);
+                this._updateContent(content);
             }
         }
         if (accessorUpdateTasks.length > 0 || shouldQueueContent) {
-            this.task = this.platform.domWriteQueue.queueTask(() => {
+            this.task = this.taskQueue.queueTask(() => {
                 this.task = null;
                 for (const updateTask of accessorUpdateTasks) {
                     updateTask.run();
                 }
                 if (shouldQueueContent) {
-                    this._updateContent(content, flags);
+                    this._updateContent(content);
                 }
             }, taskQueueOpts);
         }
-        task === null || task === void 0 ? void 0 : task.cancel();
+        task?.cancel();
     }
     _preprocessAttributes(attributes) {
         if (attributes.length === 0) {
@@ -465,7 +468,7 @@ class TranslationBinding {
     _isContentAttribute(attribute) {
         return this._contentAttributes.includes(attribute);
     }
-    _updateContent(content, _flags) {
+    _updateContent(content) {
         const children = toArray(this.target.childNodes);
         const fallBackContents = [];
         const marker = 'au-i18n';
@@ -481,10 +484,9 @@ class TranslationBinding {
         }
     }
     _prepareTemplate(content, marker, fallBackContents) {
-        var _a;
         const template = this.platform.document.createElement('template');
         this._addContentToTemplate(template, content.prepend, marker);
-        if (!this._addContentToTemplate(template, (_a = content.innerHTML) !== null && _a !== void 0 ? _a : content.textContent, marker)) {
+        if (!this._addContentToTemplate(template, content.innerHTML ?? content.textContent, marker)) {
             for (const fallbackContent of fallBackContents) {
                 template.content.append(fallbackContent);
             }
@@ -505,8 +507,7 @@ class TranslationBinding {
         return false;
     }
     _ensureKeyExpression() {
-        var _a;
-        const expr = (_a = this._keyExpression) !== null && _a !== void 0 ? _a : (this._keyExpression = '');
+        const expr = this._keyExpression ?? (this._keyExpression = '');
         const exprType = typeof expr;
         if (exprType !== 'string') {
             throw new Error(`Expected the i18n key to be a string, but got ${expr} of type ${exprType}`);
@@ -514,65 +515,67 @@ class TranslationBinding {
     }
 }
 class AccessorUpdateTask {
-    constructor(accessor, v, f, el, attr) {
+    constructor(accessor, v, el, attr) {
         this.accessor = accessor;
         this.v = v;
-        this.f = f;
         this.el = el;
         this.attr = attr;
     }
     run() {
-        this.accessor.setValue(this.v, this.f, this.el, this.attr);
+        this.accessor.setValue(this.v, this.el, this.attr);
     }
 }
 class ParameterBinding {
-    constructor(owner, expr, updater) {
+    constructor(owner, ast, updater) {
         this.owner = owner;
-        this.expr = expr;
+        this.ast = ast;
         this.updater = updater;
         this.interceptor = this;
         this.isBound = false;
+        this.boundFn = false;
         this.oL = owner.oL;
         this.locator = owner.locator;
     }
-    handleChange(newValue, _previousValue, flags) {
+    handleChange(_newValue, _previousValue) {
         if (!this.isBound) {
             return;
         }
         this.obs.version++;
-        this.value = this.expr.evaluate(flags, this.scope, this.locator, this);
+        this.value = this.ast.evaluate(this.scope, this, this);
         this.obs.clear();
-        this.updater(flags);
+        this.updater();
     }
-    $bind(flags, scope) {
+    $bind(scope) {
         if (this.isBound) {
             return;
         }
         this.scope = scope;
-        if (this.expr.hasBind) {
-            this.expr.bind(flags, scope, this);
+        if (this.ast.hasBind) {
+            this.ast.bind(scope, this);
         }
-        this.value = this.expr.evaluate(flags, scope, this.locator, this);
+        this.value = this.ast.evaluate(scope, this, this);
         this.isBound = true;
     }
-    $unbind(flags) {
+    $unbind() {
         if (!this.isBound) {
             return;
         }
-        if (this.expr.hasUnbind) {
-            this.expr.unbind(flags, this.scope, this);
+        if (this.ast.hasUnbind) {
+            this.ast.unbind(this.scope, this);
         }
         this.scope = (void 0);
         this.obs.clearAll();
     }
 }
 connectable(TranslationBinding);
+astEvaluator(true)(TranslationBinding);
 connectable(ParameterBinding);
+astEvaluator(true)(ParameterBinding);
 
 const TranslationParametersInstructionType = 'tpt';
 const attribute = 't-params.bind';
 let TranslationParametersAttributePattern = class TranslationParametersAttributePattern {
-    [attribute](rawName, rawValue, parts) {
+    [attribute](rawName, rawValue, _parts) {
         return new AttrSyntax(rawName, rawValue, '', attribute);
     }
 };
@@ -584,30 +587,27 @@ class TranslationParametersBindingInstruction {
         this.from = from;
         this.to = to;
         this.type = TranslationParametersInstructionType;
-        this.mode = BindingMode.toView;
+        this.mode = 2;
     }
 }
 let TranslationParametersBindingCommand = class TranslationParametersBindingCommand {
-    constructor(m, xp) {
+    constructor() {
         this.type = 0;
-        this._attrMapper = m;
-        this._exprParser = xp;
     }
     get name() { return attribute; }
-    build(info) {
-        var _a;
+    build(info, exprParser, attrMapper) {
         const attr = info.attr;
         let target = attr.target;
         if (info.bindable == null) {
-            target = (_a = this._attrMapper.map(info.node, target)) !== null && _a !== void 0 ? _a : camelCase(target);
+            target = attrMapper.map(info.node, target)
+                ?? camelCase(target);
         }
         else {
             target = info.bindable.property;
         }
-        return new TranslationParametersBindingInstruction(this._exprParser.parse(attr.rawValue, 8), target);
+        return new TranslationParametersBindingInstruction(exprParser.parse(attr.rawValue, 8), target);
     }
 };
-TranslationParametersBindingCommand.inject = [IAttrMapper, IExpressionParser];
 TranslationParametersBindingCommand = __decorate([
     bindingCommand(attribute)
 ], TranslationParametersBindingCommand);
@@ -648,20 +648,19 @@ class TranslationBindingInstruction {
         this.from = from;
         this.to = to;
         this.type = TranslationInstructionType;
-        this.mode = BindingMode.toView;
+        this.mode = 2;
     }
 }
 class TranslationBindingCommand {
-    constructor(m) {
+    constructor() {
         this.type = 0;
-        this._attrMapper = m;
     }
     get name() { return 't'; }
-    build(info) {
-        var _a;
+    build(info, parser, attrMapper) {
         let target;
         if (info.bindable == null) {
-            target = (_a = this._attrMapper.map(info.node, info.attr.target)) !== null && _a !== void 0 ? _a : camelCase(info.attr.target);
+            target = attrMapper.map(info.node, info.attr.target)
+                ?? camelCase(info.attr.target);
         }
         else {
             target = info.bindable.property;
@@ -669,7 +668,6 @@ class TranslationBindingCommand {
         return new TranslationBindingInstruction(new CustomExpression(info.attr.rawValue), target);
     }
 }
-TranslationBindingCommand.inject = [IAttrMapper];
 let TranslationBindingRenderer = class TranslationBindingRenderer {
     constructor(exprParser, observerLocator, p) {
         this._exprParser = exprParser;
@@ -706,29 +704,26 @@ class TranslationBindBindingInstruction {
         this.from = from;
         this.to = to;
         this.type = TranslationBindInstructionType;
-        this.mode = BindingMode.toView;
+        this.mode = 2;
     }
 }
 class TranslationBindBindingCommand {
-    constructor(attrMapper, exprParser) {
+    constructor() {
         this.type = 0;
-        this._attrMapper = attrMapper;
-        this._exprParser = exprParser;
     }
     get name() { return 't-bind'; }
-    build(info) {
-        var _a;
+    build(info, exprParser, attrMapper) {
         let target;
         if (info.bindable == null) {
-            target = (_a = this._attrMapper.map(info.node, info.attr.target)) !== null && _a !== void 0 ? _a : camelCase(info.attr.target);
+            target = attrMapper.map(info.node, info.attr.target)
+                ?? camelCase(info.attr.target);
         }
         else {
             target = info.bindable.property;
         }
-        return new TranslationBindBindingInstruction(this._exprParser.parse(info.attr.rawValue, 8), target);
+        return new TranslationBindBindingInstruction(exprParser.parse(info.attr.rawValue, 8), target);
     }
 }
-TranslationBindBindingCommand.inject = [IAttrMapper, IExpressionParser];
 let TranslationBindBindingRenderer = class TranslationBindBindingRenderer {
     constructor(parser, oL, p) {
         this.parser = parser;

@@ -96,13 +96,13 @@ var MiddlewarePlacement;
 })(MiddlewarePlacement || (MiddlewarePlacement = {}));
 function logMiddleware(state, _, settings) {
     const cons = STORE.container.get(IPlatform).console;
-    const logType = (settings === null || settings === void 0 ? void 0 : settings.logType) !== undefined && cons[settings.logType] !== undefined ? settings.logType : "log";
+    const logType = settings?.logType !== undefined && cons[settings.logType] !== undefined ? settings.logType : "log";
     cons[logType]("New state: ", state);
 }
 function localStorageMiddleware(state, _, settings) {
     const localStorage = STORE.container.get(IWindow).localStorage;
     if (localStorage !== undefined) {
-        const key = (settings === null || settings === void 0 ? void 0 : settings.key) !== undefined ? settings.key : DEFAULT_LOCAL_STORAGE_KEY;
+        const key = settings?.key !== undefined ? settings.key : DEFAULT_LOCAL_STORAGE_KEY;
         localStorage.setItem(key, JSON.stringify(state));
     }
 }
@@ -118,7 +118,7 @@ function rehydrateFromLocalStorage(state, key) {
     try {
         return JSON.parse(storedState);
     }
-    catch (_a) { }
+    catch { }
     return state;
 }
 
@@ -131,8 +131,7 @@ var LogLevel;
     LogLevel["error"] = "error";
 })(LogLevel || (LogLevel = {}));
 function getLogType(options, definition, defaultLevel) {
-    var _a;
-    if (((_a = options.logDefinitions) === null || _a === void 0 ? void 0 : _a.hasOwnProperty(definition)) &&
+    if (options.logDefinitions?.hasOwnProperty(definition) &&
         options.logDefinitions[definition] &&
         Object.values(LogLevel).includes(options.logDefinitions[definition])) {
         return options.logDefinitions[definition];
@@ -161,7 +160,6 @@ class ReducerNoStateError extends Error {
 }
 let Store = class Store {
     constructor(initialState, logger, _window, options) {
-        var _a, _b, _c, _d;
         this.initialState = initialState;
         this.logger = logger;
         this._window = _window;
@@ -169,11 +167,11 @@ let Store = class Store {
         this.actions = new Map();
         this.middlewares = new Map();
         this.dispatchQueue = [];
-        this.options = options !== null && options !== void 0 ? options : {};
-        const isUndoable = ((_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.history) === null || _b === void 0 ? void 0 : _b.undoable) === true;
+        this.options = options ?? {};
+        const isUndoable = this.options?.history?.undoable === true;
         this._state = new BehaviorSubject(initialState);
         this.state = this._state.asObservable();
-        if (((_d = (_c = this.options) === null || _c === void 0 ? void 0 : _c.devToolsOptions) === null || _d === void 0 ? void 0 : _d.disable) !== true) {
+        if (this.options?.devToolsOptions?.disable !== true) {
             this.setupDevTools();
         }
         if (isUndoable) {
@@ -271,7 +269,6 @@ let Store = class Store {
         }
     }
     async internalDispatch(actions) {
-        var _a;
         const unregisteredAction = actions.find((a) => !this.actions.has(a.reducer));
         if (unregisteredAction) {
             throw new UnregisteredActionError(unregisteredAction.reducer);
@@ -319,7 +316,7 @@ let Store = class Store {
             return;
         }
         if (isStateHistory(resultingState) &&
-            ((_a = this.options.history) === null || _a === void 0 ? void 0 : _a.limit)) {
+            this.options.history?.limit) {
             resultingState = applyLimits(resultingState, this.options.history.limit);
         }
         this._state.next(resultingState);
@@ -367,14 +364,12 @@ let Store = class Store {
             this.devTools = this._window.__REDUX_DEVTOOLS_EXTENSION__.connect(this.options.devToolsOptions);
             this.devTools.init(this.initialState);
             this.devTools.subscribe((message) => {
-                var _a, _b;
                 this.logger[getLogType(this.options, "devToolsStatus", LogLevel.debug)](`DevTools sent change ${message.type}`);
                 if (message.type === "ACTION" && message.payload !== undefined) {
                     const byName = Array.from(this.actions).find(function ([reducer]) {
-                        var _a;
-                        return reducer.name === ((_a = message.payload) === null || _a === void 0 ? void 0 : _a.name);
+                        return reducer.name === message.payload?.name;
                     });
-                    const action = (_b = this.lookupAction((_a = message.payload) === null || _a === void 0 ? void 0 : _a.name)) !== null && _b !== void 0 ? _b : byName === null || byName === void 0 ? void 0 : byName[0];
+                    const action = this.lookupAction(message.payload?.name) ?? byName?.[0];
                     if (!action) {
                         throw new DevToolsRemoteDispatchError("Tried to remotely dispatch an unregistered action");
                     }
@@ -481,18 +476,15 @@ function connectTo(settings) {
         };
         return Object.entries({
             ...(isSelectorObj ? _settings.selector : fallbackSelector)
-        }).map(([target, selector]) => {
-            var _a, _b;
-            return ({
-                targets: _settings.target && isSelectorObj ? [_settings.target, target] : [target],
-                selector,
-                changeHandlers: {
-                    [(_a = _settings.onChanged) !== null && _a !== void 0 ? _a : '']: 1,
-                    [`${(_b = _settings.target) !== null && _b !== void 0 ? _b : target}Changed`]: _settings.target ? 0 : 1,
-                    propertyChanged: 0
-                }
-            });
-        });
+        }).map(([target, selector]) => ({
+            targets: _settings.target && isSelectorObj ? [_settings.target, target] : [target],
+            selector,
+            changeHandlers: {
+                [_settings.onChanged ?? '']: 1,
+                [`${_settings.target ?? target}Changed`]: _settings.target ? 0 : 1,
+                propertyChanged: 0
+            }
+        }));
     }
     return function (target) {
         const originalSetup = typeof settings === 'object' && settings.setup
@@ -552,7 +544,6 @@ const StoreConfiguration = {
         return this;
     },
     register(container) {
-        var _a;
         STORE.container = container;
         const state = Reflect.get(this, 'state');
         const options = Reflect.get(this, 'options');
@@ -562,7 +553,7 @@ const StoreConfiguration = {
             throw new Error("initialState must be provided via withInitialState builder method");
         }
         let initState = state;
-        if (((_a = options === null || options === void 0 ? void 0 : options.history) === null || _a === void 0 ? void 0 : _a.undoable) && !isStateHistory(state)) {
+        if (options?.history?.undoable && !isStateHistory(state)) {
             initState = { past: [], present: state, future: [] };
         }
         Registration.instance(Store, new Store(initState, logger, window, options)).register(container);

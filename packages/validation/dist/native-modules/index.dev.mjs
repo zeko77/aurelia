@@ -2,6 +2,7 @@ import { DI, Protocol, toArray, IServiceLocator, ILogger, Registration, noop } f
 import { Metadata } from '../../../metadata/dist/native-modules/index.mjs';
 import * as AST from '../../../runtime/dist/native-modules/index.mjs';
 import { Scope, PrimitiveLiteralExpression, IExpressionParser } from '../../../runtime/dist/native-modules/index.mjs';
+import { astEvaluator } from '../../../runtime-html/dist/native-modules/index.mjs';
 
 const IValidationExpressionHydrator = DI.createInterface('IValidationExpressionHydrator');
 
@@ -171,8 +172,8 @@ let RangeRule = class RangeRule extends BaseValidationRule {
         this.isInclusive = isInclusive;
         this.min = Number.NEGATIVE_INFINITY;
         this.max = Number.POSITIVE_INFINITY;
-        this.min = min !== null && min !== void 0 ? min : this.min;
-        this.max = max !== null && max !== void 0 ? max : this.max;
+        this.min = min ?? this.min;
+        this.max = max ?? this.max;
     }
     execute(value, _object) {
         return value === null
@@ -236,7 +237,7 @@ const validationRulesRegistrar = Object.freeze({
     name: 'validation-rules',
     defaultRuleSetName: '__default',
     set(target, rules, tag) {
-        const key = `${validationRulesRegistrar.name}:${tag !== null && tag !== void 0 ? tag : validationRulesRegistrar.defaultRuleSetName}`;
+        const key = `${validationRulesRegistrar.name}:${tag ?? validationRulesRegistrar.defaultRuleSetName}`;
         Metadata.define(Protocol.annotation.keyFor(key), rules, target);
         const keys = Metadata.getOwn(Protocol.annotation.name, target);
         if (keys === void 0) {
@@ -247,9 +248,8 @@ const validationRulesRegistrar = Object.freeze({
         }
     },
     get(target, tag) {
-        var _a;
-        const key = Protocol.annotation.keyFor(validationRulesRegistrar.name, tag !== null && tag !== void 0 ? tag : validationRulesRegistrar.defaultRuleSetName);
-        return (_a = Metadata.get(key, target)) !== null && _a !== void 0 ? _a : Metadata.getOwn(key, target.constructor);
+        const key = Protocol.annotation.keyFor(validationRulesRegistrar.name, tag ?? validationRulesRegistrar.defaultRuleSetName);
+        return Metadata.get(key, target) ?? Metadata.getOwn(key, target.constructor);
     },
     unset(target, tag) {
         const keys = Metadata.getOwn(Protocol.annotation.name, target);
@@ -301,10 +301,7 @@ class PropertyRule {
         const depth = this.$rules.length - 1;
         return this.$rules[depth];
     }
-    async validate(object, tag, flags, scope) {
-        if (flags === void 0) {
-            flags = 0;
-        }
+    async validate(object, tag, _flags, scope) {
         if (scope === void 0) {
             scope = Scope.create({ [rootObjectSymbol]: object });
         }
@@ -314,7 +311,7 @@ class PropertyRule {
             value = object;
         }
         else {
-            value = expression.evaluate(flags, scope, this.locator, null);
+            value = expression.evaluate(scope, this, null);
         }
         let isValid = true;
         const validateRuleset = async (rules) => {
@@ -328,7 +325,7 @@ class PropertyRule {
                 let message;
                 if (!isValidOrPromise) {
                     const messageEvaluationScope = Scope.create(new ValidationMessageEvaluationContext(this.messageProvider, this.messageProvider.getDisplayName(name, displayName), name, value, rule, object));
-                    message = this.messageProvider.getMessage(rule).evaluate(flags, messageEvaluationScope, null, null);
+                    message = this.messageProvider.getMessage(rule).evaluate(messageEvaluationScope, this, null);
                 }
                 return new ValidationResult(isValidOrPromise, message, name, object, rule, this);
             };
@@ -446,6 +443,7 @@ class PropertyRule {
     }
 }
 PropertyRule.$TYPE = 'PropertyRule';
+astEvaluator()(PropertyRule);
 class ModelBasedRule {
     constructor(ruleset, tag = validationRulesRegistrar.defaultRuleSetName) {
         this.ruleset = ruleset;
@@ -481,7 +479,7 @@ let ValidationRules = class ValidationRules {
         if (Object.is(rules, this.rules)) {
             return this;
         }
-        this.rules = rules !== null && rules !== void 0 ? rules : [];
+        this.rules = rules ?? [];
         validationRulesRegistrar.set(target, this.rules, tag);
         this.targets.add(target);
         return this;
@@ -518,13 +516,12 @@ const classicAccessorPattern = /^function\s*\([$_\w\d]+\)\s*\{(?:\s*["']{1}use s
 const arrowAccessorPattern = /^\(?[$_\w\d]+\)?\s*=>\s*[$_\w\d]+((\.[$_\w\d]+|\[['"$_\w\d]+\])+)$/;
 const rootObjectSymbol = '$root';
 function parsePropertyName(property, parser) {
-    var _a;
     switch (typeof property) {
         case 'string':
             break;
         case 'function': {
             const fn = property.toString();
-            const match = (_a = arrowAccessorPattern.exec(fn)) !== null && _a !== void 0 ? _a : classicAccessorPattern.exec(fn);
+            const match = arrowAccessorPattern.exec(fn) ?? classicAccessorPattern.exec(fn);
             if (match === null) {
                 throw new Error(`Unable to parse accessor function:\n${fn}`);
             }
@@ -570,7 +567,6 @@ let ValidationMessageProvider = class ValidationMessageProvider {
         }
     }
     getMessage(rule) {
-        var _a;
         const parsedMessage = this.registeredMessages.get(rule);
         if (parsedMessage !== void 0) {
             return parsedMessage;
@@ -583,7 +579,7 @@ let ValidationMessageProvider = class ValidationMessageProvider {
             message = validationMessages[0].defaultMessage;
         }
         else {
-            message = (_a = validationMessages.find(m => m.name === messageKey)) === null || _a === void 0 ? void 0 : _a.defaultMessage;
+            message = validationMessages.find(m => m.name === messageKey)?.defaultMessage;
         }
         if (!message) {
             message = ValidationRuleAliasMessage.getDefaultMessages(BaseValidationRule)[0].defaultMessage;
@@ -597,13 +593,13 @@ let ValidationMessageProvider = class ValidationMessageProvider {
     }
     parseMessage(message) {
         const parsed = this.parser.parse(message, 1);
-        if ((parsed === null || parsed === void 0 ? void 0 : parsed.$kind) === 25) {
+        if (parsed?.$kind === 23) {
             for (const expr of parsed.expressions) {
                 const name = expr.name;
                 if (contextualProperties.has(name)) {
                     this.logger.warn(`Did you mean to use "$${name}" instead of "${name}" in this validation message template: "${message}"?`);
                 }
-                if (expr.$kind === 1793 || expr.ancestor > 0) {
+                if (expr.$kind === 0 || expr.ancestor > 0) {
                     throw new Error('$parent is not permitted in validation message expressions.');
                 }
             }
@@ -864,7 +860,6 @@ class Serializer {
     visitBindingIdentifier(expr) {
         return `{"$TYPE":"${ASTExpressionTypes.BindingIdentifier}","name":"${expr.name}"}`;
     }
-    visitHtmlLiteral(_expr) { throw new Error('visitHtmlLiteral'); }
     visitForOfStatement(expr) {
         return `{"$TYPE":"${ASTExpressionTypes.ForOfStatement}","declaration":${expr.declaration.accept(this)},"iterable":${expr.iterable.accept(this)}}`;
     }
@@ -1023,7 +1018,6 @@ let ValidationDeserializer = class ValidationDeserializer {
         return deserializer.hydrate(raw, validationRules);
     }
     hydrate(raw, validationRules) {
-        var _a, _b;
         switch (raw.$TYPE) {
             case RequiredRule.$TYPE: {
                 const $raw = raw;
@@ -1056,7 +1050,7 @@ let ValidationDeserializer = class ValidationDeserializer {
             }
             case RangeRule.$TYPE: {
                 const $raw = raw;
-                const rule = new RangeRule($raw.isInclusive, { min: (_a = $raw.min) !== null && _a !== void 0 ? _a : Number.NEGATIVE_INFINITY, max: (_b = $raw.max) !== null && _b !== void 0 ? _b : Number.POSITIVE_INFINITY });
+                const rule = new RangeRule($raw.isInclusive, { min: $raw.min ?? Number.NEGATIVE_INFINITY, max: $raw.max ?? Number.POSITIVE_INFINITY });
                 rule.messageKey = $raw.messageKey;
                 rule.tag = this.astDeserializer.hydrate($raw.tag);
                 return rule;
@@ -1169,8 +1163,7 @@ let ModelValidationExpressionHydrator = class ModelValidationExpressionHydrator 
             if (typeof when === 'string') {
                 const parsed = this.parser.parse(when, 0);
                 rule.canExecute = (object) => {
-                    const flags = 0;
-                    return parsed.evaluate(flags, Scope.create({ $object: object }), this.locator, null);
+                    return parsed.evaluate(Scope.create({ $object: object }), this, null);
                 };
             }
             else if (typeof when === 'function') {
@@ -1226,6 +1219,7 @@ ModelValidationExpressionHydrator = __decorate([
     __param(1, IValidationMessageProvider),
     __param(2, IExpressionParser)
 ], ModelValidationExpressionHydrator);
+astEvaluator()(ModelValidationExpressionHydrator);
 
 class ValidateInstruction {
     constructor(object = (void 0), propertyName = (void 0), rules = (void 0), objectTag = (void 0), propertyTag = (void 0), flags = 0) {
@@ -1240,15 +1234,14 @@ class ValidateInstruction {
 const IValidator = DI.createInterface('IValidator');
 class StandardValidator {
     async validate(instruction) {
-        var _a, _b, _c, _d;
         const object = instruction.object;
         const propertyName = instruction.propertyName;
         const propertyTag = instruction.propertyTag;
         const flags = instruction.flags;
-        const rules = (_b = (_a = instruction.rules) !== null && _a !== void 0 ? _a : validationRulesRegistrar.get(object, instruction.objectTag)) !== null && _b !== void 0 ? _b : [];
+        const rules = instruction.rules ?? validationRulesRegistrar.get(object, instruction.objectTag) ?? [];
         const scope = Scope.create({ [rootObjectSymbol]: object });
         if (propertyName !== void 0) {
-            return (_d = (await ((_c = rules.find((r) => r.property.name === propertyName)) === null || _c === void 0 ? void 0 : _c.validate(object, propertyTag, flags, scope)))) !== null && _d !== void 0 ? _d : [];
+            return (await rules.find((r) => r.property.name === propertyName)?.validate(object, propertyTag, flags, scope)) ?? [];
         }
         return (await Promise.all(rules.map(async (rule) => rule.validate(object, propertyTag, flags, scope)))).flat();
     }
@@ -1272,7 +1265,7 @@ function createConfiguration(optionsProvider) {
             return container;
         },
         customize(cb) {
-            return createConfiguration(cb !== null && cb !== void 0 ? cb : optionsProvider);
+            return createConfiguration(cb ?? optionsProvider);
         },
     };
 }

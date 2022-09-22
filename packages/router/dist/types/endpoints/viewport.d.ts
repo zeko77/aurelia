@@ -1,4 +1,4 @@
-import { IHydratedController, IHydratedParentController } from '@aurelia/runtime-html';
+import { LifecycleFlags, IHydratedController, IHydratedParentController } from '@aurelia/runtime-html';
 import { ComponentAppellation, IRouteableComponent, LoadInstruction } from '../interfaces';
 import { IRouter } from '../router';
 import { ViewportContent } from './viewport-content';
@@ -10,7 +10,6 @@ import { Step } from '../utilities/runner';
 import { Route } from '../route';
 import { Endpoint, IConnectedCustomElement } from './endpoint';
 import { IViewportOptions, ViewportOptions } from './viewport-options';
-import { LifecycleFlags } from '@aurelia/runtime';
 /**
  * The viewport is an endpoint that encapsulates an au-viewport custom element
  * instance. It always has at least one viewport content -- the current and also
@@ -116,6 +115,10 @@ export declare class Viewport extends Endpoint {
      */
     getTimeContent(timestamp: number): ViewportContent | null;
     /**
+     * The content for a specific navigation (or coordinator)
+     */
+    getNavigationContent(navigation: NavigationCoordinator | Navigation): ViewportContent | null;
+    /**
      * The parent viewport.
      */
     get parentViewport(): Viewport | null;
@@ -169,19 +172,19 @@ export declare class Viewport extends Endpoint {
      *
      * @param step - The previous step in this transition Run
      */
-    canUnload(step: Step<boolean> | null): boolean | Promise<boolean>;
+    canUnload(coordinator: NavigationCoordinator, step: Step<boolean> | null): boolean | Promise<boolean>;
     /**
      * Check if the next content can be loaded.
      *
      * @param step - The previous step in this transition Run
      */
-    canLoad(step: Step<boolean>): boolean | LoadInstruction | LoadInstruction[] | Promise<boolean | LoadInstruction | LoadInstruction[]>;
+    canLoad(coordinator: NavigationCoordinator, step: Step<boolean>): boolean | LoadInstruction | LoadInstruction[] | Promise<boolean | LoadInstruction | LoadInstruction[]>;
     /**
      * Load the next content.
      *
      * @param step - The previous step in this transition Run
      */
-    load(step: Step<void>): Step<void> | void;
+    load(coordinator: NavigationCoordinator, step: Step<void>): Step<void> | void;
     /**
      * Add (activate) the next content.
      *
@@ -222,7 +225,7 @@ export declare class Viewport extends Endpoint {
      *
      * @param step - The previous step in this transition Run
      */
-    unload(step: Step<void> | null): void | Step<void>;
+    unload(coordinator: NavigationCoordinator, step: Step<void> | null): void | Step<void>;
     /**
      * Dispose the current content.
      */
@@ -237,7 +240,7 @@ export declare class Viewport extends Endpoint {
      *
      * @param step - The previous step in this transition Run
      */
-    cancelContentChange(coordinator: NavigationCoordinator, step: Step<void> | null): void | Step<void>;
+    cancelContentChange(coordinator: NavigationCoordinator, noExitStep?: Step<void> | null): void | Step<void>;
     /**
      * Whether the viewport wants a specific component. Used when
      * matching routing instructions to viewports.
@@ -268,7 +271,7 @@ export declare class Viewport extends Endpoint {
     /**
      * Get any configured routes in the relevant content's component type.
      */
-    getRoutes(): Route[] | null;
+    getRoutes(): Route[];
     /**
      * Get the title for the content.
      *

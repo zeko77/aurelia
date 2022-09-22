@@ -3,7 +3,7 @@ import { PropertyAccessor } from './property-accessor';
 import type { Collection, IAccessor, ICollectionObserver, IObserver, AccessorOrObserver, CollectionKind, CollectionObserver } from '../observation';
 export declare const propertyAccessor: PropertyAccessor;
 export interface IObjectObservationAdapter {
-    getObserver(object: unknown, propertyName: string, descriptor: PropertyDescriptor, requestor: IObserverLocator): AccessorOrObserver | null;
+    getObserver(object: unknown, key: PropertyKey, descriptor: PropertyDescriptor, requestor: IObserverLocator): IObserver | null;
 }
 export interface IObserverLocator extends ObserverLocator {
 }
@@ -25,20 +25,16 @@ export declare type ObservableSetter = PropertyDescriptor['set'] & {
     getObserver?(obj: unknown, requestor: IObserverLocator): IObserver;
 };
 export declare class ObserverLocator {
-    private readonly _dirtyChecker;
-    private readonly _nodeObserverLocator;
-    protected static readonly inject: (import("@aurelia/kernel").InterfaceSymbol<IDirtyChecker> | import("@aurelia/kernel").InterfaceSymbol<INodeObserverLocator>)[];
-    private readonly _adapters;
-    constructor(_dirtyChecker: IDirtyChecker, _nodeObserverLocator: INodeObserverLocator);
+    constructor(dirtyChecker: IDirtyChecker, nodeObserverLocator: INodeObserverLocator);
     addAdapter(adapter: IObjectObservationAdapter): void;
-    getObserver(obj: object, key: PropertyKey): IObserver;
+    getObserver(obj: unknown, key: PropertyKey): IObserver;
     getAccessor(obj: object, key: PropertyKey): AccessorOrObserver;
     getArrayObserver(observedArray: unknown[]): ICollectionObserver<CollectionKind.array>;
     getMapObserver(observedMap: Map<unknown, unknown>): ICollectionObserver<CollectionKind.map>;
     getSetObserver(observedSet: Set<unknown>): ICollectionObserver<CollectionKind.set>;
     private createObserver;
-    private _cache;
 }
 export declare type RepeatableCollection = Collection | null | undefined | number;
-export declare function getCollectionObserver(collection: RepeatableCollection): CollectionObserver | undefined;
+export declare const getCollectionObserver: (collection: RepeatableCollection) => CollectionObserver | undefined;
+export declare const getObserverLookup: <T extends IObserver>(instance: object) => Record<PropertyKey, T>;
 //# sourceMappingURL=observer-locator.d.ts.map

@@ -1,6 +1,5 @@
 import { IContainer, IEventAggregator } from '@aurelia/kernel';
-import { LifecycleFlags } from '@aurelia/runtime';
-import { INode, HydrateElementInstruction, ICompiledCustomElementController, ICustomElementViewModel, ICustomElementController, IHydratedController, IHydratedParentController, ISyntheticView } from '@aurelia/runtime-html';
+import { LifecycleFlags, INode, HydrateElementInstruction, ICompiledCustomElementController, ICustomElementViewModel, ICustomElementController, IHydratedController, IHydratedParentController, ISyntheticView } from '@aurelia/runtime-html';
 import { IRouter, NavigationFlags } from '../index';
 import { Viewport } from '../endpoints/viewport';
 import { Step } from '../utilities/runner';

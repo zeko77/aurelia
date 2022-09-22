@@ -1,12 +1,9 @@
 import type { IContainer, IRegistry, Key, Resolved } from '@aurelia/kernel';
 export declare type TaskSlot = 'creating' | 'hydrating' | 'hydrated' | 'activating' | 'activated' | 'deactivating' | 'deactivated';
 export declare const IAppTask: import("@aurelia/kernel").InterfaceSymbol<IAppTask>;
-export interface IAppTask extends Pick<$AppTask, 'slot' | 'run' | 'register'> {
-}
-declare class $AppTask<K extends Key = Key> {
+export interface IAppTask {
     readonly slot: TaskSlot;
-    constructor(slot: TaskSlot, key: K | null, cb: AppTaskCallback<K> | AppTaskCallbackNoArg);
-    register(container: IContainer): IContainer;
+    register(c: IContainer): IContainer;
     run(): void | Promise<void>;
 }
 export declare const AppTask: Readonly<{
@@ -70,5 +67,4 @@ export declare const AppTask: Readonly<{
 }>;
 export declare type AppTaskCallbackNoArg = () => unknown | Promise<unknown>;
 export declare type AppTaskCallback<T> = (arg: Resolved<T>) => unknown | Promise<unknown>;
-export {};
 //# sourceMappingURL=app-task.d.ts.map

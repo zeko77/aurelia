@@ -1,5 +1,5 @@
-import { LifecycleFlags, AccessorType } from '@aurelia/runtime';
-import type { IObserver, ISubscriber, ISubscriberCollection, IFlushable, IWithFlushQueue, FlushQueue } from '@aurelia/runtime';
+import { AccessorType } from '@aurelia/runtime';
+import type { IObserver, ISubscriber, ISubscriberCollection } from '@aurelia/runtime';
 export interface AttributeObserver extends IObserver, ISubscriber, ISubscriberCollection {
 }
 /**
@@ -7,16 +7,14 @@ export interface AttributeObserver extends IObserver, ISubscriber, ISubscriberCo
  * Has different strategy for class/style and normal attributes
  * TODO: handle SVG/attributes with namespace
  */
-export declare class AttributeObserver implements AttributeObserver, ElementMutationSubscriber, IWithFlushQueue, IFlushable {
+export declare class AttributeObserver implements AttributeObserver, ElementMutationSubscriber {
     type: AccessorType;
-    readonly queue: FlushQueue;
     constructor(obj: HTMLElement, prop: string, attr: string);
     getValue(): unknown;
-    setValue(value: unknown, flags: LifecycleFlags): void;
+    setValue(value: unknown): void;
     handleMutation(mutationRecords: MutationRecord[]): void;
     subscribe(subscriber: ISubscriber): void;
     unsubscribe(subscriber: ISubscriber): void;
-    flush(): void;
 }
 interface ElementMutationSubscriber {
     handleMutation(mutationRecords: MutationRecord[]): void;

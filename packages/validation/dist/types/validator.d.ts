@@ -1,4 +1,4 @@
-import { LifecycleFlags } from '@aurelia/runtime';
+import { LifecycleFlags } from '@aurelia/runtime-html';
 import { ValidationResult, PropertyRule } from './rule-provider';
 import { IValidateable } from './rule-interfaces';
 /**
@@ -12,6 +12,7 @@ export declare class ValidateInstruction<TObject extends IValidateable = IValida
     propertyTag: string;
     flags: LifecycleFlags;
     /**
+     * @template TObject
      * @param {TObject} [object=(void 0)!] - The object to validate.
      * @param {(keyof TObject | string)} [propertyName=(void 0)!] - The property name to validate.
      * @param {PropertyRule[]} [rules=(void 0)!] - The rules to validate.

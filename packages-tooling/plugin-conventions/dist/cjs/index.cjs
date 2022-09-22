@@ -6,7 +6,6 @@ var kernel = require('@aurelia/kernel');
 var path = require('path');
 var modifyCode = require('modify-code');
 var ts = require('typescript');
-var runtime = require('@aurelia/runtime');
 var parse5 = require('parse5');
 var fs = require('fs');
 
@@ -58,6 +57,8 @@ const hmrRuntimeModules = ['CustomElement', 'LifecycleFlags', 'IHydrationContext
 const hmrMetadataModules = ['Metadata'];
 const getHmrCode = (className, moduleText = 'module') => {
     const code = `
+    import { ExpressionKind as $$EK } from '@aurelia/runtime';
+
     // @ts-ignore
     const controllers = [];
 
@@ -116,10 +117,19 @@ const getHmrCode = (className, moduleText = 'module') => {
         const hydrationContext = controller.container.get(IHydrationContext)
         const hydrationInst = hydrationContext.instruction;
 
+        const bindableNames = Object.keys(controller.definition.bindables);
         // @ts-ignore
         Object.keys(values).forEach(key => {
+          if (bindableNames.includes(key)) {
+            return;
+          }
+          // if there' some bindings that target the existing property
           // @ts-ignore
-          if (!controller.bindings?.some(y => y.sourceExpression?.name === key && y.targetProperty)) {
+          const isTargettedByBinding = controller.bindings?.some(y =>
+            y.ast?.$kind === $$EK.AccessScope
+              && y.ast.name === key && y.targetProperty
+          );
+          if (!isTargettedByBinding) {
             delete values[key];
           }
         });
@@ -539,13 +549,13 @@ function toBindingMode(mode) {
     if (mode) {
         const normalizedMode = kernel.kebabCase(mode);
         if (normalizedMode === 'one-time')
-            return runtime.BindingMode.oneTime;
+            return 1;
         if (normalizedMode === 'one-way' || normalizedMode === 'to-view')
-            return runtime.BindingMode.toView;
+            return 2;
         if (normalizedMode === 'from-view')
-            return runtime.BindingMode.fromView;
+            return 4;
         if (normalizedMode === 'two-way')
-            return runtime.BindingMode.twoWay;
+            return 6;
     }
 }
 

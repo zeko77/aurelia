@@ -1,6 +1,6 @@
 import { noop, isArrayIndex, DI, Registration, kebabCase, emptyArray, EventAggregator, ILogger } from '../../../kernel/dist/native-modules/index.mjs';
-import { IObserverLocator, FlushQueue, valueConverter, IDirtyChecker, INodeObserverLocator, Scope, OverrideContext } from '../../../runtime/dist/native-modules/index.mjs';
-import { StandardConfiguration, IPlatform, ITemplateCompiler, CustomElement, CustomAttribute, Aurelia, bindable, customElement } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { IObserverLocator, IDirtyChecker, INodeObserverLocator, Scope } from '../../../runtime/dist/native-modules/index.mjs';
+import { StandardConfiguration, IPlatform, ITemplateCompiler, CustomElement, CustomAttribute, Aurelia, valueConverter, bindable, customElement } from '../../../runtime-html/dist/native-modules/index.mjs';
 import { BrowserPlatform } from '../../../platform-browser/dist/native-modules/index.mjs';
 import { Metadata } from '../../../metadata/dist/native-modules/index.mjs';
 
@@ -917,6 +917,108 @@ function createContainer(...registries) {
     return DI.createContainer().register(PLATFORMRegistration, ...registries);
 }
 
+var Char;
+(function (Char) {
+    Char[Char["Null"] = 0] = "Null";
+    Char[Char["Backspace"] = 8] = "Backspace";
+    Char[Char["Tab"] = 9] = "Tab";
+    Char[Char["LineFeed"] = 10] = "LineFeed";
+    Char[Char["VerticalTab"] = 11] = "VerticalTab";
+    Char[Char["FormFeed"] = 12] = "FormFeed";
+    Char[Char["CarriageReturn"] = 13] = "CarriageReturn";
+    Char[Char["Space"] = 32] = "Space";
+    Char[Char["Exclamation"] = 33] = "Exclamation";
+    Char[Char["DoubleQuote"] = 34] = "DoubleQuote";
+    Char[Char["Dollar"] = 36] = "Dollar";
+    Char[Char["Percent"] = 37] = "Percent";
+    Char[Char["Ampersand"] = 38] = "Ampersand";
+    Char[Char["SingleQuote"] = 39] = "SingleQuote";
+    Char[Char["OpenParen"] = 40] = "OpenParen";
+    Char[Char["CloseParen"] = 41] = "CloseParen";
+    Char[Char["Asterisk"] = 42] = "Asterisk";
+    Char[Char["Plus"] = 43] = "Plus";
+    Char[Char["Comma"] = 44] = "Comma";
+    Char[Char["Minus"] = 45] = "Minus";
+    Char[Char["Dot"] = 46] = "Dot";
+    Char[Char["Slash"] = 47] = "Slash";
+    Char[Char["Semicolon"] = 59] = "Semicolon";
+    Char[Char["Backtick"] = 96] = "Backtick";
+    Char[Char["OpenBracket"] = 91] = "OpenBracket";
+    Char[Char["Backslash"] = 92] = "Backslash";
+    Char[Char["CloseBracket"] = 93] = "CloseBracket";
+    Char[Char["Caret"] = 94] = "Caret";
+    Char[Char["Underscore"] = 95] = "Underscore";
+    Char[Char["OpenBrace"] = 123] = "OpenBrace";
+    Char[Char["Bar"] = 124] = "Bar";
+    Char[Char["CloseBrace"] = 125] = "CloseBrace";
+    Char[Char["Colon"] = 58] = "Colon";
+    Char[Char["LessThan"] = 60] = "LessThan";
+    Char[Char["Equals"] = 61] = "Equals";
+    Char[Char["GreaterThan"] = 62] = "GreaterThan";
+    Char[Char["Question"] = 63] = "Question";
+    Char[Char["Zero"] = 48] = "Zero";
+    Char[Char["One"] = 49] = "One";
+    Char[Char["Two"] = 50] = "Two";
+    Char[Char["Three"] = 51] = "Three";
+    Char[Char["Four"] = 52] = "Four";
+    Char[Char["Five"] = 53] = "Five";
+    Char[Char["Six"] = 54] = "Six";
+    Char[Char["Seven"] = 55] = "Seven";
+    Char[Char["Eight"] = 56] = "Eight";
+    Char[Char["Nine"] = 57] = "Nine";
+    Char[Char["UpperA"] = 65] = "UpperA";
+    Char[Char["UpperB"] = 66] = "UpperB";
+    Char[Char["UpperC"] = 67] = "UpperC";
+    Char[Char["UpperD"] = 68] = "UpperD";
+    Char[Char["UpperE"] = 69] = "UpperE";
+    Char[Char["UpperF"] = 70] = "UpperF";
+    Char[Char["UpperG"] = 71] = "UpperG";
+    Char[Char["UpperH"] = 72] = "UpperH";
+    Char[Char["UpperI"] = 73] = "UpperI";
+    Char[Char["UpperJ"] = 74] = "UpperJ";
+    Char[Char["UpperK"] = 75] = "UpperK";
+    Char[Char["UpperL"] = 76] = "UpperL";
+    Char[Char["UpperM"] = 77] = "UpperM";
+    Char[Char["UpperN"] = 78] = "UpperN";
+    Char[Char["UpperO"] = 79] = "UpperO";
+    Char[Char["UpperP"] = 80] = "UpperP";
+    Char[Char["UpperQ"] = 81] = "UpperQ";
+    Char[Char["UpperR"] = 82] = "UpperR";
+    Char[Char["UpperS"] = 83] = "UpperS";
+    Char[Char["UpperT"] = 84] = "UpperT";
+    Char[Char["UpperU"] = 85] = "UpperU";
+    Char[Char["UpperV"] = 86] = "UpperV";
+    Char[Char["UpperW"] = 87] = "UpperW";
+    Char[Char["UpperX"] = 88] = "UpperX";
+    Char[Char["UpperY"] = 89] = "UpperY";
+    Char[Char["UpperZ"] = 90] = "UpperZ";
+    Char[Char["LowerA"] = 97] = "LowerA";
+    Char[Char["LowerB"] = 98] = "LowerB";
+    Char[Char["LowerC"] = 99] = "LowerC";
+    Char[Char["LowerD"] = 100] = "LowerD";
+    Char[Char["LowerE"] = 101] = "LowerE";
+    Char[Char["LowerF"] = 102] = "LowerF";
+    Char[Char["LowerG"] = 103] = "LowerG";
+    Char[Char["LowerH"] = 104] = "LowerH";
+    Char[Char["LowerI"] = 105] = "LowerI";
+    Char[Char["LowerJ"] = 106] = "LowerJ";
+    Char[Char["LowerK"] = 107] = "LowerK";
+    Char[Char["LowerL"] = 108] = "LowerL";
+    Char[Char["LowerM"] = 109] = "LowerM";
+    Char[Char["LowerN"] = 110] = "LowerN";
+    Char[Char["LowerO"] = 111] = "LowerO";
+    Char[Char["LowerP"] = 112] = "LowerP";
+    Char[Char["LowerQ"] = 113] = "LowerQ";
+    Char[Char["LowerR"] = 114] = "LowerR";
+    Char[Char["LowerS"] = 115] = "LowerS";
+    Char[Char["LowerT"] = 116] = "LowerT";
+    Char[Char["LowerU"] = 117] = "LowerU";
+    Char[Char["LowerV"] = 118] = "LowerV";
+    Char[Char["LowerW"] = 119] = "LowerW";
+    Char[Char["LowerX"] = 120] = "LowerX";
+    Char[Char["LowerY"] = 121] = "LowerY";
+    Char[Char["LowerZ"] = 122] = "LowerZ";
+})(Char || (Char = {}));
 let maxStack_ErrorName;
 let maxStack_ErrorMessage;
 function isStackOverflowError(err) {
@@ -1763,7 +1865,7 @@ function formatPromise(ctx, value, recurseTimes) {
 function formatProperty(ctx, value, recurseTimes, key, type) {
     switch (key) {
         case '$controller':
-            return `$controller: { id: ${value.$controller.id} } (omitted for brevity)`;
+            return `$controller: { id: ${value.$controller.name} } (omitted for brevity)`;
         case 'overrideContext':
             return 'overrideContext: (omitted for brevity)';
     }
@@ -2078,7 +2180,7 @@ function formatRaw(ctx, value, recurseTimes, typedArray) {
     try {
         output = formatter(ctx, value, recurseTimes, keys, braces);
         let $key;
-        const isNotNode = (PLATFORM === null || PLATFORM === void 0 ? void 0 : PLATFORM.Node) != null && !(value instanceof PLATFORM.Node);
+        const isNotNode = PLATFORM?.Node != null && !(value instanceof PLATFORM.Node);
         for (i = 0; i < keys.length; i++) {
             $key = keys[i];
             if ((isNotNode || $key === 'textContent' || $key === 'outerHTML')
@@ -2204,21 +2306,18 @@ function verifyEqual(actual, expected, depth, property, index) {
     }
 }
 function nextAncestor(host, node) {
-    var _a, _b, _c;
-    const parent = (_b = (_a = node.parentNode) !== null && _a !== void 0 ? _a : node.host) !== null && _b !== void 0 ? _b : null;
+    const parent = node.parentNode ?? node.host ?? null;
     if (parent === null || parent === host) {
         return null;
     }
-    return (_c = parent.nextSibling) !== null && _c !== void 0 ? _c : nextAncestor(host, parent);
+    return parent.nextSibling ?? nextAncestor(host, parent);
 }
 function nextNode(host, node) {
-    var _a, _b, _c, _d, _e;
-    return (_e = (_d = (_c = (_b = (_a = CustomElement.for(node, { optional: true })) === null || _a === void 0 ? void 0 : _a.shadowRoot) === null || _b === void 0 ? void 0 : _b.firstChild) !== null && _c !== void 0 ? _c : node.firstChild) !== null && _d !== void 0 ? _d : node.nextSibling) !== null && _e !== void 0 ? _e : nextAncestor(host, node);
+    return CustomElement.for(node, { optional: true })?.shadowRoot?.firstChild ?? node.firstChild ?? node.nextSibling ?? nextAncestor(host, node);
 }
 function getVisibleText(host, removeWhiteSpace) {
-    var _a, _b, _c;
     let text = '';
-    let cur = (_c = (_b = (_a = CustomElement.for(host, { optional: true })) === null || _a === void 0 ? void 0 : _a.shadowRoot) === null || _b === void 0 ? void 0 : _b.firstChild) !== null && _c !== void 0 ? _c : host.firstChild;
+    let cur = CustomElement.for(host, { optional: true })?.shadowRoot?.firstChild ?? host.firstChild;
     while (cur !== null) {
         if (cur.nodeType === 3) {
             text += cur.data;
@@ -2914,7 +3013,6 @@ const areTaskQueuesEmpty = (function () {
         return ((num * 10 + .5) | 0) / 10;
     }
     function reportTask(task) {
-        var _a;
         const id = task.id;
         const created = round(task.createdTime);
         const queue = round(task.queueTime);
@@ -2923,7 +3021,7 @@ const areTaskQueuesEmpty = (function () {
         const persistent = task.persistent;
         const status = task.status;
         return `    task id=${id} createdTime=${created} queueTime=${queue} preempt=${preempt} reusable=${reusable} persistent=${persistent} status=${status}\n`
-            + `    task callback="${(_a = task.callback) === null || _a === void 0 ? void 0 : _a.toString()}"`;
+            + `    task callback="${task.callback?.toString()}"`;
     }
     function reportTaskQueue(name, taskQueue) {
         const processing = taskQueue['processing'];
@@ -7485,8 +7583,9 @@ const onFixtureCreated = (callback) => {
     });
 };
 function createFixture(template, $class, registrations = [], autoStart = true, ctx = TestContext.create()) {
-    const { container, platform, observerLocator } = ctx;
+    const { container } = ctx;
     container.register(...registrations);
+    const { platform, observerLocator } = ctx;
     const root = ctx.doc.body.appendChild(ctx.createElement('div'));
     const host = root.appendChild(ctx.createElement('app'));
     const au = new Aurelia(container);
@@ -7533,9 +7632,8 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
                     void ret.then(dispose);
                 else
                     dispose();
-                FlushQueue.instance.clear();
             }
-            catch (_a) {
+            catch {
                 console.warn('(!) corrupted fixture state, should isolate the failing test and restart the run'
                     + 'as it is likely that this failing fixture creation will pollute others.');
             }
@@ -7579,13 +7677,34 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
         if (arguments.length === 2) {
             const el = queryBy(selector);
             if (el === null) {
-                throw new Error(`No element found for selector "${selector}" to compare innerHTML with "${html}"`);
+                throw new Error(`No element found for selector "${selector}" to compare innerHTML against "${html}"`);
             }
             assert.strictEqual(el.innerHTML, html);
         }
         else {
             assert.strictEqual(host.innerHTML, selector);
         }
+    }
+    function assertAttr(selector, name, value) {
+        const el = queryBy(selector);
+        if (el === null) {
+            throw new Error(`No element found for selector "${selector}" to compare attribute "${name}" against "${value}"`);
+        }
+        assert.strictEqual(el.getAttribute(name), value);
+    }
+    function assertAttrNS(selector, namespace, name, value) {
+        const el = queryBy(selector);
+        if (el === null) {
+            throw new Error(`No element found for selector "${selector}" to compare attribute "${name}" against "${value}"`);
+        }
+        assert.strictEqual(el.getAttributeNS(namespace, name), value);
+    }
+    function assertValue(selector, value) {
+        const el = queryBy(selector);
+        if (el === null) {
+            throw new Error(`No element found for selector "${selector}" to compare value against "${value}"`);
+        }
+        assert.strictEqual(el.value, value);
     }
     function trigger(selector, event, init) {
         const el = queryBy(selector);
@@ -7633,6 +7752,9 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             this.queryBy = queryBy;
             this.assertText = assertText;
             this.assertHtml = assertHtml;
+            this.assertAttr = assertAttr;
+            this.assertAttrNS = assertAttrNS;
+            this.assertValue = assertValue;
             this.trigger = trigger;
             this.scrollBy = scrollBy;
             this.flush = flush;
@@ -7683,11 +7805,10 @@ class FixtureBuilder {
         return this;
     }
     build() {
-        var _a;
         if (this._html === void 0) {
             throw new Error('Builder is not ready, missing template, call .html()/.html`` first');
         }
-        return createFixture(typeof this._html === 'string' ? this._html : brokenProcessFastTemplate(this._html, ...(_a = this._htmlArgs) !== null && _a !== void 0 ? _a : []), this._comp, this._args);
+        return createFixture(typeof this._html === 'string' ? this._html : brokenProcessFastTemplate(this._html, ...this._htmlArgs ?? []), this._comp, this._args);
     }
 }
 function brokenProcessFastTemplate(html, ..._args) {
@@ -7706,17 +7827,21 @@ class MockBinding {
         this.interceptor = this;
         this.calls = [];
     }
-    updateTarget(value, flags) {
-        this.trace('updateTarget', value, flags);
+    get(key) {
+        this.trace('get', key);
+        return null;
     }
-    updateSource(value, flags) {
-        this.trace('updateSource', value, flags);
+    updateTarget(value) {
+        this.trace('updateTarget', value);
     }
-    handleChange(newValue, _previousValue, flags) {
-        this.trace('handleChange', newValue, _previousValue, flags);
+    updateSource(value) {
+        this.trace('updateSource', value);
     }
-    handleCollectionChange(indexMap, flags) {
-        this.trace('handleCollectionChange', indexMap, flags);
+    handleChange(newValue, _previousValue) {
+        this.trace('handleChange', newValue, _previousValue);
+    }
+    handleCollectionChange(collection, indexMap) {
+        this.trace('handleCollectionChange', collection, indexMap);
     }
     observe(obj, propertyName) {
         this.trace('observe', obj, propertyName);
@@ -7727,11 +7852,11 @@ class MockBinding {
     subscribeTo(subscribable) {
         this.trace('subscribeTo', subscribable);
     }
-    $bind(flags, scope) {
-        this.trace('$bind', flags, scope);
+    $bind(scope) {
+        this.trace('$bind', scope);
     }
-    $unbind(flags) {
-        this.trace('$unbind', flags);
+    $unbind() {
+        this.trace('$unbind');
     }
     trace(fnName, ...args) {
         this.calls.push([fnName, ...args]);
@@ -7744,11 +7869,11 @@ class MockBindingBehavior {
     constructor() {
         this.calls = [];
     }
-    bind(flags, scope, binding, ...rest) {
-        this.trace('bind', flags, scope, binding, ...rest);
+    bind(scope, binding, ...rest) {
+        this.trace('bind', scope, binding, ...rest);
     }
-    unbind(flags, scope, binding, ...rest) {
-        this.trace('unbind', flags, scope, binding, ...rest);
+    unbind(scope, binding, ...rest) {
+        this.trace('unbind', scope, binding, ...rest);
     }
     trace(fnName, ...args) {
         this.calls.push([fnName, ...args]);
@@ -7788,8 +7913,8 @@ class MockPropertySubscriber {
     constructor() {
         this.calls = [];
     }
-    handleChange(newValue, previousValue, flags) {
-        this.trace(`handleChange`, newValue, previousValue, flags);
+    handleChange(newValue, previousValue) {
+        this.trace(`handleChange`, newValue, previousValue);
     }
     trace(fnName, ...args) {
         this.calls.push([fnName, ...args]);
@@ -7798,7 +7923,9 @@ class MockPropertySubscriber {
 class MockTracingExpression {
     constructor(inner) {
         this.inner = inner;
-        this.$kind = 2048 | 4096;
+        this.$kind = 18;
+        this.hasBind = true;
+        this.hasUnbind = true;
         this.calls = [];
     }
     evaluate(...args) {
@@ -7954,9 +8081,8 @@ class MockBrowserHistoryLocation {
     }
 }
 class ChangeSet {
-    constructor(index, flags, newValue, oldValue) {
+    constructor(index, newValue, oldValue) {
         this.index = index;
-        this.flags = flags;
         this._newValue = newValue;
         this._oldValue = oldValue;
     }
@@ -7991,9 +8117,8 @@ class ProxyChangeSet {
     }
 }
 class CollectionChangeSet {
-    constructor(index, flags, indexMap) {
+    constructor(index, indexMap) {
         this.index = index;
-        this.flags = flags;
         this._indexMap = indexMap;
     }
     get indexMap() {
@@ -8012,19 +8137,19 @@ class SpySubscriber {
     }
     get changes() {
         if (this._changes === void 0) {
-            return emptyArray;
+            return [];
         }
         return this._changes;
     }
     get proxyChanges() {
         if (this._proxyChanges === void 0) {
-            return emptyArray;
+            return [];
         }
         return this._proxyChanges;
     }
     get collectionChanges() {
         if (this._collectionChanges === void 0) {
-            return emptyArray;
+            return [];
         }
         return this._collectionChanges;
     }
@@ -8040,28 +8165,20 @@ class SpySubscriber {
     get callCount() {
         return this._callCount;
     }
-    handleChange(newValue, oldValue, flags) {
+    handleChange(newValue, oldValue) {
         if (this._changes === void 0) {
-            this._changes = [new ChangeSet(this._callCount++, flags, newValue, oldValue)];
+            this._changes = [new ChangeSet(this._callCount++, newValue, oldValue)];
         }
         else {
-            this._changes.push(new ChangeSet(this._callCount++, flags, newValue, oldValue));
+            this._changes.push(new ChangeSet(this._callCount++, newValue, oldValue));
         }
     }
-    handleProxyChange(key, newValue, oldValue, flags) {
-        if (this._proxyChanges === void 0) {
-            this._proxyChanges = [new ProxyChangeSet(this._callCount++, flags, key, newValue, oldValue)];
-        }
-        else {
-            this._proxyChanges.push(new ProxyChangeSet(this._callCount++, flags, key, newValue, oldValue));
-        }
-    }
-    handleCollectionChange(indexMap, flags) {
+    handleCollectionChange(collection, indexMap) {
         if (this._collectionChanges === void 0) {
-            this._collectionChanges = [new CollectionChangeSet(this._callCount++, flags, indexMap)];
+            this._collectionChanges = [new CollectionChangeSet(this._callCount++, indexMap)];
         }
         else {
-            this._collectionChanges.push(new CollectionChangeSet(this._callCount++, flags, indexMap));
+            this._collectionChanges.push(new CollectionChangeSet(this._callCount++, indexMap));
         }
     }
     dispose() {
@@ -8107,7 +8224,7 @@ let SortValueConverter = class SortValueConverter {
     toView(arr, prop, dir = 'asc') {
         if (Array.isArray(arr)) {
             const factor = dir === 'asc' ? 1 : -1;
-            if (prop === null || prop === void 0 ? void 0 : prop.length) {
+            if (prop?.length) {
                 arr.sort((a, b) => a[prop] - b[prop] * factor);
             }
             else {
@@ -8321,7 +8438,7 @@ function createObserverLocator(containerOrLifecycle) {
 function createScopeForTest(bindingContext = {}, parentBindingContext, isBoundary) {
     return parentBindingContext
         ? Scope.fromParent(Scope.create(parentBindingContext), bindingContext)
-        : Scope.create(bindingContext, OverrideContext.create(bindingContext), isBoundary);
+        : Scope.create(bindingContext, null, isBoundary);
 }
 
 class Call {

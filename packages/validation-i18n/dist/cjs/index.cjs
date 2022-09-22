@@ -105,7 +105,7 @@ function u(e) {
             })), t.Registration.callback(c, (() => o)));
         },
         customize(t) {
-            return u(null !== t && void 0 !== t ? t : e);
+            return u(t ?? e);
         }
     };
 }

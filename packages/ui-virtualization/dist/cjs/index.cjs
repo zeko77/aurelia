@@ -74,7 +74,6 @@ const f = {
 
 class VirtualRepeat {
     constructor(t, s, e, r, i, n) {
-        var l;
         this.location = t;
         this.instruction = s;
         this.parent = e;
@@ -88,12 +87,12 @@ class VirtualRepeat {
         this.minViewsRequired = 0;
         this.dom = null;
         this.scrollerObserver = null;
-        const c = s.props[0];
-        const h = c.from;
-        const a = this.iterable = null !== (l = o(h.iterable)) && void 0 !== l ? l : h.iterable;
-        const u = this.u = h.iterable !== a;
-        this.C = new CollectionObservationMediator(this, u ? "handleInnerCollectionChange" : "handleCollectionChange");
-        this.local = h.declaration.name;
+        const l = s.props[0];
+        const c = l.from;
+        const h = this.iterable = o(c.iterable) ?? c.iterable;
+        const a = this.u = c.iterable !== h;
+        this.C = new CollectionObservationMediator(this, a ? "handleInnerCollectionChange" : "handleCollectionChange");
+        this.local = c.declaration.name;
         this.taskQueue = n.domWriteQueue;
     }
     static get inject() {
@@ -112,8 +111,7 @@ class VirtualRepeat {
         this.itemsChanged(this.items);
     }
     detaching() {
-        var t;
-        null === (t = this.task) || void 0 === t ? void 0 : t.cancel();
+        this.task?.cancel();
         this.T();
         this.dom.dispose();
         this.scrollerObserver.unsubscribe(this);
@@ -150,7 +148,7 @@ class VirtualRepeat {
         if (0 === i) {
             for (c = 0; h > c; ++c) {
                 a = o[c];
-                void a.deactivate(e, e, 4);
+                void a.deactivate(e, e, 2);
                 a.nodes.remove();
             }
             o.length = 0;
@@ -160,7 +158,7 @@ class VirtualRepeat {
         if (h > l) {
             while (h > l) {
                 a = o[h - 1];
-                void a.deactivate(e, e, 4);
+                void a.deactivate(e, e, 2);
                 a.nodes.remove();
                 --h;
             }
@@ -169,7 +167,7 @@ class VirtualRepeat {
         if (h > i) {
             while (h > i) {
                 a = o[h - 1];
-                void a.deactivate(e, e, 4);
+                void a.deactivate(e, e, 2);
                 a.nodes.remove();
                 --h;
             }
@@ -180,32 +178,32 @@ class VirtualRepeat {
         for (c = h; c < u; c++) o.push(this.f.create());
         const f = this.itemHeight;
         const d = this.local;
-        const {firstIndex: v, topCount: p, botCount: C} = this.measureBuffer(this.scrollerObserver.getValue(), o.length, i, f);
-        let w = 0;
-        let m;
+        const {firstIndex: g, topCount: w, botCount: C} = this.measureBuffer(this.scrollerObserver.getValue(), o.length, i, f);
+        let m = 0;
+        let v;
         let b;
         let y;
         for (c = 0; u > c; ++c) {
-            w = v + c;
-            m = r.item(w);
+            m = g + c;
+            v = r.item(m);
             a = o[c];
             b = o[c - 1];
             if (a.isActive) {
                 y = a.scope;
-                y.bindingContext[d] = m;
-                y.overrideContext.$index = w;
+                y.bindingContext[d] = v;
+                y.overrideContext.$index = m;
                 y.overrideContext.$length = i;
             } else {
                 a.nodes.insertBefore(b.nodes.firstChild.nextSibling);
-                y = s.Scope.fromParent(e.scope, s.BindingContext.create(d, r.item(w)));
-                y.overrideContext.$index = w;
+                y = s.Scope.fromParent(e.scope, new s.BindingContext(d, r.item(m)));
+                y.overrideContext.$index = m;
                 y.overrideContext.$length = i;
-                g(y.overrideContext);
-                void a.activate(e, e, 2, y);
+                p(y.overrideContext);
+                void a.activate(e, e, 1, y);
             }
         }
         this.C.start(t);
-        this.dom.update(p * f, C * f);
+        this.dom.update(w * f, C * f);
     }
     calcRealScrollTop(t) {
         const s = t.scrollTop;
@@ -231,7 +229,7 @@ class VirtualRepeat {
             this.task = null;
             this.handleScroll(t);
         }));
-        null === s || void 0 === s ? void 0 : s.cancel();
+        s?.cancel();
     }
     handleScroll(t) {
         if (0 === this.itemHeight) return;
@@ -246,48 +244,48 @@ class VirtualRepeat {
         const h = n[0].scope.overrideContext.$index;
         const {firstIndex: a, topCount: u, botCount: f} = this.measureBuffer(t, l, c, r);
         const d = t.scrollTop > s.scrollTop;
-        const v = d ? a >= h + l : a + l <= h;
+        const g = d ? a >= h + l : a + l <= h;
         this.i = t;
         if (a === h) return;
-        let g = null;
         let p = null;
+        let w = null;
         let C = 0;
-        let w = 0;
         let m = 0;
+        let v = 0;
         let b = 0;
-        if (v) for (b = 0; l > b; ++b) {
+        if (g) for (b = 0; l > b; ++b) {
             C = a + b;
-            p = n[b].scope;
-            p.bindingContext[e] = o.item(C);
-            p.overrideContext.$index = C;
-            p.overrideContext.$length = c;
+            w = n[b].scope;
+            w.bindingContext[e] = o.item(C);
+            w.overrideContext.$index = C;
+            w.overrideContext.$length = c;
         } else if (d) {
-            w = a - h;
-            while (w > 0) {
-                g = n.shift();
+            m = a - h;
+            while (m > 0) {
+                p = n.shift();
                 C = n[n.length - 1].scope.overrideContext["$index"] + 1;
-                n.push(g);
-                p = g.scope;
-                p.bindingContext[e] = o.item(C);
-                p.overrideContext.$index = C;
-                p.overrideContext.$length = c;
-                g.nodes.insertBefore(i.bottom);
-                ++m;
-                --w;
+                n.push(p);
+                w = p.scope;
+                w.bindingContext[e] = o.item(C);
+                w.overrideContext.$index = C;
+                w.overrideContext.$length = c;
+                p.nodes.insertBefore(i.bottom);
+                ++v;
+                --m;
             }
         } else {
-            w = h - a;
-            while (w > 0) {
-                C = h - (m + 1);
-                g = n.pop();
-                p = g.scope;
-                p.bindingContext[e] = o.item(C);
-                p.overrideContext.$index = C;
-                p.overrideContext.$length = c;
-                g.nodes.insertBefore(n[0].nodes.firstChild);
-                n.unshift(g);
-                ++m;
-                --w;
+            m = h - a;
+            while (m > 0) {
+                C = h - (v + 1);
+                p = n.pop();
+                w = p.scope;
+                w.bindingContext[e] = o.item(C);
+                w.overrideContext.$index = C;
+                w.overrideContext.$length = c;
+                p.nodes.insertBefore(n[0].nodes.firstChild);
+                n.unshift(p);
+                ++v;
+                --m;
             }
         }
         if (d) {
@@ -296,8 +294,7 @@ class VirtualRepeat {
         i.update(u * r, f * r);
     }
     getDistances() {
-        var t, s;
-        return null !== (s = null === (t = this.dom) || void 0 === t ? void 0 : t.distances) && void 0 !== s ? s : [ 0, 0 ];
+        return this.dom?.distances ?? [ 0, 0 ];
     }
     getViews() {
         return this.views.slice(0);
@@ -306,7 +303,7 @@ class VirtualRepeat {
         this.itemsChanged(this.items);
     }
     handleInnerCollectionChange() {
-        const t = this.iterable.evaluate(0, this.parent.scope, this.c, null);
+        const t = this.iterable.evaluate(this.parent.scope, this.c, null);
         const s = this.items;
         this.items = t;
         if (t === s) this.itemsChanged(t);
@@ -316,10 +313,10 @@ class VirtualRepeat {
         const e = this.$controller;
         const r = this.collectionStrategy;
         const i = e.scope;
-        const n = s.Scope.fromParent(i, s.BindingContext.create(this.local, r.first()));
+        const n = s.Scope.fromParent(i, new s.BindingContext(this.local, r.first()));
         n.overrideContext.$index = 0;
         n.overrideContext.$length = r.count();
-        g(n.overrideContext);
+        p(n.overrideContext);
         t.nodes.insertBefore(this.dom.bottom);
         void t.activate(e, e, 0, n);
         return t;
@@ -356,14 +353,12 @@ class CollectionObservationMediator {
         this.repeat[this.key](t, s);
     }
     start(t) {
-        var e;
         if (this.M === t) return;
         this.stop();
-        if (null != t) null === (e = s.getCollectionObserver(this.M = t)) || void 0 === e ? void 0 : e.subscribe(this);
+        if (null != t) s.getCollectionObserver(this.M = t)?.subscribe(this);
     }
     stop() {
-        var t;
-        null === (t = s.getCollectionObserver(this.M)) || void 0 === t ? void 0 : t.unsubscribe(this);
+        s.getCollectionObserver(this.M)?.unsubscribe(this);
     }
 }
 
@@ -389,21 +384,21 @@ Calculation.reset = new Calculation(1, 0);
 
 Calculation.none = new Calculation(0, 0);
 
-const v = new WeakSet;
+const g = new WeakSet;
 
-function g(t) {
+function p(t) {
     const s = t;
-    if (v.has(s)) return;
+    if (g.has(s)) return;
     Object.defineProperties(s, {
-        $first: p(m),
-        $last: p(b),
-        $middle: p(y),
-        $even: p(C),
-        $odd: p(w)
+        $first: w(v),
+        $last: w(b),
+        $middle: w(y),
+        $even: w(C),
+        $odd: w(m)
     });
 }
 
-function p(t) {
+function w(t) {
     return {
         configurable: true,
         enumerable: true,
@@ -415,11 +410,11 @@ function C() {
     return this.$index % 2 === 0;
 }
 
-function w() {
+function m() {
     return this.$index % 2 !== 0;
 }
 
-function m() {
+function v() {
     return 0 === this.$index;
 }
 
@@ -456,8 +451,7 @@ class ArrayCollectionStrategy {
         return this.val.length > 0 ? this.val[this.val.length - 1] : null;
     }
     item(t) {
-        var s;
-        return null !== (s = this.val[t]) && void 0 !== s ? s : null;
+        return this.val[t] ?? null;
     }
     range(t, s) {
         const e = this.val;
@@ -539,9 +533,8 @@ class ScrollerObserver {
         }))).observe(this.scroller);
     }
     stop() {
-        var t;
         this.scroller.removeEventListener("scroll", this);
-        null === (t = this.sizeObs) || void 0 === t ? void 0 : t.disconnect();
+        this.sizeObs?.disconnect();
         this.sizeObs = void 0;
     }
     notify() {

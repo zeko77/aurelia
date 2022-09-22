@@ -55,7 +55,7 @@ export declare class RoutingInstruction {
     /**
      * The configured route, if any, that the routing instruction is part of.
      */
-    route: FoundRoute | null;
+    route: FoundRoute | string | null;
     /**
      * The instruction is the start/first instruction of a configured route.
      */
@@ -75,6 +75,10 @@ export declare class RoutingInstruction {
      * in the string after the actual part for the instruction itself.
      */
     unparsed: string | null;
+    /**
+     * Whether the routing instruction has been cancelled (aborted) for some reason
+     */
+    cancelled: boolean;
     constructor(component?: ComponentAppellation | Promise<ComponentAppellation>, endpoint?: EndpointHandle, parameters?: ComponentParameters);
     /**
      * Create a new routing instruction.
@@ -124,6 +128,12 @@ export declare class RoutingInstruction {
      * @param endpointContext - Whether to include endpoint context in the string
      */
     static stringify(context: IRouterConfiguration | IRouter | IContainer, instructions: RoutingInstruction[] | string, excludeEndpoint?: boolean, endpointContext?: boolean): string;
+    /**
+     * Resolve a list of routing instructions, returning a promise that should be awaited if needed.
+     *
+     * @param instructions - The instructions to resolve
+     */
+    static resolve(instructions: RoutingInstruction[]): void | Promise<void | ComponentAppellation[]>;
     /**
      * Whether the instructions, on any level, contains siblings
      *
@@ -204,6 +214,13 @@ export declare class RoutingInstruction {
      * Get the instruction parameters with type specification applied.
      */
     typeParameters(context: IRouterConfiguration | IRouter | IContainer): Parameters;
+    /**
+     * Compare the routing instruction's route with the route of another routing
+     * instruction.
+     *
+     * @param other - The routing instruction to compare to
+     */
+    sameRoute(other: RoutingInstruction): boolean;
     /**
      * Compare the routing instruction's component with the component of another routing
      * instruction. Compares on name unless `compareType` is `true`.

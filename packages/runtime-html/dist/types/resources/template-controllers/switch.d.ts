@@ -1,14 +1,13 @@
 import { ILogger } from '@aurelia/kernel';
-import { LifecycleFlags, IObserverLocator, IndexMap, Scope } from '@aurelia/runtime';
+import { IObserverLocator, Scope } from '@aurelia/runtime';
 import { IRenderLocation } from '../../dom';
 import { IViewFactory } from '../../templating/view';
-import type { ICustomAttributeController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, IHydratableController, ISyntheticView, ControllerVisitor } from '../../templating/controller';
+import type { LifecycleFlags, ICustomAttributeController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, IHydratableController, ISyntheticView, ControllerVisitor } from '../../templating/controller';
 import type { INode } from '../../dom';
 import type { IInstruction } from '../../renderer';
 export declare class Switch implements ICustomAttributeViewModel {
     private readonly _factory;
     private readonly _location;
-    readonly id: number;
     readonly $controller: ICustomAttributeController<this>;
     private view;
     value: unknown;
@@ -23,14 +22,13 @@ export declare class Switch implements ICustomAttributeViewModel {
     attaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void>;
     detaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void>;
     dispose(): void;
-    valueChanged(_newValue: boolean, _oldValue: boolean, flags: LifecycleFlags): void;
-    caseChanged($case: Case, flags: LifecycleFlags): void;
+    valueChanged(_newValue: boolean, _oldValue: boolean): void;
+    caseChanged($case: Case): void;
     private swap;
     private queue;
     accept(visitor: ControllerVisitor): void | true;
 }
 export declare class Case implements ICustomAttributeViewModel {
-    readonly id: number;
     readonly $controller: ICustomAttributeController<this>;
     value: unknown;
     fallThrough: boolean;
@@ -42,14 +40,13 @@ export declare class Case implements ICustomAttributeViewModel {
     /** @internal */ _location: IRenderLocation, logger: ILogger);
     link(controller: IHydratableController, _childController: ICustomAttributeController, _target: INode, _instruction: IInstruction): void;
     detaching(initiator: IHydratedController, parent: IHydratedParentController, flags: LifecycleFlags): void | Promise<void>;
-    isMatch(value: unknown, flags: LifecycleFlags): boolean;
-    valueChanged(newValue: unknown, _oldValue: unknown, flags: LifecycleFlags): void;
-    handleCollectionChange(_indexMap: IndexMap, flags: LifecycleFlags): void;
+    isMatch(value: unknown): boolean;
+    valueChanged(newValue: unknown, _oldValue: unknown): void;
+    handleCollectionChange(): void;
     activate(initiator: IHydratedController | null, flags: LifecycleFlags, scope: Scope): void | Promise<void>;
     deactivate(initiator: IHydratedController | null, flags: LifecycleFlags): void | Promise<void>;
     dispose(): void;
     protected linkToSwitch(auSwitch: Switch): void;
-    private _observeCollection;
     accept(visitor: ControllerVisitor): void | true;
 }
 export declare class DefaultCase extends Case {

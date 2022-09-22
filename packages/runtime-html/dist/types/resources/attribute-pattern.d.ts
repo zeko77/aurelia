@@ -39,6 +39,10 @@ export declare class AttrParsingState {
     append(charSpec: ICharSpec, pattern: string): AttrParsingState;
     findMatches(ch: string, interpretation: Interpretation): AttrParsingState[];
 }
+export interface ISegment {
+    text: string;
+    eachChar(callback: (spec: CharSpec) => void): void;
+}
 export declare class SegmentTypes {
     statics: number;
     dynamics: number;
@@ -66,10 +70,11 @@ export interface IAttributePattern {
     [pattern: string]: (rawName: string, rawValue: string, parts: readonly string[]) => AttrSyntax;
 }
 export declare const IAttributePattern: import("@aurelia/kernel").InterfaceSymbol<IAttributePattern>;
-export interface IAttributeParser extends AttributeParser {
+export interface IAttributeParser {
+    parse(name: string, value: string): AttrSyntax;
 }
 export declare const IAttributeParser: import("@aurelia/kernel").InterfaceSymbol<IAttributeParser>;
-export declare class AttributeParser {
+export declare class AttributeParser implements IAttributeParser {
     constructor(interpreter: ISyntaxInterpreter, attrPatterns: IAttributePattern[]);
     parse(name: string, value: string): AttrSyntax;
 }

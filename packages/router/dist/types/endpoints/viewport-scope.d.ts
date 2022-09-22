@@ -53,13 +53,13 @@ export declare class ViewportScope extends Endpoint {
     setNextContent(instruction: RoutingInstruction, navigation: Navigation): TransitionAction;
     transition(coordinator: NavigationCoordinator): void;
     finalizeContentChange(coordinator: NavigationCoordinator, _step: Step<void> | null): void;
-    cancelContentChange(coordinator: NavigationCoordinator, _step: Step<void> | null): void | Step<void>;
+    cancelContentChange(coordinator: NavigationCoordinator, noExitStep?: Step<void> | null): void | Step<void>;
     acceptSegment(segment: string): boolean;
     binding(): void;
     unbinding(): void;
     getAvailableSourceItem(): unknown | null;
     addSourceItem(): unknown;
     removeSourceItem(): void;
-    getRoutes(): Route[] | null;
+    getRoutes(): Route[];
 }
 //# sourceMappingURL=viewport-scope.d.ts.map

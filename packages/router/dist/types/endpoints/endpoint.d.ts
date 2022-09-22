@@ -69,6 +69,10 @@ export declare class Endpoint {
      */
     getTimeContent(_timestamp?: number): EndpointContent | null;
     /**
+     * The content for a specific navigation (or coordinator)
+     */
+    getNavigationContent(navigation: NavigationCoordinator | Navigation): EndpointContent | null;
+    /**
      * The active content, next or current.
      */
     get activeContent(): EndpointContent;
@@ -143,11 +147,11 @@ export declare class Endpoint {
      *
      * @param _step - The previous step in this transition Run
      */
-    cancelContentChange(_coordinator: NavigationCoordinator, _step: Step<void> | null): void | Step<void>;
+    cancelContentChange(_coordinator: NavigationCoordinator, _noExitStep?: Step<void> | null): void | Step<void>;
     /**
      * Get any configured routes in the relevant content's component type.
      */
-    getRoutes(): Route[] | null;
+    getRoutes(): Route[];
     /**
      * Get the title for the content.
      *
@@ -166,24 +170,24 @@ export declare class Endpoint {
      *
      * @param step - The previous step in this transition Run
      */
-    canUnload(_step: Step<boolean> | null): boolean | Promise<boolean>;
+    canUnload(_coordinator: NavigationCoordinator, _step: Step<boolean> | null): boolean | Promise<boolean>;
     /**
      * Check if the next content can be loaded.
      *
      * @param step - The previous step in this transition Run
      */
-    canLoad(_step: Step<boolean>): boolean | LoadInstruction | LoadInstruction[] | Promise<boolean | LoadInstruction | LoadInstruction[]>;
+    canLoad(_coordinator: NavigationCoordinator, _step: Step<boolean>): boolean | LoadInstruction | LoadInstruction[] | Promise<boolean | LoadInstruction | LoadInstruction[]>;
     /**
      * Unload the next content.
      *
      * @param step - The previous step in this transition Run
      */
-    unload(_step: Step<void> | null): void | Step<void>;
+    unload(_coordinator: NavigationCoordinator, _step: Step<void> | null): void | Step<void>;
     /**
      * Load the next content.
      *
      * @param step - The previous step in this transition Run
      */
-    load(_step: Step<void>): Step<void> | void;
+    load(_coordinator: NavigationCoordinator, _step: Step<void>): Step<void> | void;
 }
 //# sourceMappingURL=endpoint.d.ts.map

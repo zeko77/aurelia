@@ -1,4 +1,4 @@
-import type { ICollectionSubscriber, IndexMap, ISubscriber, ISubscriberRecord, LifecycleFlags as LF } from '../observation';
+import type { Collection, ICollectionSubscriber, IndexMap, ISubscriber, ISubscriberRecord } from '../observation';
 export declare type IAnySubscriber = ISubscriber | ICollectionSubscriber;
 export declare function subscriberCollection(): ClassDecorator;
 export declare function subscriberCollection(target: Function): void;
@@ -19,7 +19,7 @@ export declare class SubscriberRecord<T extends IAnySubscriber> implements ISubs
     has(subscriber: T): boolean;
     any(): boolean;
     remove(subscriber: T): boolean;
-    notify(val: unknown, oldVal: unknown, flags: LF): void;
-    notifyCollection(indexMap: IndexMap, flags: LF): void;
+    notify(val: unknown, oldVal: unknown): void;
+    notifyCollection(collection: Collection, indexMap: IndexMap): void;
 }
 //# sourceMappingURL=subscriber-collection.d.ts.map

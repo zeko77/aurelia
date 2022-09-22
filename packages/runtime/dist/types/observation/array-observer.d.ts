@@ -1,6 +1,6 @@
-import { LifecycleFlags, AccessorType, ISubscriberCollection, ICollectionSubscriberCollection } from '../observation';
+import { AccessorType, type ISubscriberCollection, type ICollectionSubscriberCollection, type IObserver } from '../observation';
 import { CollectionLengthObserver } from './collection-length-observer';
-import type { CollectionKind, ICollectionObserver, IArrayIndexObserver, IndexMap, ISubscriber } from '../observation';
+import type { CollectionKind, ICollectionObserver, IndexMap, ISubscriber } from '../observation';
 export declare function enableArrayObservation(): void;
 export declare function disableArrayObservation(): void;
 export interface ArrayObserver extends ICollectionObserver<CollectionKind.array>, ICollectionSubscriberCollection {
@@ -14,6 +14,9 @@ export declare class ArrayObserver {
     getLengthObserver(): CollectionLengthObserver;
     getIndexObserver(index: number): IArrayIndexObserver;
 }
+export interface IArrayIndexObserver extends IObserver {
+    owner: ICollectionObserver<CollectionKind.array>;
+}
 export interface ArrayIndexObserver extends IArrayIndexObserver, ISubscriberCollection {
 }
 export declare class ArrayIndexObserver implements IArrayIndexObserver {
@@ -23,11 +26,11 @@ export declare class ArrayIndexObserver implements IArrayIndexObserver {
     value: unknown;
     constructor(owner: ArrayObserver, index: number);
     getValue(): unknown;
-    setValue(newValue: unknown, flag: LifecycleFlags): void;
+    setValue(newValue: unknown): void;
     /**
      * From interface `ICollectionSubscriber`
      */
-    handleCollectionChange(indexMap: IndexMap, flags: LifecycleFlags): void;
+    handleCollectionChange(_arr: unknown[], indexMap: IndexMap): void;
     subscribe(subscriber: ISubscriber): void;
     unsubscribe(subscriber: ISubscriber): void;
 }

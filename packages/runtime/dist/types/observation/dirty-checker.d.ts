@@ -1,8 +1,7 @@
 import { IPlatform } from '@aurelia/kernel';
-import { AccessorType, IObserver, ISubscriberCollection, LifecycleFlags } from '../observation';
+import { AccessorType, type IObserver, type ISubscriberCollection } from '../observation';
 import type { IIndexable } from '@aurelia/kernel';
 import type { IObservable, ISubscriber } from '../observation';
-import { FlushQueue, IFlushable, IWithFlushQueue } from './flush-queue';
 export interface IDirtyChecker extends DirtyChecker {
 }
 export declare const IDirtyChecker: import("@aurelia/kernel").InterfaceSymbol<IDirtyChecker>;
@@ -34,27 +33,26 @@ export declare const DirtyCheckSettings: {
      */
     resetToDefault(): void;
 };
-export declare class DirtyChecker implements IWithFlushQueue {
+export declare class DirtyChecker {
     private readonly p;
-    readonly queue: FlushQueue;
     private readonly tracked;
     private _task;
     private _elapsedFrames;
     constructor(p: IPlatform);
-    createProperty(obj: object, key: string): DirtyCheckProperty;
+    createProperty(obj: object, key: PropertyKey): DirtyCheckProperty;
     addProperty(property: DirtyCheckProperty): void;
     removeProperty(property: DirtyCheckProperty): void;
     private readonly check;
 }
 export interface DirtyCheckProperty extends IObserver, ISubscriberCollection {
 }
-export declare class DirtyCheckProperty implements DirtyCheckProperty, IFlushable {
+export declare class DirtyCheckProperty implements DirtyCheckProperty {
     obj: IObservable & IIndexable;
     key: string;
     type: AccessorType;
     constructor(dirtyChecker: IDirtyChecker, obj: IObservable & IIndexable, key: string);
     getValue(): unknown;
-    setValue(v: unknown, f: LifecycleFlags): void;
+    setValue(_v: unknown): void;
     isDirty(): boolean;
     flush(): void;
     subscribe(subscriber: ISubscriber): void;

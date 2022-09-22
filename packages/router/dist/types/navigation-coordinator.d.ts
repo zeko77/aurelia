@@ -28,8 +28,8 @@ import { Step } from './index';
 export declare type NavigationState = 'guardedUnload' | // fulfilled when canUnload (if any) has been called
 'guardedLoad' | // fulfilled when canLoad (if any) has been called
 'guarded' | // fulfilled when check hooks canUnload and canLoad (if any) have been called
-'unloaded' | // fulfilled when unload (if any) has been called
-'loaded' | // fulfilled when load (if any) has been called
+'unloaded' | // fulfilled when unloading (if any) has been called
+'loaded' | // fulfilled when loading (if any) has been called
 'routed' | // fulfilled when initial routing hooks (if any) have been called
 'bound' | // fulfilled when bind has been called
 'swapped' | 'completed';
@@ -164,6 +164,12 @@ export declare class NavigationCoordinator {
      * @param step - The step that's controlling the transition
      */
     setEndpointStep(endpoint: IEndpoint, step: Step<void>): void;
+    /**
+     * Get the Runner step controlling the transition for an endpoint.
+     *
+     * @param endpoint - The endpoint to get the step for
+     */
+    getEndpointStep(endpoint: IEndpoint): Step<void> | null;
     /**
      * Add a (reached) navigation state for an endpoint.
      *

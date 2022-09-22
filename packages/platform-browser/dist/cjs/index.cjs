@@ -25,8 +25,7 @@ class BrowserPlatform extends t.Platform {
             this[t] = t in e ? e[t] : i[t];
         }));
         "fetch,requestAnimationFrame,cancelAnimationFrame".split(",").forEach((t => {
-            var h, r;
-            this[t] = t in e ? e[t] : null !== (r = null === (h = i[t]) || void 0 === h ? void 0 : h.bind(i)) && void 0 !== r ? r : s(t);
+            this[t] = t in e ? e[t] : i[t]?.bind(i) ?? s(t);
         }));
         this.flushDomRead = this.flushDomRead.bind(this);
         this.flushDomWrite = this.flushDomWrite.bind(this);
