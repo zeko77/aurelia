@@ -32,7 +32,6 @@ export interface IBindableCommandInfo {
 export declare type ICommandBuildInfo = IPlainAttrCommandInfo | IBindableCommandInfo;
 export declare type BindingCommandInstance<T extends {} = {}> = {
     type: CommandType;
-    name: string;
     build(info: ICommandBuildInfo, parser: IExpressionParser, mapper: IAttrMapper): IInstruction;
 } & T;
 export declare type BindingCommandType<T extends Constructable = Constructable> = ResourceType<T, BindingCommandInstance, PartialBindingCommandDefinition>;
@@ -58,52 +57,42 @@ export declare class BindingCommandDefinition<T extends Constructable = Construc
 export declare const BindingCommand: Readonly<BindingCommandKind>;
 export declare class OneTimeBindingCommand implements BindingCommandInstance {
     get type(): CommandType.None;
-    get name(): string;
     build(info: ICommandBuildInfo, exprParser: IExpressionParser, attrMapper: IAttrMapper): PropertyBindingInstruction;
 }
 export declare class ToViewBindingCommand implements BindingCommandInstance {
     get type(): CommandType.None;
-    get name(): string;
     build(info: ICommandBuildInfo, exprParser: IExpressionParser, attrMapper: IAttrMapper): PropertyBindingInstruction;
 }
 export declare class FromViewBindingCommand implements BindingCommandInstance {
     get type(): CommandType.None;
-    get name(): string;
     build(info: ICommandBuildInfo, exprParser: IExpressionParser, attrMapper: IAttrMapper): PropertyBindingInstruction;
 }
 export declare class TwoWayBindingCommand implements BindingCommandInstance {
     get type(): CommandType.None;
-    get name(): string;
     build(info: ICommandBuildInfo, exprParser: IExpressionParser, attrMapper: IAttrMapper): PropertyBindingInstruction;
 }
 export declare class DefaultBindingCommand implements BindingCommandInstance {
     get type(): CommandType.None;
-    get name(): string;
     build(info: ICommandBuildInfo, exprParser: IExpressionParser, attrMapper: IAttrMapper): PropertyBindingInstruction;
 }
 export declare class CallBindingCommand implements BindingCommandInstance {
     get type(): CommandType.None;
-    get name(): string;
     build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 export declare class ForBindingCommand implements BindingCommandInstance {
     get type(): CommandType.None;
-    get name(): string;
     build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 export declare class TriggerBindingCommand implements BindingCommandInstance {
     get type(): CommandType.IgnoreAttr;
-    get name(): string;
     build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 export declare class DelegateBindingCommand implements BindingCommandInstance {
     get type(): CommandType.IgnoreAttr;
-    get name(): string;
     build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 export declare class CaptureBindingCommand implements BindingCommandInstance {
     get type(): CommandType.IgnoreAttr;
-    get name(): string;
     build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 /**
@@ -111,7 +100,6 @@ export declare class CaptureBindingCommand implements BindingCommandInstance {
  */
 export declare class AttrBindingCommand implements BindingCommandInstance {
     get type(): CommandType.IgnoreAttr;
-    get name(): string;
     build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 /**
@@ -119,7 +107,6 @@ export declare class AttrBindingCommand implements BindingCommandInstance {
  */
 export declare class StyleBindingCommand implements BindingCommandInstance {
     get type(): CommandType.IgnoreAttr;
-    get name(): string;
     build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 /**
@@ -127,7 +114,6 @@ export declare class StyleBindingCommand implements BindingCommandInstance {
  */
 export declare class ClassBindingCommand implements BindingCommandInstance {
     get type(): CommandType.IgnoreAttr;
-    get name(): string;
     build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 /**
@@ -135,12 +121,10 @@ export declare class ClassBindingCommand implements BindingCommandInstance {
  */
 export declare class RefBindingCommand implements BindingCommandInstance {
     get type(): CommandType.IgnoreAttr;
-    get name(): string;
     build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 export declare class SpreadBindingCommand implements BindingCommandInstance {
     get type(): CommandType.IgnoreAttr;
-    get name(): string;
     build(_info: ICommandBuildInfo): IInstruction;
 }
 //# sourceMappingURL=binding-command.d.ts.map

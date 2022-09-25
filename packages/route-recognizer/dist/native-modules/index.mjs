@@ -308,14 +308,6 @@ function e(t) {
     return t.length > 0;
 }
 
-var n;
-
-(function(t) {
-    t[t["star"] = 1] = "star";
-    t[t["dynamic"] = 2] = "dynamic";
-    t[t["static"] = 3] = "static";
-})(n || (n = {}));
-
 class StaticSegment {
     constructor(t, s) {
         this.value = t;

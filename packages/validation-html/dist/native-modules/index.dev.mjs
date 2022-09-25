@@ -1,7 +1,7 @@
 import { DI, IServiceLocator, optional, Registration, noop } from '../../../kernel/dist/native-modules/index.mjs';
 import { parsePropertyName, ValidationResult, ValidateInstruction, PropertyRule, IValidator, getDefaultValidationConfiguration, ValidationConfiguration } from '../../../validation/dist/native-modules/index.mjs';
 import { IPlatform, bindable, INode, customAttribute, bindingBehavior, astEvaluator, BindingInterceptor, PropertyBinding, CustomElement } from '../../../runtime-html/dist/native-modules/index.mjs';
-import { IExpressionParser, connectable } from '../../../runtime/dist/native-modules/index.mjs';
+import { astEvaluate, IExpressionParser, connectable } from '../../../runtime/dist/native-modules/index.mjs';
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -92,7 +92,7 @@ function getPropertyInfo(binding, info, _flags = 0) {
                 if (toCachePropertyName) {
                     toCachePropertyName = keyExpr.$kind === 4;
                 }
-                memberName = `[${keyExpr.evaluate(scope, binding, null).toString()}]`;
+                memberName = `[${astEvaluate(keyExpr, scope, binding, null).toString()}]`;
                 break;
             }
             default:
@@ -111,7 +111,7 @@ function getPropertyInfo(binding, info, _flags = 0) {
         object = scope.bindingContext;
     }
     else {
-        object = expression.evaluate(scope, binding, null);
+        object = astEvaluate(expression, scope, binding, null);
     }
     if (object === null || object === void 0) {
         return (void 0);
@@ -560,16 +560,16 @@ let ValidateBindingBehavior = class ValidateBindingBehavior extends BindingInter
             const arg = args[i];
             switch (i) {
                 case 0:
-                    trigger = this._ensureTrigger(arg.evaluate(scope, this, this.triggerMediator));
+                    trigger = this._ensureTrigger(astEvaluate(arg, scope, this, this.triggerMediator));
                     break;
                 case 1:
-                    controller = this._ensureController(arg.evaluate(scope, this, this.controllerMediator));
+                    controller = this._ensureController(astEvaluate(arg, scope, this, this.controllerMediator));
                     break;
                 case 2:
-                    rules = this._ensureRules(arg.evaluate(scope, this, this.rulesMediator));
+                    rules = this._ensureRules(astEvaluate(arg, scope, this, this.rulesMediator));
                     break;
                 default:
-                    throw new Error(`Unconsumed argument#${i + 1} for validate binding behavior: ${arg.evaluate(scope, this, null)}`);
+                    throw new Error(`Unconsumed argument#${i + 1} for validate binding behavior: ${astEvaluate(arg, scope, this, null)}`);
             }
         }
         return new ValidateArgumentsDelta(this._ensureController(controller), this._ensureTrigger(trigger), rules);

@@ -1,5 +1,5 @@
 import { DI, IContainer, Registration } from '@aurelia/kernel';
-import { BindingBehaviorExpression, ValueConverterExpression, Scope, BindingContext, getCollectionObserver } from '@aurelia/runtime';
+import { BindingBehaviorExpression, ValueConverterExpression, Scope, BindingContext, astEvaluate, getCollectionObserver } from '@aurelia/runtime';
 import { customAttribute, IRenderLocation, IInstruction, IController, IViewFactory, IPlatform } from '@aurelia/runtime-html';
 
 const IDomRenderer = DI.createInterface('IDomRenderer');
@@ -332,7 +332,7 @@ class VirtualRepeat {
         this.itemsChanged(this.items);
     }
     handleInnerCollectionChange() {
-        const newItems = this.iterable.evaluate(this.parent.scope, this._container, null);
+        const newItems = astEvaluate(this.iterable, this.parent.scope, this._container, null);
         const oldItems = this.items;
         this.items = newItems;
         if (newItems === oldItems) {

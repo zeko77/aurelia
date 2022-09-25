@@ -8,7 +8,7 @@ export declare class ExpressionParser {
     parse(expression: string, expressionType: Exclude<ExpressionType, ExpressionType.IsIterator | ExpressionType.Interpolation>): IsBindingBehavior;
     parse(expression: string, expressionType: ExpressionType): AnyBindingExpression;
 }
-export declare const enum Precedence {
+declare const enum Precedence {
     Variadic = 61,
     Assign = 62,
     Conditional = 63,
@@ -34,4 +34,5 @@ export declare const enum ExpressionType {
 }
 export declare function parseExpression(input: string, expressionType?: ExpressionType): AnyBindingExpression;
 export declare function parse(minPrecedence: Precedence, expressionType: ExpressionType): AnyBindingExpression;
+export {};
 //# sourceMappingURL=expression-parser.d.ts.map

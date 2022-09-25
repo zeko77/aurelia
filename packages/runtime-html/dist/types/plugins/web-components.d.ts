@@ -1,4 +1,4 @@
-import { Constructable, IContainer } from '@aurelia/kernel';
+import { type Constructable, IContainer } from '@aurelia/kernel';
 import { IPlatform } from '../platform';
 import { PartialCustomElementDefinition } from '../resources/custom-element';
 import { IRendering } from '../templating/rendering';

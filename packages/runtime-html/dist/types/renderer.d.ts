@@ -45,38 +45,38 @@ export declare function isInstruction(value: unknown): value is IInstruction;
 export declare class InterpolationInstruction {
     from: string | Interpolation;
     to: string;
-    get type(): InstructionType.interpolation;
+    readonly type = InstructionType.interpolation;
     constructor(from: string | Interpolation, to: string);
 }
 export declare class PropertyBindingInstruction {
     from: string | IsBindingBehavior;
     to: string;
     mode: BindingMode;
-    get type(): InstructionType.propertyBinding;
+    readonly type = InstructionType.propertyBinding;
     constructor(from: string | IsBindingBehavior, to: string, mode: BindingMode);
 }
 export declare class IteratorBindingInstruction {
     from: string | ForOfStatement;
     to: string;
-    get type(): InstructionType.iteratorBinding;
+    readonly type = InstructionType.iteratorBinding;
     constructor(from: string | ForOfStatement, to: string);
 }
 export declare class CallBindingInstruction {
     from: string | IsBindingBehavior;
     to: string;
-    get type(): InstructionType.callBinding;
+    readonly type = InstructionType.callBinding;
     constructor(from: string | IsBindingBehavior, to: string);
 }
 export declare class RefBindingInstruction {
     readonly from: string | IsBindingBehavior;
     readonly to: string;
-    get type(): InstructionType.refBinding;
+    readonly type = InstructionType.refBinding;
     constructor(from: string | IsBindingBehavior, to: string);
 }
 export declare class SetPropertyInstruction {
     value: unknown;
     to: string;
-    get type(): InstructionType.setProperty;
+    readonly type = InstructionType.setProperty;
     constructor(value: unknown, to: string);
 }
 export declare class HydrateElementInstruction {
@@ -101,7 +101,7 @@ export declare class HydrateElementInstruction {
      * A list of captured attr syntaxes
      */
     captures: AttrSyntax[] | undefined;
-    get type(): InstructionType.hydrateElement;
+    readonly type = InstructionType.hydrateElement;
     /**
      * A special property that can be used to store <au-slot/> usage information
      */
@@ -138,7 +138,7 @@ export declare class HydrateAttributeInstruction {
      * Bindable instructions for the custom attribute instance
      */
     props: IInstruction[];
-    get type(): InstructionType.hydrateAttribute;
+    readonly type = InstructionType.hydrateAttribute;
     constructor(res: string | /* Constructable |  */ CustomAttributeDefinition, alias: string | undefined, 
     /**
      * Bindable instructions for the custom attribute instance
@@ -153,7 +153,7 @@ export declare class HydrateTemplateController {
      * Bindable instructions for the template controller instance
      */
     props: IInstruction[];
-    get type(): InstructionType.hydrateTemplateController;
+    readonly type = InstructionType.hydrateTemplateController;
     constructor(def: PartialCustomElementDefinition, res: string | /* Constructable |  */ CustomAttributeDefinition, alias: string | undefined, 
     /**
      * Bindable instructions for the template controller instance
@@ -163,13 +163,13 @@ export declare class HydrateTemplateController {
 export declare class HydrateLetElementInstruction {
     instructions: LetBindingInstruction[];
     toBindingContext: boolean;
-    get type(): InstructionType.hydrateLetElement;
+    readonly type = InstructionType.hydrateLetElement;
     constructor(instructions: LetBindingInstruction[], toBindingContext: boolean);
 }
 export declare class LetBindingInstruction {
     from: string | IsBindingBehavior | Interpolation;
     to: string;
-    get type(): InstructionType.letBinding;
+    readonly type = InstructionType.letBinding;
     constructor(from: string | IsBindingBehavior | Interpolation, to: string);
 }
 export declare class TextBindingInstruction {
@@ -181,7 +181,7 @@ export declare class TextBindingInstruction {
      * In none strict mode, "undefined" and "null" are coerced into empty string
      */
     strict: boolean;
-    get type(): InstructionType.textBinding;
+    readonly type = InstructionType.textBinding;
     constructor(from: string | Interpolation, 
     /**
      * Indicates whether the value of the expression "from"
@@ -201,19 +201,19 @@ export declare class ListenerBindingInstruction {
     to: string;
     preventDefault: boolean;
     strategy: DelegationStrategy;
-    get type(): InstructionType.listenerBinding;
+    readonly type = InstructionType.listenerBinding;
     constructor(from: string | IsBindingBehavior, to: string, preventDefault: boolean, strategy: DelegationStrategy);
 }
 export declare class StylePropertyBindingInstruction {
     from: string | IsBindingBehavior;
     to: string;
-    get type(): InstructionType.stylePropertyBinding;
+    readonly type = InstructionType.stylePropertyBinding;
     constructor(from: string | IsBindingBehavior, to: string);
 }
 export declare class SetAttributeInstruction {
     value: string;
     to: string;
-    get type(): InstructionType.setAttribute;
+    readonly type = InstructionType.setAttribute;
     constructor(value: string, to: string);
 }
 export declare class SetClassAttributeInstruction {
@@ -236,7 +236,7 @@ export declare class AttributeBindingInstruction {
     attr: string;
     from: string | IsBindingBehavior;
     to: string;
-    get type(): InstructionType.attributeBinding;
+    readonly type = InstructionType.attributeBinding;
     constructor(
     /**
      * `attr` and `to` have the same value on a normal attribute
@@ -247,11 +247,11 @@ export declare class AttributeBindingInstruction {
     attr: string, from: string | IsBindingBehavior, to: string);
 }
 export declare class SpreadBindingInstruction {
-    get type(): InstructionType.spreadBinding;
+    readonly type = InstructionType.spreadBinding;
 }
 export declare class SpreadElementPropBindingInstruction {
     readonly instructions: IInstruction;
-    get type(): InstructionType.spreadElementProp;
+    readonly type = InstructionType.spreadElementProp;
     constructor(instructions: IInstruction);
 }
 export declare const ITemplateCompiler: import("@aurelia/kernel").InterfaceSymbol<ITemplateCompiler>;

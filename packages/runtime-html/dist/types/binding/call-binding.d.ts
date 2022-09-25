@@ -1,5 +1,5 @@
 import type { IServiceLocator } from '@aurelia/kernel';
-import type { IAccessor, IObserverLocator, IsBindingBehavior, Scope } from '@aurelia/runtime';
+import { IAccessor, IObserverLocator, IsBindingBehavior, Scope } from '@aurelia/runtime';
 import type { IAstBasedBinding } from './interfaces-bindings';
 /**
  * A binding for handling .call syntax

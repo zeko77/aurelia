@@ -37,13 +37,7 @@ function isArrayIndex(value) {
     }
 }
 const baseCase = (function () {
-    let CharKind;
-    (function (CharKind) {
-        CharKind[CharKind["none"] = 0] = "none";
-        CharKind[CharKind["digit"] = 1] = "digit";
-        CharKind[CharKind["upper"] = 2] = "upper";
-        CharKind[CharKind["lower"] = 3] = "lower";
-    })(CharKind || (CharKind = {}));
+    
     const isDigit = Object.assign(createObject(), {
         '0': true,
         '1': true,
@@ -692,15 +686,7 @@ const newInstanceOf = createResolver((key, handler, requestor) => createNewInsta
 function createNewInstance(key, handler, requestor) {
     return handler.getFactory(key).construct(requestor);
 }
-var ResolverStrategy;
-(function (ResolverStrategy) {
-    ResolverStrategy[ResolverStrategy["instance"] = 0] = "instance";
-    ResolverStrategy[ResolverStrategy["singleton"] = 1] = "singleton";
-    ResolverStrategy[ResolverStrategy["transient"] = 2] = "transient";
-    ResolverStrategy[ResolverStrategy["callback"] = 3] = "callback";
-    ResolverStrategy[ResolverStrategy["array"] = 4] = "array";
-    ResolverStrategy[ResolverStrategy["alias"] = 5] = "alias";
-})(ResolverStrategy || (ResolverStrategy = {}));
+
 class Resolver {
     constructor(_key, _strategy, _state) {
         this._key = _key;

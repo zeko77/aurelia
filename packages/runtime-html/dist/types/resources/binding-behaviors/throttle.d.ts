@@ -1,5 +1,5 @@
-import { BindingInterceptor, IInterceptableBinding } from '../binding-behavior';
-import type { BindingBehaviorExpression, Scope } from '@aurelia/runtime';
+import { BindingInterceptor, type IInterceptableBinding } from '../binding-behavior';
+import { type BindingBehaviorExpression, type Scope } from '@aurelia/runtime';
 export declare class ThrottleBindingBehavior extends BindingInterceptor {
     constructor(binding: IInterceptableBinding, expr: BindingBehaviorExpression);
     callSource(args: object): unknown;

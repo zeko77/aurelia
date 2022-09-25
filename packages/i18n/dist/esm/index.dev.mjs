@@ -1,6 +1,6 @@
 import { DI, IEventAggregator, toArray, camelCase, Registration } from '@aurelia/kernel';
 import { bindingBehavior, valueConverter, astEvaluator, CustomElement, attributePattern, bindingCommand, renderer, AttrSyntax, IPlatform, AttributePattern, BindingCommand, AppTask } from '@aurelia/runtime-html';
-import { ValueConverterExpression, ISignaler, connectable, CustomExpression, Interpolation, IExpressionParser, IObserverLocator } from '@aurelia/runtime';
+import { ValueConverterExpression, ISignaler, connectable, CustomExpression, Interpolation, astEvaluate, astUnbind, astBind, IExpressionParser, IObserverLocator } from '@aurelia/runtime';
 import i18next from 'i18next';
 
 /******************************************************************************
@@ -364,7 +364,7 @@ class TranslationBinding {
         }
         this.scope = scope;
         this._isInterpolation = this.ast instanceof Interpolation;
-        this._keyExpression = this.ast.evaluate(scope, this, this);
+        this._keyExpression = astEvaluate(this.ast, scope, this, this);
         this._ensureKeyExpression();
         this.parameter?.$bind(scope);
         this._updateTranslations();
@@ -374,9 +374,7 @@ class TranslationBinding {
         if (!this.isBound) {
             return;
         }
-        if (this.ast.hasUnbind) {
-            this.ast.unbind(this.scope, this);
-        }
+        astUnbind(this.ast, this.scope, this);
         this.parameter?.$unbind();
         this._targetAccessors.clear();
         if (this.task !== null) {
@@ -389,7 +387,7 @@ class TranslationBinding {
     handleChange(newValue, _previousValue) {
         this.obs.version++;
         this._keyExpression = this._isInterpolation
-            ? this.ast.evaluate(this.scope, this, this)
+            ? astEvaluate(this.ast, this.scope, this, this)
             : newValue;
         this.obs.clear();
         this._ensureKeyExpression();
@@ -541,7 +539,7 @@ class ParameterBinding {
             return;
         }
         this.obs.version++;
-        this.value = this.ast.evaluate(this.scope, this, this);
+        this.value = astEvaluate(this.ast, this.scope, this, this);
         this.obs.clear();
         this.updater();
     }
@@ -550,19 +548,15 @@ class ParameterBinding {
             return;
         }
         this.scope = scope;
-        if (this.ast.hasBind) {
-            this.ast.bind(scope, this);
-        }
-        this.value = this.ast.evaluate(scope, this, this);
+        astBind(this.ast, scope, this);
+        this.value = astEvaluate(this.ast, scope, this, this);
         this.isBound = true;
     }
     $unbind() {
         if (!this.isBound) {
             return;
         }
-        if (this.ast.hasUnbind) {
-            this.ast.unbind(this.scope, this);
-        }
+        astUnbind(this.ast, this.scope, this);
         this.scope = (void 0);
         this.obs.clearAll();
     }

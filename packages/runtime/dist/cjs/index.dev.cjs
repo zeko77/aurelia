@@ -5,73 +5,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
 var kernel = require('@aurelia/kernel');
 var metadata = require('@aurelia/metadata');
 
-class BindingContext {
-    constructor(key, value) {
-        if (key !== void 0) {
-            this[key] = value;
-        }
-    }
-}
-class Scope {
-    constructor(parentScope, bindingContext, overrideContext, isBoundary) {
-        this.parentScope = parentScope;
-        this.bindingContext = bindingContext;
-        this.overrideContext = overrideContext;
-        this.isBoundary = isBoundary;
-    }
-    static getContext(scope, name, ancestor) {
-        if (scope == null) {
-            throw nullScopeError();
-        }
-        let overrideContext = scope.overrideContext;
-        let currentScope = scope;
-        if (ancestor > 0) {
-            while (ancestor > 0) {
-                ancestor--;
-                currentScope = currentScope.parentScope;
-                if (currentScope == null) {
-                    return void 0;
-                }
-            }
-            overrideContext = currentScope.overrideContext;
-            return name in overrideContext ? overrideContext : currentScope.bindingContext;
-        }
-        while (currentScope != null
-            && !currentScope.isBoundary
-            && !(name in currentScope.overrideContext)
-            && !(name in currentScope.bindingContext)) {
-            currentScope = currentScope.parentScope;
-        }
-        if (currentScope == null) {
-            return scope.bindingContext;
-        }
-        overrideContext = currentScope.overrideContext;
-        return name in overrideContext ? overrideContext : currentScope.bindingContext;
-    }
-    static create(bc, oc, isBoundary) {
-        if (bc == null) {
-            throw nullContextError();
-        }
-        return new Scope(null, bc, oc == null ? new OverrideContext() : oc, isBoundary ?? false);
-    }
-    static fromParent(ps, bc) {
-        if (ps == null) {
-            throw nullScopeError();
-        }
-        return new Scope(ps, bc, new OverrideContext(), false);
-    }
-}
-const nullScopeError = () => {
-    return new Error(`AUR0203: scope is null/undefined.`)
-        ;
-};
-const nullContextError = () => {
-    return new Error('AUR0204: binding context is null/undefined')
-        ;
-};
-class OverrideContext {
-}
-
 const hasOwnProp = Object.prototype.hasOwnProperty;
 const def = Reflect.defineProperty;
 const isFunction = (v) => typeof v === 'function';
@@ -92,6 +25,7 @@ function ensureProto(proto, key, defaultValue) {
     }
 }
 const safeString = String;
+const createInterface = kernel.DI.createInterface;
 const createLookup = () => Object.create(null);
 const getOwnMetadata = metadata.Metadata.getOwn;
 metadata.Metadata.hasOwn;
@@ -100,33 +34,332 @@ kernel.Protocol.annotation.keyFor;
 kernel.Protocol.resource.keyFor;
 kernel.Protocol.resource.appendTo;
 
-const ISignaler = kernel.DI.createInterface('ISignaler', x => x.singleton(Signaler));
-class Signaler {
-    constructor() {
-        this.signals = createLookup();
+const astVisit = (ast, visitor) => {
+    switch (ast.$kind) {
+        case 11: return visitor.visitAccessKeyed(ast);
+        case 10: return visitor.visitAccessMember(ast);
+        case 1: return visitor.visitAccessScope(ast);
+        case 0: return visitor.visitAccessThis(ast);
+        case 19: return visitor.visitArrayBindingPattern(ast);
+        case 24: return visitor.visitDestructuringAssignmentExpression(ast);
+        case 2: return visitor.visitArrayLiteral(ast);
+        case 16: return visitor.visitArrowFunction(ast);
+        case 15: return visitor.visitAssign(ast);
+        case 13: return visitor.visitBinary(ast);
+        case 18: return visitor.visitBindingBehavior(ast);
+        case 21: return visitor.visitBindingIdentifier(ast);
+        case 9: return visitor.visitCallFunction(ast);
+        case 8: return visitor.visitCallMember(ast);
+        case 7: return visitor.visitCallScope(ast);
+        case 14: return visitor.visitConditional(ast);
+        case 26: return visitor.visitDestructuringAssignmentSingleExpression(ast);
+        case 22: return visitor.visitForOfStatement(ast);
+        case 23: return visitor.visitInterpolation(ast);
+        case 20: return visitor.visitObjectBindingPattern(ast);
+        case 25: return visitor.visitDestructuringAssignmentExpression(ast);
+        case 3: return visitor.visitObjectLiteral(ast);
+        case 4: return visitor.visitPrimitiveLiteral(ast);
+        case 12: return visitor.visitTaggedTemplate(ast);
+        case 5: return visitor.visitTemplate(ast);
+        case 6: return visitor.visitUnary(ast);
+        case 17: return visitor.visitValueConverter(ast);
+        case 28: return visitor.visitCustom(ast);
+        default: {
+            throw new Error(`Unknown ast node ${JSON.stringify(ast)}`);
+        }
     }
-    dispatchSignal(name) {
-        const listeners = this.signals[name];
-        if (listeners === undefined) {
+};
+class Unparser {
+    constructor() {
+        this.text = '';
+    }
+    static unparse(expr) {
+        const visitor = new Unparser();
+        astVisit(expr, visitor);
+        return visitor.text;
+    }
+    visitAccessMember(expr) {
+        astVisit(expr.object, this);
+        this.text += `${expr.optional ? '?' : ''}.${expr.name}`;
+    }
+    visitAccessKeyed(expr) {
+        astVisit(expr.object, this);
+        this.text += `${expr.optional ? '?.' : ''}[`;
+        astVisit(expr.key, this);
+        this.text += ']';
+    }
+    visitAccessThis(expr) {
+        if (expr.ancestor === 0) {
+            this.text += '$this';
             return;
         }
-        let listener;
-        for (listener of listeners.keys()) {
-            listener.handleChange(undefined, undefined);
+        this.text += '$parent';
+        let i = expr.ancestor - 1;
+        while (i--) {
+            this.text += '.$parent';
         }
     }
-    addSignalListener(name, listener) {
-        const signals = this.signals;
-        const listeners = signals[name];
-        if (listeners === undefined) {
-            signals[name] = new Set([listener]);
+    visitAccessScope(expr) {
+        let i = expr.ancestor;
+        while (i--) {
+            this.text += '$parent.';
+        }
+        this.text += expr.name;
+    }
+    visitArrayLiteral(expr) {
+        const elements = expr.elements;
+        this.text += '[';
+        for (let i = 0, length = elements.length; i < length; ++i) {
+            if (i !== 0) {
+                this.text += ',';
+            }
+            astVisit(elements[i], this);
+        }
+        this.text += ']';
+    }
+    visitArrowFunction(expr) {
+        const args = expr.args;
+        const ii = args.length;
+        let i = 0;
+        let text = '(';
+        let name;
+        for (; i < ii; ++i) {
+            name = args[i].name;
+            if (i > 0) {
+                text += ', ';
+            }
+            if (i < ii - 1) {
+                text += name;
+            }
+            else {
+                text += expr.rest ? `...${name}` : name;
+            }
+        }
+        this.text += `${text}) => `;
+        astVisit(expr.body, this);
+    }
+    visitObjectLiteral(expr) {
+        const keys = expr.keys;
+        const values = expr.values;
+        this.text += '{';
+        for (let i = 0, length = keys.length; i < length; ++i) {
+            if (i !== 0) {
+                this.text += ',';
+            }
+            this.text += `'${keys[i]}':`;
+            astVisit(values[i], this);
+        }
+        this.text += '}';
+    }
+    visitPrimitiveLiteral(expr) {
+        this.text += '(';
+        if (isString(expr.value)) {
+            const escaped = expr.value.replace(/'/g, '\\\'');
+            this.text += `'${escaped}'`;
         }
         else {
-            listeners.add(listener);
+            this.text += `${expr.value}`;
+        }
+        this.text += ')';
+    }
+    visitCallFunction(expr) {
+        this.text += '(';
+        astVisit(expr.func, this);
+        this.text += expr.optional ? '?.' : '';
+        this.writeArgs(expr.args);
+        this.text += ')';
+    }
+    visitCallMember(expr) {
+        this.text += '(';
+        astVisit(expr.object, this);
+        this.text += `${expr.optionalMember ? '?.' : ''}.${expr.name}${expr.optionalCall ? '?.' : ''}`;
+        this.writeArgs(expr.args);
+        this.text += ')';
+    }
+    visitCallScope(expr) {
+        this.text += '(';
+        let i = expr.ancestor;
+        while (i--) {
+            this.text += '$parent.';
+        }
+        this.text += `${expr.name}${expr.optional ? '?.' : ''}`;
+        this.writeArgs(expr.args);
+        this.text += ')';
+    }
+    visitTemplate(expr) {
+        const { cooked, expressions } = expr;
+        const length = expressions.length;
+        this.text += '`';
+        this.text += cooked[0];
+        for (let i = 0; i < length; i++) {
+            astVisit(expressions[i], this);
+            this.text += cooked[i + 1];
+        }
+        this.text += '`';
+    }
+    visitTaggedTemplate(expr) {
+        const { cooked, expressions } = expr;
+        const length = expressions.length;
+        astVisit(expr.func, this);
+        this.text += '`';
+        this.text += cooked[0];
+        for (let i = 0; i < length; i++) {
+            astVisit(expressions[i], this);
+            this.text += cooked[i + 1];
+        }
+        this.text += '`';
+    }
+    visitUnary(expr) {
+        this.text += `(${expr.operation}`;
+        if (expr.operation.charCodeAt(0) >= 97) {
+            this.text += ' ';
+        }
+        astVisit(expr.expression, this);
+        this.text += ')';
+    }
+    visitBinary(expr) {
+        this.text += '(';
+        astVisit(expr.left, this);
+        if (expr.operation.charCodeAt(0) === 105) {
+            this.text += ` ${expr.operation} `;
+        }
+        else {
+            this.text += expr.operation;
+        }
+        astVisit(expr.right, this);
+        this.text += ')';
+    }
+    visitConditional(expr) {
+        this.text += '(';
+        astVisit(expr.condition, this);
+        this.text += '?';
+        astVisit(expr.yes, this);
+        this.text += ':';
+        astVisit(expr.no, this);
+        this.text += ')';
+    }
+    visitAssign(expr) {
+        this.text += '(';
+        astVisit(expr.target, this);
+        this.text += '=';
+        astVisit(expr.value, this);
+        this.text += ')';
+    }
+    visitValueConverter(expr) {
+        const args = expr.args;
+        astVisit(expr.expression, this);
+        this.text += `|${expr.name}`;
+        for (let i = 0, length = args.length; i < length; ++i) {
+            this.text += ':';
+            astVisit(args[i], this);
         }
     }
-    removeSignalListener(name, listener) {
-        this.signals[name]?.delete(listener);
+    visitBindingBehavior(expr) {
+        const args = expr.args;
+        astVisit(expr.expression, this);
+        this.text += `&${expr.name}`;
+        for (let i = 0, length = args.length; i < length; ++i) {
+            this.text += ':';
+            astVisit(args[i], this);
+        }
+    }
+    visitArrayBindingPattern(expr) {
+        const elements = expr.elements;
+        this.text += '[';
+        for (let i = 0, length = elements.length; i < length; ++i) {
+            if (i !== 0) {
+                this.text += ',';
+            }
+            astVisit(elements[i], this);
+        }
+        this.text += ']';
+    }
+    visitObjectBindingPattern(expr) {
+        const keys = expr.keys;
+        const values = expr.values;
+        this.text += '{';
+        for (let i = 0, length = keys.length; i < length; ++i) {
+            if (i !== 0) {
+                this.text += ',';
+            }
+            this.text += `'${keys[i]}':`;
+            astVisit(values[i], this);
+        }
+        this.text += '}';
+    }
+    visitBindingIdentifier(expr) {
+        this.text += expr.name;
+    }
+    visitForOfStatement(expr) {
+        astVisit(expr.declaration, this);
+        this.text += ' of ';
+        astVisit(expr.iterable, this);
+    }
+    visitInterpolation(expr) {
+        const { parts, expressions } = expr;
+        const length = expressions.length;
+        this.text += '${';
+        this.text += parts[0];
+        for (let i = 0; i < length; i++) {
+            astVisit(expressions[i], this);
+            this.text += parts[i + 1];
+        }
+        this.text += '}';
+    }
+    visitDestructuringAssignmentExpression(expr) {
+        const $kind = expr.$kind;
+        const isObjDes = $kind === 25;
+        this.text += isObjDes ? '{' : '[';
+        const list = expr.list;
+        const len = list.length;
+        let i;
+        let item;
+        for (i = 0; i < len; i++) {
+            item = list[i];
+            switch (item.$kind) {
+                case 26:
+                    astVisit(item, this);
+                    break;
+                case 24:
+                case 25: {
+                    const source = item.source;
+                    if (source) {
+                        astVisit(source, this);
+                        this.text += ':';
+                    }
+                    astVisit(item, this);
+                    break;
+                }
+            }
+        }
+        this.text += isObjDes ? '}' : ']';
+    }
+    visitDestructuringAssignmentSingleExpression(expr) {
+        astVisit(expr.source, this);
+        this.text += ':';
+        astVisit(expr.target, this);
+        const initializer = expr.initializer;
+        if (initializer !== void 0) {
+            this.text += '=';
+            astVisit(initializer, this);
+        }
+    }
+    visitDestructuringAssignmentRestExpression(expr) {
+        this.text += '...';
+        astVisit(expr.target, this);
+    }
+    visitCustom(expr) {
+        this.text += safeString(expr.value);
+    }
+    writeArgs(args) {
+        this.text += '(';
+        for (let i = 0, length = args.length; i < length; ++i) {
+            if (i !== 0) {
+                this.text += ',';
+            }
+            astVisit(args[i], this);
+        }
+        this.text += ')';
     }
 }
 
@@ -159,303 +392,26 @@ exports.ExpressionKind = void 0;
     ExpressionKind[ExpressionKind["ArrayDestructuring"] = 24] = "ArrayDestructuring";
     ExpressionKind[ExpressionKind["ObjectDestructuring"] = 25] = "ObjectDestructuring";
     ExpressionKind[ExpressionKind["DestructuringAssignmentLeaf"] = 26] = "DestructuringAssignmentLeaf";
+    ExpressionKind[ExpressionKind["DestructuringAssignmentRestLeaf"] = 27] = "DestructuringAssignmentRestLeaf";
+    ExpressionKind[ExpressionKind["Custom"] = 28] = "Custom";
 })(exports.ExpressionKind || (exports.ExpressionKind = {}));
-class Unparser {
-    constructor() {
-        this.text = '';
-    }
-    static unparse(expr) {
-        const visitor = new Unparser();
-        expr.accept(visitor);
-        return visitor.text;
-    }
-    visitAccessMember(expr) {
-        expr.object.accept(this);
-        this.text += `${expr.optional ? '?' : ''}.${expr.name}`;
-    }
-    visitAccessKeyed(expr) {
-        expr.object.accept(this);
-        this.text += `${expr.optional ? '?.' : ''}[`;
-        expr.key.accept(this);
-        this.text += ']';
-    }
-    visitAccessThis(expr) {
-        if (expr.ancestor === 0) {
-            this.text += '$this';
-            return;
-        }
-        this.text += '$parent';
-        let i = expr.ancestor - 1;
-        while (i--) {
-            this.text += '.$parent';
-        }
-    }
-    visitAccessScope(expr) {
-        let i = expr.ancestor;
-        while (i--) {
-            this.text += '$parent.';
-        }
-        this.text += expr.name;
-    }
-    visitArrayLiteral(expr) {
-        const elements = expr.elements;
-        this.text += '[';
-        for (let i = 0, length = elements.length; i < length; ++i) {
-            if (i !== 0) {
-                this.text += ',';
-            }
-            elements[i].accept(this);
-        }
-        this.text += ']';
-    }
-    visitArrowFunction(expr) {
-        const args = expr.args;
-        const ii = args.length;
-        let i = 0;
-        let text = '(';
-        let name;
-        for (; i < ii; ++i) {
-            name = args[i].name;
-            if (i > 0) {
-                text += ', ';
-            }
-            if (i < ii - 1) {
-                text += name;
-            }
-            else {
-                text += expr.rest ? `...${name}` : name;
-            }
-        }
-        this.text += `${text}) => `;
-        expr.body.accept(this);
-    }
-    visitObjectLiteral(expr) {
-        const keys = expr.keys;
-        const values = expr.values;
-        this.text += '{';
-        for (let i = 0, length = keys.length; i < length; ++i) {
-            if (i !== 0) {
-                this.text += ',';
-            }
-            this.text += `'${keys[i]}':`;
-            values[i].accept(this);
-        }
-        this.text += '}';
-    }
-    visitPrimitiveLiteral(expr) {
-        this.text += '(';
-        if (isString(expr.value)) {
-            const escaped = expr.value.replace(/'/g, '\\\'');
-            this.text += `'${escaped}'`;
-        }
-        else {
-            this.text += `${expr.value}`;
-        }
-        this.text += ')';
-    }
-    visitCallFunction(expr) {
-        this.text += '(';
-        expr.func.accept(this);
-        this.text += expr.optional ? '?.' : '';
-        this.writeArgs(expr.args);
-        this.text += ')';
-    }
-    visitCallMember(expr) {
-        this.text += '(';
-        expr.object.accept(this);
-        this.text += `${expr.optionalMember ? '?.' : ''}.${expr.name}${expr.optionalCall ? '?.' : ''}`;
-        this.writeArgs(expr.args);
-        this.text += ')';
-    }
-    visitCallScope(expr) {
-        this.text += '(';
-        let i = expr.ancestor;
-        while (i--) {
-            this.text += '$parent.';
-        }
-        this.text += `${expr.name}${expr.optional ? '?.' : ''}`;
-        this.writeArgs(expr.args);
-        this.text += ')';
-    }
-    visitTemplate(expr) {
-        const { cooked, expressions } = expr;
-        const length = expressions.length;
-        this.text += '`';
-        this.text += cooked[0];
-        for (let i = 0; i < length; i++) {
-            expressions[i].accept(this);
-            this.text += cooked[i + 1];
-        }
-        this.text += '`';
-    }
-    visitTaggedTemplate(expr) {
-        const { cooked, expressions } = expr;
-        const length = expressions.length;
-        expr.func.accept(this);
-        this.text += '`';
-        this.text += cooked[0];
-        for (let i = 0; i < length; i++) {
-            expressions[i].accept(this);
-            this.text += cooked[i + 1];
-        }
-        this.text += '`';
-    }
-    visitUnary(expr) {
-        this.text += `(${expr.operation}`;
-        if (expr.operation.charCodeAt(0) >= 97) {
-            this.text += ' ';
-        }
-        expr.expression.accept(this);
-        this.text += ')';
-    }
-    visitBinary(expr) {
-        this.text += '(';
-        expr.left.accept(this);
-        if (expr.operation.charCodeAt(0) === 105) {
-            this.text += ` ${expr.operation} `;
-        }
-        else {
-            this.text += expr.operation;
-        }
-        expr.right.accept(this);
-        this.text += ')';
-    }
-    visitConditional(expr) {
-        this.text += '(';
-        expr.condition.accept(this);
-        this.text += '?';
-        expr.yes.accept(this);
-        this.text += ':';
-        expr.no.accept(this);
-        this.text += ')';
-    }
-    visitAssign(expr) {
-        this.text += '(';
-        expr.target.accept(this);
-        this.text += '=';
-        expr.value.accept(this);
-        this.text += ')';
-    }
-    visitValueConverter(expr) {
-        const args = expr.args;
-        expr.expression.accept(this);
-        this.text += `|${expr.name}`;
-        for (let i = 0, length = args.length; i < length; ++i) {
-            this.text += ':';
-            args[i].accept(this);
-        }
-    }
-    visitBindingBehavior(expr) {
-        const args = expr.args;
-        expr.expression.accept(this);
-        this.text += `&${expr.name}`;
-        for (let i = 0, length = args.length; i < length; ++i) {
-            this.text += ':';
-            args[i].accept(this);
-        }
-    }
-    visitArrayBindingPattern(expr) {
-        const elements = expr.elements;
-        this.text += '[';
-        for (let i = 0, length = elements.length; i < length; ++i) {
-            if (i !== 0) {
-                this.text += ',';
-            }
-            elements[i].accept(this);
-        }
-        this.text += ']';
-    }
-    visitObjectBindingPattern(expr) {
-        const keys = expr.keys;
-        const values = expr.values;
-        this.text += '{';
-        for (let i = 0, length = keys.length; i < length; ++i) {
-            if (i !== 0) {
-                this.text += ',';
-            }
-            this.text += `'${keys[i]}':`;
-            values[i].accept(this);
-        }
-        this.text += '}';
-    }
-    visitBindingIdentifier(expr) {
-        this.text += expr.name;
-    }
-    visitForOfStatement(expr) {
-        expr.declaration.accept(this);
-        this.text += ' of ';
-        expr.iterable.accept(this);
-    }
-    visitInterpolation(expr) {
-        const { parts, expressions } = expr;
-        const length = expressions.length;
-        this.text += '${';
-        this.text += parts[0];
-        for (let i = 0; i < length; i++) {
-            expressions[i].accept(this);
-            this.text += parts[i + 1];
-        }
-        this.text += '}';
-    }
-    visitDestructuringAssignmentExpression(expr) {
-        const $kind = expr.$kind;
-        const isObjDes = $kind === 25;
-        this.text += isObjDes ? '{' : '[';
-        const list = expr.list;
-        const len = list.length;
-        let i;
-        let item;
-        for (i = 0; i < len; i++) {
-            item = list[i];
-            switch (item.$kind) {
-                case 26:
-                    item.accept(this);
-                    break;
-                case 24:
-                case 25: {
-                    const source = item.source;
-                    if (source) {
-                        source.accept(this);
-                        this.text += ':';
-                    }
-                    item.accept(this);
-                    break;
-                }
-            }
-        }
-        this.text += isObjDes ? '}' : ']';
-    }
-    visitDestructuringAssignmentSingleExpression(expr) {
-        expr.source.accept(this);
-        this.text += ':';
-        expr.target.accept(this);
-        const initializer = expr.initializer;
-        if (initializer !== void 0) {
-            this.text += '=';
-            initializer.accept(this);
-        }
-    }
-    visitDestructuringAssignmentRestExpression(expr) {
-        this.text += '...';
-        expr.accept(this);
-    }
-    writeArgs(args) {
-        this.text += '(';
-        for (let i = 0, length = args.length; i < length; ++i) {
-            if (i !== 0) {
-                this.text += ',';
-            }
-            args[i].accept(this);
-        }
-        this.text += ')';
-    }
-}
 class CustomExpression {
     constructor(value) {
         this.value = value;
+        this.$kind = 28;
     }
     evaluate(_s, _e, _c) {
         return this.value;
+    }
+    assign(s, e, val) {
+        return val;
+    }
+    bind(s, b) {
+    }
+    unbind(s, b) {
+    }
+    accept(_visitor) {
+        return (void 0);
     }
 }
 class BindingBehaviorExpression {
@@ -463,148 +419,23 @@ class BindingBehaviorExpression {
         this.expression = expression;
         this.name = name;
         this.args = args;
-        this._key = `_bb_${name}`;
-    }
-    get $kind() { return 18; }
-    get hasBind() { return true; }
-    get hasUnbind() { return true; }
-    evaluate(s, e, c) {
-        return this.expression.evaluate(s, e, c);
-    }
-    assign(s, e, val) {
-        return this.expression.assign(s, e, val);
-    }
-    bind(s, b) {
-        const name = this.name;
-        const key = this._key;
-        const behavior = b.getBehavior?.(name);
-        if (behavior == null) {
-            throw behaviorNotFoundError(name);
-        }
-        if (b[key] === void 0) {
-            b[key] = behavior;
-            behavior.bind?.(s, b, ...this.args.map(a => a.evaluate(s, b, null)));
-        }
-        else {
-            throw duplicateBehaviorAppliedError(name);
-        }
-        if (this.expression.hasBind) {
-            this.expression.bind(s, b);
-        }
-    }
-    unbind(s, b) {
-        const internalKey = this._key;
-        const $b = b;
-        if ($b[internalKey] !== void 0) {
-            $b[internalKey].unbind?.(s, b);
-            $b[internalKey] = void 0;
-        }
-        if (this.expression.hasUnbind) {
-            this.expression.unbind(s, b);
-        }
-    }
-    accept(visitor) {
-        return visitor.visitBindingBehavior(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 18;
+        this.key = `_bb_${name}`;
     }
 }
-const behaviorNotFoundError = (name) => new Error(`AUR0101: BindingBehavior '${name}' could not be found. Did you forget to register it as a dependency?`)
-    ;
-const duplicateBehaviorAppliedError = (name) => new Error(`AUR0102: BindingBehavior '${name}' already applied.`)
-    ;
 class ValueConverterExpression {
     constructor(expression, name, args) {
         this.expression = expression;
         this.name = name;
         this.args = args;
-    }
-    get $kind() { return 17; }
-    get hasBind() { return true; }
-    get hasUnbind() { return true; }
-    evaluate(s, e, c) {
-        const name = this.name;
-        const vc = e?.getConverter?.(name);
-        if (vc == null) {
-            throw converterNotFoundError(name);
-        }
-        if ('toView' in vc) {
-            return vc.toView(this.expression.evaluate(s, e, c), ...this.args.map(a => a.evaluate(s, e, c)));
-        }
-        return this.expression.evaluate(s, e, c);
-    }
-    assign(s, e, val) {
-        const name = this.name;
-        const vc = e?.getConverter?.(name);
-        if (vc == null) {
-            throw converterNotFoundError(name);
-        }
-        if ('fromView' in vc) {
-            val = vc.fromView(val, ...this.args.map(a => a.evaluate(s, e, null)));
-        }
-        return this.expression.assign(s, e, val);
-    }
-    bind(s, b) {
-        const name = this.name;
-        const vc = b.getConverter?.(name);
-        if (vc == null) {
-            throw converterNotFoundError(name);
-        }
-        const signals = vc.signals;
-        if (signals != null) {
-            const signaler = b.get?.(ISignaler);
-            const ii = signals.length;
-            let i = 0;
-            for (; i < ii; ++i) {
-                signaler?.addSignalListener(signals[i], b);
-            }
-        }
-        if (this.expression.hasBind) {
-            this.expression.bind(s, b);
-        }
-    }
-    unbind(_s, b) {
-        const vc = b.getConverter?.(this.name);
-        if (vc?.signals === void 0) {
-            return;
-        }
-        const signaler = b.get(ISignaler);
-        let i = 0;
-        for (; i < vc.signals.length; ++i) {
-            signaler.removeSignalListener(vc.signals[i], b);
-        }
-    }
-    accept(visitor) {
-        return visitor.visitValueConverter(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 17;
     }
 }
-const converterNotFoundError = (name) => {
-    return new Error(`AUR0103: ValueConverter '${name}' could not be found. Did you forget to register it as a dependency?`);
-};
 class AssignExpression {
     constructor(target, value) {
         this.target = target;
         this.value = value;
-    }
-    get $kind() { return 15; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, e, c) {
-        return this.target.assign(s, e, this.value.evaluate(s, e, c));
-    }
-    assign(s, e, val) {
-        this.value.assign(s, e, val);
-        return this.target.assign(s, e, val);
-    }
-    accept(visitor) {
-        return visitor.visitAssign(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 15;
     }
 }
 class ConditionalExpression {
@@ -612,46 +443,13 @@ class ConditionalExpression {
         this.condition = condition;
         this.yes = yes;
         this.no = no;
-    }
-    get $kind() { return 14; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, e, c) {
-        return this.condition.evaluate(s, e, c) ? this.yes.evaluate(s, e, c) : this.no.evaluate(s, e, c);
-    }
-    assign(_s, _e, _obj) {
-        return void 0;
-    }
-    accept(visitor) {
-        return visitor.visitConditional(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 14;
     }
 }
 class AccessThisExpression {
     constructor(ancestor = 0) {
         this.ancestor = ancestor;
-    }
-    get $kind() { return 0; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, _e, _c) {
-        let currentScope = s;
-        let i = this.ancestor;
-        while (i-- && currentScope) {
-            currentScope = currentScope.parentScope;
-        }
-        return i < 1 && currentScope ? currentScope.bindingContext : void 0;
-    }
-    assign(_s, _e, _obj) {
-        return void 0;
-    }
-    accept(visitor) {
-        return visitor.visitAccessThis(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 0;
     }
 }
 AccessThisExpression.$this = new AccessThisExpression(0);
@@ -660,50 +458,7 @@ class AccessScopeExpression {
     constructor(name, ancestor = 0) {
         this.name = name;
         this.ancestor = ancestor;
-    }
-    get $kind() { return 1; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, e, c) {
-        const obj = Scope.getContext(s, this.name, this.ancestor);
-        if (c !== null) {
-            c.observe(obj, this.name);
-        }
-        const evaluatedValue = obj[this.name];
-        if (evaluatedValue == null && this.name === '$host') {
-            throw new Error(`AUR0105: Unable to find $host context. Did you forget [au-slot] attribute?`);
-        }
-        if (e?.strict) {
-            return e?.boundFn && isFunction(evaluatedValue)
-                ? evaluatedValue.bind(obj)
-                : evaluatedValue;
-        }
-        return evaluatedValue == null
-            ? ''
-            : e?.boundFn && isFunction(evaluatedValue)
-                ? evaluatedValue.bind(obj)
-                : evaluatedValue;
-    }
-    assign(s, _e, val) {
-        if (this.name === '$host') {
-            throw new Error(`AUR0106: Invalid assignment. $host is a reserved keyword.`);
-        }
-        const obj = Scope.getContext(s, this.name, this.ancestor);
-        if (obj instanceof Object) {
-            if (obj.$observers?.[this.name] !== void 0) {
-                obj.$observers[this.name].setValue(val);
-                return val;
-            }
-            else {
-                return obj[this.name] = val;
-            }
-        }
-    }
-    accept(visitor) {
-        return visitor.visitAccessScope(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 1;
     }
 }
 class AccessMemberExpression {
@@ -711,58 +466,7 @@ class AccessMemberExpression {
         this.object = object;
         this.name = name;
         this.optional = optional;
-    }
-    get $kind() { return 10; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, e, c) {
-        const instance = this.object.evaluate(s, e, c);
-        let ret;
-        if (e?.strict) {
-            if (instance == null) {
-                return instance;
-            }
-            if (c !== null) {
-                c.observe(instance, this.name);
-            }
-            ret = instance[this.name];
-            if (e?.boundFn && isFunction(ret)) {
-                return ret.bind(instance);
-            }
-            return ret;
-        }
-        if (c !== null && instance instanceof Object) {
-            c.observe(instance, this.name);
-        }
-        if (instance) {
-            ret = instance[this.name];
-            if (e?.boundFn && isFunction(ret)) {
-                return ret.bind(instance);
-            }
-            return ret;
-        }
-        return '';
-    }
-    assign(s, e, val) {
-        const obj = this.object.evaluate(s, e, null);
-        if (obj instanceof Object) {
-            if (obj.$observers !== void 0 && obj.$observers[this.name] !== void 0) {
-                obj.$observers[this.name].setValue(val);
-            }
-            else {
-                obj[this.name] = val;
-            }
-        }
-        else {
-            this.object.assign(s, e, { [this.name]: val });
-        }
-        return val;
-    }
-    accept(visitor) {
-        return visitor.visitAccessMember(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 10;
     }
 }
 class AccessKeyedExpression {
@@ -770,31 +474,7 @@ class AccessKeyedExpression {
         this.object = object;
         this.key = key;
         this.optional = optional;
-    }
-    get $kind() { return 11; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, e, c) {
-        const instance = this.object.evaluate(s, e, c);
-        if (instance instanceof Object) {
-            const key = this.key.evaluate(s, e, c);
-            if (c !== null) {
-                c.observe(instance, key);
-            }
-            return instance[key];
-        }
-        return void 0;
-    }
-    assign(s, e, val) {
-        const instance = this.object.evaluate(s, e, null);
-        const key = this.key.evaluate(s, e, null);
-        return instance[key] = val;
-    }
-    accept(visitor) {
-        return visitor.visitAccessKeyed(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 11;
     }
 }
 class CallScopeExpression {
@@ -803,30 +483,9 @@ class CallScopeExpression {
         this.args = args;
         this.ancestor = ancestor;
         this.optional = optional;
-    }
-    get $kind() { return 7; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, e, c) {
-        const args = this.args.map(a => a.evaluate(s, e, c));
-        const context = Scope.getContext(s, this.name, this.ancestor);
-        const func = getFunction(e?.strictFnCall, context, this.name);
-        if (func) {
-            return func.apply(context, args);
-        }
-        return void 0;
-    }
-    assign(_s, _e, _obj) {
-        return void 0;
-    }
-    accept(visitor) {
-        return visitor.visitCallScope(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 7;
     }
 }
-const autoObserveArrayMethods = 'at map filter includes indexOf lastIndexOf findIndex find flat flatMap join reduce reduceRight slice every some sort'.split(' ');
 class CallMemberExpression {
     constructor(object, name, args, optionalMember = false, optionalCall = false) {
         this.object = object;
@@ -834,31 +493,7 @@ class CallMemberExpression {
         this.args = args;
         this.optionalMember = optionalMember;
         this.optionalCall = optionalCall;
-    }
-    get $kind() { return 8; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, e, c) {
-        const instance = this.object.evaluate(s, e, c);
-        const args = this.args.map(a => a.evaluate(s, e, c));
-        const func = getFunction(e?.strictFnCall, instance, this.name);
-        if (func) {
-            const ret = func.apply(instance, args);
-            if (isArray(instance) && autoObserveArrayMethods.includes(this.name)) {
-                c?.observeCollection(instance);
-            }
-            return ret;
-        }
-        return void 0;
-    }
-    assign(_s, _e, _obj) {
-        return void 0;
-    }
-    accept(visitor) {
-        return visitor.visitCallMember(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 8;
     }
 }
 class CallFunctionExpression {
@@ -866,28 +501,7 @@ class CallFunctionExpression {
         this.func = func;
         this.args = args;
         this.optional = optional;
-    }
-    get $kind() { return 9; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, e, c) {
-        const func = this.func.evaluate(s, e, c);
-        if (isFunction(func)) {
-            return func(...this.args.map(a => a.evaluate(s, e, c)));
-        }
-        if (!e?.strictFnCall && func == null) {
-            return void 0;
-        }
-        throw new Error(`AUR0107: Expression is not a function.`);
-    }
-    assign(_s, _e, _obj) {
-        return void 0;
-    }
-    accept(visitor) {
-        return visitor.visitCallFunction(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 9;
     }
 }
 class BinaryExpression {
@@ -895,138 +509,20 @@ class BinaryExpression {
         this.operation = operation;
         this.left = left;
         this.right = right;
-    }
-    get $kind() { return 13; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, e, c) {
-        switch (this.operation) {
-            case '&&':
-                return this.left.evaluate(s, e, c) && this.right.evaluate(s, e, c);
-            case '||':
-                return this.left.evaluate(s, e, c) || this.right.evaluate(s, e, c);
-            case '??':
-                return this.left.evaluate(s, e, c) ?? this.right.evaluate(s, e, c);
-            case '==':
-                return this.left.evaluate(s, e, c) == this.right.evaluate(s, e, c);
-            case '===':
-                return this.left.evaluate(s, e, c) === this.right.evaluate(s, e, c);
-            case '!=':
-                return this.left.evaluate(s, e, c) != this.right.evaluate(s, e, c);
-            case '!==':
-                return this.left.evaluate(s, e, c) !== this.right.evaluate(s, e, c);
-            case 'instanceof': {
-                const right = this.right.evaluate(s, e, c);
-                if (isFunction(right)) {
-                    return this.left.evaluate(s, e, c) instanceof right;
-                }
-                return false;
-            }
-            case 'in': {
-                const right = this.right.evaluate(s, e, c);
-                if (right instanceof Object) {
-                    return this.left.evaluate(s, e, c) in right;
-                }
-                return false;
-            }
-            case '+': {
-                const left = this.left.evaluate(s, e, c);
-                const right = this.right.evaluate(s, e, c);
-                if (e?.strict) {
-                    return left + right;
-                }
-                if (!left || !right) {
-                    if (isNumberOrBigInt(left) || isNumberOrBigInt(right)) {
-                        return (left || 0) + (right || 0);
-                    }
-                    if (isStringOrDate(left) || isStringOrDate(right)) {
-                        return (left || '') + (right || '');
-                    }
-                }
-                return left + right;
-            }
-            case '-':
-                return this.left.evaluate(s, e, c) - this.right.evaluate(s, e, c);
-            case '*':
-                return this.left.evaluate(s, e, c) * this.right.evaluate(s, e, c);
-            case '/':
-                return this.left.evaluate(s, e, c) / this.right.evaluate(s, e, c);
-            case '%':
-                return this.left.evaluate(s, e, c) % this.right.evaluate(s, e, c);
-            case '<':
-                return this.left.evaluate(s, e, c) < this.right.evaluate(s, e, c);
-            case '>':
-                return this.left.evaluate(s, e, c) > this.right.evaluate(s, e, c);
-            case '<=':
-                return this.left.evaluate(s, e, c) <= this.right.evaluate(s, e, c);
-            case '>=':
-                return this.left.evaluate(s, e, c) >= this.right.evaluate(s, e, c);
-            default:
-                throw new Error(`AUR0108: Unknown binary operator: '${this.operation}'`);
-        }
-    }
-    assign(_s, _e, _obj) {
-        return void 0;
-    }
-    accept(visitor) {
-        return visitor.visitBinary(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 13;
     }
 }
 class UnaryExpression {
     constructor(operation, expression) {
         this.operation = operation;
         this.expression = expression;
-    }
-    get $kind() { return 6; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, e, c) {
-        switch (this.operation) {
-            case 'void':
-                return void this.expression.evaluate(s, e, c);
-            case 'typeof':
-                return typeof this.expression.evaluate(s, e, c);
-            case '!':
-                return !this.expression.evaluate(s, e, c);
-            case '-':
-                return -this.expression.evaluate(s, e, c);
-            case '+':
-                return +this.expression.evaluate(s, e, c);
-            default:
-                throw new Error(`AUR0109: Unknown unary operator: '${this.operation}'`);
-        }
-    }
-    assign(_s, _e, _obj) {
-        return void 0;
-    }
-    accept(visitor) {
-        return visitor.visitUnary(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 6;
     }
 }
 class PrimitiveLiteralExpression {
     constructor(value) {
         this.value = value;
-    }
-    get $kind() { return 4; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(_s, _e, _c) {
-        return this.value;
-    }
-    assign(_s, _e, _obj) {
-        return void 0;
-    }
-    accept(visitor) {
-        return visitor.visitPrimitiveLiteral(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 4;
     }
 }
 PrimitiveLiteralExpression.$undefined = new PrimitiveLiteralExpression(void 0);
@@ -1037,21 +533,7 @@ PrimitiveLiteralExpression.$empty = new PrimitiveLiteralExpression('');
 class ArrayLiteralExpression {
     constructor(elements) {
         this.elements = elements;
-    }
-    get $kind() { return 2; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, e, c) {
-        return this.elements.map(el => el.evaluate(s, e, c));
-    }
-    assign(_s, _e, _obj) {
-        return void 0;
-    }
-    accept(visitor) {
-        return visitor.visitArrayLiteral(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 2;
     }
 }
 ArrayLiteralExpression.$empty = new ArrayLiteralExpression(kernel.emptyArray);
@@ -1059,25 +541,7 @@ class ObjectLiteralExpression {
     constructor(keys, values) {
         this.keys = keys;
         this.values = values;
-    }
-    get $kind() { return 3; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, e, c) {
-        const instance = {};
-        for (let i = 0; i < this.keys.length; ++i) {
-            instance[this.keys[i]] = this.values[i].evaluate(s, e, c);
-        }
-        return instance;
-    }
-    assign(_s, _e, _obj) {
-        return void 0;
-    }
-    accept(visitor) {
-        return visitor.visitObjectLiteral(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 3;
     }
 }
 ObjectLiteralExpression.$empty = new ObjectLiteralExpression(kernel.emptyArray, kernel.emptyArray);
@@ -1085,26 +549,7 @@ class TemplateExpression {
     constructor(cooked, expressions = kernel.emptyArray) {
         this.cooked = cooked;
         this.expressions = expressions;
-    }
-    get $kind() { return 5; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, e, c) {
-        let result = this.cooked[0];
-        for (let i = 0; i < this.expressions.length; ++i) {
-            result += safeString(this.expressions[i].evaluate(s, e, c));
-            result += this.cooked[i + 1];
-        }
-        return result;
-    }
-    assign(_s, _e, _obj) {
-        return void 0;
-    }
-    accept(visitor) {
-        return visitor.visitTemplate(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 5;
     }
 }
 TemplateExpression.$empty = new TemplateExpression(['']);
@@ -1113,150 +558,43 @@ class TaggedTemplateExpression {
         this.cooked = cooked;
         this.func = func;
         this.expressions = expressions;
+        this.$kind = 12;
         cooked.raw = raw;
-    }
-    get $kind() { return 12; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, e, c) {
-        const results = this.expressions.map(el => el.evaluate(s, e, c));
-        const func = this.func.evaluate(s, e, c);
-        if (!isFunction(func)) {
-            throw new Error(`AUR0110: Left-hand side of tagged template expression is not a function.`);
-        }
-        return func(this.cooked, ...results);
-    }
-    assign(_s, _e, _obj) {
-        return void 0;
-    }
-    accept(visitor) {
-        return visitor.visitTaggedTemplate(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
     }
 }
 class ArrayBindingPattern {
     constructor(elements) {
         this.elements = elements;
-    }
-    get $kind() { return 19; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(_s, _e, _c) {
-        return void 0;
-    }
-    assign(_s, _e, _obj) {
-        return void 0;
-    }
-    accept(visitor) {
-        return visitor.visitArrayBindingPattern(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 19;
     }
 }
 class ObjectBindingPattern {
     constructor(keys, values) {
         this.keys = keys;
         this.values = values;
-    }
-    get $kind() { return 20; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(_s, _e, _c) {
-        return void 0;
-    }
-    assign(_s, _e, _obj) {
-        return void 0;
-    }
-    accept(visitor) {
-        return visitor.visitObjectBindingPattern(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 20;
     }
 }
 class BindingIdentifier {
     constructor(name) {
         this.name = name;
-    }
-    get $kind() { return 21; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(_s, _e, _c) {
-        return this.name;
-    }
-    accept(visitor) {
-        return visitor.visitBindingIdentifier(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 21;
     }
 }
 class ForOfStatement {
     constructor(declaration, iterable) {
         this.declaration = declaration;
         this.iterable = iterable;
-    }
-    get $kind() { return 22; }
-    get hasBind() { return true; }
-    get hasUnbind() { return true; }
-    evaluate(s, e, c) {
-        return this.iterable.evaluate(s, e, c);
-    }
-    assign(_s, _e, _obj) {
-        return void 0;
-    }
-    bind(s, b) {
-        if (this.iterable.hasBind) {
-            this.iterable.bind(s, b);
-        }
-    }
-    unbind(s, b) {
-        if (this.iterable.hasUnbind) {
-            this.iterable.unbind(s, b);
-        }
-    }
-    accept(visitor) {
-        return visitor.visitForOfStatement(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 22;
     }
 }
 class Interpolation {
     constructor(parts, expressions = kernel.emptyArray) {
         this.parts = parts;
         this.expressions = expressions;
+        this.$kind = 23;
         this.isMulti = expressions.length > 1;
         this.firstExpression = expressions[0];
-    }
-    get $kind() { return 23; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, e, c) {
-        if (this.isMulti) {
-            let result = this.parts[0];
-            let i = 0;
-            for (; i < this.expressions.length; ++i) {
-                result += safeString(this.expressions[i].evaluate(s, e, c));
-                result += this.parts[i + 1];
-            }
-            return result;
-        }
-        else {
-            return `${this.parts[0]}${this.firstExpression.evaluate(s, e, c)}${this.parts[1]}`;
-        }
-    }
-    assign(_s, _e, _obj) {
-        return void 0;
-    }
-    accept(visitor) {
-        return visitor.visitInterpolation(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
     }
 }
 class DestructuringAssignmentExpression {
@@ -1266,123 +604,20 @@ class DestructuringAssignmentExpression {
         this.source = source;
         this.initializer = initializer;
     }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(_s, _e, _c) {
-        return void 0;
-    }
-    assign(s, l, value) {
-        const list = this.list;
-        const len = list.length;
-        let i;
-        let item;
-        for (i = 0; i < len; i++) {
-            item = list[i];
-            switch (item.$kind) {
-                case 26:
-                    item.assign(s, l, value);
-                    break;
-                case 24:
-                case 25: {
-                    if (typeof value !== 'object' || value === null) {
-                        {
-                            throw new Error(`AUR0112: Cannot use non-object value for destructuring assignment.`);
-                        }
-                    }
-                    let source = item.source.evaluate(Scope.create(value), l, null);
-                    if (source === void 0) {
-                        source = item.initializer?.evaluate(s, l, null);
-                    }
-                    item.assign(s, l, source);
-                    break;
-                }
-            }
-        }
-    }
-    accept(visitor) {
-        return visitor.visitDestructuringAssignmentExpression(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
-    }
 }
 class DestructuringAssignmentSingleExpression {
     constructor(target, source, initializer) {
         this.target = target;
         this.source = source;
         this.initializer = initializer;
-    }
-    get $kind() { return 26; }
-    evaluate(_s, _e, _c) {
-        return void 0;
-    }
-    assign(s, l, value) {
-        if (value == null) {
-            return;
-        }
-        if (typeof value !== 'object') {
-            {
-                throw new Error(`AUR0112: Cannot use non-object value for destructuring assignment.`);
-            }
-        }
-        let source = this.source.evaluate(Scope.create(value), l, null);
-        if (source === void 0) {
-            source = this.initializer?.evaluate(s, l, null);
-        }
-        this.target.assign(s, l, source);
-    }
-    accept(visitor) {
-        return visitor.visitDestructuringAssignmentSingleExpression(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 26;
     }
 }
 class DestructuringAssignmentRestExpression {
     constructor(target, indexOrProperties) {
         this.target = target;
         this.indexOrProperties = indexOrProperties;
-    }
-    get $kind() { return 26; }
-    evaluate(_s, _e, _c) {
-        return void 0;
-    }
-    assign(s, l, value) {
-        if (value == null) {
-            return;
-        }
-        if (typeof value !== 'object') {
-            {
-                throw new Error(`AUR0112: Cannot use non-object value for destructuring assignment.`);
-            }
-        }
-        const indexOrProperties = this.indexOrProperties;
-        let restValue;
-        if (kernel.isArrayIndex(indexOrProperties)) {
-            if (!Array.isArray(value)) {
-                {
-                    throw new Error(`AUR0112: Cannot use non-array value for array-destructuring assignment.`);
-                }
-            }
-            restValue = value.slice(indexOrProperties);
-        }
-        else {
-            restValue = Object
-                .entries(value)
-                .reduce((acc, [k, v]) => {
-                if (!indexOrProperties.includes(k)) {
-                    acc[k] = v;
-                }
-                return acc;
-            }, {});
-        }
-        this.target.assign(s, l, restValue);
-    }
-    accept(_visitor) {
-        return _visitor.visitDestructuringAssignmentRestExpression(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 26;
     }
 }
 class ArrowFunction {
@@ -1390,40 +625,610 @@ class ArrowFunction {
         this.args = args;
         this.body = body;
         this.rest = rest;
-    }
-    get $kind() { return 16; }
-    get hasBind() { return false; }
-    get hasUnbind() { return false; }
-    evaluate(s, e, c) {
-        const func = (...args) => {
-            const params = this.args;
-            const rest = this.rest;
-            const lastIdx = params.length - 1;
-            const context = params.reduce((map, param, i) => {
-                if (rest && i === lastIdx) {
-                    map[param.name] = args.slice(i);
-                }
-                else {
-                    map[param.name] = args[i];
-                }
-                return map;
-            }, {});
-            const functionScope = Scope.fromParent(s, context);
-            return this.body.evaluate(functionScope, e, c);
-        };
-        return func;
-    }
-    assign(_s, _e, _value) {
-        return void 0;
-    }
-    accept(visitor) {
-        return visitor.visitArrowFunction(this);
-    }
-    toString() {
-        return Unparser.unparse(this);
+        this.$kind = 16;
     }
 }
-function getFunction(mustEvaluate, obj, name) {
+
+class BindingContext {
+    constructor(key, value) {
+        if (key !== void 0) {
+            this[key] = value;
+        }
+    }
+}
+class Scope {
+    constructor(parent, bindingContext, overrideContext, isBoundary) {
+        this.parent = parent;
+        this.bindingContext = bindingContext;
+        this.overrideContext = overrideContext;
+        this.isBoundary = isBoundary;
+    }
+    static getContext(scope, name, ancestor) {
+        if (scope == null) {
+            throw nullScopeError();
+        }
+        let overrideContext = scope.overrideContext;
+        let currentScope = scope;
+        if (ancestor > 0) {
+            while (ancestor > 0) {
+                ancestor--;
+                currentScope = currentScope.parent;
+                if (currentScope == null) {
+                    return void 0;
+                }
+            }
+            overrideContext = currentScope.overrideContext;
+            return name in overrideContext ? overrideContext : currentScope.bindingContext;
+        }
+        while (currentScope != null
+            && !currentScope.isBoundary
+            && !(name in currentScope.overrideContext)
+            && !(name in currentScope.bindingContext)) {
+            currentScope = currentScope.parent;
+        }
+        if (currentScope == null) {
+            return scope.bindingContext;
+        }
+        overrideContext = currentScope.overrideContext;
+        return name in overrideContext ? overrideContext : currentScope.bindingContext;
+    }
+    static create(bc, oc, isBoundary) {
+        if (bc == null) {
+            throw nullContextError();
+        }
+        return new Scope(null, bc, oc == null ? new OverrideContext() : oc, isBoundary ?? false);
+    }
+    static fromParent(ps, bc) {
+        if (ps == null) {
+            throw nullScopeError();
+        }
+        return new Scope(ps, bc, new OverrideContext(), false);
+    }
+}
+const nullScopeError = () => {
+    return new Error(`AUR0203: scope is null/undefined.`)
+        ;
+};
+const nullContextError = () => {
+    return new Error('AUR0204: binding context is null/undefined')
+        ;
+};
+class OverrideContext {
+}
+
+const ISignaler = createInterface('ISignaler', x => x.singleton(Signaler));
+class Signaler {
+    constructor() {
+        this.signals = createLookup();
+    }
+    dispatchSignal(name) {
+        const listeners = this.signals[name];
+        if (listeners === undefined) {
+            return;
+        }
+        let listener;
+        for (listener of listeners.keys()) {
+            listener.handleChange(undefined, undefined);
+        }
+    }
+    addSignalListener(name, listener) {
+        const signals = this.signals;
+        const listeners = signals[name];
+        if (listeners === undefined) {
+            signals[name] = new Set([listener]);
+        }
+        else {
+            listeners.add(listener);
+        }
+    }
+    removeSignalListener(name, listener) {
+        this.signals[name]?.delete(listener);
+    }
+}
+
+const getContext = Scope.getContext;
+function astEvaluate(ast, s, e, c) {
+    switch (ast.$kind) {
+        case 0: {
+            let oc = s.overrideContext;
+            let currentScope = s;
+            let i = ast.ancestor;
+            while (i-- && oc) {
+                currentScope = currentScope.parent;
+                oc = currentScope?.overrideContext ?? null;
+            }
+            return i < 1 && currentScope ? currentScope.bindingContext : void 0;
+        }
+        case 1: {
+            const obj = getContext(s, ast.name, ast.ancestor);
+            if (c !== null) {
+                c.observe(obj, ast.name);
+            }
+            const evaluatedValue = obj[ast.name];
+            if (evaluatedValue == null && ast.name === '$host') {
+                throw new Error(`AUR0105: Unable to find $host context. Did you forget [au-slot] attribute?`);
+            }
+            if (e?.strict) {
+                return e?.boundFn && isFunction(evaluatedValue)
+                    ? evaluatedValue.bind(obj)
+                    : evaluatedValue;
+            }
+            return evaluatedValue == null
+                ? ''
+                : e?.boundFn && isFunction(evaluatedValue)
+                    ? evaluatedValue.bind(obj)
+                    : evaluatedValue;
+        }
+        case 2:
+            return ast.elements.map(expr => astEvaluate(expr, s, e, c));
+        case 3: {
+            const instance = {};
+            for (let i = 0; i < ast.keys.length; ++i) {
+                instance[ast.keys[i]] = astEvaluate(ast.values[i], s, e, c);
+            }
+            return instance;
+        }
+        case 4:
+            return ast.value;
+        case 5: {
+            let result = ast.cooked[0];
+            for (let i = 0; i < ast.expressions.length; ++i) {
+                result += String(astEvaluate(ast.expressions[i], s, e, c));
+                result += ast.cooked[i + 1];
+            }
+            return result;
+        }
+        case 6:
+            switch (ast.operation) {
+                case 'void':
+                    return void astEvaluate(ast.expression, s, e, c);
+                case 'typeof':
+                    return typeof astEvaluate(ast.expression, s, e, c);
+                case '!':
+                    return !astEvaluate(ast.expression, s, e, c);
+                case '-':
+                    return -astEvaluate(ast.expression, s, e, c);
+                case '+':
+                    return +astEvaluate(ast.expression, s, e, c);
+                default:
+                    throw new Error(`AUR0109: Unknown unary operator: '${ast.operation}'`);
+            }
+        case 7: {
+            const args = ast.args.map(a => astEvaluate(a, s, e, c));
+            const context = getContext(s, ast.name, ast.ancestor);
+            const func = getFunction(e?.strictFnCall, context, ast.name);
+            if (func) {
+                return func.apply(context, args);
+            }
+            return void 0;
+        }
+        case 8: {
+            const instance = astEvaluate(ast.object, s, e, c);
+            const args = ast.args.map(a => astEvaluate(a, s, e, c));
+            const func = getFunction(e?.strictFnCall, instance, ast.name);
+            let ret;
+            if (func) {
+                ret = func.apply(instance, args);
+                if (isArray(instance) && autoObserveArrayMethods.includes(ast.name)) {
+                    c?.observeCollection(instance);
+                }
+            }
+            return ret;
+        }
+        case 9: {
+            const func = astEvaluate(ast.func, s, e, c);
+            if (isFunction(func)) {
+                return func(...ast.args.map(a => astEvaluate(a, s, e, c)));
+            }
+            if (!e?.strictFnCall && func == null) {
+                return void 0;
+            }
+            throw new Error(`AUR0107: Expression is not a function.`);
+        }
+        case 16: {
+            const func = (...args) => {
+                const params = ast.args;
+                const rest = ast.rest;
+                const lastIdx = params.length - 1;
+                const context = params.reduce((map, param, i) => {
+                    if (rest && i === lastIdx) {
+                        map[param.name] = args.slice(i);
+                    }
+                    else {
+                        map[param.name] = args[i];
+                    }
+                    return map;
+                }, {});
+                const functionScope = Scope.fromParent(s, context);
+                return astEvaluate(ast.body, functionScope, e, c);
+            };
+            return func;
+        }
+        case 10: {
+            const instance = astEvaluate(ast.object, s, e, c);
+            let ret;
+            if (e?.strict) {
+                if (instance == null) {
+                    return instance;
+                }
+                if (c !== null) {
+                    c.observe(instance, ast.name);
+                }
+                ret = instance[ast.name];
+                if (e?.boundFn && isFunction(ret)) {
+                    return ret.bind(instance);
+                }
+                return ret;
+            }
+            if (c !== null && instance instanceof Object) {
+                c.observe(instance, ast.name);
+            }
+            if (instance) {
+                ret = instance[ast.name];
+                if (e?.boundFn && isFunction(ret)) {
+                    return ret.bind(instance);
+                }
+                return ret;
+            }
+            return '';
+        }
+        case 11: {
+            const instance = astEvaluate(ast.object, s, e, c);
+            if (instance instanceof Object) {
+                const key = astEvaluate(ast.key, s, e, c);
+                if (c !== null) {
+                    c.observe(instance, key);
+                }
+                return instance[key];
+            }
+            return void 0;
+        }
+        case 12: {
+            const results = ast.expressions.map(expr => astEvaluate(expr, s, e, c));
+            const func = astEvaluate(ast.func, s, e, c);
+            if (!isFunction(func)) {
+                throw new Error(`AUR0110: Left-hand side of tagged template expression is not a function.`);
+            }
+            return func(ast.cooked, ...results);
+        }
+        case 13: {
+            const left = ast.left;
+            const right = ast.right;
+            switch (ast.operation) {
+                case '&&':
+                    return astEvaluate(left, s, e, c) && astEvaluate(right, s, e, c);
+                case '||':
+                    return astEvaluate(left, s, e, c) || astEvaluate(right, s, e, c);
+                case '??':
+                    return astEvaluate(left, s, e, c) ?? astEvaluate(right, s, e, c);
+                case '==':
+                    return astEvaluate(left, s, e, c) == astEvaluate(right, s, e, c);
+                case '===':
+                    return astEvaluate(left, s, e, c) === astEvaluate(right, s, e, c);
+                case '!=':
+                    return astEvaluate(left, s, e, c) != astEvaluate(right, s, e, c);
+                case '!==':
+                    return astEvaluate(left, s, e, c) !== astEvaluate(right, s, e, c);
+                case 'instanceof': {
+                    const $right = astEvaluate(right, s, e, c);
+                    if (isFunction($right)) {
+                        return astEvaluate(left, s, e, c) instanceof $right;
+                    }
+                    return false;
+                }
+                case 'in': {
+                    const $right = astEvaluate(right, s, e, c);
+                    if ($right instanceof Object) {
+                        return astEvaluate(left, s, e, c) in $right;
+                    }
+                    return false;
+                }
+                case '+': {
+                    const $left = astEvaluate(left, s, e, c);
+                    const $right = astEvaluate(right, s, e, c);
+                    if (e?.strict) {
+                        return $left + $right;
+                    }
+                    if (!$left || !$right) {
+                        if (isNumberOrBigInt($left) || isNumberOrBigInt($right)) {
+                            return ($left || 0) + ($right || 0);
+                        }
+                        if (isStringOrDate($left) || isStringOrDate($right)) {
+                            return ($left || '') + ($right || '');
+                        }
+                    }
+                    return $left + $right;
+                }
+                case '-':
+                    return astEvaluate(left, s, e, c) - astEvaluate(right, s, e, c);
+                case '*':
+                    return astEvaluate(left, s, e, c) * astEvaluate(right, s, e, c);
+                case '/':
+                    return astEvaluate(left, s, e, c) / astEvaluate(right, s, e, c);
+                case '%':
+                    return astEvaluate(left, s, e, c) % astEvaluate(right, s, e, c);
+                case '<':
+                    return astEvaluate(left, s, e, c) < astEvaluate(right, s, e, c);
+                case '>':
+                    return astEvaluate(left, s, e, c) > astEvaluate(right, s, e, c);
+                case '<=':
+                    return astEvaluate(left, s, e, c) <= astEvaluate(right, s, e, c);
+                case '>=':
+                    return astEvaluate(left, s, e, c) >= astEvaluate(right, s, e, c);
+                default:
+                    throw new Error(`AUR0108: Unknown binary operator: '${ast.operation}'`);
+            }
+        }
+        case 14:
+            return astEvaluate(ast.condition, s, e, c) ? astEvaluate(ast.yes, s, e, c) : astEvaluate(ast.no, s, e, c);
+        case 15:
+            return astAssign(ast.target, s, e, astEvaluate(ast.value, s, e, c));
+        case 17: {
+            const vc = e?.getConverter?.(ast.name);
+            if (vc == null) {
+                throw new Error(`AUR0103: ValueConverter named '${ast.name}' could not be found. Did you forget to register it as a dependency?`);
+            }
+            if ('toView' in vc) {
+                return vc.toView(astEvaluate(ast.expression, s, e, c), ...ast.args.map(a => astEvaluate(a, s, e, c)));
+            }
+            return astEvaluate(ast.expression, s, e, c);
+        }
+        case 18:
+            return astEvaluate(ast.expression, s, e, c);
+        case 21:
+            return ast.name;
+        case 22:
+            return astEvaluate(ast.iterable, s, e, c);
+        case 23:
+            if (ast.isMulti) {
+                let result = ast.parts[0];
+                let i = 0;
+                for (; i < ast.expressions.length; ++i) {
+                    result += safeString(astEvaluate(ast.expressions[i], s, e, c));
+                    result += ast.parts[i + 1];
+                }
+                return result;
+            }
+            else {
+                return `${ast.parts[0]}${astEvaluate(ast.firstExpression, s, e, c)}${ast.parts[1]}`;
+            }
+        case 19:
+        case 20:
+        case 24:
+        case 25:
+        case 26:
+        default:
+            return void 0;
+        case 28:
+            return ast.evaluate(s, e, c);
+    }
+}
+function astAssign(ast, s, e, val) {
+    switch (ast.$kind) {
+        case 1: {
+            if (ast.name === '$host') {
+                throw new Error(`AUR0106: Invalid assignment. $host is a reserved keyword.`);
+            }
+            const obj = getContext(s, ast.name, ast.ancestor);
+            if (obj instanceof Object) {
+                if (obj.$observers?.[ast.name] !== void 0) {
+                    obj.$observers[ast.name].setValue(val);
+                    return val;
+                }
+                else {
+                    return obj[ast.name] = val;
+                }
+            }
+            return void 0;
+        }
+        case 10: {
+            const obj = astEvaluate(ast.object, s, e, null);
+            if (obj instanceof Object) {
+                if (obj.$observers !== void 0 && obj.$observers[ast.name] !== void 0) {
+                    obj.$observers[ast.name].setValue(val);
+                }
+                else {
+                    obj[ast.name] = val;
+                }
+            }
+            else {
+                astAssign(ast.object, s, e, { [ast.name]: val });
+            }
+            return val;
+        }
+        case 11: {
+            const instance = astEvaluate(ast.object, s, e, null);
+            const key = astEvaluate(ast.key, s, e, null);
+            return instance[key] = val;
+        }
+        case 15:
+            astAssign(ast.value, s, e, val);
+            return astAssign(ast.target, s, e, val);
+        case 17: {
+            const vc = e?.getConverter?.(ast.name);
+            if (vc == null) {
+                throw converterNotFoundError(ast.name);
+            }
+            if ('fromView' in vc) {
+                val = vc.fromView(val, ...ast.args.map(a => astEvaluate(a, s, e, null)));
+            }
+            return astAssign(ast.expression, s, e, val);
+        }
+        case 18:
+            return astAssign(ast.expression, s, e, val);
+        case 24:
+        case 25: {
+            const list = ast.list;
+            const len = list.length;
+            let i;
+            let item;
+            for (i = 0; i < len; i++) {
+                item = list[i];
+                switch (item.$kind) {
+                    case 26:
+                        astAssign(item, s, e, val);
+                        break;
+                    case 24:
+                    case 25: {
+                        if (typeof val !== 'object' || val === null) {
+                            {
+                                throw new Error(`AUR0112: Cannot use non-object value for destructuring assignment.`);
+                            }
+                        }
+                        let source = astEvaluate(item.source, Scope.create(val), e, null);
+                        if (source === void 0 && item.initializer) {
+                            source = astEvaluate(item.initializer, s, e, null);
+                        }
+                        astAssign(item, s, e, source);
+                        break;
+                    }
+                }
+            }
+            break;
+        }
+        case 26: {
+            if (ast instanceof DestructuringAssignmentSingleExpression) {
+                if (val == null) {
+                    return;
+                }
+                if (typeof val !== 'object') {
+                    {
+                        throw new Error(`AUR0112: Cannot use non-object value for destructuring assignment.`);
+                    }
+                }
+                let source = astEvaluate(ast.source, Scope.create(val), e, null);
+                if (source === void 0 && ast.initializer) {
+                    source = astEvaluate(ast.initializer, s, e, null);
+                }
+                astAssign(ast.target, s, e, source);
+            }
+            else {
+                if (val == null) {
+                    return;
+                }
+                if (typeof val !== 'object') {
+                    {
+                        throw new Error(`AUR0112: Cannot use non-object value for destructuring assignment.`);
+                    }
+                }
+                const indexOrProperties = ast.indexOrProperties;
+                let restValue;
+                if (kernel.isArrayIndex(indexOrProperties)) {
+                    if (!Array.isArray(val)) {
+                        {
+                            throw new Error(`AUR0112: Cannot use non-array value for array-destructuring assignment.`);
+                        }
+                    }
+                    restValue = val.slice(indexOrProperties);
+                }
+                else {
+                    restValue = Object
+                        .entries(val)
+                        .reduce((acc, [k, v]) => {
+                        if (!indexOrProperties.includes(k)) {
+                            acc[k] = v;
+                        }
+                        return acc;
+                    }, {});
+                }
+                astAssign(ast.target, s, e, restValue);
+            }
+            break;
+        }
+        case 28:
+            return ast.assign(s, e, val);
+        default:
+            return void 0;
+    }
+}
+function astBind(ast, s, b) {
+    switch (ast.$kind) {
+        case 18: {
+            const name = ast.name;
+            const key = ast.key;
+            const behavior = b.getBehavior?.(name);
+            if (behavior == null) {
+                throw behaviorNotFoundError(name);
+            }
+            if (b[key] === void 0) {
+                b[key] = behavior;
+                behavior.bind?.(s, b, ...ast.args.map(a => astEvaluate(a, s, b, null)));
+            }
+            else {
+                throw duplicateBehaviorAppliedError(name);
+            }
+            astBind(ast.expression, s, b);
+            return;
+        }
+        case 17: {
+            const name = ast.name;
+            const vc = b.getConverter?.(name);
+            if (vc == null) {
+                throw converterNotFoundError(name);
+            }
+            const signals = vc.signals;
+            if (signals != null) {
+                const signaler = b.get?.(ISignaler);
+                const ii = signals.length;
+                let i = 0;
+                for (; i < ii; ++i) {
+                    signaler?.addSignalListener(signals[i], b);
+                }
+            }
+            astBind(ast.expression, s, b);
+            return;
+        }
+        case 22: {
+            astBind(ast.iterable, s, b);
+            break;
+        }
+        case 28: {
+            ast.bind?.(s, b);
+        }
+    }
+}
+function astUnbind(ast, s, b) {
+    switch (ast.$kind) {
+        case 18: {
+            const key = ast.key;
+            const $b = b;
+            if ($b[key] !== void 0) {
+                $b[key].unbind?.(s, b);
+                $b[key] = void 0;
+            }
+            astUnbind(ast.expression, s, b);
+            break;
+        }
+        case 17: {
+            const vc = b.getConverter?.(ast.name);
+            if (vc?.signals === void 0) {
+                return;
+            }
+            const signaler = b.get(ISignaler);
+            let i = 0;
+            for (; i < vc.signals.length; ++i) {
+                signaler.removeSignalListener(vc.signals[i], b);
+            }
+            astUnbind(ast.expression, s, b);
+            break;
+        }
+        case 22: {
+            astUnbind(ast.iterable, s, b);
+            break;
+        }
+        case 28: {
+            ast.unbind?.(s, b);
+        }
+    }
+}
+const behaviorNotFoundError = (name) => new Error(`AUR0101: BindingBehavior '${name}' could not be found. Did you forget to register it as a dependency?`)
+    ;
+const duplicateBehaviorAppliedError = (name) => new Error(`AUR0102: BindingBehavior '${name}' already applied.`)
+    ;
+const converterNotFoundError = (name) => {
+    return new Error(`AUR0103: ValueConverter '${name}' could not be found. Did you forget to register it as a dependency?`);
+};
+const getFunction = (mustEvaluate, obj, name) => {
     const func = obj == null ? null : obj[name];
     if (isFunction(func)) {
         return func;
@@ -1432,8 +1237,8 @@ function getFunction(mustEvaluate, obj, name) {
         return null;
     }
     throw new Error(`AUR0111: Expected '${name}' to be a function`);
-}
-function isNumberOrBigInt(value) {
+};
+const isNumberOrBigInt = (value) => {
     switch (typeof value) {
         case 'number':
         case 'bigint':
@@ -1441,8 +1246,8 @@ function isNumberOrBigInt(value) {
         default:
             return false;
     }
-}
-function isStringOrDate(value) {
+};
+const isStringOrDate = (value) => {
     switch (typeof value) {
         case 'string':
             return true;
@@ -1451,7 +1256,8 @@ function isStringOrDate(value) {
         default:
             return false;
     }
-}
+};
+const autoObserveArrayMethods = 'at map filter includes indexOf lastIndexOf findIndex find flat flatMap join reduce reduceRight slice every some sort'.split(' ');
 
 const ICoercionConfiguration = kernel.DI.createInterface('ICoercionConfiguration');
 exports.CollectionKind = void 0;
@@ -1607,96 +1413,23 @@ function subscriberCollectionDeco(target) {
 }
 class SubscriberRecord {
     constructor() {
-        this.sf = 0;
         this.count = 0;
+        this._subs = [];
     }
     add(subscriber) {
-        if (this.has(subscriber)) {
+        if (this._subs.includes(subscriber)) {
             return false;
         }
-        const subscriberFlags = this.sf;
-        if ((subscriberFlags & 1) === 0) {
-            this.s0 = subscriber;
-            this.sf |= 1;
-        }
-        else if ((subscriberFlags & 2) === 0) {
-            this.s1 = subscriber;
-            this.sf |= 2;
-        }
-        else if ((subscriberFlags & 4) === 0) {
-            this.s2 = subscriber;
-            this.sf |= 4;
-        }
-        else if ((subscriberFlags & 8) === 0) {
-            this.sr = [subscriber];
-            this.sf |= 8;
-        }
-        else {
-            this.sr.push(subscriber);
-        }
+        this._subs[this._subs.length] = subscriber;
         ++this.count;
         return true;
     }
-    has(subscriber) {
-        const subscriberFlags = this.sf;
-        if ((subscriberFlags & 1) > 0 && this.s0 === subscriber) {
-            return true;
-        }
-        if ((subscriberFlags & 2) > 0 && this.s1 === subscriber) {
-            return true;
-        }
-        if ((subscriberFlags & 4) > 0 && this.s2 === subscriber) {
-            return true;
-        }
-        if ((subscriberFlags & 8) > 0) {
-            const subscribers = this.sr;
-            const ii = subscribers.length;
-            let i = 0;
-            for (; i < ii; ++i) {
-                if (subscribers[i] === subscriber) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    any() {
-        return this.sf !== 0;
-    }
     remove(subscriber) {
-        const subscriberFlags = this.sf;
-        if ((subscriberFlags & 1) > 0 && this.s0 === subscriber) {
-            this.s0 = void 0;
-            this.sf = (this.sf | 1) ^ 1;
+        const idx = this._subs.indexOf(subscriber);
+        if (idx !== -1) {
+            this._subs.splice(idx, 1);
             --this.count;
             return true;
-        }
-        else if ((subscriberFlags & 2) > 0 && this.s1 === subscriber) {
-            this.s1 = void 0;
-            this.sf = (this.sf | 2) ^ 2;
-            --this.count;
-            return true;
-        }
-        else if ((subscriberFlags & 4) > 0 && this.s2 === subscriber) {
-            this.s2 = void 0;
-            this.sf = (this.sf | 4) ^ 4;
-            --this.count;
-            return true;
-        }
-        else if ((subscriberFlags & 8) > 0) {
-            const subscribers = this.sr;
-            const ii = subscribers.length;
-            let i = 0;
-            for (; i < ii; ++i) {
-                if (subscribers[i] === subscriber) {
-                    subscribers.splice(i, 1);
-                    if (ii === 1) {
-                        this.sf = (this.sf | 8) ^ 8;
-                    }
-                    --this.count;
-                    return true;
-                }
-            }
         }
         return false;
     }
@@ -1705,62 +1438,22 @@ class SubscriberRecord {
             addValueBatch(this, val, oldVal);
             return;
         }
-        const sub0 = this.s0;
-        const sub1 = this.s1;
-        const sub2 = this.s2;
-        let subs = this.sr;
-        if (subs !== void 0) {
-            subs = subs.slice();
+        const _subs = this._subs.slice(0);
+        const len = _subs.length;
+        let i = 0;
+        for (; i < len; ++i) {
+            _subs[i].handleChange(val, oldVal);
         }
-        if (sub0 !== void 0) {
-            sub0.handleChange(val, oldVal);
-        }
-        if (sub1 !== void 0) {
-            sub1.handleChange(val, oldVal);
-        }
-        if (sub2 !== void 0) {
-            sub2.handleChange(val, oldVal);
-        }
-        if (subs !== void 0) {
-            const ii = subs.length;
-            let sub;
-            let i = 0;
-            for (; i < ii; ++i) {
-                sub = subs[i];
-                if (sub !== void 0) {
-                    sub.handleChange(val, oldVal);
-                }
-            }
-        }
+        return;
     }
     notifyCollection(collection, indexMap) {
-        const sub0 = this.s0;
-        const sub1 = this.s1;
-        const sub2 = this.s2;
-        let subs = this.sr;
-        if (subs !== void 0) {
-            subs = subs.slice();
+        const _subs = this._subs.slice(0);
+        const len = _subs.length;
+        let i = 0;
+        for (; i < len; ++i) {
+            _subs[i].handleCollectionChange(collection, indexMap);
         }
-        if (sub0 !== void 0) {
-            sub0.handleCollectionChange(collection, indexMap);
-        }
-        if (sub1 !== void 0) {
-            sub1.handleCollectionChange(collection, indexMap);
-        }
-        if (sub2 !== void 0) {
-            sub2.handleCollectionChange(collection, indexMap);
-        }
-        if (subs !== void 0) {
-            const ii = subs.length;
-            let sub;
-            let i = 0;
-            for (; i < ii; ++i) {
-                sub = subs[i];
-                if (sub !== void 0) {
-                    sub.handleCollectionChange(collection, indexMap);
-                }
-            }
-        }
+        return;
     }
 }
 function getSubscriberRecord() {
@@ -1772,15 +1465,6 @@ function addSubscriber(subscriber) {
 function removeSubscriber(subscriber) {
     return this.subs.remove(subscriber);
 }
-var SubFlags;
-(function (SubFlags) {
-    SubFlags[SubFlags["None"] = 0] = "None";
-    SubFlags[SubFlags["Sub0"] = 1] = "Sub0";
-    SubFlags[SubFlags["Sub1"] = 2] = "Sub1";
-    SubFlags[SubFlags["Sub2"] = 4] = "Sub2";
-    SubFlags[SubFlags["SubRest"] = 8] = "SubRest";
-    SubFlags[SubFlags["Any"] = 15] = "Any";
-})(SubFlags || (SubFlags = {}));
 
 class CollectionLengthObserver {
     constructor(owner) {
@@ -2723,7 +2407,7 @@ function connectable(target) {
     return target == null ? connectableDecorator : connectableDecorator(target);
 }
 
-const IExpressionParser = kernel.DI.createInterface('IExpressionParser', x => x.singleton(ExpressionParser));
+const IExpressionParser = createInterface('IExpressionParser', x => x.singleton(ExpressionParser));
 class ExpressionParser {
     constructor() {
         this._expressionLookup = createLookup();
@@ -2776,108 +2460,7 @@ class ExpressionParser {
         return parse(61, expressionType === void 0 ? 8 : expressionType);
     }
 }
-var Char;
-(function (Char) {
-    Char[Char["Null"] = 0] = "Null";
-    Char[Char["Backspace"] = 8] = "Backspace";
-    Char[Char["Tab"] = 9] = "Tab";
-    Char[Char["LineFeed"] = 10] = "LineFeed";
-    Char[Char["VerticalTab"] = 11] = "VerticalTab";
-    Char[Char["FormFeed"] = 12] = "FormFeed";
-    Char[Char["CarriageReturn"] = 13] = "CarriageReturn";
-    Char[Char["Space"] = 32] = "Space";
-    Char[Char["Exclamation"] = 33] = "Exclamation";
-    Char[Char["DoubleQuote"] = 34] = "DoubleQuote";
-    Char[Char["Dollar"] = 36] = "Dollar";
-    Char[Char["Percent"] = 37] = "Percent";
-    Char[Char["Ampersand"] = 38] = "Ampersand";
-    Char[Char["SingleQuote"] = 39] = "SingleQuote";
-    Char[Char["OpenParen"] = 40] = "OpenParen";
-    Char[Char["CloseParen"] = 41] = "CloseParen";
-    Char[Char["Asterisk"] = 42] = "Asterisk";
-    Char[Char["Plus"] = 43] = "Plus";
-    Char[Char["Comma"] = 44] = "Comma";
-    Char[Char["Minus"] = 45] = "Minus";
-    Char[Char["Dot"] = 46] = "Dot";
-    Char[Char["Slash"] = 47] = "Slash";
-    Char[Char["Semicolon"] = 59] = "Semicolon";
-    Char[Char["Backtick"] = 96] = "Backtick";
-    Char[Char["OpenBracket"] = 91] = "OpenBracket";
-    Char[Char["Backslash"] = 92] = "Backslash";
-    Char[Char["CloseBracket"] = 93] = "CloseBracket";
-    Char[Char["Caret"] = 94] = "Caret";
-    Char[Char["Underscore"] = 95] = "Underscore";
-    Char[Char["OpenBrace"] = 123] = "OpenBrace";
-    Char[Char["Bar"] = 124] = "Bar";
-    Char[Char["CloseBrace"] = 125] = "CloseBrace";
-    Char[Char["Colon"] = 58] = "Colon";
-    Char[Char["LessThan"] = 60] = "LessThan";
-    Char[Char["Equals"] = 61] = "Equals";
-    Char[Char["GreaterThan"] = 62] = "GreaterThan";
-    Char[Char["Question"] = 63] = "Question";
-    Char[Char["Zero"] = 48] = "Zero";
-    Char[Char["One"] = 49] = "One";
-    Char[Char["Two"] = 50] = "Two";
-    Char[Char["Three"] = 51] = "Three";
-    Char[Char["Four"] = 52] = "Four";
-    Char[Char["Five"] = 53] = "Five";
-    Char[Char["Six"] = 54] = "Six";
-    Char[Char["Seven"] = 55] = "Seven";
-    Char[Char["Eight"] = 56] = "Eight";
-    Char[Char["Nine"] = 57] = "Nine";
-    Char[Char["UpperA"] = 65] = "UpperA";
-    Char[Char["UpperB"] = 66] = "UpperB";
-    Char[Char["UpperC"] = 67] = "UpperC";
-    Char[Char["UpperD"] = 68] = "UpperD";
-    Char[Char["UpperE"] = 69] = "UpperE";
-    Char[Char["UpperF"] = 70] = "UpperF";
-    Char[Char["UpperG"] = 71] = "UpperG";
-    Char[Char["UpperH"] = 72] = "UpperH";
-    Char[Char["UpperI"] = 73] = "UpperI";
-    Char[Char["UpperJ"] = 74] = "UpperJ";
-    Char[Char["UpperK"] = 75] = "UpperK";
-    Char[Char["UpperL"] = 76] = "UpperL";
-    Char[Char["UpperM"] = 77] = "UpperM";
-    Char[Char["UpperN"] = 78] = "UpperN";
-    Char[Char["UpperO"] = 79] = "UpperO";
-    Char[Char["UpperP"] = 80] = "UpperP";
-    Char[Char["UpperQ"] = 81] = "UpperQ";
-    Char[Char["UpperR"] = 82] = "UpperR";
-    Char[Char["UpperS"] = 83] = "UpperS";
-    Char[Char["UpperT"] = 84] = "UpperT";
-    Char[Char["UpperU"] = 85] = "UpperU";
-    Char[Char["UpperV"] = 86] = "UpperV";
-    Char[Char["UpperW"] = 87] = "UpperW";
-    Char[Char["UpperX"] = 88] = "UpperX";
-    Char[Char["UpperY"] = 89] = "UpperY";
-    Char[Char["UpperZ"] = 90] = "UpperZ";
-    Char[Char["LowerA"] = 97] = "LowerA";
-    Char[Char["LowerB"] = 98] = "LowerB";
-    Char[Char["LowerC"] = 99] = "LowerC";
-    Char[Char["LowerD"] = 100] = "LowerD";
-    Char[Char["LowerE"] = 101] = "LowerE";
-    Char[Char["LowerF"] = 102] = "LowerF";
-    Char[Char["LowerG"] = 103] = "LowerG";
-    Char[Char["LowerH"] = 104] = "LowerH";
-    Char[Char["LowerI"] = 105] = "LowerI";
-    Char[Char["LowerJ"] = 106] = "LowerJ";
-    Char[Char["LowerK"] = 107] = "LowerK";
-    Char[Char["LowerL"] = 108] = "LowerL";
-    Char[Char["LowerM"] = 109] = "LowerM";
-    Char[Char["LowerN"] = 110] = "LowerN";
-    Char[Char["LowerO"] = 111] = "LowerO";
-    Char[Char["LowerP"] = 112] = "LowerP";
-    Char[Char["LowerQ"] = 113] = "LowerQ";
-    Char[Char["LowerR"] = 114] = "LowerR";
-    Char[Char["LowerS"] = 115] = "LowerS";
-    Char[Char["LowerT"] = 116] = "LowerT";
-    Char[Char["LowerU"] = 117] = "LowerU";
-    Char[Char["LowerV"] = 118] = "LowerV";
-    Char[Char["LowerW"] = 119] = "LowerW";
-    Char[Char["LowerX"] = 120] = "LowerX";
-    Char[Char["LowerY"] = 121] = "LowerY";
-    Char[Char["LowerZ"] = 122] = "LowerZ";
-})(Char || (Char = {}));
+
 function unescapeCode(code) {
     switch (code) {
         case 98: return 8;
@@ -2892,91 +2475,8 @@ function unescapeCode(code) {
         default: return code;
     }
 }
-var Precedence;
-(function (Precedence) {
-    Precedence[Precedence["Variadic"] = 61] = "Variadic";
-    Precedence[Precedence["Assign"] = 62] = "Assign";
-    Precedence[Precedence["Conditional"] = 63] = "Conditional";
-    Precedence[Precedence["NullishCoalescing"] = 128] = "NullishCoalescing";
-    Precedence[Precedence["LogicalOR"] = 192] = "LogicalOR";
-    Precedence[Precedence["LogicalAND"] = 256] = "LogicalAND";
-    Precedence[Precedence["Equality"] = 320] = "Equality";
-    Precedence[Precedence["Relational"] = 384] = "Relational";
-    Precedence[Precedence["Additive"] = 448] = "Additive";
-    Precedence[Precedence["Multiplicative"] = 512] = "Multiplicative";
-    Precedence[Precedence["Binary"] = 513] = "Binary";
-    Precedence[Precedence["LeftHandSide"] = 514] = "LeftHandSide";
-    Precedence[Precedence["Primary"] = 515] = "Primary";
-    Precedence[Precedence["Unary"] = 516] = "Unary";
-})(Precedence || (Precedence = {}));
-var Token;
-(function (Token) {
-    Token[Token["EOF"] = 6291456] = "EOF";
-    Token[Token["ExpressionTerminal"] = 4194304] = "ExpressionTerminal";
-    Token[Token["AccessScopeTerminal"] = 2097152] = "AccessScopeTerminal";
-    Token[Token["ClosingToken"] = 1048576] = "ClosingToken";
-    Token[Token["OpeningToken"] = 524288] = "OpeningToken";
-    Token[Token["BinaryOp"] = 262144] = "BinaryOp";
-    Token[Token["UnaryOp"] = 131072] = "UnaryOp";
-    Token[Token["LeftHandSide"] = 65536] = "LeftHandSide";
-    Token[Token["StringOrNumericLiteral"] = 49152] = "StringOrNumericLiteral";
-    Token[Token["NumericLiteral"] = 32768] = "NumericLiteral";
-    Token[Token["StringLiteral"] = 16384] = "StringLiteral";
-    Token[Token["IdentifierName"] = 12288] = "IdentifierName";
-    Token[Token["Keyword"] = 8192] = "Keyword";
-    Token[Token["Identifier"] = 4096] = "Identifier";
-    Token[Token["Contextual"] = 2048] = "Contextual";
-    Token[Token["OptionalSuffix"] = 13312] = "OptionalSuffix";
-    Token[Token["Precedence"] = 960] = "Precedence";
-    Token[Token["Type"] = 63] = "Type";
-    Token[Token["FalseKeyword"] = 8192] = "FalseKeyword";
-    Token[Token["TrueKeyword"] = 8193] = "TrueKeyword";
-    Token[Token["NullKeyword"] = 8194] = "NullKeyword";
-    Token[Token["UndefinedKeyword"] = 8195] = "UndefinedKeyword";
-    Token[Token["ThisScope"] = 12292] = "ThisScope";
-    Token[Token["ParentScope"] = 12294] = "ParentScope";
-    Token[Token["OpenParen"] = 2688007] = "OpenParen";
-    Token[Token["OpenBrace"] = 524296] = "OpenBrace";
-    Token[Token["Dot"] = 65545] = "Dot";
-    Token[Token["DotDot"] = 10] = "DotDot";
-    Token[Token["DotDotDot"] = 11] = "DotDotDot";
-    Token[Token["QuestionDot"] = 2162700] = "QuestionDot";
-    Token[Token["CloseBrace"] = 7340045] = "CloseBrace";
-    Token[Token["CloseParen"] = 7340046] = "CloseParen";
-    Token[Token["Comma"] = 6291471] = "Comma";
-    Token[Token["OpenBracket"] = 2688016] = "OpenBracket";
-    Token[Token["CloseBracket"] = 7340051] = "CloseBracket";
-    Token[Token["Colon"] = 6291476] = "Colon";
-    Token[Token["Question"] = 6291477] = "Question";
-    Token[Token["Ampersand"] = 6291478] = "Ampersand";
-    Token[Token["Bar"] = 6291479] = "Bar";
-    Token[Token["QuestionQuestion"] = 6553752] = "QuestionQuestion";
-    Token[Token["BarBar"] = 6553817] = "BarBar";
-    Token[Token["AmpersandAmpersand"] = 6553882] = "AmpersandAmpersand";
-    Token[Token["EqualsEquals"] = 6553947] = "EqualsEquals";
-    Token[Token["ExclamationEquals"] = 6553948] = "ExclamationEquals";
-    Token[Token["EqualsEqualsEquals"] = 6553949] = "EqualsEqualsEquals";
-    Token[Token["ExclamationEqualsEquals"] = 6553950] = "ExclamationEqualsEquals";
-    Token[Token["LessThan"] = 6554015] = "LessThan";
-    Token[Token["GreaterThan"] = 6554016] = "GreaterThan";
-    Token[Token["LessThanEquals"] = 6554017] = "LessThanEquals";
-    Token[Token["GreaterThanEquals"] = 6554018] = "GreaterThanEquals";
-    Token[Token["InKeyword"] = 6562211] = "InKeyword";
-    Token[Token["InstanceOfKeyword"] = 6562212] = "InstanceOfKeyword";
-    Token[Token["Plus"] = 2490853] = "Plus";
-    Token[Token["Minus"] = 2490854] = "Minus";
-    Token[Token["TypeofKeyword"] = 139303] = "TypeofKeyword";
-    Token[Token["VoidKeyword"] = 139304] = "VoidKeyword";
-    Token[Token["Asterisk"] = 6554153] = "Asterisk";
-    Token[Token["Percent"] = 6554154] = "Percent";
-    Token[Token["Slash"] = 6554155] = "Slash";
-    Token[Token["Equals"] = 4194348] = "Equals";
-    Token[Token["Exclamation"] = 131117] = "Exclamation";
-    Token[Token["TemplateTail"] = 2163758] = "TemplateTail";
-    Token[Token["TemplateContinuation"] = 2163759] = "TemplateContinuation";
-    Token[Token["OfKeyword"] = 4204592] = "OfKeyword";
-    Token[Token["Arrow"] = 49] = "Arrow";
-})(Token || (Token = {}));
+
+
 const $false = PrimitiveLiteralExpression.$false;
 const $true = PrimitiveLiteralExpression.$true;
 const $null = PrimitiveLiteralExpression.$null;
@@ -3458,13 +2958,7 @@ function parseMemberExpressionLHS(lhs, optional) {
         }
     }
 }
-var ArrowFnParams;
-(function (ArrowFnParams) {
-    ArrowFnParams[ArrowFnParams["Valid"] = 1] = "Valid";
-    ArrowFnParams[ArrowFnParams["Invalid"] = 2] = "Invalid";
-    ArrowFnParams[ArrowFnParams["Default"] = 3] = "Default";
-    ArrowFnParams[ArrowFnParams["Destructuring"] = 4] = "Destructuring";
-})(ArrowFnParams || (ArrowFnParams = {}));
+
 function parseCoverParenthesizedExpressionAndArrowParameterList(expressionType) {
     nextToken();
     const indexSave = $index;
@@ -4733,7 +4227,7 @@ connectable(ComputedObserver);
 subscriberCollection(ComputedObserver);
 let oV$1 = void 0;
 
-const IDirtyChecker = kernel.DI.createInterface('IDirtyChecker', x => x.singleton(DirtyChecker));
+const IDirtyChecker = createInterface('IDirtyChecker', x => x.singleton(DirtyChecker));
 const DirtyCheckSettings = {
     timeoutsPerCheck: 25,
     disabled: false,
@@ -4950,9 +4444,8 @@ subscriberCollection(SetterNotifier);
 let oV = void 0;
 
 const propertyAccessor = new PropertyAccessor();
-const IObserverLocator = kernel.DI.createInterface('IObserverLocator', x => x.singleton(ObserverLocator));
-const INodeObserverLocator = kernel.DI
-    .createInterface('INodeObserverLocator', x => x.cachedCallback(handler => {
+const IObserverLocator = createInterface('IObserverLocator', x => x.singleton(ObserverLocator));
+const INodeObserverLocator = createInterface('INodeObserverLocator', x => x.cachedCallback(handler => {
     {
         handler.getAll(kernel.ILogger).forEach(logger => {
             logger.error('Using default INodeObserverLocator implementation. Will not be able to observe nodes (HTML etc...).');
@@ -5107,7 +4600,7 @@ const getObserverLookup = (instance) => {
 const nullObjectError = (key) => new Error(`AUR0199: trying to observe property ${safeString(key)} on null/undefined`)
     ;
 
-const IObservation = kernel.DI.createInterface('IObservation', x => x.singleton(Observation));
+const IObservation = createInterface('IObservation', x => x.singleton(Observation));
 class Observation {
     constructor(oL) {
         this.oL = oL;
@@ -5297,8 +4790,14 @@ exports.SubscriberRecord = SubscriberRecord;
 exports.TaggedTemplateExpression = TaggedTemplateExpression;
 exports.TemplateExpression = TemplateExpression;
 exports.UnaryExpression = UnaryExpression;
+exports.Unparser = Unparser;
 exports.ValueConverterExpression = ValueConverterExpression;
 exports.applyMutationsToIndices = applyMutationsToIndices;
+exports.astAssign = astAssign;
+exports.astBind = astBind;
+exports.astEvaluate = astEvaluate;
+exports.astUnbind = astUnbind;
+exports.astVisit = astVisit;
 exports.batch = batch;
 exports.cloneIndexMap = cloneIndexMap;
 exports.connectable = connectable;

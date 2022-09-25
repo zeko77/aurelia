@@ -395,12 +395,7 @@ class State {
 function isNotEmpty(segment) {
     return segment.length > 0;
 }
-var SegmentKind;
-(function (SegmentKind) {
-    SegmentKind[SegmentKind["star"] = 1] = "star";
-    SegmentKind[SegmentKind["dynamic"] = 2] = "dynamic";
-    SegmentKind[SegmentKind["static"] = 3] = "static";
-})(SegmentKind || (SegmentKind = {}));
+
 class StaticSegment {
     constructor(value, caseSensitive) {
         this.value = value;

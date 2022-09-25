@@ -71,49 +71,49 @@ class PropertyInfo {
 }
 
 function o(t, i, s = 0) {
-    let e = i.propertyInfo;
-    if (void 0 !== e) return e;
-    const r = i.scope;
-    let n = t.ast.expression;
-    let o = true;
-    let a = "";
-    while (void 0 !== n && 1 !== n?.$kind) {
+    let r = i.propertyInfo;
+    if (void 0 !== r) return r;
+    const n = i.scope;
+    let o = t.ast.expression;
+    let a = true;
+    let h = "";
+    while (void 0 !== o && 1 !== o?.$kind) {
         let i;
-        switch (n.$kind) {
+        switch (o.$kind) {
           case 18:
           case 17:
-            n = n.expression;
+            o = o.expression;
             continue;
 
           case 10:
-            i = n.name;
+            i = o.name;
             break;
 
           case 11:
             {
-                const s = n.key;
-                if (o) o = 4 === s.$kind;
-                i = `[${s.evaluate(r, t, null).toString()}]`;
+                const s = o.key;
+                if (a) a = 4 === s.$kind;
+                i = `[${e.astEvaluate(s, n, t, null).toString()}]`;
                 break;
             }
 
           default:
-            throw new Error(`Unknown expression of type ${n.constructor.name}`);
+            throw new Error(`Unknown expression of type ${o.constructor.name}`);
         }
-        const s = a.startsWith("[") ? "" : ".";
-        a = 0 === a.length ? i : `${i}${s}${a}`;
-        n = n.object;
+        const s = h.startsWith("[") ? "" : ".";
+        h = 0 === h.length ? i : `${i}${s}${h}`;
+        o = o.object;
     }
-    if (void 0 === n) throw new Error(`Unable to parse binding expression: ${t.ast.expression}`);
-    let h;
-    if (0 === a.length) {
-        a = n.name;
-        h = r.bindingContext;
-    } else h = n.evaluate(r, t, null);
-    if (null === h || void 0 === h) return;
-    e = new PropertyInfo(h, a);
-    if (o) i.propertyInfo = e;
-    return e;
+    if (void 0 === o) throw new Error(`Unable to parse binding expression: ${t.ast.expression}`);
+    let l;
+    if (0 === h.length) {
+        h = o.name;
+        l = n.bindingContext;
+    } else l = e.astEvaluate(o, n, t, null);
+    if (null === l || void 0 === l) return;
+    r = new PropertyInfo(l, h);
+    if (a) i.propertyInfo = r;
+    return r;
 }
 
 const a = t.DI.createInterface("IValidationController");
@@ -460,30 +460,30 @@ exports.ValidateBindingBehavior = class ValidateBindingBehavior extends s.Bindin
         const t = this.scope;
         let i;
         let s;
-        let e;
-        let r = this.propertyBinding.ast;
-        while ("validate" !== r.name && void 0 !== r) r = r.expression;
-        const n = r.args;
-        for (let r = 0, o = n.length; r < o; r++) {
-            const o = n[r];
-            switch (r) {
+        let r;
+        let n = this.propertyBinding.ast;
+        while ("validate" !== n.name && void 0 !== n) n = n.expression;
+        const o = n.args;
+        for (let n = 0, a = o.length; n < a; n++) {
+            const a = o[n];
+            switch (n) {
               case 0:
-                s = this.V(o.evaluate(t, this, this.triggerMediator));
+                s = this.V(e.astEvaluate(a, t, this, this.triggerMediator));
                 break;
 
               case 1:
-                e = this.C(o.evaluate(t, this, this.controllerMediator));
+                r = this.C(e.astEvaluate(a, t, this, this.controllerMediator));
                 break;
 
               case 2:
-                i = this.R(o.evaluate(t, this, this.rulesMediator));
+                i = this.R(e.astEvaluate(a, t, this, this.rulesMediator));
                 break;
 
               default:
-                throw new Error(`Unconsumed argument#${r + 1} for validate binding behavior: ${o.evaluate(t, this, null)}`);
+                throw new Error(`Unconsumed argument#${n + 1} for validate binding behavior: ${e.astEvaluate(a, t, this, null)}`);
             }
         }
-        return new ValidateArgumentsDelta(this.C(e), this.V(s), i);
+        return new ValidateArgumentsDelta(this.C(r), this.V(s), i);
     }
     validateBinding() {
         const t = this.task;

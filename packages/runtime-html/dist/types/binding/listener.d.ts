@@ -1,6 +1,6 @@
 import { DelegationStrategy } from '../renderer';
 import type { IIndexable, IServiceLocator } from '@aurelia/kernel';
-import type { IsBindingBehavior, Scope } from '@aurelia/runtime';
+import { IsBindingBehavior, Scope } from '@aurelia/runtime';
 import type { IEventDelegator } from '../observation/event-delegator';
 import type { IAstBasedBinding } from './interfaces-bindings';
 export declare class ListenerOptions {
@@ -24,7 +24,7 @@ export declare class Listener implements IAstBasedBinding {
     $scope: Scope;
     private handler;
     constructor(locator: IServiceLocator, ast: IsBindingBehavior, target: Node, targetEvent: string, eventDelegator: IEventDelegator, options: ListenerOptions);
-    callSource(event: Event): ReturnType<IsBindingBehavior['evaluate']>;
+    callSource(event: Event): unknown;
     handleEvent(event: Event): void;
     $bind(scope: Scope): void;
     $unbind(): void;

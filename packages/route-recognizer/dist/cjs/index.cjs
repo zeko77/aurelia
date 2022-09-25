@@ -48,17 +48,17 @@ class Candidate {
         let r = null;
         let o = 0;
         const l = e[e.length - 1];
-        function c(u, h) {
-            if (u.isMatch(t)) if (1 === ++o) r = u; else i.add(new Candidate(s.concat(t), e.concat(u), null === h ? n : n.concat(h), i));
-            if (null === l.segment && u.isOptional && null !== u.nextStates) {
-                if (u.nextStates.length > 1) throw new Error(`${u.nextStates.length} nextStates`);
-                const t = u.nextStates[0];
+        function u(c, h) {
+            if (c.isMatch(t)) if (1 === ++o) r = c; else i.add(new Candidate(s.concat(t), e.concat(c), null === h ? n : n.concat(h), i));
+            if (null === l.segment && c.isOptional && null !== c.nextStates) {
+                if (c.nextStates.length > 1) throw new Error(`${c.nextStates.length} nextStates`);
+                const t = c.nextStates[0];
                 if (!t.isSeparator) throw new Error(`Not a separator`);
-                if (null !== t.nextStates) for (const s of t.nextStates) c(s, u);
+                if (null !== t.nextStates) for (const s of t.nextStates) u(s, c);
             }
         }
-        if (l.isDynamic) c(l, null);
-        if (null !== l.nextStates) for (const t of l.nextStates) c(t, null);
+        if (l.isDynamic) u(l, null);
+        if (null !== l.nextStates) for (const t of l.nextStates) u(t, null);
         if (null !== r) {
             e.push(this.head = r);
             s.push(t);
@@ -209,9 +209,9 @@ class RouteRecognizer {
                 break;
             }
         }
-        const c = new Endpoint(i, o);
-        l.setEndpoint(c);
-        n.set(s, c);
+        const u = new Endpoint(i, o);
+        l.setEndpoint(u);
+        n.set(s, u);
     }
     recognize(t) {
         let s = this.cache.get(t);
@@ -313,14 +313,6 @@ class State {
 function e(t) {
     return t.length > 0;
 }
-
-var n;
-
-(function(t) {
-    t[t["star"] = 1] = "star";
-    t[t["dynamic"] = 2] = "dynamic";
-    t[t["static"] = 3] = "static";
-})(n || (n = {}));
 
 class StaticSegment {
     constructor(t, s) {

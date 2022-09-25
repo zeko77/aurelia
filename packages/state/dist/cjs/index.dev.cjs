@@ -147,7 +147,7 @@ function __decorate(decorators, target, key, desc) {
 function createStateBindingScope(state, scope) {
     const overrideContext = { bindingContext: state };
     const stateScope = runtime.Scope.create(state, overrideContext, true);
-    stateScope.parentScope = scope;
+    stateScope.parent = scope;
     return stateScope;
 }
 const defProto = (klass, prop, desc) => Reflect.defineProperty(klass.prototype, prop, desc);
@@ -207,7 +207,7 @@ class StateBinding {
         this.targetObserver = this.oL.getAccessor(this.target, this.targetProperty);
         this.$scope = createStateBindingScope(this._store.getState(), scope);
         this._store.subscribe(this);
-        this.updateTarget(this._value = this.ast.evaluate(this.$scope, this, this.mode > 1 ? this : null));
+        this.updateTarget(this._value = runtime.astEvaluate(this.ast, this.$scope, this, this.mode > 1 ? this : null));
     }
     $unbind() {
         if (!this.isBound) {
@@ -228,7 +228,7 @@ class StateBinding {
         const shouldQueueFlush = this._controller.state !== 1 && (this.targetObserver.type & 4) > 0;
         const obsRecord = this.obs;
         obsRecord.version++;
-        newValue = this.ast.evaluate(this.$scope, this, this.interceptor);
+        newValue = runtime.astEvaluate(this.ast, this.$scope, this, this.interceptor);
         obsRecord.clear();
         let task;
         if (shouldQueueFlush) {
@@ -252,7 +252,7 @@ class StateBinding {
         const $scope = this.$scope;
         const overrideContext = $scope.overrideContext;
         $scope.bindingContext = overrideContext.bindingContext = overrideContext.$state = state;
-        const value = this.ast.evaluate($scope, this, this.mode > 1 ? this : null);
+        const value = runtime.astEvaluate(this.ast, $scope, this, this.mode > 1 ? this : null);
         const shouldQueueFlush = this._controller.state !== 1 && (this.targetObserver.type & 4) > 0;
         if (value === this._value) {
             return;
@@ -350,7 +350,7 @@ class StateDispatchBinding {
     callSource(e) {
         const $scope = this.$scope;
         $scope.overrideContext.$event = e;
-        const value = this.ast.evaluate($scope, this, null);
+        const value = runtime.astEvaluate(this.ast, $scope, this, null);
         delete $scope.overrideContext.$event;
         if (!this.isAction(value)) {
             throw new Error(`Invalid dispatch value from expression on ${this.target} on event: "${e.type}"`);

@@ -340,7 +340,7 @@ class TranslationBinding {
         if (!this.ast) throw new Error("key expression is missing");
         this.scope = t;
         this.I = this.ast instanceof n.Interpolation;
-        this.P = this.ast.evaluate(t, this, this);
+        this.P = n.astEvaluate(this.ast, t, this, this);
         this.M();
         this.parameter?.$bind(t);
         this.A();
@@ -348,7 +348,7 @@ class TranslationBinding {
     }
     $unbind() {
         if (!this.isBound) return;
-        if (this.ast.hasUnbind) this.ast.unbind(this.scope, this);
+        n.astUnbind(this.ast, this.scope, this);
         this.parameter?.$unbind();
         this.C.clear();
         if (null !== this.task) {
@@ -360,7 +360,7 @@ class TranslationBinding {
     }
     handleChange(t, s) {
         this.obs.version++;
-        this.P = this.I ? this.ast.evaluate(this.scope, this, this) : t;
+        this.P = this.I ? n.astEvaluate(this.ast, this.scope, this, this) : t;
         this.obs.clear();
         this.M();
         this.A();
@@ -473,20 +473,20 @@ class ParameterBinding {
     handleChange(t, s) {
         if (!this.isBound) return;
         this.obs.version++;
-        this.value = this.ast.evaluate(this.scope, this, this);
+        this.value = n.astEvaluate(this.ast, this.scope, this, this);
         this.obs.clear();
         this.updater();
     }
     $bind(t) {
         if (this.isBound) return;
         this.scope = t;
-        if (this.ast.hasBind) this.ast.bind(t, this);
-        this.value = this.ast.evaluate(t, this, this);
+        n.astBind(this.ast, t, this);
+        this.value = n.astEvaluate(this.ast, t, this, this);
         this.isBound = true;
     }
     $unbind() {
         if (!this.isBound) return;
-        if (this.ast.hasUnbind) this.ast.unbind(this.scope, this);
+        n.astUnbind(this.ast, this.scope, this);
         this.scope = void 0;
         this.obs.clearAll();
     }

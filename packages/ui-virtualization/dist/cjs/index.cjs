@@ -303,10 +303,10 @@ class VirtualRepeat {
         this.itemsChanged(this.items);
     }
     handleInnerCollectionChange() {
-        const t = this.iterable.evaluate(this.parent.scope, this.c, null);
-        const s = this.items;
+        const t = s.astEvaluate(this.iterable, this.parent.scope, this.c, null);
+        const e = this.items;
         this.items = t;
-        if (t === s) this.itemsChanged(t);
+        if (t === e) this.itemsChanged(t);
     }
     O() {
         const t = this.getOrCreateFirstView();

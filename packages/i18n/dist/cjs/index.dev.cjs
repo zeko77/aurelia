@@ -372,7 +372,7 @@ class TranslationBinding {
         }
         this.scope = scope;
         this._isInterpolation = this.ast instanceof runtime.Interpolation;
-        this._keyExpression = this.ast.evaluate(scope, this, this);
+        this._keyExpression = runtime.astEvaluate(this.ast, scope, this, this);
         this._ensureKeyExpression();
         this.parameter?.$bind(scope);
         this._updateTranslations();
@@ -382,9 +382,7 @@ class TranslationBinding {
         if (!this.isBound) {
             return;
         }
-        if (this.ast.hasUnbind) {
-            this.ast.unbind(this.scope, this);
-        }
+        runtime.astUnbind(this.ast, this.scope, this);
         this.parameter?.$unbind();
         this._targetAccessors.clear();
         if (this.task !== null) {
@@ -397,7 +395,7 @@ class TranslationBinding {
     handleChange(newValue, _previousValue) {
         this.obs.version++;
         this._keyExpression = this._isInterpolation
-            ? this.ast.evaluate(this.scope, this, this)
+            ? runtime.astEvaluate(this.ast, this.scope, this, this)
             : newValue;
         this.obs.clear();
         this._ensureKeyExpression();
@@ -549,7 +547,7 @@ class ParameterBinding {
             return;
         }
         this.obs.version++;
-        this.value = this.ast.evaluate(this.scope, this, this);
+        this.value = runtime.astEvaluate(this.ast, this.scope, this, this);
         this.obs.clear();
         this.updater();
     }
@@ -558,19 +556,15 @@ class ParameterBinding {
             return;
         }
         this.scope = scope;
-        if (this.ast.hasBind) {
-            this.ast.bind(scope, this);
-        }
-        this.value = this.ast.evaluate(scope, this, this);
+        runtime.astBind(this.ast, scope, this);
+        this.value = runtime.astEvaluate(this.ast, scope, this, this);
         this.isBound = true;
     }
     $unbind() {
         if (!this.isBound) {
             return;
         }
-        if (this.ast.hasUnbind) {
-            this.ast.unbind(this.scope, this);
-        }
+        runtime.astUnbind(this.ast, this.scope, this);
         this.scope = (void 0);
         this.obs.clearAll();
     }

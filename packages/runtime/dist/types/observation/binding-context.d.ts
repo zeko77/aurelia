@@ -8,7 +8,7 @@ export declare class BindingContext implements IBindingContext {
     constructor(key: PropertyKey, value: unknown);
 }
 export declare class Scope {
-    parentScope: Scope | null;
+    parent: Scope | null;
     bindingContext: IBindingContext;
     overrideContext: IOverrideContext;
     readonly isBoundary: boolean;

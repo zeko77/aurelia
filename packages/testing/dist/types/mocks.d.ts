@@ -58,14 +58,13 @@ export declare class MockPropertySubscriber {
 }
 export declare class MockTracingExpression {
     inner: any;
-    $kind: ExpressionKind;
+    $kind: ExpressionKind.Custom;
     hasBind: true;
     hasUnbind: true;
     calls: [keyof MockTracingExpression, ...any[]][];
     constructor(inner: any);
     evaluate(...args: any[]): any;
     assign(...args: any[]): any;
-    connect(...args: any[]): any;
     bind(...args: any[]): any;
     unbind(...args: any[]): any;
     accept(...args: any[]): any;

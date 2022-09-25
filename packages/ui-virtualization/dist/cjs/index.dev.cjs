@@ -336,7 +336,7 @@ class VirtualRepeat {
         this.itemsChanged(this.items);
     }
     handleInnerCollectionChange() {
-        const newItems = this.iterable.evaluate(this.parent.scope, this._container, null);
+        const newItems = runtime.astEvaluate(this.iterable, this.parent.scope, this._container, null);
         const oldItems = this.items;
         this.items = newItems;
         if (newItems === oldItems) {

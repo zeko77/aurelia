@@ -38,7 +38,6 @@ export declare class InterpolationPartBinding implements IAstBasedBinding, IColl
     readonly owner: InterpolationBinding;
     interceptor: this;
     readonly mode: BindingMode;
-    value: unknown;
     $scope?: Scope;
     task: ITask | null;
     isBound: boolean;
@@ -66,7 +65,6 @@ export declare class ContentBinding implements IAstBasedBinding, ICollectionSubs
     readonly strict: boolean;
     interceptor: this;
     readonly mode: BindingMode;
-    value: unknown;
     $scope?: Scope;
     task: ITask | null;
     isBound: boolean;

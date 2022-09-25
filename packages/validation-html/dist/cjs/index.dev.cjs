@@ -96,7 +96,7 @@ function getPropertyInfo(binding, info, _flags = 0) {
                 if (toCachePropertyName) {
                     toCachePropertyName = keyExpr.$kind === 4;
                 }
-                memberName = `[${keyExpr.evaluate(scope, binding, null).toString()}]`;
+                memberName = `[${runtime.astEvaluate(keyExpr, scope, binding, null).toString()}]`;
                 break;
             }
             default:
@@ -115,7 +115,7 @@ function getPropertyInfo(binding, info, _flags = 0) {
         object = scope.bindingContext;
     }
     else {
-        object = expression.evaluate(scope, binding, null);
+        object = runtime.astEvaluate(expression, scope, binding, null);
     }
     if (object === null || object === void 0) {
         return (void 0);
@@ -564,16 +564,16 @@ exports.ValidateBindingBehavior = class ValidateBindingBehavior extends runtimeH
             const arg = args[i];
             switch (i) {
                 case 0:
-                    trigger = this._ensureTrigger(arg.evaluate(scope, this, this.triggerMediator));
+                    trigger = this._ensureTrigger(runtime.astEvaluate(arg, scope, this, this.triggerMediator));
                     break;
                 case 1:
-                    controller = this._ensureController(arg.evaluate(scope, this, this.controllerMediator));
+                    controller = this._ensureController(runtime.astEvaluate(arg, scope, this, this.controllerMediator));
                     break;
                 case 2:
-                    rules = this._ensureRules(arg.evaluate(scope, this, this.rulesMediator));
+                    rules = this._ensureRules(runtime.astEvaluate(arg, scope, this, this.rulesMediator));
                     break;
                 default:
-                    throw new Error(`Unconsumed argument#${i + 1} for validate binding behavior: ${arg.evaluate(scope, this, null)}`);
+                    throw new Error(`Unconsumed argument#${i + 1} for validate binding behavior: ${runtime.astEvaluate(arg, scope, this, null)}`);
             }
         }
         return new ValidateArgumentsDelta(this._ensureController(controller), this._ensureTrigger(trigger), rules);

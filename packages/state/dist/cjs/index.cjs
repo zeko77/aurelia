@@ -110,7 +110,7 @@ function a(t, s) {
         bindingContext: t
     };
     const n = i.Scope.create(t, e, true);
-    n.parentScope = s;
+    n.parent = s;
     return n;
 }
 
@@ -166,7 +166,7 @@ class StateBinding {
         this.targetObserver = this.oL.getAccessor(this.target, this.targetProperty);
         this.$scope = a(this._.getState(), t);
         this._.subscribe(this);
-        this.updateTarget(this.v = this.ast.evaluate(this.$scope, this, this.mode > 1 ? this : null));
+        this.updateTarget(this.v = i.astEvaluate(this.ast, this.$scope, this, this.mode > 1 ? this : null));
     }
     $unbind() {
         if (!this.isBound) return;
@@ -181,39 +181,39 @@ class StateBinding {
     handleChange(t) {
         if (!this.isBound) return;
         const s = 1 !== this.$.state && (4 & this.targetObserver.type) > 0;
-        const i = this.obs;
-        i.version++;
-        t = this.ast.evaluate(this.$scope, this, this.interceptor);
-        i.clear();
-        let e;
+        const e = this.obs;
+        e.version++;
+        t = i.astEvaluate(this.ast, this.$scope, this, this.interceptor);
+        e.clear();
+        let n;
         if (s) {
-            e = this.task;
+            n = this.task;
             this.task = this.taskQueue.queueTask((() => {
                 this.interceptor.updateTarget(t);
                 this.task = null;
             }), d);
-            e?.cancel();
-            e = null;
+            n?.cancel();
+            n = null;
         } else this.interceptor.updateTarget(t);
     }
     handleStateChange() {
         if (!this.isBound) return;
         const t = this._.getState();
         const s = this.$scope;
-        const i = s.overrideContext;
-        s.bindingContext = i.bindingContext = i.$state = t;
-        const e = this.ast.evaluate(s, this, this.mode > 1 ? this : null);
-        const n = 1 !== this.$.state && (4 & this.targetObserver.type) > 0;
-        if (e === this.v) return;
-        this.v = e;
-        let h = null;
-        if (n) {
-            h = this.task;
+        const e = s.overrideContext;
+        s.bindingContext = e.bindingContext = e.$state = t;
+        const n = i.astEvaluate(this.ast, s, this, this.mode > 1 ? this : null);
+        const h = 1 !== this.$.state && (4 & this.targetObserver.type) > 0;
+        if (n === this.v) return;
+        this.v = n;
+        let r = null;
+        if (h) {
+            r = this.task;
             this.task = this.taskQueue.queueTask((() => {
-                this.interceptor.updateTarget(e);
+                this.interceptor.updateTarget(n);
                 this.task = null;
             }), d);
-            h?.cancel();
+            r?.cancel();
         } else this.interceptor.updateTarget(this.v);
     }
     A() {
@@ -293,10 +293,10 @@ class StateDispatchBinding {
     callSource(t) {
         const s = this.$scope;
         s.overrideContext.$event = t;
-        const i = this.ast.evaluate(s, this, null);
+        const e = i.astEvaluate(this.ast, s, this, null);
         delete s.overrideContext.$event;
-        if (!this.isAction(i)) throw new Error(`Invalid dispatch value from expression on ${this.target} on event: "${t.type}"`);
-        void this._.dispatch(i.type, ...i.params instanceof Array ? i.params : []);
+        if (!this.isAction(e)) throw new Error(`Invalid dispatch value from expression on ${this.target} on event: "${t.type}"`);
+        void this._.dispatch(e.type, ...e.params instanceof Array ? e.params : []);
     }
     handleEvent(t) {
         this.interceptor.callSource(t);

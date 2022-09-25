@@ -62,7 +62,7 @@ export { ILifecycleHooks, LifecycleHooksEntry, LifecycleHooksDefinition, type Li
 export { IRendering, Rendering, } from './templating/rendering';
 export { ViewFactory, IViewFactory, IViewLocator, ViewLocator, view, Views, } from './templating/view';
 export { createElement, RenderPlan } from './create-element';
-export { INode, IEventTarget, IRenderLocation, type INodeSequence, NodeType, FragmentNodeSequence, IHistory, IWindow, ILocation, getEffectiveParentNode, setEffectiveParentNode, convertToRenderLocation, isRenderLocation, getRef, setRef, } from './dom';
+export { INode, IEventTarget, IRenderLocation, type INodeSequence, FragmentNodeSequence, IHistory, IWindow, ILocation, getEffectiveParentNode, setEffectiveParentNode, convertToRenderLocation, isRenderLocation, getRef, setRef, } from './dom';
 export { IPlatform, } from './platform';
 export { CSSModulesProcessorRegistry, cssModules, ShadowDOMRegistry, type IShadowDOMStyleFactory, shadowCSS, StyleConfiguration, type IShadowDOMConfiguration, AdoptedStyleSheetsStyles, StyleElementStyles, IShadowDOMStyles, IShadowDOMGlobalStyles, } from './templating/styles';
 export { Watch, watch, type IWatchDefinition, type IWatcherCallback, type IDepCollectionFn, } from './watch';
