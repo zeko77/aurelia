@@ -1,12 +1,13 @@
-import { BindingBehaviorExpression, ValueConverterExpression, AssignExpression, ConditionalExpression, AccessThisExpression, AccessScopeExpression, AccessMemberExpression, AccessKeyedExpression, CallScopeExpression, CallMemberExpression, CallFunctionExpression, BinaryExpression, UnaryExpression, PrimitiveLiteralExpression, ArrayLiteralExpression, ObjectLiteralExpression, TemplateExpression, TaggedTemplateExpression, ArrayBindingPattern, ObjectBindingPattern, BindingIdentifier, ForOfStatement, Interpolation, DestructuringAssignmentExpression, DestructuringAssignmentSingleExpression, DestructuringAssignmentRestExpression, ArrowFunction, astEvaluate, astAssign, astVisit, astBind, astUnbind } from '../../../runtime/dist/native-modules/index.mjs';
-import { AppTask, IEventTarget } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { BindingBehaviorExpression, ValueConverterExpression, AssignExpression, ConditionalExpression, AccessThisExpression, AccessScopeExpression, AccessMemberExpression, AccessKeyedExpression, CallScopeExpression, CallMemberExpression, CallFunctionExpression, BinaryExpression, UnaryExpression, PrimitiveLiteralExpression, ArrayLiteralExpression, ObjectLiteralExpression, TemplateExpression, TaggedTemplateExpression, ArrayBindingPattern, ObjectBindingPattern, BindingIdentifier, ForOfStatement, Interpolation, DestructuringAssignmentExpression, DestructuringAssignmentSingleExpression, DestructuringAssignmentRestExpression, ArrowFunction, astEvaluate, astAssign, astVisit, astBind, astUnbind, Unparser } from '../../../runtime/dist/native-modules/index.mjs';
+import { PropertyBinding, AttributeBinding, Listener, CallBinding, LetBinding, InterpolationPartBinding, RefBinding, AppTask, IEventTarget } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { ContentBinding } from '../../../runtime-html/dist/types/binding/interpolation-binding/dist/native-modules/index.mjs';
 
-let defined = false;
+let defined$1 = false;
 function defineAstMethods() {
-    if (defined) {
+    if (defined$1) {
         return;
     }
-    defined = true;
+    defined$1 = true;
     const def = (Klass, name, value) => Object.defineProperty(Klass.prototype, name, { configurable: true, enumerable: false, writable: true, value });
     [
         BindingBehaviorExpression,
@@ -35,7 +36,7 @@ function defineAstMethods() {
         DestructuringAssignmentExpression,
         DestructuringAssignmentSingleExpression,
         DestructuringAssignmentRestExpression,
-        ArrowFunction
+        ArrowFunction,
     ].forEach(ast => {
         def(ast, 'evaluate', function (...args) {
             return astEvaluate(this, ...args);
@@ -52,8 +53,34 @@ function defineAstMethods() {
         def(ast, 'unbind', function (...args) {
             return astUnbind(this, ...args);
         });
+        console.warn('"evaluate"/"assign"/"accept"/"visit"/"bind"/"unbind" are only valid on AST with $kind Custom.'
+            + ' Or import and use astEvaluate/astAssign/astVisit/astBind/astUnbind accordingly.');
     });
 }
+
+let defined = false;
+const defineBindingMethods = () => {
+    if (defined)
+        return;
+    defined = true;
+    [
+        [PropertyBinding, 'Property binding'],
+        [AttributeBinding, 'Attribute binding'],
+        [Listener, 'Listener binding'],
+        [CallBinding, 'Call binding'],
+        [LetBinding, 'Let binding'],
+        [InterpolationPartBinding, 'Interpolation binding'],
+        [ContentBinding, 'Text binding'],
+        [RefBinding, 'Ref binding']
+    ].forEach(([b, name]) => {
+        Object.defineProperty(b.prototype, 'sourceExpression', {
+            configurable: true, enumerable: false, writable: true, get() {
+                console.warn(`@deprecated "sourceExpression" property for expression on ${name}. It has been renamed to "ast". expression: "${Unparser.unparse(this.ast)}"`);
+                return this.ast;
+            }
+        });
+    });
+};
 
 const PreventFormActionlessSubmit = AppTask.creating(IEventTarget, appRoot => {
     appRoot.addEventListener('submit', (e) => {
@@ -68,6 +95,7 @@ const PreventFormActionlessSubmit = AppTask.creating(IEventTarget, appRoot => {
 const registration = {
     register(container) {
         defineAstMethods();
+        defineBindingMethods();
         container.register(PreventFormActionlessSubmit);
     }
 };

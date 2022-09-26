@@ -53,11 +53,11 @@ class Candidate {
             }
             if (state.segment === null && nextState.isOptional && nextState.nextStates !== null) {
                 if (nextState.nextStates.length > 1) {
-                    throw new Error(`${nextState.nextStates.length} nextStates`);
+                    throw createError(`${nextState.nextStates.length} nextStates`);
                 }
                 const separator = nextState.nextStates[0];
                 if (!separator.isSeparator) {
-                    throw new Error(`Not a separator`);
+                    throw createError(`Not a separator`);
                 }
                 if (separator.nextStates !== null) {
                     for (const $nextState of separator.nextStates) {
@@ -249,7 +249,7 @@ class RouteRecognizer {
         const path = route.path;
         const lookup = this.endpointLookup;
         if (lookup.has(path))
-            throw new Error(`Cannot add duplicate path '${path}'.`);
+            throw createError(`Cannot add duplicate path '${path}'.`);
         const $route = new ConfigurableRoute(path, route.caseSensitive === true, route.handler);
         const parts = path === '' ? [''] : path.split('/').filter(isNotEmpty);
         const params = [];
@@ -369,7 +369,7 @@ class State {
     }
     setEndpoint(endpoint) {
         if (this.endpoint !== null) {
-            throw new Error(`Cannot add ambiguous route. The pattern '${endpoint.route.path}' clashes with '${this.endpoint.route.path}'`);
+            throw createError(`Cannot add ambiguous route. The pattern '${endpoint.route.path}' clashes with '${this.endpoint.route.path}'`);
         }
         this.endpoint = endpoint;
         if (this.isOptional) {
@@ -453,6 +453,7 @@ class StarSegment {
             b.name === this.name);
     }
 }
+const createError = (msg) => new Error(msg);
 
 exports.ConfigurableRoute = ConfigurableRoute;
 exports.Endpoint = Endpoint;

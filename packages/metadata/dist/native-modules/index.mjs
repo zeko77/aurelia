@@ -76,20 +76,20 @@ function f(t, e, n) {
     return false;
 }
 
-function s(t, e, n) {
+function d(t, e, n) {
     const r = u(e, n, false);
     if (void 0 === r) return;
     return r.get(t);
 }
 
-function l(t, e, n) {
-    if (c(t, e, n)) return s(t, e, n);
+function s(t, e, n) {
+    if (c(t, e, n)) return d(t, e, n);
     const r = Object.getPrototypeOf(e);
-    if (null !== r) return l(t, r, n);
+    if (null !== r) return s(t, r, n);
     return;
 }
 
-function d(t, e, n, r) {
+function l(t, e, n, r) {
     const a = u(n, r, true);
     a.set(t, e);
 }
@@ -107,11 +107,11 @@ function w(t, e) {
     return n;
 }
 
-function y(t, e) {
+function g(t, e) {
     const n = w(t, e);
     const r = Object.getPrototypeOf(t);
     if (null === r) return n;
-    const a = y(r, e);
+    const a = g(r, e);
     const o = n.length;
     if (0 === o) return a;
     const i = a.length;
@@ -119,41 +119,41 @@ function y(t, e) {
     const u = new Set;
     const c = [];
     let f = 0;
-    let s;
+    let d;
     for (let t = 0; t < o; ++t) {
-        s = n[t];
-        if (!u.has(s)) {
-            u.add(s);
-            c[f] = s;
+        d = n[t];
+        if (!u.has(d)) {
+            u.add(d);
+            c[f] = d;
             ++f;
         }
     }
     for (let t = 0; t < i; ++t) {
-        s = a[t];
-        if (!u.has(s)) {
-            u.add(s);
-            c[f] = s;
+        d = a[t];
+        if (!u.has(d)) {
+            u.add(d);
+            c[f] = d;
             ++f;
         }
     }
     return c;
 }
 
-function h(t, e, n) {
+function M(t, e, n) {
     const r = u(t, n, false);
     if (void 0 === r) return false;
     return r.delete(e);
 }
 
-function g(e, n) {
+function h(e, n) {
     function a(a, o) {
         if (!t(a)) throw r("@metadata", [ e, n, a, o ], "target", a, "Object or Function");
-        d(e, n, a, i(o));
+        l(e, n, a, i(o));
     }
     return a;
 }
 
-function p(n, a, i, u) {
+function y(n, a, i, u) {
     if (void 0 !== i) {
         if (!Array.isArray(n)) throw r("Metadata.decorate", [ n, a, i, u ], "decorators", n, "Array");
         if (!t(a)) throw r("Metadata.decorate", [ n, a, i, u ], "target", a, "Object or Function");
@@ -164,11 +164,11 @@ function p(n, a, i, u) {
     } else {
         if (!Array.isArray(n)) throw r("Metadata.decorate", [ n, a, i, u ], "decorators", n, "Array");
         if ("function" !== typeof a) throw r("Metadata.decorate", [ n, a, i, u ], "target", a, "Function");
-        return M(n, a);
+        return O(n, a);
     }
 }
 
-function M(t, n) {
+function O(t, n) {
     for (let a = t.length - 1; a >= 0; --a) {
         const o = t[a];
         const i = o(n);
@@ -192,94 +192,94 @@ function b(n, a, o, i) {
     return i;
 }
 
-function O(e, n, o, i) {
+function p(e, n, o, i) {
     if (!t(o)) throw r("Metadata.define", [ e, n, o, i ], "target", o, "Object or Function");
-    return d(e, n, o, a(i));
+    return l(e, n, o, a(i));
 }
 
-function m(e, n, o) {
+function j(e, n, o) {
     if (!t(n)) throw r("Metadata.has", [ e, n, o ], "target", n, "Object or Function");
     return f(e, n, a(o));
 }
 
-function j(e, n, o) {
+function F(e, n, o) {
     if (!t(n)) throw r("Metadata.hasOwn", [ e, n, o ], "target", n, "Object or Function");
     return c(e, n, a(o));
 }
 
-function v(e, n, o) {
-    if (!t(n)) throw r("Metadata.get", [ e, n, o ], "target", n, "Object or Function");
-    return l(e, n, a(o));
-}
-
 function $(e, n, o) {
-    if (!t(n)) throw r("Metadata.getOwn", [ e, n, o ], "target", n, "Object or Function");
+    if (!t(n)) throw r("Metadata.get", [ e, n, o ], "target", n, "Object or Function");
     return s(e, n, a(o));
 }
 
-function F(e, n) {
-    if (!t(e)) throw r("Metadata.getKeys", [ e, n ], "target", e, "Object or Function");
-    return y(e, a(n));
+function v(e, n, o) {
+    if (!t(n)) throw r("Metadata.getOwn", [ e, n, o ], "target", n, "Object or Function");
+    return d(e, n, a(o));
 }
 
 function K(e, n) {
+    if (!t(e)) throw r("Metadata.getKeys", [ e, n ], "target", e, "Object or Function");
+    return g(e, a(n));
+}
+
+function m(e, n) {
     if (!t(e)) throw r("Metadata.getOwnKeys", [ e, n ], "target", e, "Object or Function");
     return w(e, a(n));
 }
 
-function E(e, n, o) {
+function A(e, n, o) {
     if (!t(n)) throw r("Metadata.delete", [ e, n, o ], "target", n, "Object or Function");
-    return h(n, e, a(o));
+    return M(n, e, a(o));
 }
 
-const k = {
-    define: O,
-    has: m,
-    hasOwn: j,
-    get: v,
-    getOwn: $,
-    getKeys: F,
-    getOwnKeys: K,
-    delete: E
+const R = {
+    define: p,
+    has: j,
+    hasOwn: F,
+    get: $,
+    getOwn: v,
+    getKeys: K,
+    getOwnKeys: m,
+    delete: A
 };
 
-function A(t, e, n, r, a) {
+function E(t, e, n, r, a) {
     if (!Reflect.defineProperty(t, e, {
         writable: r,
         enumerable: false,
         configurable: a,
         value: n
-    })) throw new Error(`Unable to apply metadata polyfill: could not add property '${e}' to the global Reflect object`);
+    })) throw D(`AUR1000`);
 }
 
-const R = "[[$au]]";
+const S = "[[$au]]";
 
-function C(t) {
-    return R in t;
+function U(t) {
+    return S in t;
 }
 
-function I(t, e, r) {
-    A(t, R, n, e, r);
-    A(t, "metadata", g, e, r);
-    A(t, "decorate", p, e, r);
-    A(t, "defineMetadata", O, e, r);
-    A(t, "hasMetadata", m, e, r);
-    A(t, "hasOwnMetadata", j, e, r);
-    A(t, "getMetadata", v, e, r);
-    A(t, "getOwnMetadata", $, e, r);
-    A(t, "getMetadataKeys", F, e, r);
-    A(t, "getOwnMetadataKeys", K, e, r);
-    A(t, "deleteMetadata", E, e, r);
+function k(t, e, r) {
+    E(t, S, n, e, r);
+    E(t, "metadata", h, e, r);
+    E(t, "decorate", y, e, r);
+    E(t, "defineMetadata", p, e, r);
+    E(t, "hasMetadata", j, e, r);
+    E(t, "hasOwnMetadata", F, e, r);
+    E(t, "getMetadata", $, e, r);
+    E(t, "getOwnMetadata", v, e, r);
+    E(t, "getMetadataKeys", K, e, r);
+    E(t, "getOwnMetadataKeys", m, e, r);
+    E(t, "deleteMetadata", A, e, r);
 }
 
-function S(t, e = true, r = false, a = true, o = true) {
-    if (C(t)) {
-        if (t[R] === n) return;
-        if (t[R] instanceof WeakMap) {
-            n = t[R];
+function x(t, e = true, r = false, a = true, o = true) {
+    if (U(t)) {
+        if (t[S] === n) return;
+        if (t[S] instanceof WeakMap) {
+            n = t[S];
             return;
         }
-        throw new Error(`Conflicting @aurelia/metadata module import detected. Please make sure you have the same version of all Aurelia packages in your dependency tree.`);
+        throw D(`AUR1001`);
     }
     const i = [ "metadata", "decorate", "defineMetadata", "hasMetadata", "hasOwnMetadata", "getMetadata", "getOwnMetadata", "getMetadataKeys", "getOwnMetadataKeys", "deleteMetadata" ].filter((function(t) {
         return t in Reflect;
@@ -290,10 +290,12 @@ function S(t, e = true, r = false, a = true, o = true) {
                 const e = `${Reflect[t].toString().slice(0, 100)}...`;
                 return `${t}:\n${e}`;
             })).join("\n\n");
-            throw new Error(`Conflicting reflect.metadata polyfill found. If you have 'reflect-metadata' or any other reflect polyfill imported, please remove it, if not (or if you must use a specific polyfill) please file an issue at https://github.com/aurelia/aurelia/issues so that we can look into compatibility options for this scenario. Implementation summary:\n\n${t}`);
-        } else if (r) I(t, a, o);
-    } else I(t, a, o);
+            throw D(`AUR1002:${t}`);
+        } else if (r) k(t, a, o);
+    } else k(t, a, o);
 }
 
-export { k as Metadata, S as applyMetadataPolyfill, e as isNullOrUndefined, t as isObject, g as metadata };
+const D = t => new Error(t);
+
+export { R as Metadata, x as applyMetadataPolyfill, e as isNullOrUndefined, t as isObject, h as metadata };
 

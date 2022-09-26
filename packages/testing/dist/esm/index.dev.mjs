@@ -7620,13 +7620,21 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
                 el.dispatchEvent(new ctx.CustomEvent(event, init));
             } });
     });
+    function type(selector, value) {
+        const el = queryBy(selector);
+        if (el === null || !/input|textarea/i.test(el.nodeName)) {
+            throw new Error(`No <input>/<textarea> element found for selector "${selector}" to emulate input for "${value}"`);
+        }
+        el.value = value;
+        el.dispatchEvent(new platform.window.Event('input'));
+    }
     const scrollBy = (selector, init) => {
         const el = queryBy(selector);
         if (el === null) {
             throw new Error(`No element found for selector "${selector}" to scroll by "${JSON.stringify(init)}"`);
         }
         el.scrollBy(typeof init === 'number' ? { top: init } : init);
-        el.dispatchEvent(new Event('scroll'));
+        el.dispatchEvent(new platform.window.Event('scroll'));
     };
     const flush = (time) => {
         ctx.platform.domWriteQueue.flush(time);
@@ -7653,7 +7661,9 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             this.assertAttr = assertAttr;
             this.assertAttrNS = assertAttrNS;
             this.assertValue = assertValue;
+            this.createEvent = (name, init) => new platform.CustomEvent(name, init);
             this.trigger = trigger;
+            this.type = type;
             this.scrollBy = scrollBy;
             this.flush = flush;
         }

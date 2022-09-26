@@ -3,6 +3,7 @@ import { Metadata } from '@aurelia/metadata';
 
 const hasOwnProp = Object.prototype.hasOwnProperty;
 const def = Reflect.defineProperty;
+const createError = (message) => new Error(message);
 const isFunction = (v) => typeof v === 'function';
 const isString = (v) => typeof v === 'string';
 const isArray = (v) => v instanceof Array;
@@ -61,7 +62,7 @@ const astVisit = (ast, visitor) => {
         case 17: return visitor.visitValueConverter(ast);
         case 28: return visitor.visitCustom(ast);
         default: {
-            throw new Error(`Unknown ast node ${JSON.stringify(ast)}`);
+            throw createError(`Unknown ast node ${JSON.stringify(ast)}`);
         }
     }
 };
@@ -682,11 +683,11 @@ class Scope {
     }
 }
 const nullScopeError = () => {
-    return new Error(`AUR0203: scope is null/undefined.`)
+    return createError(`AUR0203: scope is null/undefined.`)
         ;
 };
 const nullContextError = () => {
-    return new Error('AUR0204: binding context is null/undefined')
+    return createError('AUR0204: binding context is null/undefined')
         ;
 };
 class OverrideContext {
@@ -742,7 +743,7 @@ function astEvaluate(ast, s, e, c) {
             }
             const evaluatedValue = obj[ast.name];
             if (evaluatedValue == null && ast.name === '$host') {
-                throw new Error(`AUR0105: Unable to find $host context. Did you forget [au-slot] attribute?`);
+                throw createError(`AUR0105: Unable to find $host context. Did you forget [au-slot] attribute?`);
             }
             if (e?.strict) {
                 return e?.boundFn && isFunction(evaluatedValue)
@@ -787,7 +788,7 @@ function astEvaluate(ast, s, e, c) {
                 case '+':
                     return +astEvaluate(ast.expression, s, e, c);
                 default:
-                    throw new Error(`AUR0109: Unknown unary operator: '${ast.operation}'`);
+                    throw createError(`AUR0109: Unknown unary operator: '${ast.operation}'`);
             }
         case 7: {
             const args = ast.args.map(a => astEvaluate(a, s, e, c));
@@ -819,7 +820,7 @@ function astEvaluate(ast, s, e, c) {
             if (!e?.strictFnCall && func == null) {
                 return void 0;
             }
-            throw new Error(`AUR0107: Expression is not a function.`);
+            throw createError(`AUR0107: Expression is not a function.`);
         }
         case 16: {
             const func = (...args) => {
@@ -883,7 +884,7 @@ function astEvaluate(ast, s, e, c) {
             const results = ast.expressions.map(expr => astEvaluate(expr, s, e, c));
             const func = astEvaluate(ast.func, s, e, c);
             if (!isFunction(func)) {
-                throw new Error(`AUR0110: Left-hand side of tagged template expression is not a function.`);
+                throw createError(`AUR0110: Left-hand side of tagged template expression is not a function.`);
             }
             return func(ast.cooked, ...results);
         }
@@ -952,7 +953,7 @@ function astEvaluate(ast, s, e, c) {
                 case '>=':
                     return astEvaluate(left, s, e, c) >= astEvaluate(right, s, e, c);
                 default:
-                    throw new Error(`AUR0108: Unknown binary operator: '${ast.operation}'`);
+                    throw createError(`AUR0108: Unknown binary operator: '${ast.operation}'`);
             }
         }
         case 14:
@@ -962,7 +963,7 @@ function astEvaluate(ast, s, e, c) {
         case 17: {
             const vc = e?.getConverter?.(ast.name);
             if (vc == null) {
-                throw new Error(`AUR0103: ValueConverter named '${ast.name}' could not be found. Did you forget to register it as a dependency?`);
+                throw createError(`AUR0103: ValueConverter named '${ast.name}' could not be found. Did you forget to register it as a dependency?`);
             }
             if ('toView' in vc) {
                 return vc.toView(astEvaluate(ast.expression, s, e, c), ...ast.args.map(a => astEvaluate(a, s, e, c)));
@@ -1003,7 +1004,7 @@ function astAssign(ast, s, e, val) {
     switch (ast.$kind) {
         case 1: {
             if (ast.name === '$host') {
-                throw new Error(`AUR0106: Invalid assignment. $host is a reserved keyword.`);
+                throw createError(`AUR0106: Invalid assignment. $host is a reserved keyword.`);
             }
             const obj = getContext(s, ast.name, ast.ancestor);
             if (obj instanceof Object) {
@@ -1068,7 +1069,7 @@ function astAssign(ast, s, e, val) {
                     case 25: {
                         if (typeof val !== 'object' || val === null) {
                             {
-                                throw new Error(`AUR0112: Cannot use non-object value for destructuring assignment.`);
+                                throw createError(`AUR0112: Cannot use non-object value for destructuring assignment.`);
                             }
                         }
                         let source = astEvaluate(item.source, Scope.create(val), e, null);
@@ -1089,7 +1090,7 @@ function astAssign(ast, s, e, val) {
                 }
                 if (typeof val !== 'object') {
                     {
-                        throw new Error(`AUR0112: Cannot use non-object value for destructuring assignment.`);
+                        throw createError(`AUR0112: Cannot use non-object value for destructuring assignment.`);
                     }
                 }
                 let source = astEvaluate(ast.source, Scope.create(val), e, null);
@@ -1104,7 +1105,7 @@ function astAssign(ast, s, e, val) {
                 }
                 if (typeof val !== 'object') {
                     {
-                        throw new Error(`AUR0112: Cannot use non-object value for destructuring assignment.`);
+                        throw createError(`AUR0112: Cannot use non-object value for destructuring assignment.`);
                     }
                 }
                 const indexOrProperties = ast.indexOrProperties;
@@ -1112,7 +1113,7 @@ function astAssign(ast, s, e, val) {
                 if (isArrayIndex(indexOrProperties)) {
                     if (!Array.isArray(val)) {
                         {
-                            throw new Error(`AUR0112: Cannot use non-array value for array-destructuring assignment.`);
+                            throw createError(`AUR0112: Cannot use non-array value for array-destructuring assignment.`);
                         }
                     }
                     restValue = val.slice(indexOrProperties);
@@ -1217,12 +1218,12 @@ function astUnbind(ast, s, b) {
         }
     }
 }
-const behaviorNotFoundError = (name) => new Error(`AUR0101: BindingBehavior '${name}' could not be found. Did you forget to register it as a dependency?`)
+const behaviorNotFoundError = (name) => createError(`AUR0101: BindingBehavior '${name}' could not be found. Did you forget to register it as a dependency?`)
     ;
-const duplicateBehaviorAppliedError = (name) => new Error(`AUR0102: BindingBehavior '${name}' already applied.`)
+const duplicateBehaviorAppliedError = (name) => createError(`AUR0102: BindingBehavior '${name}' already applied.`)
     ;
 const converterNotFoundError = (name) => {
-    return new Error(`AUR0103: ValueConverter '${name}' could not be found. Did you forget to register it as a dependency?`);
+    return createError(`AUR0103: ValueConverter '${name}' could not be found. Did you forget to register it as a dependency?`);
 };
 const getFunction = (mustEvaluate, obj, name) => {
     const func = obj == null ? null : obj[name];
@@ -1232,7 +1233,7 @@ const getFunction = (mustEvaluate, obj, name) => {
     if (!mustEvaluate && func == null) {
         return null;
     }
-    throw new Error(`AUR0111: Expected '${name}' to be a function`);
+    throw createError(`AUR0111: Expected '${name}' to be a function`);
 };
 const isNumberOrBigInt = (value) => {
     switch (typeof value) {
@@ -1472,11 +1473,14 @@ class CollectionLengthObserver {
         return this._obj.length;
     }
     setValue(newValue) {
-        const currentValue = this._value;
-        if (newValue !== currentValue && isArrayIndex(newValue)) {
-            this._obj.length = newValue;
-            this._value = newValue;
-            this.subs.notify(newValue, currentValue);
+        if (newValue !== this._value) {
+            if (!Number.isNaN(newValue)) {
+                this._obj.splice(newValue);
+                this._value = this._obj.length;
+            }
+            else {
+                console.warn(`Invalid value "${newValue}" for array length`);
+            }
         }
     }
     handleCollectionChange(_arr, _) {
@@ -1497,7 +1501,7 @@ class CollectionSizeObserver {
         return this._obj.size;
     }
     setValue() {
-        throw new Error(`AUR02: Map/Set "size" is a readonly property`);
+        throw createError(`AUR02: Map/Set "size" is a readonly property`);
     }
     handleCollectionChange(_collection, _) {
         const oldValue = this._value;
@@ -1777,8 +1781,8 @@ const observe$3 = {
         const indexMap = o.indexMap;
         const argCount = args.length;
         const actualDeleteCount = argCount === 0 ? 0 : argCount === 1 ? len - actualStart : deleteCount;
+        let i = actualStart;
         if (actualDeleteCount > 0) {
-            let i = actualStart;
             const to = i + actualDeleteCount;
             while (i < to) {
                 if (indexMap[i] > -1) {
@@ -1788,10 +1792,10 @@ const observe$3 = {
                 i++;
             }
         }
+        i = 0;
         if (argCount > 2) {
             const itemCount = argCount - 2;
             const inserts = new Array(itemCount);
-            let i = 0;
             while (i < itemCount) {
                 inserts[i++] = -2;
             }
@@ -1801,7 +1805,9 @@ const observe$3 = {
             $splice.apply(indexMap, args);
         }
         const deleted = $splice.apply(this, args);
-        o.notify();
+        if (actualDeleteCount > 0 || i > 0) {
+            o.notify();
+        }
         return deleted;
     },
     reverse: function () {
@@ -2325,7 +2331,7 @@ function observe(obj, key) {
 function getObserverRecord() {
     return defineHiddenProp(this, 'obs', new BindingObserverRecord(this));
 }
-function observeCollection(collection) {
+function observeCollection$1(collection) {
     let obs;
     if (isArray(collection)) {
         obs = getArrayObserver(collection);
@@ -2337,7 +2343,7 @@ function observeCollection(collection) {
         obs = getMapObserver(collection);
     }
     else {
-        throw new Error(`AUR0210: Unrecognised collection type.`);
+        throw createError(`AUR0210: Unrecognised collection type.`);
     }
     this.obs.add(obs);
 }
@@ -2345,10 +2351,10 @@ function subscribeTo(subscribable) {
     this.obs.add(subscribable);
 }
 function noopHandleChange() {
-    throw new Error(`AUR2011: method "handleChange" not implemented`);
+    throw createError(`AUR2011: method "handleChange" not implemented`);
 }
 function noopHandleCollectionChange() {
-    throw new Error(`AUR2011: method "handleCollectionChange" not implemented`);
+    throw createError(`AUR2011: method "handleCollectionChange" not implemented`);
 }
 class BindingObserverRecord {
     constructor(b) {
@@ -2392,7 +2398,7 @@ function unsubscribeStale(version, subscribable) {
 function connectableDecorator(target) {
     const proto = target.prototype;
     ensureProto(proto, 'observe', observe);
-    ensureProto(proto, 'observeCollection', observeCollection);
+    ensureProto(proto, 'observeCollection', observeCollection$1);
     ensureProto(proto, 'subscribeTo', subscribeTo);
     def(proto, 'obs', { get: getObserverRecord });
     ensureProto(proto, 'handleChange', noopHandleChange);
@@ -2450,7 +2456,7 @@ class ExpressionParser {
         $startIndex = 0;
         $currentToken = 6291456;
         $tokenValue = '';
-        $currentChar = expression.charCodeAt(0);
+        $currentChar = $charCodeAt(0);
         $assignable = true;
         $optional = false;
         return parse(61, expressionType === void 0 ? 8 : expressionType);
@@ -2498,9 +2504,9 @@ let $tokenValue = '';
 let $currentChar;
 let $assignable = true;
 let $optional = false;
-function $tokenRaw() {
-    return $input.slice($startIndex, $index);
-}
+const stringFromCharCode = String.fromCharCode;
+const $charCodeAt = (index) => $input.charCodeAt(index);
+const $tokenRaw = () => $input.slice($startIndex, $index);
 function parseExpression(input, expressionType) {
     $input = input;
     $index = 0;
@@ -2509,7 +2515,7 @@ function parseExpression(input, expressionType) {
     $startIndex = 0;
     $currentToken = 6291456;
     $tokenValue = '';
-    $currentChar = input.charCodeAt(0);
+    $currentChar = $charCodeAt(0);
     $assignable = true;
     $optional = false;
     return parse(61, expressionType === void 0 ? 8 : expressionType);
@@ -3202,11 +3208,11 @@ function parseInterpolation() {
     while ($index < length) {
         switch ($currentChar) {
             case 36:
-                if ($input.charCodeAt($index + 1) === 123) {
+                if ($charCodeAt($index + 1) === 123) {
                     parts.push(result);
                     result = '';
                     $index += 2;
-                    $currentChar = $input.charCodeAt($index);
+                    $currentChar = $charCodeAt($index);
                     nextToken();
                     const expression = parse(61, 1);
                     expressions.push(expression);
@@ -3217,10 +3223,10 @@ function parseInterpolation() {
                 }
                 break;
             case 92:
-                result += String.fromCharCode(unescapeCode(nextChar()));
+                result += stringFromCharCode(unescapeCode(nextChar()));
                 break;
             default:
-                result += String.fromCharCode($currentChar);
+                result += stringFromCharCode($currentChar);
         }
         nextChar();
     }
@@ -3268,7 +3274,7 @@ function nextToken() {
     $currentToken = 6291456;
 }
 function nextChar() {
-    return $currentChar = $input.charCodeAt(++$index);
+    return $currentChar = $charCodeAt(++$index);
 }
 function scanIdentifier() {
     while (IdParts[nextChar()])
@@ -3298,7 +3304,7 @@ function scanNumber(isFloat) {
         } while (char <= 57 && char >= 48);
     }
     else {
-        $currentChar = $input.charCodeAt(--$index);
+        $currentChar = $charCodeAt(--$index);
     }
     $tokenValue = parseFloat($tokenRaw());
     return 32768;
@@ -3315,7 +3321,7 @@ function scanString() {
             nextChar();
             unescaped = unescapeCode($currentChar);
             nextChar();
-            buffer.push(String.fromCharCode(unescaped));
+            buffer.push(stringFromCharCode(unescaped));
             marker = $index;
         }
         else if ($index >= $length) {
@@ -3337,7 +3343,7 @@ function scanTemplate() {
     let result = '';
     while (nextChar() !== 96) {
         if ($currentChar === 36) {
-            if (($index + 1) < $length && $input.charCodeAt($index + 1) === 123) {
+            if (($index + 1) < $length && $charCodeAt($index + 1) === 123) {
                 $index++;
                 tail = false;
                 break;
@@ -3347,13 +3353,13 @@ function scanTemplate() {
             }
         }
         else if ($currentChar === 92) {
-            result += String.fromCharCode(unescapeCode(nextChar()));
+            result += stringFromCharCode(unescapeCode(nextChar()));
         }
         else {
             if ($index >= $length) {
                 throw unterminatedTemplateLiteral();
             }
-            result += String.fromCharCode($currentChar);
+            result += stringFromCharCode($currentChar);
         }
     }
     nextChar();
@@ -3363,159 +3369,159 @@ function scanTemplate() {
     }
     return 2163759;
 }
-function scanTemplateTail() {
+const scanTemplateTail = () => {
     if ($index >= $length) {
         throw unterminatedTemplateLiteral();
     }
     $index--;
     return scanTemplate();
-}
-function consumeOpt(token) {
+};
+const consumeOpt = (token) => {
     if ($currentToken === token) {
         nextToken();
         return true;
     }
     return false;
-}
-function consume(token) {
+};
+const consume = (token) => {
     if ($currentToken === token) {
         nextToken();
     }
     else {
         throw missingExpectedToken(token);
     }
-}
-function invalidStartOfExpression() {
+};
+const invalidStartOfExpression = () => {
     {
-        return new Error(`AUR0151: Invalid start of expression: '${$input}'`);
+        return createError(`AUR0151: Invalid start of expression: '${$input}'`);
     }
-}
-function invalidSpreadOp() {
+};
+const invalidSpreadOp = () => {
     {
-        return new Error(`AUR0152: Spread operator is not supported: '${$input}'`);
+        return createError(`AUR0152: Spread operator is not supported: '${$input}'`);
     }
-}
-function expectedIdentifier() {
+};
+const expectedIdentifier = () => {
     {
-        return new Error(`AUR0153: Expected identifier: '${$input}'`);
+        return createError(`AUR0153: Expected identifier: '${$input}'`);
     }
-}
-function invalidMemberExpression() {
+};
+const invalidMemberExpression = () => {
     {
-        return new Error(`AUR0154: Invalid member expression: '${$input}'`);
+        return createError(`AUR0154: Invalid member expression: '${$input}'`);
     }
-}
-function unexpectedEndOfExpression() {
+};
+const unexpectedEndOfExpression = () => {
     {
-        return new Error(`AUR0155: Unexpected end of expression: '${$input}'`);
+        return createError(`AUR0155: Unexpected end of expression: '${$input}'`);
     }
-}
-function unconsumedToken() {
+};
+const unconsumedToken = () => {
     {
-        return new Error(`AUR0156: Unconsumed token: '${$tokenRaw()}' at position ${$index} of '${$input}'`);
+        return createError(`AUR0156: Unconsumed token: '${$tokenRaw()}' at position ${$index} of '${$input}'`);
     }
-}
-function invalidEmptyExpression() {
+};
+const invalidEmptyExpression = () => {
     {
-        return new Error(`AUR0157: Invalid expression. Empty expression is only valid in event bindings (trigger, delegate, capture etc...)`);
+        return createError(`AUR0157: Invalid expression. Empty expression is only valid in event bindings (trigger, delegate, capture etc...)`);
     }
-}
-function lhsNotAssignable() {
+};
+const lhsNotAssignable = () => {
     {
-        return new Error(`AUR0158: Left hand side of expression is not assignable: '${$input}'`);
+        return createError(`AUR0158: Left hand side of expression is not assignable: '${$input}'`);
     }
-}
-function expectedValueConverterIdentifier() {
+};
+const expectedValueConverterIdentifier = () => {
     {
-        return new Error(`AUR0159: Expected identifier to come after ValueConverter operator: '${$input}'`);
+        return createError(`AUR0159: Expected identifier to come after ValueConverter operator: '${$input}'`);
     }
-}
-function expectedBindingBehaviorIdentifier() {
+};
+const expectedBindingBehaviorIdentifier = () => {
     {
-        return new Error(`AUR0160: Expected identifier to come after BindingBehavior operator: '${$input}'`);
+        return createError(`AUR0160: Expected identifier to come after BindingBehavior operator: '${$input}'`);
     }
-}
-function unexpectedOfKeyword() {
+};
+const unexpectedOfKeyword = () => {
     {
-        return new Error(`AUR0161: Unexpected keyword "of": '${$input}'`);
+        return createError(`AUR0161: Unexpected keyword "of": '${$input}'`);
     }
-}
-function invalidLHSBindingIdentifierInForOf() {
+};
+const invalidLHSBindingIdentifierInForOf = () => {
     {
-        return new Error(`AUR0163: Invalid BindingIdentifier at left hand side of "of": '${$input}'`);
+        return createError(`AUR0163: Invalid BindingIdentifier at left hand side of "of": '${$input}'`);
     }
-}
-function invalidPropDefInObjLiteral() {
+};
+const invalidPropDefInObjLiteral = () => {
     {
-        return new Error(`AUR0164: Invalid or unsupported property definition in object literal: '${$input}'`);
+        return createError(`AUR0164: Invalid or unsupported property definition in object literal: '${$input}'`);
     }
-}
-function unterminatedStringLiteral() {
+};
+const unterminatedStringLiteral = () => {
     {
-        return new Error(`AUR0165: Unterminated quote in string literal: '${$input}'`);
+        return createError(`AUR0165: Unterminated quote in string literal: '${$input}'`);
     }
-}
-function unterminatedTemplateLiteral() {
+};
+const unterminatedTemplateLiteral = () => {
     {
-        return new Error(`AUR0166: Unterminated template string: '${$input}'`);
+        return createError(`AUR0166: Unterminated template string: '${$input}'`);
     }
-}
-function missingExpectedToken(token) {
+};
+const missingExpectedToken = (token) => {
     {
-        return new Error(`AUR0167: Missing expected token '${TokenValues[token & 63]}' in '${$input}' `);
+        return createError(`AUR0167: Missing expected token '${TokenValues[token & 63]}' in '${$input}' `);
     }
-}
+};
 const unexpectedCharacter = () => {
     {
-        throw new Error(`AUR0168: Unexpected character: '${$input}'`);
+        throw createError(`AUR0168: Unexpected character: '${$input}'`);
     }
 };
 unexpectedCharacter.notMapped = true;
-function unexpectedTokenInDestructuring() {
+const unexpectedTokenInDestructuring = () => {
     {
-        return new Error(`AUR0170: Unexpected '${$tokenRaw()}' at position ${$index - 1} for destructuring assignment in ${$input}`);
+        return createError(`AUR0170: Unexpected '${$tokenRaw()}' at position ${$index - 1} for destructuring assignment in ${$input}`);
     }
-}
-function unexpectedTokenInOptionalChain() {
+};
+const unexpectedTokenInOptionalChain = () => {
     {
-        return new Error(`AUR0171: Unexpected '${$tokenRaw()}' at position ${$index - 1} for optional chain in ${$input}`);
+        return createError(`AUR0171: Unexpected '${$tokenRaw()}' at position ${$index - 1} for optional chain in ${$input}`);
     }
-}
-function invalidTaggedTemplateOnOptionalChain() {
+};
+const invalidTaggedTemplateOnOptionalChain = () => {
     {
-        return new Error(`AUR0172: Invalid tagged template on optional chain in ${$input}`);
+        return createError(`AUR0172: Invalid tagged template on optional chain in ${$input}`);
     }
-}
-function invalidArrowParameterList() {
+};
+const invalidArrowParameterList = () => {
     {
-        return new Error(`AUR0173: Invalid arrow parameter list in ${$input}`);
+        return createError(`AUR0173: Invalid arrow parameter list in ${$input}`);
     }
-}
-function defaultParamsInArrowFn() {
+};
+const defaultParamsInArrowFn = () => {
     {
-        return new Error(`AUR0174: Arrow function with default parameters is not supported: ${$input}`);
+        return createError(`AUR0174: Arrow function with default parameters is not supported: ${$input}`);
     }
-}
-function destructuringParamsInArrowFn() {
+};
+const destructuringParamsInArrowFn = () => {
     {
-        return new Error(`AUR0175: Arrow function with destructuring parameters is not supported: ${$input}`);
+        return createError(`AUR0175: Arrow function with destructuring parameters is not supported: ${$input}`);
     }
-}
-function restParamsMustBeLastParam() {
+};
+const restParamsMustBeLastParam = () => {
     {
-        return new Error(`AUR0176: Rest parameter must be last formal parameter in arrow function: ${$input}`);
+        return createError(`AUR0176: Rest parameter must be last formal parameter in arrow function: ${$input}`);
     }
-}
-function functionBodyInArrowFN() {
+};
+const functionBodyInArrowFN = () => {
     {
-        return new Error(`AUR0178: Arrow function with function body is not supported: ${$input}`);
+        return createError(`AUR0178: Arrow function with function body is not supported: ${$input}`);
     }
-}
-function unexpectedDoubleDot() {
+};
+const unexpectedDoubleDot = () => {
     {
-        return new Error(`AUR0179: Unexpected token '.' at position ${$index - 1} in ${$input}`);
+        return createError(`AUR0179: Unexpected token '.' at position ${$index - 1} in ${$input}`);
     }
-}
+};
 const TokenValues = [
     $false, $true, $null, $undefined, '$this', null, '$parent',
     '(', '{', '.', '..', '...', '?.', '}', ')', ',', '[', ']', ':', '?', '\'', '"',
@@ -3543,7 +3549,7 @@ const codes = {
     Digit: [0x30, 0x3A],
     Skip: [0, 0x21, 0x7F, 0xA1]
 };
-function decompress(lookup, $set, compressed, value) {
+const decompress = (lookup, $set, compressed, value) => {
     const rangeCount = compressed.length;
     for (let i = 0; i < rangeCount; i += 2) {
         const start = compressed[i];
@@ -3558,13 +3564,11 @@ function decompress(lookup, $set, compressed, value) {
             }
         }
     }
-}
-function returnToken(token) {
-    return () => {
-        nextChar();
-        return token;
-    };
-}
+};
+const returnToken = (token) => () => {
+    nextChar();
+    return token;
+};
 const AsciiIdParts = new Set();
 decompress(null, AsciiIdParts, codes.AsciiIdPart, true);
 const IdParts = new Uint8Array(0xFFFF);
@@ -3625,7 +3629,7 @@ CharScanners[124] = () => {
 };
 CharScanners[63] = () => {
     if (nextChar() === 46) {
-        const peek = $input.charCodeAt($index + 1);
+        const peek = $charCodeAt($index + 1);
         if (peek <= 48 || peek >= 57) {
             nextChar();
             return 2162700;
@@ -3693,7 +3697,7 @@ function currentConnectable() {
 }
 function enterConnectable(connectable) {
     if (connectable == null) {
-        throw new Error(`AUR0206: Connectable cannot be null/undefined`);
+        throw createError(`AUR0206: Connectable cannot be null/undefined`);
     }
     if (_connectable == null) {
         _connectable = connectable;
@@ -3702,7 +3706,7 @@ function enterConnectable(connectable) {
         return;
     }
     if (_connectable === connectable) {
-        throw new Error(`AUR0207: Trying to enter an active connectable`);
+        throw createError(`AUR0207: Trying to enter an active connectable`);
     }
     connectables.push(connectable);
     _connectable = connectable;
@@ -3710,10 +3714,10 @@ function enterConnectable(connectable) {
 }
 function exitConnectable(connectable) {
     if (connectable == null) {
-        throw new Error(`AUR0208: Connectable cannot be null/undefined`);
+        throw createError(`AUR0208: Connectable cannot be null/undefined`);
     }
     if (_connectable !== connectable) {
-        throw new Error(`AUR0209: Trying to exit an unactive connectable`);
+        throw createError(`AUR0209: Trying to exit an unactive connectable`);
     }
     connectables.pop();
     _connectable = connectables.length > 0 ? connectables[connectables.length - 1] : null;
@@ -3794,13 +3798,12 @@ const arrayHandler = {
         if (key === rawKey) {
             return target;
         }
-        const connectable = currentConnectable();
-        if (!connecting || doNotCollect(key) || connectable == null) {
+        if (!connecting || doNotCollect(key) || _connectable == null) {
             return R$get(target, key, receiver);
         }
         switch (key) {
             case 'length':
-                connectable.observe(target, 'length');
+                _connectable.observe(target, 'length');
                 return target.length;
             case 'map':
                 return wrappedArrayMap;
@@ -3854,7 +3857,7 @@ const arrayHandler = {
             case 'entries':
                 return wrappedEntries;
         }
-        connectable.observe(target, key);
+        _connectable.observe(target, key);
         return wrap(R$get(target, key, receiver));
     },
     ownKeys(target) {
@@ -3865,64 +3868,64 @@ const arrayHandler = {
 function wrappedArrayMap(cb, thisArg) {
     const raw = getRaw(this);
     const res = raw.map((v, i) => unwrap(cb.call(thisArg, wrap(v), i, this)));
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return wrap(res);
 }
 function wrappedArrayEvery(cb, thisArg) {
     const raw = getRaw(this);
     const res = raw.every((v, i) => cb.call(thisArg, wrap(v), i, this));
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return res;
 }
 function wrappedArrayFilter(cb, thisArg) {
     const raw = getRaw(this);
     const res = raw.filter((v, i) => unwrap(cb.call(thisArg, wrap(v), i, this)));
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return wrap(res);
 }
 function wrappedArrayIncludes(v) {
     const raw = getRaw(this);
     const res = raw.includes(unwrap(v));
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return res;
 }
 function wrappedArrayIndexOf(v) {
     const raw = getRaw(this);
     const res = raw.indexOf(unwrap(v));
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return res;
 }
 function wrappedArrayLastIndexOf(v) {
     const raw = getRaw(this);
     const res = raw.lastIndexOf(unwrap(v));
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return res;
 }
 function wrappedArrayFindIndex(cb, thisArg) {
     const raw = getRaw(this);
     const res = raw.findIndex((v, i) => unwrap(cb.call(thisArg, wrap(v), i, this)));
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return res;
 }
 function wrappedArrayFind(cb, thisArg) {
     const raw = getRaw(this);
     const res = raw.find((v, i) => cb(wrap(v), i, this), thisArg);
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return wrap(res);
 }
 function wrappedArrayFlat() {
     const raw = getRaw(this);
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return wrap(raw.flat());
 }
 function wrappedArrayFlatMap(cb, thisArg) {
     const raw = getRaw(this);
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return getProxy(raw.flatMap((v, i) => wrap(cb.call(thisArg, wrap(v), i, this))));
 }
 function wrappedArrayJoin(separator) {
     const raw = getRaw(this);
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return raw.join(separator);
 }
 function wrappedArrayPop() {
@@ -3943,36 +3946,36 @@ function wrappedArraySplice(...args) {
 function wrappedArrayReverse(..._args) {
     const raw = getRaw(this);
     const res = raw.reverse();
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return wrap(res);
 }
 function wrappedArraySome(cb, thisArg) {
     const raw = getRaw(this);
     const res = raw.some((v, i) => unwrap(cb.call(thisArg, wrap(v), i, this)));
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return res;
 }
 function wrappedArraySort(cb) {
     const raw = getRaw(this);
     const res = raw.sort(cb);
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return wrap(res);
 }
 function wrappedArraySlice(start, end) {
     const raw = getRaw(this);
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return getProxy(raw.slice(start, end));
 }
 function wrappedReduce(cb, initValue) {
     const raw = getRaw(this);
     const res = raw.reduce((curr, v, i) => cb(curr, wrap(v), i, this), initValue);
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return wrap(res);
 }
 function wrappedReduceRight(cb, initValue) {
     const raw = getRaw(this);
     const res = raw.reduceRight((curr, v, i) => cb(curr, wrap(v), i, this), initValue);
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return wrap(res);
 }
 const collectionHandler = {
@@ -4025,19 +4028,19 @@ const collectionHandler = {
 };
 function wrappedForEach(cb, thisArg) {
     const raw = getRaw(this);
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return raw.forEach((v, key) => {
         cb.call(thisArg, wrap(v), wrap(key), this);
     });
 }
 function wrappedHas(v) {
     const raw = getRaw(this);
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return raw.has(unwrap(v));
 }
 function wrappedGet(k) {
     const raw = getRaw(this);
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     return wrap(raw.get(unwrap(k)));
 }
 function wrappedSet(k, v) {
@@ -4054,7 +4057,7 @@ function wrappedDelete(k) {
 }
 function wrappedKeys() {
     const raw = getRaw(this);
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     const iterator = raw.keys();
     return {
         next() {
@@ -4072,7 +4075,7 @@ function wrappedKeys() {
 }
 function wrappedValues() {
     const raw = getRaw(this);
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     const iterator = raw.values();
     return {
         next() {
@@ -4090,7 +4093,7 @@ function wrappedValues() {
 }
 function wrappedEntries() {
     const raw = getRaw(this);
-    currentConnectable()?.observeCollection(raw);
+    observeCollection(_connectable, raw);
     const iterator = raw.entries();
     return {
         next() {
@@ -4106,6 +4109,7 @@ function wrappedEntries() {
         },
     };
 }
+const observeCollection = (connectable, collection) => connectable?.observeCollection(collection);
 const ProxyObservable = Object.freeze({
     getProxy,
     getRaw,
@@ -4164,7 +4168,7 @@ class ComputedObserver {
             }
         }
         else {
-            throw new Error(`AUR0221: Property is readonly`);
+            throw createError(`AUR0221: Property is readonly`);
         }
     }
     handleChange() {
@@ -4265,7 +4269,7 @@ class DirtyChecker {
     }
     createProperty(obj, key) {
         if (DirtyCheckSettings.throw) {
-            throw new Error(`AUR0222: Property '${safeString(key)}' is being dirty-checked.`);
+            throw createError(`AUR0222: Property '${safeString(key)}' is being dirty-checked.`);
         }
         return new DirtyCheckProperty(this, obj, key);
     }
@@ -4296,7 +4300,7 @@ class DirtyCheckProperty {
         return this.obj[this.key];
     }
     setValue(_v) {
-        throw new Error(`Trying to set value for property ${safeString(this.key)} in dirty checker`);
+        throw createError(`Trying to set value for property ${safeString(this.key)} in dirty checker`);
     }
     isDirty() {
         return this._oldValue !== this.obj[this.key];
@@ -4593,7 +4597,7 @@ const getObserverLookup = (instance) => {
     }
     return lookup;
 };
-const nullObjectError = (key) => new Error(`AUR0199: trying to observe property ${safeString(key)} on null/undefined`)
+const nullObjectError = (key) => createError(`AUR0199: trying to observe property ${safeString(key)} on null/undefined`)
     ;
 
 const IObservation = createInterface('IObservation', x => x.singleton(Observation));
@@ -4629,7 +4633,7 @@ class Effect {
     }
     run() {
         if (this.stopped) {
-            throw new Error(`AUR0225: Effect has already been stopped`);
+            throw createError(`AUR0225: Effect has already been stopped`);
         }
         if (this.running) {
             return;
@@ -4650,7 +4654,7 @@ class Effect {
         if (this.queued) {
             if (this.runCount > this.maxRunCount) {
                 this.runCount = 0;
-                throw new Error(`AUR0226: Maximum number of recursive effect run reached. Consider handle effect dependencies differently.`);
+                throw createError(`AUR0226: Maximum number of recursive effect run reached. Consider handle effect dependencies differently.`);
             }
             this.run();
         }
@@ -4686,7 +4690,7 @@ function observable(targetOrConfig, key, descriptor) {
             key = config.name;
         }
         if (key == null || key === '') {
-            throw new Error(`AUR0224: Invalid usage, cannot determine property name for @observable`);
+            throw createError(`AUR0224: Invalid usage, cannot determine property name for @observable`);
         }
         const callback = config.callback || `${safeString(key)}Changed`;
         let initialValue = noValue;

@@ -4,13 +4,14 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 var runtime = require('@aurelia/runtime');
 var runtimeHtml = require('@aurelia/runtime-html');
+var interpolationBinding = require('@aurelia/runtime-html/dist/types/binding/interpolation-binding');
 
-let defined = false;
+let defined$1 = false;
 function defineAstMethods() {
-    if (defined) {
+    if (defined$1) {
         return;
     }
-    defined = true;
+    defined$1 = true;
     const def = (Klass, name, value) => Object.defineProperty(Klass.prototype, name, { configurable: true, enumerable: false, writable: true, value });
     [
         runtime.BindingBehaviorExpression,
@@ -39,7 +40,7 @@ function defineAstMethods() {
         runtime.DestructuringAssignmentExpression,
         runtime.DestructuringAssignmentSingleExpression,
         runtime.DestructuringAssignmentRestExpression,
-        runtime.ArrowFunction
+        runtime.ArrowFunction,
     ].forEach(ast => {
         def(ast, 'evaluate', function (...args) {
             return runtime.astEvaluate(this, ...args);
@@ -56,8 +57,34 @@ function defineAstMethods() {
         def(ast, 'unbind', function (...args) {
             return runtime.astUnbind(this, ...args);
         });
+        console.warn('"evaluate"/"assign"/"accept"/"visit"/"bind"/"unbind" are only valid on AST with $kind Custom.'
+            + ' Or import and use astEvaluate/astAssign/astVisit/astBind/astUnbind accordingly.');
     });
 }
+
+let defined = false;
+const defineBindingMethods = () => {
+    if (defined)
+        return;
+    defined = true;
+    [
+        [runtimeHtml.PropertyBinding, 'Property binding'],
+        [runtimeHtml.AttributeBinding, 'Attribute binding'],
+        [runtimeHtml.Listener, 'Listener binding'],
+        [runtimeHtml.CallBinding, 'Call binding'],
+        [runtimeHtml.LetBinding, 'Let binding'],
+        [runtimeHtml.InterpolationPartBinding, 'Interpolation binding'],
+        [interpolationBinding.ContentBinding, 'Text binding'],
+        [runtimeHtml.RefBinding, 'Ref binding']
+    ].forEach(([b, name]) => {
+        Object.defineProperty(b.prototype, 'sourceExpression', {
+            configurable: true, enumerable: false, writable: true, get() {
+                console.warn(`@deprecated "sourceExpression" property for expression on ${name}. It has been renamed to "ast". expression: "${runtime.Unparser.unparse(this.ast)}"`);
+                return this.ast;
+            }
+        });
+    });
+};
 
 const PreventFormActionlessSubmit = runtimeHtml.AppTask.creating(runtimeHtml.IEventTarget, appRoot => {
     appRoot.addEventListener('submit', (e) => {
@@ -72,6 +99,7 @@ const PreventFormActionlessSubmit = runtimeHtml.AppTask.creating(runtimeHtml.IEv
 const registration = {
     register(container) {
         defineAstMethods();
+        defineBindingMethods();
         container.register(PreventFormActionlessSubmit);
     }
 };

@@ -11,9 +11,10 @@ const defineMetadata = metadata.Metadata.define;
 const isFunction = (v) => typeof v === 'function';
 const isString = (v) => typeof v === 'string';
 const createObject = () => Object.create(null);
+const createError = (message) => new Error(message);
 
 const isNumericLookup = {};
-function isArrayIndex(value) {
+const isArrayIndex = (value) => {
     switch (typeof value) {
         case 'number':
             return value >= 0 && (value | 0) === value;
@@ -29,7 +30,7 @@ function isArrayIndex(value) {
             let ch = 0;
             let i = 0;
             for (; i < length; ++i) {
-                ch = value.charCodeAt(i);
+                ch = charCodeAt(value, i);
                 if (i === 0 && ch === 0x30 && length > 1 || ch < 0x30 || ch > 0x39) {
                     return isNumericLookup[value] = false;
                 }
@@ -39,7 +40,7 @@ function isArrayIndex(value) {
         default:
             return false;
     }
-}
+};
 const baseCase = (function () {
     
     const isDigit = Object.assign(createObject(), {
@@ -54,7 +55,7 @@ const baseCase = (function () {
         '8': true,
         '9': true,
     });
-    function charToKind(char) {
+    const charToKind = (char) => {
         if (char === '') {
             return 0;
         }
@@ -68,8 +69,8 @@ const baseCase = (function () {
             return 1;
         }
         return 0;
-    }
-    return function (input, cb) {
+    };
+    return (input, cb) => {
         const len = input.length;
         if (len === 0) {
             return input;
@@ -106,10 +107,10 @@ const baseCase = (function () {
 })();
 const camelCase = (function () {
     const cache = createObject();
-    function callback(char, sep) {
+    const callback = (char, sep) => {
         return sep ? char.toUpperCase() : char.toLowerCase();
-    }
-    return function (input) {
+    };
+    return (input) => {
         let output = cache[input];
         if (output === void 0) {
             output = cache[input] = baseCase(input, callback);
@@ -119,7 +120,7 @@ const camelCase = (function () {
 })();
 const pascalCase = (function () {
     const cache = createObject();
-    return function (input) {
+    return (input) => {
         let output = cache[input];
         if (output === void 0) {
             output = camelCase(input);
@@ -133,10 +134,10 @@ const pascalCase = (function () {
 })();
 const kebabCase = (function () {
     const cache = createObject();
-    function callback(char, sep) {
+    const callback = (char, sep) => {
         return sep ? `-${char.toLowerCase()}` : char.toLowerCase();
-    }
-    return function (input) {
+    };
+    return (input) => {
         let output = cache[input];
         if (output === void 0) {
             output = cache[input] = baseCase(input, callback);
@@ -144,7 +145,7 @@ const kebabCase = (function () {
         return output;
     };
 })();
-function toArray(input) {
+const toArray = (input) => {
     const length = input.length;
     const arr = Array(length);
     let i = 0;
@@ -152,8 +153,8 @@ function toArray(input) {
         arr[i] = input[i];
     }
     return arr;
-}
-function bound(target, key, descriptor) {
+};
+const bound = (target, key, descriptor) => {
     return {
         configurable: true,
         enumerable: descriptor.enumerable,
@@ -168,8 +169,8 @@ function bound(target, key, descriptor) {
             return boundFn;
         },
     };
-}
-function mergeArrays(...arrays) {
+};
+const mergeArrays = (...arrays) => {
     const result = [];
     let k = 0;
     const arraysLen = arrays.length;
@@ -187,8 +188,8 @@ function mergeArrays(...arrays) {
         }
     }
     return result;
-}
-function firstDefined(...values) {
+};
+const firstDefined = (...values) => {
     const len = values.length;
     let value;
     let i = 0;
@@ -198,8 +199,8 @@ function firstDefined(...values) {
             return value;
         }
     }
-    throw new Error(`No default value found`);
-}
+    throw createError(`No default value found`);
+};
 const getPrototypeChain = (function () {
     const functionPrototype = Function.prototype;
     const getPrototypeOf = Object.getPrototypeOf;
@@ -234,33 +235,33 @@ const isNativeFunction = (function () {
             i = sourceText.length;
             isNative = (i >= 29 &&
                 i <= 100 &&
-                sourceText.charCodeAt(i - 1) === 0x7D &&
-                sourceText.charCodeAt(i - 2) <= 0x20 &&
-                sourceText.charCodeAt(i - 3) === 0x5D &&
-                sourceText.charCodeAt(i - 4) === 0x65 &&
-                sourceText.charCodeAt(i - 5) === 0x64 &&
-                sourceText.charCodeAt(i - 6) === 0x6F &&
-                sourceText.charCodeAt(i - 7) === 0x63 &&
-                sourceText.charCodeAt(i - 8) === 0x20 &&
-                sourceText.charCodeAt(i - 9) === 0x65 &&
-                sourceText.charCodeAt(i - 10) === 0x76 &&
-                sourceText.charCodeAt(i - 11) === 0x69 &&
-                sourceText.charCodeAt(i - 12) === 0x74 &&
-                sourceText.charCodeAt(i - 13) === 0x61 &&
-                sourceText.charCodeAt(i - 14) === 0x6E &&
-                sourceText.charCodeAt(i - 15) === 0x58);
+                charCodeAt(sourceText, i - 1) === 0x7D &&
+                charCodeAt(sourceText, i - 2) <= 0x20 &&
+                charCodeAt(sourceText, i - 3) === 0x5D &&
+                charCodeAt(sourceText, i - 4) === 0x65 &&
+                charCodeAt(sourceText, i - 5) === 0x64 &&
+                charCodeAt(sourceText, i - 6) === 0x6F &&
+                charCodeAt(sourceText, i - 7) === 0x63 &&
+                charCodeAt(sourceText, i - 8) === 0x20 &&
+                charCodeAt(sourceText, i - 9) === 0x65 &&
+                charCodeAt(sourceText, i - 10) === 0x76 &&
+                charCodeAt(sourceText, i - 11) === 0x69 &&
+                charCodeAt(sourceText, i - 12) === 0x74 &&
+                charCodeAt(sourceText, i - 13) === 0x61 &&
+                charCodeAt(sourceText, i - 14) === 0x6E &&
+                charCodeAt(sourceText, i - 15) === 0x58);
             lookup.set(fn, isNative);
         }
         return isNative;
     };
 })();
-function onResolve(maybePromise, resolveCallback) {
+const onResolve = (maybePromise, resolveCallback) => {
     if (maybePromise instanceof Promise) {
         return maybePromise.then(resolveCallback);
     }
     return resolveCallback(maybePromise);
-}
-function resolveAll(...maybePromises) {
+};
+const resolveAll = (...maybePromises) => {
     let maybePromise = void 0;
     let firstPromise = void 0;
     let promises = void 0;
@@ -284,7 +285,8 @@ function resolveAll(...maybePromises) {
         return firstPromise;
     }
     return Promise.all(promises);
-}
+};
+const charCodeAt = (str, index) => str.charCodeAt(index);
 
 const annoBaseName = 'au:annotation';
 const getAnnotationKeyFor = (name, context) => {
@@ -445,7 +447,7 @@ const DefaultResolver = {
     singleton(key) { return new Resolver(key, 1, key); },
     transient(key) { return new Resolver(key, 2, key); },
 };
-const noResolverForKeyError = (key) => new Error(`AUR0002: ${toStringSafe(key)} not registered, did you forget to add @singleton()?`)
+const noResolverForKeyError = (key) => createError(`AUR0002: ${toStringSafe(key)} not registered, did you forget to add @singleton()?`)
     ;
 class ContainerConfiguration {
     constructor(inheritParentResources, defaultResolver) {
@@ -480,7 +482,7 @@ const DI = {
         const Interface = function (target, property, index) {
             if (target == null || new.target !== undefined) {
                 {
-                    throw new Error(`AUR0001: No registration for interface: '${Interface.friendlyName}'`);
+                    throw createError(`AUR0001: No registration for interface: '${Interface.friendlyName}'`);
                 }
             }
             const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
@@ -745,11 +747,11 @@ class Resolver {
         }
     }
 }
-const cyclicDependencyError = (name) => new Error(`AUR0003: Cyclic dependency found: ${name}`)
+const cyclicDependencyError = (name) => createError(`AUR0003: Cyclic dependency found: ${name}`)
     ;
-const nullFactoryError = (key) => new Error(`AUR0004: Resolver for ${toStringSafe(key)} returned a null factory`)
+const nullFactoryError = (key) => createError(`AUR0004: Resolver for ${toStringSafe(key)} returned a null factory`)
     ;
-const invalidResolverStrategyError = (strategy) => new Error(`AUR0005: Invalid resolver strategy specified: ${strategy}.`)
+const invalidResolverStrategyError = (strategy) => createError(`AUR0005: Invalid resolver strategy specified: ${strategy}.`)
     ;
 function containerGetKey(d) {
     return this.get(d);
@@ -801,40 +803,7 @@ function isClass(obj) {
 function isResourceKey(key) {
     return isString(key) && key.indexOf(':') > 0;
 }
-const InstrinsicTypeNames = new Set([
-    'Array',
-    'ArrayBuffer',
-    'Boolean',
-    'DataView',
-    'Date',
-    'Error',
-    'EvalError',
-    'Float32Array',
-    'Float64Array',
-    'Function',
-    'Int8Array',
-    'Int16Array',
-    'Int32Array',
-    'Map',
-    'Number',
-    'Object',
-    'Promise',
-    'RangeError',
-    'ReferenceError',
-    'RegExp',
-    'Set',
-    'SharedArrayBuffer',
-    'String',
-    'SyntaxError',
-    'TypeError',
-    'Uint8Array',
-    'Uint8ClampedArray',
-    'Uint16Array',
-    'Uint32Array',
-    'URIError',
-    'WeakMap',
-    'WeakSet',
-]);
+const InstrinsicTypeNames = new Set('Array ArrayBuffer Boolean DataView Date Error EvalError Float32Array Float64Array Function Int8Array Int16Array Int32Array Map Number Object Promise RangeError ReferenceError RegExp Set SharedArrayBuffer String SyntaxError TypeError Uint8Array Uint8ClampedArray Uint16Array Uint32Array URIError WeakMap WeakSet'.split(' '));
 let containerId = 0;
 class Container {
     constructor(parent, config) {
@@ -1182,19 +1151,19 @@ class Container {
         }
     }
 }
-const registrationError = (deps) => new Error(`AUR0006: Unable to autoregister dependency: [${deps.map(toStringSafe)}]`)
+const registrationError = (deps) => createError(`AUR0006: Unable to autoregister dependency: [${deps.map(toStringSafe)}]`)
     ;
-const resourceExistError = (key) => new Error(`AUR0007: Resource key "${toStringSafe(key)}" already registered`)
+const resourceExistError = (key) => createError(`AUR0007: Resource key "${toStringSafe(key)}" already registered`)
     ;
-const cantResolveKeyError = (key) => new Error(`AUR0008: Unable to resolve key: ${toStringSafe(key)}`)
+const cantResolveKeyError = (key) => createError(`AUR0008: Unable to resolve key: ${toStringSafe(key)}`)
     ;
-const jitRegisterNonFunctionError = (keyAsValue) => new Error(`AUR0009: Attempted to jitRegister something that is not a constructor: '${toStringSafe(keyAsValue)}'. Did you forget to register this resource?`)
+const jitRegisterNonFunctionError = (keyAsValue) => createError(`AUR0009: Attempted to jitRegister something that is not a constructor: '${toStringSafe(keyAsValue)}'. Did you forget to register this resource?`)
     ;
-const jitInstrinsicTypeError = (keyAsValue) => new Error(`AUR0010: Attempted to jitRegister an intrinsic type: ${keyAsValue.name}. Did you forget to add @inject(Key)`)
+const jitInstrinsicTypeError = (keyAsValue) => createError(`AUR0010: Attempted to jitRegister an intrinsic type: ${keyAsValue.name}. Did you forget to add @inject(Key)`)
     ;
-const invalidResolverFromRegisterError = () => new Error(`AUR0011: Invalid resolver returned from the static register method`)
+const invalidResolverFromRegisterError = () => createError(`AUR0011: Invalid resolver returned from the static register method`)
     ;
-const jitInterfaceError = (name) => new Error(`AUR0012: Attempted to jitRegister an interface: ${name}`)
+const jitInterfaceError = (name) => createError(`AUR0012: Attempted to jitRegister an interface: ${name}`)
     ;
 class ParameterizedRegistry {
     constructor(key, params) {
@@ -1277,7 +1246,7 @@ class InstanceProvider {
 function validateKey(key) {
     if (key === null || key === void 0) {
         {
-            throw new Error(`AUR0014: key/value cannot be null or undefined. Are you trying to inject/register something that doesn't exist with DI?`);
+            throw createError(`AUR0014: key/value cannot be null or undefined. Are you trying to inject/register something that doesn't exist with DI?`);
         }
     }
 }
@@ -1293,16 +1262,16 @@ function buildAllResponse(resolver, handler, requestor) {
     }
     return [resolver.resolve(handler, requestor)];
 }
-function noInstanceError(name) {
+const noInstanceError = (name) => {
     {
-        return new Error(`AUR0013: Cannot call resolve ${name} before calling prepare or after calling dispose.`);
+        return createError(`AUR0013: Cannot call resolve ${name} before calling prepare or after calling dispose.`);
     }
-}
-function createNativeInvocationError(Type) {
+};
+const createNativeInvocationError = (Type) => {
     {
-        return new Error(`AUR0015: ${Type.name} is a native function and therefore cannot be safely constructed by DI. If this is intentional, please use a callback or cachedCallback resolver.`);
+        return createError(`AUR0015: ${Type.name} is a native function and therefore cannot be safely constructed by DI. If this is intentional, please use a callback or cachedCallback resolver.`);
     }
-}
+};
 
 const emptyArray = Object.freeze([]);
 const emptyObject = Object.freeze({});
@@ -1445,18 +1414,18 @@ const getLogLevelString = (function () {
         return logLevelString[colorOptions].QQQ;
     };
 })();
-function getScopeString(scope, colorOptions) {
+const getScopeString = (scope, colorOptions) => {
     if (colorOptions === 0) {
         return scope.join('.');
     }
     return scope.map(format.cyan).join('.');
-}
-function getIsoString(timestamp, colorOptions) {
+};
+const getIsoString = (timestamp, colorOptions) => {
     if (colorOptions === 0) {
         return new Date(timestamp).toISOString();
     }
     return format.grey(new Date(timestamp).toISOString());
-}
+};
 class DefaultLogEvent {
     constructor(severity, message, optionalParams, scope, colorOptions, timestamp) {
         this.severity = severity;
@@ -1535,25 +1504,26 @@ exports.ConsoleSink = __decorate([
 ], exports.ConsoleSink);
 exports.DefaultLogger = class DefaultLogger {
     constructor(config, factory, sinks, scope = [], parent = null) {
-        this.config = config;
-        this.factory = factory;
         this.scope = scope;
-        this.scopedLoggers = createObject();
+        this._scopedLoggers = createObject();
         let traceSinks;
         let debugSinks;
         let infoSinks;
         let warnSinks;
         let errorSinks;
         let fatalSinks;
+        this.config = config;
+        this._factory = factory;
+        this.sinks = sinks;
         if (parent === null) {
             this.root = this;
             this.parent = this;
-            traceSinks = this.traceSinks = [];
-            debugSinks = this.debugSinks = [];
-            infoSinks = this.infoSinks = [];
-            warnSinks = this.warnSinks = [];
-            errorSinks = this.errorSinks = [];
-            fatalSinks = this.fatalSinks = [];
+            traceSinks = this._traceSinks = [];
+            debugSinks = this._debugSinks = [];
+            infoSinks = this._infoSinks = [];
+            warnSinks = this._warnSinks = [];
+            errorSinks = this._errorSinks = [];
+            fatalSinks = this._fatalSinks = [];
             for (const $sink of sinks) {
                 const handles = LoggerSink.getHandles($sink);
                 if (handles?.includes(0) ?? true) {
@@ -1579,55 +1549,55 @@ exports.DefaultLogger = class DefaultLogger {
         else {
             this.root = parent.root;
             this.parent = parent;
-            traceSinks = this.traceSinks = parent.traceSinks;
-            debugSinks = this.debugSinks = parent.debugSinks;
-            infoSinks = this.infoSinks = parent.infoSinks;
-            warnSinks = this.warnSinks = parent.warnSinks;
-            errorSinks = this.errorSinks = parent.errorSinks;
-            fatalSinks = this.fatalSinks = parent.fatalSinks;
+            traceSinks = this._traceSinks = parent._traceSinks;
+            debugSinks = this._debugSinks = parent._debugSinks;
+            infoSinks = this._infoSinks = parent._infoSinks;
+            warnSinks = this._warnSinks = parent._warnSinks;
+            errorSinks = this._errorSinks = parent._errorSinks;
+            fatalSinks = this._fatalSinks = parent._fatalSinks;
         }
     }
     trace(messageOrGetMessage, ...optionalParams) {
         if (this.config.level <= 0) {
-            this.emit(this.traceSinks, 0, messageOrGetMessage, optionalParams);
+            this.emit(this._traceSinks, 0, messageOrGetMessage, optionalParams);
         }
     }
     debug(messageOrGetMessage, ...optionalParams) {
         if (this.config.level <= 1) {
-            this.emit(this.debugSinks, 1, messageOrGetMessage, optionalParams);
+            this.emit(this._debugSinks, 1, messageOrGetMessage, optionalParams);
         }
     }
     info(messageOrGetMessage, ...optionalParams) {
         if (this.config.level <= 2) {
-            this.emit(this.infoSinks, 2, messageOrGetMessage, optionalParams);
+            this.emit(this._infoSinks, 2, messageOrGetMessage, optionalParams);
         }
     }
     warn(messageOrGetMessage, ...optionalParams) {
         if (this.config.level <= 3) {
-            this.emit(this.warnSinks, 3, messageOrGetMessage, optionalParams);
+            this.emit(this._warnSinks, 3, messageOrGetMessage, optionalParams);
         }
     }
     error(messageOrGetMessage, ...optionalParams) {
         if (this.config.level <= 4) {
-            this.emit(this.errorSinks, 4, messageOrGetMessage, optionalParams);
+            this.emit(this._errorSinks, 4, messageOrGetMessage, optionalParams);
         }
     }
     fatal(messageOrGetMessage, ...optionalParams) {
         if (this.config.level <= 5) {
-            this.emit(this.fatalSinks, 5, messageOrGetMessage, optionalParams);
+            this.emit(this._fatalSinks, 5, messageOrGetMessage, optionalParams);
         }
     }
     scopeTo(name) {
-        const scopedLoggers = this.scopedLoggers;
+        const scopedLoggers = this._scopedLoggers;
         let scopedLogger = scopedLoggers[name];
         if (scopedLogger === void 0) {
-            scopedLogger = scopedLoggers[name] = new DefaultLogger(this.config, this.factory, (void 0), this.scope.concat(name), this);
+            scopedLogger = scopedLoggers[name] = new DefaultLogger(this.config, this._factory, (void 0), this.scope.concat(name), this);
         }
         return scopedLogger;
     }
     emit(sinks, level, msgOrGetMsg, optionalParams) {
         const message = (isFunction(msgOrGetMsg) ? msgOrGetMsg() : msgOrGetMsg);
-        const event = this.factory.createLogEvent(this, level, message, optionalParams);
+        const event = this._factory.createLogEvent(this, level, message, optionalParams);
         for (let i = 0, ii = sinks.length; i < ii; ++i) {
             sinks[i].handleEvent(event);
         }
@@ -1678,14 +1648,12 @@ const LoggerConfiguration = toLookup({
 });
 
 const IModuleLoader = DI.createInterface(x => x.singleton(ModuleLoader));
-function noTransform(m) {
-    return m;
-}
+const noTransform = (m) => m;
 class ModuleTransformer {
-    constructor($transform) {
-        this.$transform = $transform;
+    constructor(transform) {
         this._promiseCache = new Map();
         this._objectCache = new Map();
+        this._transform = transform;
     }
     transform(objOrPromise) {
         if (objOrPromise instanceof Promise) {
@@ -1695,7 +1663,7 @@ class ModuleTransformer {
             return this._transformObject(objOrPromise);
         }
         else {
-            throw new Error(`Invalid input: ${String(objOrPromise)}. Expected Promise or Object.`);
+            throw createError(`Invalid input: ${String(objOrPromise)}. Expected Promise or Object.`);
         }
     }
     _transformPromise(promise) {
@@ -1715,7 +1683,7 @@ class ModuleTransformer {
         if (this._objectCache.has(obj)) {
             return this._objectCache.get(obj);
         }
-        const ret = this.$transform(this._analyze(obj));
+        const ret = this._transform(this._analyze(obj));
         this._objectCache.set(obj, ret);
         if (ret instanceof Promise) {
             void ret.then(value => {
@@ -1808,7 +1776,7 @@ class EventAggregator {
     }
     publish(channelOrInstance, message) {
         if (!channelOrInstance) {
-            throw new Error(`Invalid channel name or instance: ${channelOrInstance}.`);
+            throw createError(`Invalid channel name or instance: ${channelOrInstance}.`);
         }
         if (isString(channelOrInstance)) {
             let subscribers = this.eventLookup[channelOrInstance];
@@ -1830,7 +1798,7 @@ class EventAggregator {
     }
     subscribe(channelOrType, callback) {
         if (!channelOrType) {
-            throw new Error(`Invalid channel name or type: ${channelOrType}.`);
+            throw createError(`Invalid channel name or type: ${channelOrType}.`);
         }
         let handler;
         let subscribers;

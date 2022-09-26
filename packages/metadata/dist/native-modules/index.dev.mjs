@@ -279,7 +279,8 @@ function def(obj, key, value, writable, configurable) {
         configurable,
         value,
     })) {
-        throw new Error(`Unable to apply metadata polyfill: could not add property '${key}' to the global Reflect object`);
+        throw createError(`AUR1000: Unable to apply metadata polyfill: could not add property '${key}' to the global Reflect object`)
+            ;
     }
 }
 const internalSlotName = '[[$au]]';
@@ -308,7 +309,8 @@ function applyMetadataPolyfill(reflect, throwIfConflict = true, forceOverwrite =
             metadataInternalSlot = reflect[internalSlotName];
             return;
         }
-        throw new Error(`Conflicting @aurelia/metadata module import detected. Please make sure you have the same version of all Aurelia packages in your dependency tree.`);
+        throw createError(`AUR1001: Conflicting @aurelia/metadata module import detected. Please make sure you have the same version of all Aurelia packages in your dependency tree.`)
+            ;
     }
     const presentProps = [
         'metadata',
@@ -330,7 +332,8 @@ function applyMetadataPolyfill(reflect, throwIfConflict = true, forceOverwrite =
                 const impl = `${Reflect[p].toString().slice(0, 100)}...`;
                 return `${p}:\n${impl}`;
             }).join('\n\n');
-            throw new Error(`Conflicting reflect.metadata polyfill found. If you have 'reflect-metadata' or any other reflect polyfill imported, please remove it, if not (or if you must use a specific polyfill) please file an issue at https://github.com/aurelia/aurelia/issues so that we can look into compatibility options for this scenario. Implementation summary:\n\n${implementationSummary}`);
+            throw createError(`AUR1002: Conflicting reflect.metadata polyfill found. If you have 'reflect-metadata' or any other reflect polyfill imported, please remove it, if not (or if you must use a specific polyfill) please file an issue at https://github.com/aurelia/aurelia/issues so that we can look into compatibility options for this scenario. Implementation summary:\n\n${implementationSummary}`)
+                ;
         }
         else if (forceOverwrite) {
             $applyMetadataPolyfill(reflect, writable, configurable);
@@ -340,6 +343,7 @@ function applyMetadataPolyfill(reflect, throwIfConflict = true, forceOverwrite =
         $applyMetadataPolyfill(reflect, writable, configurable);
     }
 }
+const createError = (message) => new Error(message);
 
 export { Metadata, applyMetadataPolyfill, isNullOrUndefined, isObject, metadata };
 //# sourceMappingURL=index.dev.mjs.map

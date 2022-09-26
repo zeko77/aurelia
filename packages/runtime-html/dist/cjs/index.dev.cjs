@@ -45,6 +45,7 @@ const appendAnnotationKey = annotation.appendTo;
 const getAllAnnotations = annotation.getKeys;
 
 const createLookup = () => Object.create(null);
+const createError = (message) => new Error(message);
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 const IsDataAttribute = createLookup();
 const isDataAttribute = (obj, key, svgAnalyzer) => {
@@ -997,7 +998,7 @@ const BindingBehavior = Object.freeze({
     getDefinition(Type) {
         const def = getOwnMetadata(bbBaseName, Type);
         if (def === void 0) {
-            throw new Error(`AUR0151: No definition found for type ${Type.name}`);
+            throw createError(`AUR0151: No definition found for type ${Type.name}`);
         }
         return def;
     },
@@ -1057,7 +1058,7 @@ const ValueConverter = Object.freeze({
     getDefinition(Type) {
         const def = getOwnMetadata(vcBaseName, Type);
         if (def === void 0) {
-            throw new Error(`AUR0152: No definition found for type ${Type.name}`);
+            throw createError(`AUR0152: No definition found for type ${Type.name}`);
         }
         return def;
     },
@@ -1262,7 +1263,7 @@ class AttributeObserver {
                     newValue = this._obj.style.getPropertyValue(this._prop);
                     break;
                 default:
-                    throw new Error(`AUR0651: Unsupported observation of attribute: ${this._attr}`);
+                    throw createError(`AUR0651: Unsupported observation of attribute: ${this._attr}`);
             }
             if (newValue !== this._value) {
                 this._oldValue = this._value;
@@ -2185,7 +2186,7 @@ const defineAttribute = (nameOrDef, Type) => {
 const getAttributeDefinition = (Type) => {
     const def = getOwnMetadata(caBaseName, Type);
     if (def === void 0) {
-        throw new Error(`No definition found for type ${Type.name}`);
+        throw createError(`No definition found for type ${Type.name}`);
     }
     return def;
 };
@@ -2204,7 +2205,7 @@ const CustomAttribute = Object.freeze({
 
 function watch(expressionOrPropertyAccessFn, changeHandlerOrCallback) {
     if (expressionOrPropertyAccessFn == null) {
-        throw new Error(`AUR0772: Invalid watch config. Expected an expression or a fn`);
+        throw createError(`AUR0772: Invalid watch config. Expected an expression or a fn`);
     }
     return function decorator(target, key, descriptor) {
         const isClassDecorator = key == null;
@@ -2213,11 +2214,11 @@ function watch(expressionOrPropertyAccessFn, changeHandlerOrCallback) {
         if (isClassDecorator) {
             if (!isFunction(changeHandlerOrCallback)
                 && (changeHandlerOrCallback == null || !(changeHandlerOrCallback in Type.prototype))) {
-                throw new Error(`AUR0773: Invalid change handler config. Method "${String(changeHandlerOrCallback)}" not found in class ${Type.name}`);
+                throw createError(`AUR0773: Invalid change handler config. Method "${String(changeHandlerOrCallback)}" not found in class ${Type.name}`);
             }
         }
         else if (!isFunction(descriptor?.value)) {
-            throw new Error(`AUR0774: decorated target ${String(key)} is not a class method.`);
+            throw createError(`AUR0774: decorated target ${String(key)} is not a class method.`);
         }
         Watch.add(Type, watchDef);
         if (isAttributeType(Type)) {
@@ -2322,7 +2323,7 @@ class CustomElementDefinition {
         if (Type === null) {
             const def = nameOrDef;
             if (isString(def)) {
-                throw new Error(`AUR0761: Cannot create a custom element definition with only a name and no type: ${nameOrDef}`);
+                throw createError(`AUR0761: Cannot create a custom element definition with only a name and no type: ${nameOrDef}`);
             }
             const name = kernel.fromDefinitionOrDefault('name', def, generateElementName);
             if (isFunction(def.Type)) {
@@ -2396,7 +2397,7 @@ const findElementControllerFor = (node, opts = defaultForOpts) => {
             if (opts.optional === true) {
                 return null;
             }
-            throw new Error(`AUR0762: The provided node is not a custom element or containerless host.`);
+            throw createError(`AUR0762: The provided node is not a custom element or containerless host.`);
         }
         return controller;
     }
@@ -2404,7 +2405,7 @@ const findElementControllerFor = (node, opts = defaultForOpts) => {
         if (opts.searchParents !== true) {
             const controller = getRef(node, elementBaseName);
             if (controller === null) {
-                throw new Error(`AUR0763: The provided node is not a custom element or containerless host.`);
+                throw createError(`AUR0763: The provided node is not a custom element or containerless host.`);
             }
             if (controller.is(opts.name)) {
                 return controller;
@@ -2426,7 +2427,7 @@ const findElementControllerFor = (node, opts = defaultForOpts) => {
         if (foundAController) {
             return (void 0);
         }
-        throw new Error(`AUR0764: The provided node does does not appear to be part of an Aurelia app DOM tree, or it was added to the DOM in a way that Aurelia cannot properly resolve its position in the component tree.`);
+        throw createError(`AUR0764: The provided node does does not appear to be part of an Aurelia app DOM tree, or it was added to the DOM in a way that Aurelia cannot properly resolve its position in the component tree.`);
     }
     let cur = node;
     while (cur !== null) {
@@ -2436,13 +2437,13 @@ const findElementControllerFor = (node, opts = defaultForOpts) => {
         }
         cur = getEffectiveParentNode(cur);
     }
-    throw new Error(`AUR0765: The provided node does does not appear to be part of an Aurelia app DOM tree, or it was added to the DOM in a way that Aurelia cannot properly resolve its position in the component tree.`);
+    throw createError(`AUR0765: The provided node does does not appear to be part of an Aurelia app DOM tree, or it was added to the DOM in a way that Aurelia cannot properly resolve its position in the component tree.`);
 };
 const getElementAnnotation = (Type, prop) => getOwnMetadata(getAnnotationKeyFor(prop), Type);
 const getElementDefinition = (Type) => {
     const def = getOwnMetadata(elementBaseName, Type);
     if (def === void 0) {
-        throw new Error(`AUR0760: No definition found for type ${Type.name}`);
+        throw createError(`AUR0760: No definition found for type ${Type.name}`);
     }
     return def;
 };
@@ -2521,7 +2522,7 @@ function ensureHook(target, hook) {
         hook = target[hook];
     }
     if (!isFunction(hook)) {
-        throw new Error(`AUR0766: Invalid @processContent hook. Expected the hook to be a function (when defined in a class, it needs to be a static function) but got a ${typeof hook}.`);
+        throw createError(`AUR0766: Invalid @processContent hook. Expected the hook to be a function (when defined in a class, it needs to be a static function) but got a ${typeof hook}.`);
     }
     return hook;
 }
@@ -3186,7 +3187,7 @@ class ViewLocator {
     _getView(views, name) {
         const v = views.find(x => x.name === name);
         if (v === void 0) {
-            throw new Error(`Could not find view: ${name}`);
+            throw createError(`Could not find view: ${name}`);
         }
         return v;
     }
@@ -3269,7 +3270,7 @@ class Rendering {
         const renderers = this.renderers;
         const ii = targets.length;
         if (targets.length !== rows.length) {
-            throw new Error(`AUR0757: The compiled template is not aligned with the render instructions. There are ${ii} targets and ${rows.length} instructions.`);
+            throw createError(`AUR0757: The compiled template is not aligned with the render instructions. There are ${ii} targets and ${rows.length} instructions.`);
         }
         let i = 0;
         let j = 0;
@@ -3328,7 +3329,6 @@ class Controller {
         this.vmKind = vmKind;
         this.definition = definition;
         this.viewFactory = viewFactory;
-        this.viewModel = viewModel;
         this.host = host;
         this.head = null;
         this.tail = null;
@@ -3345,7 +3345,7 @@ class Controller {
         this.shadowRoot = null;
         this.nodes = null;
         this.location = null;
-        this.lifecycleHooks = null;
+        this._lifecycleHooks = null;
         this.state = 0;
         this._fullyNamed = false;
         this._childrenObs = kernel.emptyArray;
@@ -3358,21 +3358,17 @@ class Controller {
         this._activatingStack = 0;
         this._detachingStack = 0;
         this._unbindingStack = 0;
+        this._vm = viewModel;
+        this._hooks = vmKind === 2 ? HooksDefinition.none : new HooksDefinition(viewModel);
         {
             this.logger = null;
             this.debug = false;
         }
         this.location = location;
         this._rendering = container.root.get(IRendering);
-        switch (vmKind) {
-            case 1:
-            case 0:
-                this.hooks = new HooksDefinition(viewModel);
-                break;
-            case 2:
-                this.hooks = HooksDefinition.none;
-                break;
-        }
+    }
+    get lifecycleHooks() {
+        return this._lifecycleHooks;
     }
     get isActive() {
         return (this.state & (1 | 2)) > 0 && (this.state & 4) === 0;
@@ -3399,13 +3395,23 @@ class Controller {
                     : `${this.parent.name}[view:${this.viewFactory.name}]`;
         }
     }
+    get hooks() {
+        return this._hooks;
+    }
+    get viewModel() {
+        return this._vm;
+    }
+    set viewModel(v) {
+        this._vm = v;
+        this._hooks = v == null || this.vmKind === 2 ? HooksDefinition.none : new HooksDefinition(v);
+    }
     static getCached(viewModel) {
         return controllerLookup.get(viewModel);
     }
     static getCachedOrThrow(viewModel) {
         const $el = Controller.getCached(viewModel);
         if ($el === void 0) {
-            throw new Error(`AUR0500: There is no cached controller for the provided ViewModel: ${viewModel}`);
+            throw createError(`AUR0500: There is no cached controller for the provided ViewModel: ${viewModel}`);
         }
         return $el;
     }
@@ -3455,7 +3461,7 @@ class Controller {
         }
         const container = this.container;
         const flags = this.flags;
-        const instance = this.viewModel;
+        const instance = this._vm;
         let definition = this.definition;
         this.scope = runtime.Scope.create(instance, null, true);
         if (definition.watches.length > 0) {
@@ -3463,7 +3469,7 @@ class Controller {
         }
         createObservers(this, definition, flags, instance);
         this._childrenObs = createChildrenObservers(this, definition, instance);
-        if (this.hooks.hasDefine) {
+        if (this._hooks.hasDefine) {
             if (this.debug) {
                 this.logger.trace(`invoking define() hook`);
             }
@@ -3472,7 +3478,7 @@ class Controller {
                 definition = CustomElementDefinition.getOrCreate(result);
             }
         }
-        this.lifecycleHooks = LifecycleHooks.resolve(container);
+        this._lifecycleHooks = LifecycleHooks.resolve(container);
         definition.register(container);
         if (definition.injectable !== null) {
             registerResolver(container, definition.injectable, new kernel.InstanceProvider('definition.injectable', instance));
@@ -3483,14 +3489,14 @@ class Controller {
         }
     }
     _hydrate(hydrationInst) {
-        if (this.lifecycleHooks.hydrating !== void 0) {
-            this.lifecycleHooks.hydrating.forEach(callHydratingHook, this);
+        if (this._lifecycleHooks.hydrating !== void 0) {
+            this._lifecycleHooks.hydrating.forEach(callHydratingHook, this);
         }
-        if (this.hooks.hasHydrating) {
+        if (this._hooks.hasHydrating) {
             if (this.debug) {
                 this.logger.trace(`invoking hydrating() hook`);
             }
-            this.viewModel.hydrating(this);
+            this._vm.hydrating(this);
         }
         const compiledDef = this._compiledDef = this._rendering.compile(this.definition, this.container, hydrationInst);
         const { shadowOptions, isStrictBinding, hasSlots, containerless } = compiledDef;
@@ -3506,7 +3512,7 @@ class Controller {
         setRef(this.host, this.definition.key, this);
         if (shadowOptions !== null || hasSlots) {
             if (location != null) {
-                throw new Error(`AUR0501: Cannot combine the containerless custom element option with Shadow DOM.`);
+                throw createError(`AUR0501: Cannot combine the containerless custom element option with Shadow DOM.`);
             }
             setRef(this.shadowRoot = this.host.attachShadow(shadowOptions ?? defaultShadowOptions), elementBaseName, this);
             setRef(this.shadowRoot, this.definition.key, this);
@@ -3520,47 +3526,47 @@ class Controller {
         else {
             this.mountTarget = 1;
         }
-        this.viewModel.$controller = this;
+        this._vm.$controller = this;
         this.nodes = this._rendering.createNodes(compiledDef);
-        if (this.lifecycleHooks.hydrated !== void 0) {
-            this.lifecycleHooks.hydrated.forEach(callHydratedHook, this);
+        if (this._lifecycleHooks.hydrated !== void 0) {
+            this._lifecycleHooks.hydrated.forEach(callHydratedHook, this);
         }
-        if (this.hooks.hasHydrated) {
+        if (this._hooks.hasHydrated) {
             if (this.debug) {
                 this.logger.trace(`invoking hydrated() hook`);
             }
-            this.viewModel.hydrated(this);
+            this._vm.hydrated(this);
         }
     }
     _hydrateChildren() {
         this._rendering.render(this, this.nodes.findTargets(), this._compiledDef, this.host);
-        if (this.lifecycleHooks.created !== void 0) {
-            this.lifecycleHooks.created.forEach(callCreatedHook, this);
+        if (this._lifecycleHooks.created !== void 0) {
+            this._lifecycleHooks.created.forEach(callCreatedHook, this);
         }
-        if (this.hooks.hasCreated) {
+        if (this._hooks.hasCreated) {
             if (this.debug) {
                 this.logger.trace(`invoking created() hook`);
             }
-            this.viewModel.created(this);
+            this._vm.created(this);
         }
     }
     _hydrateCustomAttribute() {
         const definition = this.definition;
-        const instance = this.viewModel;
+        const instance = this._vm;
         if (definition.watches.length > 0) {
             createWatchers(this, this.container, definition, instance);
         }
         createObservers(this, definition, this.flags, instance);
         instance.$controller = this;
-        this.lifecycleHooks = LifecycleHooks.resolve(this.container);
-        if (this.lifecycleHooks.created !== void 0) {
-            this.lifecycleHooks.created.forEach(callCreatedHook, this);
+        this._lifecycleHooks = LifecycleHooks.resolve(this.container);
+        if (this._lifecycleHooks.created !== void 0) {
+            this._lifecycleHooks.created.forEach(callCreatedHook, this);
         }
-        if (this.hooks.hasCreated) {
+        if (this._hooks.hasCreated) {
             if (this.debug) {
                 this.logger.trace(`invoking created() hook`);
             }
-            this.viewModel.created(this);
+            this._vm.created(this);
         }
     }
     _hydrateSynthetic() {
@@ -3580,9 +3586,9 @@ class Controller {
             case 2:
                 return;
             case 32:
-                throw new Error(`AUR0502: ${this.name} trying to activate a controller that is disposed.`);
+                throw createError(`AUR0502: ${this.name} trying to activate a controller that is disposed.`);
             default:
-                throw new Error(`AUR0503: ${this.name} unexpected state: ${stringifyState(this.state)}.`);
+                throw createError(`AUR0503: ${this.name} unexpected state: ${stringifyState(this.state)}.`);
         }
         this.parent = parent;
         if (this.debug && !this._fullyNamed) {
@@ -3599,7 +3605,7 @@ class Controller {
                 break;
             case 2:
                 if (scope === void 0 || scope === null) {
-                    throw new Error(`AUR0504: Scope is null or undefined`);
+                    throw createError(`AUR0504: Scope is null or undefined`);
                 }
                 if (!this.hasLockedScope) {
                     this.scope = scope;
@@ -3611,17 +3617,17 @@ class Controller {
         this.$flags = flags;
         this._enterActivating();
         let ret;
-        if (this.vmKind !== 2 && this.lifecycleHooks.binding != null) {
+        if (this.vmKind !== 2 && this._lifecycleHooks.binding != null) {
             if (this.debug) {
                 this.logger.trace(`lifecycleHooks.binding()`);
             }
-            ret = kernel.resolveAll(...this.lifecycleHooks.binding.map(callBindingHook, this));
+            ret = kernel.resolveAll(...this._lifecycleHooks.binding.map(callBindingHook, this));
         }
-        if (this.hooks.hasBinding) {
+        if (this._hooks.hasBinding) {
             if (this.debug) {
                 this.logger.trace(`binding()`);
             }
-            ret = kernel.resolveAll(ret, this.viewModel.binding(this.$initiator, this.parent, this.$flags));
+            ret = kernel.resolveAll(ret, this._vm.binding(this.$initiator, this.parent, this.$flags));
         }
         if (isPromise(ret)) {
             this._ensurePromise();
@@ -3656,17 +3662,17 @@ class Controller {
                 ++i;
             }
         }
-        if (this.vmKind !== 2 && this.lifecycleHooks.bound != null) {
+        if (this.vmKind !== 2 && this._lifecycleHooks.bound != null) {
             if (this.debug) {
                 this.logger.trace(`lifecycleHooks.bound()`);
             }
-            ret = kernel.resolveAll(...this.lifecycleHooks.bound.map(callBoundHook, this));
+            ret = kernel.resolveAll(...this._lifecycleHooks.bound.map(callBoundHook, this));
         }
-        if (this.hooks.hasBound) {
+        if (this._hooks.hasBound) {
             if (this.debug) {
                 this.logger.trace(`bound()`);
             }
-            ret = kernel.resolveAll(ret, this.viewModel.bound(this.$initiator, this.parent, this.$flags));
+            ret = kernel.resolveAll(ret, this._vm.bound(this.$initiator, this.parent, this.$flags));
         }
         if (isPromise(ret)) {
             this._ensurePromise();
@@ -3732,17 +3738,17 @@ class Controller {
         }
         let i = 0;
         let ret = void 0;
-        if (this.vmKind !== 2 && this.lifecycleHooks.attaching != null) {
+        if (this.vmKind !== 2 && this._lifecycleHooks.attaching != null) {
             if (this.debug) {
                 this.logger.trace(`lifecycleHooks.attaching()`);
             }
-            ret = kernel.resolveAll(...this.lifecycleHooks.attaching.map(callAttachingHook, this));
+            ret = kernel.resolveAll(...this._lifecycleHooks.attaching.map(callAttachingHook, this));
         }
-        if (this.hooks.hasAttaching) {
+        if (this._hooks.hasAttaching) {
             if (this.debug) {
                 this.logger.trace(`attaching()`);
             }
-            ret = kernel.resolveAll(ret, this.viewModel.attaching(this.$initiator, this.parent, this.$flags));
+            ret = kernel.resolveAll(ret, this._vm.attaching(this.$initiator, this.parent, this.$flags));
         }
         if (isPromise(ret)) {
             this._ensurePromise();
@@ -3771,7 +3777,7 @@ class Controller {
             case 8 | 32:
                 return;
             default:
-                throw new Error(`AUR0505: ${this.name} unexpected state: ${stringifyState(this.state)}.`);
+                throw createError(`AUR0505: ${this.name} unexpected state: ${stringifyState(this.state)}.`);
         }
         if (this.debug) {
             this.logger.trace(`deactivate()`);
@@ -3793,17 +3799,17 @@ class Controller {
                 void this.children[i].deactivate(initiator, this, flags);
             }
         }
-        if (this.vmKind !== 2 && this.lifecycleHooks.detaching != null) {
+        if (this.vmKind !== 2 && this._lifecycleHooks.detaching != null) {
             if (this.debug) {
                 this.logger.trace(`lifecycleHooks.detaching()`);
             }
-            ret = kernel.resolveAll(...this.lifecycleHooks.detaching.map(callDetachingHook, this));
+            ret = kernel.resolveAll(...this._lifecycleHooks.detaching.map(callDetachingHook, this));
         }
-        if (this.hooks.hasDetaching) {
+        if (this._hooks.hasDetaching) {
             if (this.debug) {
                 this.logger.trace(`detaching()`);
             }
-            ret = kernel.resolveAll(ret, this.viewModel.detaching(this.$initiator, this.parent, this.$flags));
+            ret = kernel.resolveAll(ret, this._vm.detaching(this.$initiator, this.parent, this.$flags));
         }
         if (isPromise(ret)) {
             this._ensurePromise();
@@ -3922,14 +3928,14 @@ class Controller {
     }
     _leaveActivating() {
         if (--this._activatingStack === 0) {
-            if (this.vmKind !== 2 && this.lifecycleHooks.attached != null) {
-                _retPromise = kernel.resolveAll(...this.lifecycleHooks.attached.map(callAttachedHook, this));
+            if (this.vmKind !== 2 && this._lifecycleHooks.attached != null) {
+                _retPromise = kernel.resolveAll(...this._lifecycleHooks.attached.map(callAttachedHook, this));
             }
-            if (this.hooks.hasAttached) {
+            if (this._hooks.hasAttached) {
                 if (this.debug) {
                     this.logger.trace(`attached()`);
                 }
-                _retPromise = kernel.resolveAll(_retPromise, this.viewModel.attached(this.$initiator, this.$flags));
+                _retPromise = kernel.resolveAll(_retPromise, this._vm.attached(this.$initiator, this.$flags));
             }
             if (isPromise(_retPromise)) {
                 this._ensurePromise();
@@ -3972,10 +3978,10 @@ class Controller {
                     }
                     cur.removeNodes();
                 }
-                if (cur.vmKind !== 2 && cur.lifecycleHooks.unbinding != null) {
-                    ret = kernel.resolveAll(...cur.lifecycleHooks.unbinding.map(callUnbindingHook, this));
+                if (cur.vmKind !== 2 && cur._lifecycleHooks.unbinding != null) {
+                    ret = kernel.resolveAll(...cur._lifecycleHooks.unbinding.map(callUnbindingHook, this));
                 }
-                if (cur.hooks.hasUnbinding) {
+                if (cur._hooks.hasUnbinding) {
                     if (cur.debug) {
                         cur.logger.trace('unbinding()');
                     }
@@ -4039,10 +4045,10 @@ class Controller {
     is(name) {
         switch (this.vmKind) {
             case 1: {
-                return getAttributeDefinition(this.viewModel.constructor).name === name;
+                return getAttributeDefinition(this._vm.constructor).name === name;
             }
             case 0: {
-                return getElementDefinition(this.viewModel.constructor).name === name;
+                return getElementDefinition(this._vm.constructor).name === name;
             }
             case 2:
                 return this.viewFactory.name === name;
@@ -4090,8 +4096,8 @@ class Controller {
             return;
         }
         this.state |= 32;
-        if (this.hooks.hasDispose) {
-            this.viewModel.dispose();
+        if (this._hooks.hasDispose) {
+            this._vm.dispose();
         }
         if (this.children !== null) {
             this.children.forEach(callDispose);
@@ -4102,11 +4108,11 @@ class Controller {
         this.nodes = null;
         this.location = null;
         this.viewFactory = null;
-        if (this.viewModel !== null) {
-            controllerLookup.delete(this.viewModel);
-            this.viewModel = null;
+        if (this._vm !== null) {
+            controllerLookup.delete(this._vm);
+            this._vm = null;
         }
-        this.viewModel = null;
+        this._vm = null;
         this.host = null;
         this.shadowRoot = null;
         this.container.disposeResolvers();
@@ -4115,7 +4121,7 @@ class Controller {
         if (visitor(this) === true) {
             return true;
         }
-        if (this.hooks.hasAccept && this.viewModel.accept(visitor) === true) {
+        if (this._hooks.hasAccept && this._vm.accept(visitor) === true) {
             return true;
         }
         if (this.children !== null) {
@@ -4206,7 +4212,7 @@ function createWatchers(controller, context, definition, instance) {
             ? callback
             : Reflect.get(instance, callback);
         if (!isFunction(callback)) {
-            throw new Error(`AUR0506: Invalid callback for @watch decorator: ${String(callback)}`);
+            throw createError(`AUR0506: Invalid callback for @watch decorator: ${String(callback)}`);
         }
         if (isFunction(expression)) {
             controller.addBinding(new ComputedWatcher(instance, observerLocator, expression, callback, true));
@@ -4296,31 +4302,31 @@ function callDispose(disposable) {
     disposable.dispose();
 }
 function callCreatedHook(l) {
-    l.instance.created(this.viewModel, this);
+    l.instance.created(this._vm, this);
 }
 function callHydratingHook(l) {
-    l.instance.hydrating(this.viewModel, this);
+    l.instance.hydrating(this._vm, this);
 }
 function callHydratedHook(l) {
-    l.instance.hydrated(this.viewModel, this);
+    l.instance.hydrated(this._vm, this);
 }
 function callBindingHook(l) {
-    return l.instance.binding(this.viewModel, this['$initiator'], this.parent, this['$flags']);
+    return l.instance.binding(this._vm, this['$initiator'], this.parent, this['$flags']);
 }
 function callBoundHook(l) {
-    return l.instance.bound(this.viewModel, this['$initiator'], this.parent, this['$flags']);
+    return l.instance.bound(this._vm, this['$initiator'], this.parent, this['$flags']);
 }
 function callAttachingHook(l) {
-    return l.instance.attaching(this.viewModel, this['$initiator'], this.parent, this['$flags']);
+    return l.instance.attaching(this._vm, this['$initiator'], this.parent, this['$flags']);
 }
 function callAttachedHook(l) {
-    return l.instance.attached(this.viewModel, this['$initiator'], this['$flags']);
+    return l.instance.attached(this._vm, this['$initiator'], this['$flags']);
 }
 function callDetachingHook(l) {
-    return l.instance.detaching(this.viewModel, this['$initiator'], this.parent, this['$flags']);
+    return l.instance.detaching(this._vm, this['$initiator'], this.parent, this['$flags']);
 }
 function callUnbindingHook(l) {
-    return l.instance.unbinding(this.viewModel, this['$initiator'], this.parent, this['$flags']);
+    return l.instance.unbinding(this._vm, this['$initiator'], this.parent, this['$flags']);
 }
 let _resolve;
 let _reject;
@@ -5044,7 +5050,7 @@ function getRefTarget(refHost, refTargetName) {
         case 'controller':
             return findElementControllerFor(refHost);
         case 'view':
-            throw new Error(`AUR0750: Not supported API`);
+            throw createError(`AUR0750: Not supported API`);
         case 'view-model':
             return findElementControllerFor(refHost).viewModel;
         default: {
@@ -5054,7 +5060,7 @@ function getRefTarget(refHost, refTargetName) {
             }
             const ceController = findElementControllerFor(refHost, { name: refTargetName });
             if (ceController === void 0) {
-                throw new Error(`AUR0751: Attempted to reference "${refTargetName}", but it was not found amongst the target's API.`);
+                throw createError(`AUR0751: Attempted to reference "${refTargetName}", but it was not found amongst the target's API.`);
             }
             return ceController.viewModel;
         }
@@ -5092,7 +5098,7 @@ let CustomElementRenderer = class CustomElementRenderer {
             case 'string':
                 def = ctxContainer.find(CustomElement, res);
                 if (def == null) {
-                    throw new Error(`AUR0752: Element ${res} is not registered in ${renderingCtrl['name']}.`);
+                    throw createError(`AUR0752: Element ${res} is not registered in ${renderingCtrl['name']}.`);
                 }
                 break;
             default:
@@ -5135,7 +5141,7 @@ let CustomAttributeRenderer = class CustomAttributeRenderer {
             case 'string':
                 def = ctxContainer.find(CustomAttribute, instruction.res);
                 if (def == null) {
-                    throw new Error(`AUR0753: Attribute ${instruction.res} is not registered in ${renderingCtrl['name']}.`);
+                    throw createError(`AUR0753: Attribute ${instruction.res} is not registered in ${renderingCtrl['name']}.`);
                 }
                 break;
             default:
@@ -5173,7 +5179,7 @@ let TemplateControllerRenderer = class TemplateControllerRenderer {
             case 'string':
                 def = ctxContainer.find(CustomAttribute, instruction.res);
                 if (def == null) {
-                    throw new Error(`AUR0754: Attribute ${instruction.res} is not registered in ${renderingCtrl['name']}.`);
+                    throw createError(`AUR0754: Attribute ${instruction.res} is not registered in ${renderingCtrl['name']}.`);
                 }
                 break;
             default:
@@ -5481,7 +5487,7 @@ let SpreadRenderer = class SpreadRenderer {
                 --currentLevel;
             }
             if (currentContext == null) {
-                throw new Error('No scope context for spread binding.');
+                throw createError('No scope context for spread binding.');
             }
             return currentContext;
         };
@@ -5541,7 +5547,7 @@ class SpreadBinding {
         this.isBound = true;
         const innerScope = this.$scope = this._hydrationContext.controller.scope.parent ?? void 0;
         if (innerScope == null) {
-            throw new Error('Invalid spreading. Context scope is null/undefined');
+            throw createError('Invalid spreading. Context scope is null/undefined');
         }
         this._innerBindings.forEach(b => b.$bind(innerScope));
     }
@@ -5554,7 +5560,7 @@ class SpreadBinding {
     }
     addChild(controller) {
         if (controller.vmKind !== 1) {
-            throw new Error('Spread binding does not support spreading custom attributes/template controllers');
+            throw createError('Spread binding does not support spreading custom attributes/template controllers');
         }
         this.ctrl.addChild(controller);
     }
@@ -5601,10 +5607,10 @@ class ViewFactoryProvider {
     resolve() {
         const f = this.f;
         if (f === null) {
-            throw new Error(`AUR7055: Cannot resolve ViewFactory before the provider was prepared.`);
+            throw createError(`AUR7055: Cannot resolve ViewFactory before the provider was prepared.`);
         }
         if (!isString(f.name) || f.name.length === 0) {
-            throw new Error(`AUR0756: Cannot resolve ViewFactory without a (valid) name.`);
+            throw createError(`AUR0756: Cannot resolve ViewFactory without a (valid) name.`);
         }
         return f;
     }
@@ -6153,7 +6159,7 @@ function shouldDefaultToTwoWay(element, attr) {
     }
 }
 function createMappedError(attr, tagName) {
-    return new Error(`Attribute ${attr} has been already registered for ${tagName === '*' ? 'all elements' : `<${tagName}/>`}`);
+    return createError(`Attribute ${attr} has been already registered for ${tagName === '*' ? 'all elements' : `<${tagName}/>`}`);
 }
 
 const ITemplateElementFactory = createInterface('ITemplateElementFactory', x => x.singleton(TemplateElementFactory));
@@ -6226,7 +6232,7 @@ class TemplateCompiler {
             }
         }
         if (template.hasAttribute(localTemplateIdentifier)) {
-            throw new Error(`AUR0701: The root cannot be a local template itself.`);
+            throw createError(`AUR0701: The root cannot be a local template itself.`);
         }
         this._compileLocalElement(content, context);
         this._compileNode(content, context);
@@ -6279,7 +6285,7 @@ class TemplateCompiler {
             attrDef = context._findAttr(attrTarget);
             if (attrDef !== null) {
                 if (attrDef.isTemplateController) {
-                    throw new Error(`AUR0703: Spreading template controller ${attrTarget} is not supported.`);
+                    throw createError(`AUR0703: Spreading template controller ${attrTarget} is not supported.`);
                 }
                 bindablesInfo = BindablesInfo.from(attrDef, true);
                 isMultiBindings = attrDef.noMultiBindings === false
@@ -6392,7 +6398,7 @@ class TemplateCompiler {
             realAttrTarget = attrSyntax.target;
             realAttrValue = attrSyntax.rawValue;
             if (invalidSurrogateAttribute[realAttrTarget]) {
-                throw new Error(`AUR0702: Attribute ${attrName} is invalid on surrogate.`);
+                throw createError(`AUR0702: Attribute ${attrName} is invalid on surrogate.`);
             }
             bindingCommand = context._createCommand(attrSyntax);
             if (bindingCommand !== null && (bindingCommand.type & 1) > 0) {
@@ -6406,7 +6412,7 @@ class TemplateCompiler {
             attrDef = context._findAttr(realAttrTarget);
             if (attrDef !== null) {
                 if (attrDef.isTemplateController) {
-                    throw new Error(`AUR0703: Template controller ${realAttrTarget} is invalid on surrogate.`);
+                    throw createError(`AUR0703: Template controller ${realAttrTarget} is invalid on surrogate.`);
                 }
                 bindableInfo = BindablesInfo.from(attrDef, true);
                 isMultiBindings = attrDef.noMultiBindings === false
@@ -6527,7 +6533,7 @@ class TemplateCompiler {
                     letInstructions.push(new LetBindingInstruction(exprParser.parse(realAttrValue, 8), kernel.camelCase(realAttrTarget)));
                 }
                 else {
-                    throw new Error(`AUR0704: Invalid command ${attrSyntax.command} for <let>. Only to-view/bind supported.`);
+                    throw createError(`AUR0704: Invalid command ${attrSyntax.command} for <let>. Only to-view/bind supported.`);
                 }
                 continue;
             }
@@ -6590,7 +6596,7 @@ class TemplateCompiler {
         let canCapture = false;
         if (elName === 'slot') {
             if (context.root.def.shadowOptions == null) {
-                throw new Error(`AUR0717: detect a usage of "<slot>" element without specifying shadow DOM options in element: ${context.root.def.name}`);
+                throw createError(`AUR0717: detect a usage of "<slot>" element without specifying shadow DOM options in element: ${context.root.def.name}`);
             }
             context.root.hasSlot = true;
         }
@@ -6600,7 +6606,7 @@ class TemplateCompiler {
             ii = attrs.length;
         }
         if (context.root.def.enhance && el.classList.contains('au')) {
-            throw new Error(`AUR0705: `
+            throw createError(`AUR0705: `
                     + 'Trying to enhance with a template that was probably compiled before. '
                     + 'This is likely going to cause issues. '
                     + 'Consider enhancing only untouched elements or first remove all "au" classes.');
@@ -6808,7 +6814,7 @@ class TemplateCompiler {
                     else {
                         if (targetSlot !== null) {
                             targetSlot = targetSlot || DEFAULT_SLOT_NAME;
-                            throw new Error(`AUR0706: Projection with [au-slot="${targetSlot}"] is attempted on a non custom element ${el.nodeName}.`);
+                            throw createError(`AUR0706: Projection with [au-slot="${targetSlot}"] is attempted on a non custom element ${el.nodeName}.`);
                         }
                         child = child.nextSibling;
                     }
@@ -6918,7 +6924,7 @@ class TemplateCompiler {
                     else {
                         if (targetSlot !== null) {
                             targetSlot = targetSlot || DEFAULT_SLOT_NAME;
-                            throw new Error(`AUR0706: Projection with [au-slot="${targetSlot}"] is attempted on a non custom element ${el.nodeName}.`);
+                            throw createError(`AUR0706: Projection with [au-slot="${targetSlot}"] is attempted on a non custom element ${el.nodeName}.`);
                         }
                         child = child.nextSibling;
                     }
@@ -7029,7 +7035,7 @@ class TemplateCompiler {
                 command = context._createCommand(attrSyntax);
                 bindable = bindableAttrsInfo.attrs[attrSyntax.target];
                 if (bindable == null) {
-                    throw new Error(`AUR0707: Bindable ${attrSyntax.target} not found on ${attrDef.name}.`);
+                    throw createError(`AUR0707: Bindable ${attrSyntax.target} not found on ${attrDef.name}.`);
                 }
                 if (command === null) {
                     expr = context._exprParser.parse(attrValue, 1);
@@ -7062,13 +7068,13 @@ class TemplateCompiler {
             return;
         }
         if (numLocalTemplates === root.childElementCount) {
-            throw new Error(`AUR0708: The custom element does not have any content other than local template(s).`);
+            throw createError(`AUR0708: The custom element does not have any content other than local template(s).`);
         }
         const localTemplateNames = new Set();
         const localElTypes = [];
         for (const localTemplate of localTemplates) {
             if (localTemplate.parentNode !== root) {
-                throw new Error(`AUR0709: Local templates needs to be defined directly under root.`);
+                throw createError(`AUR0709: Local templates needs to be defined directly under root.`);
             }
             const name = processTemplateName(localTemplate, localTemplateNames);
             const LocalTemplateType = class LocalTemplate {
@@ -7080,17 +7086,17 @@ class TemplateCompiler {
             const attributes = new Set();
             for (const bindableEl of bindableEls) {
                 if (bindableEl.parentNode !== content) {
-                    throw new Error(`AUR0710: Bindable properties of local templates needs to be defined directly under root.`);
+                    throw createError(`AUR0710: Bindable properties of local templates needs to be defined directly under root.`);
                 }
                 const property = bindableEl.getAttribute("property");
                 if (property === null) {
-                    throw new Error(`AUR0711: The attribute 'property' is missing in ${bindableEl.outerHTML}`);
+                    throw createError(`AUR0711: The attribute 'property' is missing in ${bindableEl.outerHTML}`);
                 }
                 const attribute = bindableEl.getAttribute("attribute");
                 if (attribute !== null
                     && attributes.has(attribute)
                     || properties.has(property)) {
-                    throw new Error(`Bindable property and attribute needs to be unique; found property: ${property}, attribute: ${attribute}`);
+                    throw createError(`Bindable property and attribute needs to be unique; found property: ${property}, attribute: ${attribute}`);
                 }
                 else {
                     if (attribute !== null) {
@@ -7215,7 +7221,7 @@ class CompilationContext {
         if (result === void 0) {
             result = this.c.create(BindingCommand, name);
             if (result === null) {
-                throw new Error(`AUR0713: Unknown binding command: ${name}`);
+                throw createError(`AUR0713: Unknown binding command: ${name}`);
             }
             this._commands[name] = result;
         }
@@ -7292,7 +7298,7 @@ class BindablesInfo {
                 attr = bindable.attribute;
                 if (bindable.primary === true) {
                     if (hasPrimary) {
-                        throw new Error(`AUR0714: Primary already exists on ${def.name}`);
+                        throw createError(`AUR0714: Primary already exists on ${def.name}`);
                     }
                     hasPrimary = true;
                     primary = bindable;
@@ -7320,10 +7326,10 @@ const localTemplateIdentifier = 'as-custom-element';
 function processTemplateName(localTemplate, localTemplateNames) {
     const name = localTemplate.getAttribute(localTemplateIdentifier);
     if (name === null || name === '') {
-        throw new Error(`AUR0715: The value of "as-custom-element" attribute cannot be empty for local template`);
+        throw createError(`AUR0715: The value of "as-custom-element" attribute cannot be empty for local template`);
     }
     if (localTemplateNames.has(name)) {
-        throw new Error(`AUR0716: Duplicate definition of the local template named ${name}`);
+        throw createError(`AUR0716: Duplicate definition of the local template named ${name}`);
     }
     else {
         localTemplateNames.add(name);
@@ -7474,10 +7480,10 @@ class SignalBindingBehavior {
     }
     bind(scope, binding, ...names) {
         if (!('handleChange' in binding)) {
-            throw new Error(`AUR0817: The signal behavior can only be used with bindings that have a "handleChange" method`);
+            throw createError(`AUR0817: The signal behavior can only be used with bindings that have a "handleChange" method`);
         }
         if (names.length === 0) {
-            throw new Error(`AUR0818: At least one signal name must be passed to the signal behavior, e.g. "expr & signal:'my-signal'"`);
+            throw createError(`AUR0818: At least one signal name must be passed to the signal behavior, e.g. "expr & signal:'my-signal'"`);
         }
         this._lookup.set(binding, names);
         let name;
@@ -7600,7 +7606,7 @@ function handleSelfEvent(event) {
 class SelfBindingBehavior {
     bind(_scope, binding) {
         if (!binding.callSource || !binding.targetEvent) {
-            throw new Error(`AUR0801: Self binding behavior only supports events.`);
+            throw createError(`AUR0801: Self binding behavior only supports events.`);
         }
         binding.selfEventCallSource = binding.callSource;
         binding.callSource = handleSelfEvent;
@@ -7940,7 +7946,7 @@ class SelectValueObserver {
         this._arrayObserver = void 0;
         if (array != null) {
             if (!this._obj.multiple) {
-                throw new Error(`AUR0654: Only null or Array instances can be bound to a multi-select.`);
+                throw createError(`AUR0654: Only null or Array instances can be bound to a multi-select.`);
             }
             (this._arrayObserver = this._observerLocator.getArrayObserver(array)).subscribe(this);
         }
@@ -8389,7 +8395,7 @@ class NodeObserverLocator {
             if (this.allowDirtyCheck) {
                 return this.dirtyChecker.createProperty(el, key);
             }
-            throw new Error(`AUR0652: Unable to observe property ${String(key)}. Register observation mapping with .useConfig().`);
+            throw createError(`AUR0652: Unable to observe property ${String(key)}. Register observation mapping with .useConfig().`);
         }
         else {
             return new runtime.SetterObserver(el, key);
@@ -8409,7 +8415,7 @@ function getCollectionObserver(collection, observerLocator) {
     }
 }
 function throwMappingExisted(nodeName, key) {
-    throw new Error(`AUR0653: Mapping for property ${String(key)} of <${nodeName} /> already exists`);
+    throw createError(`AUR0653: Mapping for property ${String(key)} of <${nodeName} /> already exists`);
 }
 
 class UpdateTriggerBindingBehavior {
@@ -8418,14 +8424,14 @@ class UpdateTriggerBindingBehavior {
     }
     bind(_scope, binding, ...events) {
         if (events.length === 0) {
-            throw new Error(`AUR0802: The updateTrigger binding behavior requires at least one event name argument: eg <input value.bind="firstName & updateTrigger:'blur'">`);
+            throw createError(`AUR0802: The updateTrigger binding behavior requires at least one event name argument: eg <input value.bind="firstName & updateTrigger:'blur'">`);
         }
         if (binding.mode !== 6 && binding.mode !== 4) {
-            throw new Error(`AUR0803: The updateTrigger binding behavior can only be applied to two-way/ from-view bindings.`);
+            throw createError(`AUR0803: The updateTrigger binding behavior can only be applied to two-way/ from-view bindings.`);
         }
         const targetObserver = this.oL.getObserver(binding.target, binding.targetProperty);
         if (!targetObserver.handler) {
-            throw new Error(`AUR0804: The updateTrigger binding behavior can only be applied to two-way/ from-view bindings on input/select elements.`);
+            throw createError(`AUR0804: The updateTrigger binding behavior can only be applied to two-way/ from-view bindings on input/select elements.`);
         }
         binding.targetObserver = targetObserver;
         const originalHandler = targetObserver.handler;
@@ -8647,7 +8653,7 @@ class Portal {
         let context = this.renderContext;
         if (target === '') {
             if (this.strict) {
-                throw new Error(`AUR0811: Empty querySelector`);
+                throw createError(`AUR0811: Empty querySelector`);
             }
             return $document.body;
         }
@@ -8666,7 +8672,7 @@ class Portal {
         }
         if (target == null) {
             if (this.strict) {
-                throw new Error(`AUR0812: Portal target not found`);
+                throw createError(`AUR0812: Portal target not found`);
             }
             return $document.body;
         }
@@ -8840,7 +8846,7 @@ class Else {
             ifBehavior.viewModel.elseFactory = this._factory;
         }
         else {
-            throw new Error(`AUR0810: Unsupported If behavior`);
+            throw createError(`AUR0810: Unsupported If behavior`);
         }
     }
 }
@@ -9209,7 +9215,7 @@ function longestIncreasingSubsequence(indexMap) {
         prevIndices[i] = 0;
     return result;
 }
-const mismatchedLengthError = (viewCount, itemCount) => new Error(`AUR0814: viewsLen=${viewCount}, mapLen=${itemCount}`)
+const mismatchedLengthError = (viewCount, itemCount) => createError(`AUR0814: viewsLen=${viewCount}, mapLen=${itemCount}`)
     ;
 const setContextualProperties = (oc, index, length) => {
     const isFirst = index === 0;
@@ -9232,7 +9238,7 @@ const getCount = (result) => {
         case '[object Number]': return result;
         case '[object Null]': return 0;
         case '[object Undefined]': return 0;
-        default: throw new Error(`Cannot count ${toStringTag.call(result)}`);
+        default: throw createError(`Cannot count ${toStringTag.call(result)}`);
     }
 };
 const iterate = (result, func) => {
@@ -9243,7 +9249,7 @@ const iterate = (result, func) => {
         case '[object Number]': return $number(result, func);
         case '[object Null]': return;
         case '[object Undefined]': return;
-        default: throw new Error(`Cannot iterate over ${toStringTag.call(result)}`);
+        default: throw createError(`Cannot iterate over ${toStringTag.call(result)}`);
     }
 };
 const $array = (result, func) => {
@@ -9495,7 +9501,7 @@ exports.Case = class Case {
             this.linkToSwitch($switch);
         }
         else {
-            throw new Error(`AUR0815: The parent switch not found; only "*[switch] > *[case|default-case]" relation is supported.`);
+            throw createError(`AUR0815: The parent switch not found; only "*[switch] > *[case|default-case]" relation is supported.`);
         }
     }
     detaching(initiator, parent, flags) {
@@ -9584,7 +9590,7 @@ exports.Case = __decorate([
 exports.DefaultCase = class DefaultCase extends exports.Case {
     linkToSwitch($switch) {
         if ($switch.defaultCase !== void 0) {
-            throw new Error(`AUR0816: Multiple 'default-case's are not allowed.`);
+            throw createError(`AUR0816: Multiple 'default-case's are not allowed.`);
         }
         $switch.defaultCase = this;
     }
@@ -9827,7 +9833,7 @@ function getPromiseController(controller) {
     if ($promise instanceof exports.PromiseTemplateController) {
         return $promise;
     }
-    throw new Error(`AUR0813: The parent promise.resolve not found; only "*[promise.resolve] > *[pending|then|catch]" relation is supported.`);
+    throw createError(`AUR0813: The parent promise.resolve not found; only "*[promise.resolve] > *[pending|then|catch]" relation is supported.`);
 }
 let PromiseAttributePattern = class PromiseAttributePattern {
     'promise.resolve'(name, value, _parts) {
@@ -9861,7 +9867,7 @@ function createElement(p, tagOrType, props, children) {
     if (isElementType(tagOrType)) {
         return createElementForType(p, tagOrType, props, children);
     }
-    throw new Error(`Invalid Tag or Type.`);
+    throw createError(`Invalid Tag or Type.`);
 }
 class RenderPlan {
     constructor(node, instructions, _dependencies) {
@@ -10069,7 +10075,7 @@ class AuRender {
         if (isString(comp)) {
             const def = ctxContainer.find(CustomElement, comp);
             if (def == null) {
-                throw new Error(`AUR0809: Unable to find custom element ${comp} for <au-render>.`);
+                throw createError(`AUR0809: Unable to find custom element ${comp} for <au-render>.`);
             }
             comp = def.Type;
         }
@@ -10182,7 +10188,7 @@ class AuCompose {
         const parentNode = loc == null ? host.parentNode : loc.parentNode;
         if (vmDef !== null) {
             if (vmDef.containerless) {
-                throw new Error(`AUR0806: Containerless custom element is not supported by <au-compose/>`);
+                throw createError(`AUR0806: Containerless custom element is not supported by <au-compose/>`);
             }
             if (loc == null) {
                 compositionHost = host;
@@ -10273,7 +10279,7 @@ __decorate([
             if (v === 'scoped' || v === 'auto') {
                 return v;
             }
-            throw new Error(`AUR0805: Invalid scope behavior config. Only "scoped" or "auto" allowed.`);
+            throw createError(`AUR0805: Invalid scope behavior config. Only "scoped" or "auto" allowed.`);
         }
     })
 ], AuCompose.prototype, "scopeBehavior", void 0);
@@ -10339,7 +10345,7 @@ class CompositionController {
     }
     activate(initiator) {
         if (this.state !== 0) {
-            throw new Error(`AUR0807: Composition has already been activated/deactivated. Id: ${this.controller.name}`);
+            throw createError(`AUR0807: Composition has already been activated/deactivated. Id: ${this.controller.name}`);
         }
         this.state = 1;
         return this.start(initiator);
@@ -10350,7 +10356,7 @@ class CompositionController {
                 this.state = -1;
                 return this.stop(detachInitator);
             case -1:
-                throw new Error(`AUR0808: Composition has already been deactivated.`);
+                throw createError(`AUR0808: Composition has already been deactivated.`);
             default:
                 this.state = -1;
         }
@@ -10413,7 +10419,7 @@ customElement({ name: 'au-slot', template: null, containerless: true })(AuSlot);
 
 const ISanitizer = createInterface('ISanitizer', x => x.singleton(class {
     sanitize() {
-        throw new Error('"sanitize" method not implemented');
+        throw createError('"sanitize" method not implemented');
     }
 }));
 exports.SanitizeValueConverter = class SanitizeValueConverter {
@@ -10633,7 +10639,7 @@ class Aurelia {
         this._startPromise = void 0;
         this._stopPromise = void 0;
         if (container.has(IAurelia, true)) {
-            throw new Error(`AUR0768: An instance of Aurelia is already registered with the container or an ancestor of it.`);
+            throw createError(`AUR0768: An instance of Aurelia is already registered with the container or an ancestor of it.`);
         }
         registerResolver(container, IAurelia, new kernel.InstanceProvider('IAurelia', this));
         registerResolver(container, IAppRoot, this._rootProvider = new kernel.InstanceProvider('IAppRoot'));
@@ -10644,7 +10650,7 @@ class Aurelia {
     get root() {
         if (this._root == null) {
             if (this.next == null) {
-                throw new Error(`AUR0767: root is not defined`);
+                throw createError(`AUR0767: root is not defined`);
             }
             return this.next;
         }
@@ -10686,7 +10692,7 @@ class Aurelia {
         let p;
         if (!this.container.has(IPlatform, false)) {
             if (host.ownerDocument.defaultView === null) {
-                throw new Error(`AUR0769: Failed to initialize the platform object. The host element's ownerDocument does not have a defaultView`);
+                throw createError(`AUR0769: Failed to initialize the platform object. The host element's ownerDocument does not have a defaultView`);
             }
             p = new platformBrowser.BrowserPlatform(host.ownerDocument.defaultView);
             this.container.register(instanceRegistration(IPlatform, p));
@@ -10698,7 +10704,7 @@ class Aurelia {
     }
     start(root = this.next) {
         if (root == null) {
-            throw new Error(`AUR0770: There is no composition root`);
+            throw createError(`AUR0770: There is no composition root`);
         }
         if (isPromise(this._startPromise)) {
             return this._startPromise;
@@ -10737,7 +10743,7 @@ class Aurelia {
     }
     dispose() {
         if (this._isRunning || this._isStopping) {
-            throw new Error(`AUR0771: The aurelia instance must be fully stopped before it can be disposed`);
+            throw createError(`AUR0771: The aurelia instance must be fully stopped before it can be disposed`);
         }
         this.container.dispose();
     }
@@ -10922,13 +10928,13 @@ class DialogController {
 class EmptyComponent {
 }
 function createDialogCancelError(output, msg) {
-    const error = new Error(msg);
+    const error = createError(msg);
     error.wasCancelled = true;
     error.value = output;
     return error;
 }
 function createDialogCloseError(output) {
-    const error = new Error();
+    const error = createError('');
     error.wasCancelled = false;
     error.value = output;
     return error;
@@ -10952,7 +10958,7 @@ class DialogService {
     static register(container) {
         container.register(singletonRegistration(IDialogService, this), AppTask.deactivating(IDialogService, dialogService => kernel.onResolve(dialogService.closeAll(), (openDialogController) => {
             if (openDialogController.length > 0) {
-                throw new Error(`AUR0901: There are still ${openDialogController.length} open dialog(s).`);
+                throw createError(`AUR0901: There are still ${openDialogController.length} open dialog(s).`);
             }
         })));
     }
@@ -10964,7 +10970,7 @@ class DialogService {
                 const dialogController = container.invoke(DialogController);
                 container.register(instanceRegistration(IDialogController, dialogController));
                 container.register(callbackRegistration(DialogController, () => {
-                    throw new Error(`AUR0902: Invalid injection of DialogController. Use IDialogController instead.`);
+                    throw createError(`AUR0902: Invalid injection of DialogController. Use IDialogController instead.`);
                 }));
                 return kernel.onResolve(dialogController.activate(loadedSettings), openResult => {
                     if (!openResult.wasCancelled) {
@@ -11045,7 +11051,7 @@ class DialogSettings {
     }
     _validate() {
         if (this.component == null && this.template == null) {
-            throw new Error(`AUR0903: Invalid Dialog Settings. You must provide "component", "template" or both.`);
+            throw createError(`AUR0903: Invalid Dialog Settings. You must provide "component", "template" or both.`);
         }
         return this;
     }
@@ -11132,7 +11138,7 @@ function createDialogConfiguration(settingsProvider, registrations) {
     };
 }
 const DialogConfiguration = createDialogConfiguration(() => {
-    throw new Error(`AUR0904: Invalid dialog configuration. ` +
+    throw createError(`AUR0904: Invalid dialog configuration. ` +
             'Specify the implementations for ' +
             '<IDialogService>, <IDialogGlobalSettings> and <IDialogDomRenderer>, ' +
             'or use the DialogDefaultConfiguration export.');
@@ -11156,11 +11162,11 @@ class WcCustomElementRegistry {
     }
     define(name, def, options) {
         if (!name.includes('-')) {
-            throw new Error('Invalid web-components custom element name. It must include a "-"');
+            throw createError('Invalid web-components custom element name. It must include a "-"');
         }
         let elDef;
         if (def == null) {
-            throw new Error('Invalid custom element definition');
+            throw createError('Invalid custom element definition');
         }
         switch (typeof def) {
             case 'function':
@@ -11173,7 +11179,7 @@ class WcCustomElementRegistry {
                 break;
         }
         if (elDef.containerless) {
-            throw new Error('Containerless custom element is not supported. Consider using buitl-in extends instead');
+            throw createError('Containerless custom element is not supported. Consider using buitl-in extends instead');
         }
         const BaseClass = !options?.extends ? HTMLElement : this.p.document.createElement(options.extends).constructor;
         const container = this.ctn;

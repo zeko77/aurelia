@@ -3764,18 +3764,24 @@ function qi(t, i, s = [], o = true, a = TestContext.create()) {
             }
         });
     }));
-    const R = (e, t) => {
+    function R(e, t) {
+        const n = k(e);
+        if (null === n || !/input|textarea/i.test(n.nodeName)) throw new Error(`No <input>/<textarea> element found for selector "${e}" to emulate input for "${t}"`);
+        n.value = t;
+        n.dispatchEvent(new u.window.Event("input"));
+    }
+    const q = (e, t) => {
         const n = k(e);
         if (null === n) throw new Error(`No element found for selector "${e}" to scroll by "${JSON.stringify(t)}"`);
         n.scrollBy("number" === typeof t ? {
             top: t
         } : t);
-        n.dispatchEvent(new Event("scroll"));
+        n.dispatchEvent(new u.window.Event("scroll"));
     };
-    const q = e => {
+    const M = e => {
         a.platform.domWriteQueue.flush(e);
     };
-    const M = new class Results {
+    const L = new class Results {
         constructor() {
             this.startPromise = x;
             this.ctx = a;
@@ -3797,9 +3803,11 @@ function qi(t, i, s = [], o = true, a = TestContext.create()) {
             this.assertAttr = O;
             this.assertAttrNS = E;
             this.assertValue = j;
+            this.createEvent = (e, t) => new u.CustomEvent(e, t);
             this.trigger = A;
-            this.scrollBy = R;
-            this.flush = q;
+            this.type = R;
+            this.scrollBy = q;
+            this.flush = M;
         }
         async start() {
             await d.app({
@@ -3827,8 +3835,8 @@ function qi(t, i, s = [], o = true, a = TestContext.create()) {
             return Promise.resolve(this);
         }
     };
-    Ai.publish("fixture:created", M);
-    return M;
+    Ai.publish("fixture:created", L);
+    return L;
 }
 
 class FixtureBuilder {
