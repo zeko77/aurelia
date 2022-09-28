@@ -96,7 +96,7 @@ const PreventFormActionlessSubmit = runtimeHtml.AppTask.creating(runtimeHtml.IEv
     }, false);
 });
 
-const registration = {
+const compatRegistration = {
     register(container) {
         defineAstMethods();
         defineBindingMethods();
@@ -105,5 +105,5 @@ const registration = {
 };
 
 exports.PreventFormActionlessSubmit = PreventFormActionlessSubmit;
-exports["default"] = registration;
+exports.compatRegistration = compatRegistration;
 //# sourceMappingURL=index.dev.cjs.map

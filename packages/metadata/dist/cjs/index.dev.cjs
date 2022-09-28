@@ -276,7 +276,7 @@ const Metadata = {
     getOwnKeys: $getOwnKeys,
     delete: $delete,
 };
-function def(obj, key, value, writable, configurable) {
+const def = (obj, key, value, writable, configurable) => {
     if (!Reflect.defineProperty(obj, key, {
         writable,
         enumerable: false,
@@ -286,25 +286,25 @@ function def(obj, key, value, writable, configurable) {
         throw createError(`AUR1000: Unable to apply metadata polyfill: could not add property '${key}' to the global Reflect object`)
             ;
     }
-}
+};
 const internalSlotName = '[[$au]]';
-function hasInternalSlot(reflect) {
+const hasInternalSlot = (reflect) => {
     return internalSlotName in reflect;
-}
-function $applyMetadataPolyfill(reflect, writable, configurable) {
-    def(reflect, internalSlotName, metadataInternalSlot, writable, configurable);
-    def(reflect, 'metadata', metadata, writable, configurable);
-    def(reflect, 'decorate', decorate, writable, configurable);
-    def(reflect, 'defineMetadata', $define, writable, configurable);
-    def(reflect, 'hasMetadata', $has, writable, configurable);
-    def(reflect, 'hasOwnMetadata', $hasOwn, writable, configurable);
-    def(reflect, 'getMetadata', $get, writable, configurable);
-    def(reflect, 'getOwnMetadata', $getOwn, writable, configurable);
-    def(reflect, 'getMetadataKeys', $getKeys, writable, configurable);
-    def(reflect, 'getOwnMetadataKeys', $getOwnKeys, writable, configurable);
-    def(reflect, 'deleteMetadata', $delete, writable, configurable);
-}
-function applyMetadataPolyfill(reflect, throwIfConflict = true, forceOverwrite = false, writable = true, configurable = true) {
+};
+const $applyMetadataPolyfill = (reflect, writable, configurable) => [
+    [internalSlotName, metadataInternalSlot],
+    ['metadata', metadata],
+    ['decorate', decorate],
+    ['defineMetadata', $define],
+    ['hasMetadata', $has],
+    ['hasOwnMetadata', $hasOwn],
+    ['getMetadata', $get],
+    ['getOwnMetadata', $getOwn],
+    ['getMetadataKeys', $getKeys],
+    ['getOwnMetadataKeys', $getOwnKeys],
+    ['deleteMetadata', $delete],
+].forEach(([key, value]) => def(reflect, key, value, writable, configurable));
+const applyMetadataPolyfill = (reflect, throwIfConflict = true, forceOverwrite = false, writable = true, configurable = true) => {
     if (hasInternalSlot(reflect)) {
         if (reflect[internalSlotName] === metadataInternalSlot) {
             return;
@@ -316,20 +316,9 @@ function applyMetadataPolyfill(reflect, throwIfConflict = true, forceOverwrite =
         throw createError(`AUR1001: Conflicting @aurelia/metadata module import detected. Please make sure you have the same version of all Aurelia packages in your dependency tree.`)
             ;
     }
-    const presentProps = [
-        'metadata',
-        'decorate',
-        'defineMetadata',
-        'hasMetadata',
-        'hasOwnMetadata',
-        'getMetadata',
-        'getOwnMetadata',
-        'getMetadataKeys',
-        'getOwnMetadataKeys',
-        'deleteMetadata',
-    ].filter(function (p) {
-        return p in Reflect;
-    });
+    const presentProps = 'metadata decorate defineMetadata hasMetadata hasOwnMetadata getMetadata getOwnMetadata getMetadataKeys getOwnMetadataKeys deleteMetadata'
+        .split(' ')
+        .filter(p => p in Reflect);
     if (presentProps.length > 0) {
         if (throwIfConflict) {
             const implementationSummary = presentProps.map(function (p) {
@@ -346,7 +335,7 @@ function applyMetadataPolyfill(reflect, throwIfConflict = true, forceOverwrite =
     else {
         $applyMetadataPolyfill(reflect, writable, configurable);
     }
-}
+};
 const createError = (message) => new Error(message);
 
 exports.Metadata = Metadata;

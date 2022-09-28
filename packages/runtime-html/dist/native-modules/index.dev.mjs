@@ -5065,7 +5065,7 @@ function getRefTarget(refHost, refTargetName) {
 let SetPropertyRenderer = class SetPropertyRenderer {
     render(renderingCtrl, target, instruction) {
         const obj = getTarget(target);
-        if (obj.$observers !== void 0 && obj.$observers[instruction.to] !== void 0) {
+        if (obj.$observers?.[instruction.to] !== void 0) {
             obj.$observers[instruction.to].setValue(instruction.value);
         }
         else {
@@ -11177,7 +11177,9 @@ class WcCustomElementRegistry {
         if (elDef.containerless) {
             throw createError('Containerless custom element is not supported. Consider using buitl-in extends instead');
         }
-        const BaseClass = !options?.extends ? HTMLElement : this.p.document.createElement(options.extends).constructor;
+        const BaseClass = options?.extends
+            ? this.p.document.createElement(options.extends).constructor
+            : this.p.HTMLElement;
         const container = this.ctn;
         const rendering = this.r;
         const bindables = elDef.bindables;

@@ -137,7 +137,6 @@ export declare class Transition {
     readonly reject: ((err: unknown) => void) | null;
     guardsResult: boolean | ViewportInstructionTree;
     error: unknown;
-    private _erredWithUnknownRoute;
     get erredWithUnknownRoute(): boolean;
     private constructor();
     static create(input: Omit<Transition, 'run' | 'handleError' | 'erredWithUnknownRoute'>): Transition;
@@ -183,7 +182,7 @@ export declare class Router {
      * - `ICustomElementController`: same as `ICustomElementViewModel`, but using the controller object instead of the view model object (advanced users).
      */
     resolveContext(context: RouteContextLike | null): IRouteContext;
-    start(routerOptions: IRouterOptions, performInitialNavigation: boolean): void | Promise<boolean>;
+    start(performInitialNavigation: boolean): void | Promise<boolean>;
     stop(): void;
     /**
      * Loads the provided path.

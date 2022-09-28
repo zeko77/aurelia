@@ -658,7 +658,7 @@ class RouteExpression {
         return result;
     }
     static $parse(path, fragmentIsRoute) {
-        let fragment;
+        let fragment = null;
         const fragmentStart = path.indexOf('#');
         if (fragmentStart >= 0) {
             const rawFragment = path.slice(fragmentStart + 1);
@@ -669,12 +669,6 @@ class RouteExpression {
             else {
                 path = path.slice(0, fragmentStart);
             }
-        }
-        else {
-            if (fragmentIsRoute) {
-                path = '';
-            }
-            fragment = null;
         }
         let queryParams = null;
         const queryStart = path.indexOf('?');
@@ -1060,7 +1054,6 @@ class ViewportAgent {
         this.currNode = null;
         this.nextNode = null;
         this.currTransition = null;
-        this.prevTransition = null;
         this._cancellationPromise = null;
         this.logger = ctx.container.get(kernel.ILogger).scopeTo(`ViewportAgent<${ctx.friendlyPath}>`);
         this.logger.trace(`constructor()`);
@@ -1640,7 +1633,6 @@ class ViewportAgent {
                     this.nextState = 64;
                     this.nextCA = null;
                     this.nextNode = null;
-                    this.prevTransition = null;
                     this.currTransition = null;
                     this._cancellationPromise = null;
                 });
@@ -1703,7 +1695,6 @@ class ViewportAgent {
             this.nextState = 64;
             this.nextNode = null;
             this.nextCA = null;
-            this.prevTransition = this.currTransition;
             this.currTransition = null;
         }
     }
@@ -2447,8 +2438,10 @@ exports.Router = class Router {
     resolveContext(context) {
         return RouteContext.resolve(this.ctx, context);
     }
-    start(routerOptions, performInitialNavigation) {
+    _setOptions(routerOptions) {
         this.options = RouterOptions.create(routerOptions);
+    }
+    start(performInitialNavigation) {
         this._hasTitleBuilder = typeof this.options.buildTitle === 'function';
         this.locationMgr.startListening();
         this.locationChangeSubscription = this.events.subscribe('au:router:location-change', e => {
@@ -2938,12 +2931,10 @@ class ViewportInstructionTree {
         }
         let search = this.queryParams.toString();
         search = search === '' ? '' : `?${search}`;
-        const url = `${pathname}${hash}${search}`;
-        return url;
+        return `${pathname}${hash}${search}`;
     }
     toPath() {
-        const path = this.children.map(x => x.toUrlComponent()).join('+');
-        return path;
+        return this.children.map(x => x.toUrlComponent()).join('+');
     }
     toString() {
         return `[${this.children.map(String).join(',')}]`;
@@ -4183,12 +4174,7 @@ exports.HrefCustomAttribute = class HrefCustomAttribute {
             this.isInitialized = true;
             this.isEnabled = this.isEnabled && runtimeHtml.getRef(this.el, runtimeHtml.CustomAttribute.getDefinition(exports.LoadCustomAttribute).key) === null;
         }
-        if (this.value == null) {
-            this.el.removeAttribute('href');
-        }
-        else {
-            this.el.setAttribute('href', this.value);
-        }
+        this.valueChanged(this.value);
         this.eventListener = this.delegator.addEventListener(this.target, this.el, 'click', this);
     }
     unbinding() {
@@ -4199,6 +4185,11 @@ exports.HrefCustomAttribute = class HrefCustomAttribute {
             this.el.removeAttribute('href');
         }
         else {
+            if (this.router.options.useUrlFragmentHash
+                && this.ctx.isRoot
+                && !/^[.#]/.test(newValue)) {
+                newValue = `#${newValue}`;
+            }
             this.el.setAttribute('href', newValue);
         }
     }
@@ -4243,27 +4234,20 @@ const DefaultResources = [
     exports.LoadCustomAttribute,
     exports.HrefCustomAttribute,
 ];
-function configure(container, config) {
-    let activation;
+function configure(container, options) {
     let basePath = null;
-    if (metadata.isObject(config)) {
-        if (typeof config === 'function') {
-            activation = router => config(router);
-        }
-        else {
-            basePath = config.basePath ?? null;
-            activation = router => router.start(config, true);
-        }
+    if (metadata.isObject(options)) {
+        basePath = options.basePath ?? null;
     }
     else {
-        activation = router => router.start({}, true);
+        options = {};
     }
     return container.register(kernel.Registration.cachedCallback(IBaseHref, (handler, _, __) => {
         const window = handler.get(runtimeHtml.IWindow);
         const url = new URL(window.document.baseURI);
         url.pathname = normalizePath(basePath ?? url.pathname);
         return url;
-    }), runtimeHtml.AppTask.hydrated(kernel.IContainer, RouteContext.setRoot), runtimeHtml.AppTask.activated(IRouter, activation), runtimeHtml.AppTask.deactivated(IRouter, router => {
+    }), runtimeHtml.AppTask.hydrated(IRouter, router => router._setOptions(options)), runtimeHtml.AppTask.hydrated(kernel.IContainer, RouteContext.setRoot), runtimeHtml.AppTask.activated(IRouter, router => router.start(true)), runtimeHtml.AppTask.deactivated(IRouter, router => {
         router.stop();
     }), ...DefaultComponents, ...DefaultResources);
 }
@@ -4271,10 +4255,10 @@ const RouterConfiguration = {
     register(container) {
         return configure(container);
     },
-    customize(config) {
+    customize(options) {
         return {
             register(container) {
-                return configure(container, config);
+                return configure(container, options);
             },
         };
     },

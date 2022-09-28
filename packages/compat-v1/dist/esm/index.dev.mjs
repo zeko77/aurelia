@@ -92,7 +92,7 @@ const PreventFormActionlessSubmit = AppTask.creating(IEventTarget, appRoot => {
     }, false);
 });
 
-const registration = {
+const compatRegistration = {
     register(container) {
         defineAstMethods();
         defineBindingMethods();
@@ -100,5 +100,5 @@ const registration = {
     }
 };
 
-export { PreventFormActionlessSubmit, registration as default };
+export { PreventFormActionlessSubmit, compatRegistration };
 //# sourceMappingURL=index.dev.mjs.map

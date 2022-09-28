@@ -4549,7 +4549,7 @@ function si(t, e) {
 let ii = class SetPropertyRenderer {
     render(t, e, s) {
         const i = ei(e);
-        if (void 0 !== i.$observers && void 0 !== i.$observers[s.to]) i.$observers[s.to].setValue(s.value); else i[s.to] = s.value;
+        if (void 0 !== i.$observers?.[s.to]) i.$observers[s.to].setValue(s.value); else i[s.to] = s.value;
     }
 };
 
@@ -9953,7 +9953,7 @@ class WcCustomElementRegistry {
             break;
         }
         if (n.containerless) throw v("Containerless custom element is not supported. Consider using buitl-in extends instead");
-        const r = !i?.extends ? HTMLElement : this.p.document.createElement(i.extends).constructor;
+        const r = i?.extends ? this.p.document.createElement(i.extends).constructor : this.p.HTMLElement;
         const o = this.ctn;
         const l = this.r;
         const h = n.bindables;

@@ -77,5 +77,5 @@ const o = {
 
 exports.PreventFormActionlessSubmit = a;
 
-exports["default"] = o;
+exports.compatRegistration = o;
 //# sourceMappingURL=index.cjs.map

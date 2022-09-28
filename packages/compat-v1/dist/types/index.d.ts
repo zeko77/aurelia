@@ -1,6 +1,6 @@
 import { IRegistry } from '@aurelia/kernel';
 import { PreventFormActionlessSubmit } from './compat-form';
-declare const registration: IRegistry;
+declare const compatRegistration: IRegistry;
 export { PreventFormActionlessSubmit, };
-export default registration;
+export { compatRegistration };
 //# sourceMappingURL=index.d.ts.map

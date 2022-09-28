@@ -35,7 +35,7 @@ function o(t) {
     }
 }
 
-function i(t) {
+function c(t) {
     switch (typeof t) {
       case "undefined":
       case "string":
@@ -47,7 +47,7 @@ function i(t) {
     }
 }
 
-function u(t, e, r) {
+function i(t, e, r) {
     let a = n.get(t);
     if (void 0 === a) {
         if (!r) return;
@@ -63,40 +63,40 @@ function u(t, e, r) {
     return o;
 }
 
-function c(t, e, n) {
-    const r = u(e, n, false);
+function u(t, e, n) {
+    const r = i(e, n, false);
     if (void 0 === r) return false;
     return r.has(t);
 }
 
 function f(t, e, n) {
-    if (c(t, e, n)) return true;
+    if (u(t, e, n)) return true;
     const r = Object.getPrototypeOf(e);
     if (null !== r) return f(t, r, n);
     return false;
 }
 
-function d(t, e, n) {
-    const r = u(e, n, false);
+function s(t, e, n) {
+    const r = i(e, n, false);
     if (void 0 === r) return;
     return r.get(t);
 }
 
-function s(t, e, n) {
-    if (c(t, e, n)) return d(t, e, n);
+function d(t, e, n) {
+    if (u(t, e, n)) return s(t, e, n);
     const r = Object.getPrototypeOf(e);
-    if (null !== r) return s(t, r, n);
+    if (null !== r) return d(t, r, n);
     return;
 }
 
 function l(t, e, n, r) {
-    const a = u(n, r, true);
+    const a = i(n, r, true);
     a.set(t, e);
 }
 
 function w(t, e) {
     const n = [];
-    const r = u(t, e, false);
+    const r = i(t, e, false);
     if (void 0 === r) return n;
     const a = r.keys();
     let o = 0;
@@ -114,33 +114,33 @@ function g(t, e) {
     const a = g(r, e);
     const o = n.length;
     if (0 === o) return a;
-    const i = a.length;
-    if (0 === i) return n;
-    const u = new Set;
-    const c = [];
+    const c = a.length;
+    if (0 === c) return n;
+    const i = new Set;
+    const u = [];
     let f = 0;
-    let d;
+    let s;
     for (let t = 0; t < o; ++t) {
-        d = n[t];
-        if (!u.has(d)) {
-            u.add(d);
-            c[f] = d;
+        s = n[t];
+        if (!i.has(s)) {
+            i.add(s);
+            u[f] = s;
             ++f;
         }
     }
-    for (let t = 0; t < i; ++t) {
-        d = a[t];
-        if (!u.has(d)) {
-            u.add(d);
-            c[f] = d;
+    for (let t = 0; t < c; ++t) {
+        s = a[t];
+        if (!i.has(s)) {
+            i.add(s);
+            u[f] = s;
             ++f;
         }
     }
-    return c;
+    return u;
 }
 
 function M(t, e, n) {
-    const r = u(t, n, false);
+    const r = i(t, n, false);
     if (void 0 === r) return false;
     return r.delete(e);
 }
@@ -148,22 +148,22 @@ function M(t, e, n) {
 function h(e, n) {
     function a(a, o) {
         if (!t(a)) throw r("@metadata", [ e, n, a, o ], "target", a, "Object or Function");
-        l(e, n, a, i(o));
+        l(e, n, a, c(o));
     }
     return a;
 }
 
-function y(n, a, i, u) {
-    if (void 0 !== i) {
-        if (!Array.isArray(n)) throw r("Metadata.decorate", [ n, a, i, u ], "decorators", n, "Array");
-        if (!t(a)) throw r("Metadata.decorate", [ n, a, i, u ], "target", a, "Object or Function");
-        if (!t(u) && !e(u)) throw r("Metadata.decorate", [ n, a, i, u ], "attributes", u, "Object, Function, null, or undefined");
-        if (null === u) u = void 0;
-        i = o(i);
-        return b(n, a, i, u);
+function y(n, a, c, i) {
+    if (void 0 !== c) {
+        if (!Array.isArray(n)) throw r("Metadata.decorate", [ n, a, c, i ], "decorators", n, "Array");
+        if (!t(a)) throw r("Metadata.decorate", [ n, a, c, i ], "target", a, "Object or Function");
+        if (!t(i) && !e(i)) throw r("Metadata.decorate", [ n, a, c, i ], "attributes", i, "Object, Function, null, or undefined");
+        if (null === i) i = void 0;
+        c = o(c);
+        return b(n, a, c, i);
     } else {
-        if (!Array.isArray(n)) throw r("Metadata.decorate", [ n, a, i, u ], "decorators", n, "Array");
-        if ("function" !== typeof a) throw r("Metadata.decorate", [ n, a, i, u ], "target", a, "Function");
+        if (!Array.isArray(n)) throw r("Metadata.decorate", [ n, a, c, i ], "decorators", n, "Array");
+        if ("function" !== typeof a) throw r("Metadata.decorate", [ n, a, c, i ], "target", a, "Function");
         return O(n, a);
     }
 }
@@ -171,30 +171,30 @@ function y(n, a, i, u) {
 function O(t, n) {
     for (let a = t.length - 1; a >= 0; --a) {
         const o = t[a];
-        const i = o(n);
-        if (!e(i)) {
-            if ("function" !== typeof i) throw r("DecorateConstructor", [ t, n ], "decorated", i, "Function, null, or undefined");
-            n = i;
+        const c = o(n);
+        if (!e(c)) {
+            if ("function" !== typeof c) throw r("DecorateConstructor", [ t, n ], "decorated", c, "Function, null, or undefined");
+            n = c;
         }
     }
     return n;
 }
 
-function b(n, a, o, i) {
-    for (let u = n.length - 1; u >= 0; --u) {
-        const c = n[u];
-        const f = c(a, o, i);
+function b(n, a, o, c) {
+    for (let i = n.length - 1; i >= 0; --i) {
+        const u = n[i];
+        const f = u(a, o, c);
         if (!e(f)) {
-            if (!t(f)) throw r("DecorateProperty", [ n, a, o, i ], "decorated", f, "Object, Function, null, or undefined");
-            i = f;
+            if (!t(f)) throw r("DecorateProperty", [ n, a, o, c ], "decorated", f, "Object, Function, null, or undefined");
+            c = f;
         }
     }
-    return i;
+    return c;
 }
 
-function p(e, n, o, i) {
-    if (!t(o)) throw r("Metadata.define", [ e, n, o, i ], "target", o, "Object or Function");
-    return l(e, n, o, a(i));
+function p(e, n, o, c) {
+    if (!t(o)) throw r("Metadata.define", [ e, n, o, c ], "target", o, "Object or Function");
+    return l(e, n, o, a(c));
 }
 
 function j(e, n, o) {
@@ -202,19 +202,19 @@ function j(e, n, o) {
     return f(e, n, a(o));
 }
 
-function F(e, n, o) {
+function $(e, n, o) {
     if (!t(n)) throw r("Metadata.hasOwn", [ e, n, o ], "target", n, "Object or Function");
-    return c(e, n, a(o));
+    return u(e, n, a(o));
 }
 
-function $(e, n, o) {
+function F(e, n, o) {
     if (!t(n)) throw r("Metadata.get", [ e, n, o ], "target", n, "Object or Function");
-    return s(e, n, a(o));
+    return d(e, n, a(o));
 }
 
 function v(e, n, o) {
     if (!t(n)) throw r("Metadata.getOwn", [ e, n, o ], "target", n, "Object or Function");
-    return d(e, n, a(o));
+    return s(e, n, a(o));
 }
 
 function K(e, n) {
@@ -235,44 +235,30 @@ function A(e, n, o) {
 const R = {
     define: p,
     has: j,
-    hasOwn: F,
-    get: $,
+    hasOwn: $,
+    get: F,
     getOwn: v,
     getKeys: K,
     getOwnKeys: m,
     delete: A
 };
 
-function E(t, e, n, r, a) {
+const E = (t, e, n, r, a) => {
     if (!Reflect.defineProperty(t, e, {
         writable: r,
         enumerable: false,
         configurable: a,
         value: n
-    })) throw D(`AUR1000`);
-}
+    })) throw D(`AUR1000:${e}`);
+};
 
 const S = "[[$au]]";
 
-function U(t) {
-    return S in t;
-}
+const U = t => S in t;
 
-function k(t, e, r) {
-    E(t, S, n, e, r);
-    E(t, "metadata", h, e, r);
-    E(t, "decorate", y, e, r);
-    E(t, "defineMetadata", p, e, r);
-    E(t, "hasMetadata", j, e, r);
-    E(t, "hasOwnMetadata", F, e, r);
-    E(t, "getMetadata", $, e, r);
-    E(t, "getOwnMetadata", v, e, r);
-    E(t, "getMetadataKeys", K, e, r);
-    E(t, "getOwnMetadataKeys", m, e, r);
-    E(t, "deleteMetadata", A, e, r);
-}
+const k = (t, e, r) => [ [ S, n ], [ "metadata", h ], [ "decorate", y ], [ "defineMetadata", p ], [ "hasMetadata", j ], [ "hasOwnMetadata", $ ], [ "getMetadata", F ], [ "getOwnMetadata", v ], [ "getMetadataKeys", K ], [ "getOwnMetadataKeys", m ], [ "deleteMetadata", A ] ].forEach((([n, a]) => E(t, n, a, e, r)));
 
-function x(t, e = true, r = false, a = true, o = true) {
+const x = (t, e = true, r = false, a = true, o = true) => {
     if (U(t)) {
         if (t[S] === n) return;
         if (t[S] instanceof WeakMap) {
@@ -281,19 +267,17 @@ function x(t, e = true, r = false, a = true, o = true) {
         }
         throw D(`AUR1001`);
     }
-    const i = [ "metadata", "decorate", "defineMetadata", "hasMetadata", "hasOwnMetadata", "getMetadata", "getOwnMetadata", "getMetadataKeys", "getOwnMetadataKeys", "deleteMetadata" ].filter((function(t) {
-        return t in Reflect;
-    }));
-    if (i.length > 0) {
+    const c = "metadata decorate defineMetadata hasMetadata hasOwnMetadata getMetadata getOwnMetadata getMetadataKeys getOwnMetadataKeys deleteMetadata".split(" ").filter((t => t in Reflect));
+    if (c.length > 0) {
         if (e) {
-            const t = i.map((function(t) {
+            const t = c.map((function(t) {
                 const e = `${Reflect[t].toString().slice(0, 100)}...`;
                 return `${t}:\n${e}`;
             })).join("\n\n");
             throw D(`AUR1002:${t}`);
         } else if (r) k(t, a, o);
     } else k(t, a, o);
-}
+};
 
 const D = t => new Error(t);
 
