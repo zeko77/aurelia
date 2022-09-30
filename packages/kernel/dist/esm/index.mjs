@@ -398,7 +398,7 @@ class ContainerConfiguration {
 
 ContainerConfiguration.DEFAULT = ContainerConfiguration.from({});
 
-const z = {
+const _ = {
     createContainer(t) {
         return new Container(null, ContainerConfiguration.from(t));
     },
@@ -410,7 +410,7 @@ const z = {
         return i(e, t);
     },
     getOrCreateAnnotationParamTypes: Q,
-    getDependencies: _,
+    getDependencies: z,
     createInterface(t, e) {
         const n = u(t) ? t : e;
         const r = l(t) ? t : void 0;
@@ -473,17 +473,17 @@ const z = {
     }
 };
 
-function _(t) {
+function z(t) {
     const e = O("di:dependencies");
     let n = i(e, t);
     if (void 0 === n) {
         const r = t.inject;
         if (void 0 === r) {
-            const e = z.getDesignParamtypes(t);
-            const r = z.getAnnotationParamtypes(t);
+            const e = _.getDesignParamtypes(t);
+            const r = _.getAnnotationParamtypes(t);
             if (void 0 === e) if (void 0 === r) {
                 const e = Object.getPrototypeOf(t);
-                if (u(e) && e !== Function.prototype) n = N(_(e)); else n = [];
+                if (u(e) && e !== Function.prototype) n = N(z(e)); else n = [];
             } else n = N(r); else if (void 0 === r) n = N(e); else {
                 n = N(e);
                 let t = r.length;
@@ -519,14 +519,14 @@ function Q(t) {
     return n;
 }
 
-const x = z.createInterface("IContainer");
+const x = _.createInterface("IContainer");
 
 const G = x;
 
 function K(t) {
     return function(e) {
         const n = function(t, e, r) {
-            z.inject(n)(t, e, r);
+            _.inject(n)(t, e, r);
         };
         n.$isResolver = true;
         n.resolve = function(n, r) {
@@ -536,10 +536,10 @@ function K(t) {
     };
 }
 
-const H = z.inject;
+const H = _.inject;
 
 function V(t) {
-    return z.transient(t);
+    return _.transient(t);
 }
 
 function q(t) {
@@ -551,9 +551,9 @@ const J = {
 };
 
 function X(t) {
-    if (u(t)) return z.singleton(t);
+    if (u(t)) return _.singleton(t);
     return function(e) {
-        return z.singleton(e, t);
+        return _.singleton(e, t);
     };
 }
 
@@ -561,7 +561,7 @@ function Y(t) {
     return function(e, n) {
         n = !!n;
         const r = function(t, e, n) {
-            z.inject(r)(t, e, n);
+            _.inject(r)(t, e, n);
         };
         r.$isResolver = true;
         r.resolve = function(r, i) {
@@ -580,7 +580,7 @@ const et = K(((t, e, n) => {
 }));
 
 function nt(t, e, n) {
-    z.inject(nt)(t, e, n);
+    _.inject(nt)(t, e, n);
 }
 
 nt.$isResolver = true;
@@ -873,13 +873,13 @@ class Container {
     }
     invoke(t, e) {
         if (C(t)) throw Ut(t);
-        if (void 0 === e) return new t(..._(t).map(ft, this)); else return new t(..._(t).map(ft, this), ...e);
+        if (void 0 === e) return new t(...z(t).map(ft, this)); else return new t(...z(t).map(ft, this), ...e);
     }
     getFactory(t) {
         let e = this.$.get(t);
         if (void 0 === e) {
             if (C(t)) throw Ut(t);
-            this.$.set(t, e = new Factory(t, _(t)));
+            this.$.set(t, e = new Factory(t, z(t)));
         }
         return e;
     }
@@ -1079,7 +1079,7 @@ const Pt = Object.freeze({});
 
 function Dt() {}
 
-const St = z.createInterface("IPlatform");
+const St = _.createInterface("IPlatform");
 
 function Nt(t, e, n, r) {
     var i = arguments.length, s = i < 3 ? e : null === r ? r = Object.getOwnPropertyDescriptor(e, n) : r, o;
@@ -1105,22 +1105,22 @@ var Bt;
     t[t["none"] = 6] = "none";
 })(Bt || (Bt = {}));
 
-var zt;
+var _t;
 
 (function(t) {
     t[t["noColors"] = 0] = "noColors";
     t[t["colors"] = 1] = "colors";
-})(zt || (zt = {}));
+})(_t || (_t = {}));
 
-const _t = z.createInterface("ILogConfig", (t => t.instance(new LogConfig(0, 3))));
+const zt = _.createInterface("ILogConfig", (t => t.instance(new LogConfig(0, 3))));
 
-const Qt = z.createInterface("ISink");
+const Qt = _.createInterface("ISink");
 
-const xt = z.createInterface("ILogEventFactory", (t => t.singleton(Zt)));
+const xt = _.createInterface("ILogEventFactory", (t => t.singleton(Zt)));
 
-const Gt = z.createInterface("ILogger", (t => t.singleton(ee)));
+const Gt = _.createInterface("ILogger", (t => t.singleton(ee)));
 
-const Kt = z.createInterface("ILogScope");
+const Kt = _.createInterface("ILogScope");
 
 const Ht = Object.freeze({
     key: O("logger-sink-handles"),
@@ -1237,7 +1237,7 @@ let Zt = class DefaultLogEventFactory {
     }
 };
 
-Zt = Nt([ Wt(0, _t) ], Zt);
+Zt = Nt([ Wt(0, zt) ], Zt);
 
 let te = class ConsoleSink {
     constructor(t) {
@@ -1333,22 +1333,22 @@ let ee = class DefaultLogger {
         }
     }
     trace(t, ...e) {
-        if (this.config.level <= 0) this.emit(this.O, 0, t, e);
+        if (this.config.level <= 0) this.P(this.O, 0, t, e);
     }
     debug(t, ...e) {
-        if (this.config.level <= 1) this.emit(this.M, 1, t, e);
+        if (this.config.level <= 1) this.P(this.M, 1, t, e);
     }
     info(t, ...e) {
-        if (this.config.level <= 2) this.emit(this.F, 2, t, e);
+        if (this.config.level <= 2) this.P(this.F, 2, t, e);
     }
     warn(t, ...e) {
-        if (this.config.level <= 3) this.emit(this.L, 3, t, e);
+        if (this.config.level <= 3) this.P(this.L, 3, t, e);
     }
     error(t, ...e) {
-        if (this.config.level <= 4) this.emit(this.U, 4, t, e);
+        if (this.config.level <= 4) this.P(this.U, 4, t, e);
     }
     fatal(t, ...e) {
-        if (this.config.level <= 5) this.emit(this.T, 5, t, e);
+        if (this.config.level <= 5) this.P(this.T, 5, t, e);
     }
     scopeTo(t) {
         const e = this.I;
@@ -1356,7 +1356,7 @@ let ee = class DefaultLogger {
         if (void 0 === n) n = e[t] = new DefaultLogger(this.config, this.f, void 0, this.scope.concat(t), this);
         return n;
     }
-    emit(t, e, n, r) {
+    P(t, e, n, r) {
         const i = u(n) ? n() : n;
         const s = this.f.createLogEvent(this, e, i, r);
         for (let e = 0, n = t.length; e < n; ++e) t[e].handleEvent(s);
@@ -1375,13 +1375,13 @@ Nt([ m ], ee.prototype, "error", null);
 
 Nt([ m ], ee.prototype, "fatal", null);
 
-ee = Nt([ Wt(0, _t), Wt(1, xt), Wt(2, Z(Qt)), Wt(3, et(Kt)), Wt(4, nt) ], ee);
+ee = Nt([ Wt(0, zt), Wt(1, xt), Wt(2, Z(Qt)), Wt(3, et(Kt)), Wt(4, nt) ], ee);
 
 const ne = $({
     create({level: t = 3, colorOptions: e = 0, sinks: n = []} = {}) {
         return $({
             register(r) {
-                r.register(Mt.instance(_t, new LogConfig(e, t)));
+                r.register(Mt.instance(zt, new LogConfig(e, t)));
                 for (const t of n) if (u(t)) r.register(Mt.singleton(Qt, t)); else r.register(t);
                 return r;
             }
@@ -1389,38 +1389,38 @@ const ne = $({
     }
 });
 
-const re = z.createInterface((t => t.singleton(ModuleLoader)));
+const re = _.createInterface((t => t.singleton(ModuleLoader)));
 
 const ie = t => t;
 
 class ModuleTransformer {
     constructor(t) {
-        this.P = new Map;
         this.N = new Map;
-        this.W = t;
+        this.W = new Map;
+        this.B = t;
     }
     transform(t) {
-        if (t instanceof Promise) return this.B(t); else if ("object" === typeof t && null !== t) return this._(t); else throw f(`Invalid input: ${String(t)}. Expected Promise or Object.`);
-    }
-    B(t) {
-        if (this.P.has(t)) return this.P.get(t);
-        const e = t.then((t => this._(t)));
-        this.P.set(t, e);
-        void e.then((e => {
-            this.P.set(t, e);
-        }));
-        return e;
+        if (t instanceof Promise) return this._(t); else if ("object" === typeof t && null !== t) return this.G(t); else throw f(`Invalid input: ${String(t)}. Expected Promise or Object.`);
     }
     _(t) {
         if (this.N.has(t)) return this.N.get(t);
-        const e = this.W(this.G(t));
+        const e = t.then((t => this.G(t)));
         this.N.set(t, e);
-        if (e instanceof Promise) void e.then((e => {
+        void e.then((e => {
             this.N.set(t, e);
         }));
         return e;
     }
     G(t) {
+        if (this.W.has(t)) return this.W.get(t);
+        const e = this.B(this.K(t));
+        this.W.set(t, e);
+        if (e instanceof Promise) void e.then((e => {
+            this.W.set(t, e);
+        }));
+        return e;
+    }
+    K(t) {
         if (null == t) throw new Error(`Invalid input: ${String(t)}. Expected Object.`);
         if ("object" !== typeof t) return new AnalyzedModule(t, []);
         let e;
@@ -1494,7 +1494,7 @@ class Handler {
     }
 }
 
-const se = z.createInterface("IEventAggregator", (t => t.singleton(EventAggregator)));
+const se = _.createInterface("IEventAggregator", (t => t.singleton(EventAggregator)));
 
 class EventAggregator {
     constructor() {
@@ -1545,5 +1545,5 @@ class EventAggregator {
     }
 }
 
-export { AnalyzedModule, zt as ColorOptions, te as ConsoleSink, ContainerConfiguration, z as DI, DefaultLogEvent, Zt as DefaultLogEventFactory, ee as DefaultLogger, W as DefaultResolver, EventAggregator, x as IContainer, se as IEventAggregator, _t as ILogConfig, xt as ILogEventFactory, Gt as ILogger, re as IModuleLoader, St as IPlatform, G as IServiceLocator, Qt as ISink, InstanceProvider, LogConfig, Bt as LogLevel, ne as LoggerConfiguration, ModuleItem, U as Protocol, Mt as Registration, Z as all, m as bound, v as camelCase, Tt as emptyArray, Pt as emptyObject, rt as factory, y as firstDefined, qt as format, P as fromAnnotationOrDefinitionOrTypeOrDefault, D as fromAnnotationOrTypeOrDefault, S as fromDefinitionOrDefault, b as getPrototypeChain, nt as ignore, H as inject, h as isArrayIndex, C as isNativeFunction, w as kebabCase, tt as lazy, p as mergeArrays, it as newInstanceForScope, st as newInstanceOf, Dt as noop, A as onResolve, et as optional, g as pascalCase, j as resolveAll, X as singleton, Vt as sink, R as toArray, q as transient };
+export { AnalyzedModule, _t as ColorOptions, te as ConsoleSink, ContainerConfiguration, _ as DI, DefaultLogEvent, Zt as DefaultLogEventFactory, ee as DefaultLogger, W as DefaultResolver, EventAggregator, x as IContainer, se as IEventAggregator, zt as ILogConfig, xt as ILogEventFactory, Gt as ILogger, re as IModuleLoader, St as IPlatform, G as IServiceLocator, Qt as ISink, InstanceProvider, LogConfig, Bt as LogLevel, ne as LoggerConfiguration, ModuleItem, U as Protocol, Mt as Registration, Z as all, m as bound, v as camelCase, Tt as emptyArray, Pt as emptyObject, rt as factory, y as firstDefined, qt as format, P as fromAnnotationOrDefinitionOrTypeOrDefault, D as fromAnnotationOrTypeOrDefault, S as fromDefinitionOrDefault, b as getPrototypeChain, nt as ignore, H as inject, h as isArrayIndex, C as isNativeFunction, w as kebabCase, tt as lazy, p as mergeArrays, it as newInstanceForScope, st as newInstanceOf, Dt as noop, A as onResolve, et as optional, g as pascalCase, j as resolveAll, X as singleton, Vt as sink, R as toArray, q as transient };
 //# sourceMappingURL=index.mjs.map

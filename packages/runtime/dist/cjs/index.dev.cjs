@@ -2367,15 +2367,9 @@ class BindingObserverRecord {
         this.o = new Map();
         this.b = b;
     }
-    handleChange(value, oldValue) {
-        return this.b.interceptor.handleChange(value, oldValue);
-    }
-    handleCollectionChange(collection, indexMap) {
-        this.b.interceptor.handleCollectionChange(collection, indexMap);
-    }
     add(observer) {
         if (!this.o.has(observer)) {
-            observer.subscribe(this);
+            observer.subscribe(this.b);
             ++this.count;
         }
         this.o.set(observer, this.version);
@@ -2391,11 +2385,11 @@ class BindingObserverRecord {
     }
 }
 function unsubscribeAll(version, subscribable) {
-    subscribable.unsubscribe(this);
+    subscribable.unsubscribe(this.b);
 }
 function unsubscribeStale(version, subscribable) {
     if (this.version !== version) {
-        subscribable.unsubscribe(this);
+        subscribable.unsubscribe(this.b);
         this.o.delete(subscribable);
     }
 }
@@ -4124,7 +4118,6 @@ const ProxyObservable = Object.freeze({
 
 class ComputedObserver {
     constructor(obj, get, set, useProxy, observerLocator) {
-        this.interceptor = this;
         this.type = 1;
         this._value = void 0;
         this._oldValue = void 0;
@@ -4620,7 +4613,6 @@ class Effect {
     constructor(oL, fn) {
         this.oL = oL;
         this.fn = fn;
-        this.interceptor = this;
         this.maxRunCount = 10;
         this.queued = false;
         this.running = false;

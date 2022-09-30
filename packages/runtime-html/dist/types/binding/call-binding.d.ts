@@ -11,15 +11,12 @@ export declare class CallBinding implements IAstBasedBinding {
     ast: IsBindingBehavior;
     readonly target: object;
     readonly targetProperty: string;
-    interceptor: this;
     isBound: boolean;
-    $scope?: Scope;
+    scope?: Scope;
     targetObserver: IAccessor;
     constructor(locator: IServiceLocator, observerLocator: IObserverLocator, ast: IsBindingBehavior, target: object, targetProperty: string);
     callSource(args: object): unknown;
     $bind(scope: Scope): void;
     $unbind(): void;
-    observe(_obj: object, _propertyName: string): void;
-    handleChange(_newValue: unknown, _previousValue: unknown): void;
 }
 //# sourceMappingURL=call-binding.d.ts.map

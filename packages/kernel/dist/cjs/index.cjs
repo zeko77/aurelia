@@ -415,14 +415,14 @@ const N = {
         const e = j("di:paramtypes");
         return r(e, t);
     },
-    getOrCreateAnnotationParamTypes: B,
+    getOrCreateAnnotationParamTypes: _,
     getDependencies: W,
     createInterface(t, e) {
         const r = i(t) ? t : e;
         const n = o(t) ? t : void 0;
         const s = function(t, e, r) {
             if (null == t || void 0 !== new.target) throw l(`AUR0001:${s.friendlyName}`);
-            const n = B(t);
+            const n = _(t);
             n[r] = s;
         };
         s.$isInterface = true;
@@ -434,16 +434,16 @@ const N = {
     inject(...t) {
         return function(e, r, n) {
             if ("number" === typeof n) {
-                const r = B(e);
+                const r = _(e);
                 const s = t[0];
                 if (void 0 !== s) r[n] = s;
             } else if (r) {
-                const n = B(e.constructor);
+                const n = _(e.constructor);
                 const s = t[0];
                 if (void 0 !== s) n[r] = s;
             } else if (n) {
                 const e = n.value;
-                const r = B(e);
+                const r = _(e);
                 let s;
                 let i = 0;
                 for (;i < t.length; ++i) {
@@ -451,7 +451,7 @@ const N = {
                     if (void 0 !== s) r[i] = s;
                 }
             } else {
-                const r = B(e);
+                const r = _(e);
                 let n;
                 let s = 0;
                 for (;s < t.length; ++s) {
@@ -515,7 +515,7 @@ function W(t) {
     return n;
 }
 
-function B(t) {
+function _(t) {
     const e = j("di:paramtypes");
     let n = r(e, t);
     if (void 0 === n) {
@@ -525,9 +525,9 @@ function B(t) {
     return n;
 }
 
-const _ = N.createInterface("IContainer");
+const B = N.createInterface("IContainer");
 
-const z = _;
+const z = B;
 
 function Q(t) {
     return function(e) {
@@ -749,7 +749,7 @@ class Container {
             this.$ = t.$;
             if (e.inheritParentResources) this.res = Object.assign(u(), t.res, this.root.res); else this.res = u();
         }
-        this.R.set(_, ft);
+        this.R.set(B, ft);
     }
     get depth() {
         return null === this.parent ? 0 : this.parent.depth + 1;
@@ -1124,9 +1124,9 @@ const Nt = N.createInterface("ISink");
 
 const Wt = N.createInterface("ILogEventFactory", (t => t.singleton(exports.DefaultLogEventFactory)));
 
-const Bt = N.createInterface("ILogger", (t => t.singleton(exports.DefaultLogger)));
+const _t = N.createInterface("ILogger", (t => t.singleton(exports.DefaultLogger)));
 
-const _t = N.createInterface("ILogScope");
+const Bt = N.createInterface("ILogScope");
 
 const zt = Object.freeze({
     key: j("logger-sink-handles"),
@@ -1339,22 +1339,22 @@ exports.DefaultLogger = class DefaultLogger {
         }
     }
     trace(t, ...e) {
-        if (this.config.level <= 0) this.emit(this.O, 0, t, e);
+        if (this.config.level <= 0) this.P(this.O, 0, t, e);
     }
     debug(t, ...e) {
-        if (this.config.level <= 1) this.emit(this.M, 1, t, e);
+        if (this.config.level <= 1) this.P(this.M, 1, t, e);
     }
     info(t, ...e) {
-        if (this.config.level <= 2) this.emit(this.F, 2, t, e);
+        if (this.config.level <= 2) this.P(this.F, 2, t, e);
     }
     warn(t, ...e) {
-        if (this.config.level <= 3) this.emit(this.L, 3, t, e);
+        if (this.config.level <= 3) this.P(this.L, 3, t, e);
     }
     error(t, ...e) {
-        if (this.config.level <= 4) this.emit(this.U, 4, t, e);
+        if (this.config.level <= 4) this.P(this.U, 4, t, e);
     }
     fatal(t, ...e) {
-        if (this.config.level <= 5) this.emit(this.T, 5, t, e);
+        if (this.config.level <= 5) this.P(this.T, 5, t, e);
     }
     scopeTo(t) {
         const e = this.I;
@@ -1362,7 +1362,7 @@ exports.DefaultLogger = class DefaultLogger {
         if (void 0 === r) r = e[t] = new DefaultLogger(this.config, this.f, void 0, this.scope.concat(t), this);
         return r;
     }
-    emit(t, e, r, n) {
+    P(t, e, r, n) {
         const s = i(r) ? r() : r;
         const o = this.f.createLogEvent(this, e, s, n);
         for (let e = 0, r = t.length; e < r; ++e) t[e].handleEvent(o);
@@ -1381,7 +1381,7 @@ Pt([ g ], exports.DefaultLogger.prototype, "error", null);
 
 Pt([ g ], exports.DefaultLogger.prototype, "fatal", null);
 
-exports.DefaultLogger = Pt([ Dt(0, St), Dt(1, Wt), Dt(2, X(Nt)), Dt(3, Z(_t)), Dt(4, tt) ], exports.DefaultLogger);
+exports.DefaultLogger = Pt([ Dt(0, St), Dt(1, Wt), Dt(2, X(Nt)), Dt(3, Z(Bt)), Dt(4, tt) ], exports.DefaultLogger);
 
 const Vt = m({
     create({level: t = 3, colorOptions: e = 0, sinks: r = []} = {}) {
@@ -1401,32 +1401,32 @@ const Xt = t => t;
 
 class ModuleTransformer {
     constructor(t) {
-        this.P = new Map;
         this.N = new Map;
-        this.W = t;
+        this.W = new Map;
+        this._ = t;
     }
     transform(t) {
-        if (t instanceof Promise) return this.B(t); else if ("object" === typeof t && null !== t) return this._(t); else throw l(`Invalid input: ${String(t)}. Expected Promise or Object.`);
+        if (t instanceof Promise) return this.B(t); else if ("object" === typeof t && null !== t) return this.G(t); else throw l(`Invalid input: ${String(t)}. Expected Promise or Object.`);
     }
     B(t) {
-        if (this.P.has(t)) return this.P.get(t);
-        const e = t.then((t => this._(t)));
-        this.P.set(t, e);
-        void e.then((e => {
-            this.P.set(t, e);
-        }));
-        return e;
-    }
-    _(t) {
         if (this.N.has(t)) return this.N.get(t);
-        const e = this.W(this.G(t));
+        const e = t.then((t => this.G(t)));
         this.N.set(t, e);
-        if (e instanceof Promise) void e.then((e => {
+        void e.then((e => {
             this.N.set(t, e);
         }));
         return e;
     }
     G(t) {
+        if (this.W.has(t)) return this.W.get(t);
+        const e = this._(this.K(t));
+        this.W.set(t, e);
+        if (e instanceof Promise) void e.then((e => {
+            this.W.set(t, e);
+        }));
+        return e;
+    }
+    K(t) {
         if (null == t) throw new Error(`Invalid input: ${String(t)}. Expected Object.`);
         if ("object" !== typeof t) return new AnalyzedModule(t, []);
         let e;
@@ -1563,7 +1563,7 @@ exports.DefaultResolver = D;
 
 exports.EventAggregator = EventAggregator;
 
-exports.IContainer = _;
+exports.IContainer = B;
 
 exports.IEventAggregator = Yt;
 
@@ -1571,7 +1571,7 @@ exports.ILogConfig = St;
 
 exports.ILogEventFactory = Wt;
 
-exports.ILogger = Bt;
+exports.ILogger = _t;
 
 exports.IModuleLoader = Jt;
 

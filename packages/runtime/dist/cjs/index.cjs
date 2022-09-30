@@ -1097,7 +1097,7 @@ function y(e, s, r, n) {
       case 17:
         {
             const t = r?.getConverter?.(e.name);
-            if (null == t) throw k(e.name);
+            if (null == t) throw C(e.name);
             if ("fromView" in t) n = t.fromView(n, ...e.args.map((t => A(t, s, r, null))));
             return y(e.expression, s, r, n);
         }
@@ -1175,7 +1175,7 @@ function m(t, e, s) {
             if (void 0 === s[i]) {
                 s[i] = n;
                 n.bind?.(e, s, ...t.args.map((t => A(t, e, s, null))));
-            } else throw C(r);
+            } else throw k(r);
             m(t.expression, e, s);
             return;
         }
@@ -1184,7 +1184,7 @@ function m(t, e, s) {
         {
             const r = t.name;
             const i = s.getConverter?.(r);
-            if (null == i) throw k(r);
+            if (null == i) throw C(r);
             const n = i.signals;
             if (null != n) {
                 const t = s.get?.(x);
@@ -1241,9 +1241,9 @@ function E(t, e, s) {
 
 const O = t => i(`AUR0101:${t}`);
 
-const C = t => i(`AUR0102:${t}`);
+const k = t => i(`AUR0102:${t}`);
 
-const k = t => i(`AUR0103:${t}`);
+const C = t => i(`AUR0103:${t}`);
 
 const S = (t, e, s) => {
     const r = null == e ? null : e[s];
@@ -1567,7 +1567,7 @@ function tt(t, e, s, r, i) {
     let p, b, w;
     let d, v;
     let x, g, A, y;
-    let m, E, O, C;
+    let m, E, O, k;
     while (true) {
         if (r - s <= 10) {
             Z(t, e, s, r, i);
@@ -1636,8 +1636,8 @@ function tt(t, e, s, r, i) {
                 do {
                     y--;
                     if (y == o) break t;
-                    C = t[y];
-                    O = i(C, x);
+                    k = t[y];
+                    O = i(k, x);
                 } while (O > 0);
                 t[o] = t[y];
                 e[o] = e[y];
@@ -1978,12 +1978,12 @@ const Et = mt.add;
 
 const Ot = mt.clear;
 
-const Ct = mt.delete;
+const kt = mt.delete;
 
-const kt = {
+const Ct = {
     add: Et,
     clear: Ot,
-    delete: Ct
+    delete: kt
 };
 
 const St = [ "add", "clear", "delete" ];
@@ -2025,7 +2025,7 @@ const $t = {
     },
     delete: function(t) {
         const e = yt.get(this);
-        if (void 0 === e) return Ct.call(this, t);
+        if (void 0 === e) return kt.call(this, t);
         const s = this.size;
         if (0 === s) return false;
         let r = 0;
@@ -2037,7 +2037,7 @@ const $t = {
                     i.deletedItems.push(s);
                 }
                 i.splice(r, 1);
-                const n = Ct.call(this, t);
+                const n = kt.call(this, t);
                 if (true === n) e.notify();
                 return n;
             }
@@ -2077,7 +2077,7 @@ function Pt() {
 function _t() {
     for (const t of St) if (true === mt[t].observing) r(mt, t, {
         ...Rt,
-        value: kt[t]
+        value: Ct[t]
     });
 }
 
@@ -2322,15 +2322,9 @@ class BindingObserverRecord {
         this.o = new Map;
         this.b = t;
     }
-    handleChange(t, e) {
-        return this.b.interceptor.handleChange(t, e);
-    }
-    handleCollectionChange(t, e) {
-        this.b.interceptor.handleCollectionChange(t, e);
-    }
     add(t) {
         if (!this.o.has(t)) {
-            t.subscribe(this);
+            t.subscribe(this.b);
             ++this.count;
         }
         this.o.set(t, this.version);
@@ -2347,12 +2341,12 @@ class BindingObserverRecord {
 }
 
 function se(t, e) {
-    e.unsubscribe(this);
+    e.unsubscribe(this.b);
 }
 
 function re(t, e) {
     if (this.version !== t) {
-        e.unsubscribe(this);
+        e.unsubscribe(this.b);
         this.o.delete(e);
     }
 }
@@ -2416,7 +2410,7 @@ class ExpressionParser {
         xe = 0;
         ge = 6291456;
         Ae = "";
-        ye = Ce(0);
+        ye = ke(0);
         me = true;
         Ee = false;
         return $e(61, void 0 === e ? 8 : e);
@@ -2502,9 +2496,9 @@ let Ee = false;
 
 const Oe = String.fromCharCode;
 
-const Ce = t => be.charCodeAt(t);
+const ke = t => be.charCodeAt(t);
 
-const ke = () => be.slice(xe, we);
+const Ce = () => be.slice(xe, we);
 
 function Se(t, e) {
     be = t;
@@ -2514,7 +2508,7 @@ function Se(t, e) {
     xe = 0;
     ge = 6291456;
     Ae = "";
-    ye = Ce(0);
+    ye = ke(0);
     me = true;
     Ee = false;
     return $e(61, void 0 === e ? 8 : e);
@@ -2776,7 +2770,7 @@ function $e(t, e) {
     }
     if (6291456 !== ge) {
         if ((1 & e) > 0 && 7340045 === ge) return r;
-        if ("of" === ke()) throw os();
+        if ("of" === Ce()) throw os();
         throw es();
     }
     return r;
@@ -2801,7 +2795,7 @@ function Re() {
             break;
 
           case 4096:
-            s = ke();
+            s = Ce();
             break;
 
           default:
@@ -3099,11 +3093,11 @@ function Te() {
     while (we < s) {
         switch (ye) {
           case 36:
-            if (123 === Ce(we + 1)) {
+            if (123 === ke(we + 1)) {
                 t.push(r);
                 r = "";
                 we += 2;
-                ye = Ce(we);
+                ye = ke(we);
                 Fe();
                 const s = $e(61, 1);
                 e.push(s);
@@ -3165,12 +3159,12 @@ function Fe() {
 }
 
 function Ne() {
-    return ye = Ce(++we);
+    return ye = ke(++we);
 }
 
 function ze() {
     while ($s[Ne()]) ;
-    const t = Es[Ae = ke()];
+    const t = Es[Ae = Ce()];
     return void 0 === t ? 4096 : t;
 }
 
@@ -3181,19 +3175,19 @@ function Ke(t) {
             e = Ne();
         } while (e <= 57 && e >= 48);
         if (46 !== e) {
-            Ae = parseInt(ke(), 10);
+            Ae = parseInt(Ce(), 10);
             return 32768;
         }
         e = Ne();
         if (we >= de) {
-            Ae = parseInt(ke().slice(0, -1), 10);
+            Ae = parseInt(Ce().slice(0, -1), 10);
             return 32768;
         }
     }
     if (e <= 57 && e >= 48) do {
         e = Ne();
-    } while (e <= 57 && e >= 48); else ye = Ce(--we);
-    Ae = parseFloat(ke());
+    } while (e <= 57 && e >= 48); else ye = ke(--we);
+    Ae = parseFloat(Ce());
     return 32768;
 }
 
@@ -3222,7 +3216,7 @@ function We() {
 function qe() {
     let t = true;
     let e = "";
-    while (96 !== Ne()) if (36 === ye) if (we + 1 < de && 123 === Ce(we + 1)) {
+    while (96 !== Ne()) if (36 === ye) if (we + 1 < de && 123 === ke(we + 1)) {
         we++;
         t = false;
         break;
@@ -3333,7 +3327,7 @@ const Os = {
     Skip: [ 0, 33, 127, 161 ]
 };
 
-const Cs = (t, e, s, r) => {
+const ks = (t, e, s, r) => {
     const i = s.length;
     for (let n = 0; n < i; n += 2) {
         const i = s[n];
@@ -3344,33 +3338,33 @@ const Cs = (t, e, s, r) => {
     }
 };
 
-const ks = t => () => {
+const Cs = t => () => {
     Ne();
     return t;
 };
 
 const Ss = new Set;
 
-Cs(null, Ss, Os.AsciiIdPart, true);
+ks(null, Ss, Os.AsciiIdPart, true);
 
 const $s = new Uint8Array(65535);
 
-Cs($s, null, Os.IdStart, 1);
+ks($s, null, Os.IdStart, 1);
 
-Cs($s, null, Os.Digit, 1);
+ks($s, null, Os.Digit, 1);
 
 const Rs = new Array(65535);
 
 Rs.fill(fs, 0, 65535);
 
-Cs(Rs, null, Os.Skip, (() => {
+ks(Rs, null, Os.Skip, (() => {
     Ne();
     return null;
 }));
 
-Cs(Rs, null, Os.IdStart, ze);
+ks(Rs, null, Os.IdStart, ze);
 
-Cs(Rs, null, Os.Digit, (() => Ke(false)));
+ks(Rs, null, Os.Digit, (() => Ke(false)));
 
 Rs[34] = Rs[39] = () => We();
 
@@ -3408,7 +3402,7 @@ Rs[124] = () => {
 
 Rs[63] = () => {
     if (46 === Ne()) {
-        const t = Ce(we + 1);
+        const t = ke(we + 1);
         if (t <= 48 || t >= 57) {
             Ne();
             return 2162700;
@@ -3442,31 +3436,31 @@ Rs[62] = () => {
     return 6554018;
 };
 
-Rs[37] = ks(6554154);
+Rs[37] = Cs(6554154);
 
-Rs[40] = ks(2688007);
+Rs[40] = Cs(2688007);
 
-Rs[41] = ks(7340046);
+Rs[41] = Cs(7340046);
 
-Rs[42] = ks(6554153);
+Rs[42] = Cs(6554153);
 
-Rs[43] = ks(2490853);
+Rs[43] = Cs(2490853);
 
-Rs[44] = ks(6291471);
+Rs[44] = Cs(6291471);
 
-Rs[45] = ks(2490854);
+Rs[45] = Cs(2490854);
 
-Rs[47] = ks(6554155);
+Rs[47] = Cs(6554155);
 
-Rs[58] = ks(6291476);
+Rs[58] = Cs(6291476);
 
-Rs[91] = ks(2688016);
+Rs[91] = Cs(2688016);
 
-Rs[93] = ks(7340051);
+Rs[93] = Cs(7340051);
 
-Rs[123] = ks(524296);
+Rs[123] = Cs(524296);
 
-Rs[125] = ks(7340045);
+Rs[125] = Cs(7340045);
 
 let Us = null;
 
@@ -3819,7 +3813,7 @@ const Ar = {
             return t.size;
 
           case "clear":
-            return kr;
+            return Cr;
 
           case "delete":
             return Sr;
@@ -3828,7 +3822,7 @@ const Ar = {
             return yr;
 
           case "add":
-            if (t instanceof Set) return Cr;
+            if (t instanceof Set) return kr;
             break;
 
           case "get":
@@ -3882,11 +3876,11 @@ function Or(t, e) {
     return Ks(qs(this).set(Js(t), Js(e)));
 }
 
-function Cr(t) {
+function kr(t) {
     return Ks(qs(this).add(Js(t)));
 }
 
-function kr() {
+function Cr() {
     return Ks(qs(this).clear());
 }
 
@@ -3975,7 +3969,6 @@ const Pr = Object.freeze({
 
 class ComputedObserver {
     constructor(t, e, s, r, i) {
-        this.interceptor = this;
         this.type = 1;
         this.v = void 0;
         this.ov = void 0;
@@ -4415,7 +4408,6 @@ class Effect {
     constructor(t, e) {
         this.oL = t;
         this.fn = e;
-        this.interceptor = this;
         this.maxRunCount = 10;
         this.queued = false;
         this.running = false;

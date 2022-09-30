@@ -1,5 +1,5 @@
 import { type Constructable } from '@aurelia/kernel';
-import { type IAstEvaluator, type ISubscriber } from '@aurelia/runtime';
+import { IBinding, IRateLimitOptions, type IAstEvaluator, type ISubscriber } from '@aurelia/runtime';
 import { type IAstBasedBinding } from './interfaces-bindings';
 interface ITwoWayBindingImpl extends IAstBasedBinding {
     updateSource(value: unknown): void;
@@ -13,11 +13,15 @@ export declare class BindingTargetSubscriber implements ISubscriber {
     handleChange(value: unknown, _: unknown): void;
 }
 /**
- * Turns a class into AST evaluator
+ * Implement method `useScope` in a common way for a binding. For internal use only for size saving.
+ */
+export declare const mixinBindingUseScope: <T extends IBinding>(target: Constructable<T>) => void;
+/**
+ * Turns a class into AST evaluator. For internal use only
  *
  * @param strict - whether the evaluation of AST nodes will be in strict mode
  */
-export declare function astEvaluator(strict?: boolean | undefined, strictFnCall?: boolean): (target: Constructable<IAstEvaluator>) => void;
+export declare const implementAstEvaluator: (strict?: boolean | undefined, strictFnCall?: boolean) => (target: Constructable<IAstEvaluator>) => void;
 export interface IFlushable {
     flush(): void;
 }
@@ -31,5 +35,11 @@ export declare class FlushQueue implements IFlushQueue {
     add(flushable: IFlushable): void;
     clear(): void;
 }
+/**
+ * A mixing for bindings to implement a set of default behvaviors for rate limiting their calls.
+ *
+ * For internal use only
+ */
+export declare const mixingBindingLimited: <T extends IBinding>(target: Constructable<T>, getMethodName: (binding: T, opts: IRateLimitOptions) => keyof T) => void;
 export {};
 //# sourceMappingURL=binding-utils.d.ts.map

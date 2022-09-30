@@ -1559,32 +1559,32 @@ exports.DefaultLogger = class DefaultLogger {
     }
     trace(messageOrGetMessage, ...optionalParams) {
         if (this.config.level <= 0) {
-            this.emit(this._traceSinks, 0, messageOrGetMessage, optionalParams);
+            this._emit(this._traceSinks, 0, messageOrGetMessage, optionalParams);
         }
     }
     debug(messageOrGetMessage, ...optionalParams) {
         if (this.config.level <= 1) {
-            this.emit(this._debugSinks, 1, messageOrGetMessage, optionalParams);
+            this._emit(this._debugSinks, 1, messageOrGetMessage, optionalParams);
         }
     }
     info(messageOrGetMessage, ...optionalParams) {
         if (this.config.level <= 2) {
-            this.emit(this._infoSinks, 2, messageOrGetMessage, optionalParams);
+            this._emit(this._infoSinks, 2, messageOrGetMessage, optionalParams);
         }
     }
     warn(messageOrGetMessage, ...optionalParams) {
         if (this.config.level <= 3) {
-            this.emit(this._warnSinks, 3, messageOrGetMessage, optionalParams);
+            this._emit(this._warnSinks, 3, messageOrGetMessage, optionalParams);
         }
     }
     error(messageOrGetMessage, ...optionalParams) {
         if (this.config.level <= 4) {
-            this.emit(this._errorSinks, 4, messageOrGetMessage, optionalParams);
+            this._emit(this._errorSinks, 4, messageOrGetMessage, optionalParams);
         }
     }
     fatal(messageOrGetMessage, ...optionalParams) {
         if (this.config.level <= 5) {
-            this.emit(this._fatalSinks, 5, messageOrGetMessage, optionalParams);
+            this._emit(this._fatalSinks, 5, messageOrGetMessage, optionalParams);
         }
     }
     scopeTo(name) {
@@ -1595,7 +1595,7 @@ exports.DefaultLogger = class DefaultLogger {
         }
         return scopedLogger;
     }
-    emit(sinks, level, msgOrGetMsg, optionalParams) {
+    _emit(sinks, level, msgOrGetMsg, optionalParams) {
         const message = (isFunction(msgOrGetMsg) ? msgOrGetMsg() : msgOrGetMsg);
         const event = this._factory.createLogEvent(this, level, message, optionalParams);
         for (let i = 0, ii = sinks.length; i < ii; ++i) {

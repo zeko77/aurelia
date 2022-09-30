@@ -7732,7 +7732,6 @@ createFixture.deps = (...deps) => new FixtureBuilder().deps(...deps);
 
 class MockBinding {
     constructor() {
-        this.interceptor = this;
         this.calls = [];
     }
     get(key) {
@@ -7771,6 +7770,13 @@ class MockBinding {
     }
     dispose() {
         this.trace('dispose');
+    }
+    limit(opts) {
+        this.trace('limit', opts);
+        return { dispose: () => { } };
+    }
+    useScope(scope) {
+        this.trace('useScope', scope);
     }
 }
 class MockBindingBehavior {

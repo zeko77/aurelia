@@ -1,7 +1,6 @@
 import { IExpressionParser, IObserverLocator } from '@aurelia/runtime';
 import { BindingMode } from './binding/interfaces-bindings';
 import { IEventDelegator } from './observation/event-delegator';
-import { IInterceptableBinding } from './resources/binding-behavior';
 import { CustomElementDefinition } from './resources/custom-element';
 import { IProjections } from './resources/slot-injectables';
 import { CustomAttributeDefinition } from './resources/custom-attribute';
@@ -10,7 +9,7 @@ import { IController } from './templating/controller';
 import { IPlatform } from './platform';
 import { IRendering } from './templating/rendering';
 import { AttrSyntax } from './resources/attribute-pattern';
-import type { IServiceLocator, IContainer, Class, IRegistry } from '@aurelia/kernel';
+import type { IContainer, Class, IRegistry } from '@aurelia/kernel';
 import type { Interpolation, IsBindingBehavior, ForOfStatement } from '@aurelia/runtime';
 import type { IHydratableController } from './templating/controller';
 import type { PartialCustomElementDefinition } from './resources/custom-element';
@@ -356,7 +355,6 @@ export declare class IteratorBindingRenderer implements IRenderer {
     constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator, p: IPlatform);
     render(renderingCtrl: IHydratableController, target: IController, instruction: IteratorBindingInstruction): void;
 }
-export declare function applyBindingBehavior<T extends IInterceptableBinding>(binding: T, expression: IsBindingBehavior, locator: IServiceLocator): T;
 export declare class TextBindingRenderer implements IRenderer {
     target: InstructionType.textBinding;
     constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator, p: IPlatform);

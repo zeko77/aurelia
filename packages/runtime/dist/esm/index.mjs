@@ -774,7 +774,7 @@ class Signaler {
 
 const O = Scope.getContext;
 
-function C(t, e, s, r) {
+function k(t, e, s, r) {
     switch (t.$kind) {
       case 0:
         {
@@ -799,12 +799,12 @@ function C(t, e, s, r) {
         }
 
       case 2:
-        return t.elements.map((t => C(t, e, s, r)));
+        return t.elements.map((t => k(t, e, s, r)));
 
       case 3:
         {
             const i = {};
-            for (let n = 0; n < t.keys.length; ++n) i[t.keys[n]] = C(t.values[n], e, s, r);
+            for (let n = 0; n < t.keys.length; ++n) i[t.keys[n]] = k(t.values[n], e, s, r);
             return i;
         }
 
@@ -815,7 +815,7 @@ function C(t, e, s, r) {
         {
             let i = t.cooked[0];
             for (let n = 0; n < t.expressions.length; ++n) {
-                i += String(C(t.expressions[n], e, s, r));
+                i += String(k(t.expressions[n], e, s, r));
                 i += t.cooked[n + 1];
             }
             return i;
@@ -824,19 +824,19 @@ function C(t, e, s, r) {
       case 6:
         switch (t.operation) {
           case "void":
-            return void C(t.expression, e, s, r);
+            return void k(t.expression, e, s, r);
 
           case "typeof":
-            return typeof C(t.expression, e, s, r);
+            return typeof k(t.expression, e, s, r);
 
           case "!":
-            return !C(t.expression, e, s, r);
+            return !k(t.expression, e, s, r);
 
           case "-":
-            return -C(t.expression, e, s, r);
+            return -k(t.expression, e, s, r);
 
           case "+":
-            return +C(t.expression, e, s, r);
+            return +k(t.expression, e, s, r);
 
           default:
             throw u(`AUR0109:${t.operation}`);
@@ -844,7 +844,7 @@ function C(t, e, s, r) {
 
       case 7:
         {
-            const i = t.args.map((t => C(t, e, s, r)));
+            const i = t.args.map((t => k(t, e, s, r)));
             const n = O(e, t.name, t.ancestor);
             const o = P(s?.strictFnCall, n, t.name);
             if (o) return o.apply(n, i);
@@ -853,8 +853,8 @@ function C(t, e, s, r) {
 
       case 8:
         {
-            const i = C(t.object, e, s, r);
-            const n = t.args.map((t => C(t, e, s, r)));
+            const i = k(t.object, e, s, r);
+            const n = t.args.map((t => k(t, e, s, r)));
             const o = P(s?.strictFnCall, i, t.name);
             let c;
             if (o) {
@@ -866,8 +866,8 @@ function C(t, e, s, r) {
 
       case 9:
         {
-            const i = C(t.func, e, s, r);
-            if (h(i)) return i(...t.args.map((t => C(t, e, s, r))));
+            const i = k(t.func, e, s, r);
+            if (h(i)) return i(...t.args.map((t => k(t, e, s, r))));
             if (!s?.strictFnCall && null == i) return;
             throw u(`AUR0107`);
         }
@@ -883,14 +883,14 @@ function C(t, e, s, r) {
                     return t;
                 }), {});
                 const h = Scope.fromParent(e, u);
-                return C(t.body, h, s, r);
+                return k(t.body, h, s, r);
             };
             return i;
         }
 
       case 10:
         {
-            const i = C(t.object, e, s, r);
+            const i = k(t.object, e, s, r);
             let n;
             if (s?.strict) {
                 if (null == i) return i;
@@ -910,9 +910,9 @@ function C(t, e, s, r) {
 
       case 11:
         {
-            const i = C(t.object, e, s, r);
+            const i = k(t.object, e, s, r);
             if (i instanceof Object) {
-                const n = C(t.key, e, s, r);
+                const n = k(t.key, e, s, r);
                 if (null !== r) r.observe(i, n);
                 return i[n];
             }
@@ -921,8 +921,8 @@ function C(t, e, s, r) {
 
       case 12:
         {
-            const i = t.expressions.map((t => C(t, e, s, r)));
-            const n = C(t.func, e, s, r);
+            const i = t.expressions.map((t => k(t, e, s, r)));
+            const n = k(t.func, e, s, r);
             if (!h(n)) throw u(`AUR0110`);
             return n(t.cooked, ...i);
         }
@@ -933,44 +933,44 @@ function C(t, e, s, r) {
             const n = t.right;
             switch (t.operation) {
               case "&&":
-                return C(i, e, s, r) && C(n, e, s, r);
+                return k(i, e, s, r) && k(n, e, s, r);
 
               case "||":
-                return C(i, e, s, r) || C(n, e, s, r);
+                return k(i, e, s, r) || k(n, e, s, r);
 
               case "??":
-                return C(i, e, s, r) ?? C(n, e, s, r);
+                return k(i, e, s, r) ?? k(n, e, s, r);
 
               case "==":
-                return C(i, e, s, r) == C(n, e, s, r);
+                return k(i, e, s, r) == k(n, e, s, r);
 
               case "===":
-                return C(i, e, s, r) === C(n, e, s, r);
+                return k(i, e, s, r) === k(n, e, s, r);
 
               case "!=":
-                return C(i, e, s, r) != C(n, e, s, r);
+                return k(i, e, s, r) != k(n, e, s, r);
 
               case "!==":
-                return C(i, e, s, r) !== C(n, e, s, r);
+                return k(i, e, s, r) !== k(n, e, s, r);
 
               case "instanceof":
                 {
-                    const t = C(n, e, s, r);
-                    if (h(t)) return C(i, e, s, r) instanceof t;
+                    const t = k(n, e, s, r);
+                    if (h(t)) return k(i, e, s, r) instanceof t;
                     return false;
                 }
 
               case "in":
                 {
-                    const t = C(n, e, s, r);
-                    if (t instanceof Object) return C(i, e, s, r) in t;
+                    const t = k(n, e, s, r);
+                    if (t instanceof Object) return k(i, e, s, r) in t;
                     return false;
                 }
 
               case "+":
                 {
-                    const t = C(i, e, s, r);
-                    const o = C(n, e, s, r);
+                    const t = k(i, e, s, r);
+                    const o = k(n, e, s, r);
                     if (s?.strict) return t + o;
                     if (!t || !o) {
                         if (_(t) || _(o)) return (t || 0) + (o || 0);
@@ -980,28 +980,28 @@ function C(t, e, s, r) {
                 }
 
               case "-":
-                return C(i, e, s, r) - C(n, e, s, r);
+                return k(i, e, s, r) - k(n, e, s, r);
 
               case "*":
-                return C(i, e, s, r) * C(n, e, s, r);
+                return k(i, e, s, r) * k(n, e, s, r);
 
               case "/":
-                return C(i, e, s, r) / C(n, e, s, r);
+                return k(i, e, s, r) / k(n, e, s, r);
 
               case "%":
-                return C(i, e, s, r) % C(n, e, s, r);
+                return k(i, e, s, r) % k(n, e, s, r);
 
               case "<":
-                return C(i, e, s, r) < C(n, e, s, r);
+                return k(i, e, s, r) < k(n, e, s, r);
 
               case ">":
-                return C(i, e, s, r) > C(n, e, s, r);
+                return k(i, e, s, r) > k(n, e, s, r);
 
               case "<=":
-                return C(i, e, s, r) <= C(n, e, s, r);
+                return k(i, e, s, r) <= k(n, e, s, r);
 
               case ">=":
-                return C(i, e, s, r) >= C(n, e, s, r);
+                return k(i, e, s, r) >= k(n, e, s, r);
 
               default:
                 throw u(`AUR0108:${t.operation}`);
@@ -1009,38 +1009,38 @@ function C(t, e, s, r) {
         }
 
       case 14:
-        return C(t.condition, e, s, r) ? C(t.yes, e, s, r) : C(t.no, e, s, r);
+        return k(t.condition, e, s, r) ? k(t.yes, e, s, r) : k(t.no, e, s, r);
 
       case 15:
-        return k(t.target, e, s, C(t.value, e, s, r));
+        return C(t.target, e, s, k(t.value, e, s, r));
 
       case 17:
         {
             const i = s?.getConverter?.(t.name);
             if (null == i) throw u(`AUR0103:${t.name}`);
-            if ("toView" in i) return i.toView(C(t.expression, e, s, r), ...t.args.map((t => C(t, e, s, r))));
-            return C(t.expression, e, s, r);
+            if ("toView" in i) return i.toView(k(t.expression, e, s, r), ...t.args.map((t => k(t, e, s, r))));
+            return k(t.expression, e, s, r);
         }
 
       case 18:
-        return C(t.expression, e, s, r);
+        return k(t.expression, e, s, r);
 
       case 21:
         return t.name;
 
       case 22:
-        return C(t.iterable, e, s, r);
+        return k(t.iterable, e, s, r);
 
       case 23:
         if (t.isMulti) {
             let i = t.parts[0];
             let n = 0;
             for (;n < t.expressions.length; ++n) {
-                i += w(C(t.expressions[n], e, s, r));
+                i += w(k(t.expressions[n], e, s, r));
                 i += t.parts[n + 1];
             }
             return i;
-        } else return `${t.parts[0]}${C(t.firstExpression, e, s, r)}${t.parts[1]}`;
+        } else return `${t.parts[0]}${k(t.firstExpression, e, s, r)}${t.parts[1]}`;
 
       case 19:
       case 20:
@@ -1055,7 +1055,7 @@ function C(t, e, s, r) {
     }
 }
 
-function k(t, e, s, i) {
+function C(t, e, s, i) {
     switch (t.$kind) {
       case 1:
         {
@@ -1070,8 +1070,8 @@ function k(t, e, s, i) {
 
       case 10:
         {
-            const r = C(t.object, e, s, null);
-            if (r instanceof Object) if (void 0 !== r.$observers && void 0 !== r.$observers[t.name]) r.$observers[t.name].setValue(i); else r[t.name] = i; else k(t.object, e, s, {
+            const r = k(t.object, e, s, null);
+            if (r instanceof Object) if (void 0 !== r.$observers && void 0 !== r.$observers[t.name]) r.$observers[t.name].setValue(i); else r[t.name] = i; else C(t.object, e, s, {
                 [t.name]: i
             });
             return i;
@@ -1079,25 +1079,25 @@ function k(t, e, s, i) {
 
       case 11:
         {
-            const r = C(t.object, e, s, null);
-            const n = C(t.key, e, s, null);
+            const r = k(t.object, e, s, null);
+            const n = k(t.key, e, s, null);
             return r[n] = i;
         }
 
       case 15:
-        k(t.value, e, s, i);
-        return k(t.target, e, s, i);
+        C(t.value, e, s, i);
+        return C(t.target, e, s, i);
 
       case 17:
         {
             const r = s?.getConverter?.(t.name);
             if (null == r) throw L(t.name);
-            if ("fromView" in r) i = r.fromView(i, ...t.args.map((t => C(t, e, s, null))));
-            return k(t.expression, e, s, i);
+            if ("fromView" in r) i = r.fromView(i, ...t.args.map((t => k(t, e, s, null))));
+            return C(t.expression, e, s, i);
         }
 
       case 18:
-        return k(t.expression, e, s, i);
+        return C(t.expression, e, s, i);
 
       case 24:
       case 25:
@@ -1110,16 +1110,16 @@ function k(t, e, s, i) {
                 c = r[o];
                 switch (c.$kind) {
                   case 26:
-                    k(c, e, s, i);
+                    C(c, e, s, i);
                     break;
 
                   case 24:
                   case 25:
                     {
                         if ("object" !== typeof i || null === i) throw u(`AUR0112`);
-                        let t = C(c.source, Scope.create(i), s, null);
-                        if (void 0 === t && c.initializer) t = C(c.initializer, e, s, null);
-                        k(c, e, s, t);
+                        let t = k(c.source, Scope.create(i), s, null);
+                        if (void 0 === t && c.initializer) t = k(c.initializer, e, s, null);
+                        C(c, e, s, t);
                         break;
                     }
                 }
@@ -1131,9 +1131,9 @@ function k(t, e, s, i) {
         if (t instanceof DestructuringAssignmentSingleExpression) {
             if (null == i) return;
             if ("object" !== typeof i) throw u(`AUR0112`);
-            let r = C(t.source, Scope.create(i), s, null);
-            if (void 0 === r && t.initializer) r = C(t.initializer, e, s, null);
-            k(t.target, e, s, r);
+            let r = k(t.source, Scope.create(i), s, null);
+            if (void 0 === r && t.initializer) r = k(t.initializer, e, s, null);
+            C(t.target, e, s, r);
         } else {
             if (null == i) return;
             if ("object" !== typeof i) throw u(`AUR0112`);
@@ -1146,7 +1146,7 @@ function k(t, e, s, i) {
                 if (!n.includes(e)) t[e] = s;
                 return t;
             }), {});
-            k(t.target, e, s, o);
+            C(t.target, e, s, o);
         }
         break;
 
@@ -1168,7 +1168,7 @@ function S(t, e, s) {
             if (null == n) throw R(r);
             if (void 0 === s[i]) {
                 s[i] = n;
-                n.bind?.(e, s, ...t.args.map((t => C(t, e, s, null))));
+                n.bind?.(e, s, ...t.args.map((t => k(t, e, s, null))));
             } else throw U(r);
             S(t.expression, e, s);
             return;
@@ -1561,7 +1561,7 @@ function ct(t, e, s, r, i) {
     let b, w, p;
     let d, v;
     let g, A, x, m;
-    let y, E, O, C;
+    let y, E, O, k;
     while (true) {
         if (r - s <= 10) {
             ot(t, e, s, r, i);
@@ -1630,8 +1630,8 @@ function ct(t, e, s, r, i) {
                 do {
                     m--;
                     if (m == o) break t;
-                    C = t[m];
-                    O = i(C, g);
+                    k = t[m];
+                    O = i(k, g);
                 } while (O > 0);
                 t[o] = t[m];
                 e[o] = e[m];
@@ -1929,7 +1929,7 @@ function Et(t) {
 
 const Ot = (t, e) => t - e;
 
-function Ct(t) {
+function kt(t) {
     let e = 0;
     let s = 0;
     let r = 0;
@@ -1946,7 +1946,7 @@ function Ct(t) {
     return i;
 }
 
-function kt(t, e) {
+function Ct(t, e) {
     const s = t.slice();
     const r = e.length;
     let i = 0;
@@ -2316,15 +2316,9 @@ class BindingObserverRecord {
         this.o = new Map;
         this.b = t;
     }
-    handleChange(t, e) {
-        return this.b.interceptor.handleChange(t, e);
-    }
-    handleCollectionChange(t, e) {
-        this.b.interceptor.handleCollectionChange(t, e);
-    }
     add(t) {
         if (!this.o.has(t)) {
-            t.subscribe(this);
+            t.subscribe(this.b);
             ++this.count;
         }
         this.o.set(t, this.version);
@@ -2341,12 +2335,12 @@ class BindingObserverRecord {
 }
 
 function he(t, e) {
-    e.unsubscribe(this);
+    e.unsubscribe(this.b);
 }
 
 function ae(t, e) {
     if (this.version !== t) {
-        e.unsubscribe(this);
+        e.unsubscribe(this.b);
         this.o.delete(e);
     }
 }
@@ -2406,8 +2400,8 @@ class ExpressionParser {
         ye = t;
         Ee = 0;
         Oe = t.length;
-        Ce = 0;
         ke = 0;
+        Ce = 0;
         Se = 6291456;
         $e = "";
         Re = _e(0);
@@ -2480,9 +2474,9 @@ let Ee = 0;
 
 let Oe = 0;
 
-let Ce = 0;
-
 let ke = 0;
+
+let Ce = 0;
 
 let Se = 6291456;
 
@@ -2498,14 +2492,14 @@ const Pe = String.fromCharCode;
 
 const _e = t => ye.charCodeAt(t);
 
-const Me = () => ye.slice(ke, Ee);
+const Me = () => ye.slice(Ce, Ee);
 
 function je(t, e) {
     ye = t;
     Ee = 0;
     Oe = t.length;
-    Ce = 0;
     ke = 0;
+    Ce = 0;
     Se = 6291456;
     $e = "";
     Re = _e(0);
@@ -2534,7 +2528,7 @@ function Ie(t, e) {
     } else {
         t: switch (Se) {
           case 12294:
-            i = Ce;
+            i = ke;
             Ue = false;
             do {
                 He();
@@ -2577,11 +2571,11 @@ function Ie(t, e) {
                 if (ss(49)) {
                     if (524296 === Se) throw $s();
                     const e = Le;
-                    const s = Ce;
-                    ++Ce;
+                    const s = ke;
+                    ++ke;
                     const i = Ie(62, 0);
                     Le = e;
-                    Ce = s;
+                    ke = s;
                     Ue = false;
                     r = new ArrowFunction([ new BindingIdentifier(t) ], i);
                 }
@@ -2597,7 +2591,7 @@ function Ie(t, e) {
           case 12292:
             Ue = false;
             He();
-            switch (Ce) {
+            switch (ke) {
               case 0:
                 r = Ae;
                 break;
@@ -2607,7 +2601,7 @@ function Ie(t, e) {
                 break;
 
               default:
-                r = new AccessThisExpression(Ce);
+                r = new AccessThisExpression(ke);
                 break;
             }
             break;
@@ -2855,7 +2849,7 @@ function Fe(t, e) {
             Le = true;
             Ue = false;
             const r = Ee;
-            const i = ke;
+            const i = Ce;
             const n = Se;
             const o = Re;
             const c = $e;
@@ -2865,7 +2859,7 @@ function Fe(t, e) {
             if (0 === (13312 & Se)) throw ys();
             if (2688007 === Se) return new CallMemberExpression(t, s, Te(), e, true);
             Ee = r;
-            ke = i;
+            Ce = i;
             Se = n;
             Re = o;
             $e = c;
@@ -2888,7 +2882,7 @@ function Fe(t, e) {
 function Ne(t) {
     He();
     const e = Ee;
-    const s = ke;
+    const s = Ce;
     const r = Se;
     const i = Re;
     const n = $e;
@@ -2909,11 +2903,11 @@ function Ne(t) {
             if (49 !== Se) throw ns();
             He();
             const t = Le;
-            const e = Ce;
-            ++Ce;
+            const e = ke;
+            ++ke;
             const s = Ie(62, 0);
             Le = t;
-            Ce = e;
+            ke = e;
             Ue = false;
             return new ArrowFunction(u, s, true);
         }
@@ -2978,11 +2972,11 @@ function Ne(t) {
             He();
             if (524296 === Se) throw $s();
             const t = Le;
-            const e = Ce;
-            ++Ce;
+            const e = ke;
+            ++ke;
             const s = Ie(62, 0);
             Le = t;
-            Ce = e;
+            ke = e;
             Ue = false;
             return new ArrowFunction(u, s);
         }
@@ -2993,13 +2987,13 @@ function Ne(t) {
         throw Os();
 
       case 3:
-        throw Cs();
+        throw ks();
 
       case 4:
-        throw ks();
+        throw Cs();
     }
     Ee = e;
-    ke = s;
+    Ce = s;
     Se = r;
     Re = i;
     $e = n;
@@ -3014,10 +3008,10 @@ function Ne(t) {
         throw Os();
 
       case 3:
-        throw Cs();
+        throw ks();
 
       case 4:
-        throw ks();
+        throw Cs();
     }
     return f;
 }
@@ -3152,7 +3146,7 @@ function Ge(t) {
 
 function He() {
     while (Ee < Oe) {
-        ke = Ee;
+        Ce = Ee;
         if (null != (Se = Bs[Re]())) return;
     }
     Se = 6291456;
@@ -3294,9 +3288,9 @@ const Es = () => u(`AUR0172:${ye}`);
 
 const Os = () => u(`AUR0173:${ye}`);
 
-const Cs = () => u(`AUR0174:${ye}`);
+const ks = () => u(`AUR0174:${ye}`);
 
-const ks = () => u(`AUR0175:${ye}`);
+const Cs = () => u(`AUR0175:${ye}`);
 
 const Ss = () => u(`AUR0176:${ye}`);
 
@@ -3622,7 +3616,7 @@ const nr = {
             return vr;
 
           case "reduce":
-            return kr;
+            return Cr;
 
           case "reduceRight":
             return Sr;
@@ -3637,7 +3631,7 @@ const nr = {
             return xr;
 
           case "slice":
-            return Cr;
+            return kr;
 
           case "splice":
             return mr;
@@ -3782,13 +3776,13 @@ function Or(t) {
     return Ys(s);
 }
 
-function Cr(t, e) {
+function kr(t, e) {
     const s = tr(this);
     Dr(Ts, s);
     return Zs(s.slice(t, e));
 }
 
-function kr(t, e) {
+function Cr(t, e) {
     const s = tr(this);
     const r = s.reduce(((e, s, r) => t(e, Ys(s), r, this)), e);
     Dr(Ts, s);
@@ -3969,7 +3963,6 @@ const Vr = Object.freeze({
 
 class ComputedObserver {
     constructor(t, e, s, r, i) {
-        this.interceptor = this;
         this.type = 1;
         this.v = void 0;
         this.ov = void 0;
@@ -4409,7 +4402,6 @@ class Effect {
     constructor(t, e) {
         this.oL = t;
         this.fn = e;
-        this.interceptor = this;
         this.maxRunCount = 10;
         this.queued = false;
         this.running = false;
@@ -4511,5 +4503,5 @@ function ii(t, e, s, r, i) {
     return o;
 }
 
-export { AccessKeyedExpression, AccessMemberExpression, AccessScopeExpression, AccessThisExpression, T as AccessorType, ArrayBindingPattern, ArrayIndexObserver, ArrayLiteralExpression, ArrayObserver, ArrowFunction, AssignExpression, BinaryExpression, BindingBehaviorExpression, BindingContext, BindingIdentifier, BindingObserverRecord, CallFunctionExpression, CallMemberExpression, CallScopeExpression, B as CollectionKind, CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, ConditionalExpression, Js as ConnectableSwitcher, CustomExpression, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, DirtyCheckProperty, zr as DirtyCheckSettings, x as ExpressionKind, me as ExpressionType, ForOfStatement, I as ICoercionConfiguration, Nr as IDirtyChecker, be as IExpressionParser, Gr as INodeObserverLocator, ti as IObservation, qr as IObserverLocator, E as ISignaler, Interpolation, MapObserver, ObjectBindingPattern, ObjectLiteralExpression, Observation, ObserverLocator, PrimitiveLiteralExpression, PrimitiveObserver, PropertyAccessor, Vr as ProxyObservable, Scope, SetObserver, SetterObserver, SubscriberRecord, TaggedTemplateExpression, TemplateExpression, UnaryExpression, Unparser, ValueConverterExpression, Ct as applyMutationsToIndices, k as astAssign, S as astBind, C as astEvaluate, $ as astUnbind, A as astVisit, W as batch, F as cloneIndexMap, fe as connectable, D as copyIndexMap, V as createIndexMap, yt as disableArrayObservation, ee as disableMapObservation, Vt as disableSetObservation, mt as enableArrayObservation, te as enableMapObservation, Dt as enableSetObservation, Hr as getCollectionObserver, Yr as getObserverLookup, N as isIndexMap, ri as observable, je as parseExpression, G as subscriberCollection, kt as synchronizeIndices };
+export { AccessKeyedExpression, AccessMemberExpression, AccessScopeExpression, AccessThisExpression, T as AccessorType, ArrayBindingPattern, ArrayIndexObserver, ArrayLiteralExpression, ArrayObserver, ArrowFunction, AssignExpression, BinaryExpression, BindingBehaviorExpression, BindingContext, BindingIdentifier, BindingObserverRecord, CallFunctionExpression, CallMemberExpression, CallScopeExpression, B as CollectionKind, CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, ConditionalExpression, Js as ConnectableSwitcher, CustomExpression, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, DirtyCheckProperty, zr as DirtyCheckSettings, x as ExpressionKind, me as ExpressionType, ForOfStatement, I as ICoercionConfiguration, Nr as IDirtyChecker, be as IExpressionParser, Gr as INodeObserverLocator, ti as IObservation, qr as IObserverLocator, E as ISignaler, Interpolation, MapObserver, ObjectBindingPattern, ObjectLiteralExpression, Observation, ObserverLocator, PrimitiveLiteralExpression, PrimitiveObserver, PropertyAccessor, Vr as ProxyObservable, Scope, SetObserver, SetterObserver, SubscriberRecord, TaggedTemplateExpression, TemplateExpression, UnaryExpression, Unparser, ValueConverterExpression, kt as applyMutationsToIndices, C as astAssign, S as astBind, k as astEvaluate, $ as astUnbind, A as astVisit, W as batch, F as cloneIndexMap, fe as connectable, D as copyIndexMap, V as createIndexMap, yt as disableArrayObservation, ee as disableMapObservation, Vt as disableSetObservation, mt as enableArrayObservation, te as enableMapObservation, Dt as enableSetObservation, Hr as getCollectionObserver, Yr as getObserverLookup, N as isIndexMap, ri as observable, je as parseExpression, G as subscriberCollection, Ct as synchronizeIndices };
 //# sourceMappingURL=index.mjs.map

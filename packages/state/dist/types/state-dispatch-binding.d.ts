@@ -8,9 +8,8 @@ import { type IStore } from './interfaces';
 export interface StateDispatchBinding extends IAstBasedBinding {
 }
 export declare class StateDispatchBinding implements IAstBasedBinding {
-    interceptor: this;
     locator: IServiceLocator;
-    $scope?: Scope | undefined;
+    scope?: Scope | undefined;
     isBound: boolean;
     ast: IsBindingBehavior;
     private readonly target;

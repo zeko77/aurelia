@@ -6,7 +6,7 @@ import * as u from "@aurelia/runtime";
 
 import { Scope as c, astEvaluate as l, PrimitiveLiteralExpression as h, IExpressionParser as $ } from "@aurelia/runtime";
 
-import { astEvaluator as d } from "@aurelia/runtime-html";
+import { implementAstEvaluator as d } from "@aurelia/runtime-html";
 
 const m = e.createInterface("IValidationExpressionHydrator");
 

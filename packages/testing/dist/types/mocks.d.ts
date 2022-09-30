@@ -1,15 +1,14 @@
 import { Key } from '@aurelia/kernel';
-import { ExpressionKind } from '@aurelia/runtime';
+import { ExpressionKind, IRateLimitOptions } from '@aurelia/runtime';
 import { LifecycleFlags } from '@aurelia/runtime-html';
 import type { IContainer, IDisposable, IIndexable, IServiceLocator } from '@aurelia/kernel';
 import type { Scope, IBinding, IConnectableBinding, IndexMap, IObserverLocator, ISignaler, BindingObserverRecord, Collection, ISubscribable, ICollectionSubscribable } from '@aurelia/runtime';
 export declare class MockBinding implements IConnectableBinding {
-    interceptor: this;
     observerSlots: number;
     version: number;
     oL: IObserverLocator;
     locator: IServiceLocator;
-    $scope?: Scope | undefined;
+    scope?: Scope | undefined;
     isBound: boolean;
     value: unknown;
     obs: BindingObserverRecord;
@@ -26,6 +25,10 @@ export declare class MockBinding implements IConnectableBinding {
     $unbind(): void;
     trace(fnName: keyof MockBinding, ...args: any[]): void;
     dispose(): void;
+    limit(opts: IRateLimitOptions): {
+        dispose: () => void;
+    };
+    useScope(scope: Scope): void;
 }
 export declare class MockBindingBehavior {
     calls: [keyof MockBindingBehavior, ...any[]][];

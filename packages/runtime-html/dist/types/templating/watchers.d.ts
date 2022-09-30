@@ -8,7 +8,6 @@ export declare class ComputedWatcher implements IConnectableBinding, ISubscriber
     readonly $get: (obj: object, watcher: IConnectable) => unknown;
     private readonly cb;
     readonly useProxy: boolean;
-    interceptor: this;
     value: unknown;
     isBound: boolean;
     private running;
@@ -28,7 +27,6 @@ export declare class ExpressionWatcher implements IConnectableBinding {
     oL: IObserverLocator;
     private readonly expression;
     private readonly callback;
-    interceptor: this;
     value: unknown;
     isBound: boolean;
     constructor(scope: Scope, locator: IServiceLocator, oL: IObserverLocator, expression: IsBindingBehavior, callback: IWatcherCallback<object>);

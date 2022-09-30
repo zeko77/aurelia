@@ -3867,7 +3867,6 @@ tr.deps = (...e) => (new FixtureBuilder).deps(...e);
 
 class MockBinding {
     constructor() {
-        this.interceptor = this;
         this.calls = [];
     }
     get(e) {
@@ -3906,6 +3905,15 @@ class MockBinding {
     }
     dispose() {
         this.trace("dispose");
+    }
+    limit(e) {
+        this.trace("limit", e);
+        return {
+            dispose: () => {}
+        };
+    }
+    useScope(e) {
+        this.trace("useScope", e);
     }
 }
 

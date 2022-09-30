@@ -2,7 +2,7 @@ import { DI, Protocol, toArray, IServiceLocator, ILogger, Registration, noop } f
 import { Metadata } from '../../../metadata/dist/native-modules/index.mjs';
 import * as AST from '../../../runtime/dist/native-modules/index.mjs';
 import { Scope, astEvaluate, PrimitiveLiteralExpression, IExpressionParser } from '../../../runtime/dist/native-modules/index.mjs';
-import { astEvaluator } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { implementAstEvaluator } from '../../../runtime-html/dist/native-modules/index.mjs';
 
 const IValidationExpressionHydrator = DI.createInterface('IValidationExpressionHydrator');
 
@@ -443,7 +443,7 @@ class PropertyRule {
     }
 }
 PropertyRule.$TYPE = 'PropertyRule';
-astEvaluator()(PropertyRule);
+implementAstEvaluator()(PropertyRule);
 class ModelBasedRule {
     constructor(ruleset, tag = validationRulesRegistrar.defaultRuleSetName) {
         this.ruleset = ruleset;
@@ -1224,7 +1224,7 @@ ModelValidationExpressionHydrator = __decorate([
     __param(1, IValidationMessageProvider),
     __param(2, IExpressionParser)
 ], ModelValidationExpressionHydrator);
-astEvaluator()(ModelValidationExpressionHydrator);
+implementAstEvaluator()(ModelValidationExpressionHydrator);
 
 class ValidateInstruction {
     constructor(object = (void 0), propertyName = (void 0), rules = (void 0), objectTag = (void 0), propertyTag = (void 0), flags = 0) {

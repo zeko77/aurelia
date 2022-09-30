@@ -1,67 +1,67 @@
 import { DI as t, IEventAggregator as n, toArray as i, camelCase as s, Registration as e } from "@aurelia/kernel";
 
-import { bindingBehavior as r, valueConverter as o, astEvaluator as a, CustomElement as h, attributePattern as l, bindingCommand as c, renderer as u, AttrSyntax as f, IPlatform as d, AttributePattern as m, BindingCommand as g, AppTask as p } from "@aurelia/runtime-html";
+import { bindingBehavior as r, valueConverter as a, implementAstEvaluator as o, mixingBindingLimited as h, CustomElement as l, attributePattern as c, bindingCommand as u, renderer as f, AttrSyntax as d, IPlatform as g, AttributePattern as m, BindingCommand as p, AppTask as b } from "@aurelia/runtime-html";
 
-import { ValueConverterExpression as b, ISignaler as T, connectable as B, CustomExpression as v, Interpolation as w, astEvaluate as y, astUnbind as C, astBind as I, IExpressionParser as P, IObserverLocator as x } from "@aurelia/runtime";
+import { ValueConverterExpression as T, ISignaler as B, connectable as v, CustomExpression as w, Interpolation as y, astEvaluate as C, astUnbind as I, astBind as P, IExpressionParser as x, IObserverLocator as M } from "@aurelia/runtime";
 
-import M from "i18next";
+import A from "i18next";
 
-function A(t, n, i, s) {
-    var e = arguments.length, r = e < 3 ? n : null === s ? s = Object.getOwnPropertyDescriptor(n, i) : s, o;
-    if ("object" === typeof Reflect && "function" === typeof Reflect.decorate) r = Reflect.decorate(t, n, i, s); else for (var a = t.length - 1; a >= 0; a--) if (o = t[a]) r = (e < 3 ? o(r) : e > 3 ? o(n, i, r) : o(n, i)) || r;
+function L(t, n, i, s) {
+    var e = arguments.length, r = e < 3 ? n : null === s ? s = Object.getOwnPropertyDescriptor(n, i) : s, a;
+    if ("object" === typeof Reflect && "function" === typeof Reflect.decorate) r = Reflect.decorate(t, n, i, s); else for (var o = t.length - 1; o >= 0; o--) if (a = t[o]) r = (e < 3 ? a(r) : e > 3 ? a(n, i, r) : a(n, i)) || r;
     return e > 3 && r && Object.defineProperty(n, i, r), r;
 }
 
-function L(t, n) {
+function R(t, n) {
     return function(i, s) {
         n(i, s, t);
     };
 }
 
-var R;
+var k;
 
 (function(t) {
     t["I18N_EA_CHANNEL"] = "i18n:locale:changed";
     t["I18N_SIGNAL"] = "aurelia-translation-signal";
     t["RT_SIGNAL"] = "aurelia-relativetime-signal";
-})(R || (R = {}));
+})(k || (k = {}));
 
-var k;
+var E;
 
 (function(t) {
     t["translationValueConverterName"] = "t";
     t["dateFormatValueConverterName"] = "df";
     t["numberFormatValueConverterName"] = "nf";
     t["relativeTimeValueConverterName"] = "rt";
-})(k || (k = {}));
+})(E || (E = {}));
 
-function E(t, n) {
+function N(t, n) {
     const i = n.ast.expression;
-    if (!(i instanceof b)) {
-        const s = new b(i, t, n.ast.args);
+    if (!(i instanceof T)) {
+        const s = new T(i, t, n.ast.args);
         n.ast.expression = s;
     }
 }
 
-let N = class DateFormatBindingBehavior {
+let $ = class DateFormatBindingBehavior {
     bind(t, n) {
-        E("df", n);
+        N("df", n);
     }
 };
 
-N = A([ r("df") ], N);
+$ = L([ r("df") ], $);
 
-const $ = t.createInterface("I18nInitOptions");
+const O = t.createInterface("I18nInitOptions");
 
-const O = t.createInterface("I18nextWrapper");
+const V = t.createInterface("I18nextWrapper");
 
 class I18nextWrapper {
     constructor() {
-        this.i18next = M;
+        this.i18next = A;
     }
 }
 
-var V;
+var _;
 
 (function(t) {
     t[t["Second"] = 1e3] = "Second";
@@ -71,7 +71,7 @@ var V;
     t[t["Week"] = 6048e5] = "Week";
     t[t["Month"] = 2592e6] = "Month";
     t[t["Year"] = 31536e6] = "Year";
-})(V || (V = {}));
+})(_ || (_ = {}));
 
 class I18nKeyEvaluationResult {
     constructor(t) {
@@ -87,9 +87,9 @@ class I18nKeyEvaluationResult {
     }
 }
 
-const _ = t.createInterface("I18N");
+const D = t.createInterface("I18N");
 
-let D = class I18nService {
+let F = class I18nService {
     constructor(t, n, i, s) {
         this.ea = i;
         this.i = new Set;
@@ -155,21 +155,21 @@ let D = class I18nService {
         let s = t.getTime() - this.now();
         const e = this.options.rtEpsilon * (s > 0 ? 1 : 0);
         const r = this.createRelativeTimeFormat(n, i);
-        let o = s / 31536e6;
-        if (Math.abs(o + e) >= 1) return r.format(Math.round(o), "year");
-        o = s / 2592e6;
-        if (Math.abs(o + e) >= 1) return r.format(Math.round(o), "month");
-        o = s / 6048e5;
-        if (Math.abs(o + e) >= 1) return r.format(Math.round(o), "week");
-        o = s / 864e5;
-        if (Math.abs(o + e) >= 1) return r.format(Math.round(o), "day");
-        o = s / 36e5;
-        if (Math.abs(o + e) >= 1) return r.format(Math.round(o), "hour");
-        o = s / 6e4;
-        if (Math.abs(o + e) >= 1) return r.format(Math.round(o), "minute");
+        let a = s / 31536e6;
+        if (Math.abs(a + e) >= 1) return r.format(Math.round(a), "year");
+        a = s / 2592e6;
+        if (Math.abs(a + e) >= 1) return r.format(Math.round(a), "month");
+        a = s / 6048e5;
+        if (Math.abs(a + e) >= 1) return r.format(Math.round(a), "week");
+        a = s / 864e5;
+        if (Math.abs(a + e) >= 1) return r.format(Math.round(a), "day");
+        a = s / 36e5;
+        if (Math.abs(a + e) >= 1) return r.format(Math.round(a), "hour");
+        a = s / 6e4;
+        if (Math.abs(a + e) >= 1) return r.format(Math.round(a), "minute");
         s = Math.abs(s) < 1e3 ? 1e3 : s;
-        o = s / 1e3;
-        return r.format(Math.round(o), "second");
+        a = s / 1e3;
+        return r.format(Math.round(a), "second");
     }
     subscribeLocaleChange(t) {
         this.i.add(t);
@@ -195,9 +195,9 @@ let D = class I18nService {
     }
 };
 
-D = A([ L(0, O), L(1, $), L(2, n), L(3, T) ], D);
+F = L([ R(0, V), R(1, O), R(2, n), R(3, B) ], F);
 
-let F = class DateFormatValueConverter {
+let j = class DateFormatValueConverter {
     constructor(t) {
         this.i18n = t;
         this.signals = [ "aurelia-translation-signal" ];
@@ -214,17 +214,17 @@ let F = class DateFormatValueConverter {
     }
 };
 
-F = A([ o("df"), L(0, _) ], F);
+j = L([ a("df"), R(0, D) ], j);
 
-let j = class NumberFormatBindingBehavior {
+let K = class NumberFormatBindingBehavior {
     bind(t, n) {
-        E("nf", n);
+        N("nf", n);
     }
 };
 
-j = A([ r("nf") ], j);
+K = L([ r("nf") ], K);
 
-let K = class NumberFormatValueConverter {
+let S = class NumberFormatValueConverter {
     constructor(t) {
         this.i18n = t;
         this.signals = [ "aurelia-translation-signal" ];
@@ -235,17 +235,17 @@ let K = class NumberFormatValueConverter {
     }
 };
 
-K = A([ o("nf"), L(0, _) ], K);
+S = L([ a("nf"), R(0, D) ], S);
 
-let S = class RelativeTimeBindingBehavior {
+let W = class RelativeTimeBindingBehavior {
     bind(t, n) {
-        E("rt", n);
+        N("rt", n);
     }
 };
 
-S = A([ r("rt") ], S);
+W = L([ r("rt") ], W);
 
-let W = class RelativeTimeValueConverter {
+let z = class RelativeTimeValueConverter {
     constructor(t) {
         this.i18n = t;
         this.signals = [ "aurelia-translation-signal", "aurelia-relativetime-signal" ];
@@ -256,29 +256,29 @@ let W = class RelativeTimeValueConverter {
     }
 };
 
-W = A([ o("rt"), L(0, _) ], W);
+z = L([ a("rt"), R(0, D) ], z);
 
-let z = class TranslationBindingBehavior {
+let H = class TranslationBindingBehavior {
     bind(t, n) {
         const i = n.ast.expression;
-        if (!(i instanceof b)) {
-            const t = new b(i, "t", n.ast.args);
+        if (!(i instanceof T)) {
+            const t = new T(i, "t", n.ast.args);
             n.ast.expression = t;
         }
     }
 };
 
-z = A([ r("t") ], z);
+H = L([ r("t") ], H);
 
-const H = [ "textContent", "innerHTML", "prepend", "append" ];
+const U = [ "textContent", "innerHTML", "prepend", "append" ];
 
-const U = new Map([ [ "text", "textContent" ], [ "html", "innerHTML" ] ]);
+const G = new Map([ [ "text", "textContent" ], [ "html", "innerHTML" ] ]);
 
-const G = {
+const Y = {
     optional: true
 };
 
-const Y = {
+const q = {
     reusable: false,
     preempt: true
 };
@@ -286,36 +286,35 @@ const Y = {
 class TranslationBinding {
     constructor(t, n, i, s, e) {
         this.locator = n;
-        this.interceptor = this;
         this.isBound = false;
-        this.T = H;
+        this.T = U;
         this.task = null;
         this.parameter = null;
         this.boundFn = false;
         this.B = t;
         this.target = e;
-        this.i18n = this.locator.get(_);
+        this.i18n = this.locator.get(D);
         this.platform = s;
         this.C = new Set;
         this.oL = i;
         this.i18n.subscribeLocaleChange(this);
         this.taskQueue = s.domWriteQueue;
     }
-    static create({parser: t, observerLocator: n, context: i, controller: s, target: e, instruction: r, platform: o, isParameterContext: a}) {
-        const h = this.getBinding({
+    static create({parser: t, observerLocator: n, context: i, controller: s, target: e, instruction: r, platform: a, isParameterContext: o}) {
+        const h = this.I({
             observerLocator: n,
             context: i,
             controller: s,
             target: e,
-            platform: o
+            platform: a
         });
         const l = "string" === typeof r.from ? t.parse(r.from, 8) : r.from;
-        if (a) h.useParameter(l); else {
-            const n = l instanceof v ? t.parse(l.value, 1) : void 0;
+        if (o) h.useParameter(l); else {
+            const n = l instanceof w ? t.parse(l.value, 1) : void 0;
             h.ast = n || l;
         }
     }
-    static getBinding({observerLocator: t, context: n, controller: i, target: s, platform: e}) {
+    static I({observerLocator: t, context: n, controller: i, target: s, platform: e}) {
         let r = i.bindings && i.bindings.find((t => t instanceof TranslationBinding && t.target === s));
         if (!r) {
             r = new TranslationBinding(i, n, t, e, s);
@@ -327,16 +326,16 @@ class TranslationBinding {
         if (this.isBound) return;
         if (!this.ast) throw new Error("key expression is missing");
         this.scope = t;
-        this.I = this.ast instanceof w;
-        this.P = y(this.ast, t, this, this);
-        this.M();
-        this.parameter?.$bind(t);
+        this.P = this.ast instanceof y;
+        this.M = C(this.ast, t, this, this);
         this.A();
+        this.parameter?.$bind(t);
+        this.updateTranslations();
         this.isBound = true;
     }
     $unbind() {
         if (!this.isBound) return;
-        C(this.ast, this.scope, this);
+        I(this.ast, this.scope, this);
         this.parameter?.$unbind();
         this.C.clear();
         if (null !== this.task) {
@@ -348,20 +347,20 @@ class TranslationBinding {
     }
     handleChange(t, n) {
         this.obs.version++;
-        this.P = this.I ? y(this.ast, this.scope, this, this) : t;
+        this.M = this.P ? C(this.ast, this.scope, this, this) : t;
         this.obs.clear();
-        this.M();
         this.A();
+        this.updateTranslations();
     }
     handleLocaleChange() {
-        this.A();
+        this.updateTranslations();
     }
     useParameter(t) {
         if (null != this.parameter) throw new Error("This translation parameter has already been specified.");
-        this.parameter = new ParameterBinding(this, t, (() => this.A()));
+        this.parameter = new ParameterBinding(this, t, (() => this.updateTranslations()));
     }
-    A() {
-        const t = this.i18n.evaluate(this.P, this.parameter?.value);
+    updateTranslations() {
+        const t = this.i18n.evaluate(this.M, this.parameter?.value);
         const n = Object.create(null);
         const i = [];
         const s = this.task;
@@ -370,7 +369,7 @@ class TranslationBinding {
             const t = s.value;
             const e = this.L(s.attributes);
             for (const s of e) if (this.R(s)) n[s] = t; else {
-                const n = h.for(this.target, G);
+                const n = l.for(this.target, Y);
                 const e = n?.viewModel ? this.oL.getAccessor(n.viewModel, s) : this.oL.getAccessor(this.target, s);
                 const r = 1 !== this.B.state && (4 & e.type) > 0;
                 if (r) i.push(new AccessorUpdateTask(e, t, this.target, s)); else e.setValue(t, this.target, s);
@@ -386,12 +385,12 @@ class TranslationBinding {
             this.task = null;
             for (const t of i) t.run();
             if (e) this.N(n);
-        }), Y);
+        }), q);
         s?.cancel();
     }
     L(t) {
         if (0 === t.length) t = "IMG" === this.target.tagName ? [ "src" ] : [ "textContent" ];
-        for (const [n, i] of U) {
+        for (const [n, i] of G) {
             const s = t.findIndex((t => t === n));
             if (s > -1) t.splice(s, 1, i);
         }
@@ -428,12 +427,18 @@ class TranslationBinding {
         }
         return false;
     }
-    M() {
-        const t = this.P ?? (this.P = "");
+    A() {
+        const t = this.M ?? (this.M = "");
         const n = typeof t;
         if ("string" !== n) throw new Error(`Expected the i18n key to be a string, but got ${t} of type ${n}`);
     }
 }
+
+v(TranslationBinding);
+
+o(true)(TranslationBinding);
+
+h(TranslationBinding, (() => "updateTranslations"));
 
 class AccessorUpdateTask {
     constructor(t, n, i, s) {
@@ -452,7 +457,6 @@ class ParameterBinding {
         this.owner = t;
         this.ast = n;
         this.updater = i;
-        this.interceptor = this;
         this.isBound = false;
         this.boundFn = false;
         this.oL = t.oL;
@@ -461,63 +465,59 @@ class ParameterBinding {
     handleChange(t, n) {
         if (!this.isBound) return;
         this.obs.version++;
-        this.value = y(this.ast, this.scope, this, this);
+        this.value = C(this.ast, this.scope, this, this);
         this.obs.clear();
         this.updater();
     }
     $bind(t) {
         if (this.isBound) return;
         this.scope = t;
-        I(this.ast, t, this);
-        this.value = y(this.ast, t, this, this);
+        P(this.ast, t, this);
+        this.value = C(this.ast, t, this, this);
         this.isBound = true;
     }
     $unbind() {
         if (!this.isBound) return;
-        C(this.ast, this.scope, this);
+        I(this.ast, this.scope, this);
         this.scope = void 0;
         this.obs.clearAll();
     }
 }
 
-B(TranslationBinding);
+v(ParameterBinding);
 
-a(true)(TranslationBinding);
+o(true)(ParameterBinding);
 
-B(ParameterBinding);
+const J = "tpt";
 
-a(true)(ParameterBinding);
+const Q = "t-params.bind";
 
-const q = "tpt";
-
-const J = "t-params.bind";
-
-let Q = class TranslationParametersAttributePattern {
-    [J](t, n, i) {
-        return new f(t, n, "", J);
+let X = class TranslationParametersAttributePattern {
+    [Q](t, n, i) {
+        return new d(t, n, "", Q);
     }
 };
 
-Q = A([ l({
-    pattern: J,
+X = L([ c({
+    pattern: Q,
     symbols: ""
-}) ], Q);
+}) ], X);
 
 class TranslationParametersBindingInstruction {
     constructor(t, n) {
         this.from = t;
         this.to = n;
-        this.type = q;
+        this.type = J;
         this.mode = 2;
     }
 }
 
-let X = class TranslationParametersBindingCommand {
+let Z = class TranslationParametersBindingCommand {
     constructor() {
         this.type = 0;
     }
     get name() {
-        return J;
+        return Q;
     }
     build(t, n, i) {
         const e = t.attr;
@@ -527,9 +527,9 @@ let X = class TranslationParametersBindingCommand {
     }
 };
 
-X = A([ c(J) ], X);
+Z = L([ u(Q) ], Z);
 
-let Z = class TranslationParametersBindingRenderer {
+let tt = class TranslationParametersBindingRenderer {
     constructor(t, n, i) {
         this.ep = t;
         this.oL = n;
@@ -549,16 +549,16 @@ let Z = class TranslationParametersBindingRenderer {
     }
 };
 
-Z.inject = [ P, x, d ];
+tt.inject = [ x, M, g ];
 
-Z = A([ u(q) ], Z);
+tt = L([ f(J) ], tt);
 
-const tt = "tt";
+const nt = "tt";
 
 class TranslationAttributePattern {
     static registerAlias(t) {
         this.prototype[t] = function(n, i, s) {
-            return new f(n, i, "", t);
+            return new d(n, i, "", t);
         };
     }
 }
@@ -567,7 +567,7 @@ class TranslationBindingInstruction {
     constructor(t, n) {
         this.from = t;
         this.to = n;
-        this.type = tt;
+        this.type = nt;
         this.mode = 2;
     }
 }
@@ -582,11 +582,11 @@ class TranslationBindingCommand {
     build(t, n, i) {
         let e;
         if (null == t.bindable) e = i.map(t.node, t.attr.target) ?? s(t.attr.target); else e = t.bindable.property;
-        return new TranslationBindingInstruction(new v(t.attr.rawValue), e);
+        return new TranslationBindingInstruction(new w(t.attr.rawValue), e);
     }
 }
 
-let nt = class TranslationBindingRenderer {
+let it = class TranslationBindingRenderer {
     constructor(t, n, i) {
         this.ep = t;
         this.oL = n;
@@ -605,17 +605,17 @@ let nt = class TranslationBindingRenderer {
     }
 };
 
-nt.inject = [ P, x, d ];
+it.inject = [ x, M, g ];
 
-nt = A([ u(tt) ], nt);
+it = L([ f(nt) ], it);
 
-const it = "tbt";
+const st = "tbt";
 
 class TranslationBindAttributePattern {
     static registerAlias(t) {
         const n = `${t}.bind`;
         this.prototype[n] = function(t, i, s) {
-            return new f(t, i, s[1], n);
+            return new d(t, i, s[1], n);
         };
     }
 }
@@ -624,7 +624,7 @@ class TranslationBindBindingInstruction {
     constructor(t, n) {
         this.from = t;
         this.to = n;
-        this.type = it;
+        this.type = st;
         this.mode = 2;
     }
 }
@@ -643,7 +643,7 @@ class TranslationBindBindingCommand {
     }
 }
 
-let st = class TranslationBindBindingRenderer {
+let et = class TranslationBindBindingRenderer {
     constructor(t, n, i) {
         this.parser = t;
         this.oL = n;
@@ -662,9 +662,9 @@ let st = class TranslationBindBindingRenderer {
     }
 };
 
-st = A([ u(it), L(0, P), L(1, x), L(2, d) ], st);
+et = L([ f(st), R(0, x), R(1, M), R(2, g) ], et);
 
-let et = class TranslationValueConverter {
+let rt = class TranslationValueConverter {
     constructor(t) {
         this.i18n = t;
         this.signals = [ "aurelia-translation-signal" ];
@@ -674,17 +674,17 @@ let et = class TranslationValueConverter {
     }
 };
 
-et = A([ o("t"), L(0, _) ], et);
+rt = L([ a("t"), R(0, D) ], rt);
 
-const rt = [ et, z ];
+const at = [ rt, H ];
 
 function ot(t) {
     const n = t.translationAttributeAliases;
     const i = Array.isArray(n) ? n : [ "t" ];
     const s = [];
     const r = [];
-    const o = [];
     const a = [];
+    const o = [];
     for (const t of i) {
         const n = `${t}.bind`;
         s.push({
@@ -698,31 +698,31 @@ function ot(t) {
         });
         TranslationBindAttributePattern.registerAlias(t);
         if ("t" !== t) {
-            o.push(t);
-            a.push(n);
+            a.push(t);
+            o.push(n);
         }
     }
-    const h = [ m.define(s, TranslationAttributePattern), g.define({
+    const h = [ m.define(s, TranslationAttributePattern), p.define({
         name: "t",
-        aliases: o
-    }, TranslationBindingCommand), nt, m.define(r, TranslationBindAttributePattern), g.define({
-        name: "t.bind",
         aliases: a
-    }, TranslationBindBindingCommand), st, Q, X, Z ];
+    }, TranslationBindingCommand), it, m.define(r, TranslationBindAttributePattern), p.define({
+        name: "t.bind",
+        aliases: o
+    }, TranslationBindBindingCommand), et, X, Z, tt ];
     return {
         register(n) {
-            return n.register(e.callback($, (() => t.initOptions)), p.activating(_, (t => t.initPromise)), e.singleton(O, I18nextWrapper), e.singleton(_, D), ...h, ...rt);
+            return n.register(e.callback(O, (() => t.initOptions)), b.activating(D, (t => t.initPromise)), e.singleton(V, I18nextWrapper), e.singleton(D, F), ...h, ...at);
         }
     };
 }
 
-const at = [ F, N ];
+const ht = [ j, $ ];
 
-const ht = [ K, j ];
+const lt = [ S, K ];
 
-const lt = [ W, S ];
+const ct = [ z, W ];
 
-function ct(t) {
+function ut(t) {
     return {
         optionsProvider: t,
         register(n) {
@@ -730,15 +730,15 @@ function ct(t) {
                 initOptions: Object.create(null)
             };
             t(i);
-            return n.register(ot(i), ...at, ...ht, ...lt);
+            return n.register(ot(i), ...ht, ...lt, ...ct);
         },
         customize(n) {
-            return ct(n || t);
+            return ut(n || t);
         }
     };
 }
 
-const ut = ct((() => {}));
+const ft = ut((() => {}));
 
-export { N as DateFormatBindingBehavior, F as DateFormatValueConverter, _ as I18N, ut as I18nConfiguration, $ as I18nInitOptions, I18nKeyEvaluationResult, D as I18nService, j as NumberFormatBindingBehavior, K as NumberFormatValueConverter, S as RelativeTimeBindingBehavior, W as RelativeTimeValueConverter, R as Signals, TranslationAttributePattern, TranslationBindAttributePattern, TranslationBindBindingCommand, TranslationBindBindingInstruction, st as TranslationBindBindingRenderer, it as TranslationBindInstructionType, TranslationBinding, z as TranslationBindingBehavior, TranslationBindingCommand, TranslationBindingInstruction, nt as TranslationBindingRenderer, tt as TranslationInstructionType, Q as TranslationParametersAttributePattern, X as TranslationParametersBindingCommand, TranslationParametersBindingInstruction, Z as TranslationParametersBindingRenderer, q as TranslationParametersInstructionType, et as TranslationValueConverter };
+export { $ as DateFormatBindingBehavior, j as DateFormatValueConverter, D as I18N, ft as I18nConfiguration, O as I18nInitOptions, I18nKeyEvaluationResult, F as I18nService, K as NumberFormatBindingBehavior, S as NumberFormatValueConverter, W as RelativeTimeBindingBehavior, z as RelativeTimeValueConverter, k as Signals, TranslationAttributePattern, TranslationBindAttributePattern, TranslationBindBindingCommand, TranslationBindBindingInstruction, et as TranslationBindBindingRenderer, st as TranslationBindInstructionType, TranslationBinding, H as TranslationBindingBehavior, TranslationBindingCommand, TranslationBindingInstruction, it as TranslationBindingRenderer, nt as TranslationInstructionType, X as TranslationParametersAttributePattern, Z as TranslationParametersBindingCommand, TranslationParametersBindingInstruction, tt as TranslationParametersBindingRenderer, J as TranslationParametersInstructionType, rt as TranslationValueConverter };
 //# sourceMappingURL=index.mjs.map

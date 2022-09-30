@@ -10,9 +10,8 @@ export interface StateBinding extends IAstBasedBinding {
 }
 export declare class StateBinding implements IAstBasedBinding, IStoreSubscriber<object> {
     readonly oL: IObserverLocator;
-    interceptor: this;
     locator: IServiceLocator;
-    $scope?: Scope | undefined;
+    scope?: Scope | undefined;
     isBound: boolean;
     ast: IsBindingBehavior;
     private readonly target;

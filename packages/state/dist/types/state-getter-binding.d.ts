@@ -7,9 +7,8 @@ import { IStore, type IStoreSubscriber } from './interfaces';
 export interface StateGetterBinding extends IConnectableBinding {
 }
 export declare class StateGetterBinding implements IConnectableBinding, IStoreSubscriber<object> {
-    interceptor: this;
     locator: IServiceLocator;
-    $scope?: Scope | undefined;
+    scope?: Scope | undefined;
     isBound: boolean;
     private readonly $get;
     private readonly target;

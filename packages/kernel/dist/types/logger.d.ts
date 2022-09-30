@@ -383,7 +383,6 @@ export declare class DefaultLogger {
      * ```
      */
     scopeTo(name: string): ILogger;
-    private emit;
 }
 /**
  * A basic `ILogger` configuration that configures a single `console` sink based on provided options.

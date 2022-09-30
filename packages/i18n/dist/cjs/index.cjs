@@ -298,7 +298,6 @@ const m = {
 class TranslationBinding {
     constructor(t, s, n, i, e) {
         this.locator = s;
-        this.interceptor = this;
         this.isBound = false;
         this.T = d;
         this.task = null;
@@ -314,7 +313,7 @@ class TranslationBinding {
         this.taskQueue = i.domWriteQueue;
     }
     static create({parser: t, observerLocator: s, context: i, controller: e, target: r, instruction: o, platform: a, isParameterContext: h}) {
-        const c = this.getBinding({
+        const c = this.I({
             observerLocator: s,
             context: i,
             controller: e,
@@ -327,7 +326,7 @@ class TranslationBinding {
             c.ast = s || l;
         }
     }
-    static getBinding({observerLocator: t, context: s, controller: n, target: i, platform: e}) {
+    static I({observerLocator: t, context: s, controller: n, target: i, platform: e}) {
         let r = n.bindings && n.bindings.find((t => t instanceof TranslationBinding && t.target === i));
         if (!r) {
             r = new TranslationBinding(n, s, t, e, i);
@@ -339,11 +338,11 @@ class TranslationBinding {
         if (this.isBound) return;
         if (!this.ast) throw new Error("key expression is missing");
         this.scope = t;
-        this.I = this.ast instanceof n.Interpolation;
-        this.P = n.astEvaluate(this.ast, t, this, this);
-        this.M();
-        this.parameter?.$bind(t);
+        this.P = this.ast instanceof n.Interpolation;
+        this.M = n.astEvaluate(this.ast, t, this, this);
         this.A();
+        this.parameter?.$bind(t);
+        this.updateTranslations();
         this.isBound = true;
     }
     $unbind() {
@@ -360,20 +359,20 @@ class TranslationBinding {
     }
     handleChange(t, s) {
         this.obs.version++;
-        this.P = this.I ? n.astEvaluate(this.ast, this.scope, this, this) : t;
+        this.M = this.P ? n.astEvaluate(this.ast, this.scope, this, this) : t;
         this.obs.clear();
-        this.M();
         this.A();
+        this.updateTranslations();
     }
     handleLocaleChange() {
-        this.A();
+        this.updateTranslations();
     }
     useParameter(t) {
         if (null != this.parameter) throw new Error("This translation parameter has already been specified.");
-        this.parameter = new ParameterBinding(this, t, (() => this.A()));
+        this.parameter = new ParameterBinding(this, t, (() => this.updateTranslations()));
     }
-    A() {
-        const t = this.i18n.evaluate(this.P, this.parameter?.value);
+    updateTranslations() {
+        const t = this.i18n.evaluate(this.M, this.parameter?.value);
         const n = Object.create(null);
         const i = [];
         const e = this.task;
@@ -440,12 +439,18 @@ class TranslationBinding {
         }
         return false;
     }
-    M() {
-        const t = this.P ?? (this.P = "");
+    A() {
+        const t = this.M ?? (this.M = "");
         const s = typeof t;
         if ("string" !== s) throw new Error(`Expected the i18n key to be a string, but got ${t} of type ${s}`);
     }
 }
+
+n.connectable(TranslationBinding);
+
+s.implementAstEvaluator(true)(TranslationBinding);
+
+s.mixingBindingLimited(TranslationBinding, (() => "updateTranslations"));
 
 class AccessorUpdateTask {
     constructor(t, s, n, i) {
@@ -464,7 +469,6 @@ class ParameterBinding {
         this.owner = t;
         this.ast = s;
         this.updater = n;
-        this.interceptor = this;
         this.isBound = false;
         this.boundFn = false;
         this.oL = t.oL;
@@ -492,13 +496,9 @@ class ParameterBinding {
     }
 }
 
-n.connectable(TranslationBinding);
-
-s.astEvaluator(true)(TranslationBinding);
-
 n.connectable(ParameterBinding);
 
-s.astEvaluator(true)(ParameterBinding);
+s.implementAstEvaluator(true)(ParameterBinding);
 
 const b = "tpt";
 

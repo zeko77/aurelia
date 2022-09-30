@@ -17,11 +17,10 @@ export interface TranslationBinding extends IAstBasedBinding {
 }
 export declare class TranslationBinding implements IObserverLocatorBasedConnectable {
     locator: IServiceLocator;
-    interceptor: this;
     isBound: boolean;
     ast: IsExpression;
     private readonly i18n;
-    private scope;
+    scope: Scope;
     private task;
     private readonly _targetAccessors;
     target: HTMLElement;
@@ -34,12 +33,12 @@ export declare class TranslationBinding implements IObserverLocatorBasedConnecta
     readonly oL: IObserverLocator;
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, platform: IPlatform, target: INode);
     static create({ parser, observerLocator, context, controller, target, instruction, platform, isParameterContext, }: TranslationBindingCreationContext): void;
-    private static getBinding;
     $bind(scope: Scope): void;
     $unbind(): void;
     handleChange(newValue: string | i18next.TOptions, _previousValue: string | i18next.TOptions): void;
     handleLocaleChange(): void;
     useParameter(expr: IsExpression): void;
+    updateTranslations(): void;
 }
 export {};
 //# sourceMappingURL=translation-binding.d.ts.map

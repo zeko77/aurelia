@@ -6,7 +6,7 @@ import * as u from "../../../runtime/dist/native-modules/index.mjs";
 
 import { Scope as c, astEvaluate as l, PrimitiveLiteralExpression as h, IExpressionParser as $ } from "../../../runtime/dist/native-modules/index.mjs";
 
-import { astEvaluator as d } from "../../../runtime-html/dist/native-modules/index.mjs";
+import { implementAstEvaluator as d } from "../../../runtime-html/dist/native-modules/index.mjs";
 
 const m = e.createInterface("IValidationExpressionHydrator");
 

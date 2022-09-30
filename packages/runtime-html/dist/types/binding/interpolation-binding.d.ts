@@ -1,7 +1,7 @@
 import { BindingMode } from './interfaces-bindings';
-import type { ITask, TaskQueue } from '@aurelia/platform';
 import type { IServiceLocator } from '@aurelia/kernel';
-import type { ICollectionSubscriber, Interpolation, IObserverLocator, IsExpression, IBinding, Scope } from '@aurelia/runtime';
+import type { ITask, TaskQueue } from '@aurelia/platform';
+import type { IBinding, ICollectionSubscriber, Interpolation, IObserverLocator, IsExpression, Scope } from '@aurelia/runtime';
 import type { IPlatform } from '../platform';
 import type { IAstBasedBinding, IBindingController } from './interfaces-bindings';
 export interface InterpolationBinding extends IBinding {
@@ -13,9 +13,8 @@ export declare class InterpolationBinding implements IBinding {
     target: object;
     targetProperty: string;
     mode: BindingMode;
-    interceptor: this;
     isBound: boolean;
-    $scope?: Scope;
+    scope?: Scope;
     partBindings: InterpolationPartBinding[];
     private readonly targetObserver;
     private task;
@@ -36,9 +35,8 @@ export declare class InterpolationPartBinding implements IAstBasedBinding, IColl
     readonly targetProperty: string;
     readonly locator: IServiceLocator;
     readonly owner: InterpolationBinding;
-    interceptor: this;
     readonly mode: BindingMode;
-    $scope?: Scope;
+    scope?: Scope;
     task: ITask | null;
     isBound: boolean;
     /**
@@ -46,6 +44,7 @@ export declare class InterpolationPartBinding implements IAstBasedBinding, IColl
      */
     readonly oL: IObserverLocator;
     constructor(ast: IsExpression, target: object, targetProperty: string, locator: IServiceLocator, observerLocator: IObserverLocator, owner: InterpolationBinding);
+    updateTarget(): void;
     handleChange(): void;
     handleCollectionChange(): void;
     $bind(scope: Scope): void;
@@ -63,9 +62,8 @@ export declare class ContentBinding implements IAstBasedBinding, ICollectionSubs
     readonly ast: IsExpression;
     readonly target: Text;
     readonly strict: boolean;
-    interceptor: this;
     readonly mode: BindingMode;
-    $scope?: Scope;
+    scope?: Scope;
     task: ITask | null;
     isBound: boolean;
     /**
@@ -78,6 +76,5 @@ export declare class ContentBinding implements IAstBasedBinding, ICollectionSubs
     handleCollectionChange(): void;
     $bind(scope: Scope): void;
     $unbind(): void;
-    private queueUpdate;
 }
 //# sourceMappingURL=interpolation-binding.d.ts.map

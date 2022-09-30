@@ -466,7 +466,7 @@ class PropertyRule {
 
 PropertyRule.$TYPE = "PropertyRule";
 
-r.astEvaluator()(PropertyRule);
+r.implementAstEvaluator()(PropertyRule);
 
 class ModelBasedRule {
     constructor(e, t = $.defaultRuleSetName) {
@@ -1274,7 +1274,7 @@ exports.ModelValidationExpressionHydrator = class ModelValidationExpressionHydra
 
 exports.ModelValidationExpressionHydrator = a([ u(0, e.IServiceLocator), u(1, c), u(2, s.IExpressionParser) ], exports.ModelValidationExpressionHydrator);
 
-r.astEvaluator()(exports.ModelValidationExpressionHydrator);
+r.implementAstEvaluator()(exports.ModelValidationExpressionHydrator);
 
 class ValidateInstruction {
     constructor(e = void 0, t = void 0, s = void 0, r = void 0, i = void 0, n = 0) {

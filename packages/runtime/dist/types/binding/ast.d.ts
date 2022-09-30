@@ -64,8 +64,8 @@ export declare class CustomExpression {
 }
 export declare type BindingBehaviorInstance<T extends {} = {}> = {
     type?: 'instance' | 'factory';
-    bind?(scope: Scope, binding: IBinding, ...args: T[]): void;
-    unbind?(scope: Scope, binding: IBinding, ...args: T[]): void;
+    bind?(scope: Scope, binding: IBinding, ...args: unknown[]): void;
+    unbind?(scope: Scope, binding: IBinding, ...args: unknown[]): void;
 } & T;
 export declare class BindingBehaviorExpression {
     readonly expression: IsBindingBehavior;

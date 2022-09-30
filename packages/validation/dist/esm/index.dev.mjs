@@ -2,7 +2,7 @@ import { DI, Protocol, toArray, IServiceLocator, ILogger, Registration, noop } f
 import { Metadata } from '@aurelia/metadata';
 import * as AST from '@aurelia/runtime';
 import { Scope, astEvaluate, PrimitiveLiteralExpression, IExpressionParser } from '@aurelia/runtime';
-import { astEvaluator } from '@aurelia/runtime-html';
+import { implementAstEvaluator } from '@aurelia/runtime-html';
 
 const IValidationExpressionHydrator = DI.createInterface('IValidationExpressionHydrator');
 
@@ -443,7 +443,7 @@ class PropertyRule {
     }
 }
 PropertyRule.$TYPE = 'PropertyRule';
-astEvaluator()(PropertyRule);
+implementAstEvaluator()(PropertyRule);
 class ModelBasedRule {
     constructor(ruleset, tag = validationRulesRegistrar.defaultRuleSetName) {
         this.ruleset = ruleset;
@@ -1224,7 +1224,7 @@ ModelValidationExpressionHydrator = __decorate([
     __param(1, IValidationMessageProvider),
     __param(2, IExpressionParser)
 ], ModelValidationExpressionHydrator);
-astEvaluator()(ModelValidationExpressionHydrator);
+implementAstEvaluator()(ModelValidationExpressionHydrator);
 
 class ValidateInstruction {
     constructor(object = (void 0), propertyName = (void 0), rules = (void 0), objectTag = (void 0), propertyTag = (void 0), flags = 0) {

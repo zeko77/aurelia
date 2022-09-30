@@ -1,7 +1,7 @@
 export { bindable, Bindable, BindableDefinition, type PartialBindableDefinition, coercer, } from './bindable';
 export { BindableObserver, } from './observation/bindable-observer';
 export { DebounceBindingBehaviorRegistration, OneTimeBindingBehaviorRegistration, ToViewBindingBehaviorRegistration, FromViewBindingBehaviorRegistration, SignalBindingBehaviorRegistration, ThrottleBindingBehaviorRegistration, TwoWayBindingBehaviorRegistration, } from './configuration';
-export { bindingBehavior, BindingBehavior, BindingBehaviorDefinition, type PartialBindingBehaviorDefinition, type BindingBehaviorKind, type BindingBehaviorDecorator, type BindingBehaviorType, BindingInterceptor, BindingBehaviorFactory, BindingBehaviorStrategy, type IInterceptableBinding, } from './resources/binding-behavior';
+export { bindingBehavior, BindingBehavior, BindingBehaviorDefinition, type PartialBindingBehaviorDefinition, type BindingBehaviorKind, type BindingBehaviorDecorator, type BindingBehaviorType, } from './resources/binding-behavior';
 export { BindingModeBehavior, OneTimeBindingBehavior, ToViewBindingBehavior, FromViewBindingBehavior, TwoWayBindingBehavior, } from './resources/binding-behaviors/binding-mode';
 export { DebounceBindingBehavior, } from './resources/binding-behaviors/debounce';
 export { SignalBindingBehavior, } from './resources/binding-behaviors/signals';
@@ -13,7 +13,7 @@ export { AttrSyntax, IAttributeParser, attributePattern, type AttributePatternDe
 export { bindingCommand, type ICommandBuildInfo, BindingCommand, type BindingCommandInstance, BindingCommandDefinition, type BindingCommandKind, type BindingCommandType, CallBindingCommand, CommandType, DefaultBindingCommand, ForBindingCommand, FromViewBindingCommand, OneTimeBindingCommand, ToViewBindingCommand, TwoWayBindingCommand, TriggerBindingCommand, DelegateBindingCommand, CaptureBindingCommand, AttrBindingCommand, ClassBindingCommand, StyleBindingCommand, } from './resources/binding-command';
 export { IAttrMapper, type IsTwoWayPredicate, } from './attribute-mapper';
 export { BindingMode, IAstBasedBinding, IBindingController, } from './binding/interfaces-bindings';
-export { IFlushQueue, FlushQueue, IFlushable, astEvaluator, } from './binding/binding-utils';
+export { IFlushQueue, FlushQueue, IFlushable, BindingTargetSubscriber, implementAstEvaluator, mixingBindingLimited, mixinBindingUseScope as mixinUseScope, } from './binding/binding-utils';
 export { Listener, } from './binding/listener';
 export { AttributeBinding, } from './binding/attribute';
 export { CallBinding, } from './binding/call-binding';
@@ -21,7 +21,7 @@ export { InterpolationBinding, InterpolationPartBinding, } from './binding/inter
 export { LetBinding, } from './binding/let-binding';
 export { PropertyBinding, } from './binding/property-binding';
 export { RefBinding, } from './binding/ref-binding';
-export { applyBindingBehavior, IRenderer, type IInstructionTypeClassifier, ITemplateCompiler, type ICompliationInstruction, renderer, CallBindingInstruction, DelegationStrategy, HydrateAttributeInstruction, HydrateElementInstruction, HydrateTemplateController, InterpolationInstruction, IteratorBindingInstruction, LetBindingInstruction, HydrateLetElementInstruction, RefBindingInstruction, SetPropertyInstruction, AttributeBindingInstruction, ListenerBindingInstruction, PropertyBindingInstruction, SetAttributeInstruction, SetClassAttributeInstruction, SetStyleAttributeInstruction, StylePropertyBindingInstruction, TextBindingInstruction, isInstruction, type InstructionTypeName, IInstruction, InstructionType, } from './renderer';
+export { IRenderer, type IInstructionTypeClassifier, ITemplateCompiler, type ICompliationInstruction, renderer, CallBindingInstruction, DelegationStrategy, HydrateAttributeInstruction, HydrateElementInstruction, HydrateTemplateController, InterpolationInstruction, IteratorBindingInstruction, LetBindingInstruction, HydrateLetElementInstruction, RefBindingInstruction, SetPropertyInstruction, AttributeBindingInstruction, ListenerBindingInstruction, PropertyBindingInstruction, SetAttributeInstruction, SetClassAttributeInstruction, SetStyleAttributeInstruction, StylePropertyBindingInstruction, TextBindingInstruction, isInstruction, type InstructionTypeName, IInstruction, InstructionType, } from './renderer';
 export { AttributeNSAccessor, } from './observation/attribute-ns-accessor';
 export { type IInputElement, CheckedObserver, } from './observation/checked-observer';
 export { ClassAttributeAccessor, } from './observation/class-attribute-accessor';

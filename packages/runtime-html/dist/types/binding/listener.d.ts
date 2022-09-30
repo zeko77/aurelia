@@ -1,8 +1,8 @@
 import { DelegationStrategy } from '../renderer';
-import type { IIndexable, IServiceLocator } from '@aurelia/kernel';
-import { IsBindingBehavior, Scope } from '@aurelia/runtime';
-import type { IEventDelegator } from '../observation/event-delegator';
-import type { IAstBasedBinding } from './interfaces-bindings';
+import type { IServiceLocator } from '@aurelia/kernel';
+import { Scope, type IsBindingBehavior } from '@aurelia/runtime';
+import { type IEventDelegator } from '../observation/event-delegator';
+import { type IAstBasedBinding } from './interfaces-bindings';
 export declare class ListenerOptions {
     readonly prevent: boolean;
     readonly strategy: DelegationStrategy;
@@ -19,16 +19,13 @@ export declare class Listener implements IAstBasedBinding {
     target: Node;
     targetEvent: string;
     eventDelegator: IEventDelegator;
-    interceptor: this;
     isBound: boolean;
-    $scope: Scope;
+    scope?: Scope;
     private handler;
     constructor(locator: IServiceLocator, ast: IsBindingBehavior, target: Node, targetEvent: string, eventDelegator: IEventDelegator, options: ListenerOptions);
     callSource(event: Event): unknown;
     handleEvent(event: Event): void;
     $bind(scope: Scope): void;
     $unbind(): void;
-    observe(obj: IIndexable, propertyName: string): void;
-    handleChange(newValue: unknown, previousValue: unknown): void;
 }
 //# sourceMappingURL=listener.d.ts.map

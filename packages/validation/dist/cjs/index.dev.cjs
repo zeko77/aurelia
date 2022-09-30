@@ -460,7 +460,7 @@ class PropertyRule {
     }
 }
 PropertyRule.$TYPE = 'PropertyRule';
-runtimeHtml.astEvaluator()(PropertyRule);
+runtimeHtml.implementAstEvaluator()(PropertyRule);
 class ModelBasedRule {
     constructor(ruleset, tag = validationRulesRegistrar.defaultRuleSetName) {
         this.ruleset = ruleset;
@@ -1241,7 +1241,7 @@ exports.ModelValidationExpressionHydrator = __decorate([
     __param(1, IValidationMessageProvider),
     __param(2, AST.IExpressionParser)
 ], exports.ModelValidationExpressionHydrator);
-runtimeHtml.astEvaluator()(exports.ModelValidationExpressionHydrator);
+runtimeHtml.implementAstEvaluator()(exports.ModelValidationExpressionHydrator);
 
 class ValidateInstruction {
     constructor(object = (void 0), propertyName = (void 0), rules = (void 0), objectTag = (void 0), propertyTag = (void 0), flags = 0) {
