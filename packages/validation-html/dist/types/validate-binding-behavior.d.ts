@@ -46,8 +46,8 @@ export declare class BindingMediator<K extends string> {
     readonly key: K;
     readonly binding: MediatedBinding<K>;
     oL: IObserverLocator;
-    locator: IServiceLocator;
-    constructor(key: K, binding: MediatedBinding<K>, oL: IObserverLocator, locator: IServiceLocator);
+    readonly l: IServiceLocator;
+    constructor(key: K, binding: MediatedBinding<K>, oL: IObserverLocator, l: IServiceLocator);
     handleChange(newValue: unknown, previousValue: unknown): void;
 }
 export {};

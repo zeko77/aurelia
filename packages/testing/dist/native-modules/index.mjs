@@ -20,12 +20,12 @@ const N = Object.assign;
 
 const P = Number.isNaN;
 
-const B = Reflect.apply;
+const I = Reflect.apply;
 
-const I = ArrayBuffer.isView;
+const B = ArrayBuffer.isView;
 
 function D(e) {
-    return (t, ...n) => B(e, t, n);
+    return (t, ...n) => I(e, t, n);
 }
 
 const U = D(Object.prototype.hasOwnProperty);
@@ -200,11 +200,11 @@ function Pe(e) {
     return "[object WeakSet]" === W(e);
 }
 
-function Be(e) {
+function Ie(e) {
     return "[object WeakMap]" === W(e);
 }
 
-function Ie(e, n) {
+function Be(e, n) {
     if (n) return R(e).filter((e => !t(e))); else return T(e).filter((e => !t(e)));
 }
 
@@ -477,8 +477,8 @@ function ct(e, t, n, i) {
     if ("[object URLSearchParams]" === r) return ct(Array.from(e.entries()), Array.from(t.entries()), n, i);
     if (Array.isArray(e)) {
         if (e.length !== t.length) return false;
-        const r = Ie(e, false);
-        const a = Ie(t, false);
+        const r = Be(e, false);
+        const a = Be(t, false);
         if (r.length !== a.length) return false;
         return ft(e, t, n, i, 1, r);
     }
@@ -489,12 +489,12 @@ function ct(e, t, n, i) {
         if (!rt(e, t)) return false;
     } else if ($e(e)) {
         if (e.message !== t.message || e.name !== t.name) return false;
-    } else if (I(e)) {
+    } else if (B(e)) {
         if (!n && (Le(e) || Te(e))) {
             if (!at(e, t)) return false;
         } else if (!ot(e, t)) return false;
-        const r = Ie(e, false);
-        const a = Ie(t, false);
+        const r = Be(e, false);
+        const a = Be(t, false);
         if (r.length !== a.length) return false;
         return ft(e, t, n, i, 0, r);
     } else if (be(e)) {
@@ -889,7 +889,7 @@ class AssertionError extends Error {
         const s = Error.stackTraceLimit;
         Error.stackTraceLimit = 0;
         let o = null == i ? "" : `${i} - `;
-        if ("deepStrictEqual" === r || "strictEqual" === r) super(`${o}${Bt(t, n, r)}`); else if ("notDeepStrictEqual" === r || "notStrictEqual" === r) {
+        if ("deepStrictEqual" === r || "strictEqual" === r) super(`${o}${It(t, n, r)}`); else if ("notDeepStrictEqual" === r || "notStrictEqual" === r) {
             let e = Tt[r];
             let n = Nn(t).split("\n");
             if ("notStrictEqual" === r && le(t)) e = Tt.notStrictEqualObject;
@@ -950,7 +950,7 @@ class AssertionError extends Error {
 
 const Pt = 10;
 
-function Bt(e, t, n) {
+function It(e, t, n) {
     let i = "";
     let r = "";
     let a = 0;
@@ -1074,7 +1074,7 @@ function Bt(e, t, n) {
     return `${b}${o ? v : ""}\n${r}${i}${s}${h}`;
 }
 
-const It = 0;
+const Bt = 0;
 
 const Dt = 1;
 
@@ -1501,7 +1501,7 @@ function Ln(e, t, n, i, r) {
         enumerable: true
     };
     if (void 0 !== l.value) {
-        const t = r !== It || true !== e.compact ? 2 : 3;
+        const t = r !== Bt || true !== e.compact ? 2 : 3;
         e.indentationLvl += t;
         s = zn(e, l.value, n);
         if (3 === t) {
@@ -1553,11 +1553,11 @@ function Tn(e, t, n, i) {
     let u;
     let c = true;
     let f = 0;
-    let h = It;
+    let h = Bt;
     if (t[Symbol.iterator]) {
         c = false;
         if (Array.isArray(t)) {
-            r = Ie(t, e.showHidden);
+            r = Be(t, e.showHidden);
             const n = sn(a, s, "Array");
             u = [ `${"Array " === n ? "" : n}[`, "]" ];
             if (0 === t.length && 0 === r.length) return `${u[0]}]`;
@@ -1576,7 +1576,7 @@ function Tn(e, t, n, i) {
             u = [ `${n}{`, "}" ];
             l = Sn;
         } else if (Se(t)) {
-            r = Ie(t, e.showHidden);
+            r = Be(t, e.showHidden);
             const n = null !== a ? sn(a, s) : sn(a, s, hn(t).name);
             u = [ `${n}[`, "]" ];
             if (0 === t.length && 0 === r.length && !e.showHidden) return `${u[0]}]`;
@@ -1642,7 +1642,7 @@ function Tn(e, t, n, i) {
         } else if (Pe(t)) {
             u[0] = `${sn(a, s, "WeakSet")}{`;
             l = e.showHidden ? An : jn;
-        } else if (Be(t)) {
+        } else if (Ie(t)) {
             u[0] = `${sn(a, s, "WeakMap")}{`;
             l = e.showHidden ? Rn : jn;
         } else if (Ce(t)) {
@@ -1696,7 +1696,7 @@ function Tn(e, t, n, i) {
     e.seen.pop();
     if (e.sorted) {
         const t = true === e.sorted ? void 0 : e.sorted;
-        if (h === It) d.sort(t); else if (r.length > 1) {
+        if (h === Bt) d.sort(t); else if (r.length > 1) {
             const e = d.slice(d.length - r.length).sort(t);
             d.splice(d.length - r.length, r.length, ...e);
         }
@@ -1777,16 +1777,16 @@ function Pn(e, t, n, i, r) {
     }
 }
 
-function Bn(e, t) {
+function In(e, t) {
     const n = t.parentNode ?? t.host ?? null;
     if (null === n || n === e) return null;
-    return n.nextSibling ?? Bn(e, n);
+    return n.nextSibling ?? In(e, n);
 }
 
-function In(e, t) {
+function Bn(e, t) {
     return $.for(t, {
         optional: true
-    })?.shadowRoot?.firstChild ?? t.firstChild ?? t.nextSibling ?? Bn(e, t);
+    })?.shadowRoot?.firstChild ?? t.firstChild ?? t.nextSibling ?? In(e, t);
 }
 
 function Dn(e, t) {
@@ -1796,7 +1796,7 @@ function Dn(e, t) {
     })?.shadowRoot?.firstChild ?? e.firstChild;
     while (null !== i) {
         if (3 === i.nodeType) n += i.data;
-        i = In(e, i);
+        i = Bn(e, i);
     }
     return t && n ? n.replace(/\s\s+/g, " ").trim() : n;
 }
@@ -1817,9 +1817,6 @@ function Un(e) {
 
       case "hb":
         return "listenerBinding";
-
-      case "rh":
-        return "callBinding";
 
       case "rj":
         return "refBinding";
@@ -2498,7 +2495,7 @@ const Pi = F({
     }
 });
 
-const Bi = {
+const Ii = {
     "align-content": {
         values: [ "baseline", "center", "end", "first baseline", "flex-end", "flex-start", "inherit", "initial", "last baseline", "normal", "safe", "space-around", "space-between", "space-evenly", "start", "stretch", "unsafe", "unset" ]
     },
@@ -3470,7 +3467,7 @@ const Bi = {
     }
 };
 
-const Ii = [ ":after", ":before", ":backdrop", ":cue", ":first-letter", ":first-line", ":selection", ":placeholder" ];
+const Bi = [ ":after", ":before", ":backdrop", ":cue", ":first-letter", ":first-line", ":selection", ":placeholder" ];
 
 const Di = [ "xml:lang", "xml:base", "accesskey", "autocapitalize", "aria-foo", "class", "contenteditable", "contextmenu", "data-foo", "dir", "draggable", "dropzone", "hidden", "id", "is", "itemid", "itemprop", "itemref", "itemscope", "itemtype", "lang", "slot", "spellcheck", "style", "tabindex", "title", "translate", "onabort", "onautocomplete", "onautocompleteerror", "onblur", "oncancel", "oncanplay", "oncanplaythrough", "onchange", "onclick", "onclose", "oncontextmenu", "oncuechange", "ondblclick", "ondrag", "ondragend", "ondragenter", "ondragexit", "ondragleave", "ondragover", "ondragstart", "ondrop", "ondurationchange", "onemptied", "onended", "onerror", "onfocus", "oninput", "oninvalid", "onkeydown", "onkeypress", "onkeyup", "onload", "onloadeddata", "onloadedmetadata", "onloadstart", "onmousedown", "onmouseenter", "onmouseleave", "onmousemove", "onmouseout", "onmouseover", "onmouseup", "onmousewheel", "onpause", "onplay", "onplaying", "onprogress", "onratechange", "onreset", "onresize", "onscroll", "onseeked", "onseeking", "onselect", "onshow", "onsort", "onstalled", "onsubmit", "onsuspend", "ontimeupdate", "ontoggle", "onvolumechange", "onwaiting" ];
 
@@ -3894,11 +3891,11 @@ class MockBinding {
     subscribeTo(e) {
         this.trace("subscribeTo", e);
     }
-    $bind(e) {
-        this.trace("$bind", e);
+    bind(e) {
+        this.trace("bind", e);
     }
-    $unbind() {
-        this.trace("$unbind");
+    unbind() {
+        this.trace("unbind");
     }
     trace(e, ...t) {
         this.calls.push([ e, ...t ]);
@@ -4456,7 +4453,7 @@ function yr(e, t) {
             const i = r.value;
             const a = function(...n) {
                 t.addCall(this, e, ...n);
-                return B(i, this, n);
+                return I(i, this, n);
             };
             Reflect.defineProperty(a, "original", {
                 value: i,
@@ -4476,7 +4473,7 @@ function yr(e, t) {
             if (i) {
                 o = function() {
                     t.addCall(this, `get ${e}`, a);
-                    return B(i, this, a);
+                    return I(i, this, a);
                 };
                 Reflect.defineProperty(o, "original", {
                     value: i
@@ -4485,7 +4482,7 @@ function yr(e, t) {
             if (s) {
                 l = function(n) {
                     t.addCall(this, `get ${e}`, a);
-                    B(s, this, [ n ]);
+                    I(s, this, [ n ]);
                 };
                 Reflect.defineProperty(l, "original", {
                     value: s
@@ -4527,5 +4524,5 @@ function wr(e) {
     };
 }
 
-export { Bi as CSS_PROPERTIES, Call, CallCollection, ChangeSet, CollectionChangeSet, ar as JsonValueConverter, MockBinding, MockBindingBehavior, MockBrowserHistoryLocation, MockContext, MockPropertySubscriber, MockServiceLocator, MockSignaler, MockTracingExpression, MockValueConverter, wt as PLATFORM, kt as PLATFORMRegistration, Ii as PSEUDO_ELEMENTS, ProxyChangeSet, rr as SortValueConverter, SpySubscriber, lr as TestConfiguration, TestContext, ur as _, Pi as assert, St as createContainer, tr as createFixture, vr as createObserverLocator, $r as createScopeForTest, nt as createSpy, Hi as eachCartesianJoin, Ji as eachCartesianJoinAsync, Ui as eachCartesianJoinFactory, Hn as ensureTaskQueuesEmpty, ai as fail, Gi as generateCartesianProduct, Dn as getVisibleText, Di as globalAttributeNames, Yi as h, Xi as hJsx, mr as htmlStringify, Fn as inspect, Un as instructionTypeName, pr as jsonStringify, er as onFixtureCreated, br as padLeft, gr as padRight, yr as recordCalls, Ct as setPlatform, xr as stopRecordingCalls, dr as stringify, wr as trace, tt as trimFull, Vn as verifyBindingInstructionsEqual, Pn as verifyEqual };
+export { Ii as CSS_PROPERTIES, Call, CallCollection, ChangeSet, CollectionChangeSet, ar as JsonValueConverter, MockBinding, MockBindingBehavior, MockBrowserHistoryLocation, MockContext, MockPropertySubscriber, MockServiceLocator, MockSignaler, MockTracingExpression, MockValueConverter, wt as PLATFORM, kt as PLATFORMRegistration, Bi as PSEUDO_ELEMENTS, ProxyChangeSet, rr as SortValueConverter, SpySubscriber, lr as TestConfiguration, TestContext, ur as _, Pi as assert, St as createContainer, tr as createFixture, vr as createObserverLocator, $r as createScopeForTest, nt as createSpy, Hi as eachCartesianJoin, Ji as eachCartesianJoinAsync, Ui as eachCartesianJoinFactory, Hn as ensureTaskQueuesEmpty, ai as fail, Gi as generateCartesianProduct, Dn as getVisibleText, Di as globalAttributeNames, Yi as h, Xi as hJsx, mr as htmlStringify, Fn as inspect, Un as instructionTypeName, pr as jsonStringify, er as onFixtureCreated, br as padLeft, gr as padRight, yr as recordCalls, Ct as setPlatform, xr as stopRecordingCalls, dr as stringify, wr as trace, tt as trimFull, Vn as verifyBindingInstructionsEqual, Pn as verifyEqual };
 

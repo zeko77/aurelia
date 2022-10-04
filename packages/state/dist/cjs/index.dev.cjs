@@ -164,8 +164,8 @@ class StateBinding {
         this.boundFn = false;
         this.mode = 2;
         this._controller = controller;
-        this.locator = locator;
-        this.taskQueue = taskQueue;
+        this.l = locator;
+        this._taskQueue = taskQueue;
         this._store = store;
         this.oL = observerLocator;
         this.ast = ast;
@@ -197,7 +197,7 @@ class StateBinding {
         }
         targetAccessor.setValue(value, target, prop);
     }
-    $bind(scope) {
+    bind(scope) {
         if (this.isBound) {
             return;
         }
@@ -206,7 +206,7 @@ class StateBinding {
         this.updateTarget(this._value = runtime.astEvaluate(this.ast, this.scope = createStateBindingScope(this._store.getState(), scope), this, this.mode > 1 ? this : null));
         this.isBound = true;
     }
-    $unbind() {
+    unbind() {
         if (!this.isBound) {
             return;
         }
@@ -230,7 +230,7 @@ class StateBinding {
         let task;
         if (shouldQueueFlush) {
             task = this.task;
-            this.task = this.taskQueue.queueTask(() => {
+            this.task = this._taskQueue.queueTask(() => {
                 this.updateTarget(newValue);
                 this.task = null;
             }, updateTaskOpts);
@@ -258,7 +258,7 @@ class StateBinding {
         let task = null;
         if (shouldQueueFlush) {
             task = this.task;
-            this.task = this.taskQueue.queueTask(() => {
+            this.task = this._taskQueue.queueTask(() => {
                 this.updateTarget(value);
                 this.task = null;
             }, updateTaskOpts);
@@ -287,7 +287,7 @@ const updateTaskOpts = {
     preempt: true,
 };
 runtime.connectable(StateBinding);
-runtimeHtml.implementAstEvaluator(true)(StateBinding);
+runtimeHtml.mixinAstEvaluator(true)(StateBinding);
 runtimeHtml.mixingBindingLimited(StateBinding, () => 'updateTarget');
 
 const bindingStateSubscriberMap = new WeakMap();
@@ -340,7 +340,7 @@ class StateDispatchBinding {
     constructor(locator, expr, target, prop, store) {
         this.isBound = false;
         this.boundFn = false;
-        this.locator = locator;
+        this.l = locator;
         this._store = store;
         this.ast = expr;
         this.target = target;
@@ -359,7 +359,7 @@ class StateDispatchBinding {
     handleEvent(e) {
         this.callSource(e);
     }
-    $bind(scope) {
+    bind(scope) {
         if (this.isBound) {
             return;
         }
@@ -369,7 +369,7 @@ class StateDispatchBinding {
         this._store.subscribe(this);
         this.isBound = true;
     }
-    $unbind() {
+    unbind() {
         if (!this.isBound) {
             return;
         }
@@ -391,7 +391,7 @@ class StateDispatchBinding {
     }
 }
 runtime.connectable(StateDispatchBinding);
-runtimeHtml.implementAstEvaluator(true)(StateDispatchBinding);
+runtimeHtml.mixinAstEvaluator(true)(StateDispatchBinding);
 runtimeHtml.mixingBindingLimited(StateDispatchBinding, () => 'callSource');
 
 exports.StateAttributePattern = class StateAttributePattern {
@@ -466,8 +466,7 @@ exports.StateBindingInstructionRenderer = class StateBindingInstructionRenderer 
         this.p = p;
     }
     render(renderingCtrl, target, instruction) {
-        const binding = new StateBinding(renderingCtrl, renderingCtrl.container, this._observerLocator, this.p.domWriteQueue, ensureExpression(this._exprParser, instruction.from, 4), target, instruction.to, this._stateContainer);
-        renderingCtrl.addBinding(binding);
+        renderingCtrl.addBinding(new StateBinding(renderingCtrl, renderingCtrl.container, this._observerLocator, this.p.domWriteQueue, ensureExpression(this._exprParser, instruction.from, 4), target, instruction.to, this._stateContainer));
     }
 };
 exports.StateBindingInstructionRenderer.inject = [runtime.IExpressionParser, runtime.IObserverLocator, IStore, runtimeHtml.IPlatform];
@@ -516,12 +515,11 @@ const createConfiguration = (initialState, reducers) => {
 const StateDefaultConfiguration = createConfiguration({}, []);
 
 let StateGetterBinding = class StateGetterBinding {
-    constructor(locator, target, prop, store, getValue) {
+    constructor(target, prop, store, getValue) {
         this.isBound = false;
         this._value = void 0;
         this._sub = void 0;
         this._updateCount = 0;
-        this.locator = locator;
         this._store = store;
         this.$get = getValue;
         this.target = target;
@@ -551,7 +549,7 @@ let StateGetterBinding = class StateGetterBinding {
         }
         target[prop] = value;
     }
-    $bind(scope) {
+    bind(scope) {
         if (this.isBound) {
             return;
         }
@@ -561,7 +559,7 @@ let StateGetterBinding = class StateGetterBinding {
         this.updateTarget(this._value = this.$get(state));
         this.isBound = true;
     }
-    $unbind() {
+    unbind() {
         if (!this.isBound) {
             return;
         }
@@ -629,7 +627,7 @@ let HydratingLifecycleHooks = class HydratingLifecycleHooks {
     }
     hydrating(vm, controller) {
         const container = controller.container;
-        controller.addBinding(new StateGetterBinding(container, vm, this.key, container.get(IStore), this.$get));
+        controller.addBinding(new StateGetterBinding(vm, this.key, container.get(IStore), this.$get));
     }
 };
 HydratingLifecycleHooks = __decorate([
@@ -645,7 +643,7 @@ let CreatedLifecycleHooks = class CreatedLifecycleHooks {
     }
     created(vm, controller) {
         const container = controller.container;
-        controller.addBinding(new StateGetterBinding(container, vm, this.key, container.get(IStore), this.$get));
+        controller.addBinding(new StateGetterBinding(vm, this.key, container.get(IStore), this.$get));
     }
 };
 CreatedLifecycleHooks = __decorate([

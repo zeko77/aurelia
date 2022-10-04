@@ -161,7 +161,7 @@ export declare const LoggerSink: Readonly<{
     define<TSink extends ISink>(target: Constructable<TSink>, definition: SinkDefinition): Constructable<TSink>;
     getHandles<TSink_1 extends ISink>(target: TSink_1 | Constructable<TSink_1>): LogLevel[] | undefined;
 }>;
-export declare function sink(definition: SinkDefinition): <TSink extends ISink>(target: Constructable<TSink>) => Constructable<TSink>;
+export declare const sink: (definition: SinkDefinition) => <TSink extends ISink>(target: Constructable<TSink>) => Constructable<TSink>;
 export interface IConsoleLike {
     debug(message: string, ...optionalParams: unknown[]): void;
     info(message: string, ...optionalParams: unknown[]): void;

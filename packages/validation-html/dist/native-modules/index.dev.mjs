@@ -1,6 +1,6 @@
 import { DI, IServiceLocator, optional, IContainer, Registration, noop } from '../../../kernel/dist/native-modules/index.mjs';
 import { parsePropertyName, ValidationResult, ValidateInstruction, PropertyRule, IValidator, getDefaultValidationConfiguration, ValidationConfiguration } from '../../../validation/dist/native-modules/index.mjs';
-import { IPlatform, bindable, INode, customAttribute, bindingBehavior, implementAstEvaluator, PropertyBinding, IFlushQueue, BindingTargetSubscriber, CustomElement } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { IPlatform, bindable, INode, customAttribute, bindingBehavior, mixinAstEvaluator, PropertyBinding, IFlushQueue, BindingTargetSubscriber, CustomElement } from '../../../runtime-html/dist/native-modules/index.mjs';
 import { astEvaluate, IExpressionParser, connectable, IObserverLocator } from '../../../runtime/dist/native-modules/index.mjs';
 
 /******************************************************************************
@@ -510,7 +510,7 @@ class ValidatitionConnector {
         this.defaultTrigger = defaultTrigger;
         this._platform = platform;
         this.oL = observerLocator;
-        this.locator = locator;
+        this.l = locator;
         this._triggerMediator = new BindingMediator('handleTriggerChange', this, observerLocator, locator);
         this._controllerMediator = new BindingMediator('handleControllerChange', this, observerLocator, locator);
         this._rulesMediator = new BindingMediator('handleRulesChange', this, observerLocator, locator);
@@ -685,7 +685,7 @@ class ValidatitionConnector {
 }
 ValidatitionConnector.inject = [IPlatform, IObserverLocator, IDefaultTrigger];
 connectable()(ValidatitionConnector);
-implementAstEvaluator(true)(ValidatitionConnector);
+mixinAstEvaluator(true)(ValidatitionConnector);
 class WithValidationTargetSubscriber extends BindingTargetSubscriber {
     constructor(_validationSubscriber, binding, flushQueue) {
         super(binding, flushQueue);
@@ -704,18 +704,18 @@ class ValidateArgumentsDelta {
     }
 }
 class BindingMediator {
-    constructor(key, binding, oL, locator) {
+    constructor(key, binding, oL, l) {
         this.key = key;
         this.binding = binding;
         this.oL = oL;
-        this.locator = locator;
+        this.l = l;
     }
     handleChange(newValue, previousValue) {
         this.binding[this.key](newValue, previousValue);
     }
 }
 connectable()(BindingMediator);
-implementAstEvaluator(true)(BindingMediator);
+mixinAstEvaluator(true)(BindingMediator);
 
 function getDefaultValidationHtmlConfiguration() {
     return {

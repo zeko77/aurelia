@@ -8,9 +8,7 @@ function e(t) {
 
 let n = new WeakMap;
 
-function r(t, e, n, r, a) {
-    return new TypeError(`${t}(${e.map(String).join(",")}) - Expected '${n}' to be of type ${a}, but got: ${Object.prototype.toString.call(r)} (${String(r)})`);
-}
+const r = (t, e, n, r, a) => new TypeError(`${t}(${e.map(String).join(",")}) - Expected '${n}' to be of type ${a}, but got: ${Object.prototype.toString.call(r)} (${String(r)})`);
 
 function a(t) {
     switch (typeof t) {
@@ -71,7 +69,7 @@ function u(t, e, n) {
 
 function f(t, e, n) {
     if (u(t, e, n)) return true;
-    const r = Object.getPrototypeOf(e);
+    const r = T(e);
     if (null !== r) return f(t, r, n);
     return false;
 }
@@ -84,7 +82,7 @@ function s(t, e, n) {
 
 function d(t, e, n) {
     if (u(t, e, n)) return s(t, e, n);
-    const r = Object.getPrototypeOf(e);
+    const r = T(e);
     if (null !== r) return d(t, r, n);
     return;
 }
@@ -109,7 +107,7 @@ function w(t, e) {
 
 function g(t, e) {
     const n = w(t, e);
-    const r = Object.getPrototypeOf(t);
+    const r = T(t);
     if (null === r) return n;
     const a = g(r, e);
     const o = n.length;
@@ -280,6 +278,8 @@ const x = (t, e = true, r = false, a = true, o = true) => {
 };
 
 const D = t => new Error(t);
+
+const T = Object.getPrototypeOf;
 
 export { R as Metadata, x as applyMetadataPolyfill, e as isNullOrUndefined, t as isObject, h as metadata };
 

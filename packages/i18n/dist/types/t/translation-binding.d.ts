@@ -2,21 +2,22 @@ import { IPlatform, type IAstBasedBinding, type IBindingController } from '@aure
 import i18next from 'i18next';
 import type { IContainer, IServiceLocator } from '@aurelia/kernel';
 import type { Scope, IsExpression, IExpressionParser, IObserverLocator, IObserverLocatorBasedConnectable } from '@aurelia/runtime';
-import type { CallBindingInstruction, IHydratableController, INode } from '@aurelia/runtime-html';
+import type { IHydratableController, INode } from '@aurelia/runtime-html';
+import type { TranslationBindBindingInstruction, TranslationBindingInstruction } from './translation-renderer';
+import type { TranslationParametersBindingInstruction } from './translation-parameters-renderer';
 interface TranslationBindingCreationContext {
     parser: IExpressionParser;
     observerLocator: IObserverLocator;
     context: IContainer;
     controller: IHydratableController;
     target: HTMLElement;
-    instruction: CallBindingInstruction;
+    instruction: TranslationBindingInstruction | TranslationBindBindingInstruction | TranslationParametersBindingInstruction;
     platform: IPlatform;
     isParameterContext?: boolean;
 }
 export interface TranslationBinding extends IAstBasedBinding {
 }
 export declare class TranslationBinding implements IObserverLocatorBasedConnectable {
-    locator: IServiceLocator;
     isBound: boolean;
     ast: IsExpression;
     private readonly i18n;
@@ -33,8 +34,8 @@ export declare class TranslationBinding implements IObserverLocatorBasedConnecta
     readonly oL: IObserverLocator;
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, platform: IPlatform, target: INode);
     static create({ parser, observerLocator, context, controller, target, instruction, platform, isParameterContext, }: TranslationBindingCreationContext): void;
-    $bind(scope: Scope): void;
-    $unbind(): void;
+    bind(scope: Scope): void;
+    unbind(): void;
     handleChange(newValue: string | i18next.TOptions, _previousValue: string | i18next.TOptions): void;
     handleLocaleChange(): void;
     useParameter(expr: IsExpression): void;

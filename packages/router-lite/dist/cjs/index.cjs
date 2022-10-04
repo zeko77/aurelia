@@ -3677,19 +3677,17 @@ exports.ViewportCustomElement = x([ s.customElement({
 const wt = [ "name", "usedBy", "default", "fallback", "stateful" ];
 
 exports.LoadCustomAttribute = class LoadCustomAttribute {
-    constructor(t, e, s, i, n, r, o) {
+    constructor(t, e, s, i, n, r) {
         this.target = t;
         this.el = e;
         this.router = s;
         this.events = i;
-        this.delegator = n;
-        this.ctx = r;
-        this.locationMgr = o;
+        this.ctx = n;
+        this.locationMgr = r;
         this.attribute = "href";
         this.active = false;
         this.href = null;
         this.instructions = null;
-        this.eventListener = null;
         this.navigationEndListener = null;
         this.onClick = t => {
             if (null === this.instructions) return;
@@ -3702,7 +3700,7 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
         this.isEnabled = !e.hasAttribute("external") && !e.hasAttribute("data-external");
     }
     binding() {
-        if (this.isEnabled) this.eventListener = this.delegator.addEventListener(this.target, this.el, "click", this.onClick);
+        if (this.isEnabled) this.el.addEventListener("click", this.onClick);
         this.valueChanged();
         this.navigationEndListener = this.events.subscribe("au:router:navigation-end", (t => {
             this.valueChanged();
@@ -3717,7 +3715,7 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
         }));
     }
     unbinding() {
-        if (this.isEnabled) this.eventListener.dispose();
+        if (this.isEnabled) this.el.removeEventListener("click", this.onClick);
         this.navigationEndListener.dispose();
     }
     valueChanged() {
@@ -3773,19 +3771,18 @@ x([ s.bindable({
     callback: "valueChanged"
 }) ], exports.LoadCustomAttribute.prototype, "context", void 0);
 
-exports.LoadCustomAttribute = x([ s.customAttribute("load"), $(0, s.IEventTarget), $(1, s.INode), $(2, Q), $(3, R), $(4, s.IEventDelegator), $(5, ct), $(6, S) ], exports.LoadCustomAttribute);
+exports.LoadCustomAttribute = x([ s.customAttribute("load"), $(0, s.IEventTarget), $(1, s.INode), $(2, Q), $(3, R), $(4, ct), $(5, S) ], exports.LoadCustomAttribute);
 
 exports.HrefCustomAttribute = class HrefCustomAttribute {
-    constructor(t, e, s, i, n, r) {
+    constructor(t, e, s, i, n) {
         this.target = t;
         this.el = e;
         this.router = s;
-        this.delegator = i;
-        this.ctx = n;
+        this.ctx = i;
         this.isInitialized = false;
         if (s.options.useHref && "A" === e.nodeName) switch (e.getAttribute("target")) {
           case null:
-          case r.name:
+          case n.name:
           case "_self":
             this.isEnabled = true;
             break;
@@ -3804,10 +3801,10 @@ exports.HrefCustomAttribute = class HrefCustomAttribute {
             this.isEnabled = this.isEnabled && null === s.getRef(this.el, s.CustomAttribute.getDefinition(exports.LoadCustomAttribute).key);
         }
         this.valueChanged(this.value);
-        this.eventListener = this.delegator.addEventListener(this.target, this.el, "click", this);
+        this.el.addEventListener("click", this);
     }
     unbinding() {
-        this.eventListener.dispose();
+        this.el.removeEventListener("click", this);
     }
     valueChanged(t) {
         if (null == t) this.el.removeAttribute("href"); else {
@@ -3837,7 +3834,7 @@ x([ s.bindable({
 exports.HrefCustomAttribute = x([ s.customAttribute({
     name: "href",
     noMultiBindings: true
-}), $(0, s.IEventTarget), $(1, s.INode), $(2, Q), $(3, s.IEventDelegator), $(4, ct), $(5, s.IWindow) ], exports.HrefCustomAttribute);
+}), $(0, s.IEventTarget), $(1, s.INode), $(2, Q), $(3, ct), $(4, s.IWindow) ], exports.HrefCustomAttribute);
 
 const vt = Q;
 

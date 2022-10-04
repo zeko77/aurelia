@@ -4027,19 +4027,17 @@ const props = [
 ];
 
 exports.LoadCustomAttribute = class LoadCustomAttribute {
-    constructor(target, el, router, events, delegator, ctx, locationMgr) {
+    constructor(target, el, router, events, ctx, locationMgr) {
         this.target = target;
         this.el = el;
         this.router = router;
         this.events = events;
-        this.delegator = delegator;
         this.ctx = ctx;
         this.locationMgr = locationMgr;
         this.attribute = 'href';
         this.active = false;
         this.href = null;
         this.instructions = null;
-        this.eventListener = null;
         this.navigationEndListener = null;
         this.onClick = (e) => {
             if (this.instructions === null) {
@@ -4055,7 +4053,7 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
     }
     binding() {
         if (this.isEnabled) {
-            this.eventListener = this.delegator.addEventListener(this.target, this.el, 'click', this.onClick);
+            this.el.addEventListener('click', this.onClick);
         }
         this.valueChanged();
         this.navigationEndListener = this.events.subscribe('au:router:navigation-end', _e => {
@@ -4074,7 +4072,7 @@ exports.LoadCustomAttribute = class LoadCustomAttribute {
     }
     unbinding() {
         if (this.isEnabled) {
-            this.eventListener.dispose();
+            this.el.removeEventListener('click', this.onClick);
         }
         this.navigationEndListener.dispose();
     }
@@ -4136,17 +4134,15 @@ exports.LoadCustomAttribute = __decorate([
     __param(1, runtimeHtml.INode),
     __param(2, IRouter),
     __param(3, IRouterEvents),
-    __param(4, runtimeHtml.IEventDelegator),
-    __param(5, IRouteContext),
-    __param(6, ILocationManager)
+    __param(4, IRouteContext),
+    __param(5, ILocationManager)
 ], exports.LoadCustomAttribute);
 
 exports.HrefCustomAttribute = class HrefCustomAttribute {
-    constructor(target, el, router, delegator, ctx, w) {
+    constructor(target, el, router, ctx, w) {
         this.target = target;
         this.el = el;
         this.router = router;
-        this.delegator = delegator;
         this.ctx = ctx;
         this.isInitialized = false;
         if (router.options.useHref &&
@@ -4175,10 +4171,10 @@ exports.HrefCustomAttribute = class HrefCustomAttribute {
             this.isEnabled = this.isEnabled && runtimeHtml.getRef(this.el, runtimeHtml.CustomAttribute.getDefinition(exports.LoadCustomAttribute).key) === null;
         }
         this.valueChanged(this.value);
-        this.eventListener = this.delegator.addEventListener(this.target, this.el, 'click', this);
+        this.el.addEventListener('click', this);
     }
     unbinding() {
-        this.eventListener.dispose();
+        this.el.removeEventListener('click', this);
     }
     valueChanged(newValue) {
         if (newValue == null) {
@@ -4217,9 +4213,8 @@ exports.HrefCustomAttribute = __decorate([
     __param(0, runtimeHtml.IEventTarget),
     __param(1, runtimeHtml.INode),
     __param(2, IRouter),
-    __param(3, runtimeHtml.IEventDelegator),
-    __param(4, IRouteContext),
-    __param(5, runtimeHtml.IWindow)
+    __param(3, IRouteContext),
+    __param(4, runtimeHtml.IWindow)
 ], exports.HrefCustomAttribute);
 
 const RouterRegistration = IRouter;

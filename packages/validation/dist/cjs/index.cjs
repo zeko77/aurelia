@@ -307,11 +307,11 @@ class ValidationMessageEvaluationContext {
 
 class PropertyRule {
     constructor(e, t, s, r, i = [ [] ]) {
-        this.locator = e;
         this.validationRules = t;
         this.messageProvider = s;
         this.property = r;
         this.$rules = i;
+        this.l = e;
     }
     accept(e) {
         return e.visitPropertyRule(this);
@@ -466,7 +466,7 @@ class PropertyRule {
 
 PropertyRule.$TYPE = "PropertyRule";
 
-r.implementAstEvaluator()(PropertyRule);
+r.mixinAstEvaluator()(PropertyRule);
 
 class ModelBasedRule {
     constructor(e, t = $.defaultRuleSetName) {
@@ -1140,7 +1140,7 @@ exports.ValidationDeserializer = a([ u(0, e.IServiceLocator), u(1, c), u(2, s.IE
 
 exports.ModelValidationExpressionHydrator = class ModelValidationExpressionHydrator {
     constructor(e, t, s) {
-        this.locator = e;
+        this.l = e;
         this.messageProvider = t;
         this.parser = s;
         this.astDeserializer = new Deserializer;
@@ -1158,7 +1158,7 @@ exports.ModelValidationExpressionHydrator = class ModelValidationExpressionHydra
                     name: "" !== r ? `${r}.${n}` : n,
                     displayName: o.displayName
                 });
-                s.push(new PropertyRule(this.locator, t, this.messageProvider, a, e));
+                s.push(new PropertyRule(this.l, t, this.messageProvider, a, e));
             } else r(Object.entries(o), [ ...i, n ]);
         };
         r(Object.entries(e));
@@ -1274,7 +1274,7 @@ exports.ModelValidationExpressionHydrator = class ModelValidationExpressionHydra
 
 exports.ModelValidationExpressionHydrator = a([ u(0, e.IServiceLocator), u(1, c), u(2, s.IExpressionParser) ], exports.ModelValidationExpressionHydrator);
 
-r.implementAstEvaluator()(exports.ModelValidationExpressionHydrator);
+r.mixinAstEvaluator()(exports.ModelValidationExpressionHydrator);
 
 class ValidateInstruction {
     constructor(e = void 0, t = void 0, s = void 0, r = void 0, i = void 0, n = 0) {

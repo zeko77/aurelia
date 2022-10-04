@@ -35,7 +35,6 @@ export declare const DefaultBindingSyntax: IRegistry[];
  * - `:target` (short-hand for `target.bind`)
  */
 export declare const ShortHandBindingSyntax: IRegistry[];
-export declare const CallBindingCommandRegistration: IRegistry;
 export declare const DefaultBindingCommandRegistration: IRegistry;
 export declare const ForBindingCommandRegistration: IRegistry;
 export declare const FromViewBindingCommandRegistration: IRegistry;
@@ -44,7 +43,6 @@ export declare const ToViewBindingCommandRegistration: IRegistry;
 export declare const TwoWayBindingCommandRegistration: IRegistry;
 export declare const RefBindingCommandRegistration: IRegistry;
 export declare const TriggerBindingCommandRegistration: IRegistry;
-export declare const DelegateBindingCommandRegistration: IRegistry;
 export declare const CaptureBindingCommandRegistration: IRegistry;
 export declare const AttrBindingCommandRegistration: IRegistry;
 export declare const ClassBindingCommandRegistration: IRegistry;
@@ -91,7 +89,6 @@ export declare const ShowRegistration: IRegistry;
  * - Value Converters: `sanitize`
  */
 export declare const DefaultResources: (IRegistry | typeof AuSlot)[];
-export declare const CallBindingRendererRegistration: IRegistry;
 export declare const CustomAttributeRendererRegistration: IRegistry;
 export declare const CustomElementRendererRegistration: IRegistry;
 export declare const InterpolationBindingRendererRegistration: IRegistry;

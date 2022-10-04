@@ -1,5 +1,5 @@
 import { DI, IEventAggregator, toArray, camelCase, Registration } from '../../../kernel/dist/native-modules/index.mjs';
-import { bindingBehavior, valueConverter, implementAstEvaluator, mixingBindingLimited, CustomElement, attributePattern, bindingCommand, renderer, AttrSyntax, IPlatform, AttributePattern, BindingCommand, AppTask } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { bindingBehavior, valueConverter, mixinAstEvaluator, mixingBindingLimited, CustomElement, attributePattern, bindingCommand, renderer, AttrSyntax, IPlatform, AttributePattern, BindingCommand, AppTask } from '../../../runtime-html/dist/native-modules/index.mjs';
 import { ValueConverterExpression, ISignaler, connectable, CustomExpression, Interpolation, astEvaluate, astUnbind, astBind, IExpressionParser, IObserverLocator } from '../../../runtime/dist/native-modules/index.mjs';
 import i18next from 'i18next';
 
@@ -318,15 +318,15 @@ const taskQueueOpts = {
 };
 class TranslationBinding {
     constructor(controller, locator, observerLocator, platform, target) {
-        this.locator = locator;
         this.isBound = false;
         this._contentAttributes = contentAttributes;
         this.task = null;
         this.parameter = null;
         this.boundFn = false;
+        this.l = locator;
         this._controller = controller;
         this.target = target;
-        this.i18n = this.locator.get(I18N);
+        this.i18n = locator.get(I18N);
         this.platform = platform;
         this._targetAccessors = new Set();
         this.oL = observerLocator;
@@ -354,7 +354,7 @@ class TranslationBinding {
         }
         return binding;
     }
-    $bind(scope) {
+    bind(scope) {
         if (this.isBound) {
             return;
         }
@@ -365,16 +365,16 @@ class TranslationBinding {
         this._isInterpolation = this.ast instanceof Interpolation;
         this._keyExpression = astEvaluate(this.ast, scope, this, this);
         this._ensureKeyExpression();
-        this.parameter?.$bind(scope);
+        this.parameter?.bind(scope);
         this.updateTranslations();
         this.isBound = true;
     }
-    $unbind() {
+    unbind() {
         if (!this.isBound) {
             return;
         }
         astUnbind(this.ast, this.scope, this);
-        this.parameter?.$unbind();
+        this.parameter?.unbind();
         this._targetAccessors.clear();
         if (this.task !== null) {
             this.task.cancel();
@@ -512,7 +512,7 @@ class TranslationBinding {
     }
 }
 connectable(TranslationBinding);
-implementAstEvaluator(true)(TranslationBinding);
+mixinAstEvaluator(true)(TranslationBinding);
 mixingBindingLimited(TranslationBinding, () => 'updateTranslations');
 class AccessorUpdateTask {
     constructor(accessor, v, el, attr) {
@@ -533,7 +533,7 @@ class ParameterBinding {
         this.isBound = false;
         this.boundFn = false;
         this.oL = owner.oL;
-        this.locator = owner.locator;
+        this.l = owner.l;
     }
     handleChange(_newValue, _previousValue) {
         if (!this.isBound) {
@@ -544,7 +544,7 @@ class ParameterBinding {
         this.obs.clear();
         this.updater();
     }
-    $bind(scope) {
+    bind(scope) {
         if (this.isBound) {
             return;
         }
@@ -553,7 +553,7 @@ class ParameterBinding {
         this.value = astEvaluate(this.ast, scope, this, this);
         this.isBound = true;
     }
-    $unbind() {
+    unbind() {
         if (!this.isBound) {
             return;
         }
@@ -563,7 +563,7 @@ class ParameterBinding {
     }
 }
 connectable(ParameterBinding);
-implementAstEvaluator(true)(ParameterBinding);
+mixinAstEvaluator(true)(ParameterBinding);
 
 const TranslationParametersInstructionType = 'tpt';
 const attribute = 't-params.bind';

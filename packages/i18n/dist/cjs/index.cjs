@@ -297,15 +297,15 @@ const m = {
 
 class TranslationBinding {
     constructor(t, s, n, i, e) {
-        this.locator = s;
         this.isBound = false;
         this.T = d;
         this.task = null;
         this.parameter = null;
         this.boundFn = false;
+        this.l = s;
         this.B = t;
         this.target = e;
-        this.i18n = this.locator.get(f);
+        this.i18n = s.get(f);
         this.platform = i;
         this.C = new Set;
         this.oL = n;
@@ -334,21 +334,21 @@ class TranslationBinding {
         }
         return r;
     }
-    $bind(t) {
+    bind(t) {
         if (this.isBound) return;
         if (!this.ast) throw new Error("key expression is missing");
         this.scope = t;
         this.P = this.ast instanceof n.Interpolation;
         this.M = n.astEvaluate(this.ast, t, this, this);
         this.A();
-        this.parameter?.$bind(t);
+        this.parameter?.bind(t);
         this.updateTranslations();
         this.isBound = true;
     }
-    $unbind() {
+    unbind() {
         if (!this.isBound) return;
         n.astUnbind(this.ast, this.scope, this);
-        this.parameter?.$unbind();
+        this.parameter?.unbind();
         this.C.clear();
         if (null !== this.task) {
             this.task.cancel();
@@ -448,7 +448,7 @@ class TranslationBinding {
 
 n.connectable(TranslationBinding);
 
-s.implementAstEvaluator(true)(TranslationBinding);
+s.mixinAstEvaluator(true)(TranslationBinding);
 
 s.mixingBindingLimited(TranslationBinding, (() => "updateTranslations"));
 
@@ -472,7 +472,7 @@ class ParameterBinding {
         this.isBound = false;
         this.boundFn = false;
         this.oL = t.oL;
-        this.locator = t.locator;
+        this.l = t.l;
     }
     handleChange(t, s) {
         if (!this.isBound) return;
@@ -481,14 +481,14 @@ class ParameterBinding {
         this.obs.clear();
         this.updater();
     }
-    $bind(t) {
+    bind(t) {
         if (this.isBound) return;
         this.scope = t;
         n.astBind(this.ast, t, this);
         this.value = n.astEvaluate(this.ast, t, this, this);
         this.isBound = true;
     }
-    $unbind() {
+    unbind() {
         if (!this.isBound) return;
         n.astUnbind(this.ast, this.scope, this);
         this.scope = void 0;
@@ -498,7 +498,7 @@ class ParameterBinding {
 
 n.connectable(ParameterBinding);
 
-s.implementAstEvaluator(true)(ParameterBinding);
+s.mixinAstEvaluator(true)(ParameterBinding);
 
 const b = "tpt";
 

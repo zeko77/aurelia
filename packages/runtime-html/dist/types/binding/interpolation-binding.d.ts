@@ -7,7 +7,6 @@ import type { IAstBasedBinding, IBindingController } from './interfaces-bindings
 export interface InterpolationBinding extends IBinding {
 }
 export declare class InterpolationBinding implements IBinding {
-    locator: IServiceLocator;
     private readonly taskQueue;
     ast: Interpolation;
     target: object;
@@ -24,39 +23,33 @@ export declare class InterpolationBinding implements IBinding {
     readonly oL: IObserverLocator;
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, taskQueue: TaskQueue, ast: Interpolation, target: object, targetProperty: string, mode: BindingMode);
     updateTarget(): void;
-    $bind(scope: Scope): void;
-    $unbind(): void;
+    bind(scope: Scope): void;
+    unbind(): void;
 }
 export interface InterpolationPartBinding extends IAstBasedBinding {
 }
-export declare class InterpolationPartBinding implements IAstBasedBinding, ICollectionSubscriber {
+export declare class InterpolationPartBinding implements IBinding, ICollectionSubscriber {
     readonly ast: IsExpression;
     readonly target: object;
     readonly targetProperty: string;
-    readonly locator: IServiceLocator;
     readonly owner: InterpolationBinding;
     readonly mode: BindingMode;
     scope?: Scope;
     task: ITask | null;
     isBound: boolean;
-    /**
-     * A semi-private property used by connectable mixin
-     */
-    readonly oL: IObserverLocator;
     constructor(ast: IsExpression, target: object, targetProperty: string, locator: IServiceLocator, observerLocator: IObserverLocator, owner: InterpolationBinding);
     updateTarget(): void;
     handleChange(): void;
     handleCollectionChange(): void;
-    $bind(scope: Scope): void;
-    $unbind(): void;
+    bind(scope: Scope): void;
+    unbind(): void;
 }
 export interface ContentBinding extends IAstBasedBinding {
 }
 /**
  * A binding for handling the element content interpolation
  */
-export declare class ContentBinding implements IAstBasedBinding, ICollectionSubscriber {
-    readonly locator: IServiceLocator;
+export declare class ContentBinding implements IBinding, ICollectionSubscriber {
     private readonly taskQueue;
     private readonly p;
     readonly ast: IsExpression;
@@ -66,15 +59,11 @@ export declare class ContentBinding implements IAstBasedBinding, ICollectionSubs
     scope?: Scope;
     task: ITask | null;
     isBound: boolean;
-    /**
-     * A semi-private property used by connectable mixin
-     */
-    readonly oL: IObserverLocator;
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, taskQueue: TaskQueue, p: IPlatform, ast: IsExpression, target: Text, strict: boolean);
     updateTarget(value: unknown): void;
     handleChange(): void;
     handleCollectionChange(): void;
-    $bind(scope: Scope): void;
-    $unbind(): void;
+    bind(scope: Scope): void;
+    unbind(): void;
 }
 //# sourceMappingURL=interpolation-binding.d.ts.map

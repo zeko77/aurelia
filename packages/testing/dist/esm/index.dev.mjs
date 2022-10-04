@@ -2236,8 +2236,6 @@ function instructionTypeName(type) {
             return 'iteratorBinding';
         case "hb":
             return 'listenerBinding';
-        case "rh":
-            return 'callBinding';
         case "rj":
             return 'refBinding';
         case "hd":
@@ -7759,11 +7757,11 @@ class MockBinding {
     subscribeTo(subscribable) {
         this.trace('subscribeTo', subscribable);
     }
-    $bind(scope) {
-        this.trace('$bind', scope);
+    bind(scope) {
+        this.trace('bind', scope);
     }
-    $unbind() {
-        this.trace('$unbind');
+    unbind() {
+        this.trace('unbind');
     }
     trace(fnName, ...args) {
         this.calls.push([fnName, ...args]);

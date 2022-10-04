@@ -228,7 +228,7 @@ const isNativeFunction = (function () {
     let isNative = false;
     let sourceText = '';
     let i = 0;
-    return function (fn) {
+    return (fn) => {
         isNative = lookup.get(fn);
         if (isNative === void 0) {
             sourceText = fn.toString();
@@ -397,412 +397,6 @@ function fromDefinitionOrDefault(name, def, getDefault) {
     return value;
 }
 
-metadata.applyMetadataPolyfill(Reflect, false, false);
-class ResolverBuilder {
-    constructor(_container, _key) {
-        this._container = _container;
-        this._key = _key;
-    }
-    instance(value) {
-        return this._registerResolver(0, value);
-    }
-    singleton(value) {
-        return this._registerResolver(1, value);
-    }
-    transient(value) {
-        return this._registerResolver(2, value);
-    }
-    callback(value) {
-        return this._registerResolver(3, value);
-    }
-    cachedCallback(value) {
-        return this._registerResolver(3, cacheCallbackResult(value));
-    }
-    aliasTo(destinationKey) {
-        return this._registerResolver(5, destinationKey);
-    }
-    _registerResolver(strategy, state) {
-        const { _container: container, _key: key } = this;
-        this._container = this._key = (void 0);
-        return container.registerResolver(key, new Resolver(key, strategy, state));
-    }
-}
-function cloneArrayWithPossibleProps(source) {
-    const clone = source.slice();
-    const keys = Object.keys(source);
-    const len = keys.length;
-    let key;
-    for (let i = 0; i < len; ++i) {
-        key = keys[i];
-        if (!isArrayIndex(key)) {
-            clone[key] = source[key];
-        }
-    }
-    return clone;
-}
-const DefaultResolver = {
-    none(key) {
-        throw noResolverForKeyError(key);
-    },
-    singleton(key) { return new Resolver(key, 1, key); },
-    transient(key) { return new Resolver(key, 2, key); },
-};
-const noResolverForKeyError = (key) => createError(`AUR0002: ${toStringSafe(key)} not registered, did you forget to add @singleton()?`)
-    ;
-class ContainerConfiguration {
-    constructor(inheritParentResources, defaultResolver) {
-        this.inheritParentResources = inheritParentResources;
-        this.defaultResolver = defaultResolver;
-    }
-    static from(config) {
-        if (config === void 0 ||
-            config === ContainerConfiguration.DEFAULT) {
-            return ContainerConfiguration.DEFAULT;
-        }
-        return new ContainerConfiguration(config.inheritParentResources ?? false, config.defaultResolver ?? DefaultResolver.singleton);
-    }
-}
-ContainerConfiguration.DEFAULT = ContainerConfiguration.from({});
-const DI = {
-    createContainer(config) {
-        return new Container(null, ContainerConfiguration.from(config));
-    },
-    getDesignParamtypes(Type) {
-        return getOwnMetadata('design:paramtypes', Type);
-    },
-    getAnnotationParamtypes(Type) {
-        const key = getAnnotationKeyFor('di:paramtypes');
-        return getOwnMetadata(key, Type);
-    },
-    getOrCreateAnnotationParamTypes: getOrCreateAnnotationParamTypes,
-    getDependencies: getDependencies,
-    createInterface(configureOrName, configuror) {
-        const configure = isFunction(configureOrName) ? configureOrName : configuror;
-        const friendlyName = isString(configureOrName) ? configureOrName : undefined;
-        const Interface = function (target, property, index) {
-            if (target == null || new.target !== undefined) {
-                {
-                    throw createError(`AUR0001: No registration for interface: '${Interface.friendlyName}'`);
-                }
-            }
-            const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
-            annotationParamtypes[index] = Interface;
-        };
-        Interface.$isInterface = true;
-        Interface.friendlyName = friendlyName == null ? '(anonymous)' : friendlyName;
-        if (configure != null) {
-            Interface.register = (container, key) => configure(new ResolverBuilder(container, key ?? Interface));
-        }
-        Interface.toString = () => `InterfaceSymbol<${Interface.friendlyName}>`;
-        return Interface;
-    },
-    inject(...dependencies) {
-        return function (target, key, descriptor) {
-            if (typeof descriptor === 'number') {
-                const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
-                const dep = dependencies[0];
-                if (dep !== void 0) {
-                    annotationParamtypes[descriptor] = dep;
-                }
-            }
-            else if (key) {
-                const annotationParamtypes = getOrCreateAnnotationParamTypes(target.constructor);
-                const dep = dependencies[0];
-                if (dep !== void 0) {
-                    annotationParamtypes[key] = dep;
-                }
-            }
-            else if (descriptor) {
-                const fn = descriptor.value;
-                const annotationParamtypes = getOrCreateAnnotationParamTypes(fn);
-                let dep;
-                let i = 0;
-                for (; i < dependencies.length; ++i) {
-                    dep = dependencies[i];
-                    if (dep !== void 0) {
-                        annotationParamtypes[i] = dep;
-                    }
-                }
-            }
-            else {
-                const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
-                let dep;
-                let i = 0;
-                for (; i < dependencies.length; ++i) {
-                    dep = dependencies[i];
-                    if (dep !== void 0) {
-                        annotationParamtypes[i] = dep;
-                    }
-                }
-            }
-        };
-    },
-    transient(target) {
-        target.register = function (container) {
-            const registration = Registration.transient(target, target);
-            return registration.register(container, target);
-        };
-        target.registerInRequestor = false;
-        return target;
-    },
-    singleton(target, options = defaultSingletonOptions) {
-        target.register = function (container) {
-            const registration = Registration.singleton(target, target);
-            return registration.register(container, target);
-        };
-        target.registerInRequestor = options.scoped;
-        return target;
-    },
-};
-function getDependencies(Type) {
-    const key = getAnnotationKeyFor('di:dependencies');
-    let dependencies = getOwnMetadata(key, Type);
-    if (dependencies === void 0) {
-        const inject = Type.inject;
-        if (inject === void 0) {
-            const designParamtypes = DI.getDesignParamtypes(Type);
-            const annotationParamtypes = DI.getAnnotationParamtypes(Type);
-            if (designParamtypes === void 0) {
-                if (annotationParamtypes === void 0) {
-                    const Proto = Object.getPrototypeOf(Type);
-                    if (isFunction(Proto) && Proto !== Function.prototype) {
-                        dependencies = cloneArrayWithPossibleProps(getDependencies(Proto));
-                    }
-                    else {
-                        dependencies = [];
-                    }
-                }
-                else {
-                    dependencies = cloneArrayWithPossibleProps(annotationParamtypes);
-                }
-            }
-            else if (annotationParamtypes === void 0) {
-                dependencies = cloneArrayWithPossibleProps(designParamtypes);
-            }
-            else {
-                dependencies = cloneArrayWithPossibleProps(designParamtypes);
-                let len = annotationParamtypes.length;
-                let auAnnotationParamtype;
-                let i = 0;
-                for (; i < len; ++i) {
-                    auAnnotationParamtype = annotationParamtypes[i];
-                    if (auAnnotationParamtype !== void 0) {
-                        dependencies[i] = auAnnotationParamtype;
-                    }
-                }
-                const keys = Object.keys(annotationParamtypes);
-                let key;
-                i = 0;
-                len = keys.length;
-                for (i = 0; i < len; ++i) {
-                    key = keys[i];
-                    if (!isArrayIndex(key)) {
-                        dependencies[key] = annotationParamtypes[key];
-                    }
-                }
-            }
-        }
-        else {
-            dependencies = cloneArrayWithPossibleProps(inject);
-        }
-        defineMetadata(key, dependencies, Type);
-        appendAnnotation(Type, key);
-    }
-    return dependencies;
-}
-function getOrCreateAnnotationParamTypes(Type) {
-    const key = getAnnotationKeyFor('di:paramtypes');
-    let annotationParamtypes = getOwnMetadata(key, Type);
-    if (annotationParamtypes === void 0) {
-        defineMetadata(key, annotationParamtypes = [], Type);
-        appendAnnotation(Type, key);
-    }
-    return annotationParamtypes;
-}
-const IContainer = DI.createInterface('IContainer');
-const IServiceLocator = IContainer;
-function createResolver(getter) {
-    return function (key) {
-        const resolver = function (target, property, descriptor) {
-            DI.inject(resolver)(target, property, descriptor);
-        };
-        resolver.$isResolver = true;
-        resolver.resolve = function (handler, requestor) {
-            return getter(key, handler, requestor);
-        };
-        return resolver;
-    };
-}
-const inject = DI.inject;
-function transientDecorator(target) {
-    return DI.transient(target);
-}
-function transient(target) {
-    return target == null ? transientDecorator : transientDecorator(target);
-}
-const defaultSingletonOptions = { scoped: false };
-function singleton(targetOrOptions) {
-    if (isFunction(targetOrOptions)) {
-        return DI.singleton(targetOrOptions);
-    }
-    return function ($target) {
-        return DI.singleton($target, targetOrOptions);
-    };
-}
-function createAllResolver(getter) {
-    return function (key, searchAncestors) {
-        searchAncestors = !!searchAncestors;
-        const resolver = function (target, property, descriptor) {
-            DI.inject(resolver)(target, property, descriptor);
-        };
-        resolver.$isResolver = true;
-        resolver.resolve = function (handler, requestor) {
-            return getter(key, handler, requestor, searchAncestors);
-        };
-        return resolver;
-    };
-}
-const all = createAllResolver((key, handler, requestor, searchAncestors) => requestor.getAll(key, searchAncestors));
-const lazy = createResolver((key, handler, requestor) => {
-    return () => requestor.get(key);
-});
-const optional = createResolver((key, handler, requestor) => {
-    if (requestor.has(key, true)) {
-        return requestor.get(key);
-    }
-    else {
-        return undefined;
-    }
-});
-function ignore(target, property, descriptor) {
-    DI.inject(ignore)(target, property, descriptor);
-}
-ignore.$isResolver = true;
-ignore.resolve = () => undefined;
-const factory = createResolver((key, handler, requestor) => {
-    return (...args) => handler.getFactory(key).construct(requestor, args);
-});
-const newInstanceForScope = createResolver((key, handler, requestor) => {
-    const instance = createNewInstance(key, handler, requestor);
-    const instanceProvider = new InstanceProvider(toStringSafe(key), instance);
-    requestor.registerResolver(key, instanceProvider, true);
-    return instance;
-});
-const newInstanceOf = createResolver((key, handler, requestor) => createNewInstance(key, handler, requestor));
-function createNewInstance(key, handler, requestor) {
-    return handler.getFactory(key).construct(requestor);
-}
-
-class Resolver {
-    constructor(_key, _strategy, _state) {
-        this._key = _key;
-        this._strategy = _strategy;
-        this._state = _state;
-        this.resolving = false;
-    }
-    get $isResolver() { return true; }
-    register(container, key) {
-        return container.registerResolver(key || this._key, this);
-    }
-    resolve(handler, requestor) {
-        switch (this._strategy) {
-            case 0:
-                return this._state;
-            case 1: {
-                if (this.resolving) {
-                    throw cyclicDependencyError(this._state.name);
-                }
-                this.resolving = true;
-                this._state = handler.getFactory(this._state).construct(requestor);
-                this._strategy = 0;
-                this.resolving = false;
-                return this._state;
-            }
-            case 2: {
-                const factory = handler.getFactory(this._state);
-                if (factory === null) {
-                    throw nullFactoryError(this._key);
-                }
-                return factory.construct(requestor);
-            }
-            case 3:
-                return this._state(handler, requestor, this);
-            case 4:
-                return this._state[0].resolve(handler, requestor);
-            case 5:
-                return requestor.get(this._state);
-            default:
-                throw invalidResolverStrategyError(this._strategy);
-        }
-    }
-    getFactory(container) {
-        switch (this._strategy) {
-            case 1:
-            case 2:
-                return container.getFactory(this._state);
-            case 5:
-                return container.getResolver(this._state)?.getFactory?.(container) ?? null;
-            default:
-                return null;
-        }
-    }
-}
-const cyclicDependencyError = (name) => createError(`AUR0003: Cyclic dependency found: ${name}`)
-    ;
-const nullFactoryError = (key) => createError(`AUR0004: Resolver for ${toStringSafe(key)} returned a null factory`)
-    ;
-const invalidResolverStrategyError = (strategy) => createError(`AUR0005: Invalid resolver strategy specified: ${strategy}.`)
-    ;
-function containerGetKey(d) {
-    return this.get(d);
-}
-function transformInstance(inst, transform) {
-    return transform(inst);
-}
-class Factory {
-    constructor(Type, dependencies) {
-        this.Type = Type;
-        this.dependencies = dependencies;
-        this.transformers = null;
-    }
-    construct(container, dynamicDependencies) {
-        let instance;
-        if (dynamicDependencies === void 0) {
-            instance = new this.Type(...this.dependencies.map(containerGetKey, container));
-        }
-        else {
-            instance = new this.Type(...this.dependencies.map(containerGetKey, container), ...dynamicDependencies);
-        }
-        if (this.transformers == null) {
-            return instance;
-        }
-        return this.transformers.reduce(transformInstance, instance);
-    }
-    registerTransformer(transformer) {
-        (this.transformers ?? (this.transformers = [])).push(transformer);
-    }
-}
-const containerResolver = {
-    $isResolver: true,
-    resolve(handler, requestor) {
-        return requestor;
-    }
-};
-function isRegistry(obj) {
-    return isFunction(obj.register);
-}
-function isSelfRegistry(obj) {
-    return isRegistry(obj) && typeof obj.registerInRequestor === 'boolean';
-}
-function isRegisterInRequester(obj) {
-    return isSelfRegistry(obj) && obj.registerInRequestor;
-}
-function isClass(obj) {
-    return obj.prototype !== void 0;
-}
-function isResourceKey(key) {
-    return isString(key) && key.indexOf(':') > 0;
-}
 const InstrinsicTypeNames = new Set('Array ArrayBuffer Boolean DataView Date Error EvalError Float32Array Float64Array Function Int8Array Int16Array Int32Array Map Number Object Promise RangeError ReferenceError RegExp Set SharedArrayBuffer String SyntaxError TypeError Uint8Array Uint8ClampedArray Uint16Array Uint32Array URIError WeakMap WeakSet'.split(' '));
 let containerId = 0;
 class Container {
@@ -1151,6 +745,36 @@ class Container {
         }
     }
 }
+function validateKey(key) {
+    if (key === null || key === void 0) {
+        {
+            throw createError(`AUR0014: key/value cannot be null or undefined. Are you trying to inject/register something that doesn't exist with DI?`);
+        }
+    }
+}
+const buildAllResponse = (resolver, handler, requestor) => {
+    if (resolver instanceof Resolver && resolver._strategy === 4) {
+        const state = resolver._state;
+        let i = state.length;
+        const results = new Array(i);
+        while (i--) {
+            results[i] = state[i].resolve(handler, requestor);
+        }
+        return results;
+    }
+    return [resolver.resolve(handler, requestor)];
+};
+const containerResolver = {
+    $isResolver: true,
+    resolve(handler, requestor) {
+        return requestor;
+    }
+};
+const isRegistry = (obj) => isFunction(obj.register);
+const isSelfRegistry = (obj) => isRegistry(obj) && typeof obj.registerInRequestor === 'boolean';
+const isRegisterInRequester = (obj) => isSelfRegistry(obj) && obj.registerInRequestor;
+const isClass = (obj) => obj.prototype !== void 0;
+const isResourceKey = (key) => isString(key) && key.indexOf(':') > 0;
 const registrationError = (deps) => createError(`AUR0006: Unable to autoregister dependency: [${deps.map(toStringSafe)}]`)
     ;
 const resourceExistError = (key) => createError(`AUR0007: Resource key "${toStringSafe(key)}" already registered`)
@@ -1165,6 +789,418 @@ const invalidResolverFromRegisterError = () => createError(`AUR0011: Invalid res
     ;
 const jitInterfaceError = (name) => createError(`AUR0012: Attempted to jitRegister an interface: ${name}`)
     ;
+const createNativeInvocationError = (Type) => createError(`AUR0015: ${Type.name} is a native function and therefore cannot be safely constructed by DI. If this is intentional, please use a callback or cachedCallback resolver.`)
+    ;
+
+const instanceRegistration = (key, value) => new Resolver(key, 0, value);
+const singletonRegistration = (key, value) => new Resolver(key, 1, value);
+const transientRegistation = (key, value) => new Resolver(key, 2, value);
+const callbackRegistration = (key, callback) => new Resolver(key, 3, callback);
+const cachedCallbackRegistration = (key, callback) => new Resolver(key, 3, cacheCallbackResult(callback));
+const aliasToRegistration = (originalKey, aliasKey) => new Resolver(aliasKey, 5, originalKey);
+const deferRegistration = (key, ...params) => new ParameterizedRegistry(key, params);
+const containerLookup = new WeakMap();
+const cacheCallbackResult = (fun) => {
+    return (handler, requestor, resolver) => {
+        let resolverLookup = containerLookup.get(handler);
+        if (resolverLookup === void 0) {
+            containerLookup.set(handler, resolverLookup = new WeakMap());
+        }
+        if (resolverLookup.has(resolver)) {
+            return resolverLookup.get(resolver);
+        }
+        const t = fun(handler, requestor, resolver);
+        resolverLookup.set(resolver, t);
+        return t;
+    };
+};
+
+metadata.applyMetadataPolyfill(Reflect, false, false);
+class ResolverBuilder {
+    constructor(_container, _key) {
+        this._container = _container;
+        this._key = _key;
+    }
+    instance(value) {
+        return this._registerResolver(0, value);
+    }
+    singleton(value) {
+        return this._registerResolver(1, value);
+    }
+    transient(value) {
+        return this._registerResolver(2, value);
+    }
+    callback(value) {
+        return this._registerResolver(3, value);
+    }
+    cachedCallback(value) {
+        return this._registerResolver(3, cacheCallbackResult(value));
+    }
+    aliasTo(destinationKey) {
+        return this._registerResolver(5, destinationKey);
+    }
+    _registerResolver(strategy, state) {
+        const { _container: container, _key: key } = this;
+        this._container = this._key = (void 0);
+        return container.registerResolver(key, new Resolver(key, strategy, state));
+    }
+}
+const cloneArrayWithPossibleProps = (source) => {
+    const clone = source.slice();
+    const keys = Object.keys(source);
+    const len = keys.length;
+    let key;
+    for (let i = 0; i < len; ++i) {
+        key = keys[i];
+        if (!isArrayIndex(key)) {
+            clone[key] = source[key];
+        }
+    }
+    return clone;
+};
+const DefaultResolver = {
+    none(key) {
+        throw noResolverForKeyError(key);
+    },
+    singleton: (key) => new Resolver(key, 1, key),
+    transient: (key) => new Resolver(key, 2, key),
+};
+const noResolverForKeyError = (key) => createError(`AUR0002: ${toStringSafe(key)} not registered, did you forget to add @singleton()?`)
+    ;
+class ContainerConfiguration {
+    constructor(inheritParentResources, defaultResolver) {
+        this.inheritParentResources = inheritParentResources;
+        this.defaultResolver = defaultResolver;
+    }
+    static from(config) {
+        if (config === void 0 ||
+            config === ContainerConfiguration.DEFAULT) {
+            return ContainerConfiguration.DEFAULT;
+        }
+        return new ContainerConfiguration(config.inheritParentResources ?? false, config.defaultResolver ?? DefaultResolver.singleton);
+    }
+}
+ContainerConfiguration.DEFAULT = ContainerConfiguration.from({});
+const createContainer = (config) => new Container(null, ContainerConfiguration.from(config));
+const getAnnotationParamtypes = (Type) => {
+    const key = getAnnotationKeyFor('di:paramtypes');
+    return getOwnMetadata(key, Type);
+};
+const getDesignParamtypes = (Type) => getOwnMetadata('design:paramtypes', Type);
+const getOrCreateAnnotationParamTypes = (Type) => {
+    const key = getAnnotationKeyFor('di:paramtypes');
+    let annotationParamtypes = getOwnMetadata(key, Type);
+    if (annotationParamtypes === void 0) {
+        defineMetadata(key, annotationParamtypes = [], Type);
+        appendAnnotation(Type, key);
+    }
+    return annotationParamtypes;
+};
+const getDependencies = (Type) => {
+    const key = getAnnotationKeyFor('di:dependencies');
+    let dependencies = getOwnMetadata(key, Type);
+    if (dependencies === void 0) {
+        const inject = Type.inject;
+        if (inject === void 0) {
+            const designParamtypes = DI.getDesignParamtypes(Type);
+            const annotationParamtypes = getAnnotationParamtypes(Type);
+            if (designParamtypes === void 0) {
+                if (annotationParamtypes === void 0) {
+                    const Proto = Object.getPrototypeOf(Type);
+                    if (isFunction(Proto) && Proto !== Function.prototype) {
+                        dependencies = cloneArrayWithPossibleProps(getDependencies(Proto));
+                    }
+                    else {
+                        dependencies = [];
+                    }
+                }
+                else {
+                    dependencies = cloneArrayWithPossibleProps(annotationParamtypes);
+                }
+            }
+            else if (annotationParamtypes === void 0) {
+                dependencies = cloneArrayWithPossibleProps(designParamtypes);
+            }
+            else {
+                dependencies = cloneArrayWithPossibleProps(designParamtypes);
+                let len = annotationParamtypes.length;
+                let auAnnotationParamtype;
+                let i = 0;
+                for (; i < len; ++i) {
+                    auAnnotationParamtype = annotationParamtypes[i];
+                    if (auAnnotationParamtype !== void 0) {
+                        dependencies[i] = auAnnotationParamtype;
+                    }
+                }
+                const keys = Object.keys(annotationParamtypes);
+                let key;
+                i = 0;
+                len = keys.length;
+                for (i = 0; i < len; ++i) {
+                    key = keys[i];
+                    if (!isArrayIndex(key)) {
+                        dependencies[key] = annotationParamtypes[key];
+                    }
+                }
+            }
+        }
+        else {
+            dependencies = cloneArrayWithPossibleProps(inject);
+        }
+        defineMetadata(key, dependencies, Type);
+        appendAnnotation(Type, key);
+    }
+    return dependencies;
+};
+const createInterface = (configureOrName, configuror) => {
+    const configure = isFunction(configureOrName) ? configureOrName : configuror;
+    const friendlyName = isString(configureOrName) ? configureOrName : undefined;
+    const Interface = function (target, property, index) {
+        if (target == null || new.target !== undefined) {
+            throw createNoRegistrationError(Interface.friendlyName);
+        }
+        const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
+        annotationParamtypes[index] = Interface;
+    };
+    Interface.$isInterface = true;
+    Interface.friendlyName = friendlyName == null ? '(anonymous)' : friendlyName;
+    if (configure != null) {
+        Interface.register = (container, key) => configure(new ResolverBuilder(container, key ?? Interface));
+    }
+    Interface.toString = () => `InterfaceSymbol<${Interface.friendlyName}>`;
+    return Interface;
+};
+const createNoRegistrationError = (name) => createError(`AUR0001: No registration for interface: '${name}'`)
+    ;
+const DI = {
+    createContainer,
+    getDesignParamtypes,
+    getAnnotationParamtypes,
+    getOrCreateAnnotationParamTypes,
+    getDependencies: getDependencies,
+    createInterface,
+    inject(...dependencies) {
+        return (target, key, descriptor) => {
+            if (typeof descriptor === 'number') {
+                const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
+                const dep = dependencies[0];
+                if (dep !== void 0) {
+                    annotationParamtypes[descriptor] = dep;
+                }
+            }
+            else if (key) {
+                const annotationParamtypes = getOrCreateAnnotationParamTypes(target.constructor);
+                const dep = dependencies[0];
+                if (dep !== void 0) {
+                    annotationParamtypes[key] = dep;
+                }
+            }
+            else if (descriptor) {
+                const fn = descriptor.value;
+                const annotationParamtypes = getOrCreateAnnotationParamTypes(fn);
+                let dep;
+                let i = 0;
+                for (; i < dependencies.length; ++i) {
+                    dep = dependencies[i];
+                    if (dep !== void 0) {
+                        annotationParamtypes[i] = dep;
+                    }
+                }
+            }
+            else {
+                const annotationParamtypes = getOrCreateAnnotationParamTypes(target);
+                let dep;
+                let i = 0;
+                for (; i < dependencies.length; ++i) {
+                    dep = dependencies[i];
+                    if (dep !== void 0) {
+                        annotationParamtypes[i] = dep;
+                    }
+                }
+            }
+        };
+    },
+    transient(target) {
+        target.register = function (container) {
+            const registration = Registration.transient(target, target);
+            return registration.register(container, target);
+        };
+        target.registerInRequestor = false;
+        return target;
+    },
+    singleton(target, options = defaultSingletonOptions) {
+        target.register = function (container) {
+            const registration = Registration.singleton(target, target);
+            return registration.register(container, target);
+        };
+        target.registerInRequestor = options.scoped;
+        return target;
+    },
+};
+const IContainer = createInterface('IContainer');
+const IServiceLocator = IContainer;
+function createResolver(getter) {
+    return function (key) {
+        const resolver = function (target, property, descriptor) {
+            inject(resolver)(target, property, descriptor);
+        };
+        resolver.$isResolver = true;
+        resolver.resolve = function (handler, requestor) {
+            return getter(key, handler, requestor);
+        };
+        return resolver;
+    };
+}
+const inject = DI.inject;
+function transientDecorator(target) {
+    return DI.transient(target);
+}
+function transient(target) {
+    return target == null ? transientDecorator : transientDecorator(target);
+}
+const defaultSingletonOptions = { scoped: false };
+const decorateSingleton = DI.singleton;
+function singleton(targetOrOptions) {
+    if (isFunction(targetOrOptions)) {
+        return decorateSingleton(targetOrOptions);
+    }
+    return function ($target) {
+        return decorateSingleton($target, targetOrOptions);
+    };
+}
+const createAllResolver = (getter) => {
+    return (key, searchAncestors) => {
+        searchAncestors = !!searchAncestors;
+        const resolver = function (target, property, descriptor) {
+            inject(resolver)(target, property, descriptor);
+        };
+        resolver.$isResolver = true;
+        resolver.resolve = function (handler, requestor) {
+            return getter(key, handler, requestor, searchAncestors);
+        };
+        return resolver;
+    };
+};
+const all = createAllResolver((key, handler, requestor, searchAncestors) => requestor.getAll(key, searchAncestors));
+const lazy = createResolver((key, handler, requestor) => {
+    return () => requestor.get(key);
+});
+const optional = createResolver((key, handler, requestor) => {
+    if (requestor.has(key, true)) {
+        return requestor.get(key);
+    }
+    else {
+        return undefined;
+    }
+});
+const ignore = (target, property, descriptor) => {
+    inject(ignore)(target, property, descriptor);
+};
+ignore.$isResolver = true;
+ignore.resolve = () => undefined;
+const factory = createResolver((key, handler, requestor) => {
+    return (...args) => handler.getFactory(key).construct(requestor, args);
+});
+const newInstanceForScope = createResolver((key, handler, requestor) => {
+    const instance = createNewInstance(key, handler, requestor);
+    const instanceProvider = new InstanceProvider(toStringSafe(key), instance);
+    requestor.registerResolver(key, instanceProvider, true);
+    return instance;
+});
+const newInstanceOf = createResolver((key, handler, requestor) => createNewInstance(key, handler, requestor));
+const createNewInstance = (key, handler, requestor) => {
+    return handler.getFactory(key).construct(requestor);
+};
+
+class Resolver {
+    constructor(_key, _strategy, _state) {
+        this._key = _key;
+        this._strategy = _strategy;
+        this._state = _state;
+        this.resolving = false;
+    }
+    get $isResolver() { return true; }
+    register(container, key) {
+        return container.registerResolver(key || this._key, this);
+    }
+    resolve(handler, requestor) {
+        switch (this._strategy) {
+            case 0:
+                return this._state;
+            case 1: {
+                if (this.resolving) {
+                    throw cyclicDependencyError(this._state.name);
+                }
+                this.resolving = true;
+                this._state = handler.getFactory(this._state).construct(requestor);
+                this._strategy = 0;
+                this.resolving = false;
+                return this._state;
+            }
+            case 2: {
+                const factory = handler.getFactory(this._state);
+                if (factory === null) {
+                    throw nullFactoryError(this._key);
+                }
+                return factory.construct(requestor);
+            }
+            case 3:
+                return this._state(handler, requestor, this);
+            case 4:
+                return this._state[0].resolve(handler, requestor);
+            case 5:
+                return requestor.get(this._state);
+            default:
+                throw invalidResolverStrategyError(this._strategy);
+        }
+    }
+    getFactory(container) {
+        switch (this._strategy) {
+            case 1:
+            case 2:
+                return container.getFactory(this._state);
+            case 5:
+                return container.getResolver(this._state)?.getFactory?.(container) ?? null;
+            default:
+                return null;
+        }
+    }
+}
+const cyclicDependencyError = (name) => createError(`AUR0003: Cyclic dependency found: ${name}`)
+    ;
+const nullFactoryError = (key) => createError(`AUR0004: Resolver for ${toStringSafe(key)} returned a null factory`)
+    ;
+const invalidResolverStrategyError = (strategy) => createError(`AUR0005: Invalid resolver strategy specified: ${strategy}.`)
+    ;
+function containerGetKey(d) {
+    return this.get(d);
+}
+function transformInstance(inst, transform) {
+    return transform(inst);
+}
+class Factory {
+    constructor(Type, dependencies) {
+        this.Type = Type;
+        this.dependencies = dependencies;
+        this.transformers = null;
+    }
+    construct(container, dynamicDependencies) {
+        let instance;
+        if (dynamicDependencies === void 0) {
+            instance = new this.Type(...this.dependencies.map(containerGetKey, container));
+        }
+        else {
+            instance = new this.Type(...this.dependencies.map(containerGetKey, container), ...dynamicDependencies);
+        }
+        if (this.transformers == null) {
+            return instance;
+        }
+        return this.transformers.reduce(transformInstance, instance);
+    }
+    registerTransformer(transformer) {
+        (this.transformers ?? (this.transformers = [])).push(transformer);
+    }
+}
 class ParameterizedRegistry {
     constructor(key, params) {
         this.key = key;
@@ -1180,43 +1216,14 @@ class ParameterizedRegistry {
         }
     }
 }
-const containerLookup = new WeakMap();
-function cacheCallbackResult(fun) {
-    return function (handler, requestor, resolver) {
-        let resolverLookup = containerLookup.get(handler);
-        if (resolverLookup === void 0) {
-            containerLookup.set(handler, resolverLookup = new WeakMap());
-        }
-        if (resolverLookup.has(resolver)) {
-            return resolverLookup.get(resolver);
-        }
-        const t = fun(handler, requestor, resolver);
-        resolverLookup.set(resolver, t);
-        return t;
-    };
-}
 const Registration = {
-    instance(key, value) {
-        return new Resolver(key, 0, value);
-    },
-    singleton(key, value) {
-        return new Resolver(key, 1, value);
-    },
-    transient(key, value) {
-        return new Resolver(key, 2, value);
-    },
-    callback(key, callback) {
-        return new Resolver(key, 3, callback);
-    },
-    cachedCallback(key, callback) {
-        return new Resolver(key, 3, cacheCallbackResult(callback));
-    },
-    aliasTo(originalKey, aliasKey) {
-        return new Resolver(aliasKey, 5, originalKey);
-    },
-    defer(key, ...params) {
-        return new ParameterizedRegistry(key, params);
-    }
+    instance: instanceRegistration,
+    singleton: singletonRegistration,
+    transient: transientRegistation,
+    callback: callbackRegistration,
+    cachedCallback: cachedCallbackRegistration,
+    aliasTo: aliasToRegistration,
+    defer: deferRegistration,
 };
 class InstanceProvider {
     constructor(name, instance) {
@@ -1243,40 +1250,16 @@ class InstanceProvider {
         this._instance = null;
     }
 }
-function validateKey(key) {
-    if (key === null || key === void 0) {
-        {
-            throw createError(`AUR0014: key/value cannot be null or undefined. Are you trying to inject/register something that doesn't exist with DI?`);
-        }
-    }
-}
-function buildAllResponse(resolver, handler, requestor) {
-    if (resolver instanceof Resolver && resolver._strategy === 4) {
-        const state = resolver._state;
-        let i = state.length;
-        const results = new Array(i);
-        while (i--) {
-            results[i] = state[i].resolve(handler, requestor);
-        }
-        return results;
-    }
-    return [resolver.resolve(handler, requestor)];
-}
 const noInstanceError = (name) => {
     {
         return createError(`AUR0013: Cannot call resolve ${name} before calling prepare or after calling dispose.`);
-    }
-};
-const createNativeInvocationError = (Type) => {
-    {
-        return createError(`AUR0015: ${Type.name} is a native function and therefore cannot be safely constructed by DI. If this is intentional, please use a callback or cachedCallback resolver.`);
     }
 };
 
 const emptyArray = Object.freeze([]);
 const emptyObject = Object.freeze({});
 function noop() { }
-const IPlatform = DI.createInterface('IPlatform');
+const IPlatform = createInterface('IPlatform');
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -1319,11 +1302,11 @@ exports.ColorOptions = void 0;
     ColorOptions[ColorOptions["noColors"] = 0] = "noColors";
     ColorOptions[ColorOptions["colors"] = 1] = "colors";
 })(exports.ColorOptions || (exports.ColorOptions = {}));
-const ILogConfig = DI.createInterface('ILogConfig', x => x.instance(new LogConfig(0, 3)));
-const ISink = DI.createInterface('ISink');
-const ILogEventFactory = DI.createInterface('ILogEventFactory', x => x.singleton(exports.DefaultLogEventFactory));
-const ILogger = DI.createInterface('ILogger', x => x.singleton(exports.DefaultLogger));
-const ILogScopes = DI.createInterface('ILogScope');
+const ILogConfig = createInterface('ILogConfig', x => x.instance(new LogConfig(0, 3)));
+const ISink = createInterface('ISink');
+const ILogEventFactory = createInterface('ILogEventFactory', x => x.singleton(exports.DefaultLogEventFactory));
+const ILogger = createInterface('ILogger', x => x.singleton(exports.DefaultLogger));
+const ILogScopes = createInterface('ILogScope');
 const LoggerSink = Object.freeze({
     key: getAnnotationKeyFor('logger-sink-handles'),
     define(target, definition) {
@@ -1334,11 +1317,9 @@ const LoggerSink = Object.freeze({
         return metadata.Metadata.get(this.key, target);
     },
 });
-function sink(definition) {
-    return function (target) {
-        return LoggerSink.define(target, definition);
-    };
-}
+const sink = (definition) => {
+    return (target) => LoggerSink.define(target, definition);
+};
 const format = toLookup({
     red(str) {
         return `\u001b[31m${str}\u001b[39m`;
@@ -1392,7 +1373,7 @@ const getLogLevelString = (function () {
             QQQ: format.grey('???'),
         }),
     ];
-    return function (level, colorOptions) {
+    return (level, colorOptions) => {
         if (level <= 0) {
             return logLevelString[colorOptions].TRC;
         }
@@ -1496,7 +1477,7 @@ exports.ConsoleSink = class ConsoleSink {
         };
     }
     static register(container) {
-        Registration.singleton(ISink, ConsoleSink).register(container);
+        singletonRegistration(ISink, ConsoleSink).register(container);
     }
 };
 exports.ConsoleSink = __decorate([
@@ -1632,10 +1613,10 @@ const LoggerConfiguration = toLookup({
     create({ level = 3, colorOptions = 0, sinks = [], } = {}) {
         return toLookup({
             register(container) {
-                container.register(Registration.instance(ILogConfig, new LogConfig(colorOptions, level)));
+                container.register(instanceRegistration(ILogConfig, new LogConfig(colorOptions, level)));
                 for (const $sink of sinks) {
                     if (isFunction($sink)) {
-                        container.register(Registration.singleton(ISink, $sink));
+                        container.register(singletonRegistration(ISink, $sink));
                     }
                     else {
                         container.register($sink);
@@ -1647,7 +1628,7 @@ const LoggerConfiguration = toLookup({
     },
 });
 
-const IModuleLoader = DI.createInterface(x => x.singleton(ModuleLoader));
+const IModuleLoader = createInterface(x => x.singleton(ModuleLoader));
 const noTransform = (m) => m;
 class ModuleTransformer {
     constructor(transform) {
@@ -1758,17 +1739,17 @@ class ModuleItem {
 }
 
 class Handler {
-    constructor(messageType, callback) {
-        this.messageType = messageType;
-        this.callback = callback;
+    constructor(type, cb) {
+        this.type = type;
+        this.cb = cb;
     }
     handle(message) {
-        if (message instanceof this.messageType) {
-            this.callback.call(null, message);
+        if (message instanceof this.type) {
+            this.cb.call(null, message);
         }
     }
 }
-const IEventAggregator = DI.createInterface('IEventAggregator', x => x.singleton(EventAggregator));
+const IEventAggregator = createInterface('IEventAggregator', x => x.singleton(EventAggregator));
 class EventAggregator {
     constructor() {
         this.eventLookup = {};
@@ -1824,7 +1805,7 @@ class EventAggregator {
         };
     }
     subscribeOnce(channelOrType, callback) {
-        const sub = this.subscribe(channelOrType, function (message, event) {
+        const sub = this.subscribe(channelOrType, (message, event) => {
             sub.dispose();
             callback(message, event);
         });

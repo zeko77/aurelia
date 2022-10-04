@@ -5,9 +5,9 @@ function isNullOrUndefined(value) {
     return value === null || value === void 0;
 }
 let metadataInternalSlot = new WeakMap();
-function $typeError(operation, args, paramName, actualValue, expectedType) {
+const $typeError = (operation, args, paramName, actualValue, expectedType) => {
     return new TypeError(`${operation}(${args.map(String).join(',')}) - Expected '${paramName}' to be of type ${expectedType}, but got: ${Object.prototype.toString.call(actualValue)} (${String(actualValue)})`);
-}
+};
 function toPropertyKeyOrUndefined(propertyKey) {
     switch (typeof propertyKey) {
         case 'undefined':
@@ -67,7 +67,7 @@ function OrdinaryHasMetadata(MetadataKey, O, P) {
     if (OrdinaryHasOwnMetadata(MetadataKey, O, P)) {
         return true;
     }
-    const parent = Object.getPrototypeOf(O);
+    const parent = getPrototype(O);
     if (parent !== null) {
         return OrdinaryHasMetadata(MetadataKey, parent, P);
     }
@@ -84,7 +84,7 @@ function OrdinaryGetMetadata(MetadataKey, O, P) {
     if (OrdinaryHasOwnMetadata(MetadataKey, O, P)) {
         return OrdinaryGetOwnMetadata(MetadataKey, O, P);
     }
-    const parent = Object.getPrototypeOf(O);
+    const parent = getPrototype(O);
     if (parent !== null) {
         return OrdinaryGetMetadata(MetadataKey, parent, P);
     }
@@ -110,7 +110,7 @@ function OrdinaryOwnMetadataKeys(O, P) {
 }
 function OrdinaryMetadataKeys(O, P) {
     const ownKeys = OrdinaryOwnMetadataKeys(O, P);
-    const parent = Object.getPrototypeOf(O);
+    const parent = getPrototype(O);
     if (parent === null) {
         return ownKeys;
     }
@@ -333,6 +333,7 @@ const applyMetadataPolyfill = (reflect, throwIfConflict = true, forceOverwrite =
     }
 };
 const createError = (message) => new Error(message);
+const getPrototype = Object.getPrototypeOf;
 
 export { Metadata, applyMetadataPolyfill, isNullOrUndefined, isObject, metadata };
 //# sourceMappingURL=index.dev.mjs.map

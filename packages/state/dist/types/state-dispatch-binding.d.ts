@@ -1,5 +1,5 @@
 import { type IServiceLocator } from '@aurelia/kernel';
-import { Scope, type IsBindingBehavior } from '@aurelia/runtime';
+import { Scope, type IsBindingBehavior, IBinding } from '@aurelia/runtime';
 import { type IAstBasedBinding } from '@aurelia/runtime-html';
 import { type IStore } from './interfaces';
 /**
@@ -7,8 +7,7 @@ import { type IStore } from './interfaces';
  */
 export interface StateDispatchBinding extends IAstBasedBinding {
 }
-export declare class StateDispatchBinding implements IAstBasedBinding {
-    locator: IServiceLocator;
+export declare class StateDispatchBinding implements IBinding {
     scope?: Scope | undefined;
     isBound: boolean;
     ast: IsBindingBehavior;
@@ -17,8 +16,8 @@ export declare class StateDispatchBinding implements IAstBasedBinding {
     constructor(locator: IServiceLocator, expr: IsBindingBehavior, target: HTMLElement, prop: string, store: IStore<object>);
     callSource(e: Event): void;
     handleEvent(e: Event): void;
-    $bind(scope: Scope): void;
-    $unbind(): void;
+    bind(scope: Scope): void;
+    unbind(): void;
     handleStateChange(state: object): void;
 }
 //# sourceMappingURL=state-dispatch-binding.d.ts.map

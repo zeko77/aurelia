@@ -1,10 +1,10 @@
+import { IBinding } from '@aurelia/runtime';
 import type { IIndexable, IServiceLocator } from '@aurelia/kernel';
 import type { IObservable, IObserverLocator, IsExpression, Scope } from '@aurelia/runtime';
 import type { IAstBasedBinding } from './interfaces-bindings';
 export interface LetBinding extends IAstBasedBinding {
 }
-export declare class LetBinding implements IAstBasedBinding {
-    locator: IServiceLocator;
+export declare class LetBinding implements IBinding {
     ast: IsExpression;
     targetProperty: string;
     isBound: boolean;
@@ -14,7 +14,7 @@ export declare class LetBinding implements IAstBasedBinding {
     updateTarget(): void;
     handleChange(): void;
     handleCollectionChange(): void;
-    $bind(scope: Scope): void;
-    $unbind(): void;
+    bind(scope: Scope): void;
+    unbind(): void;
 }
 //# sourceMappingURL=let-binding.d.ts.map

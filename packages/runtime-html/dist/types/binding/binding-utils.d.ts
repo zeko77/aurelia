@@ -1,5 +1,5 @@
-import { type Constructable } from '@aurelia/kernel';
-import { IBinding, IRateLimitOptions, type IAstEvaluator, type ISubscriber } from '@aurelia/runtime';
+import { IServiceLocator, type Constructable } from '@aurelia/kernel';
+import { IBinding, IRateLimitOptions, type ISubscriber } from '@aurelia/runtime';
 import { type IAstBasedBinding } from './interfaces-bindings';
 interface ITwoWayBindingImpl extends IAstBasedBinding {
     updateSource(value: unknown): void;
@@ -21,7 +21,9 @@ export declare const mixinBindingUseScope: <T extends IBinding>(target: Construc
  *
  * @param strict - whether the evaluation of AST nodes will be in strict mode
  */
-export declare const implementAstEvaluator: (strict?: boolean | undefined, strictFnCall?: boolean) => (target: Constructable<IAstEvaluator>) => void;
+export declare const mixinAstEvaluator: (strict?: boolean | undefined, strictFnCall?: boolean) => <T extends {
+    l: IServiceLocator;
+}>(target: Constructable<T>) => void;
 export interface IFlushable {
     flush(): void;
 }

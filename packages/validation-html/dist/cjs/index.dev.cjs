@@ -514,7 +514,7 @@ class ValidatitionConnector {
         this.defaultTrigger = defaultTrigger;
         this._platform = platform;
         this.oL = observerLocator;
-        this.locator = locator;
+        this.l = locator;
         this._triggerMediator = new BindingMediator('handleTriggerChange', this, observerLocator, locator);
         this._controllerMediator = new BindingMediator('handleControllerChange', this, observerLocator, locator);
         this._rulesMediator = new BindingMediator('handleRulesChange', this, observerLocator, locator);
@@ -689,7 +689,7 @@ class ValidatitionConnector {
 }
 ValidatitionConnector.inject = [runtimeHtml.IPlatform, runtime.IObserverLocator, IDefaultTrigger];
 runtime.connectable()(ValidatitionConnector);
-runtimeHtml.implementAstEvaluator(true)(ValidatitionConnector);
+runtimeHtml.mixinAstEvaluator(true)(ValidatitionConnector);
 class WithValidationTargetSubscriber extends runtimeHtml.BindingTargetSubscriber {
     constructor(_validationSubscriber, binding, flushQueue) {
         super(binding, flushQueue);
@@ -708,18 +708,18 @@ class ValidateArgumentsDelta {
     }
 }
 class BindingMediator {
-    constructor(key, binding, oL, locator) {
+    constructor(key, binding, oL, l) {
         this.key = key;
         this.binding = binding;
         this.oL = oL;
-        this.locator = locator;
+        this.l = l;
     }
     handleChange(newValue, previousValue) {
         this.binding[this.key](newValue, previousValue);
     }
 }
 runtime.connectable()(BindingMediator);
-runtimeHtml.implementAstEvaluator(true)(BindingMediator);
+runtimeHtml.mixinAstEvaluator(true)(BindingMediator);
 
 function getDefaultValidationHtmlConfiguration() {
     return {

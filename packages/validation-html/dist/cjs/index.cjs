@@ -433,7 +433,7 @@ class ValidatitionConnector {
         this.defaultTrigger = s;
         this.p = t;
         this.oL = i;
-        this.locator = r;
+        this.l = r;
         this.t = new BindingMediator("handleTriggerChange", this, i, r);
         this.i = new BindingMediator("handleControllerChange", this, i, r);
         this.h = new BindingMediator("handleRulesChange", this, i, r);
@@ -577,7 +577,7 @@ ValidatitionConnector.inject = [ s.IPlatform, e.IObserverLocator, u ];
 
 e.connectable()(ValidatitionConnector);
 
-s.implementAstEvaluator(true)(ValidatitionConnector);
+s.mixinAstEvaluator(true)(ValidatitionConnector);
 
 class WithValidationTargetSubscriber extends s.BindingTargetSubscriber {
     constructor(t, i, s) {
@@ -603,7 +603,7 @@ class BindingMediator {
         this.key = t;
         this.binding = i;
         this.oL = s;
-        this.locator = e;
+        this.l = e;
     }
     handleChange(t, i) {
         this.binding[this.key](t, i);
@@ -612,7 +612,7 @@ class BindingMediator {
 
 e.connectable()(BindingMediator);
 
-s.implementAstEvaluator(true)(BindingMediator);
+s.mixinAstEvaluator(true)(BindingMediator);
 
 function p() {
     return {

@@ -7,7 +7,7 @@ export declare class MockBinding implements IConnectableBinding {
     observerSlots: number;
     version: number;
     oL: IObserverLocator;
-    locator: IServiceLocator;
+    l: IServiceLocator;
     scope?: Scope | undefined;
     isBound: boolean;
     value: unknown;
@@ -21,8 +21,8 @@ export declare class MockBinding implements IConnectableBinding {
     observe(obj: IIndexable, propertyName: string): void;
     observeCollection(col: Collection): void;
     subscribeTo(subscribable: ISubscribable | ICollectionSubscribable): void;
-    $bind(scope: Scope): void;
-    $unbind(): void;
+    bind(scope: Scope): void;
+    unbind(): void;
     trace(fnName: keyof MockBinding, ...args: any[]): void;
     dispose(): void;
     limit(opts: IRateLimitOptions): {

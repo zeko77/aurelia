@@ -1,6 +1,5 @@
 import { IExpressionParser, IObserverLocator } from '@aurelia/runtime';
 import { BindingMode } from './binding/interfaces-bindings';
-import { IEventDelegator } from './observation/event-delegator';
 import { CustomElementDefinition } from './resources/custom-element';
 import { IProjections } from './resources/slot-injectables';
 import { CustomAttributeDefinition } from './resources/custom-attribute';
@@ -21,7 +20,6 @@ export declare const enum InstructionType {
     setProperty = "re",
     interpolation = "rf",
     propertyBinding = "rg",
-    callBinding = "rh",
     letBinding = "ri",
     refBinding = "rj",
     iteratorBinding = "rk",
@@ -59,12 +57,6 @@ export declare class IteratorBindingInstruction {
     to: string;
     readonly type = InstructionType.iteratorBinding;
     constructor(from: string | ForOfStatement, to: string);
-}
-export declare class CallBindingInstruction {
-    from: string | IsBindingBehavior;
-    to: string;
-    readonly type = InstructionType.callBinding;
-    constructor(from: string | IsBindingBehavior, to: string);
 }
 export declare class RefBindingInstruction {
     readonly from: string | IsBindingBehavior;
@@ -190,18 +182,13 @@ export declare class TextBindingInstruction {
      */
     strict: boolean);
 }
-export declare const enum DelegationStrategy {
-    none = 0,
-    capturing = 1,
-    bubbling = 2
-}
 export declare class ListenerBindingInstruction {
     from: string | IsBindingBehavior;
     to: string;
     preventDefault: boolean;
-    strategy: DelegationStrategy;
+    capture: boolean;
     readonly type = InstructionType.listenerBinding;
-    constructor(from: string | IsBindingBehavior, to: string, preventDefault: boolean, strategy: DelegationStrategy);
+    constructor(from: string | IsBindingBehavior, to: string, preventDefault: boolean, capture: boolean);
 }
 export declare class StylePropertyBindingInstruction {
     from: string | IsBindingBehavior;
@@ -330,11 +317,6 @@ export declare class LetElementRenderer implements IRenderer {
     constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator);
     render(renderingCtrl: IHydratableController, target: Node & ChildNode, instruction: HydrateLetElementInstruction): void;
 }
-export declare class CallBindingRenderer implements IRenderer {
-    target: InstructionType.callBinding;
-    constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator);
-    render(renderingCtrl: IHydratableController, target: IController, instruction: CallBindingInstruction): void;
-}
 export declare class RefBindingRenderer implements IRenderer {
     target: InstructionType.refBinding;
     constructor(exprParser: IExpressionParser);
@@ -362,7 +344,7 @@ export declare class TextBindingRenderer implements IRenderer {
 }
 export declare class ListenerBindingRenderer implements IRenderer {
     target: InstructionType.listenerBinding;
-    constructor(parser: IExpressionParser, eventDelegator: IEventDelegator);
+    constructor(parser: IExpressionParser);
     render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: ListenerBindingInstruction): void;
 }
 export declare class SetAttributeRenderer implements IRenderer {

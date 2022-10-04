@@ -300,11 +300,11 @@ class ValidationMessageEvaluationContext {
 }
 class PropertyRule {
     constructor(locator, validationRules, messageProvider, property, $rules = [[]]) {
-        this.locator = locator;
         this.validationRules = validationRules;
         this.messageProvider = messageProvider;
         this.property = property;
         this.$rules = $rules;
+        this.l = locator;
     }
     accept(visitor) {
         return visitor.visitPropertyRule(this);
@@ -460,7 +460,7 @@ class PropertyRule {
     }
 }
 PropertyRule.$TYPE = 'PropertyRule';
-runtimeHtml.implementAstEvaluator()(PropertyRule);
+runtimeHtml.mixinAstEvaluator()(PropertyRule);
 class ModelBasedRule {
     constructor(ruleset, tag = validationRulesRegistrar.defaultRuleSetName) {
         this.ruleset = ruleset;
@@ -1123,8 +1123,8 @@ exports.ValidationDeserializer = __decorate([
     __param(2, AST.IExpressionParser)
 ], exports.ValidationDeserializer);
 exports.ModelValidationExpressionHydrator = class ModelValidationExpressionHydrator {
-    constructor(locator, messageProvider, parser) {
-        this.locator = locator;
+    constructor(l, messageProvider, parser) {
+        this.l = l;
         this.messageProvider = messageProvider;
         this.parser = parser;
         this.astDeserializer = new Deserializer();
@@ -1140,7 +1140,7 @@ exports.ModelValidationExpressionHydrator = class ModelValidationExpressionHydra
                     const rules = value.rules.map((rule) => Object.entries(rule).map(([ruleName, ruleConfig]) => this.hydrateRule(ruleName, ruleConfig)));
                     const propertyPrefix = propertyPath.join('.');
                     const property = this.hydrateRuleProperty({ name: propertyPrefix !== '' ? `${propertyPrefix}.${key}` : key, displayName: value.displayName });
-                    accRules.push(new PropertyRule(this.locator, validationRules, this.messageProvider, property, rules));
+                    accRules.push(new PropertyRule(this.l, validationRules, this.messageProvider, property, rules));
                 }
                 else {
                     iterate(Object.entries(value), [...propertyPath, key]);
@@ -1241,7 +1241,7 @@ exports.ModelValidationExpressionHydrator = __decorate([
     __param(1, IValidationMessageProvider),
     __param(2, AST.IExpressionParser)
 ], exports.ModelValidationExpressionHydrator);
-runtimeHtml.implementAstEvaluator()(exports.ModelValidationExpressionHydrator);
+runtimeHtml.mixinAstEvaluator()(exports.ModelValidationExpressionHydrator);
 
 class ValidateInstruction {
     constructor(object = (void 0), propertyName = (void 0), rules = (void 0), objectTag = (void 0), propertyTag = (void 0), flags = 0) {

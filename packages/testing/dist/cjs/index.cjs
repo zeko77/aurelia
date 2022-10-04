@@ -78,11 +78,11 @@ function P(e) {
     return "symbol" === typeof e;
 }
 
-function B(e) {
+function I(e) {
     return void 0 === e;
 }
 
-function I(e) {
+function B(e) {
     return null !== e && "object" === typeof e;
 }
 
@@ -445,12 +445,12 @@ function Pe(e, t) {
     return 0;
 }
 
-function Be(e, t) {
+function Ie(e, t) {
     if (e.byteLength !== t.byteLength) return false;
     return 0 === Pe(new Uint8Array(e.buffer, e.byteOffset, e.byteLength), new Uint8Array(t.buffer, t.byteOffset, t.byteLength));
 }
 
-function Ie(e, t) {
+function Be(e, t) {
     return e.byteLength === t.byteLength && 0 === Pe(new Uint8Array(e), new Uint8Array(t));
 }
 
@@ -471,11 +471,11 @@ function Ue(e, t, n, i) {
         if ("object" !== typeof t || null === e || null === t) return false;
         if (s(e) !== s(t)) return false;
     } else {
-        if (!I(e)) {
-            if (!I(t)) return e == t;
+        if (!B(e)) {
+            if (!B(t)) return e == t;
             return false;
         }
-        if (!I(t)) return false;
+        if (!B(t)) return false;
     }
     const r = C(e);
     const o = C(t);
@@ -498,7 +498,7 @@ function Ue(e, t, n, i) {
     } else if (v(e)) {
         if (!n && (fe(e) || he(e))) {
             if (!Ne(e, t)) return false;
-        } else if (!Be(e, t)) return false;
+        } else if (!Ie(e, t)) return false;
         const r = ve(e, false);
         const s = ve(t, false);
         if (r.length !== s.length) return false;
@@ -510,7 +510,7 @@ function Ue(e, t, n, i) {
         if (!W(t) || e.size !== t.size) return false;
         return Ve(e, t, n, i, 3);
     } else if (H(e)) {
-        if (!Ie(e, t)) return false;
+        if (!Be(e, t)) return false;
     } else if (ne(e) && !De(e, t)) return false;
     return Ve(e, t, n, i, 0);
 }
@@ -607,7 +607,7 @@ function _e(e, t, n, i, r) {
 
 function Ge(e, t, n, i) {
     let r = null;
-    for (const i of e) if (I(i)) {
+    for (const i of e) if (B(i)) {
         if (null === r) r = new Set;
         r.add(i);
     } else if (!t.has(i)) {
@@ -617,7 +617,7 @@ function Ge(e, t, n, i) {
         r.add(i);
     }
     if (null !== r) {
-        for (const s of t) if (I(s)) {
+        for (const s of t) if (B(s)) {
             if (!He(r, s, n, i)) return false;
         } else if (!n && !e.has(s) && !He(r, s, n, i)) return false;
         return 0 === r.size;
@@ -635,7 +635,7 @@ function Ye(e, t, n, i, r, s) {
 
 function Ke(e, t, n, i) {
     let r = null;
-    for (const [s, o] of e) if (I(s)) {
+    for (const [s, o] of e) if (B(s)) {
         if (null === r) r = new Set;
         r.add(s);
     } else {
@@ -648,7 +648,7 @@ function Ke(e, t, n, i) {
         }
     }
     if (null !== r) {
-        for (const [s, o] of t) if (I(s)) {
+        for (const [s, o] of t) if (B(s)) {
             if (!Ye(r, e, s, o, n, i)) return false;
         } else if (!n && (!e.has(s) || !Ue(e.get(s), o, false, i)) && !Ye(r, e, s, o, false, i)) return false;
         return 0 === r.size;
@@ -898,7 +898,7 @@ class AssertionError extends Error {
         if ("deepStrictEqual" === r || "strictEqual" === r) super(`${a}${mt(t, n, r)}`); else if ("notDeepStrictEqual" === r || "notStrictEqual" === r) {
             let e = ct[r];
             let n = dn(t).split("\n");
-            if ("notStrictEqual" === r && I(t)) e = ct.notStrictEqualObject;
+            if ("notStrictEqual" === r && B(t)) e = ct.notStrictEqualObject;
             if (n.length > 30) {
                 n[26] = $e.blue("...");
                 while (n.length > 27) n.pop();
@@ -967,11 +967,11 @@ function mt(e, t, n) {
     const c = dn(t).split("\n");
     let f = 0;
     let h = "";
-    if ("strictEqual" === n && I(e) && I(t)) n = "strictEqualObject";
+    if ("strictEqual" === n && B(e) && B(t)) n = "strictEqualObject";
     if (1 === u.length && 1 === c.length && u[0] !== c[0]) {
         const i = u[0].length + c[0].length;
         if (i <= pt) {
-            if (!I(e) && !I(t) && (0 !== e || 0 !== t)) return `${ct[n]}\n\n${u[0]} !== ${c[0]}\n`;
+            if (!B(e) && !B(t) && (0 !== e || 0 !== t)) return `${ct[n]}\n\n${u[0]} !== ${c[0]}\n`;
         } else if ("strictEqualObject" !== n && i < 80) {
             while (u[0][f] === c[0][f]) f++;
             if (f > 2) {
@@ -1190,7 +1190,7 @@ function Lt(e, t) {
     let n;
     while (e) {
         const t = o(e, "constructor");
-        if (!B(t) && D(t.value) && "" !== t.value.name) return t.value.name;
+        if (!I(t) && D(t.value) && "" !== t.value.name) return t.value.name;
         e = s(e);
         if (void 0 === n) n = e;
     }
@@ -1234,13 +1234,13 @@ function Pt(e, t) {
     return e || t || "Object";
 }
 
-const Bt = p([ [ re, Uint8Array ], [ se, Uint8ClampedArray ], [ oe, Uint16Array ], [ ae, Uint32Array ], [ le, Int8Array ], [ ue, Int16Array ], [ ce, Int32Array ], [ fe, Float32Array ], [ he, Float64Array ] ]);
+const It = p([ [ re, Uint8Array ], [ se, Uint8ClampedArray ], [ oe, Uint16Array ], [ ae, Uint32Array ], [ le, Int8Array ], [ ue, Int16Array ], [ ce, Int32Array ], [ fe, Float32Array ], [ he, Float64Array ] ]);
 
-const It = Bt.length;
+const Bt = It.length;
 
 function Dt(e) {
-    for (let t = 0; t < It; ++t) {
-        const [n, i] = Bt[t];
+    for (let t = 0; t < Bt; ++t) {
+        const [n, i] = It[t];
         if (n(e)) return i;
     }
     return;
@@ -1824,9 +1824,6 @@ function vn(e) {
       case "hb":
         return "listenerBinding";
 
-      case "rh":
-        return "callBinding";
-
       case "rj":
         return "refBinding";
 
@@ -1923,7 +1920,7 @@ function kn(e, t, n, i) {
 
 class Comparison {
     constructor(e, t, n) {
-        for (const i of t) if (i in e) if (!B(n) && N(n[i]) && G(e[i]) && e[i].test(n[i])) this[i] = n[i]; else this[i] = e[i];
+        for (const i of t) if (i in e) if (!I(n) && N(n[i]) && G(e[i]) && e[i].test(n[i])) this[i] = n[i]; else this[i] = e[i];
     }
 }
 
@@ -2105,23 +2102,23 @@ function Pn(e, t, n) {
     });
 }
 
-function Bn(e, t, n) {
+function In(e, t, n) {
     if (!(e instanceof t)) wn({
         actual: e,
         expected: t,
         message: n,
         operator: "instanceOf",
-        stackStartFn: Bn
+        stackStartFn: In
     });
 }
 
-function In(e, t, n) {
+function Bn(e, t, n) {
     if (e instanceof t) wn({
         actual: e,
         expected: t,
         message: n,
         operator: "notInstanceOf",
-        stackStartFn: In
+        stackStartFn: Bn
     });
 }
 
@@ -2466,8 +2463,8 @@ const pi = p({
     fail: zn,
     equal: Nn,
     typeOf: Pn,
-    instanceOf: Bn,
-    notInstanceOf: In,
+    instanceOf: In,
+    notInstanceOf: Bn,
     includes: Dn,
     notIncludes: Un,
     contains: Vn,
@@ -3900,11 +3897,11 @@ class MockBinding {
     subscribeTo(e) {
         this.trace("subscribeTo", e);
     }
-    $bind(e) {
-        this.trace("$bind", e);
+    bind(e) {
+        this.trace("bind", e);
     }
-    $unbind() {
-        this.trace("$unbind");
+    unbind() {
+        this.trace("unbind");
     }
     trace(e, ...t) {
         this.calls.push([ e, ...t ]);
@@ -4290,12 +4287,12 @@ function Ni(e, ...t) {
 
 const Pi = /\r?\n/g;
 
-const Bi = /\s+/g;
+const Ii = /\s+/g;
 
-const Ii = Object.prototype.toString;
+const Bi = Object.prototype.toString;
 
 function Di(e, t) {
-    const n = Ii.call(e);
+    const n = Bi.call(e);
     switch (n) {
       case "[object Undefined]":
         return "undefined";
@@ -4325,7 +4322,7 @@ function Di(e, t) {
 
       case "[object Function]":
         if (e.name && e.name.length) return `class ${e.name}`;
-        return e.toString().replace(Bi, "");
+        return e.toString().replace(Ii, "");
 
       default:
         return Ui(e, t);

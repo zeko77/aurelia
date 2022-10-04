@@ -326,15 +326,15 @@ const taskQueueOpts = {
 };
 class TranslationBinding {
     constructor(controller, locator, observerLocator, platform, target) {
-        this.locator = locator;
         this.isBound = false;
         this._contentAttributes = contentAttributes;
         this.task = null;
         this.parameter = null;
         this.boundFn = false;
+        this.l = locator;
         this._controller = controller;
         this.target = target;
-        this.i18n = this.locator.get(I18N);
+        this.i18n = locator.get(I18N);
         this.platform = platform;
         this._targetAccessors = new Set();
         this.oL = observerLocator;
@@ -362,7 +362,7 @@ class TranslationBinding {
         }
         return binding;
     }
-    $bind(scope) {
+    bind(scope) {
         if (this.isBound) {
             return;
         }
@@ -373,16 +373,16 @@ class TranslationBinding {
         this._isInterpolation = this.ast instanceof runtime.Interpolation;
         this._keyExpression = runtime.astEvaluate(this.ast, scope, this, this);
         this._ensureKeyExpression();
-        this.parameter?.$bind(scope);
+        this.parameter?.bind(scope);
         this.updateTranslations();
         this.isBound = true;
     }
-    $unbind() {
+    unbind() {
         if (!this.isBound) {
             return;
         }
         runtime.astUnbind(this.ast, this.scope, this);
-        this.parameter?.$unbind();
+        this.parameter?.unbind();
         this._targetAccessors.clear();
         if (this.task !== null) {
             this.task.cancel();
@@ -520,7 +520,7 @@ class TranslationBinding {
     }
 }
 runtime.connectable(TranslationBinding);
-runtimeHtml.implementAstEvaluator(true)(TranslationBinding);
+runtimeHtml.mixinAstEvaluator(true)(TranslationBinding);
 runtimeHtml.mixingBindingLimited(TranslationBinding, () => 'updateTranslations');
 class AccessorUpdateTask {
     constructor(accessor, v, el, attr) {
@@ -541,7 +541,7 @@ class ParameterBinding {
         this.isBound = false;
         this.boundFn = false;
         this.oL = owner.oL;
-        this.locator = owner.locator;
+        this.l = owner.l;
     }
     handleChange(_newValue, _previousValue) {
         if (!this.isBound) {
@@ -552,7 +552,7 @@ class ParameterBinding {
         this.obs.clear();
         this.updater();
     }
-    $bind(scope) {
+    bind(scope) {
         if (this.isBound) {
             return;
         }
@@ -561,7 +561,7 @@ class ParameterBinding {
         this.value = runtime.astEvaluate(this.ast, scope, this, this);
         this.isBound = true;
     }
-    $unbind() {
+    unbind() {
         if (!this.isBound) {
             return;
         }
@@ -571,7 +571,7 @@ class ParameterBinding {
     }
 }
 runtime.connectable(ParameterBinding);
-runtimeHtml.implementAstEvaluator(true)(ParameterBinding);
+runtimeHtml.mixinAstEvaluator(true)(ParameterBinding);
 
 const TranslationParametersInstructionType = 'tpt';
 const attribute = 't-params.bind';

@@ -11,6 +11,7 @@ const createError = (message) => new Error(message);
 const isFunction = (v) => typeof v === 'function';
 const isString = (v) => typeof v === 'string';
 const isArray = (v) => v instanceof Array;
+const areEqual = Object.is;
 function defineHiddenProp(obj, key, value) {
     def(obj, key, {
         enumerable: false,
@@ -1025,7 +1026,7 @@ function astAssign(ast, s, e, val) {
         case 10: {
             const obj = astEvaluate(ast.object, s, e, null);
             if (obj instanceof Object) {
-                if (obj.$observers !== void 0 && obj.$observers[ast.name] !== void 0) {
+                if (obj.$observers?.[ast.name] !== void 0) {
                     obj.$observers[ast.name].setValue(val);
                 }
                 else {
@@ -4199,7 +4200,7 @@ class ComputedObserver {
         const oldValue = this._value;
         const newValue = this.compute();
         this._isDirty = false;
-        if (!Object.is(newValue, oldValue)) {
+        if (!areEqual(newValue, oldValue)) {
             this._oldValue = oldValue;
             oV$1 = this._oldValue;
             this._oldValue = this._value;
@@ -4362,7 +4363,7 @@ class SetterObserver {
     }
     setValue(newValue) {
         if (this._observing) {
-            if (Object.is(newValue, this._value)) {
+            if (areEqual(newValue, this._value)) {
                 return;
             }
             oV = this._value;
@@ -4426,7 +4427,7 @@ class SetterNotifier {
         if (this._hasSetter) {
             value = this._setter(value, null);
         }
-        if (!Object.is(value, this._value)) {
+        if (!areEqual(value, this._value)) {
             this._oldValue = this._value;
             this._value = value;
             this.cb?.call(this._obj, this._value, this._oldValue);

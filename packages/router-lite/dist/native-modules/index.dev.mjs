@@ -1,6 +1,6 @@
 import { isObject, Metadata } from '../../../metadata/dist/native-modules/index.mjs';
 import { DI, IEventAggregator, ILogger, bound, onResolve, resolveAll, emptyObject, IContainer, isArrayIndex, Protocol, emptyArray, IModuleLoader, InstanceProvider, noop, Registration } from '../../../kernel/dist/native-modules/index.mjs';
-import { isCustomElementViewModel, IHistory, ILocation, IWindow, Controller, IPlatform, CustomElement, CustomElementDefinition, IController, IAppRoot, isCustomElementController, customElement, bindable, customAttribute, IEventTarget, INode, IEventDelegator, getRef, CustomAttribute, AppTask } from '../../../runtime-html/dist/native-modules/index.mjs';
+import { isCustomElementViewModel, IHistory, ILocation, IWindow, Controller, IPlatform, CustomElement, CustomElementDefinition, IController, IAppRoot, isCustomElementController, customElement, bindable, customAttribute, IEventTarget, INode, getRef, CustomAttribute, AppTask } from '../../../runtime-html/dist/native-modules/index.mjs';
 import { RecognizedRoute, Endpoint, ConfigurableRoute, RouteRecognizer } from '../../../route-recognizer/dist/native-modules/index.mjs';
 
 class Batch {
@@ -4023,19 +4023,17 @@ const props = [
 ];
 
 let LoadCustomAttribute = class LoadCustomAttribute {
-    constructor(target, el, router, events, delegator, ctx, locationMgr) {
+    constructor(target, el, router, events, ctx, locationMgr) {
         this.target = target;
         this.el = el;
         this.router = router;
         this.events = events;
-        this.delegator = delegator;
         this.ctx = ctx;
         this.locationMgr = locationMgr;
         this.attribute = 'href';
         this.active = false;
         this.href = null;
         this.instructions = null;
-        this.eventListener = null;
         this.navigationEndListener = null;
         this.onClick = (e) => {
             if (this.instructions === null) {
@@ -4051,7 +4049,7 @@ let LoadCustomAttribute = class LoadCustomAttribute {
     }
     binding() {
         if (this.isEnabled) {
-            this.eventListener = this.delegator.addEventListener(this.target, this.el, 'click', this.onClick);
+            this.el.addEventListener('click', this.onClick);
         }
         this.valueChanged();
         this.navigationEndListener = this.events.subscribe('au:router:navigation-end', _e => {
@@ -4070,7 +4068,7 @@ let LoadCustomAttribute = class LoadCustomAttribute {
     }
     unbinding() {
         if (this.isEnabled) {
-            this.eventListener.dispose();
+            this.el.removeEventListener('click', this.onClick);
         }
         this.navigationEndListener.dispose();
     }
@@ -4132,17 +4130,15 @@ LoadCustomAttribute = __decorate([
     __param(1, INode),
     __param(2, IRouter),
     __param(3, IRouterEvents),
-    __param(4, IEventDelegator),
-    __param(5, IRouteContext),
-    __param(6, ILocationManager)
+    __param(4, IRouteContext),
+    __param(5, ILocationManager)
 ], LoadCustomAttribute);
 
 let HrefCustomAttribute = class HrefCustomAttribute {
-    constructor(target, el, router, delegator, ctx, w) {
+    constructor(target, el, router, ctx, w) {
         this.target = target;
         this.el = el;
         this.router = router;
-        this.delegator = delegator;
         this.ctx = ctx;
         this.isInitialized = false;
         if (router.options.useHref &&
@@ -4171,10 +4167,10 @@ let HrefCustomAttribute = class HrefCustomAttribute {
             this.isEnabled = this.isEnabled && getRef(this.el, CustomAttribute.getDefinition(LoadCustomAttribute).key) === null;
         }
         this.valueChanged(this.value);
-        this.eventListener = this.delegator.addEventListener(this.target, this.el, 'click', this);
+        this.el.addEventListener('click', this);
     }
     unbinding() {
-        this.eventListener.dispose();
+        this.el.removeEventListener('click', this);
     }
     valueChanged(newValue) {
         if (newValue == null) {
@@ -4213,9 +4209,8 @@ HrefCustomAttribute = __decorate([
     __param(0, IEventTarget),
     __param(1, INode),
     __param(2, IRouter),
-    __param(3, IEventDelegator),
-    __param(4, IRouteContext),
-    __param(5, IWindow)
+    __param(3, IRouteContext),
+    __param(4, IWindow)
 ], HrefCustomAttribute);
 
 const RouterRegistration = IRouter;

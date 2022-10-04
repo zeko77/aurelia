@@ -6,7 +6,7 @@ import * as u from "../../../runtime/dist/native-modules/index.mjs";
 
 import { Scope as c, astEvaluate as l, PrimitiveLiteralExpression as h, IExpressionParser as $ } from "../../../runtime/dist/native-modules/index.mjs";
 
-import { implementAstEvaluator as d } from "../../../runtime-html/dist/native-modules/index.mjs";
+import { mixinAstEvaluator as d } from "../../../runtime-html/dist/native-modules/index.mjs";
 
 const m = e.createInterface("IValidationExpressionHydrator");
 
@@ -293,11 +293,11 @@ class ValidationMessageEvaluationContext {
 
 class PropertyRule {
     constructor(e, t, s, i, r = [ [] ]) {
-        this.locator = e;
         this.validationRules = t;
         this.messageProvider = s;
         this.property = i;
         this.$rules = r;
+        this.l = e;
     }
     accept(e) {
         return e.visitPropertyRule(this);
@@ -1126,7 +1126,7 @@ K = f([ p(0, i), p(1, g), p(2, $) ], K);
 
 let F = class ModelValidationExpressionHydrator {
     constructor(e, t, s) {
-        this.locator = e;
+        this.l = e;
         this.messageProvider = t;
         this.parser = s;
         this.astDeserializer = new Deserializer;
@@ -1144,7 +1144,7 @@ let F = class ModelValidationExpressionHydrator {
                     name: "" !== i ? `${i}.${n}` : n,
                     displayName: a.displayName
                 });
-                s.push(new PropertyRule(this.locator, t, this.messageProvider, o, e));
+                s.push(new PropertyRule(this.l, t, this.messageProvider, o, e));
             } else i(Object.entries(a), [ ...r, n ]);
         };
         i(Object.entries(e));

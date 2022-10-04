@@ -75,19 +75,11 @@ export declare class DefaultBindingCommand implements BindingCommandInstance {
     get type(): CommandType.None;
     build(info: ICommandBuildInfo, exprParser: IExpressionParser, attrMapper: IAttrMapper): PropertyBindingInstruction;
 }
-export declare class CallBindingCommand implements BindingCommandInstance {
-    get type(): CommandType.None;
-    build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
-}
 export declare class ForBindingCommand implements BindingCommandInstance {
     get type(): CommandType.None;
     build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 export declare class TriggerBindingCommand implements BindingCommandInstance {
-    get type(): CommandType.IgnoreAttr;
-    build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
-}
-export declare class DelegateBindingCommand implements BindingCommandInstance {
     get type(): CommandType.IgnoreAttr;
     build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }

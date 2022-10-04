@@ -2,7 +2,7 @@ import { DI, Protocol, toArray, IServiceLocator, ILogger, Registration, noop } f
 import { Metadata } from '@aurelia/metadata';
 import * as AST from '@aurelia/runtime';
 import { Scope, astEvaluate, PrimitiveLiteralExpression, IExpressionParser } from '@aurelia/runtime';
-import { implementAstEvaluator } from '@aurelia/runtime-html';
+import { mixinAstEvaluator } from '@aurelia/runtime-html';
 
 const IValidationExpressionHydrator = DI.createInterface('IValidationExpressionHydrator');
 
@@ -283,11 +283,11 @@ class ValidationMessageEvaluationContext {
 }
 class PropertyRule {
     constructor(locator, validationRules, messageProvider, property, $rules = [[]]) {
-        this.locator = locator;
         this.validationRules = validationRules;
         this.messageProvider = messageProvider;
         this.property = property;
         this.$rules = $rules;
+        this.l = locator;
     }
     accept(visitor) {
         return visitor.visitPropertyRule(this);
@@ -443,7 +443,7 @@ class PropertyRule {
     }
 }
 PropertyRule.$TYPE = 'PropertyRule';
-implementAstEvaluator()(PropertyRule);
+mixinAstEvaluator()(PropertyRule);
 class ModelBasedRule {
     constructor(ruleset, tag = validationRulesRegistrar.defaultRuleSetName) {
         this.ruleset = ruleset;
@@ -1106,8 +1106,8 @@ ValidationDeserializer = __decorate([
     __param(2, IExpressionParser)
 ], ValidationDeserializer);
 let ModelValidationExpressionHydrator = class ModelValidationExpressionHydrator {
-    constructor(locator, messageProvider, parser) {
-        this.locator = locator;
+    constructor(l, messageProvider, parser) {
+        this.l = l;
         this.messageProvider = messageProvider;
         this.parser = parser;
         this.astDeserializer = new Deserializer();
@@ -1123,7 +1123,7 @@ let ModelValidationExpressionHydrator = class ModelValidationExpressionHydrator 
                     const rules = value.rules.map((rule) => Object.entries(rule).map(([ruleName, ruleConfig]) => this.hydrateRule(ruleName, ruleConfig)));
                     const propertyPrefix = propertyPath.join('.');
                     const property = this.hydrateRuleProperty({ name: propertyPrefix !== '' ? `${propertyPrefix}.${key}` : key, displayName: value.displayName });
-                    accRules.push(new PropertyRule(this.locator, validationRules, this.messageProvider, property, rules));
+                    accRules.push(new PropertyRule(this.l, validationRules, this.messageProvider, property, rules));
                 }
                 else {
                     iterate(Object.entries(value), [...propertyPath, key]);
@@ -1224,7 +1224,7 @@ ModelValidationExpressionHydrator = __decorate([
     __param(1, IValidationMessageProvider),
     __param(2, IExpressionParser)
 ], ModelValidationExpressionHydrator);
-implementAstEvaluator()(ModelValidationExpressionHydrator);
+mixinAstEvaluator()(ModelValidationExpressionHydrator);
 
 class ValidateInstruction {
     constructor(object = (void 0), propertyName = (void 0), rules = (void 0), objectTag = (void 0), propertyTag = (void 0), flags = 0) {

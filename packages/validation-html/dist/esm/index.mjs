@@ -2,7 +2,7 @@ import { DI as t, IServiceLocator as i, optional as s, IContainer as e, Registra
 
 import { parsePropertyName as o, ValidationResult as a, ValidateInstruction as l, PropertyRule as h, IValidator as c, getDefaultValidationConfiguration as u, ValidationConfiguration as d } from "@aurelia/validation";
 
-import { IPlatform as f, bindable as v, INode as g, customAttribute as w, bindingBehavior as p, implementAstEvaluator as b, PropertyBinding as m, IFlushQueue as V, BindingTargetSubscriber as C, CustomElement as y } from "@aurelia/runtime-html";
+import { IPlatform as f, bindable as v, INode as g, customAttribute as w, bindingBehavior as p, mixinAstEvaluator as b, PropertyBinding as m, IFlushQueue as V, BindingTargetSubscriber as C, CustomElement as y } from "@aurelia/runtime-html";
 
 import { astEvaluate as E, IExpressionParser as R, connectable as B, IObserverLocator as T } from "@aurelia/runtime";
 
@@ -427,7 +427,7 @@ class ValidatitionConnector {
         this.defaultTrigger = s;
         this.p = t;
         this.oL = i;
-        this.locator = n;
+        this.l = n;
         this.t = new BindingMediator("handleTriggerChange", this, i, n);
         this.i = new BindingMediator("handleControllerChange", this, i, n);
         this.h = new BindingMediator("handleRulesChange", this, i, n);
@@ -597,7 +597,7 @@ class BindingMediator {
         this.key = t;
         this.binding = i;
         this.oL = s;
-        this.locator = e;
+        this.l = e;
     }
     handleChange(t, i) {
         this.binding[this.key](t, i);
