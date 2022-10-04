@@ -15,7 +15,7 @@ import {
   type IAstBasedBinding,
   type IBindingController,
   State,
-  implementAstEvaluator,
+  mixinAstEvaluator,
   mixingBindingLimited,
 } from '@aurelia/runtime-html';
 import i18next from 'i18next';
@@ -31,7 +31,9 @@ import type {
   IObserverLocatorBasedConnectable,
   IAccessor,
 } from '@aurelia/runtime';
-import type { CallBindingInstruction, IHydratableController, INode } from '@aurelia/runtime-html';
+import type { IHydratableController, INode } from '@aurelia/runtime-html';
+import type { TranslationBindBindingInstruction, TranslationBindingInstruction } from './translation-renderer';
+import type { TranslationParametersBindingInstruction } from './translation-parameters-renderer';
 
 interface TranslationBindingCreationContext {
   parser: IExpressionParser;
@@ -39,7 +41,7 @@ interface TranslationBindingCreationContext {
   context: IContainer;
   controller: IHydratableController;
   target: HTMLElement;
-  instruction: CallBindingInstruction;
+  instruction: TranslationBindingInstruction | TranslationBindBindingInstruction | TranslationParametersBindingInstruction;
   platform: IPlatform;
   isParameterContext?: boolean;
 }
@@ -80,6 +82,9 @@ export class TranslationBinding implements IObserverLocatorBasedConnectable {
   private readonly platform: IPlatform;
   private readonly taskQueue: TaskQueue;
   private parameter: ParameterBinding | null = null;
+
+  /** @internal */
+  public readonly l: IServiceLocator;
   /**
    * A semi-private property used by connectable mixin
    */
@@ -93,14 +98,15 @@ export class TranslationBinding implements IObserverLocatorBasedConnectable {
 
   public constructor(
     controller: IBindingController,
-    public locator: IServiceLocator,
+    locator: IServiceLocator,
     observerLocator: IObserverLocator,
     platform: IPlatform,
     target: INode,
   ) {
+    this.l = locator;
     this._controller = controller;
     this.target = target as HTMLElement;
-    this.i18n = this.locator.get(I18N);
+    this.i18n = locator.get(I18N);
     this.platform = platform;
     this._targetAccessors = new Set<IAccessor>();
     this.oL = observerLocator;
@@ -146,7 +152,7 @@ export class TranslationBinding implements IObserverLocatorBasedConnectable {
     return binding;
   }
 
-  public $bind(scope: Scope): void {
+  public bind(scope: Scope): void {
     if (this.isBound) {
       return;
     }
@@ -157,20 +163,20 @@ export class TranslationBinding implements IObserverLocatorBasedConnectable {
 
     this._keyExpression = astEvaluate(this.ast, scope, this, this) as string;
     this._ensureKeyExpression();
-    this.parameter?.$bind(scope);
+    this.parameter?.bind(scope);
 
     this.updateTranslations();
     this.isBound = true;
   }
 
-  public $unbind(): void {
+  public unbind(): void {
     if (!this.isBound) {
       return;
     }
 
     astUnbind(this.ast, this.scope, this);
 
-    this.parameter?.$unbind();
+    this.parameter?.unbind();
     this._targetAccessors.clear();
     if (this.task !== null) {
       this.task.cancel();
@@ -344,7 +350,7 @@ export class TranslationBinding implements IObserverLocatorBasedConnectable {
   }
 }
 connectable(TranslationBinding);
-implementAstEvaluator(true)(TranslationBinding);
+mixinAstEvaluator(true)(TranslationBinding);
 mixingBindingLimited(TranslationBinding, () => 'updateTranslations');
 
 class AccessorUpdateTask {
@@ -370,7 +376,7 @@ class ParameterBinding {
    * @internal
    */
   public readonly oL: IObserverLocator;
-  public readonly locator: IServiceLocator;
+  public readonly l: IServiceLocator;
   public isBound: boolean = false;
 
   public scope!: Scope;
@@ -384,7 +390,7 @@ class ParameterBinding {
     public readonly updater: () => void,
   ) {
     this.oL = owner.oL;
-    this.locator = owner.locator;
+    this.l = owner.l;
   }
 
   public handleChange(_newValue: string | i18next.TOptions, _previousValue: string | i18next.TOptions): void {
@@ -399,7 +405,7 @@ class ParameterBinding {
     this.updater();
   }
 
-  public $bind(scope: Scope): void {
+  public bind(scope: Scope): void {
     if (this.isBound) {
       return;
     }
@@ -411,7 +417,7 @@ class ParameterBinding {
     this.isBound = true;
   }
 
-  public $unbind() {
+  public unbind() {
     if (!this.isBound) {
       return;
     }
@@ -424,4 +430,4 @@ class ParameterBinding {
 }
 
 connectable(ParameterBinding);
-implementAstEvaluator(true)(ParameterBinding);
+mixinAstEvaluator(true)(ParameterBinding);
