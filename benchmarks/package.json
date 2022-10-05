@@ -14,5 +14,6 @@
   },
   "dependencies": {
     "tachometer": "0.7.0"
-  }
+  },
+  "version": "2.1.0-dev.202210052241"
 }
