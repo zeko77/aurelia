@@ -1,12 +1,11 @@
 import type { IServiceLocator } from '@aurelia/kernel';
-import { IBinding, Scope, type IsBindingBehavior } from '@aurelia/runtime';
-import { type IAstBasedBinding } from './interfaces-bindings';
+import { IAstEvaluator, IBinding, IConnectableBinding, Scope, type IsBindingBehavior } from '@aurelia/runtime';
 export declare class ListenerBindingOptions {
     readonly prevent: boolean;
     readonly capture: boolean;
     constructor(prevent: boolean, capture?: boolean);
 }
-export interface ListenerBinding extends IAstBasedBinding {
+export interface ListenerBinding extends IAstEvaluator, IConnectableBinding {
 }
 /**
  * Listener binding. Handle event binding between view and view model

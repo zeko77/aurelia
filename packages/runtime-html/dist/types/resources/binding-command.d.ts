@@ -3,7 +3,7 @@ import { IAttrMapper } from '../attribute-mapper';
 import { PropertyBindingInstruction } from '../renderer';
 import type { Constructable, IContainer, IResourceKind, ResourceType, ResourceDefinition, PartialResourceDefinition } from '@aurelia/kernel';
 import type { IInstruction } from '../renderer';
-import type { AttrSyntax } from './attribute-pattern';
+import { AttrSyntax, IAttributeParser } from './attribute-pattern';
 import type { BindableDefinition } from '../bindable';
 import type { CustomAttributeDefinition } from './custom-attribute';
 import type { CustomElementDefinition } from './custom-element';
@@ -77,6 +77,8 @@ export declare class DefaultBindingCommand implements BindingCommandInstance {
 }
 export declare class ForBindingCommand implements BindingCommandInstance {
     get type(): CommandType.None;
+    static get inject(): unknown[];
+    constructor(attrParser: IAttributeParser);
     build(info: ICommandBuildInfo, exprParser: IExpressionParser): IInstruction;
 }
 export declare class TriggerBindingCommand implements BindingCommandInstance {

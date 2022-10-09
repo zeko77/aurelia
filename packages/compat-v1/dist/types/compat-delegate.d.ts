@@ -1,6 +1,6 @@
 import { IContainer } from '@aurelia/kernel';
-import { IExpressionParser, IBinding, Scope, type IsBindingBehavior } from '@aurelia/runtime';
-import { InstructionType, IRenderer, IHydratableController, type IAstBasedBinding, CommandType, ICommandBuildInfo, BindingCommandInstance, IInstruction } from '@aurelia/runtime-html';
+import { IAstEvaluator, IBinding, IConnectableBinding, IExpressionParser, Scope, type IsBindingBehavior } from '@aurelia/runtime';
+import { BindingCommandInstance, CommandType, ICommandBuildInfo, IHydratableController, IInstruction, InstructionType, IRenderer } from '@aurelia/runtime-html';
 import type { IDisposable, IServiceLocator } from '@aurelia/kernel';
 export declare const delegateSyntax: {
     register(container: IContainer): void;
@@ -25,7 +25,7 @@ export declare class DelegateListenerOptions {
     readonly prevent: boolean;
     constructor(prevent: boolean);
 }
-export interface DelegateListenerBinding extends IAstBasedBinding {
+export interface DelegateListenerBinding extends IAstEvaluator, IConnectableBinding {
 }
 /**
  * Listener binding. Handle event binding between view and view model

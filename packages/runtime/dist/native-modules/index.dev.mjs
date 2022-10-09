@@ -7,6 +7,8 @@ const createError = (message) => new Error(message);
 const isFunction = (v) => typeof v === 'function';
 const isString = (v) => typeof v === 'string';
 const isArray = (v) => v instanceof Array;
+const isSet = (v) => v instanceof Set;
+const isMap = (v) => v instanceof Map;
 const areEqual = Object.is;
 function defineHiddenProp(obj, key, value) {
     def(obj, key, {
@@ -580,9 +582,10 @@ class BindingIdentifier {
     }
 }
 class ForOfStatement {
-    constructor(declaration, iterable) {
+    constructor(declaration, iterable, semiIdx) {
         this.declaration = declaration;
         this.iterable = iterable;
+        this.semiIdx = semiIdx;
         this.$kind = 22;
     }
 }
@@ -692,36 +695,6 @@ const nullContextError = () => {
         ;
 };
 class OverrideContext {
-}
-
-const ISignaler = createInterface('ISignaler', x => x.singleton(Signaler));
-class Signaler {
-    constructor() {
-        this.signals = createLookup();
-    }
-    dispatchSignal(name) {
-        const listeners = this.signals[name];
-        if (listeners === undefined) {
-            return;
-        }
-        let listener;
-        for (listener of listeners.keys()) {
-            listener.handleChange(undefined, undefined);
-        }
-    }
-    addSignalListener(name, listener) {
-        const signals = this.signals;
-        const listeners = signals[name];
-        if (listeners === undefined) {
-            signals[name] = new Set([listener]);
-        }
-        else {
-            listeners.add(listener);
-        }
-    }
-    removeSignalListener(name, listener) {
-        this.signals[name]?.delete(listener);
-    }
 }
 
 const getContext = Scope.getContext;
@@ -990,11 +963,14 @@ function astEvaluate(ast, s, e, c) {
             else {
                 return `${ast.parts[0]}${astEvaluate(ast.firstExpression, s, e, c)}${ast.parts[1]}`;
             }
+        case 26:
+            return astEvaluate(ast.target, s, e, c);
+        case 24: {
+            return ast.list.map(x => astEvaluate(x, s, e, c));
+        }
         case 19:
         case 20:
-        case 24:
         case 25:
-        case 26:
         default:
             return void 0;
         case 28:
@@ -1166,7 +1142,7 @@ function astBind(ast, s, b) {
             }
             const signals = vc.signals;
             if (signals != null) {
-                const signaler = b.get?.(ISignaler);
+                const signaler = b.getSignaler?.();
                 const ii = signals.length;
                 let i = 0;
                 for (; i < ii; ++i) {
@@ -1202,10 +1178,10 @@ function astUnbind(ast, s, b) {
             if (vc?.signals === void 0) {
                 return;
             }
-            const signaler = b.get(ISignaler);
+            const signaler = b.getSignaler?.();
             let i = 0;
             for (; i < vc.signals.length; ++i) {
-                signaler.removeSignalListener(vc.signals[i], b);
+                signaler?.removeSignalListener(vc.signals[i], b);
             }
             astUnbind(ast.expression, s, b);
             break;
@@ -1496,7 +1472,7 @@ class CollectionSizeObserver {
     constructor(owner) {
         this.owner = owner;
         this._value = (this._obj = owner.collection).size;
-        this.type = this._obj instanceof Map ? 66 : 34;
+        this.type = isMap(this._obj) ? 66 : 34;
     }
     getValue() {
         return this._obj.size;
@@ -2325,22 +2301,21 @@ function getMapObserver(map) {
     return observer;
 }
 
-function observe(obj, key) {
-    const observer = this.oL.getObserver(obj, key);
-    this.obs.add(observer);
-}
 function getObserverRecord() {
     return defineHiddenProp(this, 'obs', new BindingObserverRecord(this));
+}
+function observe(obj, key) {
+    this.obs.add(this.oL.getObserver(obj, key));
 }
 function observeCollection$1(collection) {
     let obs;
     if (isArray(collection)) {
         obs = getArrayObserver(collection);
     }
-    else if (collection instanceof Set) {
+    else if (isSet(collection)) {
         obs = getSetObserver(collection);
     }
-    else if (collection instanceof Map) {
+    else if (isMap(collection)) {
         obs = getMapObserver(collection);
     }
     else {
@@ -2414,7 +2389,7 @@ class ExpressionParser {
     parse(expression, expressionType) {
         let found;
         switch (expressionType) {
-            case 16:
+            case 32:
                 return new CustomExpression(expression);
             case 1:
                 found = this._interpolationLookup[expression];
@@ -2430,7 +2405,7 @@ class ExpressionParser {
                 return found;
             default: {
                 if (expression.length === 0) {
-                    if ((expressionType & (4 | 8)) > 0) {
+                    if ((expressionType & (8 | 16)) > 0) {
                         return PrimitiveLiteralExpression.$empty;
                     }
                     throw invalidEmptyExpression();
@@ -2454,7 +2429,8 @@ class ExpressionParser {
         $currentChar = $charCodeAt(0);
         $assignable = true;
         $optional = false;
-        return parse(61, expressionType === void 0 ? 8 : expressionType);
+        $semicolonIndex = -1;
+        return parse(61, expressionType === void 0 ? 16 : expressionType);
     }
 }
 
@@ -2485,9 +2461,10 @@ var ExpressionType;
     ExpressionType[ExpressionType["None"] = 0] = "None";
     ExpressionType[ExpressionType["Interpolation"] = 1] = "Interpolation";
     ExpressionType[ExpressionType["IsIterator"] = 2] = "IsIterator";
-    ExpressionType[ExpressionType["IsFunction"] = 4] = "IsFunction";
-    ExpressionType[ExpressionType["IsProperty"] = 8] = "IsProperty";
-    ExpressionType[ExpressionType["IsCustom"] = 16] = "IsCustom";
+    ExpressionType[ExpressionType["IsChainable"] = 4] = "IsChainable";
+    ExpressionType[ExpressionType["IsFunction"] = 8] = "IsFunction";
+    ExpressionType[ExpressionType["IsProperty"] = 16] = "IsProperty";
+    ExpressionType[ExpressionType["IsCustom"] = 32] = "IsCustom";
 })(ExpressionType || (ExpressionType = {}));
 let $input = '';
 let $index = 0;
@@ -2499,6 +2476,7 @@ let $tokenValue = '';
 let $currentChar;
 let $assignable = true;
 let $optional = false;
+let $semicolonIndex = -1;
 const stringFromCharCode = String.fromCharCode;
 const $charCodeAt = (index) => $input.charCodeAt(index);
 const $tokenRaw = () => $input.slice($startIndex, $index);
@@ -2513,10 +2491,11 @@ function parseExpression(input, expressionType) {
     $currentChar = $charCodeAt(0);
     $assignable = true;
     $optional = false;
-    return parse(61, expressionType === void 0 ? 8 : expressionType);
+    $semicolonIndex = -1;
+    return parse(61, expressionType === void 0 ? 16 : expressionType);
 }
 function parse(minPrecedence, expressionType) {
-    if (expressionType === 16) {
+    if (expressionType === 32) {
         return new CustomExpression($input);
     }
     if ($index === 0) {
@@ -2584,7 +2563,7 @@ function parse(minPrecedence, expressionType) {
                 }
                 $assignable = !$optional;
                 nextToken();
-                if (consumeOpt(49)) {
+                if (consumeOpt(50)) {
                     if ($currentToken === 524296) {
                         throw functionBodyInArrowFN();
                     }
@@ -2627,12 +2606,12 @@ function parse(minPrecedence, expressionType) {
             case 524296:
                 result = parseObjectLiteralExpression(expressionType);
                 break;
-            case 2163758:
+            case 2163759:
                 result = new TemplateExpression([$tokenValue]);
                 $assignable = false;
                 nextToken();
                 break;
-            case 2163759:
+            case 2163760:
                 result = parseTemplate(expressionType, result, false);
                 break;
             case 16384:
@@ -2707,10 +2686,10 @@ function parse(minPrecedence, expressionType) {
                 case 2688016:
                     result = parseKeyedExpression(result, optionalThisTail);
                     break;
-                case 2163758:
+                case 2163759:
                     result = createTemplateTail(result);
                     break;
-                case 2163759:
+                case 2163760:
                     result = parseTemplate(expressionType, result, true);
                     break;
             }
@@ -2744,13 +2723,13 @@ function parse(minPrecedence, expressionType) {
                 case 2688016:
                     result = parseKeyedExpression(result, false);
                     break;
-                case 2163758:
+                case 2163759:
                     if ($optional) {
                         throw invalidTaggedTemplateOnOptionalChain();
                     }
                     result = createTemplateTail(result);
                     break;
-                case 2163759:
+                case 2163760:
                     if ($optional) {
                         throw invalidTaggedTemplateOnOptionalChain();
                     }
@@ -2777,7 +2756,7 @@ function parse(minPrecedence, expressionType) {
     if (63 < minPrecedence) {
         return result;
     }
-    if (consumeOpt(6291477)) {
+    if (consumeOpt(6291478)) {
         const yes = parse(62, expressionType);
         consume(6291476);
         result = new ConditionalExpression(result, yes, parse(62, expressionType));
@@ -2786,7 +2765,7 @@ function parse(minPrecedence, expressionType) {
     if (62 < minPrecedence) {
         return result;
     }
-    if (consumeOpt(4194348)) {
+    if (consumeOpt(4194349)) {
         if (!$assignable) {
             throw lhsNotAssignable();
         }
@@ -2795,7 +2774,7 @@ function parse(minPrecedence, expressionType) {
     if (61 < minPrecedence) {
         return result;
     }
-    while (consumeOpt(6291479)) {
+    while (consumeOpt(6291480)) {
         if ($currentToken === 6291456) {
             throw expectedValueConverterIdentifier();
         }
@@ -2807,7 +2786,7 @@ function parse(minPrecedence, expressionType) {
         }
         result = new ValueConverterExpression(result, name, args);
     }
-    while (consumeOpt(6291478)) {
+    while (consumeOpt(6291479)) {
         if ($currentToken === 6291456) {
             throw expectedBindingBehaviorIdentifier();
         }
@@ -2821,6 +2800,13 @@ function parse(minPrecedence, expressionType) {
     }
     if ($currentToken !== 6291456) {
         if ((expressionType & 1) > 0 && $currentToken === 7340045) {
+            return result;
+        }
+        if ((expressionType & 4) > 0 && $currentToken === 6291477) {
+            if ($index === $length) {
+                throw unconsumedToken();
+            }
+            $semicolonIndex = $index - 1;
             return result;
         }
         if ($tokenRaw() === 'of') {
@@ -2983,7 +2969,7 @@ function parseCoverParenthesizedExpressionAndArrowParameterList(expressionType) 
                 throw invalidSpreadOp();
             }
             nextToken();
-            if ($currentToken !== 49) {
+            if ($currentToken !== 50) {
                 throw invalidSpreadOp();
             }
             nextToken();
@@ -3032,12 +3018,12 @@ function parseCoverParenthesizedExpressionAndArrowParameterList(expressionType) 
             case 7340046:
                 nextToken();
                 break loop;
-            case 4194348:
+            case 4194349:
                 if (paramsState === 1) {
                     paramsState = 3;
                 }
                 break loop;
-            case 49:
+            case 50:
                 if (isParamList) {
                     throw invalidArrowParameterList();
                 }
@@ -3051,7 +3037,7 @@ function parseCoverParenthesizedExpressionAndArrowParameterList(expressionType) 
                 break loop;
         }
     }
-    if ($currentToken === 49) {
+    if ($currentToken === 50) {
         if (paramsState === 1) {
             nextToken();
             if ($currentToken === 524296) {
@@ -3069,7 +3055,7 @@ function parseCoverParenthesizedExpressionAndArrowParameterList(expressionType) 
         throw invalidArrowParameterList();
     }
     else if (paramsState === 1 && arrowParams.length === 0) {
-        throw missingExpectedToken(49);
+        throw missingExpectedToken(50);
     }
     if (isParamList) {
         switch (paramsState) {
@@ -3092,7 +3078,7 @@ function parseCoverParenthesizedExpressionAndArrowParameterList(expressionType) 
     const expr = parse(62, expressionType);
     $optional = _optional;
     consume(7340046);
-    if ($currentToken === 49) {
+    if ($currentToken === 50) {
         switch (paramsState) {
             case 2:
                 throw invalidArrowParameterList();
@@ -3143,13 +3129,13 @@ function parseForOfStatement(result) {
         | 21)) === 0) {
         throw invalidLHSBindingIdentifierInForOf();
     }
-    if ($currentToken !== 4204592) {
+    if ($currentToken !== 4204593) {
         throw invalidLHSBindingIdentifierInForOf();
     }
     nextToken();
     const declaration = result;
-    const statement = parse(61, 0);
-    return new ForOfStatement(declaration, statement);
+    const statement = parse(61, 4);
+    return new ForOfStatement(declaration, statement, $semicolonIndex);
 }
 function parseObjectLiteralExpression(expressionType) {
     const _optional = $optional;
@@ -3234,11 +3220,11 @@ function parseInterpolation() {
 function parseTemplate(expressionType, result, tagged) {
     const _optional = $optional;
     const cooked = [$tokenValue];
-    consume(2163759);
+    consume(2163760);
     const expressions = [parse(62, expressionType)];
-    while (($currentToken = scanTemplateTail()) !== 2163758) {
+    while (($currentToken = scanTemplateTail()) !== 2163759) {
         cooked.push($tokenValue);
-        consume(2163759);
+        consume(2163760);
         expressions.push(parse(62, expressionType));
     }
     cooked.push($tokenValue);
@@ -3360,9 +3346,9 @@ function scanTemplate() {
     nextChar();
     $tokenValue = result;
     if (tail) {
-        return 2163758;
+        return 2163759;
     }
-    return 2163759;
+    return 2163760;
 }
 const scanTemplateTail = () => {
     if ($index >= $length) {
@@ -3519,10 +3505,10 @@ const unexpectedDoubleDot = () => {
 };
 const TokenValues = [
     $false, $true, $null, $undefined, '$this', null, '$parent',
-    '(', '{', '.', '..', '...', '?.', '}', ')', ',', '[', ']', ':', '?', '\'', '"',
+    '(', '{', '.', '..', '...', '?.', '}', ')', ',', '[', ']', ':', ';', '?', '\'', '"',
     '&', '|', '??', '||', '&&', '==', '!=', '===', '!==', '<', '>',
     '<=', '>=', 'in', 'instanceof', '+', '-', 'typeof', 'void', '*', '%', '/', '=', '!',
-    2163758, 2163759,
+    2163759, 2163760,
     'of', '=>'
 ];
 const KeywordLookup = Object.assign(Object.create(null), {
@@ -3532,11 +3518,11 @@ const KeywordLookup = Object.assign(Object.create(null), {
     undefined: 8195,
     $this: 12292,
     $parent: 12294,
-    in: 6562211,
-    instanceof: 6562212,
-    typeof: 139303,
-    void: 139304,
-    of: 4204592,
+    in: 6562212,
+    instanceof: 6562213,
+    typeof: 139304,
+    void: 139305,
+    of: 4204593,
 });
 const codes = {
     AsciiIdPart: [0x24, 0, 0x30, 0x3A, 0x41, 0x5B, 0x5F, 0, 0x61, 0x7B],
@@ -3586,7 +3572,21 @@ CharScanners[96] = () => {
 };
 CharScanners[33] = () => {
     if (nextChar() !== 61) {
-        return 131117;
+        return 131118;
+    }
+    if (nextChar() !== 61) {
+        return 6553949;
+    }
+    nextChar();
+    return 6553951;
+};
+CharScanners[61] = () => {
+    if (nextChar() === 62) {
+        nextChar();
+        return 50;
+    }
+    if ($currentChar !== 61) {
+        return 4194349;
     }
     if (nextChar() !== 61) {
         return 6553948;
@@ -3594,33 +3594,19 @@ CharScanners[33] = () => {
     nextChar();
     return 6553950;
 };
-CharScanners[61] = () => {
-    if (nextChar() === 62) {
-        nextChar();
-        return 49;
-    }
-    if ($currentChar !== 61) {
-        return 4194348;
-    }
-    if (nextChar() !== 61) {
-        return 6553947;
-    }
-    nextChar();
-    return 6553949;
-};
 CharScanners[38] = () => {
     if (nextChar() !== 38) {
-        return 6291478;
-    }
-    nextChar();
-    return 6553882;
-};
-CharScanners[124] = () => {
-    if (nextChar() !== 124) {
         return 6291479;
     }
     nextChar();
-    return 6553817;
+    return 6553883;
+};
+CharScanners[124] = () => {
+    if (nextChar() !== 124) {
+        return 6291480;
+    }
+    nextChar();
+    return 6553818;
 };
 CharScanners[63] = () => {
     if (nextChar() === 46) {
@@ -3629,13 +3615,13 @@ CharScanners[63] = () => {
             nextChar();
             return 2162700;
         }
-        return 6291477;
+        return 6291478;
     }
     if ($currentChar !== 63) {
-        return 6291477;
+        return 6291478;
     }
     nextChar();
-    return 6553752;
+    return 6553753;
 };
 CharScanners[46] = () => {
     if (nextChar() <= 57 && $currentChar >= 48) {
@@ -3652,27 +3638,28 @@ CharScanners[46] = () => {
 };
 CharScanners[60] = () => {
     if (nextChar() !== 61) {
-        return 6554015;
-    }
-    nextChar();
-    return 6554017;
-};
-CharScanners[62] = () => {
-    if (nextChar() !== 61) {
         return 6554016;
     }
     nextChar();
     return 6554018;
 };
-CharScanners[37] = returnToken(6554154);
+CharScanners[62] = () => {
+    if (nextChar() !== 61) {
+        return 6554017;
+    }
+    nextChar();
+    return 6554019;
+};
+CharScanners[37] = returnToken(6554155);
 CharScanners[40] = returnToken(2688007);
 CharScanners[41] = returnToken(7340046);
-CharScanners[42] = returnToken(6554153);
-CharScanners[43] = returnToken(2490853);
+CharScanners[42] = returnToken(6554154);
+CharScanners[43] = returnToken(2490854);
 CharScanners[44] = returnToken(6291471);
-CharScanners[45] = returnToken(2490854);
-CharScanners[47] = returnToken(6554155);
+CharScanners[45] = returnToken(2490855);
+CharScanners[47] = returnToken(6554156);
 CharScanners[58] = returnToken(6291476);
+CharScanners[59] = returnToken(6291477);
 CharScanners[91] = returnToken(2688016);
 CharScanners[93] = returnToken(7340051);
 CharScanners[123] = returnToken(524296);
@@ -3768,7 +3755,7 @@ function doNotCollect(key) {
 function createProxy(obj) {
     const handler = isArray(obj)
         ? arrayHandler
-        : obj instanceof Map || obj instanceof Set
+        : isMap(obj) || isSet(obj)
             ? collectionHandler
             : objectHandler;
     const proxiedObj = new Proxy(obj, handler);
@@ -3998,12 +3985,12 @@ const collectionHandler = {
                 }
                 break;
             case 'get':
-                if (target instanceof Map) {
+                if (isMap(target)) {
                     return wrappedGet;
                 }
                 break;
             case 'set':
-                if (target instanceof Map) {
+                if (isMap(target)) {
                     return wrappedSet;
                 }
                 break;
@@ -4016,7 +4003,7 @@ const collectionHandler = {
             case 'entries':
                 return wrappedEntries;
             case Symbol.iterator:
-                return target instanceof Map ? wrappedEntries : wrappedValues;
+                return isMap(target) ? wrappedEntries : wrappedValues;
         }
         return wrap(R$get(target, key, receiver));
     },
@@ -4514,10 +4501,10 @@ class ObserverLocator {
                 }
                 break;
             case 'size':
-                if (obj instanceof Map) {
+                if (isMap(obj)) {
                     return getMapObserver(obj).getLengthObserver();
                 }
-                else if (obj instanceof Set) {
+                else if (isSet(obj)) {
                     return getSetObserver(obj).getLengthObserver();
                 }
                 break;
@@ -4571,10 +4558,10 @@ const getCollectionObserver = (collection) => {
     if (isArray(collection)) {
         obs = getArrayObserver(collection);
     }
-    else if (collection instanceof Map) {
+    else if (isMap(collection)) {
         obs = getMapObserver(collection);
     }
-    else if (collection instanceof Set) {
+    else if (isSet(collection)) {
         obs = getSetObserver(collection);
     }
     return obs;
@@ -4727,6 +4714,36 @@ function getNotifier(obj, key, callbackKey, initialValue, set) {
         lookup[key] = notifier;
     }
     return notifier;
+}
+
+const ISignaler = createInterface('ISignaler', x => x.singleton(Signaler));
+class Signaler {
+    constructor() {
+        this.signals = createLookup();
+    }
+    dispatchSignal(name) {
+        const listeners = this.signals[name];
+        if (listeners === undefined) {
+            return;
+        }
+        let listener;
+        for (listener of listeners.keys()) {
+            listener.handleChange(undefined, undefined);
+        }
+    }
+    addSignalListener(name, listener) {
+        const signals = this.signals;
+        const listeners = signals[name];
+        if (listeners === undefined) {
+            signals[name] = new Set([listener]);
+        }
+        else {
+            listeners.add(listener);
+        }
+    }
+    removeSignalListener(name, listener) {
+        this.signals[name]?.delete(listener);
+    }
 }
 
 export { AccessKeyedExpression, AccessMemberExpression, AccessScopeExpression, AccessThisExpression, AccessorType, ArrayBindingPattern, ArrayIndexObserver, ArrayLiteralExpression, ArrayObserver, ArrowFunction, AssignExpression, BinaryExpression, BindingBehaviorExpression, BindingContext, BindingIdentifier, BindingObserverRecord, CallFunctionExpression, CallMemberExpression, CallScopeExpression, CollectionKind, CollectionLengthObserver, CollectionSizeObserver, ComputedObserver, ConditionalExpression, ConnectableSwitcher, CustomExpression, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, DirtyCheckProperty, DirtyCheckSettings, ExpressionKind, ExpressionType, ForOfStatement, ICoercionConfiguration, IDirtyChecker, IExpressionParser, INodeObserverLocator, IObservation, IObserverLocator, ISignaler, Interpolation, MapObserver, ObjectBindingPattern, ObjectLiteralExpression, Observation, ObserverLocator, PrimitiveLiteralExpression, PrimitiveObserver, PropertyAccessor, ProxyObservable, Scope, SetObserver, SetterObserver, SubscriberRecord, TaggedTemplateExpression, TemplateExpression, UnaryExpression, Unparser, ValueConverterExpression, applyMutationsToIndices, astAssign, astBind, astEvaluate, astUnbind, astVisit, batch, cloneIndexMap, connectable, copyIndexMap, createIndexMap, disableArrayObservation, disableMapObservation, disableSetObservation, enableArrayObservation, enableMapObservation, enableSetObservation, getCollectionObserver, getObserverLookup, isIndexMap, observable, parseExpression, subscriberCollection, synchronizeIndices };

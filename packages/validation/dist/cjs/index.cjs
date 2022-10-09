@@ -552,7 +552,7 @@ function g(e, t) {
       default:
         throw new Error(`Unable to parse accessor function:\n${e}`);
     }
-    return [ e, t.parse(`${f}.${e}`, 8) ];
+    return [ e, t.parse(`${f}.${e}`, 16) ];
 }
 
 class ValidationResult {
@@ -794,7 +794,7 @@ class Deserializer {
           case v.ForOfStatement:
             {
                 const t = e;
-                return new n.ForOfStatement(this.hydrate(t.declaration), this.hydrate(t.iterable));
+                return new n.ForOfStatement(this.hydrate(t.declaration), this.hydrate(t.iterable), this.hydrate(t.semiIdx));
             }
 
           case v.Interpolation:
@@ -897,7 +897,7 @@ class Serializer {
         return `{"$TYPE":"${v.BindingIdentifier}","name":"${e.name}"}`;
     }
     visitForOfStatement(e) {
-        return `{"$TYPE":"${v.ForOfStatement}","declaration":${y(e.declaration, this)},"iterable":${y(e.iterable, this)}}`;
+        return `{"$TYPE":"${v.ForOfStatement}","declaration":${y(e.declaration, this)},"iterable":${y(e.iterable, this)},"semiIdx":${E(e.semiIdx)}}`;
     }
     visitInterpolation(e) {
         return `{"$TYPE":"${v.Interpolation}","cooked":${R(e.parts)},"expressions":${this.serializeExpressions(e.expressions)}}`;

@@ -408,7 +408,7 @@ let W = class StateBindingInstructionRenderer {
         this.p = n;
     }
     render(t, i, s) {
-        t.addBinding(new StateBinding(t, t.container, this.oL, this.p.domWriteQueue, z(this.ep, s.from, 4), i, s.to, this.H));
+        t.addBinding(new StateBinding(t, t.container, this.oL, this.p.domWriteQueue, z(this.ep, s.from, 8), i, s.to, this.H));
     }
 };
 
@@ -422,7 +422,7 @@ let q = class DispatchBindingInstructionRenderer {
         this.H = i;
     }
     render(t, i, s) {
-        const n = z(this.ep, s.ast, 8);
+        const n = z(this.ep, s.ast, 16);
         t.addBinding(new StateDispatchBinding(t.container, n, i, s.from, this.H));
     }
 };

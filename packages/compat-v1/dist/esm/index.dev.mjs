@@ -113,7 +113,7 @@ let CallBindingCommand = class CallBindingCommand {
         const target = info.bindable === null
             ? camelCase(info.attr.target)
             : info.bindable.property;
-        return new CallBindingInstruction(exprParser.parse(info.attr.rawValue, (8 | 4)), target);
+        return new CallBindingInstruction(exprParser.parse(info.attr.rawValue, (16 | 8)), target);
     }
 };
 CallBindingCommand = __decorate([
@@ -125,7 +125,7 @@ let CallBindingRenderer = class CallBindingRenderer {
         this._observerLocator = observerLocator;
     }
     render(renderingCtrl, target, instruction) {
-        const expr = ensureExpression(this._exprParser, instruction.from, 8 | 4);
+        const expr = ensureExpression(this._exprParser, instruction.from, 16 | 8);
         renderingCtrl.addBinding(new CallBinding(renderingCtrl.container, this._observerLocator, expr, getTarget(target), instruction.to));
     }
 };
@@ -195,7 +195,7 @@ const instructionType = 'dl';
 let DelegateBindingCommand = class DelegateBindingCommand {
     get type() { return 1; }
     build(info, exprParser) {
-        return new DelegateBindingInstruction(exprParser.parse(info.attr.rawValue, 4), info.attr.target, false);
+        return new DelegateBindingInstruction(exprParser.parse(info.attr.rawValue, 8), info.attr.target, false);
     }
 };
 DelegateBindingCommand = __decorate([
@@ -208,7 +208,7 @@ let ListenerBindingRenderer = class ListenerBindingRenderer {
     }
     static get inject() { return [IExpressionParser, IEventDelegator]; }
     render(renderingCtrl, target, instruction) {
-        const expr = ensureExpression(this._exprParser, instruction.from, 4);
+        const expr = ensureExpression(this._exprParser, instruction.from, 8);
         renderingCtrl.addBinding(new DelegateListenerBinding(renderingCtrl.container, expr, target, instruction.to, this._eventDelegator, new DelegateListenerOptions(instruction.preventDefault)));
     }
 };

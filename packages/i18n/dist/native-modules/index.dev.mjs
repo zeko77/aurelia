@@ -336,7 +336,7 @@ class TranslationBinding {
     static create({ parser, observerLocator, context, controller, target, instruction, platform, isParameterContext, }) {
         const binding = this._getBinding({ observerLocator, context, controller, target, platform });
         const expr = typeof instruction.from === 'string'
-            ? parser.parse(instruction.from, 8)
+            ? parser.parse(instruction.from, 16)
             : instruction.from;
         if (isParameterContext) {
             binding.useParameter(expr);
@@ -598,7 +598,7 @@ let TranslationParametersBindingCommand = class TranslationParametersBindingComm
         else {
             target = info.bindable.property;
         }
-        return new TranslationParametersBindingInstruction(exprParser.parse(attr.rawValue, 8), target);
+        return new TranslationParametersBindingInstruction(exprParser.parse(attr.rawValue, 16), target);
     }
 };
 TranslationParametersBindingCommand = __decorate([
@@ -714,7 +714,7 @@ class TranslationBindBindingCommand {
         else {
             target = info.bindable.property;
         }
-        return new TranslationBindBindingInstruction(exprParser.parse(info.attr.rawValue, 8), target);
+        return new TranslationBindBindingInstruction(exprParser.parse(info.attr.rawValue, 16), target);
     }
 }
 let TranslationBindBindingRenderer = class TranslationBindBindingRenderer {

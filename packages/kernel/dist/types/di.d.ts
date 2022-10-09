@@ -22,6 +22,7 @@ export interface IFactory<T extends Constructable = any> {
     construct(container: IContainer, dynamicDependencies?: unknown[]): Resolved<T>;
 }
 export interface IServiceLocator {
+    readonly root: IServiceLocator;
     has<K extends Key>(key: K | Key, searchAncestors: boolean): boolean;
     get<K extends Key>(key: INewInstanceResolver<K>): Resolved<K>;
     get<K extends Key>(key: ILazyResolver<K>): IResolvedLazy<K>;

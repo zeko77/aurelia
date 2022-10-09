@@ -6,7 +6,6 @@ export interface ComputedWatcher extends IConnectableBinding {
 export declare class ComputedWatcher implements IConnectableBinding, ISubscriber, ICollectionSubscriber {
     readonly obj: IObservable;
     readonly $get: (obj: object, watcher: IConnectable) => unknown;
-    private readonly cb;
     readonly useProxy: boolean;
     value: unknown;
     isBound: boolean;

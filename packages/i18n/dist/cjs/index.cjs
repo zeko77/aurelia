@@ -320,7 +320,7 @@ class TranslationBinding {
             target: r,
             platform: a
         });
-        const l = "string" === typeof o.from ? t.parse(o.from, 8) : o.from;
+        const l = "string" === typeof o.from ? t.parse(o.from, 16) : o.from;
         if (h) c.useParameter(l); else {
             const s = l instanceof n.CustomExpression ? t.parse(l.value, 1) : void 0;
             c.ast = s || l;
@@ -535,7 +535,7 @@ exports.TranslationParametersBindingCommand = class TranslationParametersBinding
         const e = s.attr;
         let r = e.target;
         if (null == s.bindable) r = i.map(s.node, r) ?? t.camelCase(r); else r = s.bindable.property;
-        return new TranslationParametersBindingInstruction(n.parse(e.rawValue, 8), r);
+        return new TranslationParametersBindingInstruction(n.parse(e.rawValue, 16), r);
     }
 };
 
@@ -651,7 +651,7 @@ class TranslationBindBindingCommand {
     build(s, n, i) {
         let e;
         if (null == s.bindable) e = i.map(s.node, s.attr.target) ?? t.camelCase(s.attr.target); else e = s.bindable.property;
-        return new TranslationBindBindingInstruction(n.parse(s.attr.rawValue, 8), e);
+        return new TranslationBindBindingInstruction(n.parse(s.attr.rawValue, 16), e);
     }
 }
 

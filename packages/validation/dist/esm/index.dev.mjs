@@ -531,7 +531,7 @@ function parsePropertyName(property, parser) {
         default:
             throw new Error(`Unable to parse accessor function:\n${property}`);
     }
-    return [property, parser.parse(`${rootObjectSymbol}.${property}`, 8)];
+    return [property, parser.parse(`${rootObjectSymbol}.${property}`, 16)];
 }
 class ValidationResult {
     constructor(valid, message, propertyName, object, rule, propertyRule, isManual = false) {
@@ -750,7 +750,7 @@ class Deserializer {
             }
             case ASTExpressionTypes.ForOfStatement: {
                 const expr = raw;
-                return new AST.ForOfStatement(this.hydrate(expr.declaration), this.hydrate(expr.iterable));
+                return new AST.ForOfStatement(this.hydrate(expr.declaration), this.hydrate(expr.iterable), this.hydrate(expr.semiIdx));
             }
             case ASTExpressionTypes.Interpolation: {
                 const expr = raw;
@@ -863,7 +863,7 @@ class Serializer {
         return `{"$TYPE":"${ASTExpressionTypes.BindingIdentifier}","name":"${expr.name}"}`;
     }
     visitForOfStatement(expr) {
-        return `{"$TYPE":"${ASTExpressionTypes.ForOfStatement}","declaration":${astVisit(expr.declaration, this)},"iterable":${astVisit(expr.iterable, this)}}`;
+        return `{"$TYPE":"${ASTExpressionTypes.ForOfStatement}","declaration":${astVisit(expr.declaration, this)},"iterable":${astVisit(expr.iterable, this)},"semiIdx":${serializePrimitive(expr.semiIdx)}}`;
     }
     visitInterpolation(expr) {
         return `{"$TYPE":"${ASTExpressionTypes.Interpolation}","cooked":${serializePrimitives(expr.parts)},"expressions":${this.serializeExpressions(expr.expressions)}}`;

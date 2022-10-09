@@ -1,14 +1,11 @@
 import { IServiceLocator, type Constructable } from '@aurelia/kernel';
 import { IBinding, IRateLimitOptions, type ISubscriber } from '@aurelia/runtime';
-import { type IAstBasedBinding } from './interfaces-bindings';
-interface ITwoWayBindingImpl extends IAstBasedBinding {
-    updateSource(value: unknown): void;
-}
+import { PropertyBinding } from './property-binding';
 /**
  * A subscriber that is used for subcribing to target observer & invoking `updateSource` on a binding
  */
 export declare class BindingTargetSubscriber implements ISubscriber {
-    constructor(b: ITwoWayBindingImpl, flushQueue: IFlushQueue);
+    constructor(b: PropertyBinding, flushQueue: IFlushQueue);
     flush(): void;
     handleChange(value: unknown, _: unknown): void;
 }
@@ -43,5 +40,4 @@ export declare class FlushQueue implements IFlushQueue {
  * For internal use only
  */
 export declare const mixingBindingLimited: <T extends IBinding>(target: Constructable<T>, getMethodName: (binding: T, opts: IRateLimitOptions) => keyof T) => void;
-export {};
 //# sourceMappingURL=binding-utils.d.ts.map

@@ -414,7 +414,7 @@ exports.StateBindingInstructionRenderer = class StateBindingInstructionRenderer 
         this.p = e;
     }
     render(t, s, i) {
-        t.addBinding(new StateBinding(t, t.container, this.oL, this.p.domWriteQueue, p(this.ep, i.from, 4), s, i.to, this.H));
+        t.addBinding(new StateBinding(t, t.container, this.oL, this.p.domWriteQueue, p(this.ep, i.from, 8), s, i.to, this.H));
     }
 };
 
@@ -428,7 +428,7 @@ exports.DispatchBindingInstructionRenderer = class DispatchBindingInstructionRen
         this.H = s;
     }
     render(t, s, i) {
-        const e = p(this.ep, i.ast, 8);
+        const e = p(this.ep, i.ast, 16);
         t.addBinding(new StateDispatchBinding(t.container, e, s, i.from, this.H));
     }
 };

@@ -85,7 +85,7 @@ exports.CallBindingCommand = class CallBindingCommand {
     }
     build(t, e) {
         const s = null === t.bindable ? i.camelCase(t.attr.target) : t.bindable.property;
-        return new CallBindingInstruction(e.parse(t.attr.rawValue, 8 | 4), s);
+        return new CallBindingInstruction(e.parse(t.attr.rawValue, 16 | 8), s);
     }
 };
 
@@ -97,7 +97,7 @@ exports.CallBindingRenderer = class CallBindingRenderer {
         this.oL = e;
     }
     render(t, e, i) {
-        const s = c(this.ep, i.from, 8 | 4);
+        const s = c(this.ep, i.from, 16 | 8);
         t.addBinding(new CallBinding(t.container, this.oL, s, g(e), i.to));
     }
 };
@@ -171,7 +171,7 @@ exports.DelegateBindingCommand = class DelegateBindingCommand {
         return 1;
     }
     build(t, e) {
-        return new DelegateBindingInstruction(e.parse(t.attr.rawValue, 4), t.attr.target, false);
+        return new DelegateBindingInstruction(e.parse(t.attr.rawValue, 8), t.attr.target, false);
     }
 };
 
@@ -186,7 +186,7 @@ exports.ListenerBindingRenderer = class ListenerBindingRenderer {
         return [ t.IExpressionParser, v ];
     }
     render(t, e, i) {
-        const s = c(this.ep, i.from, 4);
+        const s = c(this.ep, i.from, 8);
         t.addBinding(new DelegateListenerBinding(t.container, s, e, i.to, this.t, new DelegateListenerOptions(i.preventDefault)));
     }
 };

@@ -28,9 +28,10 @@ export declare const enum ExpressionType {
     None = 0,
     Interpolation = 1,
     IsIterator = 2,
-    IsFunction = 4,
-    IsProperty = 8,
-    IsCustom = 16
+    IsChainable = 4,
+    IsFunction = 8,
+    IsProperty = 16,
+    IsCustom = 32
 }
 export declare function parseExpression(input: string, expressionType?: ExpressionType): AnyBindingExpression;
 export declare function parse(minPrecedence: Precedence, expressionType: ExpressionType): AnyBindingExpression;

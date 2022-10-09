@@ -538,7 +538,7 @@ function j(e, t) {
       default:
         throw new Error(`Unable to parse accessor function:\n${e}`);
     }
-    return [ e, t.parse(`${V}.${e}`, 8) ];
+    return [ e, t.parse(`${V}.${e}`, 16) ];
 }
 
 class ValidationResult {
@@ -559,9 +559,9 @@ class ValidationResult {
 
 ValidationResult.nextId = 0;
 
-const O = new Set([ "displayName", "propertyName", "value", "object", "config", "getDisplayName" ]);
+const I = new Set([ "displayName", "propertyName", "value", "object", "config", "getDisplayName" ]);
 
-let I = class ValidationMessageProvider {
+let O = class ValidationMessageProvider {
     constructor(e, t, s) {
         this.parser = e;
         this.registeredMessages = new WeakMap;
@@ -591,7 +591,7 @@ let I = class ValidationMessageProvider {
         if (23 === t?.$kind) {
             for (const s of t.expressions) {
                 const t = s.name;
-                if (O.has(t)) this.logger.warn(`Did you mean to use "$${t}" instead of "${t}" in this validation message template: "${e}"?`);
+                if (I.has(t)) this.logger.warn(`Did you mean to use "$${t}" instead of "${t}" in this validation message template: "${e}"?`);
                 if (0 === s.$kind || s.ancestor > 0) throw new Error("$parent is not permitted in validation message expressions.");
             }
             return t;
@@ -606,7 +606,7 @@ let I = class ValidationMessageProvider {
     }
 };
 
-I = f([ p(0, $), p(1, r), p(2, M) ], I);
+O = f([ p(0, $), p(1, r), p(2, M) ], O);
 
 const D = u.astVisit;
 
@@ -780,7 +780,7 @@ class Deserializer {
           case L.ForOfStatement:
             {
                 const t = e;
-                return new u.ForOfStatement(this.hydrate(t.declaration), this.hydrate(t.iterable));
+                return new u.ForOfStatement(this.hydrate(t.declaration), this.hydrate(t.iterable), this.hydrate(t.semiIdx));
             }
 
           case L.Interpolation:
@@ -883,7 +883,7 @@ class Serializer {
         return `{"$TYPE":"${L.BindingIdentifier}","name":"${e.name}"}`;
     }
     visitForOfStatement(e) {
-        return `{"$TYPE":"${L.ForOfStatement}","declaration":${D(e.declaration, this)},"iterable":${D(e.iterable, this)}}`;
+        return `{"$TYPE":"${L.ForOfStatement}","declaration":${D(e.declaration, this)},"iterable":${D(e.iterable, this)},"semiIdx":${C(e.semiIdx)}}`;
     }
     visitInterpolation(e) {
         return `{"$TYPE":"${L.Interpolation}","cooked":${q(e.parts)},"expressions":${this.serializeExpressions(e.expressions)}}`;
@@ -1293,7 +1293,7 @@ class StandardValidator {
 function U() {
     return {
         ValidatorType: StandardValidator,
-        MessageProviderType: I,
+        MessageProviderType: O,
         CustomMessages: [],
         HydratorType: F
     };
@@ -1316,5 +1316,5 @@ function H(e) {
 
 const J = H(a);
 
-export { v as BaseValidationRule, Deserializer, T as EqualsRule, M as ICustomMessages, m as IValidationExpressionHydrator, g as IValidationMessageProvider, N as IValidationRules, Z as IValidator, E as LengthRule, ModelBasedRule, F as ModelValidationExpressionHydrator, PropertyRule, b as RangeRule, R as RegexRule, x as RequiredRule, RuleProperty, Serializer, P as SizeRule, StandardValidator, ValidateInstruction, J as ValidationConfiguration, K as ValidationDeserializer, I as ValidationMessageProvider, ValidationResult, w as ValidationRuleAliasMessage, Y as ValidationRules, ValidationSerializer, k as deserializePrimitive, U as getDefaultValidationConfiguration, j as parsePropertyName, V as rootObjectSymbol, C as serializePrimitive, q as serializePrimitives, y as validationRule, z as validationRulesRegistrar };
+export { v as BaseValidationRule, Deserializer, T as EqualsRule, M as ICustomMessages, m as IValidationExpressionHydrator, g as IValidationMessageProvider, N as IValidationRules, Z as IValidator, E as LengthRule, ModelBasedRule, F as ModelValidationExpressionHydrator, PropertyRule, b as RangeRule, R as RegexRule, x as RequiredRule, RuleProperty, Serializer, P as SizeRule, StandardValidator, ValidateInstruction, J as ValidationConfiguration, K as ValidationDeserializer, O as ValidationMessageProvider, ValidationResult, w as ValidationRuleAliasMessage, Y as ValidationRules, ValidationSerializer, k as deserializePrimitive, U as getDefaultValidationConfiguration, j as parsePropertyName, V as rootObjectSymbol, C as serializePrimitive, q as serializePrimitives, y as validationRule, z as validationRulesRegistrar };
 

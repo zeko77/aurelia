@@ -308,7 +308,7 @@ class TranslationBinding {
             target: e,
             platform: a
         });
-        const l = "string" === typeof r.from ? t.parse(r.from, 8) : r.from;
+        const l = "string" === typeof r.from ? t.parse(r.from, 16) : r.from;
         if (o) h.useParameter(l); else {
             const n = l instanceof w ? t.parse(l.value, 1) : void 0;
             h.ast = n || l;
@@ -523,7 +523,7 @@ let Z = class TranslationParametersBindingCommand {
         const e = t.attr;
         let r = e.target;
         if (null == t.bindable) r = i.map(t.node, r) ?? s(r); else r = t.bindable.property;
-        return new TranslationParametersBindingInstruction(n.parse(e.rawValue, 8), r);
+        return new TranslationParametersBindingInstruction(n.parse(e.rawValue, 16), r);
     }
 };
 
@@ -639,7 +639,7 @@ class TranslationBindBindingCommand {
     build(t, n, i) {
         let e;
         if (null == t.bindable) e = i.map(t.node, t.attr.target) ?? s(t.attr.target); else e = t.bindable.property;
-        return new TranslationBindBindingInstruction(n.parse(t.attr.rawValue, 8), e);
+        return new TranslationBindBindingInstruction(n.parse(t.attr.rawValue, 16), e);
     }
 }
 

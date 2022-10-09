@@ -1,7 +1,8 @@
-import { IPlatform, type IAstBasedBinding, type IBindingController } from '@aurelia/runtime-html';
+import { IConnectableBinding, IAstEvaluator } from '@aurelia/runtime';
+import { IPlatform, type IBindingController } from '@aurelia/runtime-html';
 import i18next from 'i18next';
 import type { IContainer, IServiceLocator } from '@aurelia/kernel';
-import type { Scope, IsExpression, IExpressionParser, IObserverLocator, IObserverLocatorBasedConnectable } from '@aurelia/runtime';
+import type { Scope, IsExpression, IExpressionParser, IObserverLocator } from '@aurelia/runtime';
 import type { IHydratableController, INode } from '@aurelia/runtime-html';
 import type { TranslationBindBindingInstruction, TranslationBindingInstruction } from './translation-renderer';
 import type { TranslationParametersBindingInstruction } from './translation-parameters-renderer';
@@ -15,9 +16,9 @@ interface TranslationBindingCreationContext {
     platform: IPlatform;
     isParameterContext?: boolean;
 }
-export interface TranslationBinding extends IAstBasedBinding {
+export interface TranslationBinding extends IAstEvaluator, IConnectableBinding {
 }
-export declare class TranslationBinding implements IObserverLocatorBasedConnectable {
+export declare class TranslationBinding implements IConnectableBinding {
     isBound: boolean;
     ast: IsExpression;
     private readonly i18n;

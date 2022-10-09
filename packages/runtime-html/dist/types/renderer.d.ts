@@ -7,7 +7,7 @@ import { INode } from './dom';
 import { IController } from './templating/controller';
 import { IPlatform } from './platform';
 import { IRendering } from './templating/rendering';
-import { AttrSyntax } from './resources/attribute-pattern';
+import type { AttrSyntax } from './resources/attribute-pattern';
 import type { IContainer, Class, IRegistry } from '@aurelia/kernel';
 import type { Interpolation, IsBindingBehavior, ForOfStatement } from '@aurelia/runtime';
 import type { IHydratableController } from './templating/controller';
@@ -23,6 +23,7 @@ export declare const enum InstructionType {
     letBinding = "ri",
     refBinding = "rj",
     iteratorBinding = "rk",
+    multiAttr = "rl",
     textBinding = "ha",
     listenerBinding = "hb",
     attributeBinding = "hc",
@@ -53,10 +54,11 @@ export declare class PropertyBindingInstruction {
     constructor(from: string | IsBindingBehavior, to: string, mode: BindingMode);
 }
 export declare class IteratorBindingInstruction {
-    from: string | ForOfStatement;
+    forOf: string | ForOfStatement;
     to: string;
+    props: MultiAttrInstruction[];
     readonly type = InstructionType.iteratorBinding;
-    constructor(from: string | ForOfStatement, to: string);
+    constructor(forOf: string | ForOfStatement, to: string, props: MultiAttrInstruction[]);
 }
 export declare class RefBindingInstruction {
     readonly from: string | IsBindingBehavior;
@@ -69,6 +71,13 @@ export declare class SetPropertyInstruction {
     to: string;
     readonly type = InstructionType.setProperty;
     constructor(value: unknown, to: string);
+}
+export declare class MultiAttrInstruction {
+    value: string;
+    to: string;
+    command: string | null;
+    readonly type = InstructionType.multiAttr;
+    constructor(value: string, to: string, command: string | null);
 }
 export declare class HydrateElementInstruction {
     /**
@@ -334,7 +343,7 @@ export declare class PropertyBindingRenderer implements IRenderer {
 }
 export declare class IteratorBindingRenderer implements IRenderer {
     target: InstructionType.iteratorBinding;
-    constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator, p: IPlatform);
+    constructor(rendering: IRendering, exprParser: IExpressionParser, observerLocator: IObserverLocator, p: IPlatform);
     render(renderingCtrl: IHydratableController, target: IController, instruction: IteratorBindingInstruction): void;
 }
 export declare class TextBindingRenderer implements IRenderer {

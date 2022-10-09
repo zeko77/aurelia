@@ -1,11 +1,10 @@
 import { type IServiceLocator } from '@aurelia/kernel';
-import { Scope, type IsBindingBehavior, IBinding } from '@aurelia/runtime';
-import { type IAstBasedBinding } from '@aurelia/runtime-html';
+import { Scope, type IsBindingBehavior, IBinding, IAstEvaluator, IConnectableBinding } from '@aurelia/runtime';
 import { type IStore } from './interfaces';
 /**
  * A binding that handles the connection of the global state to a property of a target object
  */
-export interface StateDispatchBinding extends IAstBasedBinding {
+export interface StateDispatchBinding extends IAstEvaluator, IConnectableBinding {
 }
 export declare class StateDispatchBinding implements IBinding {
     scope?: Scope | undefined;

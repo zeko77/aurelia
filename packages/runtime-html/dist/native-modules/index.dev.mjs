@@ -1,6 +1,6 @@
 import { Protocol, getPrototypeChain, firstDefined, kebabCase, noop, DI, Registration, emptyArray, all, mergeArrays, IPlatform as IPlatform$1, IContainer, optional, InstanceProvider, ILogger, resolveAll, onResolve, fromDefinitionOrDefault, pascalCase, fromAnnotationOrTypeOrDefault, fromAnnotationOrDefinitionOrTypeOrDefault, camelCase, toArray, emptyObject, IServiceLocator, transient } from '../../../kernel/dist/native-modules/index.mjs';
 import { Metadata, isObject } from '../../../metadata/dist/native-modules/index.mjs';
-import { subscriberCollection, astEvaluate, connectable, astBind, astUnbind, astAssign, ConnectableSwitcher, ProxyObservable, Scope, ICoercionConfiguration, IObserverLocator, IExpressionParser, AccessScopeExpression, PrimitiveLiteralExpression, ISignaler, PropertyAccessor, INodeObserverLocator, getObserverLookup, SetterObserver, IDirtyChecker, applyMutationsToIndices, getCollectionObserver as getCollectionObserver$1, synchronizeIndices, BindingContext } from '../../../runtime/dist/native-modules/index.mjs';
+import { subscriberCollection, astEvaluate, ISignaler, connectable, astBind, astUnbind, astAssign, ConnectableSwitcher, ProxyObservable, Scope, ICoercionConfiguration, IObserverLocator, IExpressionParser, AccessScopeExpression, PrimitiveLiteralExpression, PropertyAccessor, INodeObserverLocator, getObserverLookup, SetterObserver, IDirtyChecker, createIndexMap, applyMutationsToIndices, getCollectionObserver as getCollectionObserver$1, synchronizeIndices, BindingContext } from '../../../runtime/dist/native-modules/index.mjs';
 import { TaskAbortError } from '../../../platform/dist/native-modules/index.mjs';
 import { BrowserPlatform } from '../../../platform-browser/dist/native-modules/index.mjs';
 
@@ -1123,6 +1123,9 @@ const mixinAstEvaluator = (strict, strictFnCall = true) => {
         defineHiddenProp(proto, 'get', function (key) {
             return this.l.get(key);
         });
+        defineHiddenProp(proto, 'getSignaler', function () {
+            return this.l.root.get(ISignaler);
+        });
         defineHiddenProp(proto, 'getConverter', function (name) {
             const key = ValueConverter.keyFrom(name);
             let resourceLookup = resourceLookupCache.get(this);
@@ -1285,7 +1288,7 @@ class AttributeBinding {
             return;
         }
         const shouldQueueFlush = this._controller.state !== 1 && (this.targetObserver.type & 4) > 0;
-        const shouldConnect = (this.mode & 1) === 0;
+        const shouldConnect = (this.mode & 2) > 0;
         let task;
         if (shouldConnect) {
             this.obs.version++;
@@ -1711,7 +1714,7 @@ class PropertyBinding {
             return;
         }
         const shouldQueueFlush = this._controller.state !== 1 && (this._targetObserver.type & 4) > 0;
-        const shouldConnect = this.mode > 1;
+        const shouldConnect = (this.mode & 2) > 0;
         if (shouldConnect) {
             this.obs.version++;
         }
@@ -2518,11 +2521,11 @@ class ComputedWatcher {
     constructor(obj, observerLocator, $get, cb, useProxy) {
         this.obj = obj;
         this.$get = $get;
-        this.cb = cb;
         this.useProxy = useProxy;
         this.value = void 0;
         this.isBound = false;
         this.running = false;
+        this._callback = cb;
         this.oL = observerLocator;
     }
     handleChange() {
@@ -2552,8 +2555,8 @@ class ComputedWatcher {
         const obj = this.obj;
         const oldValue = this.value;
         const newValue = this.compute();
-        if (!Object.is(newValue, oldValue)) {
-            this.cb.call(obj, newValue, oldValue, obj);
+        if (!areEqual(newValue, oldValue)) {
+            this._callback.call(obj, newValue, oldValue, obj);
         }
     }
     compute() {
@@ -2591,7 +2594,7 @@ class ExpressionWatcher {
             value = astEvaluate(expr, this.scope, this, this);
             this.obs.clear();
         }
-        if (!Object.is(value, oldValue)) {
+        if (!areEqual(value, oldValue)) {
             this.value = value;
             this.callback.call(obj, value, oldValue, obj);
         }
@@ -3953,7 +3956,7 @@ function createWatchers(controller, context, definition, instance) {
         }
         else {
             ast = isString(expression)
-                ? expressionParser.parse(expression, 8)
+                ? expressionParser.parse(expression, 16)
                 : getAccessScopeAst(expression);
             controller.addBinding(new ExpressionWatcher(scope, context, observerLocator, ast, callback));
         }
@@ -4658,6 +4661,7 @@ var InstructionType;
     InstructionType["letBinding"] = "ri";
     InstructionType["refBinding"] = "rj";
     InstructionType["iteratorBinding"] = "rk";
+    InstructionType["multiAttr"] = "rl";
     InstructionType["textBinding"] = "ha";
     InstructionType["listenerBinding"] = "hb";
     InstructionType["attributeBinding"] = "hc";
@@ -4689,9 +4693,10 @@ class PropertyBindingInstruction {
     }
 }
 class IteratorBindingInstruction {
-    constructor(from, to) {
-        this.from = from;
+    constructor(forOf, to, props) {
+        this.forOf = forOf;
         this.to = to;
+        this.props = props;
         this.type = "rk";
     }
 }
@@ -4707,6 +4712,14 @@ class SetPropertyInstruction {
         this.value = value;
         this.to = to;
         this.type = "re";
+    }
+}
+class MultiAttrInstruction {
+    constructor(value, to, command) {
+        this.value = value;
+        this.to = to;
+        this.command = command;
+        this.type = "rl";
     }
 }
 class HydrateElementInstruction {
@@ -5020,7 +5033,7 @@ let LetElementRenderer = class LetElementRenderer {
         let i = 0;
         while (ii > i) {
             childInstruction = childInstructions[i];
-            expr = ensureExpression(this._exprParser, childInstruction.from, 8);
+            expr = ensureExpression(this._exprParser, childInstruction.from, 16);
             renderingCtrl.addBinding(new LetBinding(container, this._observerLocator, expr, childInstruction.to, toBindingContext));
             ++i;
         }
@@ -5035,7 +5048,7 @@ let RefBindingRenderer = class RefBindingRenderer {
         this._exprParser = exprParser;
     }
     render(renderingCtrl, target, instruction) {
-        const expr = ensureExpression(this._exprParser, instruction.from, 8);
+        const expr = ensureExpression(this._exprParser, instruction.from, 16);
         renderingCtrl.addBinding(new RefBinding(renderingCtrl.container, expr, getRefTarget(target, instruction.to)));
     }
 };
@@ -5066,7 +5079,7 @@ let PropertyBindingRenderer = class PropertyBindingRenderer {
         this._platform = p;
     }
     render(renderingCtrl, target, instruction) {
-        const expr = ensureExpression(this._exprParser, instruction.from, 8);
+        const expr = ensureExpression(this._exprParser, instruction.from, 16);
         renderingCtrl.addBinding(new PropertyBinding(renderingCtrl, renderingCtrl.container, this._observerLocator, this._platform.domWriteQueue, expr, getTarget(target), instruction.to, instruction.mode));
     }
 };
@@ -5075,17 +5088,18 @@ PropertyBindingRenderer = __decorate([
     renderer("rg")
 ], PropertyBindingRenderer);
 let IteratorBindingRenderer = class IteratorBindingRenderer {
-    constructor(exprParser, observerLocator, p) {
+    constructor(rendering, exprParser, observerLocator, p) {
+        this._rendering = rendering;
         this._exprParser = exprParser;
         this._observerLocator = observerLocator;
         this._platform = p;
     }
+    static get inject() { return [IRendering, IExpressionParser, IObserverLocator, IPlatform]; }
     render(renderingCtrl, target, instruction) {
-        const expr = ensureExpression(this._exprParser, instruction.from, 2);
+        const expr = ensureExpression(this._exprParser, instruction.forOf, 2);
         renderingCtrl.addBinding(new PropertyBinding(renderingCtrl, renderingCtrl.container, this._observerLocator, this._platform.domWriteQueue, expr, getTarget(target), instruction.to, 2));
     }
 };
-IteratorBindingRenderer.inject = [IExpressionParser, IObserverLocator, IPlatform];
 IteratorBindingRenderer = __decorate([
     renderer("rk")
 ], IteratorBindingRenderer);
@@ -5132,7 +5146,7 @@ let ListenerBindingRenderer = class ListenerBindingRenderer {
         this._exprParser = parser;
     }
     render(renderingCtrl, target, instruction) {
-        const expr = ensureExpression(this._exprParser, instruction.from, 4);
+        const expr = ensureExpression(this._exprParser, instruction.from, 8);
         renderingCtrl.addBinding(new ListenerBinding(renderingCtrl.container, expr, target, instruction.to, new ListenerBindingOptions(instruction.preventDefault, instruction.capture)));
     }
 };
@@ -5171,7 +5185,7 @@ let StylePropertyBindingRenderer = class StylePropertyBindingRenderer {
         this._platform = platform;
     }
     render(renderingCtrl, target, instruction) {
-        const expr = ensureExpression(this._exprParser, instruction.from, 8);
+        const expr = ensureExpression(this._exprParser, instruction.from, 16);
         renderingCtrl.addBinding(new PropertyBinding(renderingCtrl, renderingCtrl.container, this._observerLocator, this._platform.domWriteQueue, expr, target.style, instruction.to, 2));
     }
 };
@@ -5186,7 +5200,7 @@ let AttributeBindingRenderer = class AttributeBindingRenderer {
         this._observerLocator = _observerLocator;
     }
     render(renderingCtrl, target, instruction) {
-        const expr = ensureExpression(this._exprParser, instruction.from, 8);
+        const expr = ensureExpression(this._exprParser, instruction.from, 16);
         renderingCtrl.addBinding(new AttributeBinding(renderingCtrl, renderingCtrl.container, this._observerLocator, this._platform.domWriteQueue, expr, target, instruction.attr, instruction.to, 2));
     }
 };
@@ -5447,7 +5461,7 @@ let OneTimeBindingCommand = class OneTimeBindingCommand {
             }
             target = info.bindable.property;
         }
-        return new PropertyBindingInstruction(exprParser.parse(value, 8), target, 1);
+        return new PropertyBindingInstruction(exprParser.parse(value, 16), target, 1);
     }
 };
 OneTimeBindingCommand = __decorate([
@@ -5469,7 +5483,7 @@ let ToViewBindingCommand = class ToViewBindingCommand {
             }
             target = info.bindable.property;
         }
-        return new PropertyBindingInstruction(exprParser.parse(value, 8), target, 2);
+        return new PropertyBindingInstruction(exprParser.parse(value, 16), target, 2);
     }
 };
 ToViewBindingCommand = __decorate([
@@ -5491,7 +5505,7 @@ let FromViewBindingCommand = class FromViewBindingCommand {
             }
             target = info.bindable.property;
         }
-        return new PropertyBindingInstruction(exprParser.parse(value, 8), target, 4);
+        return new PropertyBindingInstruction(exprParser.parse(value, 16), target, 4);
     }
 };
 FromViewBindingCommand = __decorate([
@@ -5513,7 +5527,7 @@ let TwoWayBindingCommand = class TwoWayBindingCommand {
             }
             target = info.bindable.property;
         }
-        return new PropertyBindingInstruction(exprParser.parse(value, 8), target, 6);
+        return new PropertyBindingInstruction(exprParser.parse(value, 16), target, 6);
     }
 };
 TwoWayBindingCommand = __decorate([
@@ -5545,19 +5559,35 @@ let DefaultBindingCommand = class DefaultBindingCommand {
                 : bindable.mode;
             target = bindable.property;
         }
-        return new PropertyBindingInstruction(exprParser.parse(value, 8), target, mode);
+        return new PropertyBindingInstruction(exprParser.parse(value, 16), target, mode);
     }
 };
 DefaultBindingCommand = __decorate([
     bindingCommand('bind')
 ], DefaultBindingCommand);
 let ForBindingCommand = class ForBindingCommand {
+    constructor(attrParser) {
+        this._attrParser = attrParser;
+    }
     get type() { return 0; }
+    static get inject() { return [IAttributeParser]; }
     build(info, exprParser) {
         const target = info.bindable === null
             ? camelCase(info.attr.target)
             : info.bindable.property;
-        return new IteratorBindingInstruction(exprParser.parse(info.attr.rawValue, 2), target);
+        const forOf = exprParser.parse(info.attr.rawValue, 2);
+        let props = emptyArray;
+        if (forOf.semiIdx > -1) {
+            const attr = info.attr.rawValue.slice(forOf.semiIdx + 1);
+            const i = attr.indexOf(':');
+            if (i > -1) {
+                const attrName = attr.slice(0, i).trim();
+                const attrValue = attr.slice(i + 1).trim();
+                const attrSyntax = this._attrParser.parse(attrName, attrValue);
+                props = [new MultiAttrInstruction(attrValue, attrSyntax.target, attrSyntax.command)];
+            }
+        }
+        return new IteratorBindingInstruction(forOf, target, props);
     }
 };
 ForBindingCommand = __decorate([
@@ -5566,7 +5596,7 @@ ForBindingCommand = __decorate([
 let TriggerBindingCommand = class TriggerBindingCommand {
     get type() { return 1; }
     build(info, exprParser) {
-        return new ListenerBindingInstruction(exprParser.parse(info.attr.rawValue, 4), info.attr.target, true, false);
+        return new ListenerBindingInstruction(exprParser.parse(info.attr.rawValue, 8), info.attr.target, true, false);
     }
 };
 TriggerBindingCommand = __decorate([
@@ -5575,7 +5605,7 @@ TriggerBindingCommand = __decorate([
 let CaptureBindingCommand = class CaptureBindingCommand {
     get type() { return 1; }
     build(info, exprParser) {
-        return new ListenerBindingInstruction(exprParser.parse(info.attr.rawValue, 4), info.attr.target, false, true);
+        return new ListenerBindingInstruction(exprParser.parse(info.attr.rawValue, 8), info.attr.target, false, true);
     }
 };
 CaptureBindingCommand = __decorate([
@@ -5584,7 +5614,7 @@ CaptureBindingCommand = __decorate([
 let AttrBindingCommand = class AttrBindingCommand {
     get type() { return 1; }
     build(info, exprParser) {
-        return new AttributeBindingInstruction(info.attr.target, exprParser.parse(info.attr.rawValue, 8), info.attr.target);
+        return new AttributeBindingInstruction(info.attr.target, exprParser.parse(info.attr.rawValue, 16), info.attr.target);
     }
 };
 AttrBindingCommand = __decorate([
@@ -5593,7 +5623,7 @@ AttrBindingCommand = __decorate([
 let StyleBindingCommand = class StyleBindingCommand {
     get type() { return 1; }
     build(info, exprParser) {
-        return new AttributeBindingInstruction('style', exprParser.parse(info.attr.rawValue, 8), info.attr.target);
+        return new AttributeBindingInstruction('style', exprParser.parse(info.attr.rawValue, 16), info.attr.target);
     }
 };
 StyleBindingCommand = __decorate([
@@ -5602,7 +5632,7 @@ StyleBindingCommand = __decorate([
 let ClassBindingCommand = class ClassBindingCommand {
     get type() { return 1; }
     build(info, exprParser) {
-        return new AttributeBindingInstruction('class', exprParser.parse(info.attr.rawValue, 8), info.attr.target);
+        return new AttributeBindingInstruction('class', exprParser.parse(info.attr.rawValue, 16), info.attr.target);
     }
 };
 ClassBindingCommand = __decorate([
@@ -5611,7 +5641,7 @@ ClassBindingCommand = __decorate([
 let RefBindingCommand = class RefBindingCommand {
     get type() { return 1; }
     build(info, exprParser) {
-        return new RefBindingInstruction(exprParser.parse(info.attr.rawValue, 8), info.attr.target);
+        return new RefBindingInstruction(exprParser.parse(info.attr.rawValue, 16), info.attr.target);
     }
 };
 RefBindingCommand = __decorate([
@@ -6239,7 +6269,7 @@ class TemplateCompiler {
             bindingCommand = context._createCommand(attrSyntax);
             if (bindingCommand !== null) {
                 if (attrSyntax.command === 'bind') {
-                    letInstructions.push(new LetBindingInstruction(exprParser.parse(realAttrValue, 8), camelCase(realAttrTarget)));
+                    letInstructions.push(new LetBindingInstruction(exprParser.parse(realAttrValue, 16), camelCase(realAttrTarget)));
                 }
                 else {
                     throw createError(`AUR0704: Invalid command ${attrSyntax.command} for <let>. Only to-view/bind supported.`);
@@ -8501,15 +8531,39 @@ const wrappedExprs = [
     17,
 ];
 class Repeat {
-    constructor(location, parent, factory) {
+    constructor(instruction, parser, location, parent, factory) {
         this.views = [];
-        this.key = void 0;
+        this.key = null;
+        this._keyMap = new Map();
+        this._scopeMap = new Map();
         this._observer = void 0;
         this._observingInnerItems = false;
         this._reevaluating = false;
         this._innerItemsExpression = null;
         this._normalizedItems = void 0;
         this._hasDestructuredLocal = false;
+        const keyProp = instruction.props[0].props[0];
+        if (keyProp !== void 0) {
+            const { to, value, command } = keyProp;
+            if (to === 'key') {
+                if (command === null) {
+                    this.key = value;
+                }
+                else if (command === 'bind') {
+                    this.key = parser.parse(value, 16);
+                }
+                else {
+                    {
+                        throw createError(`AUR775:invalid command ${command}`);
+                    }
+                }
+            }
+            else {
+                {
+                    throw createError(`AUR776:invalid target ${to}`);
+                }
+            }
+        }
         this._location = location;
         this._parent = parent;
         this._factory = factory;
@@ -8548,19 +8602,17 @@ class Repeat {
         this._refreshCollectionObserver();
         return this._deactivateAllViews(initiator);
     }
+    unbinding(_initiator, _parent, _flags) {
+        this._scopeMap.clear();
+        this._keyMap.clear();
+    }
     itemsChanged() {
-        const { $controller } = this;
-        if (!$controller.isActive) {
+        if (!this.$controller.isActive) {
             return;
         }
         this._refreshCollectionObserver();
         this._normalizeToArray();
-        const ret = onResolve(this._deactivateAllViews(null), () => {
-            return this._activateAllViews(null);
-        });
-        if (isPromise(ret)) {
-            ret.catch(rethrow);
-        }
+        this._applyIndexMap(this.items, void 0);
     }
     handleCollectionChange(collection, indexMap) {
         const $controller = this.$controller;
@@ -8577,6 +8629,152 @@ class Repeat {
             return;
         }
         this._normalizeToArray();
+        this._applyIndexMap(collection, indexMap);
+    }
+    _applyIndexMap(collection, indexMap) {
+        const oldViews = this.views;
+        const oldLen = oldViews.length;
+        const key = this.key;
+        const hasKey = key !== null;
+        if (hasKey || indexMap === void 0) {
+            const local = this.local;
+            const newItems = this._normalizedItems;
+            const newLen = newItems.length;
+            const forOf = this.forOf;
+            const dec = forOf.declaration;
+            const binding = this._forOfBinding;
+            const hasDestructuredLocal = this._hasDestructuredLocal;
+            indexMap = createIndexMap(newLen);
+            let i = 0;
+            if (oldLen === 0) {
+                for (; i < newLen; ++i) {
+                    indexMap[i] = -2;
+                }
+            }
+            else if (newLen === 0) {
+                if (hasDestructuredLocal) {
+                    for (i = 0; i < oldLen; ++i) {
+                        indexMap.deletedIndices.push(i);
+                        indexMap.deletedItems.push(astEvaluate(dec, oldViews[i].scope, binding, null));
+                    }
+                }
+                else {
+                    for (i = 0; i < oldLen; ++i) {
+                        indexMap.deletedIndices.push(i);
+                        indexMap.deletedItems.push(oldViews[i].scope.bindingContext[local]);
+                    }
+                }
+            }
+            else {
+                const oldItems = Array(oldLen);
+                if (hasDestructuredLocal) {
+                    for (i = 0; i < oldLen; ++i) {
+                        oldItems[i] = astEvaluate(dec, oldViews[i].scope, binding, null);
+                    }
+                }
+                else {
+                    for (i = 0; i < oldLen; ++i) {
+                        oldItems[i] = oldViews[i].scope.bindingContext[local];
+                    }
+                }
+                let oldItem;
+                let newItem;
+                let oldKey;
+                let newKey;
+                let j = 0;
+                const oldEnd = oldLen - 1;
+                const newEnd = newLen - 1;
+                const oldIndices = new Map();
+                const newIndices = new Map();
+                const keyMap = this._keyMap;
+                const scopeMap = this._scopeMap;
+                const parentScope = this.$controller.scope;
+                i = 0;
+                outer: {
+                    while (true) {
+                        oldItem = oldItems[i];
+                        newItem = newItems[i];
+                        oldKey = hasKey
+                            ? getKeyValue(keyMap, key, oldItem, getScope(scopeMap, oldItems[i], forOf, parentScope, binding, local, hasDestructuredLocal), binding)
+                            : oldItem;
+                        newKey = hasKey
+                            ? getKeyValue(keyMap, key, newItem, getScope(scopeMap, newItems[i], forOf, parentScope, binding, local, hasDestructuredLocal), binding)
+                            : newItem;
+                        if (oldKey !== newKey) {
+                            keyMap.set(oldItem, oldKey);
+                            keyMap.set(newItem, newKey);
+                            break;
+                        }
+                        ++i;
+                        if (i > oldEnd || i > newEnd) {
+                            break outer;
+                        }
+                    }
+                    if (oldEnd !== newEnd) {
+                        break outer;
+                    }
+                    j = newEnd;
+                    while (true) {
+                        oldItem = oldItems[j];
+                        newItem = newItems[j];
+                        oldKey = hasKey
+                            ? getKeyValue(keyMap, key, oldItem, getScope(scopeMap, oldItem, forOf, parentScope, binding, local, hasDestructuredLocal), binding)
+                            : oldItem;
+                        newKey = hasKey
+                            ? getKeyValue(keyMap, key, newItem, getScope(scopeMap, newItem, forOf, parentScope, binding, local, hasDestructuredLocal), binding)
+                            : newItem;
+                        if (oldKey !== newKey) {
+                            keyMap.set(oldItem, oldKey);
+                            keyMap.set(newItem, newKey);
+                            break;
+                        }
+                        --j;
+                        if (i > j) {
+                            break outer;
+                        }
+                    }
+                }
+                const oldStart = i;
+                const newStart = i;
+                for (i = newStart; i <= newEnd; ++i) {
+                    if (keyMap.has(newItem = newItems[i])) {
+                        newKey = keyMap.get(newItem);
+                    }
+                    else {
+                        newKey = hasKey
+                            ? getKeyValue(keyMap, key, newItem, getScope(scopeMap, newItem, forOf, parentScope, binding, local, hasDestructuredLocal), binding)
+                            : newItem;
+                        keyMap.set(newItem, newKey);
+                    }
+                    newIndices.set(newKey, i);
+                }
+                for (i = oldStart; i <= oldEnd; ++i) {
+                    if (keyMap.has(oldItem = oldItems[i])) {
+                        oldKey = keyMap.get(oldItem);
+                    }
+                    else {
+                        oldKey = hasKey
+                            ? getKeyValue(keyMap, key, oldItem, oldViews[i].scope, binding)
+                            : oldItem;
+                    }
+                    oldIndices.set(oldKey, i);
+                    if (newIndices.has(oldKey)) {
+                        indexMap[newIndices.get(oldKey)] = i;
+                    }
+                    else {
+                        indexMap.deletedIndices.push(i);
+                        indexMap.deletedItems.push(oldItem);
+                    }
+                }
+                for (i = newStart; i <= newEnd; ++i) {
+                    if (!oldIndices.has(keyMap.get(newItems[i]))) {
+                        indexMap[i] = -2;
+                    }
+                }
+                oldIndices.clear();
+                newIndices.clear();
+            }
+        }
         if (indexMap === void 0) {
             const ret = onResolve(this._deactivateAllViews(null), () => {
                 return this._activateAllViews(null);
@@ -8586,18 +8784,17 @@ class Repeat {
             }
         }
         else {
-            const oldLength = this.views.length;
             const $indexMap = applyMutationsToIndices(indexMap);
             if ($indexMap.deletedIndices.length > 0) {
                 const ret = onResolve(this._deactivateAndRemoveViewsByKey($indexMap), () => {
-                    return this._createAndActivateAndSortViewsByKey(oldLength, $indexMap);
+                    return this._createAndActivateAndSortViewsByKey(oldLen, $indexMap);
                 });
                 if (isPromise(ret)) {
                     ret.catch(rethrow);
                 }
             }
             else {
-                this._createAndActivateAndSortViewsByKey(oldLength, $indexMap);
+                this._createAndActivateAndSortViewsByKey(oldLen, $indexMap);
             }
         }
     }
@@ -8624,7 +8821,7 @@ class Repeat {
         }
     }
     _normalizeToArray() {
-        const items = this.items;
+        const { items } = this;
         if (isArray(items)) {
             this._normalizedItems = items;
             return;
@@ -8640,20 +8837,14 @@ class Repeat {
         let ret;
         let view;
         let viewScope;
-        const { $controller, _factory: factory, local, _location: location, items } = this;
+        const { $controller, _factory, local, _location, items, _scopeMap, _forOfBinding, forOf, _hasDestructuredLocal } = this;
         const parentScope = $controller.scope;
-        const forOf = this.forOf;
         const newLen = getCount(items);
         const views = this.views = Array(newLen);
         iterate(items, (item, i) => {
-            view = views[i] = factory.create().setLocation(location);
+            view = views[i] = _factory.create().setLocation(_location);
             view.nodes.unlink();
-            if (this._hasDestructuredLocal) {
-                astAssign(forOf.declaration, viewScope = Scope.fromParent(parentScope, new BindingContext()), this._forOfBinding, item);
-            }
-            else {
-                viewScope = Scope.fromParent(parentScope, new BindingContext(local, item));
-            }
+            viewScope = getScope(_scopeMap, item, forOf, parentScope, _forOfBinding, local, _hasDestructuredLocal);
             setContextualProperties(viewScope.overrideContext, i, newLen);
             ret = view.activate(initiator ?? view, $controller, 0, viewScope);
             if (isPromise(ret)) {
@@ -8721,11 +8912,11 @@ class Repeat {
         let view;
         let viewScope;
         let i = 0;
-        const { $controller, _factory: factory, local, _normalizedItems: normalizedItems, _location: location, views } = this;
+        const { $controller, _factory, local, _normalizedItems, _location, views, _hasDestructuredLocal, _forOfBinding, _scopeMap, forOf } = this;
         const mapLen = indexMap.length;
         for (; mapLen > i; ++i) {
             if (indexMap[i] === -2) {
-                view = factory.create();
+                view = _factory.create();
                 views.splice(i, 0, view);
             }
         }
@@ -8737,32 +8928,40 @@ class Repeat {
         synchronizeIndices(views, indexMap);
         const seq = longestIncreasingSubsequence(indexMap);
         const seqLen = seq.length;
+        const dec = forOf.declaration;
         let next;
         let j = seqLen - 1;
         i = newLen - 1;
         for (; i >= 0; --i) {
             view = views[i];
             next = views[i + 1];
-            view.nodes.link(next?.nodes ?? location);
+            view.nodes.link(next?.nodes ?? _location);
             if (indexMap[i] === -2) {
-                if (this._hasDestructuredLocal) {
-                    astAssign(this.forOf.declaration, viewScope = Scope.fromParent(parentScope, new BindingContext()), this._forOfBinding, normalizedItems[i]);
-                }
-                else {
-                    viewScope = Scope.fromParent(parentScope, new BindingContext(local, normalizedItems[i]));
-                }
+                viewScope = getScope(_scopeMap, _normalizedItems[i], forOf, parentScope, _forOfBinding, local, _hasDestructuredLocal);
                 setContextualProperties(viewScope.overrideContext, i, newLen);
-                view.setLocation(location);
+                view.setLocation(_location);
                 ret = view.activate(view, $controller, 0, viewScope);
                 if (isPromise(ret)) {
                     (promises ?? (promises = [])).push(ret);
                 }
             }
             else if (j < 0 || seqLen === 1 || i !== seq[j]) {
+                if (_hasDestructuredLocal) {
+                    astAssign(dec, view.scope, _forOfBinding, _normalizedItems[i]);
+                }
+                else {
+                    view.scope.bindingContext[local] = _normalizedItems[i];
+                }
                 setContextualProperties(view.scope.overrideContext, i, newLen);
                 view.nodes.insertBefore(view.location);
             }
             else {
+                if (_hasDestructuredLocal) {
+                    astAssign(dec, view.scope, _forOfBinding, _normalizedItems[i]);
+                }
+                else {
+                    view.scope.bindingContext[local] = _normalizedItems[i];
+                }
                 if (oldLength !== newLen) {
                     setContextualProperties(view.scope.overrideContext, i, newLen);
                 }
@@ -8790,7 +8989,7 @@ class Repeat {
         }
     }
 }
-Repeat.inject = [IRenderLocation, IController, IViewFactory];
+Repeat.inject = [IInstruction, IExpressionParser, IRenderLocation, IController, IViewFactory];
 __decorate([
     bindable
 ], Repeat.prototype, "items", void 0);
@@ -8918,6 +9117,32 @@ const $number = (result, func) => {
     for (; i < result; ++i) {
         func(i, i, result);
     }
+};
+const getKeyValue = (keyMap, key, item, scope, binding) => {
+    let value = keyMap.get(item);
+    if (value === void 0) {
+        if (typeof key === 'string') {
+            value = item[key];
+        }
+        else {
+            value = astEvaluate(key, scope, binding, null);
+        }
+        keyMap.set(item, value);
+    }
+    return value;
+};
+const getScope = (scopeMap, item, forOf, parentScope, binding, local, hasDestructuredLocal) => {
+    let scope = scopeMap.get(item);
+    if (scope === void 0) {
+        if (hasDestructuredLocal) {
+            astAssign(forOf.declaration, scope = Scope.fromParent(parentScope, new BindingContext()), binding, item);
+        }
+        else {
+            scope = Scope.fromParent(parentScope, new BindingContext(local, item));
+        }
+        scopeMap.set(item, scope);
+    }
+    return scope;
 };
 
 class With {

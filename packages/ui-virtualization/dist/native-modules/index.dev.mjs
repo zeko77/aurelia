@@ -81,7 +81,7 @@ class VirtualRepeat {
         this.dom = null;
         this.scrollerObserver = null;
         const iteratorInstruction = instruction.props[0];
-        const forOf = iteratorInstruction.from;
+        const forOf = iteratorInstruction.forOf;
         const iterable = this.iterable = unwrapExpression(forOf.iterable) ?? forOf.iterable;
         const hasWrapExpression = this._hasWrapExpression = forOf.iterable !== iterable;
         this._obsMediator = new CollectionObservationMediator(this, hasWrapExpression ? 'handleInnerCollectionChange' : 'handleCollectionChange');
@@ -332,7 +332,7 @@ class VirtualRepeat {
         this.itemsChanged(this.items);
     }
     handleInnerCollectionChange() {
-        const newItems = astEvaluate(this.iterable, this.parent.scope, this._container, null);
+        const newItems = astEvaluate(this.iterable, this.parent.scope, { strict: true }, null);
         const oldItems = this.items;
         this.items = newItems;
         if (newItems === oldItems) {

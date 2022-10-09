@@ -1,9 +1,10 @@
+import { IAstEvaluator, IConnectableBinding } from '@aurelia/runtime';
 import { BindingMode } from './interfaces-bindings';
 import type { IServiceLocator } from '@aurelia/kernel';
 import type { ITask, TaskQueue } from '@aurelia/platform';
 import type { IBinding, ICollectionSubscriber, Interpolation, IObserverLocator, IsExpression, Scope } from '@aurelia/runtime';
 import type { IPlatform } from '../platform';
-import type { IAstBasedBinding, IBindingController } from './interfaces-bindings';
+import type { IBindingController } from './interfaces-bindings';
 export interface InterpolationBinding extends IBinding {
 }
 export declare class InterpolationBinding implements IBinding {
@@ -26,7 +27,7 @@ export declare class InterpolationBinding implements IBinding {
     bind(scope: Scope): void;
     unbind(): void;
 }
-export interface InterpolationPartBinding extends IAstBasedBinding {
+export interface InterpolationPartBinding extends IAstEvaluator, IConnectableBinding {
 }
 export declare class InterpolationPartBinding implements IBinding, ICollectionSubscriber {
     readonly ast: IsExpression;
@@ -44,7 +45,7 @@ export declare class InterpolationPartBinding implements IBinding, ICollectionSu
     bind(scope: Scope): void;
     unbind(): void;
 }
-export interface ContentBinding extends IAstBasedBinding {
+export interface ContentBinding extends IAstEvaluator, IConnectableBinding {
 }
 /**
  * A binding for handling the element content interpolation

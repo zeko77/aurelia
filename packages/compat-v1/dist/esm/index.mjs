@@ -79,7 +79,7 @@ let ot = class CallBindingCommand {
     }
     build(t, i) {
         const e = null === t.bindable ? Q(t.attr.target) : t.bindable.property;
-        return new CallBindingInstruction(i.parse(t.attr.rawValue, 8 | 4), e);
+        return new CallBindingInstruction(i.parse(t.attr.rawValue, 16 | 8), e);
     }
 };
 
@@ -91,7 +91,7 @@ let ht = class CallBindingRenderer {
         this.oL = i;
     }
     render(t, i, e) {
-        const s = st(this.ep, e.from, 8 | 4);
+        const s = st(this.ep, e.from, 16 | 8);
         t.addBinding(new CallBinding(t.container, this.oL, s, ct(i), e.to));
     }
 };
@@ -165,7 +165,7 @@ let ft = class DelegateBindingCommand {
         return 1;
     }
     build(t, i) {
-        return new DelegateBindingInstruction(i.parse(t.attr.rawValue, 4), t.attr.target, false);
+        return new DelegateBindingInstruction(i.parse(t.attr.rawValue, 8), t.attr.target, false);
     }
 };
 
@@ -180,7 +180,7 @@ let gt = class ListenerBindingRenderer {
         return [ k, pt ];
     }
     render(t, i, e) {
-        const s = st(this.ep, e.from, 4);
+        const s = st(this.ep, e.from, 8);
         t.addBinding(new DelegateListenerBinding(t.container, s, i, e.to, this.t, new DelegateListenerOptions(e.preventDefault)));
     }
 };

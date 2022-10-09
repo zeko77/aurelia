@@ -1,6 +1,6 @@
 import { type IContainer } from '@aurelia/kernel';
-import { IExpressionParser, IObserverLocator, IsBindingBehavior, IAccessor, IBinding, Scope } from '@aurelia/runtime';
-import { BindingCommandInstance, CommandType, IAstBasedBinding, ICommandBuildInfo, IController, IHydratableController, IInstruction, IRenderer } from '@aurelia/runtime-html';
+import { IAccessor, IAstEvaluator, IBinding, IConnectableBinding, IExpressionParser, IObserverLocator, IsBindingBehavior, Scope } from '@aurelia/runtime';
+import { BindingCommandInstance, CommandType, ICommandBuildInfo, IController, IHydratableController, IInstruction, IRenderer } from '@aurelia/runtime-html';
 import type { IServiceLocator } from '@aurelia/kernel';
 export declare const callSyntax: {
     register(container: IContainer): void;
@@ -24,7 +24,7 @@ export declare class CallBindingRenderer implements IRenderer {
 /**
  * A binding for handling .call syntax
  */
-export interface CallBinding extends IAstBasedBinding {
+export interface CallBinding extends IAstEvaluator, IConnectableBinding {
 }
 export declare class CallBinding implements IBinding {
     ast: IsBindingBehavior;

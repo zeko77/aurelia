@@ -1,10 +1,8 @@
 import type { Class } from '@aurelia/kernel';
 import type { IConnectable, ISubscribable, ISubscriber, IBinding, ICollectionSubscriber, ICollectionSubscribable } from '../observation';
 import type { IObserverLocator } from '../observation/observer-locator';
-export interface IObserverLocatorBasedConnectable extends IBinding, ISubscriber, ICollectionSubscriber {
+export interface IConnectableBinding extends IConnectable, IBinding, ISubscriber, ICollectionSubscriber {
     oL: IObserverLocator;
-}
-export interface IConnectableBinding extends IObserverLocatorBasedConnectable, IConnectable {
     /**
      * A record storing observers that are currently subscribed to by this binding
      */
@@ -30,7 +28,9 @@ export declare class BindingObserverRecord {
     clear(): void;
     clearAll(): void;
 }
-declare type Connectable = IConnectable & Partial<ISubscriber & ICollectionSubscriber>;
+declare type Connectable = {
+    oL: IObserverLocator;
+} & IConnectable & Partial<ISubscriber & ICollectionSubscriber>;
 declare type DecoratableConnectable<TProto, TClass> = Class<TProto & Connectable, TClass>;
 declare type DecoratedConnectable<TProto, TClass> = Class<TProto & Connectable, TClass>;
 declare function connectableDecorator<TProto, TClass>(target: DecoratableConnectable<TProto, TClass>): DecoratedConnectable<TProto, TClass>;

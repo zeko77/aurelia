@@ -1,9 +1,8 @@
-import { type IBinding } from '../observation';
-import { type Scope } from '../observation/binding-context';
-import { type IConnectableBinding } from './connectable';
-import type { IServiceLocator } from '@aurelia/kernel';
-import type { IConnectable } from '../observation';
-import { IVisitor } from './ast.visitor';
+import type { IBinding, IConnectable } from '../observation';
+import type { Scope } from '../observation/binding-context';
+import type { IConnectableBinding } from './connectable';
+import type { ISignaler } from '../observation/signaler';
+import type { IVisitor } from './ast.visitor';
 export { astVisit, IVisitor, Unparser } from './ast.visitor';
 export declare const enum ExpressionKind {
     AccessThis = 0,
@@ -227,8 +226,9 @@ export declare class BindingIdentifier {
 export declare class ForOfStatement {
     readonly declaration: BindingIdentifierOrPattern | DestructuringAssignmentExpression;
     readonly iterable: IsBindingBehavior;
+    readonly semiIdx: number;
     readonly $kind = ExpressionKind.ForOfStatement;
-    constructor(declaration: BindingIdentifierOrPattern | DestructuringAssignmentExpression, iterable: IsBindingBehavior);
+    constructor(declaration: BindingIdentifierOrPattern | DestructuringAssignmentExpression, iterable: IsBindingBehavior, semiIdx: number);
 }
 export declare class Interpolation {
     readonly parts: readonly string[];
@@ -278,8 +278,8 @@ export interface IAstEvaluator {
     boundFn?: boolean;
     /** describe whether the evaluator wants to evaluate the function call in strict mode */
     strictFnCall?: boolean;
-    /** Allow an AST to retrieve a service that it needs */
-    get?: IServiceLocator['get'];
+    /** Allow an AST to retrieve a signaler instance for connecting/disconnecting */
+    getSignaler?(): ISignaler;
     /** Allow an AST to retrieve a value converter that it needs */
     getConverter?<T>(name: string): ValueConverterInstance<T> | undefined;
     /** Allow an AST to retrieve a binding behavior that it needs */

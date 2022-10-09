@@ -462,7 +462,7 @@ let StateBindingInstructionRenderer = class StateBindingInstructionRenderer {
         this.p = p;
     }
     render(renderingCtrl, target, instruction) {
-        renderingCtrl.addBinding(new StateBinding(renderingCtrl, renderingCtrl.container, this._observerLocator, this.p.domWriteQueue, ensureExpression(this._exprParser, instruction.from, 4), target, instruction.to, this._stateContainer));
+        renderingCtrl.addBinding(new StateBinding(renderingCtrl, renderingCtrl.container, this._observerLocator, this.p.domWriteQueue, ensureExpression(this._exprParser, instruction.from, 8), target, instruction.to, this._stateContainer));
     }
 };
 StateBindingInstructionRenderer.inject = [IExpressionParser, IObserverLocator, IStore, IPlatform];
@@ -475,7 +475,7 @@ let DispatchBindingInstructionRenderer = class DispatchBindingInstructionRendere
         this._stateContainer = _stateContainer;
     }
     render(renderingCtrl, target, instruction) {
-        const expr = ensureExpression(this._exprParser, instruction.ast, 8);
+        const expr = ensureExpression(this._exprParser, instruction.ast, 16);
         renderingCtrl.addBinding(new StateDispatchBinding(renderingCtrl.container, expr, target, instruction.from, this._stateContainer));
     }
 };
