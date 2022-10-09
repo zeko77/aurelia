@@ -2,7 +2,6 @@
 import { IIndexable, isArrayIndex } from '@aurelia/kernel';
 import { IConnectable, IOverrideContext, IBindingContext, IObservable } from '../observation';
 import { Scope } from '../observation/binding-context';
-import { ISignaler } from '../observation/signaler';
 import { createError, isArray, isFunction, safeString } from '../utilities-objects';
 import { ExpressionKind, IsExpressionOrStatement, IAstEvaluator, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, BindingBehaviorInstance } from './ast';
 import { IConnectableBinding } from './connectable';
@@ -310,6 +309,11 @@ export function astEvaluate(ast: IsExpressionOrStatement, s: Scope, e: IAstEvalu
       } else {
         return `${ast.parts[0]}${astEvaluate(ast.firstExpression, s, e, c)}${ast.parts[1]}`;
       }
+    case ExpressionKind.DestructuringAssignmentLeaf:
+      return astEvaluate(ast.target, s, e, c);
+    case ExpressionKind.ArrayDestructuring: {
+      return ast.list.map(x => astEvaluate(x, s, e, c));
+    }
     // TODO: this should come after batch
     // as a destructuring expression like [x, y] = value
     //
@@ -328,9 +332,7 @@ export function astEvaluate(ast: IsExpressionOrStatement, s: Scope, e: IAstEvalu
     // for a single notification per destructing,
     // regardless number of property assignments on the scope binding context
     case ExpressionKind.ObjectBindingPattern:
-    case ExpressionKind.ArrayDestructuring:
     case ExpressionKind.ObjectDestructuring:
-    case ExpressionKind.DestructuringAssignmentLeaf:
     default:
       return void 0;
     case ExpressionKind.Custom:
@@ -512,7 +514,7 @@ export function astBind(ast: IsExpressionOrStatement, s: Scope, b: IAstEvaluator
       // to make sure signaler works
       const signals = vc.signals;
       if (signals != null) {
-        const signaler = b.get?.(ISignaler);
+        const signaler = b.getSignaler?.();
         const ii = signals.length;
         let i = 0;
         for (; i < ii; ++i) {
@@ -550,12 +552,12 @@ export function astUnbind(ast: IsExpressionOrStatement, s: Scope, b: IAstEvaluat
       if (vc?.signals === void 0) {
         return;
       }
-      const signaler = b.get(ISignaler);
+      const signaler = b.getSignaler?.();
       let i = 0;
       for (; i < vc.signals.length; ++i) {
         // the cast is correct, as the value converter expression would only add
         // a IConnectable that also implements `ISubscriber` interface to the signaler
-        signaler.removeSignalListener(vc.signals[i], b);
+        signaler?.removeSignalListener(vc.signals[i], b);
       }
       astUnbind(ast.expression, s, b);
       break;

@@ -1,9 +1,9 @@
-import { emptyArray, IDisposable, InstanceProvider, Key } from '@aurelia/kernel';
+import { emptyArray, type IDisposable, InstanceProvider, type Key } from '@aurelia/kernel';
 import {
   ExpressionType,
   IExpressionParser,
   IObserverLocator,
-  IBinding,
+  type IBinding,
   Scope,
 } from '@aurelia/runtime';
 import { BindingMode } from './binding/interfaces-bindings';
@@ -21,7 +21,7 @@ import { Controller, ICustomElementController, ICustomElementViewModel, IControl
 import { IPlatform } from './platform';
 import { IViewFactory } from './templating/view';
 import { IRendering } from './templating/rendering';
-import { AttrSyntax } from './resources/attribute-pattern';
+import type { AttrSyntax } from './resources/attribute-pattern';
 import { createError, defineProp, isString } from './utilities';
 import { createInterface, registerResolver, singletonRegistration } from './utilities-di';
 
@@ -47,6 +47,7 @@ export const enum InstructionType {
   letBinding = 'ri',
   refBinding = 'rj',
   iteratorBinding = 'rk',
+  multiAttr = 'rl',
   textBinding = 'ha',
   listenerBinding = 'hb',
   attributeBinding = 'hc',
@@ -93,8 +94,9 @@ export class IteratorBindingInstruction {
   public readonly type = InstructionType.iteratorBinding;
 
   public constructor(
-    public from: string | ForOfStatement,
+    public forOf: string | ForOfStatement,
     public to: string,
+    public props: MultiAttrInstruction[],
   ) {}
 }
 
@@ -113,6 +115,16 @@ export class SetPropertyInstruction {
   public constructor(
     public value: unknown,
     public to: string,
+  ) {}
+}
+
+export class MultiAttrInstruction {
+  public readonly type = InstructionType.multiAttr;
+
+  public constructor(
+    public value: string,
+    public to: string,
+    public command: string | null,
   ) {}
 }
 
@@ -827,17 +839,20 @@ export class PropertyBindingRenderer implements IRenderer {
 @renderer(InstructionType.iteratorBinding)
 /** @internal */
 export class IteratorBindingRenderer implements IRenderer {
-  /** @internal */ protected static inject = [IExpressionParser, IObserverLocator, IPlatform];
+  /** @internal */ protected static get inject(): unknown[] { return [IRendering, IExpressionParser, IObserverLocator, IPlatform]; }
+  /** @internal */ private readonly _rendering: IRendering;
   /** @internal */ private readonly _exprParser: IExpressionParser;
   /** @internal */ private readonly _observerLocator: IObserverLocator;
   /** @internal */ private readonly _platform: IPlatform;
 
   public target!: InstructionType.iteratorBinding;
   public constructor(
+    rendering: IRendering,
     exprParser: IExpressionParser,
     observerLocator: IObserverLocator,
     p: IPlatform,
   ) {
+    this._rendering = rendering;
     this._exprParser = exprParser;
     this._observerLocator = observerLocator;
     this._platform = p;
@@ -848,7 +863,7 @@ export class IteratorBindingRenderer implements IRenderer {
     target: IController,
     instruction: IteratorBindingInstruction,
   ): void {
-    const expr = ensureExpression(this._exprParser, instruction.from, ExpressionType.IsIterator);
+    const expr = ensureExpression(this._exprParser, instruction.forOf, ExpressionType.IsIterator);
     renderingCtrl.addBinding(new PropertyBinding(
       renderingCtrl,
       renderingCtrl.container,
