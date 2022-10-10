@@ -22,12 +22,7 @@ export declare class TranslationBinding implements IConnectableBinding {
     isBound: boolean;
     ast: IsExpression;
     private readonly i18n;
-    scope: Scope;
-    private task;
-    private readonly _targetAccessors;
     target: HTMLElement;
-    private readonly platform;
-    private readonly taskQueue;
     private parameter;
     /**
      * A semi-private property used by connectable mixin
@@ -35,7 +30,7 @@ export declare class TranslationBinding implements IConnectableBinding {
     readonly oL: IObserverLocator;
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, platform: IPlatform, target: INode);
     static create({ parser, observerLocator, context, controller, target, instruction, platform, isParameterContext, }: TranslationBindingCreationContext): void;
-    bind(scope: Scope): void;
+    bind(_scope: Scope): void;
     unbind(): void;
     handleChange(newValue: string | i18next.TOptions, _previousValue: string | i18next.TOptions): void;
     handleLocaleChange(): void;

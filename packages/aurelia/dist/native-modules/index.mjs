@@ -2,11 +2,11 @@ import { DI as e, Registration as t } from "../../../@aurelia/kernel/dist/native
 
 export { ColorOptions, ConsoleSink, DI, EventAggregator, IContainer, IEventAggregator, ILogger, IServiceLocator, InstanceProvider, LogLevel, LoggerConfiguration, Registration, all, bound, camelCase, emptyArray, emptyObject, inject, isArrayIndex, kebabCase, lazy, noop, optional, pascalCase, singleton, toArray, transient } from "../../../@aurelia/kernel/dist/native-modules/index.mjs";
 
-import { Aurelia as o, CustomElement as r, IPlatform as a, StandardConfiguration as i } from "../../../@aurelia/runtime-html/dist/native-modules/index.mjs";
+import { Aurelia as r, CustomElement as o, IPlatform as a, StandardConfiguration as i } from "../../../@aurelia/runtime-html/dist/native-modules/index.mjs";
 
-export { AppTask, AuSlotsInfo, Bindable, BindingBehavior, BindingMode, Controller, CustomAttribute, CustomElement, DefaultDialogDom, DefaultDialogDomRenderer, DefaultDialogGlobalSettings, DialogCloseResult, DialogConfiguration, DialogController, DialogDeactivationStatuses, DialogDefaultConfiguration, DialogOpenResult, DialogService, FlushQueue, IAppRoot, IAttrMapper, IAttributePattern, IAuSlotsInfo, IAurelia, IDialogController, IDialogDom, IDialogDomRenderer, IDialogGlobalSettings, IDialogService, IEventTarget, IFlushQueue, ILifecycleHooks, INode, IPlatform, IRenderLocation, ITemplateCompiler, ITemplateCompilerHooks, IWcElementRegistry, LifecycleFlags, LifecycleHooks, NodeObserverLocator, ShortHandBindingSyntax, StyleConfiguration, TemplateCompilerHooks, ValueConverter, ViewFactory, WcCustomElementRegistry, alias, attributePattern, bindable, bindingBehavior, bindingCommand, capture, children, coercer, containerless, createElement, cssModules, customAttribute, customElement, lifecycleHooks, registerAliases, renderer, shadowCSS, strict, templateCompilerHooks, templateController, useShadowDOM, valueConverter } from "../../../@aurelia/runtime-html/dist/native-modules/index.mjs";
+export { AppTask, AuSlotsInfo, Bindable, BindingBehavior, BindingMode, Controller, CustomAttribute, CustomElement, FlushQueue, IAppRoot, IAttrMapper, IAttributePattern, IAuSlotsInfo, IAurelia, IEventTarget, IFlushQueue, ILifecycleHooks, INode, IPlatform, IRenderLocation, ITemplateCompiler, ITemplateCompilerHooks, LifecycleFlags, LifecycleHooks, NodeObserverLocator, ShortHandBindingSyntax, StyleConfiguration, TemplateCompilerHooks, ValueConverter, ViewFactory, alias, attributePattern, bindable, bindingBehavior, bindingCommand, capture, children, coercer, containerless, cssModules, customAttribute, customElement, lifecycleHooks, registerAliases, renderer, shadowCSS, strict, templateCompilerHooks, templateController, useShadowDOM, valueConverter } from "../../../@aurelia/runtime-html/dist/native-modules/index.mjs";
 
-import { BrowserPlatform as l } from "../../../@aurelia/platform-browser/dist/native-modules/index.mjs";
+import { BrowserPlatform as n } from "../../../@aurelia/platform-browser/dist/native-modules/index.mjs";
 
 export { HttpClient, HttpClientConfiguration, IHttpClient, json } from "../../../@aurelia/fetch-client/dist/native-modules/index.mjs";
 
@@ -18,13 +18,13 @@ export { IRouteContext, IRouter, IRouterEvents, Route, RouteConfig, RouteNode, R
 
 export { CollectionKind, ComputedObserver, IObserverLocator, ISignaler, batch, observable, subscriberCollection } from "../../../@aurelia/runtime/dist/native-modules/index.mjs";
 
-const n = l.getOrCreate(globalThis);
+const l = n.getOrCreate(globalThis);
 
 function u() {
-    return e.createContainer().register(t.instance(a, n), i);
+    return e.createContainer().register(t.instance(a, l), i);
 }
 
-class Aurelia extends o {
+class Aurelia extends r {
     constructor(e = u()) {
         super(e);
     }
@@ -41,12 +41,12 @@ class Aurelia extends o {
         return (new Aurelia).register(...e);
     }
     app(e) {
-        if (r.isType(e)) {
-            const t = r.getDefinition(e);
-            let o = document.querySelector(t.name);
-            if (null === o) o = document.body;
+        if (o.isType(e)) {
+            const t = o.getDefinition(e);
+            let r = document.querySelector(t.name);
+            if (null === r) r = document.body;
             return super.app({
-                host: o,
+                host: r,
                 component: e
             });
         }
@@ -54,5 +54,5 @@ class Aurelia extends o {
     }
 }
 
-export { Aurelia, n as PLATFORM, Aurelia as default };
+export { Aurelia, l as PLATFORM, Aurelia as default };
 

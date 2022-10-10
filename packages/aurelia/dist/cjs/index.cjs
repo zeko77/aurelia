@@ -126,26 +126,6 @@ exports.CustomAttribute = e.CustomAttribute;
 
 exports.CustomElement = e.CustomElement;
 
-exports.DefaultDialogDom = e.DefaultDialogDom;
-
-exports.DefaultDialogDomRenderer = e.DefaultDialogDomRenderer;
-
-exports.DefaultDialogGlobalSettings = e.DefaultDialogGlobalSettings;
-
-exports.DialogCloseResult = e.DialogCloseResult;
-
-exports.DialogConfiguration = e.DialogConfiguration;
-
-exports.DialogController = e.DialogController;
-
-exports.DialogDeactivationStatuses = e.DialogDeactivationStatuses;
-
-exports.DialogDefaultConfiguration = e.DialogDefaultConfiguration;
-
-exports.DialogOpenResult = e.DialogOpenResult;
-
-exports.DialogService = e.DialogService;
-
 exports.FlushQueue = e.FlushQueue;
 
 exports.IAppRoot = e.IAppRoot;
@@ -157,16 +137,6 @@ exports.IAttributePattern = e.IAttributePattern;
 exports.IAuSlotsInfo = e.IAuSlotsInfo;
 
 exports.IAurelia = e.IAurelia;
-
-exports.IDialogController = e.IDialogController;
-
-exports.IDialogDom = e.IDialogDom;
-
-exports.IDialogDomRenderer = e.IDialogDomRenderer;
-
-exports.IDialogGlobalSettings = e.IDialogGlobalSettings;
-
-exports.IDialogService = e.IDialogService;
 
 exports.IEventTarget = e.IEventTarget;
 
@@ -184,8 +154,6 @@ exports.ITemplateCompiler = e.ITemplateCompiler;
 
 exports.ITemplateCompilerHooks = e.ITemplateCompilerHooks;
 
-exports.IWcElementRegistry = e.IWcElementRegistry;
-
 exports.LifecycleFlags = e.LifecycleFlags;
 
 exports.LifecycleHooks = e.LifecycleHooks;
@@ -201,8 +169,6 @@ exports.TemplateCompilerHooks = e.TemplateCompilerHooks;
 exports.ValueConverter = e.ValueConverter;
 
 exports.ViewFactory = e.ViewFactory;
-
-exports.WcCustomElementRegistry = e.WcCustomElementRegistry;
 
 exports.alias = e.alias;
 
@@ -221,8 +187,6 @@ exports.children = e.children;
 exports.coercer = e.coercer;
 
 exports.containerless = e.containerless;
-
-exports.createElement = e.createElement;
 
 exports.cssModules = e.cssModules;
 

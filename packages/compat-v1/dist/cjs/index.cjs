@@ -92,17 +92,11 @@ exports.CallBindingCommand = class CallBindingCommand {
 exports.CallBindingCommand = r([ e.bindingCommand("call") ], exports.CallBindingCommand);
 
 exports.CallBindingRenderer = class CallBindingRenderer {
-    constructor(t, e) {
-        this.ep = t;
-        this.oL = e;
-    }
-    render(t, e, i) {
-        const s = c(this.ep, i.from, 16 | 8);
-        t.addBinding(new CallBinding(t.container, this.oL, s, g(e), i.to));
+    render(t, e, i, s, n, r) {
+        const o = c(n, i.from, 16 | 8);
+        t.addBinding(new CallBinding(t.container, r, o, g(e), i.to));
     }
 };
-
-exports.CallBindingRenderer.inject = [ t.IExpressionParser, t.IObserverLocator ];
 
 exports.CallBindingRenderer = r([ e.renderer(d) ], exports.CallBindingRenderer);
 
@@ -122,18 +116,18 @@ class CallBinding {
         this.targetObserver = e.getAccessor(s, n);
     }
     callSource(e) {
-        const i = this.scope.overrideContext;
+        const i = this.s.overrideContext;
         i.$event = e;
-        const s = t.astEvaluate(this.ast, this.scope, this, null);
+        const s = t.astEvaluate(this.ast, this.s, this, null);
         Reflect.deleteProperty(i, "$event");
         return s;
     }
     bind(e) {
         if (this.isBound) {
-            if (this.scope === e) return;
+            if (this.s === e) return;
             this.unbind();
         }
-        this.scope = e;
+        this.s = e;
         t.astBind(this.ast, e, this);
         this.targetObserver.setValue((t => this.callSource(t)), this.target, this.targetProperty);
         this.isBound = true;
@@ -141,13 +135,13 @@ class CallBinding {
     unbind() {
         if (!this.isBound) return;
         this.isBound = false;
-        t.astUnbind(this.ast, this.scope, this);
-        this.scope = void 0;
+        t.astUnbind(this.ast, this.s, this);
+        this.s = void 0;
         this.targetObserver.setValue(null, this.target, this.targetProperty);
     }
 }
 
-e.mixinBindingUseScope(CallBinding);
+e.mixinUseScope(CallBinding);
 
 e.mixingBindingLimited(CallBinding, (() => "callSource"));
 
@@ -178,16 +172,15 @@ exports.DelegateBindingCommand = class DelegateBindingCommand {
 exports.DelegateBindingCommand = r([ e.bindingCommand("delegate") ], exports.DelegateBindingCommand);
 
 exports.ListenerBindingRenderer = class ListenerBindingRenderer {
-    constructor(t, e) {
-        this.ep = t;
-        this.t = e;
+    constructor(t) {
+        this.t = t;
     }
     static get inject() {
-        return [ t.IExpressionParser, v ];
+        return [ v ];
     }
-    render(t, e, i) {
-        const s = c(this.ep, i.from, 8);
-        t.addBinding(new DelegateListenerBinding(t.container, s, e, i.to, this.t, new DelegateListenerOptions(i.preventDefault)));
+    render(t, e, i, s, n) {
+        const r = c(n, i.from, 8);
+        t.addBinding(new DelegateListenerBinding(t.container, r, e, i.to, this.t, new DelegateListenerOptions(i.preventDefault)));
     }
 };
 
@@ -221,9 +214,9 @@ class DelegateListenerBinding {
         this.i = r;
     }
     callSource(e) {
-        const i = this.scope.overrideContext;
+        const i = this.s.overrideContext;
         i.$event = e;
-        let s = t.astEvaluate(this.ast, this.scope, this, null);
+        let s = t.astEvaluate(this.ast, this.s, this, null);
         delete i.$event;
         if (l(s)) s = s(e);
         if (true !== s && this.i.prevent) e.preventDefault();
@@ -234,10 +227,10 @@ class DelegateListenerBinding {
     }
     bind(i) {
         if (this.isBound) {
-            if (this.scope === i) return;
+            if (this.s === i) return;
             this.unbind();
         }
-        this.scope = i;
+        this.s = i;
         t.astBind(this.ast, i, this);
         this.handler = this.eventDelegator.addEventListener(this.l.get(e.IEventTarget), this.target, this.targetEvent, this);
         this.isBound = true;
@@ -245,14 +238,14 @@ class DelegateListenerBinding {
     unbind() {
         if (!this.isBound) return;
         this.isBound = false;
-        t.astUnbind(this.ast, this.scope, this);
-        this.scope = void 0;
+        t.astUnbind(this.ast, this.s, this);
+        this.s = void 0;
         this.handler.dispose();
         this.handler = null;
     }
 }
 
-e.mixinBindingUseScope(DelegateListenerBinding);
+e.mixinUseScope(DelegateListenerBinding);
 
 e.mixingBindingLimited(DelegateListenerBinding, (() => "callSource"));
 

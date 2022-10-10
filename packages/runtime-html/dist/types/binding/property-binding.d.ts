@@ -12,7 +12,6 @@ export declare class PropertyBinding implements IBinding {
     targetProperty: string;
     mode: BindingMode;
     isBound: boolean;
-    scope?: Scope;
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, taskQueue: TaskQueue, ast: IsBindingBehavior | ForOfStatement, target: object, targetProperty: string, mode: BindingMode);
     updateTarget(value: unknown): void;
     updateSource(value: unknown): void;

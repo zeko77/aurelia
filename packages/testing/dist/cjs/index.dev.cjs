@@ -7645,7 +7645,6 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
         constructor() {
             this.startPromise = startPromise;
             this.ctx = ctx;
-            this.host = ctx.doc.firstElementChild;
             this.container = container;
             this.platform = platform;
             this.testHost = root;
@@ -7669,8 +7668,8 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             this.scrollBy = scrollBy;
             this.flush = flush;
         }
-        async start() {
-            await au.app({ host: host, component }).start();
+        start() {
+            return au.app({ host: host, component }).start();
         }
         tearDown() {
             if (++tornCount === 2) {

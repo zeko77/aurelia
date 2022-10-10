@@ -3776,7 +3776,6 @@ function tr(e, t, n = [], i = true, r = TestContext.create()) {
         constructor() {
             this.startPromise = b;
             this.ctx = r;
-            this.host = r.doc.firstElementChild;
             this.container = a;
             this.platform = s;
             this.testHost = u;
@@ -3800,8 +3799,8 @@ function tr(e, t, n = [], i = true, r = TestContext.create()) {
             this.scrollBy = q;
             this.flush = L;
         }
-        async start() {
-            await f.app({
+        start() {
+            return f.app({
                 host: c,
                 component: g
             }).start();

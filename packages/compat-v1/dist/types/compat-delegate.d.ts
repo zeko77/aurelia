@@ -1,6 +1,6 @@
 import { IContainer } from '@aurelia/kernel';
 import { IAstEvaluator, IBinding, IConnectableBinding, IExpressionParser, Scope, type IsBindingBehavior } from '@aurelia/runtime';
-import { BindingCommandInstance, CommandType, ICommandBuildInfo, IHydratableController, IInstruction, InstructionType, IRenderer } from '@aurelia/runtime-html';
+import { BindingCommandInstance, CommandType, ICommandBuildInfo, IHydratableController, IInstruction, InstructionType, IRenderer, IPlatform } from '@aurelia/runtime-html';
 import type { IDisposable, IServiceLocator } from '@aurelia/kernel';
 export declare const delegateSyntax: {
     register(container: IContainer): void;
@@ -11,8 +11,8 @@ export declare class DelegateBindingCommand implements BindingCommandInstance {
 }
 export declare class ListenerBindingRenderer implements IRenderer {
     readonly target: 'dl';
-    constructor(parser: IExpressionParser, eventDelegator: IEventDelegator);
-    render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: DelegateBindingInstruction): void;
+    constructor(eventDelegator: IEventDelegator);
+    render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: DelegateBindingInstruction, platform: IPlatform, exprParser: IExpressionParser): void;
 }
 export declare class DelegateBindingInstruction {
     from: string | IsBindingBehavior;
@@ -36,12 +36,11 @@ export declare class DelegateListenerBinding implements IBinding {
     targetEvent: string;
     eventDelegator: IEventDelegator;
     isBound: boolean;
-    scope?: Scope;
     private handler;
     constructor(locator: IServiceLocator, ast: IsBindingBehavior, target: Node, targetEvent: string, eventDelegator: IEventDelegator, options: DelegateListenerOptions);
     callSource(event: Event): unknown;
     handleEvent(event: Event): void;
-    bind(scope: Scope): void;
+    bind(_scope: Scope): void;
     unbind(): void;
 }
 export interface IEventDelegator extends EventDelegator {

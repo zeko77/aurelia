@@ -1,5 +1,5 @@
 import { IServiceLocator, type Constructable } from '@aurelia/kernel';
-import { IBinding, IRateLimitOptions, type ISubscriber } from '@aurelia/runtime';
+import { IBinding, IRateLimitOptions, Scope, type ISubscriber } from '@aurelia/runtime';
 import { PropertyBinding } from './property-binding';
 /**
  * A subscriber that is used for subcribing to target observer & invoking `updateSource` on a binding
@@ -12,7 +12,9 @@ export declare class BindingTargetSubscriber implements ISubscriber {
 /**
  * Implement method `useScope` in a common way for a binding. For internal use only for size saving.
  */
-export declare const mixinBindingUseScope: <T extends IBinding>(target: Constructable<T>) => void;
+export declare const mixinUseScope: <T extends {
+    _scope?: Scope | undefined;
+}>(target: Constructable<T>) => void;
 /**
  * Turns a class into AST evaluator. For internal use only
  *

@@ -20,8 +20,7 @@ export declare class TranslationParametersBindingCommand implements BindingComma
 }
 export declare class TranslationParametersBindingRenderer implements IRenderer {
     target: typeof TranslationParametersInstructionType;
-    constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator, p: IPlatform);
-    render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: TranslationParametersBindingInstruction): void;
+    render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: TranslationParametersBindingInstruction, platform: IPlatform, exprParser: IExpressionParser, observerLocator: IObserverLocator): void;
 }
 export {};
 //# sourceMappingURL=translation-parameters-renderer.d.ts.map

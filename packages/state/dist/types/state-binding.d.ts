@@ -9,16 +9,14 @@ import { IStore, type IStoreSubscriber } from './interfaces';
 export interface StateBinding extends IAstEvaluator, IConnectableBinding {
 }
 export declare class StateBinding implements IBinding, IStoreSubscriber<object> {
-    scope?: Scope | undefined;
     isBound: boolean;
     ast: IsBindingBehavior;
     private readonly target;
     private readonly targetProperty;
-    private task;
     mode: BindingMode;
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, taskQueue: TaskQueue, ast: IsBindingBehavior, target: object, prop: PropertyKey, store: IStore<object>);
     updateTarget(value: unknown): void;
-    bind(scope: Scope): void;
+    bind(_scope: Scope): void;
     unbind(): void;
     handleChange(newValue: unknown): void;
     handleStateChange(): void;

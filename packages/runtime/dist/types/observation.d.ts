@@ -1,9 +1,8 @@
 import { IDisposable, IIndexable, IServiceLocator } from '@aurelia/kernel';
-import type { Scope } from './observation/binding-context';
+import type { Scope } from './observation/scope';
 import type { CollectionLengthObserver, CollectionSizeObserver } from './observation/collection-length-observer';
 import { TaskQueue } from '@aurelia/platform';
 export interface IBinding {
-    readonly scope?: Scope;
     readonly isBound: boolean;
     bind(scope: Scope): void;
     unbind(): void;

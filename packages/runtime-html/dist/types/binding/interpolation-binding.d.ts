@@ -8,23 +8,15 @@ import type { IBindingController } from './interfaces-bindings';
 export interface InterpolationBinding extends IBinding {
 }
 export declare class InterpolationBinding implements IBinding {
-    private readonly taskQueue;
     ast: Interpolation;
     target: object;
     targetProperty: string;
     mode: BindingMode;
     isBound: boolean;
-    scope?: Scope;
     partBindings: InterpolationPartBinding[];
-    private readonly targetObserver;
-    private task;
-    /**
-     * A semi-private property used by connectable mixin
-     */
-    readonly oL: IObserverLocator;
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, taskQueue: TaskQueue, ast: Interpolation, target: object, targetProperty: string, mode: BindingMode);
     updateTarget(): void;
-    bind(scope: Scope): void;
+    bind(_scope: Scope): void;
     unbind(): void;
 }
 export interface InterpolationPartBinding extends IAstEvaluator, IConnectableBinding {
@@ -35,14 +27,14 @@ export declare class InterpolationPartBinding implements IBinding, ICollectionSu
     readonly targetProperty: string;
     readonly owner: InterpolationBinding;
     readonly mode: BindingMode;
-    scope?: Scope;
+    _scope?: Scope;
     task: ITask | null;
     isBound: boolean;
     constructor(ast: IsExpression, target: object, targetProperty: string, locator: IServiceLocator, observerLocator: IObserverLocator, owner: InterpolationBinding);
     updateTarget(): void;
     handleChange(): void;
     handleCollectionChange(): void;
-    bind(scope: Scope): void;
+    bind(_scope: Scope): void;
     unbind(): void;
 }
 export interface ContentBinding extends IAstEvaluator, IConnectableBinding {
@@ -51,20 +43,17 @@ export interface ContentBinding extends IAstEvaluator, IConnectableBinding {
  * A binding for handling the element content interpolation
  */
 export declare class ContentBinding implements IBinding, ICollectionSubscriber {
-    private readonly taskQueue;
     private readonly p;
     readonly ast: IsExpression;
     readonly target: Text;
     readonly strict: boolean;
-    readonly mode: BindingMode;
-    scope?: Scope;
-    task: ITask | null;
     isBound: boolean;
+    readonly mode: BindingMode;
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, taskQueue: TaskQueue, p: IPlatform, ast: IsExpression, target: Text, strict: boolean);
     updateTarget(value: unknown): void;
     handleChange(): void;
     handleCollectionChange(): void;
-    bind(scope: Scope): void;
+    bind(_scope: Scope): void;
     unbind(): void;
 }
 //# sourceMappingURL=interpolation-binding.d.ts.map

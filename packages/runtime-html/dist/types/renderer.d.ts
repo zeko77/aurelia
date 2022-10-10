@@ -291,7 +291,7 @@ export interface IRenderer<TType extends InstructionTypeName = InstructionTypeNa
     /**
      * The controller that is current invoking this renderer
      */
-    renderingCtrl: IHydratableController, target: unknown, instruction: IInstruction): void;
+    renderingCtrl: IHydratableController, target: unknown, instruction: IInstruction, platform: IPlatform, exprParser: IExpressionParser, observerLocator: IObserverLocator): void;
 }
 export declare const IRenderer: import("@aurelia/kernel").InterfaceSymbol<IRenderer<string>>;
 declare type DecoratableInstructionRenderer<TType extends string, TProto, TClass> = Class<TProto & Partial<IInstructionTypeClassifier<TType> & Pick<IRenderer, 'render'>>, TClass> & Partial<IRegistry>;
@@ -304,57 +304,50 @@ export declare class SetPropertyRenderer implements IRenderer {
 }
 export declare class CustomElementRenderer implements IRenderer {
     target: InstructionType.hydrateElement;
-    constructor(rendering: IRendering, platform: IPlatform);
-    render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: HydrateElementInstruction): void;
+    constructor(rendering: IRendering);
+    render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: HydrateElementInstruction, platform: IPlatform, exprParser: IExpressionParser, observerLocator: IObserverLocator): void;
 }
 export declare class CustomAttributeRenderer implements IRenderer {
     target: InstructionType.hydrateAttribute;
-    constructor(rendering: IRendering, platform: IPlatform);
+    constructor(rendering: IRendering);
     render(
     /**
      * The cotroller that is currently invoking this renderer
      */
-    renderingCtrl: IHydratableController, target: HTMLElement, instruction: HydrateAttributeInstruction): void;
+    renderingCtrl: IHydratableController, target: HTMLElement, instruction: HydrateAttributeInstruction, platform: IPlatform, exprParser: IExpressionParser, observerLocator: IObserverLocator): void;
 }
 export declare class TemplateControllerRenderer implements IRenderer {
     target: InstructionType.hydrateTemplateController;
     constructor(rendering: IRendering, platform: IPlatform);
-    render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: HydrateTemplateController): void;
+    render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: HydrateTemplateController, platform: IPlatform, exprParser: IExpressionParser, observerLocator: IObserverLocator): void;
 }
 export declare class LetElementRenderer implements IRenderer {
     target: InstructionType.hydrateLetElement;
-    constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator);
-    render(renderingCtrl: IHydratableController, target: Node & ChildNode, instruction: HydrateLetElementInstruction): void;
+    render(renderingCtrl: IHydratableController, target: Node & ChildNode, instruction: HydrateLetElementInstruction, platform: IPlatform, exprParser: IExpressionParser, observerLocator: IObserverLocator): void;
 }
 export declare class RefBindingRenderer implements IRenderer {
     target: InstructionType.refBinding;
-    constructor(exprParser: IExpressionParser);
-    render(renderingCtrl: IHydratableController, target: INode, instruction: RefBindingInstruction): void;
+    render(renderingCtrl: IHydratableController, target: INode, instruction: RefBindingInstruction, platform: IPlatform, exprParser: IExpressionParser): void;
 }
 export declare class InterpolationBindingRenderer implements IRenderer {
     target: InstructionType.interpolation;
-    constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator, p: IPlatform);
-    render(renderingCtrl: IHydratableController, target: IController, instruction: InterpolationInstruction): void;
+    render(renderingCtrl: IHydratableController, target: IController, instruction: InterpolationInstruction, platform: IPlatform, exprParser: IExpressionParser, observerLocator: IObserverLocator): void;
 }
 export declare class PropertyBindingRenderer implements IRenderer {
     target: InstructionType.propertyBinding;
-    constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator, p: IPlatform);
-    render(renderingCtrl: IHydratableController, target: IController, instruction: PropertyBindingInstruction): void;
+    render(renderingCtrl: IHydratableController, target: IController, instruction: PropertyBindingInstruction, platform: IPlatform, exprParser: IExpressionParser, observerLocator: IObserverLocator): void;
 }
 export declare class IteratorBindingRenderer implements IRenderer {
     target: InstructionType.iteratorBinding;
-    constructor(rendering: IRendering, exprParser: IExpressionParser, observerLocator: IObserverLocator, p: IPlatform);
-    render(renderingCtrl: IHydratableController, target: IController, instruction: IteratorBindingInstruction): void;
+    render(renderingCtrl: IHydratableController, target: IController, instruction: IteratorBindingInstruction, platform: IPlatform, exprParser: IExpressionParser, observerLocator: IObserverLocator): void;
 }
 export declare class TextBindingRenderer implements IRenderer {
     target: InstructionType.textBinding;
-    constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator, p: IPlatform);
-    render(renderingCtrl: IHydratableController, target: ChildNode, instruction: TextBindingInstruction): void;
+    render(renderingCtrl: IHydratableController, target: ChildNode, instruction: TextBindingInstruction, platform: IPlatform, exprParser: IExpressionParser, observerLocator: IObserverLocator): void;
 }
 export declare class ListenerBindingRenderer implements IRenderer {
     target: InstructionType.listenerBinding;
-    constructor(parser: IExpressionParser);
-    render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: ListenerBindingInstruction): void;
+    render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: ListenerBindingInstruction, platform: IPlatform, exprParser: IExpressionParser): void;
 }
 export declare class SetAttributeRenderer implements IRenderer {
     target: InstructionType.setAttribute;
@@ -370,23 +363,18 @@ export declare class SetStyleAttributeRenderer implements IRenderer {
 }
 export declare class StylePropertyBindingRenderer implements IRenderer {
     target: InstructionType.stylePropertyBinding;
-    constructor(exprParser: IExpressionParser, observerLocator: IObserverLocator, platform: IPlatform);
-    render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: StylePropertyBindingInstruction): void;
+    render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: StylePropertyBindingInstruction, platform: IPlatform, exprParser: IExpressionParser, observerLocator: IObserverLocator): void;
 }
 export declare class AttributeBindingRenderer implements IRenderer {
     target: InstructionType.attributeBinding;
-    constructor(
-    /** @internal */ _platform: IPlatform, 
-    /** @internal */ _exprParser: IExpressionParser, 
-    /** @internal */ _observerLocator: IObserverLocator);
-    render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: AttributeBindingInstruction): void;
+    render(renderingCtrl: IHydratableController, target: HTMLElement, instruction: AttributeBindingInstruction, platform: IPlatform, exprParser: IExpressionParser, observerLocator: IObserverLocator): void;
 }
 export declare class SpreadRenderer implements IRenderer {
     target: InstructionType.spreadBinding;
     constructor(
     /** @internal */ _compiler: ITemplateCompiler, 
     /** @internal */ _rendering: IRendering);
-    render(renderingCtrl: IHydratableController, target: HTMLElement, _instruction: SpreadBindingInstruction): void;
+    render(renderingCtrl: IHydratableController, target: HTMLElement, _instruction: SpreadBindingInstruction, platform: IPlatform, exprParser: IExpressionParser, observerLocator: IObserverLocator): void;
 }
 export {};
 //# sourceMappingURL=renderer.d.ts.map

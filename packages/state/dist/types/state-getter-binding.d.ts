@@ -6,14 +6,13 @@ import { IStore, type IStoreSubscriber } from './interfaces';
 export interface StateGetterBinding extends IConnectableBinding {
 }
 export declare class StateGetterBinding implements IConnectableBinding, IStoreSubscriber<object> {
-    scope?: Scope | undefined;
     isBound: boolean;
     private readonly $get;
     private readonly target;
     private readonly key;
     constructor(target: object, prop: PropertyKey, store: IStore<object>, getValue: (s: unknown) => unknown);
     private updateTarget;
-    bind(scope: Scope): void;
+    bind(_scope: Scope): void;
     unbind(): void;
     handleStateChange(state: object): void;
 }

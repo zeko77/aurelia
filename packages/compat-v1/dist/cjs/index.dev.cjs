@@ -124,16 +124,11 @@ exports.CallBindingCommand = __decorate([
     runtimeHtml.bindingCommand('call')
 ], exports.CallBindingCommand);
 exports.CallBindingRenderer = class CallBindingRenderer {
-    constructor(exprParser, observerLocator) {
-        this._exprParser = exprParser;
-        this._observerLocator = observerLocator;
-    }
-    render(renderingCtrl, target, instruction) {
-        const expr = ensureExpression(this._exprParser, instruction.from, 16 | 8);
-        renderingCtrl.addBinding(new CallBinding(renderingCtrl.container, this._observerLocator, expr, getTarget(target), instruction.to));
+    render(renderingCtrl, target, instruction, platform, exprParser, observerLocator) {
+        const expr = ensureExpression(exprParser, instruction.from, 16 | 8);
+        renderingCtrl.addBinding(new CallBinding(renderingCtrl.container, observerLocator, expr, getTarget(target), instruction.to));
     }
 };
-exports.CallBindingRenderer.inject = [runtime.IExpressionParser, runtime.IObserverLocator];
 exports.CallBindingRenderer = __decorate([
     runtimeHtml.renderer(instructionType$1)
 ], exports.CallBindingRenderer);
@@ -154,21 +149,21 @@ class CallBinding {
         this.targetObserver = observerLocator.getAccessor(target, targetProperty);
     }
     callSource(args) {
-        const overrideContext = this.scope.overrideContext;
+        const overrideContext = this._scope.overrideContext;
         overrideContext.$event = args;
-        const result = runtime.astEvaluate(this.ast, this.scope, this, null);
+        const result = runtime.astEvaluate(this.ast, this._scope, this, null);
         Reflect.deleteProperty(overrideContext, '$event');
         return result;
     }
-    bind(scope) {
+    bind(_scope) {
         if (this.isBound) {
-            if (this.scope === scope) {
+            if (this._scope === _scope) {
                 return;
             }
             this.unbind();
         }
-        this.scope = scope;
-        runtime.astBind(this.ast, scope, this);
+        this._scope = _scope;
+        runtime.astBind(this.ast, _scope, this);
         this.targetObserver.setValue(($args) => this.callSource($args), this.target, this.targetProperty);
         this.isBound = true;
     }
@@ -177,12 +172,12 @@ class CallBinding {
             return;
         }
         this.isBound = false;
-        runtime.astUnbind(this.ast, this.scope, this);
-        this.scope = void 0;
+        runtime.astUnbind(this.ast, this._scope, this);
+        this._scope = void 0;
         this.targetObserver.setValue(null, this.target, this.targetProperty);
     }
 }
-runtimeHtml.mixinBindingUseScope(CallBinding);
+runtimeHtml.mixinUseScope(CallBinding);
 runtimeHtml.mixingBindingLimited(CallBinding, () => 'callSource');
 runtimeHtml.mixinAstEvaluator(true)(CallBinding);
 
@@ -206,13 +201,12 @@ exports.DelegateBindingCommand = __decorate([
     runtimeHtml.bindingCommand('delegate')
 ], exports.DelegateBindingCommand);
 exports.ListenerBindingRenderer = class ListenerBindingRenderer {
-    constructor(parser, eventDelegator) {
-        this._exprParser = parser;
+    constructor(eventDelegator) {
         this._eventDelegator = eventDelegator;
     }
-    static get inject() { return [runtime.IExpressionParser, IEventDelegator]; }
-    render(renderingCtrl, target, instruction) {
-        const expr = ensureExpression(this._exprParser, instruction.from, 8);
+    static get inject() { return [IEventDelegator]; }
+    render(renderingCtrl, target, instruction, platform, exprParser) {
+        const expr = ensureExpression(exprParser, instruction.from, 8);
         renderingCtrl.addBinding(new DelegateListenerBinding(renderingCtrl.container, expr, target, instruction.to, this._eventDelegator, new DelegateListenerOptions(instruction.preventDefault)));
     }
 };
@@ -245,9 +239,9 @@ class DelegateListenerBinding {
         this._options = options;
     }
     callSource(event) {
-        const overrideContext = this.scope.overrideContext;
+        const overrideContext = this._scope.overrideContext;
         overrideContext.$event = event;
-        let result = runtime.astEvaluate(this.ast, this.scope, this, null);
+        let result = runtime.astEvaluate(this.ast, this._scope, this, null);
         delete overrideContext.$event;
         if (isFunction(result)) {
             result = result(event);
@@ -260,15 +254,15 @@ class DelegateListenerBinding {
     handleEvent(event) {
         this.callSource(event);
     }
-    bind(scope) {
+    bind(_scope) {
         if (this.isBound) {
-            if (this.scope === scope) {
+            if (this._scope === _scope) {
                 return;
             }
             this.unbind();
         }
-        this.scope = scope;
-        runtime.astBind(this.ast, scope, this);
+        this._scope = _scope;
+        runtime.astBind(this.ast, _scope, this);
         this.handler = this.eventDelegator.addEventListener(this.l.get(runtimeHtml.IEventTarget), this.target, this.targetEvent, this);
         this.isBound = true;
     }
@@ -277,13 +271,13 @@ class DelegateListenerBinding {
             return;
         }
         this.isBound = false;
-        runtime.astUnbind(this.ast, this.scope, this);
-        this.scope = void 0;
+        runtime.astUnbind(this.ast, this._scope, this);
+        this._scope = void 0;
         this.handler.dispose();
         this.handler = null;
     }
 }
-runtimeHtml.mixinBindingUseScope(DelegateListenerBinding);
+runtimeHtml.mixinUseScope(DelegateListenerBinding);
 runtimeHtml.mixingBindingLimited(DelegateListenerBinding, () => 'callSource');
 runtimeHtml.mixinAstEvaluator(true, true)(DelegateListenerBinding);
 const defaultOptions = {

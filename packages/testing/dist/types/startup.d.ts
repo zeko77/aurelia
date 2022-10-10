@@ -35,7 +35,6 @@ export declare namespace createFixture {
 export interface IFixture<T> {
     readonly startPromise: void | Promise<void>;
     readonly ctx: TestContext;
-    readonly host: HTMLElement;
     readonly container: IContainer;
     readonly platform: IPlatform;
     readonly testHost: HTMLElement;
@@ -45,7 +44,7 @@ export interface IFixture<T> {
     readonly observerLocator: IObserverLocator;
     readonly logger: ILogger;
     readonly torn: boolean;
-    start(): Promise<void>;
+    start(): void | Promise<void>;
     tearDown(): void | Promise<void>;
     readonly started: Promise<IFixture<T>>;
     /**

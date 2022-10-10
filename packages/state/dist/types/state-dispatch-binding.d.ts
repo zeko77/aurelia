@@ -7,15 +7,12 @@ import { type IStore } from './interfaces';
 export interface StateDispatchBinding extends IAstEvaluator, IConnectableBinding {
 }
 export declare class StateDispatchBinding implements IBinding {
-    scope?: Scope | undefined;
     isBound: boolean;
     ast: IsBindingBehavior;
-    private readonly target;
-    private readonly targetProperty;
     constructor(locator: IServiceLocator, expr: IsBindingBehavior, target: HTMLElement, prop: string, store: IStore<object>);
     callSource(e: Event): void;
     handleEvent(e: Event): void;
-    bind(scope: Scope): void;
+    bind(_scope: Scope): void;
     unbind(): void;
     handleStateChange(state: object): void;
 }

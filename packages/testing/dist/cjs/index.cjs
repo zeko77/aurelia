@@ -3782,7 +3782,6 @@ function qi(t, i, s = [], o = true, a = TestContext.create()) {
         constructor() {
             this.startPromise = x;
             this.ctx = a;
-            this.host = a.doc.firstElementChild;
             this.container = l;
             this.platform = u;
             this.testHost = f;
@@ -3806,8 +3805,8 @@ function qi(t, i, s = [], o = true, a = TestContext.create()) {
             this.scrollBy = q;
             this.flush = M;
         }
-        async start() {
-            await d.app({
+        start() {
+            return d.app({
                 host: h,
                 component: v
             }).start();

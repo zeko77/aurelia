@@ -1,6 +1,6 @@
-import { type IBinding, IObserver, IAstEvaluator, IConnectableBinding } from '@aurelia/runtime';
+import { type IBinding, IAstEvaluator, IConnectableBinding } from '@aurelia/runtime';
 import { BindingMode } from './interfaces-bindings';
-import type { ITask, TaskQueue } from '@aurelia/platform';
+import type { TaskQueue } from '@aurelia/platform';
 import type { IServiceLocator } from '@aurelia/kernel';
 import type { ForOfStatement, IObserverLocator, IsBindingBehavior, Scope } from '@aurelia/runtime';
 import type { INode } from '../dom';
@@ -15,19 +15,13 @@ export declare class AttributeBinding implements IBinding {
     targetProperty: string;
     mode: BindingMode;
     isBound: boolean;
-    scope?: Scope;
-    task: ITask | null;
-    /**
-     * Target key. In case Attr has inner structure, such as class -> classList, style -> CSSStyleDeclaration
-     */
-    targetObserver: IObserver;
     target: Element;
     ast: IsBindingBehavior | ForOfStatement;
     constructor(controller: IBindingController, locator: IServiceLocator, observerLocator: IObserverLocator, taskQueue: TaskQueue, ast: IsBindingBehavior | ForOfStatement, target: INode, targetAttribute: string, targetProperty: string, mode: BindingMode);
     updateTarget(value: unknown): void;
     handleChange(): void;
     handleCollectionChange(): void;
-    bind(scope: Scope): void;
+    bind(_scope: Scope): void;
     unbind(): void;
 }
 //# sourceMappingURL=attribute.d.ts.map

@@ -57,7 +57,6 @@ export declare const SpreadBindingCommandRegistration: IRegistry;
  */
 export declare const DefaultBindingLanguage: IRegistry[];
 export declare const SanitizeValueConverterRegistration: IRegistry;
-export declare const ViewValueConverterRegistration: IRegistry;
 export declare const IfRegistration: IRegistry;
 export declare const ElseRegistration: IRegistry;
 export declare const RepeatRegistration: IRegistry;
@@ -75,7 +74,6 @@ export declare const RejectedAttributePatternRegistration: IRegistry;
 export declare const AttrBindingBehaviorRegistration: IRegistry;
 export declare const SelfBindingBehaviorRegistration: IRegistry;
 export declare const UpdateTriggerBindingBehaviorRegistration: IRegistry;
-export declare const AuRenderRegistration: IRegistry;
 export declare const AuComposeRegistration: IRegistry;
 export declare const PortalRegistration: IRegistry;
 export declare const FocusRegistration: IRegistry;

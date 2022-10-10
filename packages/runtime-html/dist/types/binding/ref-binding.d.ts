@@ -6,9 +6,8 @@ export declare class RefBinding implements IBinding {
     ast: IsBindingBehavior;
     target: object;
     isBound: boolean;
-    scope?: Scope;
     constructor(locator: IServiceLocator, ast: IsBindingBehavior, target: object);
-    bind(scope: Scope): void;
+    bind(_scope: Scope): void;
     unbind(): void;
 }
 //# sourceMappingURL=ref-binding.d.ts.map

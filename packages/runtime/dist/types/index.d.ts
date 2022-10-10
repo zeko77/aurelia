@@ -5,7 +5,7 @@ export { IExpressionParser, ExpressionType, parseExpression, } from './binding/e
 export { ArrayObserver, ArrayIndexObserver, enableArrayObservation, disableArrayObservation, applyMutationsToIndices, synchronizeIndices, type IArrayIndexObserver, } from './observation/array-observer';
 export { MapObserver, enableMapObservation, disableMapObservation, } from './observation/map-observer';
 export { SetObserver, enableSetObservation, disableSetObservation } from './observation/set-observer';
-export { BindingContext, Scope, } from './observation/binding-context';
+export { BindingContext, Scope, } from './observation/scope';
 export { CollectionLengthObserver, CollectionSizeObserver, } from './observation/collection-length-observer';
 export { ComputedObserver, } from './observation/computed-observer';
 export { IDirtyChecker, DirtyCheckProperty, DirtyCheckSettings, } from './observation/dirty-checker';

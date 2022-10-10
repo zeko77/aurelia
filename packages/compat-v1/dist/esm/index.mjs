@@ -1,21 +1,21 @@
-import { BindingBehaviorExpression as t, ValueConverterExpression as i, AssignExpression as e, ConditionalExpression as s, AccessThisExpression as n, AccessScopeExpression as r, AccessMemberExpression as l, AccessKeyedExpression as o, CallScopeExpression as h, CallMemberExpression as c, CallFunctionExpression as a, BinaryExpression as u, UnaryExpression as d, PrimitiveLiteralExpression as f, ArrayLiteralExpression as g, ObjectLiteralExpression as b, TemplateExpression as p, TaggedTemplateExpression as B, ArrayBindingPattern as m, ObjectBindingPattern as v, BindingIdentifier as D, ForOfStatement as L, Interpolation as C, DestructuringAssignmentExpression as w, DestructuringAssignmentSingleExpression as y, DestructuringAssignmentRestExpression as E, ArrowFunction as I, astEvaluate as O, astAssign as S, astVisit as j, astBind as R, astUnbind as x, IExpressionParser as k, IObserverLocator as T, Unparser as $ } from "@aurelia/runtime";
+import { BindingBehaviorExpression as t, ValueConverterExpression as i, AssignExpression as e, ConditionalExpression as n, AccessThisExpression as s, AccessScopeExpression as r, AccessMemberExpression as l, AccessKeyedExpression as o, CallScopeExpression as h, CallMemberExpression as c, CallFunctionExpression as a, BinaryExpression as u, UnaryExpression as d, PrimitiveLiteralExpression as f, ArrayLiteralExpression as g, ObjectLiteralExpression as b, TemplateExpression as p, TaggedTemplateExpression as B, ArrayBindingPattern as m, ObjectBindingPattern as v, BindingIdentifier as D, ForOfStatement as L, Interpolation as C, DestructuringAssignmentExpression as w, DestructuringAssignmentSingleExpression as y, DestructuringAssignmentRestExpression as E, ArrowFunction as I, astEvaluate as O, astAssign as S, astVisit as j, astBind as R, astUnbind as x, Unparser as k } from "@aurelia/runtime";
 
-import { bindingCommand as A, renderer as M, mixinBindingUseScope as _, mixingBindingLimited as P, mixinAstEvaluator as U, AppTask as V, IEventTarget as q, PropertyBinding as z, AttributeBinding as F, ListenerBinding as G, LetBinding as H, InterpolationPartBinding as J, ContentBinding as K, RefBinding as N } from "@aurelia/runtime-html";
+import { bindingCommand as T, renderer as $, mixinUseScope as A, mixingBindingLimited as M, mixinAstEvaluator as _, AppTask as P, IEventTarget as U, PropertyBinding as V, AttributeBinding as q, ListenerBinding as z, LetBinding as F, InterpolationPartBinding as G, ContentBinding as H, RefBinding as J } from "@aurelia/runtime-html";
 
-import { camelCase as Q, DI as W } from "@aurelia/kernel";
+import { camelCase as K, DI as N } from "@aurelia/kernel";
 
-let X = false;
+let Q = false;
 
-function Y() {
-    if (X) return;
-    X = true;
+function W() {
+    if (Q) return;
+    Q = true;
     const k = (t, i, e) => Object.defineProperty(t.prototype, i, {
         configurable: true,
         enumerable: false,
         writable: true,
         value: e
     });
-    [ t, i, e, s, n, r, l, o, h, c, a, u, d, f, g, b, p, B, m, v, D, L, C, w, y, E, I ].forEach((t => {
+    [ t, i, e, n, s, r, l, o, h, c, a, u, d, f, g, b, p, B, m, v, D, L, C, w, y, E, I ].forEach((t => {
         k(t, "evaluate", (function(...t) {
             return O(this, ...t);
         }));
@@ -35,99 +35,93 @@ function Y() {
     }));
 }
 
-function Z(t, i, e, s) {
-    var n = arguments.length, r = n < 3 ? i : null === s ? s = Object.getOwnPropertyDescriptor(i, e) : s, l;
-    if ("object" === typeof Reflect && "function" === typeof Reflect.decorate) r = Reflect.decorate(t, i, e, s); else for (var o = t.length - 1; o >= 0; o--) if (l = t[o]) r = (n < 3 ? l(r) : n > 3 ? l(i, e, r) : l(i, e)) || r;
-    return n > 3 && r && Object.defineProperty(i, e, r), r;
+function X(t, i, e, n) {
+    var s = arguments.length, r = s < 3 ? i : null === n ? n = Object.getOwnPropertyDescriptor(i, e) : n, l;
+    if ("object" === typeof Reflect && "function" === typeof Reflect.decorate) r = Reflect.decorate(t, i, e, n); else for (var o = t.length - 1; o >= 0; o--) if (l = t[o]) r = (s < 3 ? l(r) : s > 3 ? l(i, e, r) : l(i, e)) || r;
+    return s > 3 && r && Object.defineProperty(i, e, r), r;
 }
 
-const tt = () => Object.create(null);
+const Y = () => Object.create(null);
 
-const it = t => "function" === typeof t;
+const Z = t => "function" === typeof t;
 
-const et = t => "string" === typeof t;
+const tt = t => "string" === typeof t;
 
-const st = (t, i, e) => {
-    if (et(i)) return t.parse(i, e);
+const it = (t, i, e) => {
+    if (tt(i)) return t.parse(i, e);
     return i;
 };
 
-const nt = Symbol(".call");
+const et = Symbol(".call");
 
-const rt = {
+const nt = {
     register(t) {
-        if (!t[nt]) {
-            t[nt] = true;
-            t.register(ot, ht);
+        if (!t[et]) {
+            t[et] = true;
+            t.register(rt, lt);
         }
     }
 };
 
-const lt = "rh";
+const st = "rh";
 
 class CallBindingInstruction {
     constructor(t, i) {
         this.from = t;
         this.to = i;
-        this.type = lt;
+        this.type = st;
     }
 }
 
-let ot = class CallBindingCommand {
+let rt = class CallBindingCommand {
     get type() {
         return 0;
     }
     build(t, i) {
-        const e = null === t.bindable ? Q(t.attr.target) : t.bindable.property;
+        const e = null === t.bindable ? K(t.attr.target) : t.bindable.property;
         return new CallBindingInstruction(i.parse(t.attr.rawValue, 16 | 8), e);
     }
 };
 
-ot = Z([ A("call") ], ot);
+rt = X([ T("call") ], rt);
 
-let ht = class CallBindingRenderer {
-    constructor(t, i) {
-        this.ep = t;
-        this.oL = i;
-    }
-    render(t, i, e) {
-        const s = st(this.ep, e.from, 16 | 8);
-        t.addBinding(new CallBinding(t.container, this.oL, s, ct(i), e.to));
+let lt = class CallBindingRenderer {
+    render(t, i, e, n, s, r) {
+        const l = it(s, e.from, 16 | 8);
+        t.addBinding(new CallBinding(t.container, r, l, ot(i), e.to));
     }
 };
 
-ht.inject = [ k, T ];
+lt = X([ $(st) ], lt);
 
-ht = Z([ M(lt) ], ht);
-
-function ct(t) {
+function ot(t) {
     if (null != t.viewModel) return t.viewModel;
     return t;
 }
 
 class CallBinding {
-    constructor(t, i, e, s, n) {
+    constructor(t, i, e, n, s) {
         this.ast = e;
-        this.target = s;
-        this.targetProperty = n;
+        this.target = n;
+        this.targetProperty = s;
         this.isBound = false;
         this.boundFn = false;
         this.l = t;
-        this.targetObserver = i.getAccessor(s, n);
+        this.targetObserver = i.getAccessor(n, s);
     }
     callSource(t) {
-        const i = this.scope.overrideContext;
+        const i = this.s.overrideContext;
         i.$event = t;
-        const e = O(this.ast, this.scope, this, null);
+        const e = O(this.ast, this.s, this, null);
         Reflect.deleteProperty(i, "$event");
         return e;
     }
     bind(t) {
         if (this.isBound) {
-            if (this.scope === t) return;
+            if (this.s === t) return;
             this.unbind();
         }
-        this.scope = t;
+        this.s = t;
         R(this.ast, t, this);
         this.targetObserver.setValue((t => this.callSource(t)), this.target, this.targetProperty);
         this.isBound = true;
@@ -135,32 +129,32 @@ class CallBinding {
     unbind() {
         if (!this.isBound) return;
         this.isBound = false;
-        x(this.ast, this.scope, this);
-        this.scope = void 0;
+        x(this.ast, this.s, this);
+        this.s = void 0;
         this.targetObserver.setValue(null, this.target, this.targetProperty);
     }
 }
 
-_(CallBinding);
+A(CallBinding);
 
-P(CallBinding, (() => "callSource"));
+M(CallBinding, (() => "callSource"));
 
-U(true)(CallBinding);
+_(true)(CallBinding);
 
-const at = Symbol(".delegate");
+const ht = Symbol(".delegate");
 
-const ut = {
+const ct = {
     register(t) {
-        if (!t[at]) {
-            t[at] = true;
-            t.register(pt, ft, gt);
+        if (!t[ht]) {
+            t[ht] = true;
+            t.register(gt, ut, dt);
         }
     }
 };
 
-const dt = "dl";
+const at = "dl";
 
-let ft = class DelegateBindingCommand {
+let ut = class DelegateBindingCommand {
     get type() {
         return 1;
     }
@@ -169,23 +163,22 @@ let ft = class DelegateBindingCommand {
     }
 };
 
-ft = Z([ A("delegate") ], ft);
+ut = X([ T("delegate") ], ut);
 
-let gt = class ListenerBindingRenderer {
-    constructor(t, i) {
-        this.ep = t;
-        this.t = i;
+let dt = class ListenerBindingRenderer {
+    constructor(t) {
+        this.t = t;
     }
     static get inject() {
-        return [ k, pt ];
+        return [ gt ];
     }
-    render(t, i, e) {
-        const s = st(this.ep, e.from, 8);
-        t.addBinding(new DelegateListenerBinding(t.container, s, i, e.to, this.t, new DelegateListenerOptions(e.preventDefault)));
+    render(t, i, e, n, s) {
+        const r = it(s, e.from, 8);
+        t.addBinding(new DelegateListenerBinding(t.container, r, i, e.to, this.t, new DelegateListenerOptions(e.preventDefault)));
     }
 };
 
-gt = Z([ M(dt) ], gt);
+dt = X([ $(at) ], dt);
 
 class DelegateBindingInstruction {
     constructor(t, i, e) {
@@ -203,11 +196,11 @@ class DelegateListenerOptions {
 }
 
 class DelegateListenerBinding {
-    constructor(t, i, e, s, n, r) {
+    constructor(t, i, e, n, s, r) {
         this.ast = i;
         this.target = e;
-        this.targetEvent = s;
-        this.eventDelegator = n;
+        this.targetEvent = n;
+        this.eventDelegator = s;
         this.isBound = false;
         this.handler = null;
         this.boundFn = true;
@@ -215,11 +208,11 @@ class DelegateListenerBinding {
         this.i = r;
     }
     callSource(t) {
-        const i = this.scope.overrideContext;
+        const i = this.s.overrideContext;
         i.$event = t;
-        let e = O(this.ast, this.scope, this, null);
+        let e = O(this.ast, this.s, this, null);
         delete i.$event;
-        if (it(e)) e = e(t);
+        if (Z(e)) e = e(t);
         if (true !== e && this.i.prevent) t.preventDefault();
         return e;
     }
@@ -228,36 +221,36 @@ class DelegateListenerBinding {
     }
     bind(t) {
         if (this.isBound) {
-            if (this.scope === t) return;
+            if (this.s === t) return;
             this.unbind();
         }
-        this.scope = t;
+        this.s = t;
         R(this.ast, t, this);
-        this.handler = this.eventDelegator.addEventListener(this.l.get(q), this.target, this.targetEvent, this);
+        this.handler = this.eventDelegator.addEventListener(this.l.get(U), this.target, this.targetEvent, this);
         this.isBound = true;
     }
     unbind() {
         if (!this.isBound) return;
         this.isBound = false;
-        x(this.ast, this.scope, this);
-        this.scope = void 0;
+        x(this.ast, this.s, this);
+        this.s = void 0;
         this.handler.dispose();
         this.handler = null;
     }
 }
 
-_(DelegateListenerBinding);
+A(DelegateListenerBinding);
 
-P(DelegateListenerBinding, (() => "callSource"));
+M(DelegateListenerBinding, (() => "callSource"));
 
-U(true, true)(DelegateListenerBinding);
+_(true, true)(DelegateListenerBinding);
 
-const bt = {
+const ft = {
     capture: false
 };
 
 class ListenerTracker {
-    constructor(t, i, e = bt) {
+    constructor(t, i, e = ft) {
         this.h = t;
         this.u = i;
         this.i = e;
@@ -282,31 +275,31 @@ class ListenerTracker {
     j(t) {
         const i = true === this.i.capture ? this.L : this.C;
         let e = i.get(t);
-        if (void 0 === e) i.set(t, e = tt());
+        if (void 0 === e) i.set(t, e = Y());
         return e;
     }
     handleEvent(t) {
         const i = true === this.i.capture ? this.L : this.C;
         const e = t.composedPath();
         if (true === this.i.capture) e.reverse();
-        for (const s of e) {
-            const e = i.get(s);
+        for (const n of e) {
+            const e = i.get(n);
             if (void 0 === e) continue;
-            const n = e[this.u];
-            if (void 0 === n) continue;
-            if (it(n)) n(t); else n.handleEvent(t);
+            const s = e[this.u];
+            if (void 0 === s) continue;
+            if (Z(s)) s(t); else s.handleEvent(t);
             if (true === t.cancelBubble) return;
         }
     }
 }
 
 class DelegateSubscription {
-    constructor(t, i, e, s) {
+    constructor(t, i, e, n) {
         this.R = t;
         this.T = i;
         this.u = e;
         t.I();
-        i[e] = s;
+        i[e] = n;
     }
     dispose() {
         this.R.O();
@@ -314,22 +307,22 @@ class DelegateSubscription {
     }
 }
 
-const pt = W.createInterface("IEventDelegator", (t => t.cachedCallback((t => {
+const gt = N.createInterface("IEventDelegator", (t => t.cachedCallback((t => {
     const i = t.invoke(EventDelegator);
-    t.register(V.deactivating((() => i.dispose())));
+    t.register(P.deactivating((() => i.dispose())));
     return i;
 }))));
 
 class EventDelegator {
     constructor() {
-        this.$ = tt();
+        this.$ = Y();
     }
-    addEventListener(t, i, e, s, n) {
+    addEventListener(t, i, e, n, s) {
         var r;
         const l = (r = this.$)[e] ?? (r[e] = new Map);
         let o = l.get(t);
-        if (void 0 === o) l.set(t, o = new ListenerTracker(t, e, n));
-        return new DelegateSubscription(o, o.j(i), e, s);
+        if (void 0 === o) l.set(t, o = new ListenerTracker(t, e, s));
+        return new DelegateSubscription(o, o.j(i), e, n);
     }
     dispose() {
         for (const t in this.$) {
@@ -340,25 +333,25 @@ class EventDelegator {
     }
 }
 
-let Bt = false;
+let bt = false;
 
-const mt = () => {
-    if (Bt) return;
-    Bt = true;
-    [ [ z, "Property binding" ], [ F, "Attribute binding" ], [ G, "Listener binding" ], [ CallBinding, "Call binding" ], [ H, "Let binding" ], [ J, "Interpolation binding" ], [ K, "Text binding" ], [ N, "Ref binding" ], [ DelegateListenerBinding, "Delegate Listener binding" ] ].forEach((([t, i]) => {
+const pt = () => {
+    if (bt) return;
+    bt = true;
+    [ [ V, "Property binding" ], [ q, "Attribute binding" ], [ z, "Listener binding" ], [ CallBinding, "Call binding" ], [ F, "Let binding" ], [ G, "Interpolation binding" ], [ H, "Text binding" ], [ J, "Ref binding" ], [ DelegateListenerBinding, "Delegate Listener binding" ] ].forEach((([t, i]) => {
         Object.defineProperty(t.prototype, "sourceExpression", {
             configurable: true,
             enumerable: false,
             writable: true,
             get() {
-                console.warn(`@deprecated "sourceExpression" property for expression on ${i}. It has been renamed to "ast". expression: "${$.unparse(this.ast)}"`);
+                console.warn(`@deprecated "sourceExpression" property for expression on ${i}. It has been renamed to "ast". expression: "${k.unparse(this.ast)}"`);
                 return this.ast;
             }
         });
     }));
 };
 
-const vt = V.creating(q, (t => {
+const Bt = P.creating(U, (t => {
     t.addEventListener("submit", (t => {
         const i = t.target;
         const e = i.action;
@@ -366,15 +359,15 @@ const vt = V.creating(q, (t => {
     }), false);
 }));
 
-const Dt = {
+const mt = {
     register(t) {
-        Y();
-        mt();
-        t.register(vt);
-        ut.register(t);
-        rt.register(t);
+        W();
+        pt();
+        t.register(Bt);
+        ct.register(t);
+        nt.register(t);
     }
 };
 
-export { CallBinding, ot as CallBindingCommand, CallBindingInstruction, ht as CallBindingRenderer, ft as DelegateBindingCommand, DelegateBindingInstruction, DelegateListenerBinding, DelegateListenerOptions, EventDelegator, pt as IEventDelegator, gt as ListenerBindingRenderer, vt as PreventFormActionlessSubmit, rt as callSyntax, Dt as compatRegistration, ut as delegateSyntax };
+export { CallBinding, rt as CallBindingCommand, CallBindingInstruction, lt as CallBindingRenderer, ut as DelegateBindingCommand, DelegateBindingInstruction, DelegateListenerBinding, DelegateListenerOptions, EventDelegator, gt as IEventDelegator, dt as ListenerBindingRenderer, Bt as PreventFormActionlessSubmit, nt as callSyntax, mt as compatRegistration, ct as delegateSyntax };
 //# sourceMappingURL=index.mjs.map

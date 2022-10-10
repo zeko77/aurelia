@@ -1,5 +1,5 @@
-import { BindingBehaviorExpression, ValueConverterExpression, AssignExpression, ConditionalExpression, AccessThisExpression, AccessScopeExpression, AccessMemberExpression, AccessKeyedExpression, CallScopeExpression, CallMemberExpression, CallFunctionExpression, BinaryExpression, UnaryExpression, PrimitiveLiteralExpression, ArrayLiteralExpression, ObjectLiteralExpression, TemplateExpression, TaggedTemplateExpression, ArrayBindingPattern, ObjectBindingPattern, BindingIdentifier, ForOfStatement, Interpolation, DestructuringAssignmentExpression, DestructuringAssignmentSingleExpression, DestructuringAssignmentRestExpression, ArrowFunction, astEvaluate, astAssign, astVisit, astBind, astUnbind, IExpressionParser, IObserverLocator, Unparser } from '@aurelia/runtime';
-import { bindingCommand, renderer, mixinBindingUseScope, mixingBindingLimited, mixinAstEvaluator, AppTask, IEventTarget, PropertyBinding, AttributeBinding, ListenerBinding, LetBinding, InterpolationPartBinding, ContentBinding, RefBinding } from '@aurelia/runtime-html';
+import { BindingBehaviorExpression, ValueConverterExpression, AssignExpression, ConditionalExpression, AccessThisExpression, AccessScopeExpression, AccessMemberExpression, AccessKeyedExpression, CallScopeExpression, CallMemberExpression, CallFunctionExpression, BinaryExpression, UnaryExpression, PrimitiveLiteralExpression, ArrayLiteralExpression, ObjectLiteralExpression, TemplateExpression, TaggedTemplateExpression, ArrayBindingPattern, ObjectBindingPattern, BindingIdentifier, ForOfStatement, Interpolation, DestructuringAssignmentExpression, DestructuringAssignmentSingleExpression, DestructuringAssignmentRestExpression, ArrowFunction, astEvaluate, astAssign, astVisit, astBind, astUnbind, Unparser } from '@aurelia/runtime';
+import { bindingCommand, renderer, mixinUseScope, mixingBindingLimited, mixinAstEvaluator, AppTask, IEventTarget, PropertyBinding, AttributeBinding, ListenerBinding, LetBinding, InterpolationPartBinding, ContentBinding, RefBinding } from '@aurelia/runtime-html';
 import { camelCase, DI } from '@aurelia/kernel';
 
 let defined$1 = false;
@@ -120,16 +120,11 @@ CallBindingCommand = __decorate([
     bindingCommand('call')
 ], CallBindingCommand);
 let CallBindingRenderer = class CallBindingRenderer {
-    constructor(exprParser, observerLocator) {
-        this._exprParser = exprParser;
-        this._observerLocator = observerLocator;
-    }
-    render(renderingCtrl, target, instruction) {
-        const expr = ensureExpression(this._exprParser, instruction.from, 16 | 8);
-        renderingCtrl.addBinding(new CallBinding(renderingCtrl.container, this._observerLocator, expr, getTarget(target), instruction.to));
+    render(renderingCtrl, target, instruction, platform, exprParser, observerLocator) {
+        const expr = ensureExpression(exprParser, instruction.from, 16 | 8);
+        renderingCtrl.addBinding(new CallBinding(renderingCtrl.container, observerLocator, expr, getTarget(target), instruction.to));
     }
 };
-CallBindingRenderer.inject = [IExpressionParser, IObserverLocator];
 CallBindingRenderer = __decorate([
     renderer(instructionType$1)
 ], CallBindingRenderer);
@@ -150,21 +145,21 @@ class CallBinding {
         this.targetObserver = observerLocator.getAccessor(target, targetProperty);
     }
     callSource(args) {
-        const overrideContext = this.scope.overrideContext;
+        const overrideContext = this._scope.overrideContext;
         overrideContext.$event = args;
-        const result = astEvaluate(this.ast, this.scope, this, null);
+        const result = astEvaluate(this.ast, this._scope, this, null);
         Reflect.deleteProperty(overrideContext, '$event');
         return result;
     }
-    bind(scope) {
+    bind(_scope) {
         if (this.isBound) {
-            if (this.scope === scope) {
+            if (this._scope === _scope) {
                 return;
             }
             this.unbind();
         }
-        this.scope = scope;
-        astBind(this.ast, scope, this);
+        this._scope = _scope;
+        astBind(this.ast, _scope, this);
         this.targetObserver.setValue(($args) => this.callSource($args), this.target, this.targetProperty);
         this.isBound = true;
     }
@@ -173,12 +168,12 @@ class CallBinding {
             return;
         }
         this.isBound = false;
-        astUnbind(this.ast, this.scope, this);
-        this.scope = void 0;
+        astUnbind(this.ast, this._scope, this);
+        this._scope = void 0;
         this.targetObserver.setValue(null, this.target, this.targetProperty);
     }
 }
-mixinBindingUseScope(CallBinding);
+mixinUseScope(CallBinding);
 mixingBindingLimited(CallBinding, () => 'callSource');
 mixinAstEvaluator(true)(CallBinding);
 
@@ -202,13 +197,12 @@ DelegateBindingCommand = __decorate([
     bindingCommand('delegate')
 ], DelegateBindingCommand);
 let ListenerBindingRenderer = class ListenerBindingRenderer {
-    constructor(parser, eventDelegator) {
-        this._exprParser = parser;
+    constructor(eventDelegator) {
         this._eventDelegator = eventDelegator;
     }
-    static get inject() { return [IExpressionParser, IEventDelegator]; }
-    render(renderingCtrl, target, instruction) {
-        const expr = ensureExpression(this._exprParser, instruction.from, 8);
+    static get inject() { return [IEventDelegator]; }
+    render(renderingCtrl, target, instruction, platform, exprParser) {
+        const expr = ensureExpression(exprParser, instruction.from, 8);
         renderingCtrl.addBinding(new DelegateListenerBinding(renderingCtrl.container, expr, target, instruction.to, this._eventDelegator, new DelegateListenerOptions(instruction.preventDefault)));
     }
 };
@@ -241,9 +235,9 @@ class DelegateListenerBinding {
         this._options = options;
     }
     callSource(event) {
-        const overrideContext = this.scope.overrideContext;
+        const overrideContext = this._scope.overrideContext;
         overrideContext.$event = event;
-        let result = astEvaluate(this.ast, this.scope, this, null);
+        let result = astEvaluate(this.ast, this._scope, this, null);
         delete overrideContext.$event;
         if (isFunction(result)) {
             result = result(event);
@@ -256,15 +250,15 @@ class DelegateListenerBinding {
     handleEvent(event) {
         this.callSource(event);
     }
-    bind(scope) {
+    bind(_scope) {
         if (this.isBound) {
-            if (this.scope === scope) {
+            if (this._scope === _scope) {
                 return;
             }
             this.unbind();
         }
-        this.scope = scope;
-        astBind(this.ast, scope, this);
+        this._scope = _scope;
+        astBind(this.ast, _scope, this);
         this.handler = this.eventDelegator.addEventListener(this.l.get(IEventTarget), this.target, this.targetEvent, this);
         this.isBound = true;
     }
@@ -273,13 +267,13 @@ class DelegateListenerBinding {
             return;
         }
         this.isBound = false;
-        astUnbind(this.ast, this.scope, this);
-        this.scope = void 0;
+        astUnbind(this.ast, this._scope, this);
+        this._scope = void 0;
         this.handler.dispose();
         this.handler = null;
     }
 }
-mixinBindingUseScope(DelegateListenerBinding);
+mixinUseScope(DelegateListenerBinding);
 mixingBindingLimited(DelegateListenerBinding, () => 'callSource');
 mixinAstEvaluator(true, true)(DelegateListenerBinding);
 const defaultOptions = {

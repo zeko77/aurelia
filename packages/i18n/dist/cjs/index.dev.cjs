@@ -328,18 +328,18 @@ class TranslationBinding {
     constructor(controller, locator, observerLocator, platform, target) {
         this.isBound = false;
         this._contentAttributes = contentAttributes;
-        this.task = null;
+        this._task = null;
         this.parameter = null;
         this.boundFn = false;
         this.l = locator;
         this._controller = controller;
         this.target = target;
         this.i18n = locator.get(I18N);
-        this.platform = platform;
+        this._platform = platform;
         this._targetAccessors = new Set();
         this.oL = observerLocator;
         this.i18n.subscribeLocaleChange(this);
-        this.taskQueue = platform.domWriteQueue;
+        this._taskQueue = platform.domWriteQueue;
     }
     static create({ parser, observerLocator, context, controller, target, instruction, platform, isParameterContext, }) {
         const binding = this._getBinding({ observerLocator, context, controller, target, platform });
@@ -362,18 +362,18 @@ class TranslationBinding {
         }
         return binding;
     }
-    bind(scope) {
+    bind(_scope) {
         if (this.isBound) {
             return;
         }
         if (!this.ast) {
             throw new Error('key expression is missing');
         }
-        this.scope = scope;
+        this._scope = _scope;
         this._isInterpolation = this.ast instanceof runtime.Interpolation;
-        this._keyExpression = runtime.astEvaluate(this.ast, scope, this, this);
+        this._keyExpression = runtime.astEvaluate(this.ast, _scope, this, this);
         this._ensureKeyExpression();
-        this.parameter?.bind(scope);
+        this.parameter?.bind(_scope);
         this.updateTranslations();
         this.isBound = true;
     }
@@ -381,20 +381,20 @@ class TranslationBinding {
         if (!this.isBound) {
             return;
         }
-        runtime.astUnbind(this.ast, this.scope, this);
+        runtime.astUnbind(this.ast, this._scope, this);
         this.parameter?.unbind();
         this._targetAccessors.clear();
-        if (this.task !== null) {
-            this.task.cancel();
-            this.task = null;
+        if (this._task !== null) {
+            this._task.cancel();
+            this._task = null;
         }
-        this.scope = (void 0);
+        this._scope = (void 0);
         this.obs.clearAll();
     }
     handleChange(newValue, _previousValue) {
         this.obs.version++;
         this._keyExpression = this._isInterpolation
-            ? runtime.astEvaluate(this.ast, this.scope, this, this)
+            ? runtime.astEvaluate(this.ast, this._scope, this, this)
             : newValue;
         this.obs.clear();
         this._ensureKeyExpression();
@@ -413,7 +413,7 @@ class TranslationBinding {
         const results = this.i18n.evaluate(this._keyExpression, this.parameter?.value);
         const content = Object.create(null);
         const accessorUpdateTasks = [];
-        const task = this.task;
+        const task = this._task;
         this._targetAccessors.clear();
         for (const item of results) {
             const value = item.value;
@@ -446,8 +446,8 @@ class TranslationBinding {
             }
         }
         if (accessorUpdateTasks.length > 0 || shouldQueueContent) {
-            this.task = this.taskQueue.queueTask(() => {
-                this.task = null;
+            this._task = this._taskQueue.queueTask(() => {
+                this._task = null;
                 for (const updateTask of accessorUpdateTasks) {
                     updateTask.run();
                 }
@@ -489,7 +489,7 @@ class TranslationBinding {
         }
     }
     _prepareTemplate(content, marker, fallBackContents) {
-        const template = this.platform.document.createElement('template');
+        const template = this._platform.document.createElement('template');
         this._addContentToTemplate(template, content.prepend, marker);
         if (!this._addContentToTemplate(template, content.innerHTML ?? content.textContent, marker)) {
             for (const fallbackContent of fallBackContents) {
@@ -501,7 +501,7 @@ class TranslationBinding {
     }
     _addContentToTemplate(template, content, marker) {
         if (content !== void 0 && content !== null) {
-            const parser = this.platform.document.createElement('div');
+            const parser = this._platform.document.createElement('div');
             parser.innerHTML = content;
             for (const child of kernel.toArray(parser.childNodes)) {
                 Reflect.set(child, marker, true);
@@ -548,25 +548,25 @@ class ParameterBinding {
             return;
         }
         this.obs.version++;
-        this.value = runtime.astEvaluate(this.ast, this.scope, this, this);
+        this.value = runtime.astEvaluate(this.ast, this._scope, this, this);
         this.obs.clear();
         this.updater();
     }
-    bind(scope) {
+    bind(_scope) {
         if (this.isBound) {
             return;
         }
-        this.scope = scope;
-        runtime.astBind(this.ast, scope, this);
-        this.value = runtime.astEvaluate(this.ast, scope, this, this);
+        this._scope = _scope;
+        runtime.astBind(this.ast, _scope, this);
+        this.value = runtime.astEvaluate(this.ast, _scope, this, this);
         this.isBound = true;
     }
     unbind() {
         if (!this.isBound) {
             return;
         }
-        runtime.astUnbind(this.ast, this.scope, this);
-        this.scope = (void 0);
+        runtime.astUnbind(this.ast, this._scope, this);
+        this._scope = (void 0);
         this.obs.clearAll();
     }
 }
@@ -613,25 +613,19 @@ exports.TranslationParametersBindingCommand = __decorate([
     runtimeHtml.bindingCommand(attribute)
 ], exports.TranslationParametersBindingCommand);
 exports.TranslationParametersBindingRenderer = class TranslationParametersBindingRenderer {
-    constructor(exprParser, observerLocator, p) {
-        this._exprParser = exprParser;
-        this._observerLocator = observerLocator;
-        this._platform = p;
-    }
-    render(renderingCtrl, target, instruction) {
+    render(renderingCtrl, target, instruction, platform, exprParser, observerLocator) {
         TranslationBinding.create({
-            parser: this._exprParser,
-            observerLocator: this._observerLocator,
+            parser: exprParser,
+            observerLocator,
             context: renderingCtrl.container,
             controller: renderingCtrl,
             target,
             instruction,
             isParameterContext: true,
-            platform: this._platform
+            platform,
         });
     }
 };
-exports.TranslationParametersBindingRenderer.inject = [runtime.IExpressionParser, runtime.IObserverLocator, runtimeHtml.IPlatform];
 exports.TranslationParametersBindingRenderer = __decorate([
     runtimeHtml.renderer(TranslationParametersInstructionType)
 ], exports.TranslationParametersBindingRenderer);
@@ -670,24 +664,18 @@ class TranslationBindingCommand {
     }
 }
 exports.TranslationBindingRenderer = class TranslationBindingRenderer {
-    constructor(exprParser, observerLocator, p) {
-        this._exprParser = exprParser;
-        this._observerLocator = observerLocator;
-        this._platform = p;
-    }
-    render(renderingCtrl, target, instruction) {
+    render(renderingCtrl, target, instruction, platform, exprParser, observerLocator) {
         TranslationBinding.create({
-            parser: this._exprParser,
-            observerLocator: this._observerLocator,
+            parser: exprParser,
+            observerLocator,
             context: renderingCtrl.container,
             controller: renderingCtrl,
             target,
             instruction,
-            platform: this._platform,
+            platform,
         });
     }
 };
-exports.TranslationBindingRenderer.inject = [runtime.IExpressionParser, runtime.IObserverLocator, runtimeHtml.IPlatform];
 exports.TranslationBindingRenderer = __decorate([
     runtimeHtml.renderer(TranslationInstructionType)
 ], exports.TranslationBindingRenderer);
@@ -726,28 +714,20 @@ class TranslationBindBindingCommand {
     }
 }
 exports.TranslationBindBindingRenderer = class TranslationBindBindingRenderer {
-    constructor(parser, oL, p) {
-        this.parser = parser;
-        this.oL = oL;
-        this.p = p;
-    }
-    render(renderingCtrl, target, instruction) {
+    render(renderingCtrl, target, instruction, platform, exprParser, observerLocator) {
         TranslationBinding.create({
-            parser: this.parser,
-            observerLocator: this.oL,
+            parser: exprParser,
+            observerLocator,
             context: renderingCtrl.container,
             controller: renderingCtrl,
             target,
             instruction,
-            platform: this.p
+            platform
         });
     }
 };
 exports.TranslationBindBindingRenderer = __decorate([
-    runtimeHtml.renderer(TranslationBindInstructionType),
-    __param(0, runtime.IExpressionParser),
-    __param(1, runtime.IObserverLocator),
-    __param(2, runtimeHtml.IPlatform)
+    runtimeHtml.renderer(TranslationBindInstructionType)
 ], exports.TranslationBindBindingRenderer);
 
 exports.TranslationValueConverter = class TranslationValueConverter {

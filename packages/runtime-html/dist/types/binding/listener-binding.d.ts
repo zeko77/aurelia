@@ -15,7 +15,10 @@ export declare class ListenerBinding implements IBinding {
     target: Node;
     targetEvent: string;
     isBound: boolean;
-    scope?: Scope;
+    /**
+     * Whether this binding only handles events originate from the target this binding is bound to
+     */
+    self: boolean;
     constructor(locator: IServiceLocator, ast: IsBindingBehavior, target: Node, targetEvent: string, options: ListenerBindingOptions);
     callSource(event: Event): unknown;
     handleEvent(event: Event): void;

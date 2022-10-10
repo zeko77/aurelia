@@ -1,5 +1,5 @@
 import { IConnectable } from '../observation';
-import { Scope } from '../observation/binding-context';
+import { Scope } from '../observation/scope';
 import { IsExpressionOrStatement, IAstEvaluator } from './ast';
 import { IConnectableBinding } from './connectable';
 export declare function astEvaluate(ast: IsExpressionOrStatement, s: Scope, e: IAstEvaluator | null, c: IConnectable | null): unknown;

@@ -7,13 +7,12 @@ export declare class LetBinding implements IBinding {
     ast: IsExpression;
     targetProperty: string;
     isBound: boolean;
-    scope?: Scope;
     target: (IObservable & IIndexable) | null;
     constructor(locator: IServiceLocator, observerLocator: IObserverLocator, ast: IsExpression, targetProperty: string, toBindingContext?: boolean);
     updateTarget(): void;
     handleChange(): void;
     handleCollectionChange(): void;
-    bind(scope: Scope): void;
+    bind(_scope: Scope): void;
     unbind(): void;
 }
 //# sourceMappingURL=let-binding.d.ts.map
