@@ -9,6 +9,10 @@ export interface ValueAttributeObserver extends ISubscriberCollection {
  */
 export declare class ValueAttributeObserver implements INodeObserver {
     type: AccessorType;
+    /**
+     * Comes from mixin
+     */
+    useConfig: (config: INodeObserverConfigBase) => void;
     constructor(obj: INode, key: PropertyKey, config: INodeObserverConfigBase);
     getValue(): unknown;
     setValue(newValue: string | null): void;

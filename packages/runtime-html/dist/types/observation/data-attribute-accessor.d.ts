@@ -9,6 +9,8 @@ import type { IAccessor } from '@aurelia/runtime';
  */
 export declare class DataAttributeAccessor implements IAccessor<string | null>, IObserver {
     type: AccessorType;
+    subscribe: () => void;
+    unsubscribe: () => void;
     getValue(obj: HTMLElement, key: string): string | null;
     setValue(newValue: string | null, obj: HTMLElement, key: string): void;
 }

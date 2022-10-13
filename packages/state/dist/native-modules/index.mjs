@@ -1,8 +1,8 @@
-import { DI as t, Registration as i, optional as s, all as n, ILogger as e, camelCase as h } from "../../../kernel/dist/native-modules/index.mjs";
+import { DI as t, Registration as i, optional as s, all as n, ILogger as e, camelCase as h } from "../kernel/dist/native-modules/index.mjs";
 
-import { mixinAstEvaluator as r, mixingBindingLimited as o, bindingBehavior as c, attributePattern as a, bindingCommand as u, renderer as l, AttrSyntax as f, lifecycleHooks as d, CustomElement as g, CustomAttribute as p, ILifecycleHooks as S } from "../../../runtime-html/dist/native-modules/index.mjs";
+import { mixinAstEvaluator as r, mixingBindingLimited as o, bindingBehavior as c, attributePattern as a, bindingCommand as u, renderer as l, AttrSyntax as f, lifecycleHooks as d, CustomElement as g, CustomAttribute as p, ILifecycleHooks as S } from "../runtime-html/dist/native-modules/index.mjs";
 
-import { Scope as b, connectable as B, astEvaluate as m, astBind as v, astUnbind as y, IExpressionParser as w } from "../../../runtime/dist/native-modules/index.mjs";
+import { Scope as b, connectable as B, astEvaluate as m, astBind as v, astUnbind as y, IExpressionParser as w } from "../runtime/dist/native-modules/index.mjs";
 
 const I = t.createInterface("IActionHandler");
 

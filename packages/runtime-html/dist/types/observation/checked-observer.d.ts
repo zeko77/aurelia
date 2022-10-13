@@ -16,6 +16,10 @@ export interface CheckedObserver extends ISubscriberCollection {
 }
 export declare class CheckedObserver implements INodeObserver {
     type: AccessorType;
+    /**
+     * Comes from mixin
+     */
+    useConfig: (config: INodeObserverConfigBase) => void;
     constructor(obj: INode, _key: PropertyKey, config: INodeObserverConfigBase, observerLocator: IObserverLocator);
     getValue(): unknown;
     setValue(newValue: unknown): void;

@@ -5,15 +5,17 @@ Object.defineProperty(exports, '__esModule', { value: true });
 var kernel = require('@aurelia/kernel');
 var metadata = require('@aurelia/metadata');
 
-const hasOwnProp = Object.prototype.hasOwnProperty;
+const O = Object;
+const hasOwnProp = O.prototype.hasOwnProperty;
 const def = Reflect.defineProperty;
 const createError = (message) => new Error(message);
 const isFunction = (v) => typeof v === 'function';
 const isString = (v) => typeof v === 'string';
+const isObject = (v) => v instanceof O;
 const isArray = (v) => v instanceof Array;
 const isSet = (v) => v instanceof Set;
 const isMap = (v) => v instanceof Map;
-const areEqual = Object.is;
+const areEqual = O.is;
 function defineHiddenProp(obj, key, value) {
     def(obj, key, {
         enumerable: false,
@@ -30,7 +32,7 @@ function ensureProto(proto, key, defaultValue) {
 }
 const safeString = String;
 const createInterface = kernel.DI.createInterface;
-const createLookup = () => Object.create(null);
+const createLookup = () => O.create(null);
 const getOwnMetadata = metadata.Metadata.getOwn;
 metadata.Metadata.hasOwn;
 const defineMetadata = metadata.Metadata.define;
@@ -835,7 +837,7 @@ function astEvaluate(ast, s, e, c) {
                 }
                 return ret;
             }
-            if (c !== null && instance instanceof Object) {
+            if (c !== null && isObject(instance)) {
                 c.observe(instance, ast.name);
             }
             if (instance) {
@@ -849,7 +851,7 @@ function astEvaluate(ast, s, e, c) {
         }
         case 11: {
             const instance = astEvaluate(ast.object, s, e, c);
-            if (instance instanceof Object) {
+            if (isObject(instance)) {
                 const key = astEvaluate(ast.key, s, e, c);
                 if (c !== null) {
                     c.observe(instance, key);
@@ -893,7 +895,7 @@ function astEvaluate(ast, s, e, c) {
                 }
                 case 'in': {
                     const $right = astEvaluate(right, s, e, c);
-                    if ($right instanceof Object) {
+                    if (isObject($right)) {
                         return astEvaluate(left, s, e, c) in $right;
                     }
                     return false;
@@ -988,22 +990,13 @@ function astAssign(ast, s, e, val) {
                 throw createError(`AUR0106: Invalid assignment. $host is a reserved keyword.`);
             }
             const obj = getContext(s, ast.name, ast.ancestor);
-            if (obj instanceof Object) {
-                if (obj.$observers?.[ast.name] !== void 0) {
-                    obj.$observers[ast.name].setValue(val);
-                    return val;
-                }
-                else {
-                    return obj[ast.name] = val;
-                }
-            }
-            return void 0;
+            return obj[ast.name] = val;
         }
         case 10: {
             const obj = astEvaluate(ast.object, s, e, null);
-            if (obj instanceof Object) {
-                if (obj.$observers?.[ast.name] !== void 0) {
-                    obj.$observers[ast.name].setValue(val);
+            if (isObject(obj)) {
+                if (ast.name === 'length' && isArray(obj) && !isNaN(val)) {
+                    obj.splice(val);
                 }
                 else {
                     obj[ast.name] = val;
@@ -1017,6 +1010,16 @@ function astAssign(ast, s, e, val) {
         case 11: {
             const instance = astEvaluate(ast.object, s, e, null);
             const key = astEvaluate(ast.key, s, e, null);
+            if (isArray(instance)) {
+                if (key === 'length' && !isNaN(val)) {
+                    instance.splice(val);
+                    return val;
+                }
+                if (kernel.isArrayIndex(key)) {
+                    instance.splice(key, 1, val);
+                    return val;
+                }
+            }
             return instance[key] = val;
         }
         case 15:
@@ -3984,7 +3987,7 @@ const collectionHandler = {
             case 'forEach':
                 return wrappedForEach;
             case 'add':
-                if (target instanceof Set) {
+                if (isSet(target)) {
                     return wrappedAdd;
                 }
                 break;
@@ -4462,7 +4465,7 @@ class ObserverLocator {
         if (obj == null) {
             throw nullObjectError(key);
         }
-        if (!(obj instanceof Object)) {
+        if (!isObject(obj)) {
             return new PrimitiveObserver(obj, key);
         }
         const lookup = getObserverLookup(obj);

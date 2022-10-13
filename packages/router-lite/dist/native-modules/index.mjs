@@ -1,10 +1,10 @@
-import { isObject as t, Metadata as e } from "../../../metadata/dist/native-modules/index.mjs";
+import { isObject as t, Metadata as e } from "../metadata/dist/native-modules/index.mjs";
 
-import { DI as i, IEventAggregator as s, ILogger as n, bound as r, onResolve as o, resolveAll as h, emptyObject as a, IContainer as c, isArrayIndex as u, Protocol as l, emptyArray as f, IModuleLoader as d, InstanceProvider as p, noop as g, Registration as w } from "../../../kernel/dist/native-modules/index.mjs";
+import { DI as i, IEventAggregator as s, ILogger as n, bound as r, onResolve as o, resolveAll as h, emptyObject as a, IContainer as c, isArrayIndex as u, Protocol as l, emptyArray as f, IModuleLoader as d, InstanceProvider as p, noop as g, Registration as w } from "../kernel/dist/native-modules/index.mjs";
 
-import { isCustomElementViewModel as v, IHistory as m, ILocation as $, IWindow as x, Controller as E, IPlatform as R, CustomElement as y, CustomElementDefinition as b, IController as S, IAppRoot as k, isCustomElementController as C, customElement as I, bindable as N, customAttribute as A, IEventTarget as T, INode as V, getRef as P, CustomAttribute as U, AppTask as L } from "../../../runtime-html/dist/native-modules/index.mjs";
+import { isCustomElementViewModel as v, IHistory as m, ILocation as $, IWindow as x, Controller as E, IPlatform as R, CustomElement as y, CustomElementDefinition as b, IController as S, IAppRoot as k, isCustomElementController as C, customElement as I, bindable as N, customAttribute as A, IEventTarget as T, INode as V, getRef as P, CustomAttribute as U, AppTask as L } from "../runtime-html/dist/native-modules/index.mjs";
 
-import { RecognizedRoute as O, Endpoint as j, ConfigurableRoute as D, RouteRecognizer as M } from "../../../route-recognizer/dist/native-modules/index.mjs";
+import { RecognizedRoute as O, Endpoint as j, ConfigurableRoute as D, RouteRecognizer as M } from "../route-recognizer/dist/native-modules/index.mjs";
 
 class Batch {
     constructor(t, e, i) {

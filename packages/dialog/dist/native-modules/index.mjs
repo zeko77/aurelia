@@ -1,6 +1,6 @@
-import { DI as t, Registration as e, IContainer as i, onResolve as s, InstanceProvider as o, resolveAll as n, noop as r } from "../../../kernel/dist/native-modules/index.mjs";
+import { DI as t, Registration as e, IContainer as i, onResolve as s, InstanceProvider as o, resolveAll as n, noop as r } from "../kernel/dist/native-modules/index.mjs";
 
-import { IPlatform as l, IEventTarget as c, INode as a, Controller as u, CustomElementDefinition as h, CustomElement as g, AppTask as D } from "../../../runtime-html/dist/native-modules/index.mjs";
+import { IPlatform as l, IEventTarget as c, INode as a, Controller as u, CustomElementDefinition as h, CustomElement as g, AppTask as D } from "../runtime-html/dist/native-modules/index.mjs";
 
 const f = t.createInterface;
 

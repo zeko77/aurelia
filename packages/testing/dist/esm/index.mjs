@@ -3756,7 +3756,7 @@ function tr(e, t, n = [], i = true, r = TestContext.create()) {
         });
     }));
     function M(e, t) {
-        const n = k(e);
+        const n = "string" === typeof e ? k(e) : e;
         if (null === n || !/input|textarea/i.test(n.nodeName)) throw new Error(`No <input>/<textarea> element found for selector "${e}" to emulate input for "${t}"`);
         n.value = t;
         n.dispatchEvent(new s.window.Event("input"));

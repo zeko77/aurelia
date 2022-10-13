@@ -110,7 +110,7 @@ export interface IFixture<T> {
     /**
      * Find an input or text area by the selector and emulate a keyboard event with the given value
      */
-    type(selector: string, value: string): void;
+    type(selector: string | Element, value: string): void;
     hJsx(name: string, attrs: Record<string, string> | null, ...children: (Node | string | (Node | string)[])[]): HTMLElement;
     trigger: ITrigger;
     /**

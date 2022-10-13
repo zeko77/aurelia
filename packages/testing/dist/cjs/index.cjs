@@ -3762,7 +3762,7 @@ function qi(t, i, s = [], o = true, a = TestContext.create()) {
         });
     }));
     function R(e, t) {
-        const n = k(e);
+        const n = "string" === typeof e ? k(e) : e;
         if (null === n || !/input|textarea/i.test(n.nodeName)) throw new Error(`No <input>/<textarea> element found for selector "${e}" to emulate input for "${t}"`);
         n.value = t;
         n.dispatchEvent(new u.window.Event("input"));

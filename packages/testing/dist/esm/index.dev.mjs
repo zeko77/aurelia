@@ -7619,7 +7619,7 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             } });
     });
     function type(selector, value) {
-        const el = queryBy(selector);
+        const el = typeof selector === 'string' ? queryBy(selector) : selector;
         if (el === null || !/input|textarea/i.test(el.nodeName)) {
             throw new Error(`No <input>/<textarea> element found for selector "${selector}" to emulate input for "${value}"`);
         }

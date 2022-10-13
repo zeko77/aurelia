@@ -40,9 +40,15 @@ const appendResourceKey = resource$1.appendTo;
 const appendAnnotationKey = annotation.appendTo;
 const getAllAnnotations = annotation.getKeys;
 
-const createLookup = () => Object.create(null);
+const O = Object;
+const baseObjectPrototype = O.prototype;
+const createLookup = () => O.create(null);
 const createError = (message) => new Error(message);
-const hasOwnProperty = Object.prototype.hasOwnProperty;
+const hasOwnProperty = baseObjectPrototype.hasOwnProperty;
+const objectFreeze = O.freeze;
+const objectAssign = O.assign;
+const getOwnPropertyNames = O.getOwnPropertyNames;
+const objectKeys = O.keys;
 const IsDataAttribute = createLookup();
 const isDataAttribute = (obj, key, svgAnalyzer) => {
     if (IsDataAttribute[key] === true) {
@@ -61,9 +67,9 @@ const isPromise = (v) => v instanceof Promise;
 const isArray = (v) => v instanceof Array;
 const isFunction = (v) => typeof v === 'function';
 const isString = (v) => typeof v === 'string';
-const defineProp = Object.defineProperty;
+const defineProp = O.defineProperty;
 const rethrow = (err) => { throw err; };
-const areEqual = Object.is;
+const areEqual = O.is;
 const def = Reflect.defineProperty;
 const defineHiddenProp = (obj, key, value) => {
     def(obj, key, {
@@ -100,7 +106,7 @@ function isBindableAnnotation(key) {
     return key.startsWith(baseName$1);
 }
 const baseName$1 = getAnnotationKeyFor('bindable');
-const Bindable = Object.freeze({
+const Bindable = objectFreeze({
     name: baseName$1,
     keyFrom: (name) => `${baseName$1}:${name}`,
     from(type, ...bindableLists) {
@@ -120,7 +126,7 @@ const Bindable = Object.freeze({
                 bindables[maybeList.property] = maybeList;
             }
             else if (maybeList !== void 0) {
-                Object.keys(maybeList).forEach(name => addDescription(name, maybeList[name]));
+                objectKeys(maybeList).forEach(name => addDescription(name, maybeList[name]));
             }
         }
         bindableLists.forEach(addList);
@@ -786,7 +792,7 @@ class AttributePatternResourceDefinition {
 const apBaseName = getResourceKeyFor('attribute-pattern');
 const annotationKey = 'attribute-pattern-definitions';
 const getAllPatternDefinitions = (Type) => Protocol.annotation.get(Type, annotationKey);
-const AttributePattern = Object.freeze({
+const AttributePattern = objectFreeze({
     name: apBaseName,
     definitionAnnotationKey: annotationKey,
     define(patternDefs, Type) {
@@ -1003,7 +1009,7 @@ class BindingBehaviorDefinition {
 }
 const bbBaseName = getResourceKeyFor('binding-behavior');
 const getBehaviorAnnotation = (Type, prop) => getOwnMetadata(getAnnotationKeyFor(prop), Type);
-const BindingBehavior = Object.freeze({
+const BindingBehavior = objectFreeze({
     name: bbBaseName,
     keyFrom(name) {
         return `${bbBaseName}:${name}`;
@@ -1065,7 +1071,7 @@ class ValueConverterDefinition {
 }
 const vcBaseName = getResourceKeyFor('value-converter');
 const getConverterAnnotation = (Type, prop) => getOwnMetadata(getAnnotationKeyFor(prop), Type);
-const ValueConverter = Object.freeze({
+const ValueConverter = objectFreeze({
     name: vcBaseName,
     keyFrom: (name) => `${vcBaseName}:${name}`,
     isType(value) {
@@ -1899,7 +1905,7 @@ class $AppTask {
             : cb(this.c.get(key)));
     }
 }
-const AppTask = Object.freeze({
+const AppTask = objectFreeze({
     creating: createAppTaskSlotHook('creating'),
     hydrating: createAppTaskSlotHook('hydrating'),
     hydrated: createAppTaskSlotHook('hydrated'),
@@ -1952,7 +1958,7 @@ class WatchDefinition {
 }
 const noDefinitions = emptyArray;
 const watchBaseName = getAnnotationKeyFor('watch');
-const Watch = Object.freeze({
+const Watch = objectFreeze({
     name: watchBaseName,
     add(Type, definition) {
         let watchDefinitions = getOwnMetadata(watchBaseName, Type);
@@ -2035,7 +2041,7 @@ const getAttributeDefinition = (Type) => {
     }
     return def;
 };
-const CustomAttribute = Object.freeze({
+const CustomAttribute = objectFreeze({
     name: caBaseName,
     keyFrom: getAttributeKeyFrom,
     isType: isAttributeType,
@@ -2073,7 +2079,7 @@ function isChildrenObserverAnnotation(key) {
     return key.startsWith(baseName);
 }
 const baseName = getAnnotationKeyFor('children-observer');
-const Children = Object.freeze({
+const Children = objectFreeze({
     name: baseName,
     keyFrom: (name) => `${baseName}:${name}`,
     from(...childrenObserverLists) {
@@ -2092,7 +2098,7 @@ const Children = Object.freeze({
                 childrenObservers[maybeList.property] = maybeList;
             }
             else if (maybeList !== void 0) {
-                Object.keys(maybeList).forEach(name => addDescription(name, maybeList));
+                objectKeys(maybeList).forEach(name => addDescription(name, maybeList));
             }
         }
         childrenObserverLists.forEach(addList);
@@ -2369,7 +2375,7 @@ class CSSModulesProcessorRegistry {
     }
     register(container) {
         var _a;
-        const classLookup = Object.assign({}, ...this.modules);
+        const classLookup = objectAssign({}, ...this.modules);
         const ClassCustomAttribute = defineAttribute({
             name: 'class',
             bindables: ['value'],
@@ -2623,8 +2629,8 @@ class LifecycleHooksDefinition {
     static create(def, Type) {
         const propertyNames = new Set();
         let proto = Type.prototype;
-        while (proto !== Object.prototype) {
-            for (const name of Object.getOwnPropertyNames(proto)) {
+        while (proto !== baseObjectPrototype) {
+            for (const name of getOwnPropertyNames(proto)) {
                 if (name !== 'constructor') {
                     propertyNames.add(name);
                 }
@@ -2639,7 +2645,7 @@ class LifecycleHooksDefinition {
 }
 const containerLookup = new WeakMap();
 const lhBaseName = getAnnotationKeyFor('lifecycle-hooks');
-const LifecycleHooks = Object.freeze({
+const LifecycleHooks = objectFreeze({
     name: lhBaseName,
     define(def, Type) {
         const definition = LifecycleHooksDefinition.create(def, Type);
@@ -3694,7 +3700,7 @@ function getLookup(instance) {
 }
 function createObservers(controller, definition, _flags, instance) {
     const bindables = definition.bindables;
-    const observableNames = Object.getOwnPropertyNames(bindables);
+    const observableNames = getOwnPropertyNames(bindables);
     const length = observableNames.length;
     if (length > 0) {
         let name;
@@ -3714,7 +3720,7 @@ function createObservers(controller, definition, _flags, instance) {
 }
 function createChildrenObservers(controller, definition, instance) {
     const childrenObservers = definition.childrenObservers;
-    const childObserverNames = Object.getOwnPropertyNames(childrenObservers);
+    const childObserverNames = getOwnPropertyNames(childrenObservers);
     const length = childObserverNames.length;
     if (length > 0) {
         const observers = getLookup(instance);
@@ -4397,12 +4403,12 @@ const generateElementType = (function () {
         nameDescriptor.value = name;
         Reflect.defineProperty(Type, 'name', nameDescriptor);
         if (proto !== defaultProto) {
-            Object.assign(Type.prototype, proto);
+            objectAssign(Type.prototype, proto);
         }
         return Type;
     };
 })();
-const CustomElement = Object.freeze({
+const CustomElement = objectFreeze({
     name: elementBaseName,
     keyFrom: getElementKeyFrom,
     isType: isElementType,
@@ -4726,7 +4732,7 @@ let CustomElementRenderer = class CustomElementRenderer {
         }
         const containerless = instruction.containerless || def.containerless;
         const location = containerless ? convertToRenderLocation(target) : null;
-        const container = createElementContainer(platform, renderingCtrl, target, instruction, location, projections == null ? void 0 : new AuSlotsInfo(Object.keys(projections)));
+        const container = createElementContainer(platform, renderingCtrl, target, instruction, location, projections == null ? void 0 : new AuSlotsInfo(objectKeys(projections)));
         Ctor = def.Type;
         component = container.invoke(Ctor);
         registerResolver(container, Ctor, new InstanceProvider(def.key, component));
@@ -5184,7 +5190,7 @@ class BindingCommandDefinition {
 const cmdBaseName = getResourceKeyFor('binding-command');
 const getCommandKeyFrom = (name) => `${cmdBaseName}:${name}`;
 const getCommandAnnotation = (Type, prop) => getOwnMetadata(getAnnotationKeyFor(prop), Type);
-const BindingCommand = Object.freeze({
+const BindingCommand = objectFreeze({
     name: cmdBaseName,
     keyFrom: getCommandKeyFrom,
     define(nameOrDef, Type) {
@@ -5425,7 +5431,7 @@ class NoopSVGAnalyzer {
 }
 class SVGAnalyzer {
     constructor(platform) {
-        this._svgElements = Object.assign(createLookup(), {
+        this._svgElements = objectAssign(createLookup(), {
             'a': o('class externalResourcesRequired id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup requiredExtensions requiredFeatures style systemLanguage target transform xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space'),
             'altGlyph': o('class dx dy externalResourcesRequired format glyphRef id onactivate onclick onfocusin onfocusout onload onmousedown onmousemove onmouseout onmouseover onmouseup requiredExtensions requiredFeatures rotate style systemLanguage x xlink:actuate xlink:arcrole xlink:href xlink:role xlink:show xlink:title xlink:type xml:base xml:lang xml:space y'),
             'altglyph': createLookup(),
@@ -6751,7 +6757,7 @@ const commandBuildInfo = {
     bindable: null,
     def: null,
 };
-const invalidSurrogateAttribute = Object.assign(createLookup(), {
+const invalidSurrogateAttribute = objectAssign(createLookup(), {
     'id': true,
     'name': true,
     'au-slot': true,
@@ -6807,7 +6813,7 @@ class BindablesInfo {
     }
 }
 
-const allowedLocalTemplateBindableAttributes = Object.freeze([
+const allowedLocalTemplateBindableAttributes = objectFreeze([
     "property",
     "attribute",
     "mode"
@@ -6845,7 +6851,7 @@ function getBindingMode(bindable) {
 const ITemplateCompilerHooks = createInterface('ITemplateCompilerHooks');
 const typeToHooksDefCache = new WeakMap();
 const hooksBaseName = getResourceKeyFor('compiler-hooks');
-const TemplateCompilerHooks = Object.freeze({
+const TemplateCompilerHooks = objectFreeze({
     name: hooksBaseName,
     define(Type) {
         let def = typeToHooksDefCache.get(Type);
@@ -7602,7 +7608,7 @@ let oV = void 0;
 const xlinkNS = 'http://www.w3.org/1999/xlink';
 const xmlNS = 'http://www.w3.org/XML/1998/namespace';
 const xmlnsNS = 'http://www.w3.org/2000/xmlns/';
-const nsAttributes = Object.assign(createLookup(), {
+const nsAttributes = objectAssign(createLookup(), {
     'xlink:actuate': ['actuate', xlinkNS],
     'xlink:arcrole': ['arcrole', xlinkNS],
     'xlink:href': ['href', xlinkNS],
@@ -8536,7 +8542,7 @@ class Repeat {
         let newObserver;
         if (observingInnerItems) {
             innerItems = this._innerItems = astEvaluate(this._innerItemsExpression, scope, this._forOfBinding, null) ?? null;
-            observingInnerItems = this._observingInnerItems = !Object.is(this.items, innerItems);
+            observingInnerItems = this._observingInnerItems = !areEqual(this.items, innerItems);
         }
         const oldObserver = this._observer;
         if (this.$controller.isActive) {
@@ -8799,7 +8805,7 @@ const setContextualProperties = (oc, index, length) => {
     oc.$odd = !isEven;
     oc.$length = length;
 };
-const toStringTag = Object.prototype.toString;
+const toStringTag = baseObjectPrototype.toString;
 const getCount = (result) => {
     switch (toStringTag.call(result)) {
         case '[object Array]': return result.length;

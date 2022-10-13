@@ -12,8 +12,8 @@ export { type TaskSlot, AppTask, IAppTask, type AppTaskCallback, type AppTaskCal
 export { AttrSyntax, IAttributeParser, attributePattern, type AttributePatternDefinition, IAttributePattern, AttributePattern, Interpretation, ISyntaxInterpreter, AtPrefixedTriggerAttributePattern, ColonPrefixedBindAttributePattern, DotSeparatedAttributePattern, RefAttributePattern, } from './resources/attribute-pattern';
 export { bindingCommand, type ICommandBuildInfo, BindingCommand, type BindingCommandInstance, BindingCommandDefinition, type BindingCommandKind, type BindingCommandType, CommandType, DefaultBindingCommand, ForBindingCommand, FromViewBindingCommand, OneTimeBindingCommand, ToViewBindingCommand, TwoWayBindingCommand, TriggerBindingCommand, CaptureBindingCommand, AttrBindingCommand, ClassBindingCommand, StyleBindingCommand, } from './resources/binding-command';
 export { IAttrMapper, type IsTwoWayPredicate, } from './attribute-mapper';
-export { BindingMode, IBindingController, } from './binding/interfaces-bindings';
-export { IFlushQueue, FlushQueue, IFlushable, BindingTargetSubscriber, mixinAstEvaluator, mixingBindingLimited, mixinUseScope, } from './binding/binding-utils';
+export { BindingMode, type IBindingController, } from './binding/interfaces-bindings';
+export { IFlushQueue, FlushQueue, type IFlushable, BindingTargetSubscriber, mixinAstEvaluator, mixingBindingLimited, mixinUseScope, } from './binding/binding-utils';
 export { ListenerBinding, ListenerBindingOptions, } from './binding/listener-binding';
 export { AttributeBinding, } from './binding/attribute';
 export { InterpolationBinding, InterpolationPartBinding, ContentBinding, } from './binding/interpolation-binding';

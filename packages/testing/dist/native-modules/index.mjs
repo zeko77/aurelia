@@ -1,12 +1,12 @@
-import { noop as e, isArrayIndex as t, DI as n, Registration as i, kebabCase as r, emptyArray as a, EventAggregator as s, ILogger as o } from "../../../kernel/dist/native-modules/index.mjs";
+import { noop as e, isArrayIndex as t, DI as n, Registration as i, kebabCase as r, emptyArray as a, EventAggregator as s, ILogger as o } from "../kernel/dist/native-modules/index.mjs";
 
-import { IObserverLocator as l, astEvaluate as u, astAssign as c, astBind as f, astUnbind as h, IDirtyChecker as d, INodeObserverLocator as p, Scope as m } from "../../../runtime/dist/native-modules/index.mjs";
+import { IObserverLocator as l, astEvaluate as u, astAssign as c, astBind as f, astUnbind as h, IDirtyChecker as d, INodeObserverLocator as p, Scope as m } from "../runtime/dist/native-modules/index.mjs";
 
-import { StandardConfiguration as g, IPlatform as b, ITemplateCompiler as v, CustomElement as $, CustomAttribute as y, Aurelia as x, valueConverter as w, bindable as k, customElement as C } from "../../../runtime-html/dist/native-modules/index.mjs";
+import { StandardConfiguration as g, IPlatform as b, ITemplateCompiler as v, CustomElement as $, CustomAttribute as y, Aurelia as x, valueConverter as w, bindable as k, customElement as C } from "../runtime-html/dist/native-modules/index.mjs";
 
-import { BrowserPlatform as S } from "../../../platform-browser/dist/native-modules/index.mjs";
+import { BrowserPlatform as S } from "../platform-browser/dist/native-modules/index.mjs";
 
-import { Metadata as O } from "../../../metadata/dist/native-modules/index.mjs";
+import { Metadata as O } from "../metadata/dist/native-modules/index.mjs";
 
 const {getPrototypeOf: E, getOwnPropertyDescriptor: j, getOwnPropertyDescriptors: A, getOwnPropertyNames: R, getOwnPropertySymbols: M, defineProperty: q, defineProperties: L} = Object;
 
@@ -3756,7 +3756,7 @@ function tr(e, t, n = [], i = true, r = TestContext.create()) {
         });
     }));
     function M(e, t) {
-        const n = k(e);
+        const n = "string" === typeof e ? k(e) : e;
         if (null === n || !/input|textarea/i.test(n.nodeName)) throw new Error(`No <input>/<textarea> element found for selector "${e}" to emulate input for "${t}"`);
         n.value = t;
         n.dispatchEvent(new s.window.Event("input"));
