@@ -65,7 +65,7 @@ class TaskQueue {
         this._processing = [];
         this._pending = [];
         this._delayed = [];
-        this.flushRequested = false;
+        this._flushRequested = false;
         this._yieldPromise = void 0;
         this._taskPool = [];
         this._taskPoolSize = 0;
@@ -75,25 +75,17 @@ class TaskQueue {
             if (this._tracer.enabled) {
                 this._tracer.enter(this, 'requestFlush');
             }
-            if (!this.flushRequested) {
-                this.flushRequested = true;
-                this._lastRequest = this.platform.performanceNow();
+            if (!this._flushRequested) {
+                this._flushRequested = true;
+                this._lastRequest = this._now();
                 this.$request();
             }
             if (this._tracer.enabled) {
                 this._tracer.leave(this, 'requestFlush');
             }
         };
+        this._now = platform.performanceNow;
         this._tracer = new Tracer(platform.console);
-    }
-    get processing() {
-        return this._processing;
-    }
-    get pending() {
-        return this._pending;
-    }
-    get delayed() {
-        return this._delayed;
     }
     get isEmpty() {
         return (this._pendingAsyncCount === 0 &&
@@ -107,11 +99,11 @@ class TaskQueue {
             this._pending.every(isPersistent) &&
             this._delayed.every(isPersistent));
     }
-    flush(time = this.platform.performanceNow()) {
+    flush(time = this._now()) {
         if (this._tracer.enabled) {
             this._tracer.enter(this, 'flush');
         }
-        this.flushRequested = false;
+        this._flushRequested = false;
         this._lastFlush = time;
         if (this._suspenderTask === void 0) {
             if (this._pending.length > 0) {
@@ -170,9 +162,9 @@ class TaskQueue {
         if (this._tracer.enabled) {
             this._tracer.enter(this, 'cancel');
         }
-        if (this.flushRequested) {
+        if (this._flushRequested) {
             this.$cancel();
-            this.flushRequested = false;
+            this._flushRequested = false;
         }
         if (this._tracer.enabled) {
             this._tracer.leave(this, 'cancel');
@@ -216,7 +208,7 @@ class TaskQueue {
         if (this._processing.length === 0) {
             this._requestFlush();
         }
-        const time = this.platform.performanceNow();
+        const time = this._now();
         let task;
         if (reusable) {
             const taskPool = this._taskPool;
@@ -291,7 +283,7 @@ class TaskQueue {
         if (this._tracer.enabled) {
             this._tracer.enter(this, 'resetPersistentTask');
         }
-        task.reset(this.platform.performanceNow());
+        task.reset(this._now());
         if (task.createdTime === task.queueTime) {
             this._pending[this._pending.length] = task;
         }
@@ -581,10 +573,10 @@ class Tracer {
     }
     log(prefix, obj, method) {
         if (obj instanceof TaskQueue) {
-            const processing = obj['processing'].length;
-            const pending = obj['pending'].length;
-            const delayed = obj['delayed'].length;
-            const flushReq = obj['flushRequested'];
+            const processing = obj._processing.length;
+            const pending = obj._pending.length;
+            const delayed = obj._delayed.length;
+            const flushReq = obj._flushRequested;
             const susTask = !!obj._suspenderTask;
             const info = `processing=${processing} pending=${pending} delayed=${delayed} flushReq=${flushReq} susTask=${susTask}`;
             this.console.log(`${prefix}[Q.${method}] ${info}`);
@@ -636,9 +628,22 @@ const preemptDelayComboError = () => createError(`AUR1006: Invalid arguments: pr
 const preemptyPersistentComboError = () => createError(`AUR1007: Invalid arguments: preempt cannot be combined with persistent`)
     ;
 const createError = (msg) => new Error(msg);
+const reportTaskQueue = (taskQueue) => {
+    const processing = taskQueue._processing;
+    const pending = taskQueue._pending;
+    const delayed = taskQueue._delayed;
+    const flushReq = taskQueue._flushRequested;
+    return { processing, pending, delayed, flushRequested: flushReq };
+};
+const ensureEmpty = (taskQueue) => {
+    taskQueue.flush();
+    taskQueue._pending.forEach((x) => x.cancel());
+};
 
 exports.Platform = Platform;
 exports.Task = Task;
 exports.TaskAbortError = TaskAbortError;
 exports.TaskQueue = TaskQueue;
+exports.ensureEmpty = ensureEmpty;
+exports.reportTaskQueue = reportTaskQueue;
 //# sourceMappingURL=index.dev.cjs.map

@@ -173,7 +173,7 @@ export declare class LetBindingInstruction {
     constructor(from: string | IsBindingBehavior | Interpolation, to: string);
 }
 export declare class TextBindingInstruction {
-    from: string | Interpolation;
+    from: string | IsBindingBehavior;
     /**
      * Indicates whether the value of the expression "from"
      * should be evaluated in strict mode.
@@ -182,7 +182,7 @@ export declare class TextBindingInstruction {
      */
     strict: boolean;
     readonly type = InstructionType.textBinding;
-    constructor(from: string | Interpolation, 
+    constructor(from: string | IsBindingBehavior, 
     /**
      * Indicates whether the value of the expression "from"
      * should be evaluated in strict mode.

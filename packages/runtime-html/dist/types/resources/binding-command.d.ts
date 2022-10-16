@@ -1,5 +1,5 @@
 import { IExpressionParser } from '@aurelia/runtime';
-import { IAttrMapper } from '../attribute-mapper';
+import { IAttrMapper } from '../compiler/attribute-mapper';
 import { PropertyBindingInstruction } from '../renderer';
 import type { Constructable, IContainer, IResourceKind, ResourceType, ResourceDefinition, PartialResourceDefinition } from '@aurelia/kernel';
 import type { IInstruction } from '../renderer';

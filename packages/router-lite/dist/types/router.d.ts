@@ -14,7 +14,6 @@ export declare function isManagedState(state: {} | null): state is ManagedState;
 export declare function toManagedState(state: {} | null, navId: number): ManagedState;
 export declare type ResolutionMode = 'static' | 'dynamic';
 export declare type HistoryStrategy = 'none' | 'replace' | 'push';
-export declare type SameUrlStrategy = 'ignore' | 'reload';
 export declare type ValueOrFunc<T extends string> = T | ((instructions: ViewportInstructionTree) => T);
 export interface IRouterOptions extends Partial<RouterOptions> {
     /**
@@ -39,16 +38,6 @@ export declare class RouterOptions {
      */
     readonly historyStrategy: ValueOrFunc<HistoryStrategy>;
     /**
-     * The strategy to use for when navigating to the same URL.
-     *
-     * - `ignore`: do nothing (default).
-     * - `reload`: reload the current URL, effectively performing a refresh.
-     * - A function that returns one of the 2 above values based on the navigation.
-     *
-     * Default: `ignore`
-     */
-    readonly sameUrlStrategy: ValueOrFunc<SameUrlStrategy>;
-    /**
      * An optional handler to build the title.
      * When configured, the work of building the title string is completely handed over to this function.
      * If this function returns `null`, the title is not updated.
@@ -67,16 +56,6 @@ export declare class RouterOptions {
      * Default: `push`
      */
     historyStrategy: ValueOrFunc<HistoryStrategy>, 
-    /**
-     * The strategy to use for when navigating to the same URL.
-     *
-     * - `ignore`: do nothing (default).
-     * - `reload`: reload the current URL, effectively performing a refresh.
-     * - A function that returns one of the 2 above values based on the navigation.
-     *
-     * Default: `ignore`
-     */
-    sameUrlStrategy: ValueOrFunc<SameUrlStrategy>, 
     /**
      * An optional handler to build the title.
      * When configured, the work of building the title string is completely handed over to this function.
@@ -158,7 +137,7 @@ export declare class Router {
     private _routeTree;
     get routeTree(): RouteTree;
     private _currentTr;
-    private get currentTr();
+    get currentTr(): Transition;
     private set currentTr(value);
     options: RouterOptions;
     private navigated;

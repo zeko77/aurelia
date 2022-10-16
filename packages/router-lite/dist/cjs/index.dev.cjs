@@ -1580,13 +1580,7 @@ class ViewportAgent {
             this.$plan = 'replace';
         }
         else {
-            const plan = next.context.definition.config.transitionPlan;
-            if (typeof plan === 'function') {
-                this.$plan = plan(cur, next);
-            }
-            else {
-                this.$plan = plan;
-            }
+            this.$plan = next.context.definition.config.getTransitionPlan(cur, next);
         }
         this.logger.trace(`scheduleUpdate(next:%s) - plan set to '%s'`, next, this.$plan);
     }
@@ -2251,36 +2245,31 @@ function valueOrFuncToValue(instructions, valueOrFunc) {
     return valueOrFunc;
 }
 class RouterOptions {
-    constructor(useUrlFragmentHash, useHref, resolutionMode, historyStrategy, sameUrlStrategy, buildTitle) {
+    constructor(useUrlFragmentHash, useHref, resolutionMode, historyStrategy, buildTitle) {
         this.useUrlFragmentHash = useUrlFragmentHash;
         this.useHref = useHref;
         this.resolutionMode = resolutionMode;
         this.historyStrategy = historyStrategy;
-        this.sameUrlStrategy = sameUrlStrategy;
         this.buildTitle = buildTitle;
     }
     static get DEFAULT() { return RouterOptions.create({}); }
     static create(input) {
-        return new RouterOptions(input.useUrlFragmentHash ?? false, input.useHref ?? true, input.resolutionMode ?? 'dynamic', input.historyStrategy ?? 'push', input.sameUrlStrategy ?? 'ignore', input.buildTitle ?? null);
+        return new RouterOptions(input.useUrlFragmentHash ?? false, input.useHref ?? true, input.resolutionMode ?? 'dynamic', input.historyStrategy ?? 'push', input.buildTitle ?? null);
     }
     getHistoryStrategy(instructions) {
         return valueOrFuncToValue(instructions, this.historyStrategy);
-    }
-    getSameUrlStrategy(instructions) {
-        return valueOrFuncToValue(instructions, this.sameUrlStrategy);
     }
     stringifyProperties() {
         return [
             ['resolutionMode', 'resolution'],
             ['historyStrategy', 'history'],
-            ['sameUrlStrategy', 'sameUrl'],
         ].map(([key, name]) => {
             const value = this[key];
             return `${name}:${typeof value === 'function' ? value : `'${value}'`}`;
         }).join(',');
     }
     clone() {
-        return new RouterOptions(this.useUrlFragmentHash, this.useHref, this.resolutionMode, this.historyStrategy, this.sameUrlStrategy, this.buildTitle);
+        return new RouterOptions(this.useUrlFragmentHash, this.useHref, this.resolutionMode, this.historyStrategy, this.buildTitle);
     }
     toString() {
         return `RO(${this.stringifyProperties()})`;
@@ -2288,7 +2277,7 @@ class RouterOptions {
 }
 class NavigationOptions extends RouterOptions {
     constructor(routerOptions, title, titleSeparator, context, queryParams, fragment, state) {
-        super(routerOptions.useUrlFragmentHash, routerOptions.useHref, routerOptions.resolutionMode, routerOptions.historyStrategy, routerOptions.sameUrlStrategy, routerOptions.buildTitle);
+        super(routerOptions.useUrlFragmentHash, routerOptions.useHref, routerOptions.resolutionMode, routerOptions.historyStrategy, routerOptions.buildTitle);
         this.title = title;
         this.titleSeparator = titleSeparator;
         this.context = context;
@@ -2577,8 +2566,8 @@ exports.Router = class Router {
         const routeChanged = !this.navigated
             || trChildren.length !== nodeChildren.length
             || trChildren.some((x, i) => !(nodeChildren[i]?.originalInstruction.equals(x) ?? false));
-        const shouldProcessRoute = routeChanged || tr.options.getSameUrlStrategy(this.instructions) === 'reload';
-        if (!shouldProcessRoute) {
+        const shouldProcess = routeChanged || this.ctx.definition.config.getTransitionPlan(tr.previousRouteTree.root, tr.routeTree.root) === 'replace';
+        if (!shouldProcess) {
             this.logger.trace(`run(tr:%s) - NOT processing route`, tr);
             this.navigated = true;
             this._isNavigating = false;
@@ -2658,8 +2647,8 @@ exports.Router = class Router {
                 this.navigated = true;
                 this.instructions = tr.finalInstructions = tr.routeTree.finalizeInstructions();
                 this._isNavigating = false;
-                this.events.publish(new NavigationEndEvent(tr.id, tr.instructions, this.instructions));
                 this.applyHistoryState(tr);
+                this.events.publish(new NavigationEndEvent(tr.id, tr.instructions, this.instructions));
                 tr.resolve(true);
                 this.runNextTransition();
             }).start();
@@ -3052,14 +3041,14 @@ class RouteConfig {
         this.component = component;
         this.nav = nav;
     }
-    static create(configOrPath, Type) {
+    static _create(configOrPath, Type, parentConfig) {
         if (typeof configOrPath === 'string' || configOrPath instanceof Array) {
             const path = configOrPath;
             const redirectTo = Type?.redirectTo ?? null;
             const caseSensitive = Type?.caseSensitive ?? false;
             const id = Type?.id ?? (path instanceof Array ? path[0] : path);
             const title = Type?.title ?? null;
-            const reentryBehavior = Type?.transitionPlan ?? defaultReentryBehavior;
+            const reentryBehavior = Type?.transitionPlan ?? parentConfig?.transitionPlan ?? null;
             const viewport = Type?.viewport ?? null;
             const data = Type?.data ?? {};
             const children = Type?.routes ?? noRoutes;
@@ -3073,7 +3062,7 @@ class RouteConfig {
             const redirectTo = config.redirectTo ?? Type?.redirectTo ?? null;
             const caseSensitive = config.caseSensitive ?? Type?.caseSensitive ?? false;
             const id = config.id ?? Type?.id ?? (path instanceof Array ? path[0] : path);
-            const reentryBehavior = config.transitionPlan ?? Type?.transitionPlan ?? defaultReentryBehavior;
+            const reentryBehavior = config.transitionPlan ?? Type?.transitionPlan ?? parentConfig?.transitionPlan ?? null;
             const viewport = config.viewport ?? Type?.viewport ?? null;
             const data = {
                 ...Type?.data,
@@ -3089,13 +3078,17 @@ class RouteConfig {
             expectType('string, function/class or object', '', configOrPath);
         }
     }
-    applyChildRouteConfig(config) {
+    applyChildRouteConfig(config, parentConfig) {
         let parentPath = this.path ?? '';
         if (typeof parentPath !== 'string') {
             parentPath = parentPath[0];
         }
         validateRouteConfig(config, parentPath);
-        return new RouteConfig(config.id ?? this.id, config.path ?? this.path, config.title ?? this.title, config.redirectTo ?? this.redirectTo, config.caseSensitive ?? this.caseSensitive, config.transitionPlan ?? this.transitionPlan, config.viewport ?? this.viewport, config.data ?? this.data, config.routes ?? this.routes, config.fallback ?? this.fallback, config.component ?? this.component, config.nav ?? this.nav);
+        return new RouteConfig(config.id ?? this.id, config.path ?? this.path, config.title ?? this.title, config.redirectTo ?? this.redirectTo, config.caseSensitive ?? this.caseSensitive, config.transitionPlan ?? this.transitionPlan ?? parentConfig?.transitionPlan ?? null, config.viewport ?? this.viewport, config.data ?? this.data, config.routes ?? this.routes, config.fallback ?? this.fallback, config.component ?? this.component, config.nav ?? this.nav);
+    }
+    getTransitionPlan(cur, next) {
+        const plan = this.transitionPlan ?? defaultReentryBehavior;
+        return typeof plan === 'function' ? plan(cur, next) : plan;
     }
 }
 const Route = {
@@ -3104,7 +3097,7 @@ const Route = {
         return metadata.Metadata.hasOwn(Route.name, Type);
     },
     configure(configOrPath, Type) {
-        const config = RouteConfig.create(configOrPath, Type);
+        const config = RouteConfig._create(configOrPath, Type, null);
         metadata.Metadata.define(Route.name, config, Type);
         return Type;
     },
@@ -3136,8 +3129,9 @@ class RouteDefinition {
         this.fallback = config.fallback ?? parentDefinition?.fallback ?? null;
     }
     static resolve(routeable, parentDefinition, routeNode, context) {
+        const parentConfig = parentDefinition?.config ?? null;
         if (isPartialRedirectRouteConfig(routeable))
-            return new RouteDefinition(RouteConfig.create(routeable, null), null, parentDefinition);
+            return new RouteDefinition(RouteConfig._create(routeable, null, parentConfig), null, parentDefinition);
         const instruction = this.createNavigationInstruction(routeable);
         let ceDef;
         switch (instruction.type) {
@@ -3169,13 +3163,13 @@ class RouteDefinition {
                 const type = def.Type;
                 let config = null;
                 if (hasRouteConfigHook) {
-                    config = RouteConfig.create(routeable.getRouteConfig(parentDefinition, routeNode) ?? kernel.emptyObject, type);
+                    config = RouteConfig._create(routeable.getRouteConfig(parentDefinition, routeNode) ?? kernel.emptyObject, type, parentConfig);
                 }
                 else {
                     config = isPartialChildRouteConfig(routeable)
                         ? Route.isConfigured(type)
-                            ? Route.getConfig(type).applyChildRouteConfig(routeable)
-                            : RouteConfig.create(routeable, type)
+                            ? Route.getConfig(type).applyChildRouteConfig(routeable, parentConfig)
+                            : RouteConfig._create(routeable, type, parentConfig)
                         : Route.getConfig(def.Type);
                 }
                 routeDefinition = new RouteDefinition(config, def, parentDefinition);
@@ -3193,7 +3187,7 @@ class RouteDefinition {
             : TypedNavigationInstruction.create(routeable);
     }
     applyChildRouteConfig(config) {
-        this.config = config = this.config.applyChildRouteConfig(config);
+        this.config = config = this.config.applyChildRouteConfig(config, null);
         this.hasExplicitPath = config.path !== null;
         this.caseSensitive = config.caseSensitive ?? this.caseSensitive;
         this.path = ensureArrayOfStrings(config.path ?? this.path);

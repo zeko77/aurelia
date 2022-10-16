@@ -28,10 +28,6 @@ export declare class TaskQueue {
     readonly platform: Platform;
     private readonly $request;
     private readonly $cancel;
-    get processing(): Task[];
-    get pending(): Task[];
-    get delayed(): Task[];
-    private flushRequested;
     get isEmpty(): boolean;
     constructor(platform: Platform, $request: () => void, $cancel: () => void);
     flush(time?: number): void;
@@ -144,5 +140,19 @@ declare class Tracer {
     trace(obj: TaskQueue | Task, method: string): void;
     private log;
 }
+/**
+ * Retrieve internal tasks information of a TaskQueue
+ */
+export declare const reportTaskQueue: (taskQueue: TaskQueue) => {
+    processing: Task<any>[];
+    pending: Task<any>[];
+    delayed: Task<any>[];
+    flushRequested: boolean;
+};
+/**
+ * Flush a taskqueue and cancel all the tasks that are queued by the flush
+ * Mainly for debugging purposes
+ */
+export declare const ensureEmpty: (taskQueue: TaskQueue) => void;
 export {};
 //# sourceMappingURL=index.d.ts.map

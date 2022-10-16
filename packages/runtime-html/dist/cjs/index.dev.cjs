@@ -3952,6 +3952,50 @@ class AppRoot {
     }
 }
 
+const createElement = (p, name) => p.document.createElement(name);
+const createComment = (p, text) => p.document.createComment(text);
+const createText = (p, text) => p.document.createTextNode(text);
+const insertBefore = (parent, newChildNode, target) => {
+    return parent.insertBefore(newChildNode, target);
+};
+const insertManyBefore = (parent, target, newChildNodes) => {
+    const ii = newChildNodes.length;
+    let i = 0;
+    while (ii > i) {
+        parent.insertBefore(newChildNodes[i], target);
+        ++i;
+    }
+};
+const getPreviousSibling = (node) => node.previousSibling;
+const appendToTemplate = (parent, child) => {
+    return parent.content.appendChild(child);
+};
+const appendManyToTemplate = (parent, children) => {
+    const ii = children.length;
+    let i = 0;
+    while (ii > i) {
+        parent.content.appendChild(children[i]);
+        ++i;
+    }
+};
+const markerToLocation = (el) => {
+    const previousSibling = el.previousSibling;
+    let locationEnd;
+    if (previousSibling?.nodeType === 8 && previousSibling.textContent === 'au-end') {
+        locationEnd = previousSibling;
+        if ((locationEnd.$start = locationEnd.previousSibling) == null) {
+            throw markerMalformedError();
+        }
+        el.parentNode?.removeChild(el);
+        return locationEnd;
+    }
+    else {
+        throw markerMalformedError();
+    }
+};
+const markerMalformedError = () => createError(`AURxxxx: marker is malformed.`)
+    ;
+
 class Refs {
 }
 function getRef(node, name) {
@@ -4018,12 +4062,12 @@ function convertToRenderLocation(node) {
         return node;
     }
     const locationEnd = node.ownerDocument.createComment('au-end');
-    const locationStart = node.ownerDocument.createComment('au-start');
-    if (node.parentNode !== null) {
-        node.parentNode.replaceChild(locationEnd, node);
-        locationEnd.parentNode.insertBefore(locationStart, locationEnd);
+    const locationStart = locationEnd.$start = node.ownerDocument.createComment('au-start');
+    const parentNode = node.parentNode;
+    if (parentNode !== null) {
+        parentNode.replaceChild(locationEnd, node);
+        parentNode.insertBefore(locationStart, locationEnd);
     }
-    locationEnd.$start = locationStart;
     return locationEnd;
 }
 function isRenderLocation(node) {
@@ -4032,20 +4076,20 @@ function isRenderLocation(node) {
 class FragmentNodeSequence {
     constructor(platform, fragment) {
         this.platform = platform;
-        this.fragment = fragment;
-        this.isMounted = false;
-        this.isLinked = false;
         this.next = void 0;
-        this.refNode = void 0;
+        this._isMounted = false;
+        this._isLinked = false;
+        this.ref = null;
+        this.f = fragment;
         const targetNodeList = fragment.querySelectorAll('.au');
         let i = 0;
         let ii = targetNodeList.length;
         let target;
-        let targets = this.targets = Array(ii);
+        let targets = this.t = Array(ii);
         while (ii > i) {
             target = targetNodeList[i];
             if (target.nodeName === 'AU-M') {
-                targets[i] = convertToRenderLocation(target);
+                targets[i] = markerToLocation(target);
             }
             else {
                 targets[i] = target;
@@ -4059,22 +4103,28 @@ class FragmentNodeSequence {
             childNodes[i] = childNodeList[i];
             ++i;
         }
-        this.firstChild = fragment.firstChild;
-        this.lastChild = fragment.lastChild;
+        this._firstChild = fragment.firstChild;
+        this._lastChild = fragment.lastChild;
+    }
+    get firstChild() {
+        return this._firstChild;
+    }
+    get lastChild() {
+        return this._lastChild;
     }
     findTargets() {
-        return this.targets;
+        return this.t;
     }
     insertBefore(refNode) {
-        if (this.isLinked && !!this.refNode) {
+        if (this._isLinked && !!this.ref) {
             this.addToLinked();
         }
         else {
             const parent = refNode.parentNode;
-            if (this.isMounted) {
-                let current = this.firstChild;
+            if (this._isMounted) {
+                let current = this._firstChild;
                 let next;
-                const end = this.lastChild;
+                const end = this._lastChild;
                 while (current != null) {
                     next = current.nextSibling;
                     parent.insertBefore(current, refNode);
@@ -4085,16 +4135,16 @@ class FragmentNodeSequence {
                 }
             }
             else {
-                this.isMounted = true;
-                refNode.parentNode.insertBefore(this.fragment, refNode);
+                this._isMounted = true;
+                refNode.parentNode.insertBefore(this.f, refNode);
             }
         }
     }
     appendTo(parent, enhance = false) {
-        if (this.isMounted) {
-            let current = this.firstChild;
+        if (this._isMounted) {
+            let current = this._firstChild;
             let next;
-            const end = this.lastChild;
+            const end = this._lastChild;
             while (current != null) {
                 next = current.nextSibling;
                 parent.appendChild(current);
@@ -4105,19 +4155,19 @@ class FragmentNodeSequence {
             }
         }
         else {
-            this.isMounted = true;
+            this._isMounted = true;
             if (!enhance) {
-                parent.appendChild(this.fragment);
+                parent.appendChild(this.f);
             }
         }
     }
     remove() {
-        if (this.isMounted) {
-            this.isMounted = false;
-            const fragment = this.fragment;
-            const end = this.lastChild;
+        if (this._isMounted) {
+            this._isMounted = false;
+            const fragment = this.f;
+            const end = this._lastChild;
             let next;
-            let current = this.firstChild;
+            let current = this._firstChild;
             while (current !== null) {
                 next = current.nextSibling;
                 fragment.appendChild(current);
@@ -4129,12 +4179,12 @@ class FragmentNodeSequence {
         }
     }
     addToLinked() {
-        const refNode = this.refNode;
+        const refNode = this.ref;
         const parent = refNode.parentNode;
-        if (this.isMounted) {
-            let current = this.firstChild;
+        if (this._isMounted) {
+            let current = this._firstChild;
             let next;
-            const end = this.lastChild;
+            const end = this._lastChild;
             while (current != null) {
                 next = current.nextSibling;
                 parent.insertBefore(current, refNode);
@@ -4145,31 +4195,31 @@ class FragmentNodeSequence {
             }
         }
         else {
-            this.isMounted = true;
-            parent.insertBefore(this.fragment, refNode);
+            this._isMounted = true;
+            parent.insertBefore(this.f, refNode);
         }
     }
     unlink() {
-        this.isLinked = false;
+        this._isLinked = false;
         this.next = void 0;
-        this.refNode = void 0;
+        this.ref = void 0;
     }
     link(next) {
-        this.isLinked = true;
+        this._isLinked = true;
         if (isRenderLocation(next)) {
-            this.refNode = next;
+            this.ref = next;
         }
         else {
             this.next = next;
-            this.obtainRefNode();
+            this._obtainRefNode();
         }
     }
-    obtainRefNode() {
+    _obtainRefNode() {
         if (this.next !== void 0) {
-            this.refNode = this.next.firstChild;
+            this.ref = this.next.firstChild;
         }
         else {
-            this.refNode = void 0;
+            this.ref = void 0;
         }
     }
 }
@@ -4697,7 +4747,7 @@ function getRefTarget(refHost, refTargetName) {
         }
     }
 }
-let SetPropertyRenderer = class SetPropertyRenderer {
+exports.SetPropertyRenderer = class SetPropertyRenderer {
     render(renderingCtrl, target, instruction) {
         const obj = getTarget(target);
         if (obj.$observers?.[instruction.to] !== void 0) {
@@ -4708,10 +4758,10 @@ let SetPropertyRenderer = class SetPropertyRenderer {
         }
     }
 };
-SetPropertyRenderer = __decorate([
+exports.SetPropertyRenderer = __decorate([
     renderer("re")
-], SetPropertyRenderer);
-let CustomElementRenderer = class CustomElementRenderer {
+], exports.SetPropertyRenderer);
+exports.CustomElementRenderer = class CustomElementRenderer {
     constructor(rendering) {
         this._rendering = rendering;
     }
@@ -4755,10 +4805,10 @@ let CustomElementRenderer = class CustomElementRenderer {
         renderingCtrl.addChild(childCtrl);
     }
 };
-CustomElementRenderer = __decorate([
+exports.CustomElementRenderer = __decorate([
     renderer("ra")
-], CustomElementRenderer);
-let CustomAttributeRenderer = class CustomAttributeRenderer {
+], exports.CustomElementRenderer);
+exports.CustomAttributeRenderer = class CustomAttributeRenderer {
     constructor(rendering) {
         this._rendering = rendering;
     }
@@ -4792,10 +4842,10 @@ let CustomAttributeRenderer = class CustomAttributeRenderer {
         renderingCtrl.addChild(childController);
     }
 };
-CustomAttributeRenderer = __decorate([
+exports.CustomAttributeRenderer = __decorate([
     renderer("rb")
-], CustomAttributeRenderer);
-let TemplateControllerRenderer = class TemplateControllerRenderer {
+], exports.CustomAttributeRenderer);
+exports.TemplateControllerRenderer = class TemplateControllerRenderer {
     constructor(rendering, platform) {
         this._rendering = rendering;
         this._platform = platform;
@@ -4833,10 +4883,10 @@ let TemplateControllerRenderer = class TemplateControllerRenderer {
         renderingCtrl.addChild(childController);
     }
 };
-TemplateControllerRenderer = __decorate([
+exports.TemplateControllerRenderer = __decorate([
     renderer("rc")
-], TemplateControllerRenderer);
-let LetElementRenderer = class LetElementRenderer {
+], exports.TemplateControllerRenderer);
+exports.LetElementRenderer = class LetElementRenderer {
     render(renderingCtrl, target, instruction, platform, exprParser, observerLocator) {
         target.remove();
         const childInstructions = instruction.instructions;
@@ -4854,122 +4904,98 @@ let LetElementRenderer = class LetElementRenderer {
         }
     }
 };
-LetElementRenderer = __decorate([
+exports.LetElementRenderer = __decorate([
     renderer("rd")
-], LetElementRenderer);
-let RefBindingRenderer = class RefBindingRenderer {
+], exports.LetElementRenderer);
+exports.RefBindingRenderer = class RefBindingRenderer {
     render(renderingCtrl, target, instruction, platform, exprParser) {
         renderingCtrl.addBinding(new RefBinding(renderingCtrl.container, ensureExpression(exprParser, instruction.from, 16), getRefTarget(target, instruction.to)));
     }
 };
-RefBindingRenderer = __decorate([
+exports.RefBindingRenderer = __decorate([
     renderer("rj")
-], RefBindingRenderer);
-let InterpolationBindingRenderer = class InterpolationBindingRenderer {
+], exports.RefBindingRenderer);
+exports.InterpolationBindingRenderer = class InterpolationBindingRenderer {
     render(renderingCtrl, target, instruction, platform, exprParser, observerLocator) {
         renderingCtrl.addBinding(new InterpolationBinding(renderingCtrl, renderingCtrl.container, observerLocator, platform.domWriteQueue, ensureExpression(exprParser, instruction.from, 1), getTarget(target), instruction.to, 2));
     }
 };
-InterpolationBindingRenderer = __decorate([
+exports.InterpolationBindingRenderer = __decorate([
     renderer("rf")
-], InterpolationBindingRenderer);
-let PropertyBindingRenderer = class PropertyBindingRenderer {
+], exports.InterpolationBindingRenderer);
+exports.PropertyBindingRenderer = class PropertyBindingRenderer {
     render(renderingCtrl, target, instruction, platform, exprParser, observerLocator) {
         renderingCtrl.addBinding(new PropertyBinding(renderingCtrl, renderingCtrl.container, observerLocator, platform.domWriteQueue, ensureExpression(exprParser, instruction.from, 16), getTarget(target), instruction.to, instruction.mode));
     }
 };
-PropertyBindingRenderer = __decorate([
+exports.PropertyBindingRenderer = __decorate([
     renderer("rg")
-], PropertyBindingRenderer);
-let IteratorBindingRenderer = class IteratorBindingRenderer {
+], exports.PropertyBindingRenderer);
+exports.IteratorBindingRenderer = class IteratorBindingRenderer {
     render(renderingCtrl, target, instruction, platform, exprParser, observerLocator) {
         renderingCtrl.addBinding(new PropertyBinding(renderingCtrl, renderingCtrl.container, observerLocator, platform.domWriteQueue, ensureExpression(exprParser, instruction.forOf, 2), getTarget(target), instruction.to, 2));
     }
 };
-IteratorBindingRenderer = __decorate([
+exports.IteratorBindingRenderer = __decorate([
     renderer("rk")
-], IteratorBindingRenderer);
-let TextBindingRenderer = class TextBindingRenderer {
+], exports.IteratorBindingRenderer);
+exports.TextBindingRenderer = class TextBindingRenderer {
     render(renderingCtrl, target, instruction, platform, exprParser, observerLocator) {
-        const container = renderingCtrl.container;
-        const next = target.nextSibling;
-        const parent = target.parentNode;
-        const doc = platform.document;
-        const expr = ensureExpression(exprParser, instruction.from, 1);
-        const staticParts = expr.parts;
-        const dynamicParts = expr.expressions;
-        const ii = dynamicParts.length;
-        let i = 0;
-        let text = staticParts[0];
-        let part;
-        if (text !== '') {
-            parent.insertBefore(doc.createTextNode(text), next);
-        }
-        for (; ii > i; ++i) {
-            part = dynamicParts[i];
-            renderingCtrl.addBinding(new ContentBinding(renderingCtrl, container, observerLocator, platform.domWriteQueue, platform, part, parent.insertBefore(doc.createTextNode(''), next), instruction.strict));
-            text = staticParts[i + 1];
-            if (text !== '') {
-                parent.insertBefore(doc.createTextNode(text), next);
-            }
-        }
-        if (target.nodeName === 'AU-M') {
-            target.remove();
-        }
+        renderingCtrl.addBinding(new ContentBinding(renderingCtrl, renderingCtrl.container, observerLocator, platform.domWriteQueue, platform, ensureExpression(exprParser, instruction.from, 16), insertBefore(target.parentNode, createText(platform, ''), target), instruction.strict));
     }
 };
-TextBindingRenderer = __decorate([
+exports.TextBindingRenderer = __decorate([
     renderer("ha")
-], TextBindingRenderer);
-let ListenerBindingRenderer = class ListenerBindingRenderer {
+], exports.TextBindingRenderer);
+exports.ListenerBindingRenderer = class ListenerBindingRenderer {
     render(renderingCtrl, target, instruction, platform, exprParser) {
         renderingCtrl.addBinding(new ListenerBinding(renderingCtrl.container, ensureExpression(exprParser, instruction.from, 8), target, instruction.to, new ListenerBindingOptions(instruction.preventDefault, instruction.capture)));
     }
 };
-ListenerBindingRenderer = __decorate([
+exports.ListenerBindingRenderer = __decorate([
     renderer("hb")
-], ListenerBindingRenderer);
-let SetAttributeRenderer = class SetAttributeRenderer {
+], exports.ListenerBindingRenderer);
+exports.SetAttributeRenderer = class SetAttributeRenderer {
     render(_, target, instruction) {
         target.setAttribute(instruction.to, instruction.value);
     }
 };
-SetAttributeRenderer = __decorate([
+exports.SetAttributeRenderer = __decorate([
     renderer("he")
-], SetAttributeRenderer);
-let SetClassAttributeRenderer = class SetClassAttributeRenderer {
+], exports.SetAttributeRenderer);
+exports.SetClassAttributeRenderer = class SetClassAttributeRenderer {
     render(_, target, instruction) {
         addClasses(target.classList, instruction.value);
     }
 };
-SetClassAttributeRenderer = __decorate([
+exports.SetClassAttributeRenderer = __decorate([
     renderer("hf")
-], SetClassAttributeRenderer);
-let SetStyleAttributeRenderer = class SetStyleAttributeRenderer {
+], exports.SetClassAttributeRenderer);
+exports.SetStyleAttributeRenderer = class SetStyleAttributeRenderer {
     render(_, target, instruction) {
         target.style.cssText += instruction.value;
     }
 };
-SetStyleAttributeRenderer = __decorate([
+exports.SetStyleAttributeRenderer = __decorate([
     renderer("hg")
-], SetStyleAttributeRenderer);
-let StylePropertyBindingRenderer = class StylePropertyBindingRenderer {
+], exports.SetStyleAttributeRenderer);
+exports.StylePropertyBindingRenderer = class StylePropertyBindingRenderer {
     render(renderingCtrl, target, instruction, platform, exprParser, observerLocator) {
         renderingCtrl.addBinding(new PropertyBinding(renderingCtrl, renderingCtrl.container, observerLocator, platform.domWriteQueue, ensureExpression(exprParser, instruction.from, 16), target.style, instruction.to, 2));
     }
 };
-StylePropertyBindingRenderer = __decorate([
+exports.StylePropertyBindingRenderer = __decorate([
     renderer("hd")
-], StylePropertyBindingRenderer);
-let AttributeBindingRenderer = class AttributeBindingRenderer {
+], exports.StylePropertyBindingRenderer);
+exports.AttributeBindingRenderer = class AttributeBindingRenderer {
     render(renderingCtrl, target, instruction, platform, exprParser, observerLocator) {
         renderingCtrl.addBinding(new AttributeBinding(renderingCtrl, renderingCtrl.container, observerLocator, platform.domWriteQueue, ensureExpression(exprParser, instruction.from, 16), target, instruction.attr, instruction.to, 2));
     }
 };
-AttributeBindingRenderer = __decorate([
+exports.AttributeBindingRenderer = __decorate([
     renderer("hc")
-], AttributeBindingRenderer);
-let SpreadRenderer = class SpreadRenderer {
+], exports.AttributeBindingRenderer);
+exports.SpreadRenderer = class SpreadRenderer {
     constructor(_compiler, _rendering) {
         this._compiler = _compiler;
         this._rendering = _rendering;
@@ -5013,9 +5039,9 @@ let SpreadRenderer = class SpreadRenderer {
         renderSpreadInstruction(0);
     }
 };
-SpreadRenderer = __decorate([
+exports.SpreadRenderer = __decorate([
     renderer("hs")
-], SpreadRenderer);
+], exports.SpreadRenderer);
 class SpreadBinding {
     constructor(_innerBindings, _hydrationContext) {
         this._innerBindings = _innerBindings;
@@ -5667,7 +5693,7 @@ const markupCache = {};
 class TemplateElementFactory {
     constructor(p) {
         this.p = p;
-        this._template = p.document.createElement('template');
+        this._template = createTemplate(this.p);
     }
     createTemplate(input) {
         if (isString(input)) {
@@ -5677,7 +5703,7 @@ class TemplateElementFactory {
                 template.innerHTML = input;
                 const node = template.content.firstElementChild;
                 if (node == null || node.nodeName !== 'TEMPLATE' || node.nextElementSibling != null) {
-                    this._template = this.p.document.createElement('template');
+                    this._template = createTemplate(this.p);
                     result = template;
                 }
                 else {
@@ -5689,7 +5715,7 @@ class TemplateElementFactory {
             return result.cloneNode(true);
         }
         if (input.nodeName !== 'TEMPLATE') {
-            const template = this.p.document.createElement('template');
+            const template = createTemplate(this.p);
             template.content.appendChild(input);
             return template;
         }
@@ -5698,6 +5724,7 @@ class TemplateElementFactory {
     }
 }
 TemplateElementFactory.inject = [IPlatform];
+const createTemplate = (p) => p.document.createElement('template');
 
 class TemplateCompiler {
     constructor() {
@@ -5720,7 +5747,7 @@ class TemplateCompiler {
         const template = isString(definition.template) || !partialDefinition.enhance
             ? context._templateFactory.createTemplate(definition.template)
             : definition.template;
-        const isTemplateElement = template.nodeName === 'TEMPLATE' && template.content != null;
+        const isTemplateElement = template.nodeName === TEMPLATE_NODE_NAME && template.content != null;
         const content = isTemplateElement ? template.content : template;
         const hooks = container.get(allResources(ITemplateCompilerHooks));
         const ii = hooks.length;
@@ -6134,7 +6161,7 @@ class TemplateCompiler {
                     captures.push(attrSyntax);
                     continue;
                 }
-                canCapture = realAttrTarget !== 'au-slot' && realAttrTarget !== 'slot';
+                canCapture = realAttrTarget !== AU_SLOT && realAttrTarget !== 'slot';
                 if (canCapture) {
                     bindablesInfo = BindablesInfo.from(elDef, false);
                     if (bindablesInfo.attrs[realAttrTarget] == null && !context._findAttr(realAttrTarget)?.isTemplateController) {
@@ -6236,15 +6263,15 @@ class TemplateCompiler {
             elementInstruction = new HydrateElementInstruction(this.resolveResources ? elDef : elDef.name, void 0, (elBindableInstructions ?? kernel.emptyArray), null, hasContainerless, captures);
             if (elName === AU_SLOT) {
                 const slotName = el.getAttribute('name') || DEFAULT_SLOT_NAME;
-                const template = context.h('template');
+                const template = context.t();
                 const fallbackContentContext = context._createChild();
                 let node = el.firstChild;
                 while (node !== null) {
-                    if (node.nodeType === 1 && node.hasAttribute('au-slot')) {
+                    if (node.nodeType === 1 && node.hasAttribute(AU_SLOT)) {
                         el.removeChild(node);
                     }
                     else {
-                        template.content.appendChild(node);
+                        appendToTemplate(template, node);
                     }
                     node = el.firstChild;
                 }
@@ -6273,13 +6300,19 @@ class TemplateCompiler {
             i = ii;
             tcInstruction = tcInstructions[i];
             let template;
-            this._replaceByMarker(el, context);
-            if (el.nodeName === 'TEMPLATE') {
-                template = el;
+            if (isMarker(el)) {
+                template = context.t();
+                appendManyToTemplate(template, [context._comment(auStartComment), context._comment(auEndComment), this._markAsTarget(context.h(MARKER_NODE_NAME))]);
             }
             else {
-                template = context.h('template');
-                template.content.appendChild(el);
+                this._replaceByMarker(el, context);
+                if (el.nodeName === 'TEMPLATE') {
+                    template = el;
+                }
+                else {
+                    template = context.t();
+                    appendToTemplate(template, el);
+                }
             }
             const mostInnerTemplate = template;
             const childContext = context._createChild(instructions == null ? [] : [instructions]);
@@ -6323,20 +6356,20 @@ class TemplateCompiler {
             if (slotTemplateRecord != null) {
                 projections = {};
                 for (targetSlot in slotTemplateRecord) {
-                    template = context.h('template');
+                    template = context.t();
                     slotTemplates = slotTemplateRecord[targetSlot];
                     for (j = 0, jj = slotTemplates.length; jj > j; ++j) {
                         slotTemplate = slotTemplates[j];
                         if (slotTemplate.nodeName === 'TEMPLATE') {
                             if (slotTemplate.attributes.length > 0) {
-                                template.content.appendChild(slotTemplate);
+                                appendToTemplate(template, slotTemplate);
                             }
                             else {
-                                template.content.appendChild(slotTemplate.content);
+                                appendToTemplate(template, slotTemplate.content);
                             }
                         }
                         else {
-                            template.content.appendChild(slotTemplate);
+                            appendToTemplate(template, slotTemplate);
                         }
                     }
                     projectionCompilationContext = context._createChild();
@@ -6356,7 +6389,7 @@ class TemplateCompiler {
             }
             shouldCompileContent = !isCustomElement || !elDef.containerless && !hasContainerless && processContentResult !== false;
             if (shouldCompileContent) {
-                if (el.nodeName === 'TEMPLATE') {
+                if (el.nodeName === TEMPLATE_NODE_NAME) {
                     this._compileNode(el.content, childContext);
                 }
                 else {
@@ -6375,10 +6408,9 @@ class TemplateCompiler {
             });
             while (i-- > 0) {
                 tcInstruction = tcInstructions[i];
-                template = context.h('template');
-                marker = context.h('au-m');
-                marker.classList.add('au');
-                template.content.appendChild(marker);
+                template = context.t();
+                marker = this._markAsTarget(context.h(MARKER_NODE_NAME));
+                appendManyToTemplate(template, [context._comment(auStartComment), context._comment(auEndComment), marker]);
                 tcInstruction.def = CustomElementDefinition.create({
                     name: generateElementName(),
                     template,
@@ -6433,20 +6465,20 @@ class TemplateCompiler {
             if (slotTemplateRecord != null) {
                 projections = {};
                 for (targetSlot in slotTemplateRecord) {
-                    template = context.h('template');
+                    template = context.t();
                     slotTemplates = slotTemplateRecord[targetSlot];
                     for (j = 0, jj = slotTemplates.length; jj > j; ++j) {
                         slotTemplate = slotTemplates[j];
-                        if (slotTemplate.nodeName === 'TEMPLATE') {
+                        if (slotTemplate.nodeName === TEMPLATE_NODE_NAME) {
                             if (slotTemplate.attributes.length > 0) {
-                                template.content.appendChild(slotTemplate);
+                                appendToTemplate(template, slotTemplate);
                             }
                             else {
-                                template.content.appendChild(slotTemplate.content);
+                                appendToTemplate(template, slotTemplate.content);
                             }
                         }
                         else {
-                            template.content.appendChild(slotTemplate);
+                            appendToTemplate(template, slotTemplate);
                         }
                     }
                     projectionCompilationContext = context._createChild();
@@ -6475,26 +6507,33 @@ class TemplateCompiler {
         return nextSibling;
     }
     _compileText(node, context) {
-        let text = '';
-        let current = node;
-        while (current !== null && current.nodeType === 3) {
-            text += current.textContent;
-            current = current.nextSibling;
-        }
-        const expr = context._exprParser.parse(text, 1);
-        if (expr === null) {
-            return current;
-        }
         const parent = node.parentNode;
-        parent.insertBefore(this._markAsTarget(context.h('au-m')), node);
-        context.rows.push([new TextBindingInstruction(expr, !!context.def.isStrictBinding)]);
-        node.textContent = '';
-        current = node.nextSibling;
-        while (current !== null && current.nodeType === 3) {
-            parent.removeChild(current);
-            current = node.nextSibling;
+        const expr = context._exprParser.parse(node.textContent, 1);
+        const next = node.nextSibling;
+        let parts;
+        let expressions;
+        let i;
+        let ii;
+        let part;
+        if (expr !== null) {
+            ({ parts, expressions } = expr);
+            if ((part = parts[0])) {
+                insertBefore(parent, context._text(part), node);
+            }
+            for (i = 0, ii = expressions.length; ii > i; ++i) {
+                insertManyBefore(parent, node, [
+                    context._comment(auStartComment),
+                    context._comment(auEndComment),
+                    this._markAsTarget(context.h(MARKER_NODE_NAME)),
+                ]);
+                if ((part = parts[i + 1])) {
+                    insertBefore(parent, context._text(part), node);
+                }
+                context.rows.push([new TextBindingInstruction(expressions[i], context.root.def.isStrictBinding)]);
+            }
+            parent.removeChild(node);
         }
-        return node.nextSibling;
+        return next;
     }
     _compileMultiBindings(node, attrRawValue, attrDef, context) {
         const bindableAttrsInfo = BindablesInfo.from(attrDef, true);
@@ -6657,18 +6696,35 @@ class TemplateCompiler {
             }
         }
     }
+    _isMarker(el) {
+        return el.nodeName === MARKER_NODE_NAME
+            && isComment($prevSibling = getPreviousSibling(el)) && $prevSibling.textContent === auEndComment
+            && isComment($prevSibling = getPreviousSibling($prevSibling)) && $prevSibling.textContent === auStartComment;
+    }
     _markAsTarget(el) {
         el.classList.add('au');
         return el;
     }
     _replaceByMarker(node, context) {
+        if (isMarker(node)) {
+            return node;
+        }
         const parent = node.parentNode;
-        const marker = context.h('au-m');
-        this._markAsTarget(parent.insertBefore(marker, node));
+        const marker = this._markAsTarget(context.h(MARKER_NODE_NAME));
+        insertManyBefore(parent, node, [context._comment(auStartComment), context._comment(auEndComment), marker]);
         parent.removeChild(node);
         return marker;
     }
 }
+let $prevSibling;
+const MARKER_NODE_NAME = 'AU-M';
+const TEMPLATE_NODE_NAME = 'TEMPLATE';
+const auStartComment = 'au-start';
+const auEndComment = 'au-end';
+const isMarker = (el) => el.nodeName === MARKER_NODE_NAME
+    && isComment($prevSibling = getPreviousSibling(el)) && $prevSibling.textContent === auEndComment
+    && isComment($prevSibling = getPreviousSibling($prevSibling)) && $prevSibling.textContent === auStartComment;
+const isComment = (el) => el?.nodeType === 8;
 class CompilationContext {
     constructor(def, container, compilationInstruction, parent, root, instructions) {
         this.hasSlot = false;
@@ -6693,12 +6749,21 @@ class CompilationContext {
         ((_a = this.root).deps ?? (_a.deps = [])).push(dep);
         this.root.c.register(dep);
     }
+    _text(text) {
+        return createText(this.p, text);
+    }
+    _comment(text) {
+        return createComment(this.p, text);
+    }
     h(name) {
-        const el = this.p.document.createElement(name);
+        const el = createElement(this.p, name);
         if (name === 'template') {
             this.p.document.adoptNode(el.content);
         }
         return el;
+    }
+    t() {
+        return this.h('template');
     }
     _findElement(name) {
         return this.c.find(CustomElement, name);
@@ -6728,7 +6793,7 @@ class CompilationContext {
         return result;
     }
 }
-function hasInlineBindings(rawValue) {
+const hasInlineBindings = (rawValue) => {
     const len = rawValue.length;
     let ch = 0;
     let i = 0;
@@ -6746,13 +6811,13 @@ function hasInlineBindings(rawValue) {
         ++i;
     }
     return false;
-}
-function resetCommandBuildInfo() {
+};
+const resetCommandBuildInfo = () => {
     commandBuildInfo.node
         = commandBuildInfo.attr
             = commandBuildInfo.bindable
                 = commandBuildInfo.def = null;
-}
+};
 const emptyCompilationInstructions = { projections: null };
 const voidDefinition = { name: 'unnamed' };
 const commandBuildInfo = {
@@ -6823,7 +6888,7 @@ const allowedLocalTemplateBindableAttributes = objectFreeze([
     "mode"
 ]);
 const localTemplateIdentifier = 'as-custom-element';
-function processTemplateName(localTemplate, localTemplateNames) {
+const processTemplateName = (localTemplate, localTemplateNames) => {
     const name = localTemplate.getAttribute(localTemplateIdentifier);
     if (name === null || name === '') {
         throw createError(`AUR0715: The value of "as-custom-element" attribute cannot be empty for local template`);
@@ -6836,8 +6901,8 @@ function processTemplateName(localTemplate, localTemplateNames) {
         localTemplate.removeAttribute(localTemplateIdentifier);
     }
     return name;
-}
-function getBindingMode(bindable) {
+};
+const getBindingMode = (bindable) => {
     switch (bindable.getAttribute("mode")) {
         case 'oneTime':
             return 1;
@@ -6851,7 +6916,7 @@ function getBindingMode(bindable) {
         default:
             return 8;
     }
-}
+};
 const ITemplateCompilerHooks = createInterface('ITemplateCompilerHooks');
 const typeToHooksDefCache = new WeakMap();
 const hooksBaseName = getResourceKeyFor('compiler-hooks');
@@ -9726,7 +9791,7 @@ class CompositionController {
     }
 }
 
-class AuSlot {
+exports.AuSlot = class AuSlot {
     constructor(location, instruction, hdrContext, rendering) {
         this._parentScope = null;
         this._outerScope = null;
@@ -9774,11 +9839,17 @@ class AuSlot {
             return true;
         }
     }
-}
+};
 __decorate([
     bindable
-], AuSlot.prototype, "expose", void 0);
-customElement({ name: 'au-slot', template: null, containerless: true })(AuSlot);
+], exports.AuSlot.prototype, "expose", void 0);
+exports.AuSlot = __decorate([
+    customElement({
+        name: 'au-slot',
+        template: null,
+        containerless: true
+    })
+], exports.AuSlot);
 
 const ISanitizer = createInterface('ISanitizer', x => x.singleton(class {
     sanitize() {
@@ -9872,7 +9943,6 @@ const RejectedTemplateControllerRegistration = exports.RejectedTemplateControlle
 const PromiseAttributePatternRegistration = PromiseAttributePattern;
 const FulfilledAttributePatternRegistration = FulfilledAttributePattern;
 const RejectedAttributePatternRegistration = RejectedAttributePattern;
-const AttrBindingBehaviorRegistration = AttrBindingBehavior;
 const SelfBindingBehaviorRegistration = SelfBindingBehavior;
 const UpdateTriggerBindingBehaviorRegistration = UpdateTriggerBindingBehavior;
 const AuComposeRegistration = AuCompose;
@@ -9902,50 +9972,33 @@ const DefaultResources = [
     PromiseAttributePatternRegistration,
     FulfilledAttributePatternRegistration,
     RejectedAttributePatternRegistration,
-    AttrBindingBehaviorRegistration,
+    AttrBindingBehavior,
     SelfBindingBehaviorRegistration,
     UpdateTriggerBindingBehaviorRegistration,
     AuComposeRegistration,
     PortalRegistration,
     FocusRegistration,
     ShowRegistration,
-    AuSlot,
+    exports.AuSlot,
 ];
-const CustomAttributeRendererRegistration = CustomAttributeRenderer;
-const CustomElementRendererRegistration = CustomElementRenderer;
-const InterpolationBindingRendererRegistration = InterpolationBindingRenderer;
-const IteratorBindingRendererRegistration = IteratorBindingRenderer;
-const LetElementRendererRegistration = LetElementRenderer;
-const PropertyBindingRendererRegistration = PropertyBindingRenderer;
-const RefBindingRendererRegistration = RefBindingRenderer;
-const SetPropertyRendererRegistration = SetPropertyRenderer;
-const TemplateControllerRendererRegistration = TemplateControllerRenderer;
-const ListenerBindingRendererRegistration = ListenerBindingRenderer;
-const AttributeBindingRendererRegistration = AttributeBindingRenderer;
-const SetAttributeRendererRegistration = SetAttributeRenderer;
-const SetClassAttributeRendererRegistration = SetClassAttributeRenderer;
-const SetStyleAttributeRendererRegistration = SetStyleAttributeRenderer;
-const StylePropertyBindingRendererRegistration = StylePropertyBindingRenderer;
-const TextBindingRendererRegistration = TextBindingRenderer;
-const SpreadRendererRegistration = SpreadRenderer;
 const DefaultRenderers = [
-    PropertyBindingRendererRegistration,
-    IteratorBindingRendererRegistration,
-    RefBindingRendererRegistration,
-    InterpolationBindingRendererRegistration,
-    SetPropertyRendererRegistration,
-    CustomElementRendererRegistration,
-    CustomAttributeRendererRegistration,
-    TemplateControllerRendererRegistration,
-    LetElementRendererRegistration,
-    ListenerBindingRendererRegistration,
-    AttributeBindingRendererRegistration,
-    SetAttributeRendererRegistration,
-    SetClassAttributeRendererRegistration,
-    SetStyleAttributeRendererRegistration,
-    StylePropertyBindingRendererRegistration,
-    TextBindingRendererRegistration,
-    SpreadRendererRegistration,
+    exports.PropertyBindingRenderer,
+    exports.IteratorBindingRenderer,
+    exports.RefBindingRenderer,
+    exports.InterpolationBindingRenderer,
+    exports.SetPropertyRenderer,
+    exports.CustomElementRenderer,
+    exports.CustomAttributeRenderer,
+    exports.TemplateControllerRenderer,
+    exports.LetElementRenderer,
+    exports.ListenerBindingRenderer,
+    exports.AttributeBindingRenderer,
+    exports.SetAttributeRenderer,
+    exports.SetClassAttributeRenderer,
+    exports.SetStyleAttributeRenderer,
+    exports.StylePropertyBindingRenderer,
+    exports.TextBindingRenderer,
+    exports.SpreadRenderer,
 ];
 const StandardConfiguration = createConfiguration(kernel.noop);
 function createConfiguration(optionsProvider) {
@@ -10113,16 +10166,13 @@ exports.AppRoot = AppRoot;
 exports.AppTask = AppTask;
 exports.AtPrefixedTriggerAttributePatternRegistration = AtPrefixedTriggerAttributePatternRegistration;
 exports.AttrBindingBehavior = AttrBindingBehavior;
-exports.AttrBindingBehaviorRegistration = AttrBindingBehaviorRegistration;
 exports.AttrBindingCommandRegistration = AttrBindingCommandRegistration;
 exports.AttrSyntax = AttrSyntax;
 exports.AttributeBinding = AttributeBinding;
 exports.AttributeBindingInstruction = AttributeBindingInstruction;
-exports.AttributeBindingRendererRegistration = AttributeBindingRendererRegistration;
 exports.AttributeNSAccessor = AttributeNSAccessor;
 exports.AttributePattern = AttributePattern;
 exports.AuCompose = AuCompose;
-exports.AuSlot = AuSlot;
 exports.AuSlotsInfo = AuSlotsInfo;
 exports.Aurelia = Aurelia;
 exports.Bindable = Bindable;
@@ -10149,10 +10199,8 @@ exports.ContentBinding = ContentBinding;
 exports.Controller = Controller;
 exports.CustomAttribute = CustomAttribute;
 exports.CustomAttributeDefinition = CustomAttributeDefinition;
-exports.CustomAttributeRendererRegistration = CustomAttributeRendererRegistration;
 exports.CustomElement = CustomElement;
 exports.CustomElementDefinition = CustomElementDefinition;
-exports.CustomElementRendererRegistration = CustomElementRendererRegistration;
 exports.DataAttributeAccessor = DataAttributeAccessor;
 exports.DebounceBindingBehavior = DebounceBindingBehavior;
 exports.DebounceBindingBehaviorRegistration = DebounceBindingBehaviorRegistration;
@@ -10214,22 +10262,19 @@ exports.IWindow = IWindow;
 exports.If = If;
 exports.IfRegistration = IfRegistration;
 exports.InterpolationBinding = InterpolationBinding;
-exports.InterpolationBindingRendererRegistration = InterpolationBindingRendererRegistration;
 exports.InterpolationInstruction = InterpolationInstruction;
 exports.InterpolationPartBinding = InterpolationPartBinding;
 exports.Interpretation = Interpretation;
 exports.IteratorBindingInstruction = IteratorBindingInstruction;
-exports.IteratorBindingRendererRegistration = IteratorBindingRendererRegistration;
 exports.LetBinding = LetBinding;
 exports.LetBindingInstruction = LetBindingInstruction;
-exports.LetElementRendererRegistration = LetElementRendererRegistration;
 exports.LifecycleHooks = LifecycleHooks;
 exports.LifecycleHooksDefinition = LifecycleHooksDefinition;
 exports.LifecycleHooksEntry = LifecycleHooksEntry;
 exports.ListenerBinding = ListenerBinding;
 exports.ListenerBindingInstruction = ListenerBindingInstruction;
 exports.ListenerBindingOptions = ListenerBindingOptions;
-exports.ListenerBindingRendererRegistration = ListenerBindingRendererRegistration;
+exports.MultiAttrInstruction = MultiAttrInstruction;
 exports.NodeObserverLocator = NodeObserverLocator;
 exports.NoopSVGAnalyzer = NoopSVGAnalyzer;
 exports.OneTimeBindingBehavior = OneTimeBindingBehavior;
@@ -10238,12 +10283,10 @@ exports.OneTimeBindingCommandRegistration = OneTimeBindingCommandRegistration;
 exports.Portal = Portal;
 exports.PropertyBinding = PropertyBinding;
 exports.PropertyBindingInstruction = PropertyBindingInstruction;
-exports.PropertyBindingRendererRegistration = PropertyBindingRendererRegistration;
 exports.RefAttributePatternRegistration = RefAttributePatternRegistration;
 exports.RefBinding = RefBinding;
 exports.RefBindingCommandRegistration = RefBindingCommandRegistration;
 exports.RefBindingInstruction = RefBindingInstruction;
-exports.RefBindingRendererRegistration = RefBindingRendererRegistration;
 exports.Rendering = Rendering;
 exports.Repeat = Repeat;
 exports.RepeatRegistration = RepeatRegistration;
@@ -10254,29 +10297,24 @@ exports.SelectValueObserver = SelectValueObserver;
 exports.SelfBindingBehavior = SelfBindingBehavior;
 exports.SelfBindingBehaviorRegistration = SelfBindingBehaviorRegistration;
 exports.SetAttributeInstruction = SetAttributeInstruction;
-exports.SetAttributeRendererRegistration = SetAttributeRendererRegistration;
 exports.SetClassAttributeInstruction = SetClassAttributeInstruction;
-exports.SetClassAttributeRendererRegistration = SetClassAttributeRendererRegistration;
 exports.SetPropertyInstruction = SetPropertyInstruction;
-exports.SetPropertyRendererRegistration = SetPropertyRendererRegistration;
 exports.SetStyleAttributeInstruction = SetStyleAttributeInstruction;
-exports.SetStyleAttributeRendererRegistration = SetStyleAttributeRendererRegistration;
 exports.ShadowDOMRegistry = ShadowDOMRegistry;
 exports.ShortHandBindingSyntax = ShortHandBindingSyntax;
 exports.SignalBindingBehavior = SignalBindingBehavior;
 exports.SignalBindingBehaviorRegistration = SignalBindingBehaviorRegistration;
+exports.SpreadBindingInstruction = SpreadBindingInstruction;
+exports.SpreadElementPropBindingInstruction = SpreadElementPropBindingInstruction;
 exports.StandardConfiguration = StandardConfiguration;
 exports.StyleAttributeAccessor = StyleAttributeAccessor;
 exports.StyleBindingCommandRegistration = StyleBindingCommandRegistration;
 exports.StyleConfiguration = StyleConfiguration;
 exports.StyleElementStyles = StyleElementStyles;
 exports.StylePropertyBindingInstruction = StylePropertyBindingInstruction;
-exports.StylePropertyBindingRendererRegistration = StylePropertyBindingRendererRegistration;
 exports.TemplateCompiler = TemplateCompiler;
 exports.TemplateCompilerHooks = TemplateCompilerHooks;
-exports.TemplateControllerRendererRegistration = TemplateControllerRendererRegistration;
 exports.TextBindingInstruction = TextBindingInstruction;
-exports.TextBindingRendererRegistration = TextBindingRendererRegistration;
 exports.ThrottleBindingBehavior = ThrottleBindingBehavior;
 exports.ThrottleBindingBehaviorRegistration = ThrottleBindingBehaviorRegistration;
 exports.ToViewBindingBehavior = ToViewBindingBehavior;

@@ -1,3 +1,4 @@
+import { ensureEmpty, reportTaskQueue } from '@aurelia/platform';
 import { noop, isArrayIndex, DI, Registration, kebabCase, emptyArray, EventAggregator, ILogger } from '@aurelia/kernel';
 import { IObserverLocator, astEvaluate, astAssign, astBind, astUnbind, IDirtyChecker, INodeObserverLocator, Scope } from '@aurelia/runtime';
 import { StandardConfiguration, IPlatform, ITemplateCompiler, CustomElement, CustomAttribute, Aurelia, valueConverter, bindable, customElement } from '@aurelia/runtime-html';
@@ -2336,12 +2337,9 @@ function ensureTaskQueuesEmpty(platform) {
     if (!platform) {
         platform = BrowserPlatform.getOrCreate(globalThis);
     }
-    platform.taskQueue.flush();
-    platform.taskQueue['pending'].forEach((x) => x.cancel());
-    platform.domWriteQueue.flush();
-    platform.domWriteQueue['pending'].forEach((x) => x.cancel());
-    platform.domReadQueue.flush();
-    platform.domReadQueue['pending'].forEach((x) => x.cancel());
+    ensureEmpty(platform.taskQueue);
+    ensureEmpty(platform.domWriteQueue);
+    ensureEmpty(platform.domReadQueue);
 }
 
 const noException = Symbol('noException');
@@ -2919,11 +2917,8 @@ const areTaskQueuesEmpty = (function () {
         return `    task id=${id} createdTime=${created} queueTime=${queue} preempt=${preempt} reusable=${reusable} persistent=${persistent} status=${status}\n`
             + `    task callback="${task.callback?.toString()}"`;
     }
-    function reportTaskQueue(name, taskQueue) {
-        const processing = taskQueue['processing'];
-        const pending = taskQueue['pending'];
-        const delayed = taskQueue['delayed'];
-        const flushReq = taskQueue['flushRequested'];
+    function $reportTaskQueue(name, taskQueue) {
+        const { processing, pending, delayed, flushRequested: flushReq } = reportTaskQueue(taskQueue);
         let info = `${name} has processing=${processing.length} pending=${pending.length} delayed=${delayed.length} flushRequested=${flushReq}\n\n`;
         if (processing.length > 0) {
             info += `  Tasks in processing:\n${processing.map(reportTask).join('')}`;
@@ -2944,15 +2939,15 @@ const areTaskQueuesEmpty = (function () {
         let isEmpty = true;
         let message = '';
         if (!domWriteQueue.isEmpty) {
-            message += `\n${reportTaskQueue('domWriteQueue', domWriteQueue)}\n\n`;
+            message += `\n${$reportTaskQueue('domWriteQueue', domWriteQueue)}\n\n`;
             isEmpty = false;
         }
         if (!taskQueue.isEmpty) {
-            message += `\n${reportTaskQueue('taskQueue', taskQueue)}\n\n`;
+            message += `\n${$reportTaskQueue('taskQueue', taskQueue)}\n\n`;
             isEmpty = false;
         }
         if (!domReadQueue.isEmpty) {
-            message += `\n${reportTaskQueue('domReadQueue', domReadQueue)}\n\n`;
+            message += `\n${$reportTaskQueue('domReadQueue', domReadQueue)}\n\n`;
             isEmpty = false;
         }
         if (!isEmpty) {

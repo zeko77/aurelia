@@ -1,4 +1,4 @@
-import { IPlatform } from './platform';
+import { IPlatform } from '../platform';
 /**
  * Utility that creates a `HTMLTemplateElement` out of string markup or an existing DOM node.
  *
@@ -9,8 +9,6 @@ export interface ITemplateElementFactory extends TemplateElementFactory {
 }
 export declare const ITemplateElementFactory: import("@aurelia/kernel").InterfaceSymbol<ITemplateElementFactory>;
 export declare class TemplateElementFactory {
-    private readonly p;
-    static inject: import("@aurelia/kernel").InterfaceSymbol<IPlatform>[];
     constructor(p: IPlatform);
     createTemplate(markup: string): HTMLTemplateElement;
     createTemplate(node: Node): HTMLTemplateElement;

@@ -2,6 +2,7 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+var platform = require('@aurelia/platform');
 var kernel = require('@aurelia/kernel');
 var runtime = require('@aurelia/runtime');
 var runtimeHtml = require('@aurelia/runtime-html');
@@ -2336,16 +2337,13 @@ function verifyBindingInstructionsEqual(actual, expected, errors, path) {
     }
 }
 
-function ensureTaskQueuesEmpty(platform) {
-    if (!platform) {
-        platform = platformBrowser.BrowserPlatform.getOrCreate(globalThis);
+function ensureTaskQueuesEmpty(platform$1) {
+    if (!platform$1) {
+        platform$1 = platformBrowser.BrowserPlatform.getOrCreate(globalThis);
     }
-    platform.taskQueue.flush();
-    platform.taskQueue['pending'].forEach((x) => x.cancel());
-    platform.domWriteQueue.flush();
-    platform.domWriteQueue['pending'].forEach((x) => x.cancel());
-    platform.domReadQueue.flush();
-    platform.domReadQueue['pending'].forEach((x) => x.cancel());
+    platform.ensureEmpty(platform$1.taskQueue);
+    platform.ensureEmpty(platform$1.domWriteQueue);
+    platform.ensureEmpty(platform$1.domReadQueue);
 }
 
 const noException = Symbol('noException');
@@ -2923,11 +2921,8 @@ const areTaskQueuesEmpty = (function () {
         return `    task id=${id} createdTime=${created} queueTime=${queue} preempt=${preempt} reusable=${reusable} persistent=${persistent} status=${status}\n`
             + `    task callback="${task.callback?.toString()}"`;
     }
-    function reportTaskQueue(name, taskQueue) {
-        const processing = taskQueue['processing'];
-        const pending = taskQueue['pending'];
-        const delayed = taskQueue['delayed'];
-        const flushReq = taskQueue['flushRequested'];
+    function $reportTaskQueue(name, taskQueue) {
+        const { processing, pending, delayed, flushRequested: flushReq } = platform.reportTaskQueue(taskQueue);
         let info = `${name} has processing=${processing.length} pending=${pending.length} delayed=${delayed.length} flushRequested=${flushReq}\n\n`;
         if (processing.length > 0) {
             info += `  Tasks in processing:\n${processing.map(reportTask).join('')}`;
@@ -2948,15 +2943,15 @@ const areTaskQueuesEmpty = (function () {
         let isEmpty = true;
         let message = '';
         if (!domWriteQueue.isEmpty) {
-            message += `\n${reportTaskQueue('domWriteQueue', domWriteQueue)}\n\n`;
+            message += `\n${$reportTaskQueue('domWriteQueue', domWriteQueue)}\n\n`;
             isEmpty = false;
         }
         if (!taskQueue.isEmpty) {
-            message += `\n${reportTaskQueue('taskQueue', taskQueue)}\n\n`;
+            message += `\n${$reportTaskQueue('taskQueue', taskQueue)}\n\n`;
             isEmpty = false;
         }
         if (!domReadQueue.isEmpty) {
-            message += `\n${reportTaskQueue('domReadQueue', domReadQueue)}\n\n`;
+            message += `\n${$reportTaskQueue('domReadQueue', domReadQueue)}\n\n`;
             isEmpty = false;
         }
         if (!isEmpty) {

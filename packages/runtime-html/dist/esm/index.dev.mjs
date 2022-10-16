@@ -3948,6 +3948,50 @@ class AppRoot {
     }
 }
 
+const createElement = (p, name) => p.document.createElement(name);
+const createComment = (p, text) => p.document.createComment(text);
+const createText = (p, text) => p.document.createTextNode(text);
+const insertBefore = (parent, newChildNode, target) => {
+    return parent.insertBefore(newChildNode, target);
+};
+const insertManyBefore = (parent, target, newChildNodes) => {
+    const ii = newChildNodes.length;
+    let i = 0;
+    while (ii > i) {
+        parent.insertBefore(newChildNodes[i], target);
+        ++i;
+    }
+};
+const getPreviousSibling = (node) => node.previousSibling;
+const appendToTemplate = (parent, child) => {
+    return parent.content.appendChild(child);
+};
+const appendManyToTemplate = (parent, children) => {
+    const ii = children.length;
+    let i = 0;
+    while (ii > i) {
+        parent.content.appendChild(children[i]);
+        ++i;
+    }
+};
+const markerToLocation = (el) => {
+    const previousSibling = el.previousSibling;
+    let locationEnd;
+    if (previousSibling?.nodeType === 8 && previousSibling.textContent === 'au-end') {
+        locationEnd = previousSibling;
+        if ((locationEnd.$start = locationEnd.previousSibling) == null) {
+            throw markerMalformedError();
+        }
+        el.parentNode?.removeChild(el);
+        return locationEnd;
+    }
+    else {
+        throw markerMalformedError();
+    }
+};
+const markerMalformedError = () => createError(`AURxxxx: marker is malformed.`)
+    ;
+
 class Refs {
 }
 function getRef(node, name) {
@@ -4014,12 +4058,12 @@ function convertToRenderLocation(node) {
         return node;
     }
     const locationEnd = node.ownerDocument.createComment('au-end');
-    const locationStart = node.ownerDocument.createComment('au-start');
-    if (node.parentNode !== null) {
-        node.parentNode.replaceChild(locationEnd, node);
-        locationEnd.parentNode.insertBefore(locationStart, locationEnd);
+    const locationStart = locationEnd.$start = node.ownerDocument.createComment('au-start');
+    const parentNode = node.parentNode;
+    if (parentNode !== null) {
+        parentNode.replaceChild(locationEnd, node);
+        parentNode.insertBefore(locationStart, locationEnd);
     }
-    locationEnd.$start = locationStart;
     return locationEnd;
 }
 function isRenderLocation(node) {
@@ -4028,20 +4072,20 @@ function isRenderLocation(node) {
 class FragmentNodeSequence {
     constructor(platform, fragment) {
         this.platform = platform;
-        this.fragment = fragment;
-        this.isMounted = false;
-        this.isLinked = false;
         this.next = void 0;
-        this.refNode = void 0;
+        this._isMounted = false;
+        this._isLinked = false;
+        this.ref = null;
+        this.f = fragment;
         const targetNodeList = fragment.querySelectorAll('.au');
         let i = 0;
         let ii = targetNodeList.length;
         let target;
-        let targets = this.targets = Array(ii);
+        let targets = this.t = Array(ii);
         while (ii > i) {
             target = targetNodeList[i];
             if (target.nodeName === 'AU-M') {
-                targets[i] = convertToRenderLocation(target);
+                targets[i] = markerToLocation(target);
             }
             else {
                 targets[i] = target;
@@ -4055,22 +4099,28 @@ class FragmentNodeSequence {
             childNodes[i] = childNodeList[i];
             ++i;
         }
-        this.firstChild = fragment.firstChild;
-        this.lastChild = fragment.lastChild;
+        this._firstChild = fragment.firstChild;
+        this._lastChild = fragment.lastChild;
+    }
+    get firstChild() {
+        return this._firstChild;
+    }
+    get lastChild() {
+        return this._lastChild;
     }
     findTargets() {
-        return this.targets;
+        return this.t;
     }
     insertBefore(refNode) {
-        if (this.isLinked && !!this.refNode) {
+        if (this._isLinked && !!this.ref) {
             this.addToLinked();
         }
         else {
             const parent = refNode.parentNode;
-            if (this.isMounted) {
-                let current = this.firstChild;
+            if (this._isMounted) {
+                let current = this._firstChild;
                 let next;
-                const end = this.lastChild;
+                const end = this._lastChild;
                 while (current != null) {
                     next = current.nextSibling;
                     parent.insertBefore(current, refNode);
@@ -4081,16 +4131,16 @@ class FragmentNodeSequence {
                 }
             }
             else {
-                this.isMounted = true;
-                refNode.parentNode.insertBefore(this.fragment, refNode);
+                this._isMounted = true;
+                refNode.parentNode.insertBefore(this.f, refNode);
             }
         }
     }
     appendTo(parent, enhance = false) {
-        if (this.isMounted) {
-            let current = this.firstChild;
+        if (this._isMounted) {
+            let current = this._firstChild;
             let next;
-            const end = this.lastChild;
+            const end = this._lastChild;
             while (current != null) {
                 next = current.nextSibling;
                 parent.appendChild(current);
@@ -4101,19 +4151,19 @@ class FragmentNodeSequence {
             }
         }
         else {
-            this.isMounted = true;
+            this._isMounted = true;
             if (!enhance) {
-                parent.appendChild(this.fragment);
+                parent.appendChild(this.f);
             }
         }
     }
     remove() {
-        if (this.isMounted) {
-            this.isMounted = false;
-            const fragment = this.fragment;
-            const end = this.lastChild;
+        if (this._isMounted) {
+            this._isMounted = false;
+            const fragment = this.f;
+            const end = this._lastChild;
             let next;
-            let current = this.firstChild;
+            let current = this._firstChild;
             while (current !== null) {
                 next = current.nextSibling;
                 fragment.appendChild(current);
@@ -4125,12 +4175,12 @@ class FragmentNodeSequence {
         }
     }
     addToLinked() {
-        const refNode = this.refNode;
+        const refNode = this.ref;
         const parent = refNode.parentNode;
-        if (this.isMounted) {
-            let current = this.firstChild;
+        if (this._isMounted) {
+            let current = this._firstChild;
             let next;
-            const end = this.lastChild;
+            const end = this._lastChild;
             while (current != null) {
                 next = current.nextSibling;
                 parent.insertBefore(current, refNode);
@@ -4141,31 +4191,31 @@ class FragmentNodeSequence {
             }
         }
         else {
-            this.isMounted = true;
-            parent.insertBefore(this.fragment, refNode);
+            this._isMounted = true;
+            parent.insertBefore(this.f, refNode);
         }
     }
     unlink() {
-        this.isLinked = false;
+        this._isLinked = false;
         this.next = void 0;
-        this.refNode = void 0;
+        this.ref = void 0;
     }
     link(next) {
-        this.isLinked = true;
+        this._isLinked = true;
         if (isRenderLocation(next)) {
-            this.refNode = next;
+            this.ref = next;
         }
         else {
             this.next = next;
-            this.obtainRefNode();
+            this._obtainRefNode();
         }
     }
-    obtainRefNode() {
+    _obtainRefNode() {
         if (this.next !== void 0) {
-            this.refNode = this.next.firstChild;
+            this.ref = this.next.firstChild;
         }
         else {
-            this.refNode = void 0;
+            this.ref = void 0;
         }
     }
 }
@@ -4887,31 +4937,7 @@ IteratorBindingRenderer = __decorate([
 ], IteratorBindingRenderer);
 let TextBindingRenderer = class TextBindingRenderer {
     render(renderingCtrl, target, instruction, platform, exprParser, observerLocator) {
-        const container = renderingCtrl.container;
-        const next = target.nextSibling;
-        const parent = target.parentNode;
-        const doc = platform.document;
-        const expr = ensureExpression(exprParser, instruction.from, 1);
-        const staticParts = expr.parts;
-        const dynamicParts = expr.expressions;
-        const ii = dynamicParts.length;
-        let i = 0;
-        let text = staticParts[0];
-        let part;
-        if (text !== '') {
-            parent.insertBefore(doc.createTextNode(text), next);
-        }
-        for (; ii > i; ++i) {
-            part = dynamicParts[i];
-            renderingCtrl.addBinding(new ContentBinding(renderingCtrl, container, observerLocator, platform.domWriteQueue, platform, part, parent.insertBefore(doc.createTextNode(''), next), instruction.strict));
-            text = staticParts[i + 1];
-            if (text !== '') {
-                parent.insertBefore(doc.createTextNode(text), next);
-            }
-        }
-        if (target.nodeName === 'AU-M') {
-            target.remove();
-        }
+        renderingCtrl.addBinding(new ContentBinding(renderingCtrl, renderingCtrl.container, observerLocator, platform.domWriteQueue, platform, ensureExpression(exprParser, instruction.from, 16), insertBefore(target.parentNode, createText(platform, ''), target), instruction.strict));
     }
 };
 TextBindingRenderer = __decorate([
@@ -5663,7 +5689,7 @@ const markupCache = {};
 class TemplateElementFactory {
     constructor(p) {
         this.p = p;
-        this._template = p.document.createElement('template');
+        this._template = createTemplate(this.p);
     }
     createTemplate(input) {
         if (isString(input)) {
@@ -5673,7 +5699,7 @@ class TemplateElementFactory {
                 template.innerHTML = input;
                 const node = template.content.firstElementChild;
                 if (node == null || node.nodeName !== 'TEMPLATE' || node.nextElementSibling != null) {
-                    this._template = this.p.document.createElement('template');
+                    this._template = createTemplate(this.p);
                     result = template;
                 }
                 else {
@@ -5685,7 +5711,7 @@ class TemplateElementFactory {
             return result.cloneNode(true);
         }
         if (input.nodeName !== 'TEMPLATE') {
-            const template = this.p.document.createElement('template');
+            const template = createTemplate(this.p);
             template.content.appendChild(input);
             return template;
         }
@@ -5694,6 +5720,7 @@ class TemplateElementFactory {
     }
 }
 TemplateElementFactory.inject = [IPlatform];
+const createTemplate = (p) => p.document.createElement('template');
 
 class TemplateCompiler {
     constructor() {
@@ -5716,7 +5743,7 @@ class TemplateCompiler {
         const template = isString(definition.template) || !partialDefinition.enhance
             ? context._templateFactory.createTemplate(definition.template)
             : definition.template;
-        const isTemplateElement = template.nodeName === 'TEMPLATE' && template.content != null;
+        const isTemplateElement = template.nodeName === TEMPLATE_NODE_NAME && template.content != null;
         const content = isTemplateElement ? template.content : template;
         const hooks = container.get(allResources(ITemplateCompilerHooks));
         const ii = hooks.length;
@@ -6130,7 +6157,7 @@ class TemplateCompiler {
                     captures.push(attrSyntax);
                     continue;
                 }
-                canCapture = realAttrTarget !== 'au-slot' && realAttrTarget !== 'slot';
+                canCapture = realAttrTarget !== AU_SLOT && realAttrTarget !== 'slot';
                 if (canCapture) {
                     bindablesInfo = BindablesInfo.from(elDef, false);
                     if (bindablesInfo.attrs[realAttrTarget] == null && !context._findAttr(realAttrTarget)?.isTemplateController) {
@@ -6232,15 +6259,15 @@ class TemplateCompiler {
             elementInstruction = new HydrateElementInstruction(this.resolveResources ? elDef : elDef.name, void 0, (elBindableInstructions ?? emptyArray), null, hasContainerless, captures);
             if (elName === AU_SLOT) {
                 const slotName = el.getAttribute('name') || DEFAULT_SLOT_NAME;
-                const template = context.h('template');
+                const template = context.t();
                 const fallbackContentContext = context._createChild();
                 let node = el.firstChild;
                 while (node !== null) {
-                    if (node.nodeType === 1 && node.hasAttribute('au-slot')) {
+                    if (node.nodeType === 1 && node.hasAttribute(AU_SLOT)) {
                         el.removeChild(node);
                     }
                     else {
-                        template.content.appendChild(node);
+                        appendToTemplate(template, node);
                     }
                     node = el.firstChild;
                 }
@@ -6269,13 +6296,19 @@ class TemplateCompiler {
             i = ii;
             tcInstruction = tcInstructions[i];
             let template;
-            this._replaceByMarker(el, context);
-            if (el.nodeName === 'TEMPLATE') {
-                template = el;
+            if (isMarker(el)) {
+                template = context.t();
+                appendManyToTemplate(template, [context._comment(auStartComment), context._comment(auEndComment), this._markAsTarget(context.h(MARKER_NODE_NAME))]);
             }
             else {
-                template = context.h('template');
-                template.content.appendChild(el);
+                this._replaceByMarker(el, context);
+                if (el.nodeName === 'TEMPLATE') {
+                    template = el;
+                }
+                else {
+                    template = context.t();
+                    appendToTemplate(template, el);
+                }
             }
             const mostInnerTemplate = template;
             const childContext = context._createChild(instructions == null ? [] : [instructions]);
@@ -6319,20 +6352,20 @@ class TemplateCompiler {
             if (slotTemplateRecord != null) {
                 projections = {};
                 for (targetSlot in slotTemplateRecord) {
-                    template = context.h('template');
+                    template = context.t();
                     slotTemplates = slotTemplateRecord[targetSlot];
                     for (j = 0, jj = slotTemplates.length; jj > j; ++j) {
                         slotTemplate = slotTemplates[j];
                         if (slotTemplate.nodeName === 'TEMPLATE') {
                             if (slotTemplate.attributes.length > 0) {
-                                template.content.appendChild(slotTemplate);
+                                appendToTemplate(template, slotTemplate);
                             }
                             else {
-                                template.content.appendChild(slotTemplate.content);
+                                appendToTemplate(template, slotTemplate.content);
                             }
                         }
                         else {
-                            template.content.appendChild(slotTemplate);
+                            appendToTemplate(template, slotTemplate);
                         }
                     }
                     projectionCompilationContext = context._createChild();
@@ -6352,7 +6385,7 @@ class TemplateCompiler {
             }
             shouldCompileContent = !isCustomElement || !elDef.containerless && !hasContainerless && processContentResult !== false;
             if (shouldCompileContent) {
-                if (el.nodeName === 'TEMPLATE') {
+                if (el.nodeName === TEMPLATE_NODE_NAME) {
                     this._compileNode(el.content, childContext);
                 }
                 else {
@@ -6371,10 +6404,9 @@ class TemplateCompiler {
             });
             while (i-- > 0) {
                 tcInstruction = tcInstructions[i];
-                template = context.h('template');
-                marker = context.h('au-m');
-                marker.classList.add('au');
-                template.content.appendChild(marker);
+                template = context.t();
+                marker = this._markAsTarget(context.h(MARKER_NODE_NAME));
+                appendManyToTemplate(template, [context._comment(auStartComment), context._comment(auEndComment), marker]);
                 tcInstruction.def = CustomElementDefinition.create({
                     name: generateElementName(),
                     template,
@@ -6429,20 +6461,20 @@ class TemplateCompiler {
             if (slotTemplateRecord != null) {
                 projections = {};
                 for (targetSlot in slotTemplateRecord) {
-                    template = context.h('template');
+                    template = context.t();
                     slotTemplates = slotTemplateRecord[targetSlot];
                     for (j = 0, jj = slotTemplates.length; jj > j; ++j) {
                         slotTemplate = slotTemplates[j];
-                        if (slotTemplate.nodeName === 'TEMPLATE') {
+                        if (slotTemplate.nodeName === TEMPLATE_NODE_NAME) {
                             if (slotTemplate.attributes.length > 0) {
-                                template.content.appendChild(slotTemplate);
+                                appendToTemplate(template, slotTemplate);
                             }
                             else {
-                                template.content.appendChild(slotTemplate.content);
+                                appendToTemplate(template, slotTemplate.content);
                             }
                         }
                         else {
-                            template.content.appendChild(slotTemplate);
+                            appendToTemplate(template, slotTemplate);
                         }
                     }
                     projectionCompilationContext = context._createChild();
@@ -6471,26 +6503,33 @@ class TemplateCompiler {
         return nextSibling;
     }
     _compileText(node, context) {
-        let text = '';
-        let current = node;
-        while (current !== null && current.nodeType === 3) {
-            text += current.textContent;
-            current = current.nextSibling;
-        }
-        const expr = context._exprParser.parse(text, 1);
-        if (expr === null) {
-            return current;
-        }
         const parent = node.parentNode;
-        parent.insertBefore(this._markAsTarget(context.h('au-m')), node);
-        context.rows.push([new TextBindingInstruction(expr, !!context.def.isStrictBinding)]);
-        node.textContent = '';
-        current = node.nextSibling;
-        while (current !== null && current.nodeType === 3) {
-            parent.removeChild(current);
-            current = node.nextSibling;
+        const expr = context._exprParser.parse(node.textContent, 1);
+        const next = node.nextSibling;
+        let parts;
+        let expressions;
+        let i;
+        let ii;
+        let part;
+        if (expr !== null) {
+            ({ parts, expressions } = expr);
+            if ((part = parts[0])) {
+                insertBefore(parent, context._text(part), node);
+            }
+            for (i = 0, ii = expressions.length; ii > i; ++i) {
+                insertManyBefore(parent, node, [
+                    context._comment(auStartComment),
+                    context._comment(auEndComment),
+                    this._markAsTarget(context.h(MARKER_NODE_NAME)),
+                ]);
+                if ((part = parts[i + 1])) {
+                    insertBefore(parent, context._text(part), node);
+                }
+                context.rows.push([new TextBindingInstruction(expressions[i], context.root.def.isStrictBinding)]);
+            }
+            parent.removeChild(node);
         }
-        return node.nextSibling;
+        return next;
     }
     _compileMultiBindings(node, attrRawValue, attrDef, context) {
         const bindableAttrsInfo = BindablesInfo.from(attrDef, true);
@@ -6653,18 +6692,35 @@ class TemplateCompiler {
             }
         }
     }
+    _isMarker(el) {
+        return el.nodeName === MARKER_NODE_NAME
+            && isComment($prevSibling = getPreviousSibling(el)) && $prevSibling.textContent === auEndComment
+            && isComment($prevSibling = getPreviousSibling($prevSibling)) && $prevSibling.textContent === auStartComment;
+    }
     _markAsTarget(el) {
         el.classList.add('au');
         return el;
     }
     _replaceByMarker(node, context) {
+        if (isMarker(node)) {
+            return node;
+        }
         const parent = node.parentNode;
-        const marker = context.h('au-m');
-        this._markAsTarget(parent.insertBefore(marker, node));
+        const marker = this._markAsTarget(context.h(MARKER_NODE_NAME));
+        insertManyBefore(parent, node, [context._comment(auStartComment), context._comment(auEndComment), marker]);
         parent.removeChild(node);
         return marker;
     }
 }
+let $prevSibling;
+const MARKER_NODE_NAME = 'AU-M';
+const TEMPLATE_NODE_NAME = 'TEMPLATE';
+const auStartComment = 'au-start';
+const auEndComment = 'au-end';
+const isMarker = (el) => el.nodeName === MARKER_NODE_NAME
+    && isComment($prevSibling = getPreviousSibling(el)) && $prevSibling.textContent === auEndComment
+    && isComment($prevSibling = getPreviousSibling($prevSibling)) && $prevSibling.textContent === auStartComment;
+const isComment = (el) => el?.nodeType === 8;
 class CompilationContext {
     constructor(def, container, compilationInstruction, parent, root, instructions) {
         this.hasSlot = false;
@@ -6689,12 +6745,21 @@ class CompilationContext {
         ((_a = this.root).deps ?? (_a.deps = [])).push(dep);
         this.root.c.register(dep);
     }
+    _text(text) {
+        return createText(this.p, text);
+    }
+    _comment(text) {
+        return createComment(this.p, text);
+    }
     h(name) {
-        const el = this.p.document.createElement(name);
+        const el = createElement(this.p, name);
         if (name === 'template') {
             this.p.document.adoptNode(el.content);
         }
         return el;
+    }
+    t() {
+        return this.h('template');
     }
     _findElement(name) {
         return this.c.find(CustomElement, name);
@@ -6724,7 +6789,7 @@ class CompilationContext {
         return result;
     }
 }
-function hasInlineBindings(rawValue) {
+const hasInlineBindings = (rawValue) => {
     const len = rawValue.length;
     let ch = 0;
     let i = 0;
@@ -6742,13 +6807,13 @@ function hasInlineBindings(rawValue) {
         ++i;
     }
     return false;
-}
-function resetCommandBuildInfo() {
+};
+const resetCommandBuildInfo = () => {
     commandBuildInfo.node
         = commandBuildInfo.attr
             = commandBuildInfo.bindable
                 = commandBuildInfo.def = null;
-}
+};
 const emptyCompilationInstructions = { projections: null };
 const voidDefinition = { name: 'unnamed' };
 const commandBuildInfo = {
@@ -6819,7 +6884,7 @@ const allowedLocalTemplateBindableAttributes = objectFreeze([
     "mode"
 ]);
 const localTemplateIdentifier = 'as-custom-element';
-function processTemplateName(localTemplate, localTemplateNames) {
+const processTemplateName = (localTemplate, localTemplateNames) => {
     const name = localTemplate.getAttribute(localTemplateIdentifier);
     if (name === null || name === '') {
         throw createError(`AUR0715: The value of "as-custom-element" attribute cannot be empty for local template`);
@@ -6832,8 +6897,8 @@ function processTemplateName(localTemplate, localTemplateNames) {
         localTemplate.removeAttribute(localTemplateIdentifier);
     }
     return name;
-}
-function getBindingMode(bindable) {
+};
+const getBindingMode = (bindable) => {
     switch (bindable.getAttribute("mode")) {
         case 'oneTime':
             return 1;
@@ -6847,7 +6912,7 @@ function getBindingMode(bindable) {
         default:
             return 8;
     }
-}
+};
 const ITemplateCompilerHooks = createInterface('ITemplateCompilerHooks');
 const typeToHooksDefCache = new WeakMap();
 const hooksBaseName = getResourceKeyFor('compiler-hooks');
@@ -9722,7 +9787,7 @@ class CompositionController {
     }
 }
 
-class AuSlot {
+let AuSlot = class AuSlot {
     constructor(location, instruction, hdrContext, rendering) {
         this._parentScope = null;
         this._outerScope = null;
@@ -9770,11 +9835,17 @@ class AuSlot {
             return true;
         }
     }
-}
+};
 __decorate([
     bindable
 ], AuSlot.prototype, "expose", void 0);
-customElement({ name: 'au-slot', template: null, containerless: true })(AuSlot);
+AuSlot = __decorate([
+    customElement({
+        name: 'au-slot',
+        template: null,
+        containerless: true
+    })
+], AuSlot);
 
 const ISanitizer = createInterface('ISanitizer', x => x.singleton(class {
     sanitize() {
@@ -9868,7 +9939,6 @@ const RejectedTemplateControllerRegistration = RejectedTemplateController;
 const PromiseAttributePatternRegistration = PromiseAttributePattern;
 const FulfilledAttributePatternRegistration = FulfilledAttributePattern;
 const RejectedAttributePatternRegistration = RejectedAttributePattern;
-const AttrBindingBehaviorRegistration = AttrBindingBehavior;
 const SelfBindingBehaviorRegistration = SelfBindingBehavior;
 const UpdateTriggerBindingBehaviorRegistration = UpdateTriggerBindingBehavior;
 const AuComposeRegistration = AuCompose;
@@ -9898,7 +9968,7 @@ const DefaultResources = [
     PromiseAttributePatternRegistration,
     FulfilledAttributePatternRegistration,
     RejectedAttributePatternRegistration,
-    AttrBindingBehaviorRegistration,
+    AttrBindingBehavior,
     SelfBindingBehaviorRegistration,
     UpdateTriggerBindingBehaviorRegistration,
     AuComposeRegistration,
@@ -9907,41 +9977,24 @@ const DefaultResources = [
     ShowRegistration,
     AuSlot,
 ];
-const CustomAttributeRendererRegistration = CustomAttributeRenderer;
-const CustomElementRendererRegistration = CustomElementRenderer;
-const InterpolationBindingRendererRegistration = InterpolationBindingRenderer;
-const IteratorBindingRendererRegistration = IteratorBindingRenderer;
-const LetElementRendererRegistration = LetElementRenderer;
-const PropertyBindingRendererRegistration = PropertyBindingRenderer;
-const RefBindingRendererRegistration = RefBindingRenderer;
-const SetPropertyRendererRegistration = SetPropertyRenderer;
-const TemplateControllerRendererRegistration = TemplateControllerRenderer;
-const ListenerBindingRendererRegistration = ListenerBindingRenderer;
-const AttributeBindingRendererRegistration = AttributeBindingRenderer;
-const SetAttributeRendererRegistration = SetAttributeRenderer;
-const SetClassAttributeRendererRegistration = SetClassAttributeRenderer;
-const SetStyleAttributeRendererRegistration = SetStyleAttributeRenderer;
-const StylePropertyBindingRendererRegistration = StylePropertyBindingRenderer;
-const TextBindingRendererRegistration = TextBindingRenderer;
-const SpreadRendererRegistration = SpreadRenderer;
 const DefaultRenderers = [
-    PropertyBindingRendererRegistration,
-    IteratorBindingRendererRegistration,
-    RefBindingRendererRegistration,
-    InterpolationBindingRendererRegistration,
-    SetPropertyRendererRegistration,
-    CustomElementRendererRegistration,
-    CustomAttributeRendererRegistration,
-    TemplateControllerRendererRegistration,
-    LetElementRendererRegistration,
-    ListenerBindingRendererRegistration,
-    AttributeBindingRendererRegistration,
-    SetAttributeRendererRegistration,
-    SetClassAttributeRendererRegistration,
-    SetStyleAttributeRendererRegistration,
-    StylePropertyBindingRendererRegistration,
-    TextBindingRendererRegistration,
-    SpreadRendererRegistration,
+    PropertyBindingRenderer,
+    IteratorBindingRenderer,
+    RefBindingRenderer,
+    InterpolationBindingRenderer,
+    SetPropertyRenderer,
+    CustomElementRenderer,
+    CustomAttributeRenderer,
+    TemplateControllerRenderer,
+    LetElementRenderer,
+    ListenerBindingRenderer,
+    AttributeBindingRenderer,
+    SetAttributeRenderer,
+    SetClassAttributeRenderer,
+    SetStyleAttributeRenderer,
+    StylePropertyBindingRenderer,
+    TextBindingRenderer,
+    SpreadRenderer,
 ];
 const StandardConfiguration = createConfiguration(noop);
 function createConfiguration(optionsProvider) {
@@ -10104,5 +10157,5 @@ var DefinitionType;
     DefinitionType[DefinitionType["Attribute"] = 2] = "Attribute";
 })(DefinitionType || (DefinitionType = {}));
 
-export { AdoptedStyleSheetsStyles, AppRoot, AppTask, AtPrefixedTriggerAttributePattern, AtPrefixedTriggerAttributePatternRegistration, AttrBindingBehavior, AttrBindingBehaviorRegistration, AttrBindingCommand, AttrBindingCommandRegistration, AttrSyntax, AttributeBinding, AttributeBindingInstruction, AttributeBindingRendererRegistration, AttributeNSAccessor, AttributePattern, AuCompose, AuSlot, AuSlotsInfo, Aurelia, Bindable, BindableDefinition, BindableObserver, BindablesInfo, BindingBehavior, BindingBehaviorDefinition, BindingCommand, BindingCommandDefinition, BindingMode, BindingModeBehavior, BindingTargetSubscriber, CSSModulesProcessorRegistry, CaptureBindingCommand, CaptureBindingCommandRegistration, Case, CheckedObserver, Children, ChildrenDefinition, ChildrenObserver, ClassAttributeAccessor, ClassBindingCommand, ClassBindingCommandRegistration, ColonPrefixedBindAttributePattern, ColonPrefixedBindAttributePatternRegistration, CommandType, ComputedWatcher, ContentBinding, Controller, CustomAttribute, CustomAttributeDefinition, CustomAttributeRendererRegistration, CustomElement, CustomElementDefinition, CustomElementRendererRegistration, DataAttributeAccessor, DebounceBindingBehavior, DebounceBindingBehaviorRegistration, DefaultBindingCommand, DefaultBindingCommandRegistration, DefaultBindingLanguage, DefaultBindingSyntax, DefaultCase, DefaultComponents, DefaultRenderers, DefaultResources, DefinitionType, DotSeparatedAttributePattern, DotSeparatedAttributePatternRegistration, Else, ElseRegistration, ExpressionWatcher, FlushQueue, Focus, ForBindingCommand, ForBindingCommandRegistration, FragmentNodeSequence, FromViewBindingBehavior, FromViewBindingBehaviorRegistration, FromViewBindingCommand, FromViewBindingCommandRegistration, FulfilledTemplateController, HooksDefinition, HydrateAttributeInstruction, HydrateElementInstruction, HydrateLetElementInstruction, HydrateTemplateController, IAppRoot, IAppTask, IAttrMapper, IAttributeParser, IAttributePattern, IAuSlotsInfo, IAurelia, IController, IEventTarget, IFlushQueue, IHistory, IHydrationContext, IInstruction, ILifecycleHooks, ILocation, INode, INodeObserverLocatorRegistration, IPlatform, IProjections, IRenderLocation, IRenderer, IRendering, ISVGAnalyzer, ISanitizer, IShadowDOMGlobalStyles, IShadowDOMStyles, ISyntaxInterpreter, ITemplateCompiler, ITemplateCompilerHooks, ITemplateCompilerRegistration, ITemplateElementFactory, IViewFactory, IWindow, If, IfRegistration, InstructionType, InterpolationBinding, InterpolationBindingRendererRegistration, InterpolationInstruction, InterpolationPartBinding, Interpretation, IteratorBindingInstruction, IteratorBindingRendererRegistration, LetBinding, LetBindingInstruction, LetElementRendererRegistration, LifecycleFlags, LifecycleHooks, LifecycleHooksDefinition, LifecycleHooksEntry, ListenerBinding, ListenerBindingInstruction, ListenerBindingOptions, ListenerBindingRendererRegistration, NodeObserverLocator, NoopSVGAnalyzer, OneTimeBindingBehavior, OneTimeBindingBehaviorRegistration, OneTimeBindingCommand, OneTimeBindingCommandRegistration, PendingTemplateController, Portal, PromiseTemplateController, PropertyBinding, PropertyBindingInstruction, PropertyBindingRendererRegistration, RefAttributePattern, RefAttributePatternRegistration, RefBinding, RefBindingCommandRegistration, RefBindingInstruction, RefBindingRendererRegistration, RejectedTemplateController, Rendering, Repeat, RepeatRegistration, SVGAnalyzer, SVGAnalyzerRegistration, SanitizeValueConverter, SanitizeValueConverterRegistration, SelectValueObserver, SelfBindingBehavior, SelfBindingBehaviorRegistration, SetAttributeInstruction, SetAttributeRendererRegistration, SetClassAttributeInstruction, SetClassAttributeRendererRegistration, SetPropertyInstruction, SetPropertyRendererRegistration, SetStyleAttributeInstruction, SetStyleAttributeRendererRegistration, ShadowDOMRegistry, ShortHandBindingSyntax, SignalBindingBehavior, SignalBindingBehaviorRegistration, StandardConfiguration, State, StyleAttributeAccessor, StyleBindingCommand, StyleBindingCommandRegistration, StyleConfiguration, StyleElementStyles, StylePropertyBindingInstruction, StylePropertyBindingRendererRegistration, Switch, TemplateCompiler, TemplateCompilerHooks, TemplateControllerRendererRegistration, TextBindingInstruction, TextBindingRendererRegistration, ThrottleBindingBehavior, ThrottleBindingBehaviorRegistration, ToViewBindingBehavior, ToViewBindingBehaviorRegistration, ToViewBindingCommand, ToViewBindingCommandRegistration, TriggerBindingCommand, TriggerBindingCommandRegistration, TwoWayBindingBehavior, TwoWayBindingBehaviorRegistration, TwoWayBindingCommand, TwoWayBindingCommandRegistration, UpdateTriggerBindingBehavior, UpdateTriggerBindingBehaviorRegistration, ValueAttributeObserver, ValueConverter, ValueConverterDefinition, ViewFactory, ViewModelKind, Watch, With, WithRegistration, alias, allResources, attributePattern, bindable, bindingBehavior, bindingCommand, capture, children, coercer, containerless, convertToRenderLocation, cssModules, customAttribute, customElement, getEffectiveParentNode, getRef, isCustomElementController, isCustomElementViewModel, isInstruction, isRenderLocation, lifecycleHooks, mixinAstEvaluator, mixinUseScope, mixingBindingLimited, processContent, registerAliases, renderer, setEffectiveParentNode, setRef, shadowCSS, strict, templateCompilerHooks, templateController, useShadowDOM, valueConverter, watch };
+export { AdoptedStyleSheetsStyles, AppRoot, AppTask, AtPrefixedTriggerAttributePattern, AtPrefixedTriggerAttributePatternRegistration, AttrBindingBehavior, AttrBindingCommand, AttrBindingCommandRegistration, AttrSyntax, AttributeBinding, AttributeBindingInstruction, AttributeBindingRenderer, AttributeNSAccessor, AttributePattern, AuCompose, AuSlot, AuSlotsInfo, Aurelia, Bindable, BindableDefinition, BindableObserver, BindablesInfo, BindingBehavior, BindingBehaviorDefinition, BindingCommand, BindingCommandDefinition, BindingMode, BindingModeBehavior, BindingTargetSubscriber, CSSModulesProcessorRegistry, CaptureBindingCommand, CaptureBindingCommandRegistration, Case, CheckedObserver, Children, ChildrenDefinition, ChildrenObserver, ClassAttributeAccessor, ClassBindingCommand, ClassBindingCommandRegistration, ColonPrefixedBindAttributePattern, ColonPrefixedBindAttributePatternRegistration, CommandType, ComputedWatcher, ContentBinding, Controller, CustomAttribute, CustomAttributeDefinition, CustomAttributeRenderer, CustomElement, CustomElementDefinition, CustomElementRenderer, DataAttributeAccessor, DebounceBindingBehavior, DebounceBindingBehaviorRegistration, DefaultBindingCommand, DefaultBindingCommandRegistration, DefaultBindingLanguage, DefaultBindingSyntax, DefaultCase, DefaultComponents, DefaultRenderers, DefaultResources, DefinitionType, DotSeparatedAttributePattern, DotSeparatedAttributePatternRegistration, Else, ElseRegistration, ExpressionWatcher, FlushQueue, Focus, ForBindingCommand, ForBindingCommandRegistration, FragmentNodeSequence, FromViewBindingBehavior, FromViewBindingBehaviorRegistration, FromViewBindingCommand, FromViewBindingCommandRegistration, FulfilledTemplateController, HooksDefinition, HydrateAttributeInstruction, HydrateElementInstruction, HydrateLetElementInstruction, HydrateTemplateController, IAppRoot, IAppTask, IAttrMapper, IAttributeParser, IAttributePattern, IAuSlotsInfo, IAurelia, IController, IEventTarget, IFlushQueue, IHistory, IHydrationContext, IInstruction, ILifecycleHooks, ILocation, INode, INodeObserverLocatorRegistration, IPlatform, IProjections, IRenderLocation, IRenderer, IRendering, ISVGAnalyzer, ISanitizer, IShadowDOMGlobalStyles, IShadowDOMStyles, ISyntaxInterpreter, ITemplateCompiler, ITemplateCompilerHooks, ITemplateCompilerRegistration, ITemplateElementFactory, IViewFactory, IWindow, If, IfRegistration, InstructionType, InterpolationBinding, InterpolationBindingRenderer, InterpolationInstruction, InterpolationPartBinding, Interpretation, IteratorBindingInstruction, IteratorBindingRenderer, LetBinding, LetBindingInstruction, LetElementRenderer, LifecycleFlags, LifecycleHooks, LifecycleHooksDefinition, LifecycleHooksEntry, ListenerBinding, ListenerBindingInstruction, ListenerBindingOptions, ListenerBindingRenderer, MultiAttrInstruction, NodeObserverLocator, NoopSVGAnalyzer, OneTimeBindingBehavior, OneTimeBindingBehaviorRegistration, OneTimeBindingCommand, OneTimeBindingCommandRegistration, PendingTemplateController, Portal, PromiseTemplateController, PropertyBinding, PropertyBindingInstruction, PropertyBindingRenderer, RefAttributePattern, RefAttributePatternRegistration, RefBinding, RefBindingCommandRegistration, RefBindingInstruction, RefBindingRenderer, RejectedTemplateController, Rendering, Repeat, RepeatRegistration, SVGAnalyzer, SVGAnalyzerRegistration, SanitizeValueConverter, SanitizeValueConverterRegistration, SelectValueObserver, SelfBindingBehavior, SelfBindingBehaviorRegistration, SetAttributeInstruction, SetAttributeRenderer, SetClassAttributeInstruction, SetClassAttributeRenderer, SetPropertyInstruction, SetPropertyRenderer, SetStyleAttributeInstruction, SetStyleAttributeRenderer, ShadowDOMRegistry, ShortHandBindingSyntax, SignalBindingBehavior, SignalBindingBehaviorRegistration, SpreadBindingInstruction, SpreadElementPropBindingInstruction, SpreadRenderer, StandardConfiguration, State, StyleAttributeAccessor, StyleBindingCommand, StyleBindingCommandRegistration, StyleConfiguration, StyleElementStyles, StylePropertyBindingInstruction, StylePropertyBindingRenderer, Switch, TemplateCompiler, TemplateCompilerHooks, TemplateControllerRenderer, TextBindingInstruction, TextBindingRenderer, ThrottleBindingBehavior, ThrottleBindingBehaviorRegistration, ToViewBindingBehavior, ToViewBindingBehaviorRegistration, ToViewBindingCommand, ToViewBindingCommandRegistration, TriggerBindingCommand, TriggerBindingCommandRegistration, TwoWayBindingBehavior, TwoWayBindingBehaviorRegistration, TwoWayBindingCommand, TwoWayBindingCommandRegistration, UpdateTriggerBindingBehavior, UpdateTriggerBindingBehaviorRegistration, ValueAttributeObserver, ValueConverter, ValueConverterDefinition, ViewFactory, ViewModelKind, Watch, With, WithRegistration, alias, allResources, attributePattern, bindable, bindingBehavior, bindingCommand, capture, children, coercer, containerless, convertToRenderLocation, cssModules, customAttribute, customElement, getEffectiveParentNode, getRef, isCustomElementController, isCustomElementViewModel, isInstruction, isRenderLocation, lifecycleHooks, mixinAstEvaluator, mixinUseScope, mixingBindingLimited, processContent, registerAliases, renderer, setEffectiveParentNode, setRef, shadowCSS, strict, templateCompilerHooks, templateController, useShadowDOM, valueConverter, watch };
 //# sourceMappingURL=index.dev.mjs.map
