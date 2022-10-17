@@ -27,7 +27,7 @@ import { AttrSyntax, IAttributeParser } from '../resources/attribute-pattern';
 import { CustomAttribute } from '../resources/custom-attribute';
 import { CustomElement, CustomElementDefinition, CustomElementType, defineElement, generateElementName, getElementDefinition } from '../resources/custom-element';
 import { BindingCommand, CommandType } from '../resources/binding-command';
-import { createError, createLookup, isString, objectAssign, objectFreeze } from '../utilities';
+import { charCodeAt, createError, createLookup, isString, objectAssign, objectFreeze } from '../utilities';
 import { allResources, createInterface, singletonRegistration } from '../utilities-di';
 import { appendManyToTemplate, appendToTemplate, createComment, createElement, createText, insertBefore, insertManyBefore, getPreviousSibling } from '../utilities-dom';
 import { appendResourceKey, defineMetadata, getResourceKeyFor } from '../utilities-metadata';
@@ -1403,7 +1403,7 @@ export class TemplateCompiler implements ITemplateCompiler {
     let bindable: BindableDefinition;
 
     for (let i = 0; i < valueLength; ++i) {
-      ch = attrRawValue.charCodeAt(i);
+      ch = charCodeAt(attrRawValue, i);
 
       if (ch === Char.Backslash) {
         ++i;
@@ -1412,12 +1412,12 @@ export class TemplateCompiler implements ITemplateCompiler {
         attrName = attrRawValue.slice(start, i);
 
         // Skip whitespace after colon
-        while (attrRawValue.charCodeAt(++i) <= Char.Space);
+        while (charCodeAt(attrRawValue, ++i) <= Char.Space);
 
         start = i;
 
         for (; i < valueLength; ++i) {
-          ch = attrRawValue.charCodeAt(i);
+          ch = charCodeAt(attrRawValue, i);
           if (ch === Char.Backslash) {
             ++i;
             // Ignore whatever comes next because it's escaped
@@ -1460,7 +1460,7 @@ export class TemplateCompiler implements ITemplateCompiler {
         }
 
         // Skip whitespace after semicolon
-        while (i < valueLength && attrRawValue.charCodeAt(++i) <= Char.Space);
+        while (i < valueLength && charCodeAt(attrRawValue, ++i) <= Char.Space);
 
         start = i;
 
@@ -1801,13 +1801,13 @@ const hasInlineBindings = (rawValue: string): boolean => {
   let ch = 0;
   let i = 0;
   while (len > i) {
-    ch = rawValue.charCodeAt(i);
+    ch = charCodeAt(rawValue, i);
     if (ch === Char.Backslash) {
       ++i;
       // Ignore whatever comes next because it's escaped
     } else if (ch === Char.Colon) {
       return true;
-    } else if (ch === Char.Dollar && rawValue.charCodeAt(i + 1) === Char.OpenBrace) {
+    } else if (ch === Char.Dollar && charCodeAt(rawValue, i + 1) === Char.OpenBrace) {
       return false;
     }
     ++i;

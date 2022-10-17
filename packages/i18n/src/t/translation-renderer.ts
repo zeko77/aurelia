@@ -48,7 +48,6 @@ export class TranslationBindingInstruction {
 
 export class TranslationBindingCommand implements BindingCommandInstance {
   public readonly type: CommandType.None = CommandType.None;
-  public get name() { return 't'; }
 
   public build(info: ICommandBuildInfo, parser: IExpressionParser, attrMapper: IAttrMapper): TranslationBindingInstruction {
     let target: string;
@@ -112,8 +111,6 @@ export class TranslationBindBindingInstruction {
 
 export class TranslationBindBindingCommand implements BindingCommandInstance {
   public readonly type: CommandType.None = CommandType.None;
-  public get name() { return 't-bind'; }
-
   public build(info: ICommandBuildInfo, exprParser: IExpressionParser, attrMapper: IAttrMapper): TranslationBindingInstruction {
     let target: string;
     if (info.bindable == null) {

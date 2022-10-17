@@ -22,7 +22,7 @@ import { IPlatform } from './platform';
 import { IViewFactory } from './templating/view';
 import { IRendering } from './templating/rendering';
 import type { AttrSyntax } from './resources/attribute-pattern';
-import { createError, defineProp, objectKeys, isString } from './utilities';
+import { createError, defineProp, objectKeys, isString, charCodeAt } from './utilities';
 import { createInterface, registerResolver, singletonRegistration } from './utilities-di';
 
 import type { IServiceLocator, IContainer, Class, IRegistry, Constructable, IResolver } from '@aurelia/kernel';
@@ -362,6 +362,7 @@ export interface IRenderer<
     platform: IPlatform,
     exprParser: IExpressionParser,
     observerLocator: IObserverLocator,
+    rendering: IRendering,
   ): void;
 }
 
@@ -455,15 +456,7 @@ export class SetPropertyRenderer implements IRenderer {
 @renderer(InstructionType.hydrateElement)
 /** @internal */
 export class CustomElementRenderer implements IRenderer {
-  /** @internal */ protected static get inject(): unknown[] { return [IRendering]; }
-  /** @internal */ private readonly _rendering: IRendering;
-
   public target!: InstructionType.hydrateElement;
-
-  public constructor(rendering: IRendering) {
-    this._rendering = rendering;
-  }
-
   public render(
     renderingCtrl: IHydratableController,
     target: HTMLElement,
@@ -471,6 +464,7 @@ export class CustomElementRenderer implements IRenderer {
     platform: IPlatform,
     exprParser: IExpressionParser,
     observerLocator: IObserverLocator,
+    rendering: IRendering,
   ): void {
     /* eslint-disable prefer-const */
     let def: CustomElementDefinition | null;
@@ -524,14 +518,14 @@ export class CustomElementRenderer implements IRenderer {
 
     setRef(target, def.key, childCtrl);
 
-    const renderers = this._rendering.renderers;
+    const renderers = rendering.renderers;
     const props = instruction.props;
     const ii = props.length;
     let i = 0;
     let propInst: IInstruction;
     while (ii > i) {
       propInst = props[i];
-      renderers[propInst.type].render(renderingCtrl, childCtrl, propInst, platform, exprParser, observerLocator);
+      renderers[propInst.type].render(renderingCtrl, childCtrl, propInst, platform, exprParser, observerLocator, rendering);
       ++i;
     }
 
@@ -543,15 +537,7 @@ export class CustomElementRenderer implements IRenderer {
 @renderer(InstructionType.hydrateAttribute)
 /** @internal */
 export class CustomAttributeRenderer implements IRenderer {
-  /** @internal */ protected static get inject(): unknown[] { return [IRendering]; }
-  /** @internal */ private readonly _rendering: IRendering;
-
   public target!: InstructionType.hydrateAttribute;
-
-  public constructor(rendering: IRendering) {
-    this._rendering = rendering;
-  }
-
   public render(
     /**
      * The cotroller that is currently invoking this renderer
@@ -562,6 +548,7 @@ export class CustomAttributeRenderer implements IRenderer {
     platform: IPlatform,
     exprParser: IExpressionParser,
     observerLocator: IObserverLocator,
+    rendering: IRendering,
   ): void {
     /* eslint-disable prefer-const */
     let ctxContainer = renderingCtrl.container;
@@ -604,14 +591,14 @@ export class CustomAttributeRenderer implements IRenderer {
 
     setRef(target, def.key, childController);
 
-    const renderers = this._rendering.renderers;
+    const renderers = rendering.renderers;
     const props = instruction.props;
     const ii = props.length;
     let i = 0;
     let propInst: IInstruction;
     while (ii > i) {
       propInst = props[i];
-      renderers[propInst.type].render(renderingCtrl, childController, propInst, platform, exprParser, observerLocator);
+      renderers[propInst.type].render(renderingCtrl, childController, propInst, platform, exprParser, observerLocator, rendering);
       ++i;
     }
 
@@ -623,16 +610,7 @@ export class CustomAttributeRenderer implements IRenderer {
 @renderer(InstructionType.hydrateTemplateController)
 /** @internal */
 export class TemplateControllerRenderer implements IRenderer {
-  /** @internal */ protected static get inject(): unknown[] { return [IRendering, IPlatform]; }
-  /** @internal */ private readonly _rendering: IRendering;
-  /** @internal */ private readonly _platform: IPlatform;
-
   public target!: InstructionType.hydrateTemplateController;
-  public constructor(rendering: IRendering, platform: IPlatform) {
-    this._rendering = rendering;
-    this._platform = platform;
-  }
-
   public render(
     renderingCtrl: IHydratableController,
     target: HTMLElement,
@@ -640,6 +618,7 @@ export class TemplateControllerRenderer implements IRenderer {
     platform: IPlatform,
     exprParser: IExpressionParser,
     observerLocator: IObserverLocator,
+    rendering: IRendering,
   ): void {
     /* eslint-disable prefer-const */
     let ctxContainer = renderingCtrl.container;
@@ -664,10 +643,10 @@ export class TemplateControllerRenderer implements IRenderer {
       default:
         def = instruction.res;
     }
-    const viewFactory = this._rendering.getViewFactory(instruction.def, ctxContainer);
+    const viewFactory = rendering.getViewFactory(instruction.def, ctxContainer);
     const renderLocation = convertToRenderLocation(target);
     const results = invokeAttribute(
-      /* platform         */this._platform,
+      /* platform         */platform,
       /* attr definition  */def,
       /* parentController */renderingCtrl,
       /* host             */target,
@@ -686,14 +665,14 @@ export class TemplateControllerRenderer implements IRenderer {
 
     results.vm.link?.(renderingCtrl, childController, target, instruction);
 
-    const renderers = this._rendering.renderers;
+    const renderers = rendering.renderers;
     const props = instruction.props;
     const ii = props.length;
     let i = 0;
     let propInst: IInstruction;
     while (ii > i) {
       propInst = props[i];
-      renderers[propInst.type].render(renderingCtrl, childController, propInst, platform, exprParser, observerLocator);
+      renderers[propInst.type].render(renderingCtrl, childController, propInst, platform, exprParser, observerLocator, rendering);
       ++i;
     }
 
@@ -968,12 +947,11 @@ export class AttributeBindingRenderer implements IRenderer {
 
 @renderer(InstructionType.spreadBinding)
 export class SpreadRenderer implements IRenderer {
-  /** @internal */ protected static get inject() { return [ITemplateCompiler, IRendering]; }
+  /** @internal */ protected static get inject() { return [ITemplateCompiler]; }
 
   public target!: InstructionType.spreadBinding;
   public constructor(
     /** @internal */ private readonly _compiler: ITemplateCompiler,
-    /** @internal */ private readonly _rendering: IRendering,
   ) {}
 
   public render(
@@ -983,10 +961,11 @@ export class SpreadRenderer implements IRenderer {
     platform: IPlatform,
     exprParser: IExpressionParser,
     observerLocator: IObserverLocator,
+    rendering: IRendering,
   ): void {
     const container = renderingCtrl.container;
     const hydrationContext = container.get(IHydrationContext);
-    const renderers = this._rendering.renderers;
+    const renderers = rendering.renderers;
     const getHydrationContext = (ancestor: number) => {
       let currentLevel = ancestor;
       let currentContext: IHydrationContext | undefined = hydrationContext;
@@ -1022,10 +1001,11 @@ export class SpreadRenderer implements IRenderer {
               platform,
               exprParser,
               observerLocator,
+              rendering,
             );
             break;
           default:
-            renderers[inst.type].render(spreadBinding, target, inst, platform, exprParser, observerLocator);
+            renderers[inst.type].render(spreadBinding, target, inst, platform, exprParser, observerLocator, rendering);
         }
       }
       renderingCtrl.addBinding(spreadBinding);
@@ -1112,7 +1092,7 @@ function addClasses(classList: DOMTokenList, className: string): void {
   const len = className.length;
   let start = 0;
   for (let i = 0; i < len; ++i) {
-    if (className.charCodeAt(i) === 0x20) {
+    if (charCodeAt(className, i) === 0x20) {
       if (i !== start) {
         classList.add(className.slice(start, i));
       }

@@ -18,6 +18,8 @@ const O = Object;
 
 /** @internal */ export const objectKeys = O.keys;
 
+/** @internal */ export const charCodeAt = (str: string, i: number) => str.charCodeAt(i);
+
 const IsDataAttribute: Record<string, boolean> = createLookup();
 
 /** @internal */ export const isDataAttribute = (obj: Node, key: PropertyKey, svgAnalyzer: ISVGAnalyzer): boolean => {

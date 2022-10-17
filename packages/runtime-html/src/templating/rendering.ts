@@ -143,7 +143,7 @@ export class Rendering {
         jj = row.length;
         while (jj > j) {
           instruction = row[j];
-          renderers[instruction.type].render(controller, target, instruction, this._platform, this._exprParser, this._observerLocator);
+          renderers[instruction.type].render(controller, target, instruction, this._platform, this._exprParser, this._observerLocator, this);
           ++j;
         }
         ++i;
@@ -156,7 +156,7 @@ export class Rendering {
         j = 0;
         while (jj > j) {
           instruction = row[j];
-          renderers[instruction.type].render(controller, host, instruction, this._platform, this._exprParser, this._observerLocator);
+          renderers[instruction.type].render(controller, host, instruction, this._platform, this._exprParser, this._observerLocator, this);
           ++j;
         }
       }

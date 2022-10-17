@@ -48,8 +48,6 @@ export class TranslationParametersBindingInstruction {
 @bindingCommand(attribute)
 export class TranslationParametersBindingCommand implements BindingCommandInstance {
   public readonly type: CommandType.None = CommandType.None;
-  public get name() { return attribute; }
-
   public build(info: ICommandBuildInfo, exprParser: IExpressionParser, attrMapper: IAttrMapper): TranslationParametersBindingInstruction {
     const attr = info.attr;
     let target = attr.target;
