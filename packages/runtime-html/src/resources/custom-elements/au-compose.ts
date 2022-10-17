@@ -3,7 +3,7 @@ import { Scope } from '@aurelia/runtime';
 import { bindable } from '../../bindable';
 import { INode, IRenderLocation, isRenderLocation } from '../../dom';
 import { IPlatform } from '../../platform';
-import { HydrateElementInstruction, IInstruction } from '../../renderer';
+import { HydrateElementInstruction, IInstruction } from '../../templating/renderer';
 import { LifecycleFlags, Controller, IController, ICustomElementController, IHydratedController, ISyntheticView } from '../../templating/controller';
 import { IRendering } from '../../templating/rendering';
 import { createError, isFunction, isPromise } from '../../utilities';

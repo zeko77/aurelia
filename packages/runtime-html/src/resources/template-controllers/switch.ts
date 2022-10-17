@@ -20,7 +20,7 @@ import { createError, isArray } from '../../utilities';
 
 import type { LifecycleFlags, Controller, ICustomAttributeController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, IHydratableController, ISyntheticView, ControllerVisitor } from '../../templating/controller';
 import type { INode } from '../../dom';
-import type { IInstruction } from '../../renderer';
+import type { IInstruction } from '../../templating/renderer';
 
 @templateController('switch')
 export class Switch implements ICustomAttributeViewModel {

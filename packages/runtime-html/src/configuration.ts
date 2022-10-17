@@ -40,7 +40,7 @@ import {
   SetClassAttributeRenderer,
   SetStyleAttributeRenderer,
   SpreadRenderer,
-} from './renderer';
+} from './templating/renderer';
 import {
   FromViewBindingBehavior,
   OneTimeBindingBehavior,

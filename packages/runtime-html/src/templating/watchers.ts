@@ -117,10 +117,8 @@ export interface ExpressionWatcher extends IConnectableBinding { }
 
 export class ExpressionWatcher implements IConnectableBinding {
   public isBound: boolean = false;
-  /**
-   * @internal
-   */
-  private readonly obj: object;
+  /** @internal */
+  private readonly _obj: object;
 
   /** @internal */
   private _value: unknown;
@@ -145,14 +143,14 @@ export class ExpressionWatcher implements IConnectableBinding {
     expression: IsBindingBehavior,
     callback: IWatcherCallback<object>,
   ) {
-    this.obj = scope.bindingContext;
+    this._obj = scope.bindingContext;
     this._expression = expression;
     this._callback = callback;
   }
 
   public handleChange(value: unknown): void {
     const expr = this._expression;
-    const obj = this.obj;
+    const obj = this._obj;
     const oldValue = this._value;
     const canOptimize = expr.$kind === ExpressionKind.AccessScope && this.obs.count === 1;
     if (!canOptimize) {

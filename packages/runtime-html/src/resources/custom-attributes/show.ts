@@ -2,12 +2,12 @@ import { INode } from '../../dom';
 import { IPlatform } from '../../platform';
 import { customAttribute } from '../custom-attribute';
 import { bindable } from '../../bindable';
-import { IInstruction } from '../../renderer';
+import { IInstruction } from '../../templating/renderer';
 
 import type { ITask } from '@aurelia/platform';
 
 import type { ICustomAttributeViewModel } from '../../templating/controller';
-import type { HydrateAttributeInstruction } from '../../renderer';
+import type { HydrateAttributeInstruction } from '../../templating/renderer';
 import { alias } from '../../utilities-di';
 
 export class Show implements ICustomAttributeViewModel {

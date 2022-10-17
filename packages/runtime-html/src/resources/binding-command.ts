@@ -10,7 +10,7 @@ import {
   ListenerBindingInstruction,
   SpreadBindingInstruction,
   MultiAttrInstruction,
-} from '../renderer';
+} from '../templating/renderer';
 import { DefinitionType } from './resources-shared';
 import { appendResourceKey, defineMetadata, getAnnotationKeyFor, getOwnMetadata, getResourceKeyFor } from '../utilities-metadata';
 import { isString, objectFreeze } from '../utilities';
@@ -24,7 +24,7 @@ import type {
   ResourceDefinition,
   PartialResourceDefinition,
 } from '@aurelia/kernel';
-import type { IInstruction } from '../renderer';
+import type { IInstruction } from '../templating/renderer';
 import { AttrSyntax, IAttributeParser } from './attribute-pattern';
 import type { BindableDefinition } from '../bindable';
 import type { CustomAttributeDefinition } from './custom-attribute';

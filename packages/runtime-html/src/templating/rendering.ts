@@ -3,7 +3,7 @@ import { IExpressionParser, IObserverLocator } from '@aurelia/runtime';
 
 import { FragmentNodeSequence, INode, INodeSequence } from '../dom';
 import { IPlatform } from '../platform';
-import { ICompliationInstruction, IInstruction, IRenderer, ITemplateCompiler } from '../renderer';
+import { ICompliationInstruction, IInstruction, IRenderer, ITemplateCompiler } from './renderer';
 import { CustomElementDefinition, PartialCustomElementDefinition } from '../resources/custom-element';
 import { createError, createLookup, isString } from '../utilities';
 import { IViewFactory, ViewFactory } from './view';

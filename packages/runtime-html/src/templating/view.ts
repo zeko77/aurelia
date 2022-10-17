@@ -7,7 +7,15 @@ import type { IContainer } from '@aurelia/kernel';
 import type { PartialCustomElementDefinition } from '../resources/custom-element';
 import type { ICustomAttributeController, ICustomElementController, ISyntheticView } from './controller';
 
-export interface IViewFactory extends ViewFactory {}
+export interface IViewFactory {
+  readonly name: string;
+  readonly container: IContainer;
+  readonly def: PartialCustomElementDefinition;
+
+  tryReturnToCache(controller: ISyntheticView): boolean;
+  create(parentController?: ISyntheticView | ICustomElementController | ICustomAttributeController): ISyntheticView;
+}
+
 export const IViewFactory = createInterface<IViewFactory>('IViewFactory');
 export class ViewFactory implements IViewFactory {
   public static maxCacheSize: number = 0xFFFF;
@@ -15,7 +23,9 @@ export class ViewFactory implements IViewFactory {
   public name: string;
   public readonly container: IContainer;
   public def: PartialCustomElementDefinition;
-  public isCaching: boolean = false;
+
+  /** @internal */
+  private _isCaching: boolean = false;
 
   /** @internal */
   private _cache: ISyntheticView[] = null!;
@@ -51,15 +61,16 @@ export class ViewFactory implements IViewFactory {
       this._cache = null!;
     }
 
-    this.isCaching = this._cacheSize > 0;
+    this._isCaching = this._cacheSize > 0;
   }
 
-  public canReturnToCache(_controller: ISyntheticView): boolean {
+  /** @internal */
+  private _canReturnToCache(_controller: ISyntheticView): boolean {
     return this._cache != null && this._cache.length < this._cacheSize;
   }
 
   public tryReturnToCache(controller: ISyntheticView): boolean {
-    if (this.canReturnToCache(controller)) {
+    if (this._canReturnToCache(controller)) {
       this._cache.push(controller);
       return true;
     }

@@ -29,7 +29,7 @@ export class CSSModulesProcessorRegistry implements IRegistry {
 
       public value!: string;
       public constructor(
-        private readonly element: INode<HTMLElement>,
+        private readonly el: INode<HTMLElement>,
       ) {}
 
       public binding() {
@@ -38,11 +38,11 @@ export class CSSModulesProcessorRegistry implements IRegistry {
 
       public valueChanged() {
         if (!this.value) {
-          this.element.className = '';
+          this.el.className = '';
           return;
         }
 
-        this.element.className = getClassesToAdd(this.value).map(x => classLookup[x] || x).join(' ');
+        this.el.className = getClassesToAdd(this.value).map(x => classLookup[x] || x).join(' ');
       }
     });
 

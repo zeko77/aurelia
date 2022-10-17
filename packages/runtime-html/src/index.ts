@@ -187,7 +187,7 @@ export {
   SetStyleAttributeRenderer,
   SpreadRenderer,
   StylePropertyBindingRenderer,
-} from './renderer';
+} from './templating/renderer';
 
 export {
   AttributeNSAccessor,

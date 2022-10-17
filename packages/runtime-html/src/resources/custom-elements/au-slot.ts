@@ -2,14 +2,14 @@ import { Scope } from '@aurelia/runtime';
 import { IRenderLocation } from '../../dom';
 import { bindable } from '../../bindable';
 import { customElement } from '../custom-element';
-import { IInstruction } from '../../renderer';
+import { IInstruction } from '../../templating/renderer';
 import { IHydrationContext } from '../../templating/controller';
 import { IRendering } from '../../templating/rendering';
 
 import type { Writable } from '@aurelia/kernel';
 import type { LifecycleFlags, ControllerVisitor, ICustomElementController, ICustomElementViewModel, IHydratedController, IHydratedParentController, ISyntheticView } from '../../templating/controller';
 import type { IViewFactory } from '../../templating/view';
-import type { HydrateElementInstruction } from '../../renderer';
+import type { HydrateElementInstruction } from '../../templating/renderer';
 
 @customElement({
   name: 'au-slot',

@@ -33,7 +33,7 @@ import type { INode } from '../dom';
 import type { PartialChildrenDefinition, ChildrenDefinition } from '../templating/children';
 import type { Controller, ICustomElementViewModel, ICustomElementController } from '../templating/controller';
 import type { IPlatform } from '../platform';
-import type { IInstruction } from '../renderer';
+import type { IInstruction } from '../templating/renderer';
 import type { IWatchDefinition } from '../watch';
 
 declare module '@aurelia/kernel' {

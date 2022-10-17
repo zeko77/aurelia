@@ -6,24 +6,24 @@ import {
   type IBinding,
   Scope,
 } from '@aurelia/runtime';
-import { BindingMode } from './binding/interfaces-bindings';
-import { AttributeBinding } from './binding/attribute';
-import { InterpolationBinding, ContentBinding } from './binding/interpolation-binding';
-import { LetBinding } from './binding/let-binding';
-import { PropertyBinding } from './binding/property-binding';
-import { RefBinding } from './binding/ref-binding';
-import { ListenerBinding, ListenerBindingOptions } from './binding/listener-binding';
-import { CustomElement, CustomElementDefinition, findElementControllerFor } from './resources/custom-element';
-import { AuSlotsInfo, IAuSlotsInfo, IProjections } from './resources/slot-injectables';
-import { CustomAttribute, CustomAttributeDefinition, findAttributeControllerFor } from './resources/custom-attribute';
-import { convertToRenderLocation, IRenderLocation, INode, setRef } from './dom';
-import { Controller, ICustomElementController, ICustomElementViewModel, IController, ICustomAttributeViewModel, IHydrationContext, ViewModelKind } from './templating/controller';
-import { IPlatform } from './platform';
-import { IViewFactory } from './templating/view';
-import { IRendering } from './templating/rendering';
-import type { AttrSyntax } from './resources/attribute-pattern';
-import { createError, defineProp, objectKeys, isString, charCodeAt } from './utilities';
-import { createInterface, registerResolver, singletonRegistration } from './utilities-di';
+import { BindingMode } from '../binding/interfaces-bindings';
+import { AttributeBinding } from '../binding/attribute';
+import { InterpolationBinding, ContentBinding } from '../binding/interpolation-binding';
+import { LetBinding } from '../binding/let-binding';
+import { PropertyBinding } from '../binding/property-binding';
+import { RefBinding } from '../binding/ref-binding';
+import { ListenerBinding, ListenerBindingOptions } from '../binding/listener-binding';
+import { CustomElement, CustomElementDefinition, findElementControllerFor } from '../resources/custom-element';
+import { AuSlotsInfo, IAuSlotsInfo, IProjections } from '../resources/slot-injectables';
+import { CustomAttribute, CustomAttributeDefinition, findAttributeControllerFor } from '../resources/custom-attribute';
+import { convertToRenderLocation, IRenderLocation, INode, setRef } from '../dom';
+import { Controller, type ICustomElementController, type ICustomElementViewModel, IController, type ICustomAttributeViewModel, IHydrationContext, ViewModelKind } from './controller';
+import { IPlatform } from '../platform';
+import { IViewFactory } from './view';
+import { IRendering } from './rendering';
+import type { AttrSyntax } from '../resources/attribute-pattern';
+import { createError, defineProp, objectKeys, isString, charCodeAt } from '../utilities';
+import { createInterface, registerResolver, singletonRegistration } from '../utilities-di';
 
 import type { IServiceLocator, IContainer, Class, IRegistry, Constructable, IResolver } from '@aurelia/kernel';
 import type {
@@ -33,9 +33,9 @@ import type {
   IObservable,
   ForOfStatement,
 } from '@aurelia/runtime';
-import type { IHydratableController } from './templating/controller';
-import type { PartialCustomElementDefinition } from './resources/custom-element';
-import { createText, insertBefore } from './utilities-dom';
+import type { IHydratableController } from './controller';
+import type { PartialCustomElementDefinition } from '../resources/custom-element';
+import { createText, insertBefore } from '../utilities-dom';
 
 export const enum InstructionType {
   hydrateElement = 'ra',

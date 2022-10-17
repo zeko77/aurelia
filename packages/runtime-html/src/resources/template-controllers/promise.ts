@@ -4,7 +4,7 @@ import { Scope } from '@aurelia/runtime';
 import { bindable } from '../../bindable';
 import { INode, IRenderLocation } from '../../dom';
 import { IPlatform } from '../../platform';
-import { IInstruction } from '../../renderer';
+import { IInstruction } from '../../templating/renderer';
 import { BindingMode } from '../../binding/interfaces-bindings';
 import {
   LifecycleFlags,

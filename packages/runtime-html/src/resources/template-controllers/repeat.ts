@@ -27,7 +27,7 @@ import { templateController } from '../custom-attribute';
 import { IController } from '../../templating/controller';
 import { bindable } from '../../bindable';
 import { areEqual, createError, isArray, isPromise, baseObjectPrototype, rethrow } from '../../utilities';
-import { HydrateTemplateController, IInstruction, IteratorBindingInstruction } from '../../renderer';
+import { HydrateTemplateController, IInstruction, IteratorBindingInstruction } from '../../templating/renderer';
 
 import type { PropertyBinding } from '../../binding/property-binding';
 import type { LifecycleFlags, ISyntheticView, ICustomAttributeController, IHydratableController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, ControllerVisitor } from '../../templating/controller';

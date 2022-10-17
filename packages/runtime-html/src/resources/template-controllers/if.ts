@@ -6,7 +6,7 @@ import { templateController } from '../custom-attribute';
 import { bindable } from '../../bindable';
 
 import type { LifecycleFlags, ISyntheticView, ICustomAttributeController, ICustomAttributeViewModel, IHydratedController, IHydratedParentController, ControllerVisitor, IHydratableController } from '../../templating/controller';
-import type { IInstruction } from '../../renderer';
+import type { IInstruction } from '../../templating/renderer';
 import type { INode } from '../../dom';
 import { createError } from '../../utilities';
 
