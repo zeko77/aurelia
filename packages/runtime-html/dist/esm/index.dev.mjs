@@ -3948,13 +3948,23 @@ class AppRoot {
     }
 }
 
+const auLocationStart = 'au-start';
+const auLocationEnd = 'au-end';
 const createElement = (p, name) => p.document.createElement(name);
 const createComment = (p, text) => p.document.createComment(text);
+const createLocation = (p) => {
+    const locationEnd = createComment(p, auLocationEnd);
+    locationEnd.$start = createComment(p, auLocationStart);
+    return locationEnd;
+};
 const createText = (p, text) => p.document.createTextNode(text);
 const insertBefore = (parent, newChildNode, target) => {
     return parent.insertBefore(newChildNode, target);
 };
 const insertManyBefore = (parent, target, newChildNodes) => {
+    if (parent === null) {
+        return;
+    }
     const ii = newChildNodes.length;
     let i = 0;
     while (ii > i) {
@@ -8038,44 +8048,57 @@ customAttribute('show')(Show);
 
 class Portal {
     constructor(factory, originalLoc, p) {
+        this.position = 'beforeend';
         this.strict = false;
         this._platform = p;
-        this._currentTarget = p.document.createElement('div');
-        this.view = factory.create();
+        this._resolvedTarget = p.document.createElement('div');
+        (this.view = factory.create()).setLocation(this._targetLocation = createLocation(p));
         setEffectiveParentNode(this.view.nodes, originalLoc);
     }
     attaching(initiator, parent, flags) {
         if (this.callbackContext == null) {
             this.callbackContext = this.$controller.scope.bindingContext;
         }
-        const newTarget = this._currentTarget = this._resolveTarget();
-        this.view.setHost(newTarget);
+        const newTarget = this._resolvedTarget = this._getTarget();
+        this._moveLocation(newTarget, this.position);
         return this._activating(initiator, newTarget, flags);
     }
     detaching(initiator, parent, flags) {
-        return this._deactivating(initiator, this._currentTarget, flags);
+        return this._deactivating(initiator, this._resolvedTarget, flags);
     }
     targetChanged() {
         const { $controller } = this;
         if (!$controller.isActive) {
             return;
         }
-        const oldTarget = this._currentTarget;
-        const newTarget = this._currentTarget = this._resolveTarget();
-        if (oldTarget === newTarget) {
+        const newTarget = this._getTarget();
+        if (this._resolvedTarget === newTarget) {
             return;
         }
-        this.view.setHost(newTarget);
+        this._resolvedTarget = newTarget;
         const ret = onResolve(this._deactivating(null, newTarget, $controller.flags), () => {
+            this._moveLocation(newTarget, this.position);
             return this._activating(null, newTarget, $controller.flags);
         });
         if (isPromise(ret)) {
-            ret.catch(err => { throw err; });
+            ret.catch(rethrow);
+        }
+    }
+    positionChanged() {
+        const { $controller, _resolvedTarget } = this;
+        if (!$controller.isActive) {
+            return;
+        }
+        const ret = onResolve(this._deactivating(null, _resolvedTarget, $controller.flags), () => {
+            this._moveLocation(_resolvedTarget, this.position);
+            return this._activating(null, _resolvedTarget, $controller.flags);
+        });
+        if (isPromise(ret)) {
+            ret.catch(rethrow);
         }
     }
     _activating(initiator, target, flags) {
         const { activating, callbackContext, view } = this;
-        view.setHost(target);
         return onResolve(activating?.call(callbackContext, target, view), () => {
             return this._activate(initiator, target, flags);
         });
@@ -8083,7 +8106,7 @@ class Portal {
     _activate(initiator, target, flags) {
         const { $controller, view } = this;
         if (initiator === null) {
-            view.nodes.appendTo(target);
+            view.nodes.insertBefore(this._targetLocation);
         }
         else {
             return onResolve(view.activate(initiator ?? view, $controller, flags, $controller.scope), () => {
@@ -8118,7 +8141,7 @@ class Portal {
         const { deactivated, callbackContext, view } = this;
         return deactivated?.call(callbackContext, target, view);
     }
-    _resolveTarget() {
+    _getTarget() {
         const p = this._platform;
         const $document = p.document;
         let target = this.target;
@@ -8150,6 +8173,28 @@ class Portal {
         }
         return target;
     }
+    _moveLocation(target, position) {
+        const end = this._targetLocation;
+        const start = end.$start;
+        const parent = target.parentNode;
+        const nodes = [start, end];
+        switch (position) {
+            case 'beforeend':
+                insertManyBefore(target, null, nodes);
+                break;
+            case 'afterbegin':
+                insertManyBefore(target, target.firstChild, nodes);
+                break;
+            case 'beforebegin':
+                insertManyBefore(parent, target, nodes);
+                break;
+            case 'afterend':
+                insertManyBefore(parent, target.nextSibling, nodes);
+                break;
+            default:
+                throw new Error('Invalid portal insertion position');
+        }
+    }
     dispose() {
         this.view.dispose();
         this.view = (void 0);
@@ -8165,6 +8210,9 @@ Portal.inject = [IViewFactory, IRenderLocation, IPlatform];
 __decorate([
     bindable({ primary: true })
 ], Portal.prototype, "target", void 0);
+__decorate([
+    bindable()
+], Portal.prototype, "position", void 0);
 __decorate([
     bindable({ callback: 'targetChanged' })
 ], Portal.prototype, "renderContext", void 0);

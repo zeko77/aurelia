@@ -3720,34 +3720,41 @@ function Mi(e, n, r = [], o = true, a = TestContext.create()) {
         } else mi.strictEqual(h.textContent, e);
     }
     function S(e, t) {
-        if (2 === arguments.length) {
-            const n = k(e);
-            if (null === n) throw new Error(`No element found for selector "${e}" to compare innerHTML against "${t}"`);
-            mi.strictEqual(n.innerHTML, t);
-        } else mi.strictEqual(h.innerHTML, e);
+        let n = e.innerHTML;
+        if (t) n = n.replace(/<!--au-start-->/g, "").replace(/<!--au-end-->/g, "").replace(/\s+/g, " ").trim();
+        return n;
     }
-    function O(e, t, n) {
+    function O(e, t = e, {compact: n} = {
+        compact: false
+    }) {
+        if (arguments.length > 1) {
+            const i = k(e);
+            if (null === i) throw new Error(`No element found for selector "${e}" to compare innerHTML against "${t}"`);
+            mi.strictEqual(S(i, n), t);
+        } else mi.strictEqual(S(h, n), e);
+    }
+    function E(e, t, n) {
         const i = k(e);
         if (null === i) throw new Error(`No element found for selector "${e}" to compare attribute "${t}" against "${n}"`);
         mi.strictEqual(i.getAttribute(t), n);
     }
-    function E(e, t, n, i) {
+    function j(e, t, n, i) {
         const r = k(e);
         if (null === r) throw new Error(`No element found for selector "${e}" to compare attribute "${n}" against "${i}"`);
         mi.strictEqual(r.getAttributeNS(t, n), i);
     }
-    function j(e, t) {
+    function A(e, t) {
         const n = k(e);
         if (null === n) throw new Error(`No element found for selector "${e}" to compare value against "${t}"`);
         mi.strictEqual(n.value, t);
     }
-    function A(e, t, n) {
+    function R(e, t, n) {
         const i = k(e);
         if (null === i) throw new Error(`No element found for selector "${e}" to fire event "${t}"`);
         i.dispatchEvent(new a.CustomEvent(t, n));
     }
     [ "click", "change", "input", "scroll" ].forEach((e => {
-        Object.defineProperty(A, e, {
+        Object.defineProperty(R, e, {
             configurable: true,
             writable: true,
             value: (t, n) => {
@@ -3757,13 +3764,13 @@ function Mi(e, n, r = [], o = true, a = TestContext.create()) {
             }
         });
     }));
-    function R(e, t) {
+    function q(e, t) {
         const n = "string" === typeof e ? k(e) : e;
         if (null === n || !/input|textarea/i.test(n.nodeName)) throw new Error(`No <input>/<textarea> element found for selector "${e}" to emulate input for "${t}"`);
         n.value = t;
         n.dispatchEvent(new u.window.Event("input"));
     }
-    const q = (e, t) => {
+    const M = (e, t) => {
         const n = k(e);
         if (null === n) throw new Error(`No element found for selector "${e}" to scroll by "${JSON.stringify(t)}"`);
         n.scrollBy("number" === typeof t ? {
@@ -3771,10 +3778,10 @@ function Mi(e, n, r = [], o = true, a = TestContext.create()) {
         } : t);
         n.dispatchEvent(new u.window.Event("scroll"));
     };
-    const M = e => {
+    const L = e => {
         a.platform.domWriteQueue.flush(e);
     };
-    const L = new class Results {
+    const T = new class Results {
         constructor() {
             this.startPromise = x;
             this.ctx = a;
@@ -3791,15 +3798,15 @@ function Mi(e, n, r = [], o = true, a = TestContext.create()) {
             this.getAllBy = w;
             this.queryBy = k;
             this.assertText = C;
-            this.assertHtml = S;
-            this.assertAttr = O;
-            this.assertAttrNS = E;
-            this.assertValue = j;
+            this.assertHtml = O;
+            this.assertAttr = E;
+            this.assertAttrNS = j;
+            this.assertValue = A;
             this.createEvent = (e, t) => new u.CustomEvent(e, t);
-            this.trigger = A;
-            this.type = R;
-            this.scrollBy = q;
-            this.flush = M;
+            this.trigger = R;
+            this.type = q;
+            this.scrollBy = M;
+            this.flush = L;
         }
         start() {
             return d.app({
@@ -3827,8 +3834,8 @@ function Mi(e, n, r = [], o = true, a = TestContext.create()) {
             return Promise.resolve(this);
         }
     };
-    Ri.publish("fixture:created", L);
-    return L;
+    Ri.publish("fixture:created", T);
+    return T;
 }
 
 class FixtureBuilder {

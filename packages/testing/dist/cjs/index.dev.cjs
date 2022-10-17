@@ -7568,16 +7568,27 @@ function createFixture(template, $class, registrations = [], autoStart = true, c
             assert.strictEqual(host.textContent, selector);
         }
     }
-    function assertHtml(selector, html) {
-        if (arguments.length === 2) {
-            const el = queryBy(selector);
+    function getInnerHtml(el, compact) {
+        let actual = el.innerHTML;
+        if (compact) {
+            actual = actual
+                .replace(/<!--au-start-->/g, '')
+                .replace(/<!--au-end-->/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+        return actual;
+    }
+    function assertHtml(selectorOrHtml, html = selectorOrHtml, { compact } = { compact: false }) {
+        if (arguments.length > 1) {
+            const el = queryBy(selectorOrHtml);
             if (el === null) {
-                throw new Error(`No element found for selector "${selector}" to compare innerHTML against "${html}"`);
+                throw new Error(`No element found for selector "${selectorOrHtml}" to compare innerHTML against "${html}"`);
             }
-            assert.strictEqual(el.innerHTML, html);
+            assert.strictEqual(getInnerHtml(el, compact), html);
         }
         else {
-            assert.strictEqual(host.innerHTML, selector);
+            assert.strictEqual(getInnerHtml(host, compact), selectorOrHtml);
         }
     }
     function assertAttr(selector, name, value) {
