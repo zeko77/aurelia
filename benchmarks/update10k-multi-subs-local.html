@@ -1,0 +1,16 @@
+<script type="module">
+import { start } from './local/dist/app.observation.local.js';
+
+const host = document.body.appendChild(document.createElement('div'));
+const au = start(host, 10000);
+performance.mark('10k-start');
+
+au.root.controller.viewModel.updateItems();
+
+performance.mark('10k-end');
+
+// measure memory in MBs
+window.jsHeapSize = performance.memory.usedJSHeapSize / 1e6;
+
+performance.measure('update-10k', '10k-start', '10k-end');
+</script>

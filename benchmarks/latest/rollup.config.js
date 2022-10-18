@@ -4,7 +4,7 @@ import alias from '@rollup/plugin-alias';
 import path from 'path';
 
 /** @type {import('rollup').RollupOptions} */
-export default {
+export default [{
   input: '../app',
   output: {
     file: 'dist/app.latest.js',
@@ -29,4 +29,29 @@ export default {
     nodeResolve(),
     terser()
   ]
-}
+}, {
+  input: '../app.observation',
+  output: {
+    file: 'dist/app.observation.latest.js',
+    sourcemap: true
+  },
+  plugins: [
+    alias({
+      entries: [
+        ...[
+          'kernel',
+          'metadata',
+          'runtime',
+          'runtime-html',
+          'platform',
+          'platform-browser',
+        ].map(name => ({
+          find: `@aurelia/${name}`,
+          replacement: path.resolve(__dirname, `node_modules/@aurelia/${name}/dist/esm/index.mjs`)
+        }))
+      ]
+    }),
+    nodeResolve(),
+    terser()
+  ]
+}]

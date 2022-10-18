@@ -619,7 +619,9 @@ jobs:
           key: cache-{{ .Revision }}-benchmark-app
           paths:
             - benchmarks/latest/dist/app.latest.js
+            - benchmarks/latest/dist/app.observation.latest.js
             - benchmarks/local/dist/app.local.js
+            - benchmarks/local/dist/app.observation.local.js
 
   tacho_benchmark:
     executor: docker_circleci_bench
@@ -855,6 +857,7 @@ workflows:
             - build_release
       - tacho_benchmark_prep:
           <<: *filter_ignore_develop_release
+          name: benchmark_prep
           requires:
             - build_release
       - tacho_benchmark:
@@ -862,19 +865,25 @@ workflows:
           name: benchmark_startup
           command: npm run bench:startup10k
           requires:
-            - tacho_benchmark_prep
+            - benchmark_prep
       - tacho_benchmark:
           <<: *filter_ignore_develop_release
           name: benchmark_rerender
           command: npm run bench:rerender10k
           requires:
-            - tacho_benchmark_prep
+            - benchmark_prep
       - tacho_benchmark:
           <<: *filter_ignore_develop_release
           name: benchmark_update
           command: npm run bench:update1k
           requires:
-            - tacho_benchmark_prep
+            - benchmark_prep
+      - tacho_benchmark:
+          <<: *filter_ignore_develop_release
+          name: benchmark_update_multi_subs
+          command: npm run bench:update1k-multi-subs
+          requires:
+            - benchmark_prep
 
       # - e2e_playwright:
       #     <<: *filter_ignore_develop_release

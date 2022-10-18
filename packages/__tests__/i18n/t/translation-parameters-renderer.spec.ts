@@ -105,7 +105,8 @@ describe('TranslationParametersBindingRenderer', function () {
       callBindingInstruction,
       PLATFORM,
       expressionParser,
-      noopLocator
+      noopLocator,
+      null
     );
 
     assert.instanceOf(controller.bindings[0], TranslationBinding);
@@ -132,7 +133,8 @@ describe('TranslationParametersBindingRenderer', function () {
       callBindingInstruction,
       PLATFORM,
       expressionParser,
-      noopLocator
+      noopLocator,
+      null,
     );
 
     assert.equal(binding['parameter'].ast, paramExpr);

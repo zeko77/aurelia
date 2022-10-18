@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Polymer/tachometer/master/config.schema.json",
+  "root": "../../",
+  
+  "benchmarks": [
+    {
+      "browser": {
+        "name": "chrome",
+        "headless": true,
+        "addArguments": ["--js-flags=--expose-gc", "--enable-precise-memory-info"]
+      },
+      "measurement": [
+        { "name": "perf", "mode": "performance", "entryName": "update-10k" },
+        { "name": "memory", "mode": "expression", "expression": "jsHeapSize" }
+      ],
+      "expand": [
+        {
+          "name": "update 10k latest",
+          "url": "update10k-multi-subs-latest.html"
+        },
+        {
+          "name": "update 10k local",
+          "url": "update10k-multi-subs-local.html"
+        }
+      ]
+    }
+  ],
+  "timeout": 0.5
+}

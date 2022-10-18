@@ -146,6 +146,7 @@ describe('TranslationBindingRenderer', function () {
       PLATFORM,
       expressionParser,
       noopLocator,
+      null,
     );
 
     assert.instanceOf(controller.bindings[0], TranslationBinding);
@@ -167,7 +168,8 @@ describe('TranslationBindingRenderer', function () {
       callBindingInstruction,
       PLATFORM,
       expressionParser,
-      noopLocator
+      noopLocator,
+      null,
     );
 
     assert.equal(binding.ast, from);
@@ -289,6 +291,7 @@ describe('TranslationBindBindingRenderer', function () {
       PLATFORM,
       expressionParser,
       noopLocator,
+      null,
     );
 
     assert.instanceOf(controller.bindings[0], TranslationBinding);
@@ -309,6 +312,7 @@ describe('TranslationBindBindingRenderer', function () {
       PLATFORM,
       expressionParser,
       noopLocator,
+      null,
     );
 
     assert.instanceOf(controller.bindings[0], TranslationBinding);
@@ -331,6 +335,7 @@ describe('TranslationBindBindingRenderer', function () {
       PLATFORM,
       expressionParser,
       noopLocator,
+      null,
     );
 
     assert.equal(binding.ast, from);
