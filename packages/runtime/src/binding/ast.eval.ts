@@ -3,7 +3,7 @@ import { IIndexable, isArrayIndex } from '@aurelia/kernel';
 import { IConnectable, IOverrideContext, IBindingContext, IObservable } from '../observation';
 import { Scope } from '../observation/scope';
 import { createError, isArray, isFunction, isObject, safeString } from '../utilities-objects';
-import { ExpressionKind, IsExpressionOrStatement, IAstEvaluator, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, BindingBehaviorInstance } from './ast';
+import { ExpressionKind, IsExpressionOrStatement, IAstEvaluator, DestructuringAssignmentExpression, DestructuringAssignmentRestExpression, DestructuringAssignmentSingleExpression, BindingBehaviorInstance, Unparser } from './ast';
 import { IConnectableBinding } from './connectable';
 
 const getContext = Scope.getContext;
@@ -22,10 +22,7 @@ export function astEvaluate(ast: IsExpressionOrStatement, s: Scope, e: IAstEvalu
     }
     case ExpressionKind.AccessScope: {
       const obj = getContext(s, ast.name, ast.ancestor) as IBindingContext;
-      if (c !== null) {
-        c.observe(obj, ast.name);
-      }
-      const evaluatedValue: unknown = obj[ast.name];
+      const evaluatedValue: unknown = c === null ? obj[ast.name] : c.observe(obj, ast.name);
       if (evaluatedValue == null && ast.name === '$host') {
         if (__DEV__)
           throw createError(`AUR0105: Unable to find $host context. Did you forget [au-slot] attribute?`);
@@ -58,7 +55,7 @@ export function astEvaluate(ast: IsExpressionOrStatement, s: Scope, e: IAstEvalu
     case ExpressionKind.Template: {
       let result = ast.cooked[0];
       for (let i = 0; i < ast.expressions.length; ++i) {
-        result += String(astEvaluate(ast.expressions[i], s, e, c));
+        result += safeString(astEvaluate(ast.expressions[i], s, e, c));
         result += ast.cooked[i + 1];
       }
       return result;
@@ -147,21 +144,18 @@ export function astEvaluate(ast: IsExpressionOrStatement, s: Scope, e: IAstEvalu
         if (instance == null) {
           return instance;
         }
-        if (c !== null) {
-          c.observe(instance, ast.name);
-        }
-        ret = instance[ast.name];
+        ret = c === null ? instance[ast.name] : c.observe(instance, ast.name);
         if (e?.boundFn && isFunction(ret)) {
           return ret.bind(instance);
         }
         return ret;
       }
-      if (c !== null && isObject(instance)) {
-        c.observe(instance, ast.name);
-      }
+      // if (c !== null && isObject(instance)) {
+      //   c.observe(instance, ast.name);
+      // }
       // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
       if (instance) {
-        ret = instance[ast.name];
+        ret = c !== null && isObject(instance) ? c.observe(instance, ast.name) : instance[ast.name];
         if (e?.boundFn && isFunction(ret)) {
           return ret.bind(instance);
         }
@@ -173,10 +167,7 @@ export function astEvaluate(ast: IsExpressionOrStatement, s: Scope, e: IAstEvalu
       const instance = astEvaluate(ast.object, s, e, c) as IIndexable;
       if (isObject(instance)) {
         const key = astEvaluate(ast.key, s, e, c) as string;
-        if (c !== null) {
-          c.observe(instance, key);
-        }
-        return instance[key];
+        return c === null ? instance[key] : c.observe(instance, key);
       }
       return void 0;
     }
@@ -184,10 +175,7 @@ export function astEvaluate(ast: IsExpressionOrStatement, s: Scope, e: IAstEvalu
       const results = ast.expressions.map(expr => astEvaluate(expr, s, e, c));
       const func = astEvaluate(ast.func, s, e, c);
       if (!isFunction(func)) {
-        if (__DEV__)
-          throw createError(`AUR0110: Left-hand side of tagged template expression is not a function.`);
-        else
-          throw createError(`AUR0110`);
+        throw invalidTaggedFunction(__DEV__ ? Unparser.unparse(ast.func) : '');
       }
       return func(ast.cooked, ...results);
     }
@@ -582,12 +570,14 @@ const duplicateBehaviorAppliedError = (name: string) =>
   __DEV__
     ? createError(`AUR0102: BindingBehavior '${name}' already applied.`)
     : createError(`AUR0102:${name}`);
-const converterNotFoundError = (name: string) => {
-  if (__DEV__)
-    return createError(`AUR0103: ValueConverter '${name}' could not be found. Did you forget to register it as a dependency?`);
-  else
-    return createError(`AUR0103:${name}`);
-};
+const converterNotFoundError = (name: string) =>
+  __DEV__
+    ? createError(`AUR0103: ValueConverter '${name}' could not be found. Did you forget to register it as a dependency?`)
+    : createError(`AUR0103:${name}`);
+const invalidTaggedFunction = (name: string) =>
+  __DEV__
+    ? createError(`AUR0110: Left-hand side of tagged template expression is not a function in "${name}"`)
+    : createError(`AUR0110`);
 
 const getFunction = (mustEvaluate: boolean | undefined, obj: object, name: string): ((...args: unknown[]) => unknown) | null => {
   const func = obj == null ? null : (obj as IIndexable)[name];
