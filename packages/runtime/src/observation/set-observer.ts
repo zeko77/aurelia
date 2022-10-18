@@ -10,7 +10,7 @@ import type {
 } from '../observation';
 
 // multiple applications of Aurelia wouldn't have different observers for the same Set object
-const lookupMetadataKey = '__au_set_obs__';
+const lookupMetadataKey = Symbol.for('au_set_obs');
 const observerLookup = (() => {
   let lookup: WeakMap<Set<unknown>, SetObserver> = getOwnMetadata(lookupMetadataKey, Set);
   if (lookup == null) {

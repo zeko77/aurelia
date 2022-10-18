@@ -44,6 +44,7 @@ describe('2-runtime/watcher-switcher.spec.ts', function () {
     const loggingWatcher: IConnectable = {
       observe(obj, key) {
         logs.push([obj, key]);
+        return obj[key];
       },
       observeCollection(_collection) {/* empty */},
       subscribeTo(_subscribable) {/* empty */},
@@ -74,6 +75,7 @@ describe('2-runtime/watcher-switcher.spec.ts', function () {
     const loggingWatcher: IConnectable = {
       observe(obj, key) {
         logs.push([obj, key]);
+        return obj[key];
       },
       observeCollection(_collection) {/* empty */},
       subscribeTo(_subscribable) {/* empty */},

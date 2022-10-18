@@ -27,8 +27,10 @@ export interface IConnectableBinding extends IConnectable, IBinding, ISubscriber
 function getObserverRecord(this: IConnectableBinding): BindingObserverRecord {
   return defineHiddenProp(this, 'obs', new BindingObserverRecord(this));
 }
-function observe(this: IConnectableBinding, obj: object, key: PropertyKey): void {
-  this.obs.add(this.oL.getObserver(obj, key));
+function observe(this: IConnectableBinding, obj: object, key: PropertyKey): unknown {
+  const observer = this.oL.getObserver(obj, key);
+  this.obs.add(observer);
+  return observer.getValue();
 }
 function observeCollection(this: IConnectableBinding, collection: Collection): void {
   let obs: CollectionObserver;

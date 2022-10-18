@@ -5,7 +5,9 @@ import { connecting, currentConnectable, _connectable } from './connectable-swit
 
 const R$get = Reflect.get;
 const toStringTag = Object.prototype.toString;
-const proxyMap = new WeakMap<object, object>();
+const proxyKey = Symbol.for('auproxy');
+// mutiple modules/bundles of runtime can share the same weakmap
+const proxyMap = ((Proxy as IIndexable<typeof Proxy>)[proxyKey] ??= new WeakMap()) as WeakMap<object, object>;
 
 function canWrap(obj: unknown): obj is object {
   switch (toStringTag.call(obj)) {
@@ -23,7 +25,7 @@ function canWrap(obj: unknown): obj is object {
   }
 }
 
-export const rawKey = '__raw__';
+const rawKey = '__raw__';
 
 export function wrap<T>(v: T): T {
   return canWrap(v) ? getProxy(v) : v;
@@ -79,9 +81,7 @@ const objectHandler: ProxyHandler<object> = {
     }
 
     // todo: static
-    connectable.observe(target, key);
-
-    return wrap(R$get(target, key, receiver));
+    return wrap(connectable.observe(target, key));
   },
 };
 
@@ -98,8 +98,8 @@ const arrayHandler: ProxyHandler<unknown[]> = {
 
     switch (key) {
       case 'length':
-        _connectable.observe(target, 'length');
-        return target.length;
+        return _connectable.observe(target, 'length');
+        // return target.length;
       case 'map':
         return wrappedArrayMap;
       case 'includes':
@@ -153,9 +153,7 @@ const arrayHandler: ProxyHandler<unknown[]> = {
         return wrappedEntries;
     }
 
-    _connectable.observe(target, key);
-
-    return wrap(R$get(target, key, receiver));
+    return wrap(_connectable.observe(target, key));
   },
   // for (let i in array) ...
   ownKeys(target: unknown[]): (string | symbol)[] {
@@ -315,8 +313,7 @@ const collectionHandler: ProxyHandler<$MapOrSet> = {
 
     switch (key) {
       case 'size':
-        connectable.observe(target, 'size');
-        return target.size;
+        return connectable.observe(target, 'size');
       case 'clear':
         return wrappedClear;
       case 'delete':

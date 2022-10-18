@@ -32,7 +32,10 @@ export interface ICoercionConfiguration {
 export type InterceptorFunc<TInput = unknown, TOutput = unknown> = (value: TInput, coercionConfig: ICoercionConfiguration | null) => TOutput;
 
 export interface IConnectable {
-  observe(obj: object, key: PropertyKey): void;
+  /**
+   * Observe a property of an object and return its value
+   */
+  observe(obj: object, key: PropertyKey): unknown;
   observeCollection(obj: Collection): void;
   subscribeTo(subscribable: ISubscribable | ICollectionSubscribable): void;
 }

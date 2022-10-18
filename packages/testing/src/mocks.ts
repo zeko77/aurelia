@@ -65,8 +65,9 @@ export class MockBinding implements IConnectableBinding {
     this.trace('handleCollectionChange', collection, indexMap);
   }
 
-  public observe(obj: IIndexable, propertyName: string): void {
+  public observe(obj: IIndexable, propertyName: string): unknown {
     this.trace('observe', obj, propertyName);
+    return obj[propertyName];
   }
 
   public observeCollection(col: Collection): void {

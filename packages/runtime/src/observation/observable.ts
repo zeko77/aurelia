@@ -4,22 +4,13 @@ import { safeString, def, createError } from '../utilities-objects';
 import { currentConnectable } from './connectable-switcher';
 
 import type { Constructable, IIndexable } from '@aurelia/kernel';
-import type { IBindingContext, InterceptorFunc, IObservable } from '../observation';
-import type { ObservableGetter } from './observer-locator';
-import type { SetterObserver } from './setter-observer';
+import type { IBindingContext, InterceptorFunc } from '../observation';
+import { getObserverLookup, ObservableGetter } from './observer-locator';
 
 export interface IObservableDefinition {
   name?: PropertyKey;
   callback?: PropertyKey;
   set?: InterceptorFunc;
-}
-
-function getObserversLookup(obj: IObservable): IIndexable<{}, SetterObserver | SetterNotifier> {
-  if (obj.$observers === void 0) {
-    def(obj, '$observers', { value: {} });
-    // todo: define in a weakmap
-  }
-  return obj.$observers as IIndexable<{}, SetterObserver | SetterNotifier>;
 }
 
 const noValue: unknown = {};
@@ -121,7 +112,6 @@ export function observable(
       descriptor.enumerable = true;
     }
 
-    // todo(bigopon/fred): discuss string api for converter
     const $set = config.set;
     descriptor.get = function g(/* @observable */this: SetterObserverOwningObject) {
       const notifier = getNotifier(this, key!, callback, initialValue, $set);
@@ -150,7 +140,7 @@ function getNotifier(
   initialValue: unknown,
   set: InterceptorFunc | undefined,
 ): SetterNotifier {
-  const lookup = getObserversLookup(obj) as unknown as Record<PropertyKey, SetterObserver | SetterNotifier>;
+  const lookup = getObserverLookup(obj);
   let notifier = lookup[key as string] as SetterNotifier;
   if (notifier == null) {
     notifier = new SetterNotifier(obj, callbackKey, set, initialValue === noValue ? void 0 : initialValue);
