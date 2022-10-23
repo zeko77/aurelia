@@ -233,26 +233,26 @@ const N = {
     }
 };
 
-function j(e, s, i = {}) {
-    const n = i.type ?? Reflect.getMetadata("design:type", s, e) ?? null;
-    if (null == n) return t.noop;
-    let r;
-    switch (n) {
+function j(s, i, n = {}) {
+    const r = n.type ?? e.Metadata.get("design:type", i, s) ?? null;
+    if (null == r) return t.noop;
+    let o;
+    switch (r) {
       case Number:
       case Boolean:
       case String:
       case BigInt:
-        r = n;
+        o = r;
         break;
 
       default:
         {
-            const e = n.coerce;
-            r = "function" === typeof e ? e.bind(n) : N.for(n) ?? t.noop;
+            const e = r.coerce;
+            o = "function" === typeof e ? e.bind(r) : N.for(r) ?? t.noop;
             break;
         }
     }
-    return r === t.noop ? r : H(r, i.nullable);
+    return o === t.noop ? o : H(o, n.nullable);
 }
 
 function H(t, e) {

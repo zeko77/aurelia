@@ -228,7 +228,7 @@ const Mt = {
 };
 
 function Ft(t, e, i = {}) {
-    const s = i.type ?? Reflect.getMetadata("design:type", e, t) ?? null;
+    const s = i.type ?? R.get("design:type", e, t) ?? null;
     if (null == s) return n;
     let r;
     switch (s) {

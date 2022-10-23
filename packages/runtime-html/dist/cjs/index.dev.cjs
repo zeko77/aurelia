@@ -227,7 +227,7 @@ const Coercer = {
     }
 };
 function getInterceptor(prop, target, def = {}) {
-    const type = def.type ?? Reflect.getMetadata('design:type', target, prop) ?? null;
+    const type = def.type ?? metadata.Metadata.get('design:type', target, prop) ?? null;
     if (type == null) {
         return kernel.noop;
     }
