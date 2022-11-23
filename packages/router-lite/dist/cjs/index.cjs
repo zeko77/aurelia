@@ -394,9 +394,9 @@ class NavigationErrorEvent {
 
 const b = e.DI.createInterface("IBaseHref");
 
-const S = e.DI.createInterface("ILocationManager", (t => t.singleton(k)));
+const k = e.DI.createInterface("ILocationManager", (t => t.singleton(S)));
 
-let k = class BrowserLocationManager {
+let S = class BrowserLocationManager {
     constructor(t, e, s, i, n, r) {
         this.logger = t;
         this.events = e;
@@ -479,11 +479,11 @@ let k = class BrowserLocationManager {
     }
 };
 
-x([ e.bound ], k.prototype, "onPopState", null);
+x([ e.bound ], S.prototype, "onPopState", null);
 
-x([ e.bound ], k.prototype, "onHashChange", null);
+x([ e.bound ], S.prototype, "onHashChange", null);
 
-k = x([ $(0, e.ILogger), $(1, R), $(2, s.IHistory), $(3, s.ILocation), $(4, s.IWindow), $(5, b) ], k);
+S = x([ $(0, e.ILogger), $(1, R), $(2, s.IHistory), $(3, s.ILocation), $(4, s.IWindow), $(5, b) ], S);
 
 function C(t) {
     let e;
@@ -1746,7 +1746,7 @@ class RouteNode {
         return this.tree.root;
     }
     static create(t) {
-        const {[ut]: e, ...s} = t.params ?? {};
+        const {[i.RESIDUE]: e, ...s} = t.params ?? {};
         return new RouteNode(++B, t.path, t.finalPath, t.context, t.originalInstruction ?? t.instruction, t.instruction, s, t.queryParams ?? Y, t.fragment ?? null, t.data ?? {}, t.viewport ?? null, t.title ?? null, t.component, t.children ?? [], t.residue ?? []);
     }
     contains(t) {
@@ -2576,7 +2576,7 @@ exports.Router = class Router {
     }
 };
 
-exports.Router = x([ $(0, e.IContainer), $(1, s.IPlatform), $(2, e.ILogger), $(3, R), $(4, S) ], exports.Router);
+exports.Router = x([ $(0, e.IContainer), $(1, s.IPlatform), $(2, e.ILogger), $(3, R), $(4, k) ], exports.Router);
 
 class ViewportInstruction {
     constructor(t, e, s, i, n, r, o) {
@@ -3161,15 +3161,13 @@ class ComponentAgent {
 
 const ct = e.DI.createInterface("IRouteContext");
 
-const ut = "au$residue";
+const ut = Object.freeze([ "string", "object", "function" ]);
 
-const lt = Object.freeze([ "string", "object", "function" ]);
-
-function ft(t) {
+function lt(t) {
     if (null == t) return false;
     const e = t.params;
     const s = t.component;
-    return "object" === typeof e && null !== e && null != s && lt.includes(typeof s) && !(s instanceof Promise);
+    return "object" === typeof e && null !== e && null != s && ut.includes(typeof s) && !(s instanceof Promise);
 }
 
 class RouteContext {
@@ -3286,10 +3284,10 @@ class RouteContext {
     }
     static setRoot(t) {
         const i = t.get(e.ILogger).scopeTo("RouteContext");
-        if (!t.has(s.IAppRoot, true)) dt(new Error(`The provided container has no registered IAppRoot. RouteContext.setRoot can only be used after Aurelia.app was called, on a container that is within that app's component tree.`), i);
-        if (t.has(ct, true)) dt(new Error(`A root RouteContext is already registered. A possible cause is the RouterConfiguration being registered more than once in the same container tree. If you have a multi-rooted app, make sure you register RouterConfiguration only in the "forked" containers and not in the common root.`), i);
+        if (!t.has(s.IAppRoot, true)) pt(new Error(`The provided container has no registered IAppRoot. RouteContext.setRoot can only be used after Aurelia.app was called, on a container that is within that app's component tree.`), i);
+        if (t.has(ct, true)) pt(new Error(`A root RouteContext is already registered. A possible cause is the RouterConfiguration being registered more than once in the same container tree. If you have a multi-rooted app, make sure you register RouterConfiguration only in the "forked" containers and not in the common root.`), i);
         const {controller: n} = t.get(s.IAppRoot);
-        if (void 0 === n) dt(new Error(`The provided IAppRoot does not (yet) have a controller. A possible cause is calling this API manually before Aurelia.start() is called`), i);
+        if (void 0 === n) pt(new Error(`The provided IAppRoot does not (yet) have a controller. A possible cause is calling this API manually before Aurelia.start() is called`), i);
         const r = t.get(Q);
         const o = r.getRouteContext(null, n.definition, n.viewModel, n.container, null);
         t.register(e.Registration.instance(ct, o));
@@ -3302,7 +3300,7 @@ class RouteContext {
             r.trace(`resolve(context:%s) - returning root RouteContext`, i);
             return t;
         }
-        if (pt(i)) {
+        if (ft(i)) {
             r.trace(`resolve(context:%s) - returning provided RouteContext`, i);
             return i;
         }
@@ -3326,7 +3324,7 @@ class RouteContext {
             r.trace(`resolve(context:CustomElementController(name:'${t.definition.name}')) - resolving RouteContext from controller's RenderContext`);
             return t.container.get(ct);
         }
-        dt(new Error(`Invalid context type: ${Object.prototype.toString.call(i)}`), r);
+        pt(new Error(`Invalid context type: ${Object.prototype.toString.call(i)}`), r);
     }
     dispose() {
         this.container.dispose();
@@ -3373,18 +3371,18 @@ class RouteContext {
     recognize(t, e = false) {
         this.logger.trace(`recognize(path:'${t}')`);
         let s = this;
-        let i = true;
-        let n = null;
-        while (i) {
-            n = s.recognizer.recognize(t);
-            if (null === n) {
+        let n = true;
+        let r = null;
+        while (n) {
+            r = s.recognizer.recognize(t);
+            if (null === r) {
                 if (!e || s.isRoot) return null;
                 s = s.parent;
-            } else i = false;
+            } else n = false;
         }
-        let r;
-        if (Reflect.has(n.params, ut)) r = n.params[ut] ?? null; else r = null;
-        return new $RecognizedRoute(n, r);
+        let o;
+        if (Reflect.has(r.params, i.RESIDUE)) o = r.params[i.RESIDUE] ?? null; else o = null;
+        return new $RecognizedRoute(r, o);
     }
     addRoute(t) {
         this.logger.trace(`addRoute(routeable:'${t}')`);
@@ -3399,24 +3397,19 @@ class RouteContext {
             path: t,
             caseSensitive: e,
             handler: s
-        });
-        this.recognizer.add({
-            path: `${t}/*${ut}`,
-            caseSensitive: e,
-            handler: s
-        });
+        }, true);
     }
     resolveLazy(t) {
         return this.moduleLoader.load(t, (s => {
             const i = s.raw;
             if ("function" === typeof i) {
-                const t = e.Protocol.resource.getAll(i).find(gt);
+                const t = e.Protocol.resource.getAll(i).find(dt);
                 if (void 0 !== t) return t;
             }
             let n;
             let r;
             for (const t of s.items) if (t.isConstructable) {
-                const e = t.definitions.find(gt);
+                const e = t.definitions.find(dt);
                 if (void 0 !== e) if ("default" === t.key) n = e; else if (void 0 === r) r = e;
             }
             if (void 0 === n) {
@@ -3427,7 +3420,7 @@ class RouteContext {
         }));
     }
     generateViewportInstruction(t) {
-        if (!ft(t)) return null;
+        if (!lt(t)) return null;
         const e = t.component;
         let s;
         let n = false;
@@ -3530,16 +3523,16 @@ class RouteContext {
     }
 }
 
-function pt(t) {
+function ft(t) {
     return t instanceof RouteContext;
 }
 
-function dt(t, e) {
+function pt(t, e) {
     e.error(t);
     throw t;
 }
 
-function gt(t) {
+function dt(t) {
     return s.CustomElement.isType(t.Type);
 }
 
@@ -3639,7 +3632,7 @@ exports.ViewportCustomElement = class ViewportCustomElement {
     }
     toString() {
         const t = [];
-        for (const e of wt) {
+        for (const e of gt) {
             const s = this[e];
             switch (typeof s) {
               case "string":
@@ -3672,7 +3665,7 @@ exports.ViewportCustomElement = x([ s.customElement({
     name: "au-viewport"
 }), $(0, e.ILogger), $(1, ct) ], exports.ViewportCustomElement);
 
-const wt = [ "name", "usedBy", "default", "fallback", "stateful" ];
+const gt = [ "name", "usedBy", "default", "fallback", "stateful" ];
 
 exports.LoadCustomAttribute = class LoadCustomAttribute {
     constructor(t, e, s, i, n, r) {
@@ -3769,7 +3762,7 @@ x([ s.bindable({
     callback: "valueChanged"
 }) ], exports.LoadCustomAttribute.prototype, "context", void 0);
 
-exports.LoadCustomAttribute = x([ s.customAttribute("load"), $(0, s.IEventTarget), $(1, s.INode), $(2, Q), $(3, R), $(4, ct), $(5, S) ], exports.LoadCustomAttribute);
+exports.LoadCustomAttribute = x([ s.customAttribute("load"), $(0, s.IEventTarget), $(1, s.INode), $(2, Q), $(3, R), $(4, ct), $(5, k) ], exports.LoadCustomAttribute);
 
 exports.HrefCustomAttribute = class HrefCustomAttribute {
     constructor(t, e, s, i, n) {
@@ -3834,19 +3827,19 @@ exports.HrefCustomAttribute = x([ s.customAttribute({
     noMultiBindings: true
 }), $(0, s.IEventTarget), $(1, s.INode), $(2, Q), $(3, ct), $(4, s.IWindow) ], exports.HrefCustomAttribute);
 
-const vt = Q;
+const wt = Q;
 
-const mt = [ vt ];
+const vt = [ wt ];
 
-const xt = exports.ViewportCustomElement;
+const mt = exports.ViewportCustomElement;
 
-const $t = exports.LoadCustomAttribute;
+const xt = exports.LoadCustomAttribute;
 
-const Et = exports.HrefCustomAttribute;
+const $t = exports.HrefCustomAttribute;
 
-const Rt = [ exports.ViewportCustomElement, exports.LoadCustomAttribute, exports.HrefCustomAttribute ];
+const Et = [ exports.ViewportCustomElement, exports.LoadCustomAttribute, exports.HrefCustomAttribute ];
 
-function yt(i, n) {
+function Rt(i, n) {
     let r = null;
     if (t.isObject(n)) r = n.basePath ?? null; else n = {};
     return i.register(e.Registration.cachedCallback(b, ((t, e, i) => {
@@ -3856,17 +3849,17 @@ function yt(i, n) {
         return o;
     })), s.AppTask.hydrated(Q, (t => t.I(n))), s.AppTask.hydrated(e.IContainer, RouteContext.setRoot), s.AppTask.activated(Q, (t => t.start(true))), s.AppTask.deactivated(Q, (t => {
         t.stop();
-    })), ...mt, ...Rt);
+    })), ...vt, ...Et);
 }
 
-const bt = {
+const yt = {
     register(t) {
-        return yt(t);
+        return Rt(t);
     },
     customize(t) {
         return {
             register(e) {
-                return yt(e, t);
+                return Rt(e, t);
             }
         };
     }
@@ -3887,7 +3880,7 @@ class ScrollState {
     }
 }
 
-function St(t) {
+function bt(t) {
     t.restore();
 }
 
@@ -3905,7 +3898,7 @@ class HostElementState {
         }
     }
     restore() {
-        this.scrollStates.forEach(St);
+        this.scrollStates.forEach(bt);
         this.scrollStates = null;
     }
 }
@@ -3940,13 +3933,13 @@ exports.ComponentExpression = ComponentExpression;
 
 exports.CompositeSegmentExpression = CompositeSegmentExpression;
 
-exports.DefaultComponents = mt;
+exports.DefaultComponents = vt;
 
-exports.DefaultResources = Rt;
+exports.DefaultResources = Et;
 
-exports.HrefCustomAttributeRegistration = Et;
+exports.HrefCustomAttributeRegistration = $t;
 
-exports.ILocationManager = S;
+exports.ILocationManager = k;
 
 exports.IRouteContext = ct;
 
@@ -3956,7 +3949,7 @@ exports.IRouterEvents = R;
 
 exports.IStateManager = kt;
 
-exports.LoadCustomAttributeRegistration = $t;
+exports.LoadCustomAttributeRegistration = xt;
 
 exports.LocationChangeEvent = LocationChangeEvent;
 
@@ -3988,11 +3981,11 @@ exports.RouteNode = RouteNode;
 
 exports.RouteTree = RouteTree;
 
-exports.RouterConfiguration = bt;
+exports.RouterConfiguration = yt;
 
 exports.RouterOptions = RouterOptions;
 
-exports.RouterRegistration = vt;
+exports.RouterRegistration = wt;
 
 exports.ScopedSegmentExpression = ScopedSegmentExpression;
 
@@ -4004,7 +3997,7 @@ exports.Transition = Transition;
 
 exports.ViewportAgent = ViewportAgent;
 
-exports.ViewportCustomElementRegistration = xt;
+exports.ViewportCustomElementRegistration = mt;
 
 exports.ViewportExpression = ViewportExpression;
 

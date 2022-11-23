@@ -1817,7 +1817,7 @@ class RouteNode {
         return this.tree.root;
     }
     static create(input) {
-        const { [RESIDUE]: _, ...params } = input.params ?? {};
+        const { [routeRecognizer.RESIDUE]: _, ...params } = input.params ?? {};
         return new RouteNode(++nodeId, input.path, input.finalPath, input.context, input.originalInstruction ?? input.instruction, input.instruction, params, input.queryParams ?? emptyQuery, input.fragment ?? null, input.data ?? {}, input.viewport ?? null, input.title ?? null, input.component, input.children ?? [], input.residue ?? []);
     }
     contains(instructions) {
@@ -3408,7 +3408,6 @@ class ComponentAgent {
 }
 
 const IRouteContext = kernel.DI.createInterface('IRouteContext');
-const RESIDUE = 'au$residue';
 const allowedEagerComponentTypes = Object.freeze(['string', 'object', 'function']);
 function isEagerInstruction(val) {
     if (val == null)
@@ -3671,8 +3670,8 @@ class RouteContext {
             }
         }
         let residue;
-        if (Reflect.has(result.params, RESIDUE)) {
-            residue = result.params[RESIDUE] ?? null;
+        if (Reflect.has(result.params, routeRecognizer.RESIDUE)) {
+            residue = result.params[routeRecognizer.RESIDUE] ?? null;
         }
         else {
             residue = null;
@@ -3694,12 +3693,7 @@ class RouteContext {
             path,
             caseSensitive,
             handler,
-        });
-        this.recognizer.add({
-            path: `${path}/*${RESIDUE}`,
-            caseSensitive,
-            handler,
-        });
+        }, true);
     }
     resolveLazy(promise) {
         return this.moduleLoader.load(promise, m => {

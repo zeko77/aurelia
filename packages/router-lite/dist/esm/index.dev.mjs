@@ -1,7 +1,7 @@
 import { isObject, Metadata } from '@aurelia/metadata';
 import { DI, IEventAggregator, ILogger, bound, onResolve, resolveAll, emptyObject, IContainer, isArrayIndex, Protocol, emptyArray, IModuleLoader, InstanceProvider, noop, Registration } from '@aurelia/kernel';
 import { isCustomElementViewModel, IHistory, ILocation, IWindow, Controller, IPlatform, CustomElement, CustomElementDefinition, IController, IAppRoot, isCustomElementController, customElement, bindable, customAttribute, IEventTarget, INode, getRef, CustomAttribute, AppTask } from '@aurelia/runtime-html';
-import { RecognizedRoute, Endpoint, ConfigurableRoute, RouteRecognizer } from '@aurelia/route-recognizer';
+import { RecognizedRoute, Endpoint, ConfigurableRoute, RESIDUE, RouteRecognizer } from '@aurelia/route-recognizer';
 
 class Batch {
     constructor(stack, cb, head) {
@@ -3404,7 +3404,6 @@ class ComponentAgent {
 }
 
 const IRouteContext = DI.createInterface('IRouteContext');
-const RESIDUE = 'au$residue';
 const allowedEagerComponentTypes = Object.freeze(['string', 'object', 'function']);
 function isEagerInstruction(val) {
     if (val == null)
@@ -3690,12 +3689,7 @@ class RouteContext {
             path,
             caseSensitive,
             handler,
-        });
-        this.recognizer.add({
-            path: `${path}/*${RESIDUE}`,
-            caseSensitive,
-            handler,
-        });
+        }, true);
     }
     resolveLazy(promise) {
         return this.moduleLoader.load(promise, m => {

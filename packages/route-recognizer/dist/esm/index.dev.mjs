@@ -224,24 +224,32 @@ class RecognizeResult {
         }
     }
 }
+const RESIDUE = '$$residue';
 class RouteRecognizer {
     constructor() {
         this.rootState = new State(null, null, '');
         this.cache = new Map();
         this.endpointLookup = new Map();
     }
-    add(routeOrRoutes) {
+    add(routeOrRoutes, addResidue = false) {
+        let params;
         if (routeOrRoutes instanceof Array) {
             for (const route of routeOrRoutes) {
-                this.$add(route);
+                params = this.$add(route, false).params;
+                if (!addResidue || (params[params.length - 1]?.isStar ?? false))
+                    continue;
+                this.$add({ ...route, path: `${route.path}/*${RESIDUE}` }, true);
             }
         }
         else {
-            this.$add(routeOrRoutes);
+            params = this.$add(routeOrRoutes, false).params;
+            if (addResidue && !(params[params.length - 1]?.isStar ?? false)) {
+                this.$add({ ...routeOrRoutes, path: `${routeOrRoutes.path}/*${RESIDUE}` }, true);
+            }
         }
         this.cache.clear();
     }
-    $add(route) {
+    $add(route, addResidue) {
         const path = route.path;
         const lookup = this.endpointLookup;
         if (lookup.has(path))
@@ -256,14 +264,25 @@ class RouteRecognizer {
                 case ':': {
                     const isOptional = part.endsWith('?');
                     const name = isOptional ? part.slice(1, -1) : part.slice(1);
+                    if (name === RESIDUE)
+                        throw new Error(`Invalid parameter name; usage of the reserved parameter name '${RESIDUE}' is used.`);
                     params.push(new Parameter(name, isOptional, false));
                     state = new DynamicSegment(name, isOptional).appendTo(state);
                     break;
                 }
                 case '*': {
                     const name = part.slice(1);
+                    let kind;
+                    if (name === RESIDUE) {
+                        if (!addResidue)
+                            throw new Error(`Invalid parameter name; usage of the reserved parameter name '${RESIDUE}' is used.`);
+                        kind = 1;
+                    }
+                    else {
+                        kind = 2;
+                    }
                     params.push(new Parameter(name, true, true));
-                    state = new StarSegment(name).appendTo(state);
+                    state = new StarSegment(name, kind).appendTo(state);
                     break;
                 }
                 default: {
@@ -275,6 +294,7 @@ class RouteRecognizer {
         const endpoint = new Endpoint($route, params);
         state.setEndpoint(endpoint);
         lookup.set(path, endpoint);
+        return endpoint;
     }
     recognize(path) {
         let result = this.cache.get(path);
@@ -319,19 +339,20 @@ class State {
         this.nextStates = null;
         this.endpoint = null;
         switch (segment?.kind) {
-            case 2:
+            case 3:
                 this.length = prevState.length + 1;
                 this.isSeparator = false;
                 this.isDynamic = true;
                 this.isOptional = segment.optional;
                 break;
+            case 2:
             case 1:
                 this.length = prevState.length + 1;
                 this.isSeparator = false;
                 this.isDynamic = true;
                 this.isOptional = false;
                 break;
-            case 3:
+            case 4:
                 this.length = prevState.length + 1;
                 this.isSeparator = false;
                 this.isDynamic = false;
@@ -378,11 +399,12 @@ class State {
     isMatch(ch) {
         const segment = this.segment;
         switch (segment?.kind) {
-            case 2:
+            case 3:
                 return !this.value.includes(ch);
+            case 2:
             case 1:
                 return true;
-            case 3:
+            case 4:
             case undefined:
                 return this.value.includes(ch);
         }
@@ -397,7 +419,7 @@ class StaticSegment {
         this.value = value;
         this.caseSensitive = caseSensitive;
     }
-    get kind() { return 3; }
+    get kind() { return 4; }
     appendTo(state) {
         const { value, value: { length } } = this;
         if (this.caseSensitive) {
@@ -414,7 +436,7 @@ class StaticSegment {
         return state;
     }
     equals(b) {
-        return (b.kind === 3 &&
+        return (b.kind === 4 &&
             b.caseSensitive === this.caseSensitive &&
             b.value === this.value);
     }
@@ -424,32 +446,32 @@ class DynamicSegment {
         this.name = name;
         this.optional = optional;
     }
-    get kind() { return 2; }
+    get kind() { return 3; }
     appendTo(state) {
         state = state.append(this, '/');
         return state;
     }
     equals(b) {
-        return (b.kind === 2 &&
+        return (b.kind === 3 &&
             b.optional === this.optional &&
             b.name === this.name);
     }
 }
 class StarSegment {
-    constructor(name) {
+    constructor(name, kind) {
         this.name = name;
+        this.kind = kind;
     }
-    get kind() { return 1; }
     appendTo(state) {
         state = state.append(this, '');
         return state;
     }
     equals(b) {
-        return (b.kind === 1 &&
+        return ((b.kind === 2 || b.kind === 1) &&
             b.name === this.name);
     }
 }
 const createError = (msg) => new Error(msg);
 
-export { ConfigurableRoute, Endpoint, Parameter, RecognizedRoute, RouteRecognizer };
+export { ConfigurableRoute, Endpoint, Parameter, RESIDUE, RecognizedRoute, RouteRecognizer };
 //# sourceMappingURL=index.dev.mjs.map

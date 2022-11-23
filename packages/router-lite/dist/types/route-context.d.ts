@@ -12,7 +12,6 @@ import { ViewportAgent, ViewportRequest } from './viewport-agent';
 export interface IRouteContext extends RouteContext {
 }
 export declare const IRouteContext: import("@aurelia/kernel").InterfaceSymbol<IRouteContext>;
-export declare const RESIDUE: "au$residue";
 declare type PathGenerationResult = {
     vi: ViewportInstruction;
     query: Params | null;
