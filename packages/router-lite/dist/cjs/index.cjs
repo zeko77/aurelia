@@ -1954,7 +1954,7 @@ function H(t, s, i) {
                     if (void 0 !== a) return _(t, s, G(t, a, s, i));
                     t.trace(`No route definition for the fallback '${h}' is found; trying to recognize the route.`);
                     const c = e.recognize(h, true);
-                    if (null !== c) return _(t, s, W(t, s, i, c, null));
+                    if (null !== c && c.residue !== h) return _(t, s, W(t, s, i, c, null));
                     t.trace(`The fallback '${h}' is not recognized as a route; treating as custom element name.`);
                     return _(t, s, G(t, RouteDefinition.resolve(h, e.definition, null, e), s, i));
                 }

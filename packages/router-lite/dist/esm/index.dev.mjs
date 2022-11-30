@@ -2063,7 +2063,7 @@ function createAndAppendNodes(log, node, vi) {
                             return appendNode(log, node, createFallbackNode(log, rd, node, vi));
                         log.trace(`No route definition for the fallback '${fallback}' is found; trying to recognize the route.`);
                         const rr = ctx.recognize(fallback, true);
-                        if (rr !== null)
+                        if (rr !== null && rr.residue !== fallback)
                             return appendNode(log, node, createConfiguredNode(log, node, vi, rr, null));
                         log.trace(`The fallback '${fallback}' is not recognized as a route; treating as custom element name.`);
                         return appendNode(log, node, createFallbackNode(log, RouteDefinition.resolve(fallback, ctx.definition, null, ctx), node, vi));

@@ -1948,7 +1948,7 @@ function It(t, e, i) {
                     if (void 0 !== a) return Tt(t, e, At(t, a, e, i));
                     t.trace(`No route definition for the fallback '${h}' is found; trying to recognize the route.`);
                     const c = s.recognize(h, true);
-                    if (null !== c) return Tt(t, e, Nt(t, e, i, c, null));
+                    if (null !== c && c.residue !== h) return Tt(t, e, Nt(t, e, i, c, null));
                     t.trace(`The fallback '${h}' is not recognized as a route; treating as custom element name.`);
                     return Tt(t, e, At(t, RouteDefinition.resolve(h, s.definition, null, s), e, i));
                 }
