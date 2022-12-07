@@ -93,7 +93,7 @@ In some instances, you want a custom attribute that only has one bindable proper
         this.element.style.backgroundColor = 'red';
     }
     
-    bind() {
+    bound() {
         this.element.style.backgroundColor = this.value;
     }
   }
